@@ -14,7 +14,7 @@ modelo:
           tevékenységek esetén. Önbevallás.
         title: Szerencsejáték-tevékenységek adója - önbevallás (éves/többéves)
       revision:
-        2012-2t-3t:
+        2012-2014:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
@@ -28,20 +28,6 @@ modelo:
                 title: Modelo 763— adóügyi információ
           field:
             label: Modelo 763, adóév 2012 (2.º és 3.º trimestre)
-        2013-2014:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás vonatkozási éve
-            x-chim6r1ee1in4qbfchng:
-              help: 'Tekintse át a casilla adatait: Időszak (trimestre natural).'
-              label: Időszak (naptári negyedév)
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— adóügyi információ
-          field:
-            label: Casilla— adóügyi információ
         2015-2017:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

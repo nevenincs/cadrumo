@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01936"
+continuidad_id = "01936"
+continuidad_origin = "seeded"
 number = "01936"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
 data_type = "money"

@@ -4,7 +4,7 @@ Mounts ``aeat config collab recipient add|list|remove`` on the ``config`` root.
 A taxpayer records a trusted recipient (an accountant/gestor) by the SHA-256
 fingerprint of that recipient's X25519 public key, verified out-of-band (read
 aloud, compared over a separate channel) before it is trusted -- exactly the
-:class:`~application.modelo.RecipientFingerprintRegistryRepository`
+:class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`
 contract this module wires, never re-implements
 (``aeat-architecture-boundaries``). The registered public key is
 what ``aeat app modelo review-package encrypt-for-recipient`` seals a package
@@ -20,8 +20,8 @@ implicit clobber, since the whole point of the out-of-band verification is
 that the operator confirms the exact key on file.
 
 See Also:
-    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
-        Active-bucket persistence boundary this CLI surface delegates to.
+    :class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`
+        Bucket-scoped persistence capability this CLI surface delegates to.
     :class:`~application.modelo.RecipientFingerprintRecord`
         Public-key and fingerprint record projected into command results.
     :func:`~application.modelo.public_key_hex_from_raw_bytes`
@@ -43,9 +43,13 @@ from ....application.modelo.review_package_collab_audit import (
     emit_collab_recipient_removed_event,
 )
 from ....application.modelo.review_package_recipient_registry import (
-    RecipientFingerprintRegistryRepository,
+    add_recipient_fingerprint,
+    get_recipient_fingerprint,
+    list_recipient_fingerprints,
     public_key_hex_from_raw_bytes,
+    remove_recipient_fingerprint,
 )
+from ....application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
 from ....core.i18n.render import tr
 from ..common import active_bucket_id_or_refuse as _active_bucket_id_or_refuse
 from ..common import emit_envelope
@@ -55,11 +59,12 @@ from .collab_payloads import (
     ConfigCollabRecipientRemoveResult,
     RecipientFingerprintRowPayload,
 )
+from ..state_projection_support import recipient_fingerprint_registry_ports_factory
 
 
-def _registry() -> RecipientFingerprintRegistryRepository:
-    bucket_id = _active_bucket_id_or_refuse()
-    return RecipientFingerprintRegistryRepository(bucket_id=bucket_id)
+def _registry(ctx: typer.Context, *, bucket_id: str) -> RecipientFingerprintRegistryPorts:
+    """Resolve the required bucket-scoped registry capability from composition."""
+    return recipient_fingerprint_registry_ports_factory(ctx)(bucket_id=bucket_id)
 
 
 def _validated_public_key_hex(public_key: str) -> str:
@@ -92,9 +97,14 @@ def collab_recipient_add(
     validated_key_hex = _validated_public_key_hex(public_key)
 
     bucket_id = _active_bucket_id_or_refuse()
-    registry = RecipientFingerprintRegistryRepository(bucket_id=bucket_id)
-    registry.add(recipient_id=recipient_id, public_key_hex=validated_key_hex, label=label)
-    record = registry.get(recipient_id)
+    ports = _registry(ctx, bucket_id=bucket_id)
+    add_recipient_fingerprint(
+        recipient_id=recipient_id,
+        public_key_hex=validated_key_hex,
+        label=label,
+        ports=ports,
+    )
+    record = get_recipient_fingerprint(recipient_id, ports=ports)
     # Trusting a new recipient is an auditable act on this bucket.
     emit_collab_recipient_registered_event(
         record,
@@ -123,8 +133,8 @@ def collab_recipient_add(
 
 def collab_recipient_list(ctx: typer.Context) -> None:
     """List every registered recipient's fingerprint."""
-    registry = _registry()
-    records = registry.list()
+    bucket_id = _active_bucket_id_or_refuse()
+    records = list_recipient_fingerprints(ports=_registry(ctx, bucket_id=bucket_id))
 
     rows = [
         RecipientFingerprintRowPayload(
@@ -148,8 +158,8 @@ def collab_recipient_remove(
 ) -> None:
     """Remove the recipient registered under ``recipient_id``."""
     bucket_id = _active_bucket_id_or_refuse()
-    registry = RecipientFingerprintRegistryRepository(bucket_id=bucket_id)
-    updated = registry.remove(recipient_id)
+    ports = _registry(ctx, bucket_id=bucket_id)
+    updated = remove_recipient_fingerprint(recipient_id, ports=ports)
     # Revoking trust is auditable for the same reason granting it is.
     emit_collab_recipient_removed_event(
         recipient_id=recipient_id,

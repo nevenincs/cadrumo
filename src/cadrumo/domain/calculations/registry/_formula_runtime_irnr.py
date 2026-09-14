@@ -50,7 +50,11 @@ from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
 from .ids import BindingId, ParameterId
-from .irnr_tipo_renta import require_tipo_renta_irnr, tipo_renta_pension_token
+from .irnr_tipo_renta import (
+    require_tipo_renta_irnr,
+    tipo_renta_inmobiliaria_token,
+    tipo_renta_pension_token,
+)
 from .renta_codes_catalogue import is_ue_eea_country_code
 from .schema_formula import FormulaExpression
 
@@ -254,16 +258,15 @@ def _resolve_convenio_override(
 
 def _apply_convenio_override(override: ResolvedConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal | None:
     """Apply a non-pension treaty override to the domestic baseline rate."""
-    kind = override.kind
-    if kind.value == "exempt":
+    if override.is_exempt:
         return ZERO
-    if kind.value == "allocation_domestic_tariff":
+    if override.delegates_to_domestic_tariff:
         return baseline_rate
-    if kind.value == "flat":
+    if override.has_flat_rate:
         if override.rate is None:
             return None
         return override.rate
-    if kind.value == "ceiling":
+    if override.has_ceiling_rate:
         # CEILING: min(domestic, treaty) — "más favorable" computed, not assumed.
         if override.rate is None:
             return None
@@ -283,14 +286,14 @@ def _irnr_pension_effective_rate(
     if country:
         if override is None:
             return None
-        if override.kind.value == "exempt":
+        if override.is_exempt:
             return ZERO
-        if override.kind.value == "flat" and override.rate is not None:
+        if override.has_flat_rate and override.rate is not None:
             return override.rate
-        if override.kind.value == "ceiling" and override.rate is not None:
+        if override.has_ceiling_rate and override.rate is not None:
             effective = _m210_effective_rate_from_tariff(args.base_casilla_id, args.pension_tariff_parameter, ctx)
             return min(effective, override.rate)
-        if override.kind.value != "allocation_domestic_tariff":
+        if not override.delegates_to_domestic_tariff:
             raise RegistryValidationError(f"unsupported convenio override kind {override.kind.value!r}")
         # ALLOCATION_DOMESTIC_TARIFF delegates the amount to the domestic tariff.
     return _m210_effective_rate_from_tariff(args.base_casilla_id, args.pension_tariff_parameter, ctx)
@@ -338,6 +341,8 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
     tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")
     ctx.operand_refs.append(args.tipo_casilla_id)
     ctx.operand_casilla_refs.append(args.tipo_casilla_id)
+    filing_period = ctx.date_context.get("filing_period")
+    tipo_renta_token = require_tipo_renta_irnr(tipo_renta, effective_date=filing_period)
     country = (ctx.enum_binding_values.get(args.country_binding) or "").upper()
     ctx.operand_refs.append(args.country_binding)
     deductible_expenses = _numeric_casilla_value(args.deductible_expenses_casilla_id, ctx)
@@ -347,7 +352,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
             translated_message="errors.calc.m210_gastos_deducibles_negative",
             context={"casilla_id": args.deductible_expenses_casilla_id, "value": str(deductible_expenses)},
         )
-    if tipo_renta != "inmobiliaria":
+    if tipo_renta_token != tipo_renta_inmobiliaria_token(effective_date=filing_period):
         gross = _numeric_casilla_value(args.gross_casilla_id, ctx)
         if deductible_expenses == ZERO:
             return gross

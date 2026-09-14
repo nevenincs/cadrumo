@@ -2,9 +2,9 @@
 
 This module creates, lists, renames, and discards
 :class:`~WorkUnit` records in the
-:class:`adapters.persistence.profile.modelos_work_units.WorkUnitCatalogueRepository`.
+:class:`~cadrumo.domain.modelos.work_unit_repository.WorkUnitCatalogueRepositoryProtocol`.
 Each mutating action emits a typed event through
-:class:`BucketEventHistoryRepository`, giving
+:class:`~cadrumo.domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`, giving
 :func:`cadrumo.application.modelo.assemble_work_unit_history` a complete
 timeline from creation through discard.
 
@@ -35,8 +35,6 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, field_validator, model_validator
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -50,7 +48,6 @@ from ...core.period import Period
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.modelos.codes import ModeloCode
@@ -67,6 +64,7 @@ from .action_errors import (
 )
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from .work_lifecycle_ports import WorkLifecyclePorts
 
 
 class ActiveWorkUnitUse(StrEnum):
@@ -328,8 +326,7 @@ def create_work_unit(
     name: str | None = None,
     actor: str = "system",
     causante_ccaa: CCAA | None = None,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: WorkLifecyclePorts,
     clock: datetime | None = None,
     enforce_applicability: bool = True,
 ) -> WorkUnit:
@@ -411,8 +408,8 @@ def create_work_unit(
         period=period,
         enforce_applicability=enforce_applicability,
     )
-    repo = repository or WorkUnitCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    repo = ports.work_unit_repository
+    bv_repo = ports.bucket_event_repository
     # Revisioned: the catalogue is composed into the co-commit below with the
     # creation event, so it cannot use a self-committing mutation, and an
     # unguarded read would rewrite the singleton row over a work unit another
@@ -484,7 +481,7 @@ def list_work_units(
     *,
     bucket_id: str | None = None,
     include_discarded: bool = False,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    ports: WorkLifecyclePorts,
 ) -> tuple[WorkUnit, ...]:
     """Return :class:`WorkUnit` records, optionally filtered to one bucket.
 
@@ -492,7 +489,7 @@ def list_work_units(
     only active draft roots. Pass ``include_discarded=True`` for audit/history
     views that need the abandoned records.
     """
-    repo = repository or WorkUnitCatalogueRepository()
+    repo = ports.work_unit_repository
     catalogue = repo.load()
     units = tuple(
         unit
@@ -630,14 +627,14 @@ def require_revision_parent_active(
 def get_work_unit(
     work_unit_id: str,
     *,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    ports: WorkLifecyclePorts,
 ) -> WorkUnit:
     """Return one :class:`WorkUnit` by id or raise :class:`WorkUnitNotFoundError`.
 
     Scoped to the repository's own bucket: a unit belonging to another bucket is
     not addressable here and reads as not found.
     """
-    repo = repository or WorkUnitCatalogueRepository()
+    repo = ports.work_unit_repository
     return _work_unit_in_repository_bucket(work_unit_id, repository=repo)
 
 
@@ -646,8 +643,7 @@ def rename_work_unit(
     new_name: str,
     *,
     actor: str,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: WorkLifecyclePorts,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Update a :class:`WorkUnit` display name and emit a rename event.
@@ -660,8 +656,8 @@ def rename_work_unit(
     not addressable here, so an A-bound caller cannot rename a B unit and emit a
     B-scoped rename event.
     """
-    repo = repository or WorkUnitCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    repo = ports.work_unit_repository
+    bv_repo = ports.bucket_event_repository
     existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
     # Revisioned: the catalogue is composed into the co-commit below with the
     # lifecycle event, so it cannot use a self-committing mutation, and an
@@ -714,8 +710,7 @@ def discard_work_unit(
     *,
     actor: str,
     reason: str | None = None,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: WorkLifecyclePorts,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Transition a :class:`WorkUnit` to ``DESCARTADO`` and emit a discard event.
@@ -729,8 +724,8 @@ def discard_work_unit(
     not addressable here, so an A-bound caller cannot discard a B unit and emit a
     B-scoped discard event.
     """
-    repo = repository or WorkUnitCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    repo = ports.work_unit_repository
+    bv_repo = ports.bucket_event_repository
     existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
     # Revisioned: the catalogue is composed into the co-commit below with the
     # lifecycle event, so it cannot use a self-committing mutation, and an

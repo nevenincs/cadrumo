@@ -146,7 +146,7 @@ def _provision_profile(tmp_path: Path, passphrase: str) -> None:
     """
     from ....core.config import override_settings
     from ....core.config_support import SecretStoreBackend
-    from ....tests.user_profile import register_cli_profile
+    from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "storage",

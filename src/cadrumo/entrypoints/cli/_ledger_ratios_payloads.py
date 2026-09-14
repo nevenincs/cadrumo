@@ -69,8 +69,8 @@ class RatiosRowPayload(OutputSchema):
 class RatiosEligibleRowPayload(OutputSchema):
     """One ``ledger ratios eligible`` row (D2).
 
-    ``proportionality_kind`` reuses the canonical
-    :class:`~domain.categories.ProportionalityKind` enum rather than
+    ``proportionality_kind`` reuses the canonical registry-projected
+    :class:`~domain.categories.ProportionalityKind` token rather than
     restating the rule vocabulary as free text.
     """
 

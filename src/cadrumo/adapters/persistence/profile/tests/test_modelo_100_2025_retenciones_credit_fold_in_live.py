@@ -73,7 +73,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.source_mesh import (
@@ -87,7 +87,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.tests._fold_in_assertions_support import _assert_distinct_positive
+from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

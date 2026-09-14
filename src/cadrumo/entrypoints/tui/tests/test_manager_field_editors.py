@@ -28,7 +28,7 @@ from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....tests.profile_capsule import load_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ..components.host import ScreenHostApp
 from ..profile.overview import FieldEditScreen, ProfileManagerScreen
 from .manager_pilot import wait_until_settled

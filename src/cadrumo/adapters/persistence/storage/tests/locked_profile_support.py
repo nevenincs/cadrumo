@@ -19,7 +19,7 @@ from uuid import UUID
 
 from .....core.bucket_pointer import BucketPointer, write_pointer
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .....tests.profile_capsule import mint_test_profile_recovery_envelope
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from ..custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,

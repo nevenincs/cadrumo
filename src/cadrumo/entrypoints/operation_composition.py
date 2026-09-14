@@ -6,6 +6,7 @@ import secrets
 from datetime import timedelta
 
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
+from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.operations.financial_operand_custody import (
@@ -15,7 +16,6 @@ from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..application.auth.operation_definitions import (
     build_auth_operation_definitions,
@@ -43,6 +43,8 @@ from ..application.modelo.calculation_action_ports import CalculationActionPorts
 from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
 from ..application.modelo.filing_action_ports import FilingActionPortsFactory
 from ..application.modelo.export_ports import ModeloExportPortsFactory
+from ..application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from ..application.modelo.work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from ..application.operations.composition import (
     OperationComposedServices,
     compose_operation_services,
@@ -68,7 +70,10 @@ from ..core.time.clock import now
 from .adapter_composition import (
     build_amendment_action_ports,
     build_calculation_action_ports,
+    build_censal_fetch_port,
     build_filing_action_ports,
+    build_active_work_lifecycle_ports,
+    build_modelo_edit_receipt_repository,
     build_modelo_export_ports,
 )
 from .live_state_composition import compose_live_state, pull_filed_history_with_shared_composition
@@ -155,6 +160,8 @@ def build_production_operation_registry(
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
     amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
+    work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
+    modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     operator_scope_ports: OperatorScopePorts,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
@@ -168,6 +175,8 @@ def build_production_operation_registry(
         calculation_action_ports_factory=calculation_action_ports_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,
         filing_action_ports_factory=filing_action_ports_factory,
+        work_lifecycle_ports_factory=work_lifecycle_ports_factory,
+        receipt_repository_factory=modelo_edit_receipt_repository_factory,
     )
     resolved_google_export_definition = (
         google_export_definition
@@ -186,7 +195,9 @@ def build_production_operation_registry(
         if censal_definition is not None
         else build_censal_operation_definition(
             certificate_secret_backend_factory=build_certificate_secret_backend,
+            browser_session_factory=default_browser_session_factory,
             operator_scope_ports=operator_scope_ports,
+            censal_fetch_port=build_censal_fetch_port(),
         )
     )
     definitions = tuple(
@@ -227,6 +238,8 @@ def compose_operation_dependencies(
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
     amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
+    work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
+    modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     operator_scope_ports: OperatorScopePorts,
 ) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
@@ -244,6 +257,8 @@ def compose_operation_dependencies(
         calculation_action_ports_factory=calculation_action_ports_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,
         filing_action_ports_factory=filing_action_ports_factory,
+        work_lifecycle_ports_factory=work_lifecycle_ports_factory,
+        modelo_edit_receipt_repository_factory=modelo_edit_receipt_repository_factory,
         operator_scope_ports=operator_scope_ports,
     )
     journal = OperationJournalRepository(storage_root=storage_root)

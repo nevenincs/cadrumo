@@ -1,7 +1,7 @@
 """Real-behavior tests for the review-queue confidence-below filter.
 
-Exercises the full projection -> aggregator -> adapter -> encrypted
-repository path: transactions are persisted at varying
+Exercises the full projection -> aggregator -> required application-port
+path: transactions are supplied at varying
 ``classification_confidence`` and the projection is asked to surface
 only the rows whose confidence sits strictly below a threshold.
 """
@@ -14,15 +14,14 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....application.filing.draft_review_ports import DraftReviewPorts
 from ....core.config import Settings
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_minimal_profile
 from ..enums import ReviewState
 from ..operator import project_review_queue
+from ._fakes import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -75,8 +74,8 @@ def _transaction(*, source_row_index: int, confidence: Decimal | None) -> Transa
     return Transaction.model_validate(payload)
 
 
-def _seed(tmp_path: Path) -> tuple[Settings, dict[str, str]]:
-    """Persist five transactions at distinct confidences; return id-by-label map."""
+def _seed(tmp_path: Path) -> tuple[Settings, dict[str, str], DraftReviewPorts]:
+    """Build five transactions at distinct confidences and return their port bundle."""
     settings = _build_settings(tmp_path)
     low = _transaction(source_row_index=1, confidence=Decimal("0.10"))
     boundary = _transaction(source_row_index=2, confidence=Decimal("0.50"))
@@ -84,11 +83,7 @@ def _seed(tmp_path: Path) -> tuple[Settings, dict[str, str]]:
     perfect = _transaction(source_row_index=4, confidence=Decimal("1.00"))
     unscored = _transaction(source_row_index=5, confidence=None)
     catalogue = TransactionCatalogue.from_transactions((low, boundary, high, perfect, unscored))
-    with open_test_profile_session(_PROFILE_ID):
-        # The engine refuses to materialise a bucket custody never published,
-        # so the capsule is registered before any repository is constructed.
-        register_minimal_profile(profile_id=_PROFILE_ID, overrides={"identity.tax_id": "00000000T"})
-        TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
+    ports = draft_review_ports(transactions=catalogue)
     ids = {
         "low": low.transaction_id,
         "boundary": boundary.transaction_id,
@@ -96,20 +91,17 @@ def _seed(tmp_path: Path) -> tuple[Settings, dict[str, str]]:
         "perfect": perfect.transaction_id,
         "unscored": unscored.transaction_id,
     }
-    return settings, ids
+    return settings, ids, ports
 
 
 def test_confidence_below_includes_only_strictly_lower_rows(tmp_path: Path) -> None:
-    settings, ids = _seed(tmp_path)
-    with open_test_profile_session(_PROFILE_ID):
-        # The engine refuses to materialise a bucket custody never published,
-        # so the capsule is registered before any repository is constructed.
-        register_minimal_profile(profile_id=_PROFILE_ID, overrides={"identity.tax_id": "00000000T"})
-        report = project_review_queue(
-            settings=settings,
-            state=ReviewState.ALL,
-            confidence_below=Decimal("0.5"),
-        )
+    settings, ids, ports = _seed(tmp_path)
+    report = project_review_queue(
+        settings=settings,
+        state=ReviewState.ALL,
+        confidence_below=Decimal("0.5"),
+        ports=ports,
+    )
     surfaced = {row.item_id for row in report.rows}
     assert surfaced == {ids["low"]}
     # Boundary value (== threshold) is excluded by the strictly-below predicate.
@@ -121,16 +113,13 @@ def test_confidence_below_includes_only_strictly_lower_rows(tmp_path: Path) -> N
 
 
 def test_confidence_below_one_surfaces_every_scored_row_under_one(tmp_path: Path) -> None:
-    settings, ids = _seed(tmp_path)
-    with open_test_profile_session(_PROFILE_ID):
-        # The engine refuses to materialise a bucket custody never published,
-        # so the capsule is registered before any repository is constructed.
-        register_minimal_profile(profile_id=_PROFILE_ID, overrides={"identity.tax_id": "00000000T"})
-        report = project_review_queue(
-            settings=settings,
-            state=ReviewState.ALL,
-            confidence_below=Decimal("1.0"),
-        )
+    settings, ids, ports = _seed(tmp_path)
+    report = project_review_queue(
+        settings=settings,
+        state=ReviewState.ALL,
+        confidence_below=Decimal("1.0"),
+        ports=ports,
+    )
     surfaced = {row.item_id for row in report.rows}
     assert surfaced == {ids["low"], ids["boundary"], ids["high"]}
     # Exactly 1.00 is not strictly below 1.0; None never matches.
@@ -139,32 +128,26 @@ def test_confidence_below_one_surfaces_every_scored_row_under_one(tmp_path: Path
 
 
 def test_confidence_below_zero_surfaces_nothing(tmp_path: Path) -> None:
-    settings, _ids = _seed(tmp_path)
-    with open_test_profile_session(_PROFILE_ID):
-        # The engine refuses to materialise a bucket custody never published,
-        # so the capsule is registered before any repository is constructed.
-        register_minimal_profile(profile_id=_PROFILE_ID, overrides={"identity.tax_id": "00000000T"})
-        report = project_review_queue(
-            settings=settings,
-            state=ReviewState.ALL,
-            confidence_below=Decimal("0"),
-        )
+    settings, _ids, ports = _seed(tmp_path)
+    report = project_review_queue(
+        settings=settings,
+        state=ReviewState.ALL,
+        confidence_below=Decimal("0"),
+        ports=ports,
+    )
     assert report.rows == ()
 
 
 def test_no_confidence_filter_includes_non_transaction_kinds(tmp_path: Path) -> None:
     """Without the filter the queue is not narrowed to the low-confidence source."""
-    settings, ids = _seed(tmp_path)
-    with open_test_profile_session(_PROFILE_ID):
-        # The engine refuses to materialise a bucket custody never published,
-        # so the capsule is registered before any repository is constructed.
-        register_minimal_profile(profile_id=_PROFILE_ID, overrides={"identity.tax_id": "00000000T"})
-        unfiltered = project_review_queue(settings=settings, state=ReviewState.ALL)
-        filtered = project_review_queue(
-            settings=settings,
-            state=ReviewState.ALL,
-            confidence_below=Decimal("0.5"),
-        )
+    settings, ids, ports = _seed(tmp_path)
+    unfiltered = project_review_queue(settings=settings, state=ReviewState.ALL, ports=ports)
+    filtered = project_review_queue(
+        settings=settings,
+        state=ReviewState.ALL,
+        confidence_below=Decimal("0.5"),
+        ports=ports,
+    )
     # The default queue draws from transactions_pending (classified BUSINESS
     # rows are a final disposition and do not appear there), so the two
     # surfaces are genuinely distinct code paths rather than the same set.

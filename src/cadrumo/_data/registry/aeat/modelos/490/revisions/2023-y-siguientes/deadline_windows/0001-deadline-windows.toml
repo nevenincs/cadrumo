@@ -4,6 +4,94 @@
 # closes the last natural day of the month following the reference quarter (1T
 # closes 30 Apr, 2T 31 Jul, 3T 31 Oct, 4T 31 Jan del año siguiente).
 
+# THE 2023 AND 2024 WINDOWS WERE ADDED 2026-09-12. This revision opens
+# 2023-01-01 and its selector admits every quarter from 2023, but only 2025 and
+# 2026 carried windows, leaving eight quarters inside the supported filing span
+# with no plazo. They follow the same art 3 cadence quoted above, applied to
+# their own years; nothing is inferred from a neighbouring row.
+#
+# Dates are NOMINAL: closes_on is the last natural day of the month, weekend or
+# not, and shift_deadline moves it at read time.
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-490-2023-1t"
+filing_year = 2023
+period = "2023 1T"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-30
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-490-2023-2t"
+filing_year = 2023
+period = "2023 2T"
+period_kind = "quarterly"
+opens_on = 2023-07-01
+closes_on = 2023-07-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-490-2023-3t"
+filing_year = 2023
+period = "2023 3T"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-490-2023-4t"
+filing_year = 2023
+period = "2023 4T"
+period_kind = "quarterly"
+opens_on = 2024-01-01
+closes_on = 2024-01-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-490-2024-1t"
+filing_year = 2024
+period = "2024 1T"
+period_kind = "quarterly"
+opens_on = 2024-04-01
+closes_on = 2024-04-30
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-490-2024-2t"
+filing_year = 2024
+period = "2024 2T"
+period_kind = "quarterly"
+opens_on = 2024-07-01
+closes_on = 2024-07-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-490-2024-3t"
+filing_year = 2024
+period = "2024 3T"
+period_kind = "quarterly"
+opens_on = 2024-10-01
+closes_on = 2024-10-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-490-2024-4t"
+filing_year = 2024
+period = "2024 4T"
+period_kind = "quarterly"
+opens_on = 2025-01-01
+closes_on = 2025-01-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
 [[revisions."2023-y-siguientes".deadline_windows]]
 id = "modelo-490-2025-1t"
 filing_year = 2025

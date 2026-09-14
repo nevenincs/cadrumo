@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02109"
+continuidad_id = "02109"
 number = "02109"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2019"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "02110"
+continuidad_id = "02110"
 number = "02110"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2019"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "02111"
+continuidad_id = "02111"
 number = "02111"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2019"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "02112"
+continuidad_id = "02112"
 number = "02112"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2019"]
 data_type = "money"

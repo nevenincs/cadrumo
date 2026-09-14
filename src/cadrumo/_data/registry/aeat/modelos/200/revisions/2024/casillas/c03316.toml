@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03316"
+continuidad_id = "is-correccion-rentas-transmision-inmovilizado-autoridades-portuarias-permanente-disminucion"
 number = "03316"
 section = ["rentas_procedentes_de_transmision_de_inmovilizado", "disminucion"]
 data_type = "money"

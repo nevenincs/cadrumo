@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00714"
+continuidad_id = "is-deduccion-di-interna-rdleg-detalle"
 number = "00714"
 section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2013"]
 data_type = "money"

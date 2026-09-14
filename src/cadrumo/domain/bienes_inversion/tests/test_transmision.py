@@ -34,8 +34,6 @@ import pytest
 
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ..register import (
-    BienInversionDisposalRegime,
-    BienInversionKind,
     BienInversionValidationError,
     RegularizacionDireccion,
     compute_regularizacion_transmision,
@@ -44,6 +42,7 @@ from ..regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
+from ..vocabulary import BienInversionDisposalRegime, BienInversionKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

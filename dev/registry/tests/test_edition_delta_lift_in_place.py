@@ -32,12 +32,12 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_migration import (
-    MigrationRefusedError,
     PredecessorBasis,
     _chain_materialisation,
     _edition_changes,
@@ -284,7 +284,7 @@ def test_a_lift_that_dropped_a_casilla_member_is_refused(tmp_path: Path) -> None
     assert dropped in text
     fragment.write_text(text.replace(dropped, ""), encoding="utf-8", newline="\n")
 
-    with pytest.raises(MigrationRefusedError) as refusal:
+    with pytest.raises(RegistryError) as refusal:
         _prove(reference_dir, staged_dir)
 
     assert str(refusal.value) == (
@@ -314,7 +314,7 @@ def test_a_lift_that_reordered_a_reference_family_is_refused(tmp_path: Path) -> 
     )
     formulas.write_text(total + cuota, encoding="utf-8", newline="\n")
 
-    with pytest.raises(MigrationRefusedError) as refusal:
+    with pytest.raises(RegistryError) as refusal:
         _prove(reference_dir, staged_dir)
 
     assert str(refusal.value) == (
@@ -337,7 +337,7 @@ def test_a_staged_tree_whose_content_changed_fails_the_byte_identity_proof(tmp_p
     fragment.write_text(text.replace('number = "22"', 'number = "222"'), encoding="utf-8", newline="\n")
     assert _materialised_ids(staged_dir, _SUCCESSOR) == _MATERIALISED_ORDER
 
-    with pytest.raises(MigrationRefusedError) as refusal:
+    with pytest.raises(RegistryError) as refusal:
         _prove(reference_dir, staged_dir)
 
     assert str(refusal.value) == (
@@ -380,7 +380,7 @@ def test_a_value_the_chain_proof_cannot_render_is_refused_by_key_path_and_type(t
 
     planted = dataclasses.replace(source, table={**source.table, "audit_stamp": {"taken_at": datetime.time(9, 0)}})
 
-    with pytest.raises(MigrationRefusedError) as refusal:
+    with pytest.raises(RegistryError) as refusal:
         _chain_materialisation(planted)
 
     assert str(refusal.value) == (

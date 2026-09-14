@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DP200014:01033"
+continuidad_id = "is-liquidacion-iii-reserva-nivelacion-aumentos"
 number = "01033"
 segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]

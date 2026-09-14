@@ -76,6 +76,7 @@ from .diagnostic_models import (
 from .diagnostic_models import (
     ensure_models_rebuilt as _ensure_models_rebuilt,
 )
+from .diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
 from .errors import DiagnosticModelError
 from .operator_actions.models import PreconditionVerdict
 
@@ -187,8 +188,8 @@ def _secure_state_failure_check(
         summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
         # A missing bucket session on a cold start is an
         # expected diagnostic verdict, not a fault to report
-        # verbatim. Surfacing the raw NoActiveBucketSession
-        # exception text leaks internal plumbing; the
+        # verbatim. Surfacing the raw storage-session exception
+        # text leaks internal plumbing; the
         # summary + typed profile verdict already guide the operator.
         detail=None if missing_active_bucket_session else _compact_exception(exc),
         precondition_verdict=(
@@ -205,13 +206,17 @@ def _secure_state_failure_check(
     )
 
 
-def _unreadable_secure_state_repair_checks(exc: Exception) -> list[_DiagnosticCheck]:
+def _unreadable_secure_state_repair_checks(
+    exc: Exception,
+    *,
+    ports: DiagnosticsPorts,
+) -> list[_DiagnosticCheck]:
     """Build the redacted secure-state, profile, and auth fallback rows."""
     from .workflow.profile_health import assess_active_profile_health
 
     _log.debug("config repair secure state probe failed", exc_info=True)
     profile_health = assess_active_profile_health()
-    missing_active_bucket_session = is_missing_active_bucket_session_failure(exc)
+    missing_active_bucket_session = is_missing_active_bucket_session_failure(exc, ports=ports)
     return [
         _secure_state_failure_check(
             exc,
@@ -224,16 +229,19 @@ def _unreadable_secure_state_repair_checks(exc: Exception) -> list[_DiagnosticCh
     ]
 
 
-def _secure_state_repair_checks() -> tuple[list[_DiagnosticCheck], WizardStatusReport | None]:
+def _secure_state_repair_checks(
+    *,
+    ports: DiagnosticsPorts,
+) -> tuple[list[_DiagnosticCheck], WizardStatusReport | None]:
     """Read secure workflow state, falling back to redacted health rows."""
     try:
         checks, setup_report = _readable_secure_state_repair_checks()
     except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
-        return _unreadable_secure_state_repair_checks(exc), None
+        return _unreadable_secure_state_repair_checks(exc, ports=ports), None
     return checks, setup_report
 
 
-def build_config_repair_report() -> _ConfigRepairReport:
+def build_config_repair_report(*, ports: DiagnosticsPorts) -> _ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface.
 
     Returns a :class:`ConfigRepairReport` enumerating every diagnostic
@@ -251,10 +259,10 @@ def build_config_repair_report() -> _ConfigRepairReport:
     """
     _ensure_models_rebuilt()
     checks = _initial_config_repair_checks()
-    secure_state_checks, setup_report = _secure_state_repair_checks()
+    secure_state_checks, setup_report = _secure_state_repair_checks(ports=ports)
     checks.extend(secure_state_checks)
 
-    secure_objects = _probe_secure_objects_integrity()
+    secure_objects = _probe_secure_objects_integrity(ports)
     checks.append(_secure_objects_integrity_check(secure_objects))
 
     return _ConfigRepairReport(
@@ -333,24 +341,20 @@ def _finding_tag(finding: _DiagnosticFinding) -> str:
     return ""
 
 
-def _probe_secure_objects_integrity() -> _SecureObjectIntegrityReport:
+def _probe_secure_objects_integrity(ports: DiagnosticsPorts) -> _SecureObjectIntegrityReport:
     """Iterate every populated secure-objects namespace and aggregate counts.
 
     Returns an empty report when the table is empty or the engine cannot
     be reached. Non-empty results expose per-namespace counts so the
     operator can locate which application surface holds rows from a
     rotated master-key generation.
-    The per-namespace rows come from
-    :meth:`~adapters.persistence.storage.SecureObjectRepository.probe_namespace_integrity`.
+    The per-namespace rows come from the injected secure-object diagnostic
+    repository capability.
     """
     _ensure_models_rebuilt()
-    from ..adapters.persistence.storage.runtime_repository import (
-        secure_object_repository_for_active_bucket_or_default_route,
-    )
-    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
 
     try:
-        repo = secure_object_repository_for_active_bucket_or_default_route()
+        repo = ports.secure_object_repository
         namespaces = repo.list_namespaces()
     except Exception as exc:  # pragma: no cover - engine resolution depends on local backend.
         _log.debug(
@@ -360,7 +364,7 @@ def _probe_secure_objects_integrity() -> _SecureObjectIntegrityReport:
             exc_info=True,
         )
         return _SecureObjectIntegrityReport()
-    integrity_items: list[SecureObjectNamespaceIntegrity] = []
+    integrity_items: list[DiagnosticSecureObjectNamespace] = []
     for ns in namespaces:
         try:
             integrity_items.append(repo.probe_namespace_integrity(ns))
@@ -369,7 +373,7 @@ def _probe_secure_objects_integrity() -> _SecureObjectIntegrityReport:
         except Exception:
             _log.debug("secure objects integrity probe failed for namespace=%s", ns, exc_info=True)
             integrity_items.append(
-                SecureObjectNamespaceIntegrity(
+                DiagnosticSecureObjectNamespace(
                     namespace=ns,
                     readable=0,
                     unreadable=1,
@@ -768,7 +772,11 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
     )
 
 
-def is_missing_active_bucket_session_failure(exc: BaseException) -> bool:
+def is_missing_active_bucket_session_failure(
+    exc: BaseException,
+    *,
+    ports: DiagnosticsPorts,
+) -> bool:
     """Classify a secure-state probe failure as a missing active bucket session.
 
     This verdict decides whether ``secure_state.load`` warns (an expected cold
@@ -792,8 +800,6 @@ def is_missing_active_bucket_session_failure(exc: BaseException) -> bool:
     whenever a ``__cause__`` was present. Identity marking keeps a self- or
     mutually-referential chain from looping.
     """
-    from ..adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
-
     seen: set[int] = set()
     pending: list[BaseException] = [exc]
     while pending:
@@ -801,7 +807,7 @@ def is_missing_active_bucket_session_failure(exc: BaseException) -> bool:
         if id(current) in seen:
             continue
         seen.add(id(current))
-        if isinstance(current, NoActiveBucketSessionError):
+        if ports.session_failure_classifier(current):
             return True
         pending.extend(link for link in (current.__cause__, current.__context__) if link is not None)
     return False
@@ -828,7 +834,7 @@ def render_cli_version_text(report: _CliVersionReport) -> str:
     return f"{report.package_name} {report.package_version}"
 
 
-def secure_object_unreadable_total() -> int:
+def secure_object_unreadable_total(*, ports: DiagnosticsPorts) -> int:
     """Return the count of rows the current master key cannot decrypt.
 
     Lightweight wrapper over :func:`_probe_secure_objects_integrity` for
@@ -838,10 +844,10 @@ def secure_object_unreadable_total() -> int:
     themselves. The full breakdown remains the authority of
     :class:`ConfigRepairReport`.
     """
-    return _probe_secure_objects_integrity().unreadable_total
+    return _probe_secure_objects_integrity(ports).unreadable_total
 
 
-def preview_quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
+def preview_quarantine_unreadable_secure_objects(*, ports: DiagnosticsPorts) -> _SecureObjectIntegrityReport:
     """Report the rows ``repair quarantine`` would move, mutating nothing.
 
     Backs the ``aeat config repair quarantine --dry-run`` preview. Runs
@@ -855,15 +861,14 @@ def preview_quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityRepo
     operator can confirm the blast radius before committing - the same
     preview shape ``reset-progress --dry-run`` already offers.
     """
-    return _probe_secure_objects_integrity()
+    return _probe_secure_objects_integrity(ports)
 
 
-def quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
+def quarantine_unreadable_secure_objects(*, ports: DiagnosticsPorts) -> _SecureObjectIntegrityReport:
     """Move every undecryptable secure-object row into the quarantine table.
 
-    Delegates to
-    :meth:`~adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`,
-    which creates the ``secure_objects_quarantine`` archive table on first use,
+    Delegates to the injected secure-object diagnostic repository, whose
+    storage implementation creates the quarantine archive table on first use,
     copies each undecryptable row's metadata and (still encrypted) payload into
     the archive, then deletes the row from the active ``secure_objects`` table.
     Decryptable rows are not touched.
@@ -880,12 +885,8 @@ def quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
         in ``secure_objects``).
     """
     _ensure_models_rebuilt()
-    from ..adapters.persistence.storage.runtime_repository import (
-        secure_object_repository_for_active_bucket_or_default_route,
-    )
 
-    repo = secure_object_repository_for_active_bucket_or_default_route()
-    namespaces = repo.quarantine_unreadable_rows()
+    namespaces = ports.secure_object_repository.quarantine_unreadable_rows()
     quarantined_total = sum(item.unreadable for item in namespaces)
     retained_total = sum(item.readable for item in namespaces)
     return _SecureObjectIntegrityReport(

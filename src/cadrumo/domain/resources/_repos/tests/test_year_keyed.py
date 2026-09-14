@@ -45,7 +45,9 @@ def test_iva_catalogue_loads_real_year() -> None:
     catalogue_again = repo.get(2025)
 
     assert catalogue is not None
-    assert catalogue is catalogue_again
+    assert catalogue == catalogue_again
+    assert catalogue is not catalogue_again
+    assert not hasattr(repo, "_cache")
 
 
 def test_iva_catalogue_unknown_year_raises_resource_not_found() -> None:

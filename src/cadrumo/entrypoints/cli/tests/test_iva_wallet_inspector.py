@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from ....tests.cli_envelope import require_schema_envelope
 from ._iva_wallet_inspector_support import _state
@@ -33,7 +33,7 @@ def test_balance_totals_remaining_after_fifo_applications(
     repo.save_period(_state(filing_year=2024, period="2T", applied=Decimal("300.00")))
     repo.save_period(_state(filing_year=2025, period="1T", applied=Decimal("500.00")))
 
-    report = query_iva_wallet_balance(as_of_year=2028)
+    report = query_iva_wallet_balance(as_of_year=2028, repository=IvaCompensationHistoryRepository())
 
     assert report.total_balance == Decimal("400.00")
     assert report.active_balance == Decimal("400.00")
@@ -53,7 +53,7 @@ def test_balance_splits_active_and_expired_lots(
     repo.save_period(_state(filing_year=2020, period="4T", generated=Decimal("100.00")))
     repo.save_period(_state(filing_year=2023, period="2T", generated=Decimal("200.00")))
 
-    report = query_iva_wallet_balance(as_of_year=2026)
+    report = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
 
     # 2020 lot is EXPIRED_REVIEW_REQUIRED (age=6), excluded from next_expiry_year
     # 2023 lot is ACTIVE (age=3), next_expiry_year = 2023 + 4 = 2027
@@ -71,7 +71,7 @@ def test_next_expiry_year_none_when_no_active_lots_with_balance(
     repo = IvaCompensationHistoryRepository()
     repo.save_period(_state(filing_year=2019, period="4T", generated=Decimal("100.00")))
 
-    report = query_iva_wallet_balance(as_of_year=2026)
+    report = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
 
     # age=7, EXPIRED_REVIEW_REQUIRED — not ACTIVE
     assert report.next_expiry_year is None
@@ -83,7 +83,7 @@ def test_next_expiry_year_none_when_no_active_lots_with_balance(
 def test_empty_history_returns_zero_balance(
     _runtime_profile: None,
 ) -> None:
-    report = query_iva_wallet_balance(as_of_year=2026)
+    report = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
 
     assert report.total_balance == Decimal("0")
     assert report.active_balance == Decimal("0")

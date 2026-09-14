@@ -36,13 +36,14 @@ from click.shell_completion import get_completion_class
 from click.testing import CliRunner
 from typer.main import get_command
 import cadrumo
-from cadrumo.entrypoints import cli
+import cadrumo.entrypoints.cli.main as cli_main
 from cadrumo.entrypoints.cli.command_schema import command_schema_refs, command_schema_types
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 from cadrumo.entrypoints.cli.command_spec import SchemaState
 
+app = cli_main.app
 nodes = COMMAND_GRAPH.nodes()
 specs = {node.spec.key: node.spec for node in nodes}
 expected_results = {
@@ -53,7 +54,7 @@ expected_results = {
 schemas = command_schema_refs()
 inputs = build_verb_input_schemas(tuple(sorted(expected_results)))
 schema_types = command_schema_types()
-help_result = CliRunner().invoke(get_command(cli.app), ["--help"])
+help_result = CliRunner().invoke(get_command(app), ["--help"])
 # Completion is rendered for a NAMED shell rather than through
 # `--show-completion`. That flag takes no shell argument: it detects the
 # calling shell from the process tree, so the "bash" passed beside it was
@@ -64,7 +65,7 @@ help_result = CliRunner().invoke(get_command(cli.app), ["--help"])
 # public generator takes the shell explicitly and builds against the real
 # command, which also makes this prove the tree is traversable.
 completion_command = get_completion_class("bash")(
-    get_command(cli.app), {}, "aeat", "_AEAT_COMPLETE"
+    get_command(app), {}, "aeat", "_AEAT_COMPLETE"
 )
 completion_source = completion_command.source()
 payload = {
@@ -86,7 +87,7 @@ payload = {
     "dev_imports": sorted(name for name in sys.modules if name == "dev" or name.startswith("dev.")),
     "origins": [
         str(Path(cadrumo.__file__).resolve()),
-        str(Path(cli.__file__).resolve()),
+        str(Path(cli_main.__file__).resolve()),
     ],
 }
 print(json.dumps(payload, sort_keys=True))

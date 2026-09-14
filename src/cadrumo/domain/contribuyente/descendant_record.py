@@ -8,10 +8,15 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
+from ...core.descendant_relacion import DescendantRelacion
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.text_bounds import CalendarMonth, is_calendar_month, is_canonical_month_set
 from ...core.time.clock import today_madrid
+from ..calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_adoption_token,
+    descendant_relacion_default_token,
+    descendant_relacion_entitling_tokens,
+)
 from .errors import ProfileValidationError
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
@@ -27,7 +32,7 @@ class DescendantRecordFields(BaseModel):
     model_config = _STRICT_FROZEN
 
     birth_date: date
-    relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE
+    relacion: DescendantRelacion = Field(default_factory=descendant_relacion_default_token)
     inscripcion_registro_civil_date: date | None = None
     acogimiento_resolucion_date: date | None = None
     death_date: date | None = None
@@ -60,7 +65,7 @@ class DescendantRecordBase(DescendantRecordFields):
     relacion
         The legal relationship linking this descendant to the contribuyente
         (:class:`~cadrumo.core.DescendantRelacion`). Defaults to
-        :attr:`~cadrumo.core.DescendantRelacion.DESCENDIENTE`, so an absent
+        the registry-declared ordinary-descendant token, so an absent
         fact means an ordinary descendant. Art. 58.1 assimilates tutela and
         acogimiento for the tranches while Art. 58.2 names only "adopción o
         acogimiento, tanto preadoptivo como permanente" for the increase, so
@@ -71,7 +76,7 @@ class DescendantRecordBase(DescendantRecordFields):
         required — the date of the resolución judicial o administrativa. One
         anchor with two legal sources, not two meanings, which is why it is one
         field. Permitted only on an
-        :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` record.
+        registry-declared adoption record.
 
         The date is the INSCRIPTION in the Registro Civil, which is what Art.
         58.2 counts from — not the adoption's *finalisation*. The two can fall
@@ -269,7 +274,7 @@ class DescendantRecordBase(DescendantRecordFields):
         A Registro Civil inscription date is the adoption anchor and nothing
         else carries it, so a record supplying one while saying nothing about
         the relación has already stated it — resolving that to
-        :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` is a reading of the
+        the registry-declared adoption token is a reading of the
         same information, not an inference about a case the operator left open.
 
         Deliberately NOT symmetric with the acogimiento date. That date is
@@ -299,7 +304,7 @@ class DescendantRecordBase(DescendantRecordFields):
         if raw.get("relacion") is not None:
             return raw
         if raw.get("inscripcion_registro_civil_date") is not None:
-            return {**raw, "relacion": DescendantRelacion.ADOPTADO}
+            return {**raw, "relacion": descendant_relacion_adoption_token()}
         return {key: value for key, value in raw.items() if key != "relacion"}
 
     @model_validator(mode="after")
@@ -461,15 +466,17 @@ class DescendantRecordBase(DescendantRecordFields):
 
     def _refuse_incoherent_entry_dates(self) -> None:
         """Refuse an entry-event date the declared relación cannot carry."""
-        if self.inscripcion_registro_civil_date is not None and self.relacion is not DescendantRelacion.ADOPTADO:
+        adoption = descendant_relacion_adoption_token()
+        entitling = descendant_relacion_entitling_tokens()
+        if self.inscripcion_registro_civil_date is not None and self.relacion != adoption:
             raise ProfileValidationError(
                 f"inscripcion_registro_civil_date is the Art. 58.2 anchor for an adoption and cannot be "
                 f"carried by relacion={self.relacion.value!r}. Set relacion="
-                f"{DescendantRelacion.ADOPTADO.value!r}, or record the placement date as "
+                f"{adoption.value!r}, or record the placement date as "
                 f"acogimiento_resolucion_date if this is an acogimiento.",
             )
-        if self.acogimiento_resolucion_date is not None and self.relacion not in ART_58_2_ENTITLING_RELACIONES:
-            entitling = ", ".join(sorted(member.value for member in ART_58_2_ENTITLING_RELACIONES))
+        if self.acogimiento_resolucion_date is not None and self.relacion not in entitling:
+            entitling = ", ".join(sorted(member.value for member in entitling))
             raise ProfileValidationError(
                 f"acogimiento_resolucion_date is the first ENTITLING acogimiento resolución (Art. 58.2 "
                 f"names acogimiento 'tanto preadoptivo como permanente') and cannot be carried by "
@@ -534,7 +541,7 @@ class DescendantRecordBase(DescendantRecordFields):
 
         Reading the inscription field alone is sufficient rather than lucky:
         :meth:`_refuse_incoherent_entry_dates` guarantees it is populated only
-        on an :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` record, so a
+        on a registry-declared adoption record, so a
         present value is always an adoption. Absent, the birth is the event.
         """
         return (
@@ -558,7 +565,7 @@ class DescendantRecordBase(DescendantRecordFields):
         (tutela, temporal acogimiento, an ordinary descendant) and for an
         entitling relación whose date is not yet recorded.
         """
-        if self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+        if self.relacion not in descendant_relacion_entitling_tokens():
             return None
         candidates = [
             value

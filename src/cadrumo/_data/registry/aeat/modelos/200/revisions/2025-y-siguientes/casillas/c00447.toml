@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00447"
+continuidad_id = "is-pagos-fraccionados"
+continuidad_origin = "seeded"
 number = "00447"
 section = ["tributacion_conjunta_estado_y_adm_forales", "pagos_fraccionados_2"]
 data_type = "money"

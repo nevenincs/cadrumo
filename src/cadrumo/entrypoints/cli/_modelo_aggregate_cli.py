@@ -16,8 +16,14 @@ from ...application.aggregation.invoice_retencion import (
     route_invoice_retenciones,
 )
 from ...application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-from ...application.aggregation.percepciones_observations_repository import persist_percepcion_observations
-from ...application.aggregation.retencion_observations_repository import persist_retencion_observations
+from ...application.aggregation.percepciones_observations_repository import (
+    PercepcionObservationPorts,
+    persist_percepcion_observations,
+)
+from ...application.aggregation.retencion_observations_repository import (
+    RetencionObservationPorts,
+    persist_retencion_observations,
+)
 from ...application.aggregation.retenciones import RetencionObservation
 from ...application.aggregation.service import (
     PerModeloAggregationCommand,
@@ -35,7 +41,8 @@ from ...domain.calculations.registry.withholding_bindings import (
 )
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_payloads import ModeloAggregateResult
-from .common import emit_envelope, load_invoices
+from .common import active_bucket_id_or_refuse, emit_envelope, load_invoices
+from .state_projection_support import percepcion_observation_ports_factory, retencion_observation_ports_factory
 
 
 def _route_invoice_retenciones_into_command(
@@ -59,17 +66,31 @@ def _route_invoice_retenciones_into_command(
     return (merged, routing.excluded)
 
 
-def _persist_cli_owned_observations(command: PerModeloAggregationCommand) -> None:
+def _persist_cli_owned_observations(
+    command: PerModeloAggregationCommand,
+    *,
+    ports: PercepcionObservationPorts,
+) -> None:
     """Write the observation sets this entrypoint owns before the pure aggregation runs."""
     if command.modelo == Modelo("190").value:
         persist_percepcion_observations(
+            ports=ports,
             modelo=command.modelo,
             filing_year=command.period.filing_year,
             period=command.period,
             observations=command.withholding_observations,
         )
+
+
+def _persist_retencion_observations(
+    command: PerModeloAggregationCommand,
+    *,
+    ports: RetencionObservationPorts,
+) -> None:
+    """Persist retención rows through the explicitly composed application port."""
     if RetencionesAggregationSourceResolver.supports_modelo(command.modelo):
         persist_retencion_observations(
+            ports=ports,
             modelo=command.modelo,
             filing_year=command.period.filing_year,
             period=command.period,
@@ -191,7 +212,18 @@ def aggregate_modelo(
         received_invoice_retencion, model=InvoiceRetencionRouteRequest, flag="--received-invoice-retencion"
     )
     command, excluded_invoice_retencions = _route_invoice_retenciones_into_command(command, invoice_retencion_requests)
-    _persist_cli_owned_observations(command)
+    if command.modelo == Modelo("190").value:
+        bucket_id = active_bucket_id_or_refuse()
+        _persist_cli_owned_observations(
+            command,
+            ports=percepcion_observation_ports_factory(ctx)(bucket_id=bucket_id),
+        )
+    if RetencionesAggregationSourceResolver.supports_modelo(command.modelo):
+        bucket_id = active_bucket_id_or_refuse()
+        _persist_retencion_observations(
+            command,
+            ports=retencion_observation_ports_factory(ctx)(bucket_id=bucket_id),
+        )
     result = aggregate_per_modelo(command)
     clave_breakdown = _clave_breakdown(command)
     aggregate_result = ModeloAggregateResult.from_aggregation_result(result, clave_breakdown=clave_breakdown)

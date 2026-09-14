@@ -1,0 +1,224 @@
+[fact]
+fact_id = "modelo-payer-applicability-facts"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-payer-applicability-facts:2011-01-01"
+date_axis = "filing_period"
+valid_from = 2011-01-01
+valid_to = 2012-12-31
+legal_refs = [
+  "rd-1065-2007:art-31",
+  "orden-eha-3012-2008:art-1",
+  "orden-eha-3012-2008:art-10",
+  "ley-58-2003:art-93",
+  "ley-35-2006:art-25",
+  "ley-35-2006:art-99",
+  "orden-eha-3377-2011:art-1",
+  "rd-439-2007:art-108",
+  "rd-439-2007:art-90",
+  "ley-35-2006:art-101",
+]
+source_refs = [
+  "aeat-modelo-347-procedure",
+  "aeat-modelo-193-procedure",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "payer_fact.order", value = "exceeds_third_party_threshold,pays_capital_income_with_retencion" },
+  { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
+  { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
+  { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
+  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.pays_capital_income_with_retencion.value", value = "pays_capital_income_with_retencion" },
+  { key = "payer_fact.pays_capital_income_with_retencion.profile_key", value = "pays_capital_income_with_retencion" },
+  { key = "payer_fact.pays_capital_income_with_retencion.label", value = "paga rendimientos del capital mobiliario sujetos a retención" },
+  { key = "payer_fact.pays_capital_income_with_retencion.legal_refs", value = "ley-35-2006:art-25|ley-35-2006:art-99|orden-eha-3377-2011:art-1|rd-439-2007:art-108|rd-439-2007:art-90|ley-35-2006:art-101|ley-58-2003:art-93" },
+]
+
+# Each source is the AEAT procedure page for the modelo whose obligation one payer fact
+# names, and each citation quotes that page's own subject line -- the only part of these pages
+# that states what they are about. What is NOT claimed: the THRESHOLDS. The 347 umbral, the 720
+# and 721 limits and the retencion rates are grounded in the legal_refs above, not in these
+# pages. Mentions of these concepts elsewhere on the pages are entries in the site's navigation
+# list of other modelos and would prove nothing.
+
+# aeat-modelo-193-procedure -> payer fact pays_capital_income_with_retencion
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = [
+    "Retenciones e ingresos a cuenta del IRPF sobre determinados rendimientos del capital mobiliario",
+]
+
+# aeat-modelo-347-procedure -> payer fact exceeds_third_party_threshold
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = [
+    "Declaración anual de operaciones con terceras personas",
+]
+
+[[fact.variants]]
+variant_id = "modelo-payer-applicability-facts:2013-01-01"
+date_axis = "filing_period"
+valid_from = 2013-01-01
+valid_to = 2022-12-31
+legal_refs = [
+  "rd-1065-2007:art-31",
+  "orden-eha-3012-2008:art-1",
+  "orden-eha-3012-2008:art-10",
+  "ley-58-2003:art-93",
+  "ley-7-2012:da-1",
+  "orden-hap-72-2013:art-1",
+  "ley-35-2006:art-25",
+  "ley-35-2006:art-99",
+  "orden-eha-3377-2011:art-1",
+  "rd-439-2007:art-108",
+  "rd-439-2007:art-90",
+  "ley-35-2006:art-101",
+]
+source_refs = [
+  "aeat-modelo-347-procedure",
+  "aeat-modelo-720-procedure",
+  "aeat-modelo-193-procedure",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,pays_capital_income_with_retencion" },
+  { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
+  { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
+  { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
+  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.value", value = "bienes_extranjero_above_threshold" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.profile_key", value = "bienes_extranjero_above_threshold" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.label", value = "posee bienes o derechos en el extranjero por encima del umbral" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.legal_refs", value = "ley-7-2012:da-1|orden-hap-72-2013:art-1" },
+  { key = "payer_fact.pays_capital_income_with_retencion.value", value = "pays_capital_income_with_retencion" },
+  { key = "payer_fact.pays_capital_income_with_retencion.profile_key", value = "pays_capital_income_with_retencion" },
+  { key = "payer_fact.pays_capital_income_with_retencion.label", value = "paga rendimientos del capital mobiliario sujetos a retención" },
+  { key = "payer_fact.pays_capital_income_with_retencion.legal_refs", value = "ley-35-2006:art-25|ley-35-2006:art-99|orden-eha-3377-2011:art-1|rd-439-2007:art-108|rd-439-2007:art-90|ley-35-2006:art-101|ley-58-2003:art-93" },
+]
+
+# Each source is the AEAT procedure page for the modelo whose obligation one payer fact
+# names, and each citation quotes that page's own subject line -- the only part of these pages
+# that states what they are about. What is NOT claimed: the THRESHOLDS. The 347 umbral, the 720
+# and 721 limits and the retencion rates are grounded in the legal_refs above, not in these
+# pages. Mentions of these concepts elsewhere on the pages are entries in the site's navigation
+# list of other modelos and would prove nothing.
+
+# aeat-modelo-193-procedure -> payer fact pays_capital_income_with_retencion
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = [
+    "Retenciones e ingresos a cuenta del IRPF sobre determinados rendimientos del capital mobiliario",
+]
+
+# aeat-modelo-347-procedure -> payer fact exceeds_third_party_threshold
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = [
+    "Declaración anual de operaciones con terceras personas",
+]
+
+# aeat-modelo-720-procedure -> payer fact bienes_extranjero_above_threshold
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = [
+    "Declaración sobre bienes y derechos situados en el extranjero",
+]
+
+[[fact.variants]]
+variant_id = "modelo-payer-applicability-facts:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+legal_refs = [
+  "rd-1065-2007:art-31",
+  "orden-eha-3012-2008:art-1",
+  "orden-eha-3012-2008:art-10",
+  "ley-58-2003:art-93",
+  "ley-7-2012:da-1",
+  "orden-hap-72-2013:art-1",
+  "ley-58-2003:da-18",
+  "rd-1065-2007:art-42-quater",
+  "orden-hfp-886-2023:art-1",
+  "orden-hfp-886-2023:art-2",
+  "orden-hfp-886-2023:art-3",
+  "ley-35-2006:art-25",
+  "ley-35-2006:art-99",
+  "orden-eha-3377-2011:art-1",
+  "rd-439-2007:art-108",
+  "rd-439-2007:art-90",
+  "ley-35-2006:art-101",
+]
+source_refs = [
+  "aeat-modelo-347-procedure",
+  "aeat-modelo-720-procedure",
+  "aeat-modelo-721-procedure",
+  "aeat-modelo-193-procedure",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,monedas_virtuales_extranjero_above_threshold,pays_capital_income_with_retencion" },
+  { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
+  { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
+  { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
+  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.value", value = "bienes_extranjero_above_threshold" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.profile_key", value = "bienes_extranjero_above_threshold" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.label", value = "posee bienes o derechos en el extranjero por encima del umbral" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.legal_refs", value = "ley-7-2012:da-1|orden-hap-72-2013:art-1" },
+  { key = "payer_fact.monedas_virtuales_extranjero_above_threshold.value", value = "monedas_virtuales_extranjero_above_threshold" },
+  { key = "payer_fact.monedas_virtuales_extranjero_above_threshold.profile_key", value = "monedas_virtuales_extranjero_above_threshold" },
+  { key = "payer_fact.monedas_virtuales_extranjero_above_threshold.label", value = "posee monedas virtuales situadas en el extranjero por encima del umbral" },
+  { key = "payer_fact.monedas_virtuales_extranjero_above_threshold.legal_refs", value = "ley-58-2003:da-18|rd-1065-2007:art-42-quater|orden-hfp-886-2023:art-1|orden-hfp-886-2023:art-2|orden-hfp-886-2023:art-3" },
+  { key = "payer_fact.pays_capital_income_with_retencion.value", value = "pays_capital_income_with_retencion" },
+  { key = "payer_fact.pays_capital_income_with_retencion.profile_key", value = "pays_capital_income_with_retencion" },
+  { key = "payer_fact.pays_capital_income_with_retencion.label", value = "paga rendimientos del capital mobiliario sujetos a retención" },
+  { key = "payer_fact.pays_capital_income_with_retencion.legal_refs", value = "ley-35-2006:art-25|ley-35-2006:art-99|orden-eha-3377-2011:art-1|rd-439-2007:art-108|rd-439-2007:art-90|ley-35-2006:art-101|ley-58-2003:art-93" },
+]
+
+# Each source is the AEAT procedure page for the modelo whose obligation one payer fact
+# names, and each citation quotes that page's own subject line -- the only part of these pages
+# that states what they are about. What is NOT claimed: the THRESHOLDS. The 347 umbral, the 720
+# and 721 limits and the retencion rates are grounded in the legal_refs above, not in these
+# pages. Mentions of these concepts elsewhere on the pages are entries in the site's navigation
+# list of other modelos and would prove nothing.
+
+# aeat-modelo-193-procedure -> payer fact pays_capital_income_with_retencion
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = [
+    "Retenciones e ingresos a cuenta del IRPF sobre determinados rendimientos del capital mobiliario",
+]
+
+# aeat-modelo-347-procedure -> payer fact exceeds_third_party_threshold
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = [
+    "Declaración anual de operaciones con terceras personas",
+]
+
+# aeat-modelo-720-procedure -> payer fact bienes_extranjero_above_threshold
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = [
+    "Declaración sobre bienes y derechos situados en el extranjero",
+]
+
+# aeat-modelo-721-procedure -> payer fact monedas_virtuales_above_threshold
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-721-procedure"
+required_text = [
+    "Declaración informativa sobre monedas virtuales situadas en el extranjero",
+]

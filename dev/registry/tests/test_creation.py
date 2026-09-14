@@ -28,6 +28,7 @@ from cadrumo.application.aggregation.source_mesh import (
 )
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
+from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.core.aggregation import IntracomOperationType, InvoiceDevengoRank
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -249,7 +250,9 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path: Pat
             ),
             repository=repository,
         )
-        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        resolution = InvoiceCatalogueSourceResolver(
+            ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
@@ -298,7 +301,9 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
             ),
             repository=repository,
         ).invoice
-        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        resolution = InvoiceCatalogueSourceResolver(
+            ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
@@ -478,7 +483,9 @@ def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) 
             ),
             repository=repository,
         ).invoice
-        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        resolution = InvoiceCatalogueSourceResolver(
+            ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
@@ -524,7 +531,9 @@ def test_m349_declares_a_coherent_exempt_supply_with_no_diagnostic(tmp_path: Pat
             ),
             repository=repository,
         )
-        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        resolution = InvoiceCatalogueSourceResolver(
+            ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",
@@ -589,7 +598,9 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
             ),
             repository=repository,
         ).invoice
-        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        resolution = InvoiceCatalogueSourceResolver(
+            ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="349",

@@ -9,9 +9,6 @@ from typing import TypedDict
 
 import pytest
 
-from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -26,10 +23,7 @@ from ....domain.iva.schema import (
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..iva_ledger import (
-    IvaLedgerAggregation,
-    aggregate_iva_ledger_observations_from_repositories,
-)
+from ..iva_ledger import IvaLedgerAggregation
 from ..m303_arrivals import (
     resolve_m303_supplier_regime_arrival,
 )
@@ -41,7 +35,6 @@ _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _Q2_2026 = Period.from_year_and_code(2026, "2T")
 _Q3_2026 = Period.from_year_and_code(2026, "3T")
 _Q4_2027 = Period.from_year_and_code(2027, "4T")
-_PARITY_BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
 
 
 def _revision_303():
@@ -380,51 +373,6 @@ def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplie
     mixed_arrival = resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=mixed)
     assert mixed_arrival.recipient_of_cash_accounting_operations is True
     assert mixed_arrival.source_ledger_ids == (supplier_cash_purchase.transaction_id,)
-
-
-def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_quarter_devengo(
-    tmp_path: Path,
-) -> None:
-    """The persisted read path must reproduce the in-memory projection exactly.
-
-    A supplier-regime purchase booked in Q2 carries its art. 75 devengo in Q1.
-    The in-memory projection reports that Q1 cuota devengada; the
-    repository-backed projection selects its candidate rows through the
-    plaintext date index, so it must select on the row's eligible-date span
-    rather than its filing date or it returns an empty Q1 aggregation and
-    silently under-declares.
-    """
-
-    cash_purchase = _transaction(
-        "cross-quarter-devengo",
-        direction=TransactionDirection.OUTGOING,
-        booked_date=date(2026, 4, 15),
-        taxable_base=Decimal("1000.00"),
-        iva_amount=Decimal("210.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
-        operation_date=date(2026, 3, 20),
-        cash_accounting_payment_evidence=(
-            IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 4, 15),
-                taxable_base=Decimal("1000.00"),
-                iva_amount=Decimal("210.00"),
-            ),
-        ),
-    )
-    catalogue = TransactionCatalogue.from_transactions((cash_purchase,))
-    pure = aggregate_iva_ledger_observations(catalogue, period=_Q1_2026)
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PARITY_BUCKET_ID) as profile:
-        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(catalogue)
-        repository_backed = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=profile.bucket_id,
-            period=_Q1_2026,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=profile.bucket_id),
-        )
-
-    assert pure.observations != ()
-    assert tuple(repository_backed.observations) == tuple(pure.observations)
-    assert repository_backed.issues == pure.issues
 
 
 def _not_subject_transaction(

@@ -62,7 +62,7 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit

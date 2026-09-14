@@ -16,9 +16,10 @@ import pytest
 import typer
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationRepository,
+    PercepcionObservationPorts,
     persist_percepcion_observations,
 )
 from ....application.aggregation.service import PerModeloAggregationCommand
@@ -77,14 +78,16 @@ def test_command_carries_withholding_observations() -> None:
 
 def test_persisted_withholding_set_is_readable_by_the_store(tmp_path: Path) -> None:
     """The producer's persist writes the SAME set the resolver's store later reads (one source)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         parsed = _parse_typed_cli_observations([_RAW], model=WithholdingObservation, flag="--withholding-observation")
         period = Period.from_year_and_code(2024, "0A")
+        repository = PercepcionObservationRepositoryAdapter(objects=profile.repository)
         persist_percepcion_observations(
+            ports=PercepcionObservationPorts(repository=repository),
             modelo=Modelo("190").value,
             filing_year=2024,
             period=period,
             observations=parsed,
         )
-        loaded = PercepcionObservationRepository().load_observations(Modelo("190").value, period)
+        loaded = repository.load_observations(Modelo("190").value, period)
         assert set(loaded) == set(parsed)

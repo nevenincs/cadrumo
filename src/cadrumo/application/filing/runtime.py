@@ -30,7 +30,7 @@ See Also:
     :mod:`application.modelo._workflow_gate`
         Calculation-revision workflow gate that uses this runtime provider to
         build and approve filing drafts.
-    :mod:`application.modelo._revision_replay_inputs`
+    :mod:`application.modelo.revision_replay_inputs`
         Converts stored calculation revisions into the flat filing inputs
         accepted by this runtime surface.
 """
@@ -40,7 +40,6 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from functools import lru_cache
 from types import MappingProxyType
 from typing import Protocol
 
@@ -461,10 +460,12 @@ def build_runtime_schema_provider(
             invalid, or no snapshot exists for the requested filing context.
     """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
-    return _build_runtime_schema_provider_cached(
-        filing_year,
-        validated_period,
-        _selected_modelo_tuple(modelos),
+    return _schema_provider_for_authority(
+        bundled_authority(),
+        filing_year=filing_year,
+        period=validated_period,
+        selected_tuple=_selected_modelo_tuple(modelos),
+        registry_root_name="bundled",
     )
 
 
@@ -568,21 +569,6 @@ def _runtime_snapshots_for_modelos(
                 ) from exc
             continue
     return snapshots
-
-
-@lru_cache(maxsize=32)
-def _build_runtime_schema_provider_cached(
-    filing_year: int | None,
-    period: Period | None,
-    selected_tuple: tuple[str, ...] | None,
-) -> RegistrySchemaAccessor:
-    return _schema_provider_for_authority(
-        bundled_authority(),
-        filing_year=filing_year,
-        period=period,
-        selected_tuple=selected_tuple,
-        registry_root_name="bundled",
-    )
 
 
 def _schema_provider_for_authority(

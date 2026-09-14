@@ -73,7 +73,6 @@ from ...application.modelo.amendment_actions import amend_modelo_revision
 from ...application.modelo.calculation_actions import get_calculation_revision
 from ...application.modelo.filing_actions import get_filing_record
 from ...application.modelo.registry_discovery import registry_casillas_for_registry_scope
-from ...core.amendment_kind_regime import permitted_amendment_kind_values
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
@@ -82,6 +81,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
 from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,
@@ -543,7 +543,7 @@ def _value_help_ref(*, row: ModeloCasillaRow, run_token: str, table: dict[str, s
 
 
 def _amendment_kind_page(*, modelo: str, period: Period, run_token: str, table: dict[str, str]) -> FlowPage:
-    permitted = permitted_amendment_kind_values(modelo, period)
+    permitted = permitted_amendment_kind_values_for_period(modelo, period)
     permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted)
     kind_choices = tuple(
         _amendment_kind_choice(kind=kind, run_token=run_token, table=table) for kind in permitted_kinds

@@ -39,6 +39,7 @@ from ._modelo_cli_support import parse_casilla_override, resolve_default_actor
 from ._modelo_m145_parsing import m145_actor_from_cli, m145_create_command_from_cli
 from ._modelo_m145_rendering import emit_m145_export_result, emit_m145_record_result, emit_m145_validation_result
 from .common import active_bucket_id_or_refuse
+from .state_projection_support import m145_communication_records_ports_factory
 
 __all__ = ["m145_create", "m145_export", "m145_mark_delivered_to_payer", "m145_mark_locally_completed", "m145_validate"]
 
@@ -53,27 +54,38 @@ def m145_create(
 ) -> None:
     """Create a bucket-scoped Modelo 145 local communication record."""
     bucket_id = active_bucket_id_or_refuse()
+    ports = m145_communication_records_ports_factory(ctx)(bucket_id=bucket_id)
     command = m145_create_command_from_cli(
         year=year, period=period, casilla_specs=casilla, note=note, parse_casilla_override=parse_casilla_override
     )
     record = create_m145_communication_record(
-        command, bucket_id=bucket_id, actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor)
+        command,
+        bucket_id=bucket_id,
+        ports=ports,
+        actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
     )
     emit_m145_record_result(ctx, operation="modelo.m145.create", record=record)
 
 
 def m145_validate(ctx: typer.Context, communication_record_id: str) -> None:
     """Validate a persisted Modelo 145 local communication record."""
-    result = validate_m145_communication_record(communication_record_id, bucket_id=active_bucket_id_or_refuse())
+    bucket_id = active_bucket_id_or_refuse()
+    result = validate_m145_communication_record(
+        communication_record_id,
+        bucket_id=bucket_id,
+        ports=m145_communication_records_ports_factory(ctx)(bucket_id=bucket_id),
+    )
     emit_m145_validation_result(ctx, result=result)
 
 
 def m145_export(ctx: typer.Context, communication_record_id: str, actor: str | None = None) -> None:
     """Export a persisted Modelo 145 local communication record."""
+    bucket_id = active_bucket_id_or_refuse()
     result = export_m145_communication_record(
         communication_record_id,
-        bucket_id=active_bucket_id_or_refuse(),
+        bucket_id=bucket_id,
         renderer=RegistryFixedWidthRecordRenderer(),
+        ports=m145_communication_records_ports_factory(ctx)(bucket_id=bucket_id),
         actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
     )
     emit_m145_export_result(ctx, result=result)
@@ -81,9 +93,11 @@ def m145_export(ctx: typer.Context, communication_record_id: str, actor: str | N
 
 def m145_mark_delivered_to_payer(ctx: typer.Context, communication_record_id: str, actor: str | None = None) -> None:
     """Mark a Modelo 145 local communication record delivered to the payer."""
+    bucket_id = active_bucket_id_or_refuse()
     record = mark_m145_communication_record_delivered_to_payer(
         communication_record_id,
-        bucket_id=active_bucket_id_or_refuse(),
+        bucket_id=bucket_id,
+        ports=m145_communication_records_ports_factory(ctx)(bucket_id=bucket_id),
         actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
     )
     emit_m145_record_result(ctx, operation="modelo.m145.mark_delivered_to_payer", record=record)
@@ -91,9 +105,11 @@ def m145_mark_delivered_to_payer(ctx: typer.Context, communication_record_id: st
 
 def m145_mark_locally_completed(ctx: typer.Context, communication_record_id: str, actor: str | None = None) -> None:
     """Mark a Modelo 145 local communication record locally completed."""
+    bucket_id = active_bucket_id_or_refuse()
     record = mark_m145_communication_record_locally_completed(
         communication_record_id,
-        bucket_id=active_bucket_id_or_refuse(),
+        bucket_id=bucket_id,
+        ports=m145_communication_records_ports_factory(ctx)(bucket_id=bucket_id),
         actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
     )
     emit_m145_record_result(ctx, operation="modelo.m145.mark_locally_completed", record=record)

@@ -20,30 +20,26 @@ resolved rate and fail the test.
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.calculations.registry.authority import bundled_authority
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_fr_dividend_resolves_treaty_ceiling_of_15_percent(tmp_path: Path) -> None:
+def test_fr_dividend_resolves_treaty_ceiling_of_15_percent() -> None:
     """FR-resident dividend: min(domestic 0.19, treaty 0.15) = 0.15 (art 10.2.a)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="FR", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="FR", base="1000.00")
 
     assert tipo == Decimal("0.15")
     assert cuota == Decimal("150.00")  # 1000 × 0.15
 
 
-def test_fr_interest_resolves_treaty_ceiling_of_10_percent(tmp_path: Path) -> None:
+def test_fr_interest_resolves_treaty_ceiling_of_10_percent() -> None:
     """FR-resident interest: min(domestic 0.19, treaty 0.10) = 0.10 (art 11.2)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="interest", country_code="FR", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="interest", country_code="FR", base="1000.00")
 
     assert tipo == Decimal("0.10")
     assert cuota == Decimal("100.00")  # 1000 × 0.10

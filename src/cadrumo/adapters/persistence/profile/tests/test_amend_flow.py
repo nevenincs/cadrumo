@@ -58,9 +58,9 @@ from cadrumo.domain.modelos.filing_record import (    ExternalEvidence,
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 from cadrumo.application.modelo.action_errors import (    AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,

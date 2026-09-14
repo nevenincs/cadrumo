@@ -30,7 +30,7 @@ from ....core.config import load_settings
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
-from ....tests.bucket_layout import provision_bucket_directory
+from ....adapters.persistence.storage.bucket.tests.bucket_layout import provision_bucket_directory
 from ._profile_lifecycle_support import create_profile_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

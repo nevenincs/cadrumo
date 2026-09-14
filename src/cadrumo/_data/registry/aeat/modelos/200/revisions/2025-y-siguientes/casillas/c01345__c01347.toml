@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01345"
+continuidad_id = "01345"
+continuidad_origin = "seeded"
 number = "01345"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01346"
+continuidad_id = "01346"
+continuidad_origin = "seeded"
 number = "01346"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01347"
+continuidad_id = "01347"
+continuidad_origin = "seeded"
 number = "01347"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"

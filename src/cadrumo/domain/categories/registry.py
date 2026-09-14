@@ -26,14 +26,14 @@ from .profile import CategoryProfile
 from .proportionality import (
     CategoryCitation,
     CategoryCitationSource,
-    ProportionalityKind,
     ProportionalityRule,
     StatutoryCapAmount,
-    StatutoryCapPeriod,
     StatutoryCapVariant,
     parse_http_url,
 )
+from .proportionality_catalogue import require_proportionality_kind, require_statutory_cap_period
 from .spending_category import SpendingCategory
+from .spending_category_catalogue import require_spending_category, spending_category_tokens
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import ValidatedRegistryAuthority
@@ -79,7 +79,10 @@ def _resolve_profiles(year: int, *, materialise_schedule: bool) -> Mapping[Spend
 
     authority = bundled_authority()
     profiles: dict[SpendingCategory, CategoryProfile] = {}
-    for category in SpendingCategory:
+    for category in spending_category_tokens(
+        effective_date=date(year, 12, 31),
+        authority=authority,
+    ):
         try:
             fact = authority.resolve_governed_fact(
                 MappingFactQuery(
@@ -129,11 +132,21 @@ def _profile_from_authority_fact(
         )
         index += 1
     category = str(resolved.matched_selectors[0].value)
+    category_token = require_spending_category(
+        category,
+        effective_date=date(year, 12, 31),
+        authority=authority,
+    )
+    projected_kind = require_proportionality_kind(
+        values["proportionality_kind"],
+        effective_date=date(year, 12, 31),
+        authority=authority,
+    )
     variants = _cap_variants_from_entries(values, category=category)
     cap = values.get("statutory_cap_eur")
     schedule: tuple[StatutoryCapAmount, ...] = ()
     if (
-        values.get("proportionality_kind") == ProportionalityKind.STATUTORY_CAP.value
+        projected_kind.is_statutory_cap
         and not variants
         and cap is None
         and "statutory_cap_eur_per_day" not in values
@@ -161,7 +174,7 @@ def _profile_from_authority_fact(
             cap = None
     cap_period = values.get("statutory_cap_period")
     rule = {
-        "kind": ProportionalityKind(str(values["proportionality_kind"])),
+        "kind": projected_kind,
         "notes": tr(str(values["notes"])),
         "citations": tuple(citations),
         "fixed_pct": values.get("fixed_pct"),
@@ -169,7 +182,15 @@ def _profile_from_authority_fact(
         "statutory_multiplier": values.get("statutory_multiplier"),
         "statutory_cap_eur_per_day": values.get("statutory_cap_eur_per_day"),
         "statutory_cap_eur": cap,
-        "statutory_cap_period": None if cap_period is None else StatutoryCapPeriod(str(cap_period)),
+        "statutory_cap_period": (
+            None
+            if cap_period is None
+            else require_statutory_cap_period(
+                cap_period,
+                effective_date=date(year, 12, 31),
+                authority=authority,
+            )
+        ),
         "statutory_cap_variants": variants,
         "statutory_cap_schedule": schedule,
     }
@@ -178,7 +199,7 @@ def _profile_from_authority_fact(
     except ValidationError as exc:
         raise CategoryValidationError(f"category authority carries an invalid rule for {category}: {exc}") from exc
     return CategoryProfile(
-        category=SpendingCategory(category),
+        category=category_token,
         display_label=tr(str(values["display_label"])),
         proportionality=proportionality,
         iva_hint=(

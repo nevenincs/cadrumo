@@ -34,6 +34,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import output_language
@@ -47,7 +48,6 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
-from .work_lifecycle import get_work_unit
 
 _log = get_logger(__name__)
 
@@ -106,7 +106,8 @@ class CalculationResultSummary(BaseModel):
 def calculation_result_summary(
     revision: CalculationRevision,
     *,
-    work_unit_resolver: Callable[[str], WorkUnit] = get_work_unit,
+    work_unit: WorkUnit | None = None,
+    work_unit_resolver: Callable[[str], WorkUnit] | None = None,
 ) -> CalculationResultSummary | None:
     """Return the :class:`CalculationResultSummary` for ``revision``, if available.
 
@@ -129,17 +130,23 @@ def calculation_result_summary(
     """
     require_calculation_revision_coordinates_current(revision)
     casilla_values = revision.casilla_values
+    if work_unit is None:
+        if work_unit_resolver is None:
+            raise TypeError("calculation result summary requires its selected work unit")
+        try:
+            work_unit = work_unit_resolver(str(revision.work_unit_id))
+        except (LookupError, KeyError, AttributeError, CadrumoError) as exc:
+            _log.warning(
+                "modelo result summary: unable to resolve work unit for revision=%s",
+                revision.calculation_revision_id,
+                exc_info=exc,
+            )
+            return None
     try:
-        work_unit = work_unit_resolver(str(revision.work_unit_id))
-    except (LookupError, KeyError, AttributeError, CadrumoError) as exc:
-        _log.warning(
-            "modelo result summary: unable to resolve work unit for revision=%s",
-            revision.calculation_revision_id,
-            exc_info=exc,
+        snapshot = _resolve_registry_snapshot_for_work_unit(
+            work_unit,
+            grade=RegistryAuthorityGrade.CALCULATION,
         )
-        return None
-    try:
-        snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
     except (LookupError, KeyError, AttributeError, CadrumoError) as exc:
         _log.warning(
             "modelo result summary: unable to resolve registry snapshot for work_unit=%s",

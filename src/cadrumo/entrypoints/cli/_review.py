@@ -19,7 +19,7 @@ from ...core.i18n.render import tr
 from ...core.unit_proportion import is_unit_proportion
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 from .common import active_bucket_id_or_refuse, activate_subcommand_output_language, bad, emit_envelope
-from .state_projection_support import calculation_action_ports_factory
+from .state_projection_support import draft_review_ports_factory
 
 
 def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
@@ -96,7 +96,7 @@ def review_queue(
     """List read-only review queue rows."""
     activate_subcommand_output_language(ctx, output_language)
     threshold = _resolve_confidence_threshold(confidence_below)
-    observation_repository = calculation_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse()).observation_repository
+    ports = draft_review_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse())
     try:
         report = project_review_queue(
             kinds=kinds,
@@ -104,7 +104,7 @@ def review_queue(
             state=state,
             modelo=modelo,
             confidence_below=threshold,
-            observation_repository=observation_repository,
+            ports=ports,
         )
     except ReviewError as exc:
         raise bad(resolve_error_message(exc)) from exc
@@ -127,9 +127,9 @@ def review_view(
 ) -> None:
     """View one read-only review queue item."""
     activate_subcommand_output_language(ctx, output_language)
-    observation_repository = calculation_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse()).observation_repository
+    ports = draft_review_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse())
     try:
-        row = project_review_item(item_id, observation_repository=observation_repository)
+        row = project_review_item(item_id, ports=ports)
     except ReviewError as exc:
         raise bad(resolve_error_message(exc)) from exc
     typed_result = ReviewViewResult(row=_row_to_payload(row))

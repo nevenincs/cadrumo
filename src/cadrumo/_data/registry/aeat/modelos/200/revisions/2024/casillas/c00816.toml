@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00816"
+continuidad_id = "00816"
 number = "00816"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"

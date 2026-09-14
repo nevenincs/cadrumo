@@ -1,0 +1,173 @@
+# Monthly IVA liquidation windows for exercise 2022, read from AEAT's published
+# taxpayer calendars. This edition declared only the four quarterly rows, so
+# REDEME enrolees and large companies filing monthly under RIVA art. 71 had no
+# deadline window for any month of 2022.
+#
+# EXACT PUBLISHED DATES, NOT NOMINAL ONES. This follows the convention the 2023
+# sibling states in its own header -- "Exact presentation and direct-debit dates
+# come from AEAT's published 2023 taxpayer calendar" -- so that 303's editions
+# stay comparable with each other. Several of these are dates AEAT already moved:
+# month 03 closes 2 May (30 April was a Saturday), month 06 closes 1 August
+# (30 July, Saturday), month 09 closes 31 October (30 October, Sunday). Reading
+# a shift AEAT published is not the same as computing one: shift_deadline leaves
+# a date that is already a business day untouched, so these resolve identically
+# either way.
+#
+# EVERY DATE IS READ, NONE DERIVED FROM 2023. The dates genuinely differ year to
+# year, so a row cloned forward would validate and be wrong. Presentation dates
+# come from each month's own "Hasta el ..." heading in the 2022 calendar;
+# direct-debit dates from its domiciliación table (page 39), whose monthly 303
+# rule is "1 al 25 de cada mes" with explicit exceptions for Enero (23 Feb),
+# Marzo (27 Apr), Junio (27 Jul) and Septiembre (26 Oct) -- exactly the four
+# months whose presentation dates are also exceptions.
+#
+# MONTH 12 COMES FROM THE 2023 CALENDAR, which prints "Diciembre 2022.
+# Autoliquidación: 303" under "Hasta el 30 de enero". Same treatment the 4T row
+# on this edition already uses, and for the same reason: the window falls in the
+# following January.
+#
+# MONTH 11 CARRIES NO payment_cutoff_on, and that absence is deliberate. The
+# 2022 calendar does not list December among the domiciliación exceptions, so
+# its literal rule yields 25 December 2022 -- Christmas Day, a Sunday, which the
+# source cannot mean. The 2023 sibling's equivalent row shows AEAT moving that
+# date (2023-12-26), but the 2022 calendar publishes no December domiciliación
+# coordinate anywhere, so there is nothing to read. One named absence is better
+# than one guessed date.
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-01-mensual"
+filing_year = 2022
+period = "2022 01"
+period_kind = "monthly"
+opens_on = 2022-02-01
+closes_on = 2022-02-28
+payment_cutoff_on = 2022-02-23
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-02-mensual"
+filing_year = 2022
+period = "2022 02"
+period_kind = "monthly"
+opens_on = 2022-03-01
+closes_on = 2022-03-30
+payment_cutoff_on = 2022-03-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-03-mensual"
+filing_year = 2022
+period = "2022 03"
+period_kind = "monthly"
+opens_on = 2022-04-01
+closes_on = 2022-05-02
+payment_cutoff_on = 2022-04-27
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-04-mensual"
+filing_year = 2022
+period = "2022 04"
+period_kind = "monthly"
+opens_on = 2022-05-01
+closes_on = 2022-05-30
+payment_cutoff_on = 2022-05-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-05-mensual"
+filing_year = 2022
+period = "2022 05"
+period_kind = "monthly"
+opens_on = 2022-06-01
+closes_on = 2022-06-30
+payment_cutoff_on = 2022-06-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-06-mensual"
+filing_year = 2022
+period = "2022 06"
+period_kind = "monthly"
+opens_on = 2022-07-01
+closes_on = 2022-08-01
+payment_cutoff_on = 2022-07-27
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-07-mensual"
+filing_year = 2022
+period = "2022 07"
+period_kind = "monthly"
+opens_on = 2022-08-01
+closes_on = 2022-08-30
+payment_cutoff_on = 2022-08-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-08-mensual"
+filing_year = 2022
+period = "2022 08"
+period_kind = "monthly"
+opens_on = 2022-09-01
+closes_on = 2022-09-30
+payment_cutoff_on = 2022-09-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-09-mensual"
+filing_year = 2022
+period = "2022 09"
+period_kind = "monthly"
+opens_on = 2022-10-01
+closes_on = 2022-10-31
+payment_cutoff_on = 2022-10-26
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-10-mensual"
+filing_year = 2022
+period = "2022 10"
+period_kind = "monthly"
+opens_on = 2022-11-01
+closes_on = 2022-11-30
+payment_cutoff_on = 2022-11-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+# NO payment_cutoff_on ON THIS ROW, AND THAT IS AUTHORED RATHER THAN MISSING.
+# The 2022 calendar does not list December among its domiciliacion exceptions,
+# so the literal rule ("1 al 25 de cada mes") yields 25 December 2022 -- Christmas
+# Day, a Sunday. The calendar publishes no December domiciliacion coordinate
+# anywhere to read instead. The 2023 sibling shows AEAT moving the equivalent
+# date (2023-12-26), but inferring 2022 from that is deriving, not reading.
+# A sweep for null cutoffs will land here: this is the one it should skip.
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-11-mensual"
+filing_year = 2022
+period = "2022 11"
+period_kind = "monthly"
+opens_on = 2022-12-01
+closes_on = 2022-12-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-303-2022-12-mensual"
+filing_year = 2022
+period = "2022 12"
+period_kind = "monthly"
+opens_on = 2023-01-01
+closes_on = 2023-01-30
+payment_cutoff_on = 2023-01-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]

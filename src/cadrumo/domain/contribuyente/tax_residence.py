@@ -14,20 +14,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.text_fold import fold_diacritics as _fold_diacritics
+from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+from ..calculations.registry.errors import RegistryValidationError
 from .ccaa import CCAA
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
 from .errors import ForalRegimeError, TaxResidenceProfileError
-
-_FORAL_ALIASES = frozenset(
-    {
-        "pais-vasco",
-        "país-vasco",
-        "pais_vasco",
-        "país_vasco",
-        "euskadi",
-        "navarra",
-    },
-)
 
 
 class ResidenceChange(BaseModel, frozen=True, strict=True):
@@ -92,14 +83,15 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
 
 def parse_tax_region(raw: str) -> CCAA:
-    """Parse a CLI/user tax-region token into the closed :class:`CCAA` enum."""
+    """Parse a CLI/user tax-region token through the dated CCAA catalogue."""
     normalized = _normalize_region_token(raw)
-    if normalized in _FORAL_ALIASES:
+    catalogue = resolve_ccaa_catalogue()
+    if catalogue.is_foral_alias(normalized):
         raise ForalRegimeError(raw)
     try:
-        return CCAA(normalized)
-    except ValueError as exc:
-        valid = ", ".join(sorted(ccaa.value for ccaa in CCAA))
+        return catalogue.require(normalized)
+    except RegistryValidationError as exc:
+        valid = ", ".join(sorted(str(ccaa) for ccaa in catalogue.choices))
         raise TaxResidenceProfileError(
             f"unknown tax-region {raw!r}; valid CCAA values: {valid}",
             context={"tax_region": raw},

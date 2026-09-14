@@ -23,7 +23,7 @@ EXPECTED_AGRICULTURAL_AXIS_COUNTS = {2022: 16, 2023: 16, 2024: 16, 2025: 17, 202
 #: positive coefficients, which a garbled extraction would violate.
 MINIMUM_SEASONAL_INDEX_BANDS = 1
 FIRST_SEASONAL_INDEX_DAY = 1
-EXTRACTOR_VERSION = "m303-annual-orden-html-v5"
+EXTRACTOR_VERSION = "m303-annual-orden-html-v6"
 
 
 class _GeneratedSourceShape(Protocol):

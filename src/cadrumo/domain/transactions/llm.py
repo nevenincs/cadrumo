@@ -42,6 +42,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
@@ -50,9 +51,10 @@ from pydantic import BaseModel, Field, field_validator
 from ...core.i18n.render import tr as _tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
+from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..categories.registry import resolve_category_profiles
 from ..categories.spending_category import SpendingCategory
-from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ..categories.spending_category_catalogue import spending_category_tokens
 from ..iva.schema import IvaCategory
 from .enums import BusinessClassification
 from .errors import LLMClassifierError, TransactionValidationError
@@ -380,7 +382,8 @@ def prompt_spec_with_every_spending_category(
         registered :class:`cadrumo.domain.categories.SpendingCategory`.
     """
     category_choices = tuple(
-        CategoryChoice(value=value, hint=_category_hint(value, year=year)) for value in SpendingCategory
+        CategoryChoice(value=value, hint=_category_hint(value, year=year))
+        for value in spending_category_tokens(effective_date=date(year, 12, 31))
     )
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
@@ -433,7 +436,8 @@ def prompt_spec_with_saturation_fields(
         IVA-category allow-lists.
     """
     category_choices = tuple(
-        CategoryChoice(value=value, hint=_category_hint(value, year=year)) for value in SpendingCategory
+        CategoryChoice(value=value, hint=_category_hint(value, year=year))
+        for value in spending_category_tokens(effective_date=date(year, 12, 31))
     )
     return PromptSpec(
         classifications=classifications or default_classification_choices(),

@@ -79,8 +79,8 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo._pulled_filing_reconcile import pulled_filing_divergence_findings
-from cadrumo.application.modelo._reconcile_casilla import (
+from cadrumo.application.modelo.pulled_filing_reconcile import pulled_filing_divergence_findings
+from cadrumo.application.modelo.reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )

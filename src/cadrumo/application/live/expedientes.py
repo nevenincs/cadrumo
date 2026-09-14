@@ -33,6 +33,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.protocols import BrowserSessionFactoryPort
 from .errors import LiveApplicationInputError
 from .expedientes_ports import ExpedientesDeclaration, ExpedientesPorts
 from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
@@ -171,11 +172,13 @@ async def capture_expedientes(
     year: int,
     ports: ExpedientesPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ) -> PersistedExpedientesSnapshot:
     """Capture the selected declaration-register view as encrypted local evidence."""
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operation=LIVE_EXPEDIENTES_READ_OPERATION,
         operator_scope_ports=operator_scope_ports,
     )
@@ -198,6 +201,7 @@ async def capture_expedientes_bulk(
     modelos: tuple[str, ...] | None = None,
     ports: ExpedientesPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ) -> ExpedientesBulkCaptureReport:
     """Capture each requested declaration-register view while reporting isolated failures."""
@@ -211,6 +215,7 @@ async def capture_expedientes_bulk(
     )
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operation=LIVE_EXPEDIENTES_READ_OPERATION,
         operator_scope_ports=operator_scope_ports,
     )

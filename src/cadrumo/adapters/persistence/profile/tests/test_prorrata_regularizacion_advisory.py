@@ -1,6 +1,6 @@
 """Calculate-path advisory wiring for the annual prorrata-general regularización.
 
-Exercises :func:`~application.modelo._prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`
+Exercises :func:`~application.modelo.prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`
 against a REAL registry-loaded Modelo 303 revision and a REAL encrypted
 :class:`~application.calculations.CalculationObservationRepository` inside
 a genuine bucket runtime (``isolated_runtime_profile``) — no mocks, no stubs.
@@ -12,7 +12,7 @@ advisory fan-out, which was the gap the review found (the builder shipped with
 zero production callers).
 
 See Also:
-    :mod:`~application.modelo._prorrata_regularizacion_advisory`
+    :mod:`~application.modelo.prorrata_regularizacion_advisory`
         Collector under test for the calculate-path prorrata advisory fan-out.
     :func:`~application.calculations._prorrata_regularizacion.build_prorrata_missing_provisional_advisory`
         Pure missing-carry builder used by the mid-year unresolved-register
@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import validated_casilla_id
@@ -57,7 +58,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
+from cadrumo.application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -125,6 +126,8 @@ def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_pat
             period_token="4T",
             filing_year=_YEAR,
             observation_repository=obs_repo,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         )
 
     assert len(diagnostics) == 1
@@ -159,6 +162,8 @@ def test_advisory_refuses_prior_year_observation_with_stale_registry_stamp(tmp_p
                 period_token="4T",
                 filing_year=_YEAR,
                 observation_repository=obs_repo,
+                prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+                transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
             )
 
 
@@ -186,6 +191,8 @@ def test_advisory_fires_pending_when_no_prior_year_observation_exists(tmp_path: 
             period_token="4T",
             filing_year=_YEAR,
             observation_repository=obs_repo,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         )
 
     assert len(diagnostics) == 1
@@ -213,6 +220,8 @@ def test_no_advisory_when_no_sin_derecho_operations(tmp_path: Path) -> None:
             period_token="4T",
             filing_year=_YEAR,
             observation_repository=obs_repo,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         )
 
     assert diagnostics == ()
@@ -236,6 +245,8 @@ def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
             period_token="1T",
             filing_year=_YEAR,
             observation_repository=obs_repo,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         )
 
     assert diagnostics == ()
@@ -266,6 +277,8 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
             filing_year=_YEAR,
             bucket_id=_BUCKET,
             observation_repository=obs_repo,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         )
 
     assert len(diagnostics) == 1
@@ -296,6 +309,8 @@ def test_no_advisory_for_non_m303_modelo(tmp_path: Path) -> None:
             period_token="4T",
             filing_year=_YEAR,
             observation_repository=obs_repo,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         )
 
     assert diagnostics == ()

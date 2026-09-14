@@ -47,7 +47,7 @@ from ....core.config import load_settings, override_settings
 from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
 from ....tests.os_keychain_hook import require_os_credential_store
-from ....tests.profile_capsule import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ..common import cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output

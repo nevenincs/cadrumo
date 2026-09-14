@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01284"
+continuidad_id = "is-deduccion-autoridades-portuarias-importe"
+continuidad_origin = "seeded"
 number = "01284"
 section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2020"]
 data_type = "money"

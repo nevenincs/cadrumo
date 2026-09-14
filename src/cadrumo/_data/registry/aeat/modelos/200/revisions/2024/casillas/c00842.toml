@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00842"
+continuidad_id = "00842"
 number = "00842"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"

@@ -27,8 +27,13 @@ from __future__ import annotations
 
 from typing import override
 
+from pydantic import ValidationError
+
+from ....application.modelo.edit_receipt_ports import ModeloEditReceiptPersistenceError
 from ....application.modelo.edit_contract import ModeloEditMutationResultReceiptV1
+from ....core.secure_object_write import SecureObjectWrite
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
+from ..storage.errors import StorageError
 from ..storage.secure_object_namespaces import MODELO_EDIT_RECEIPT_NAMESPACE
 
 
@@ -44,6 +49,14 @@ class ModeloEditReceiptRepository(SecureBoundRepository[ModeloEditMutationResult
     def extract_identifier(self, payload: ModeloEditMutationResultReceiptV1) -> str:
         """Return the receipt's own content-addressed identity."""
         return payload.receipt_id
+
+    @override
+    def to_secure_object_write(self, receipt: ModeloEditMutationResultReceiptV1) -> SecureObjectWrite:
+        """Prepare the receipt write and translate storage-bound failures."""
+        try:
+            return super().to_secure_object_write(receipt)
+        except (OSError, StorageError, TypeError, ValueError, ValidationError) as exc:
+            raise ModeloEditReceiptPersistenceError("to_secure_object_write") from exc
 
 
 __all__ = ["ModeloEditReceiptRepository"]

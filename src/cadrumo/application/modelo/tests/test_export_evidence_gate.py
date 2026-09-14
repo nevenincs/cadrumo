@@ -1,37 +1,30 @@
-"""Export evidence gate coverage for ledger-derived calculation revisions."""
+"""Export evidence policy for ledger-derived calculation revisions.
+
+These tests exercise the application gate over an already assembled revision.
+The encrypted calculation-repository round-trip is covered separately at the
+profile-persistence adapter seam.
+"""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.period import Period
-from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.calculation_revision import (
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
-from ....domain.modelos.work_unit import derive_work_unit_id
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ..export import (
-    ModeloExportCommand,
-    ModeloExportEvidenceMissingError,
-    _raise_if_ledger_export_evidence_missing,
-    export_modelo_revision,
-)
-from ..export_ports import ModeloExportPorts
+from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from cadrumo.domain.modelos.work_unit import derive_work_unit_id
+from ..export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,26 +32,6 @@ _NOW = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 _TX_ID = "a" * 64
 _BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
 _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
-
-active_profile = active_profile_isolated_backend_fixture(autouse=False, name="active_profile")
-
-
-def _inward_export_ports(*, calculation: object) -> ModeloExportPorts:
-    """Provide application-owned fakes for authorities unused by this gate."""
-    authority = Mock()
-    return ModeloExportPorts(
-        calculation=calculation,
-        work_unit=authority,
-        filing=authority,
-        verification=authority,
-        bucket_event=authority,
-        observation=authority,
-        iva_compensation_decision=authority,
-        justificante=authority,
-        prorrata_register=authority,
-        bienes_inversion=authority,
-        transaction=authority,
-    )
 
 
 def _revision(
@@ -121,29 +94,6 @@ def test_export_refuses_ledger_revision_without_bundled_evidence_or_reference() 
 
     with pytest.raises(ModeloExportEvidenceMissingError):
         _raise_if_ledger_export_evidence_missing(revision)
-
-
-def test_export_service_refuses_ledger_revision_without_evidence_reference(
-    active_profile: None,
-    tmp_path: Path,
-) -> None:
-    revision = _revision(source_transaction_ids=(_TX_ID,))
-    repository = CalculationRevisionCatalogueRepository()
-    repository.save(upsert_calculation_revision(repository.load(), revision))
-    output_path = tmp_path / "modelo-303.txt"
-
-    with pytest.raises(ModeloExportEvidenceMissingError):
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=revision.calculation_revision_id,
-                output_path=output_path,
-                actor="operator",
-            ),
-            workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL),
-            export_ports=_inward_export_ports(calculation=repository),
-        )
-
-    assert not output_path.exists()
 
 
 def test_export_allows_non_ledger_revision_without_evidence() -> None:

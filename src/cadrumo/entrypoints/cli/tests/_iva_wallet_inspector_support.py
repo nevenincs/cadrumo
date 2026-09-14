@@ -71,7 +71,7 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
     be the same UUIDv4 the paired :func:`isolated_runtime_profile` activates.
     """
     from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
-    from ....tests.profile_capsule import seed_test_profile_record
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
     created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
     seed_test_profile_record(
@@ -89,7 +89,7 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
 def _seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
     """Persist a minimal autonomo profile sufficient for M303 work-unit applicability."""
     from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-    from ....tests.profile_capsule import seed_test_profile_record
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
     created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
     seed_test_profile_record(

@@ -9,10 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.calculations.iva_compensation_history import (
-    IvaCompensationHistoryRepository,
-    seed_iva_compensation_period,
-)
+from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from ....application.calculations.iva_compensation_history import seed_iva_compensation_period
 from ....application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
@@ -32,6 +30,7 @@ def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> 
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2024, "4T"),
             amount=Decimal("1200.00"),
+            repository=IvaCompensationHistoryRepository(),
         )
 
         repo = IvaCompensationHistoryRepository()
@@ -52,8 +51,9 @@ def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2025, "4T"),
             amount=Decimal("1500.00"),
+            repository=IvaCompensationHistoryRepository(),
         )
-        report = query_iva_wallet_balance(as_of_year=2025)
+        report = query_iva_wallet_balance(as_of_year=2025, repository=IvaCompensationHistoryRepository())
 
     assert report.lot_count == 1, "seeded carry-forward must surface as exactly one wallet lot"
     assert report.total_balance == Decimal("1500.00"), "balance must reflect the seeded amount, not zero"
@@ -69,8 +69,9 @@ def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2025, "1T"),
             amount=Decimal("0"),
+            repository=IvaCompensationHistoryRepository(),
         )
-        report = query_iva_wallet_balance(as_of_year=2025)
+        report = query_iva_wallet_balance(as_of_year=2025, repository=IvaCompensationHistoryRepository())
 
     assert report.lot_count == 0, "a zero seed must not fabricate a wallet lot"
     assert report.total_balance == Decimal("0")
@@ -85,6 +86,7 @@ def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) 
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2024, "3T"),
             amount=Decimal("500.00"),
+            repository=IvaCompensationHistoryRepository(),
         )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3ba277a9-0812-47c5-9400-64768e433f06"):
@@ -92,6 +94,7 @@ def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) 
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2024, "3T"),
             amount=Decimal("999.00"),
+            repository=IvaCompensationHistoryRepository(),
         )
 
     assert state_a.available_end_amount != state_b.available_end_amount, (
@@ -106,6 +109,7 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2024, "2T"),
             amount=Decimal("800.00"),
+            repository=IvaCompensationHistoryRepository(),
         )
 
         with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
@@ -113,6 +117,7 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
                 taxpayer_nif=_NIF,
                 period=Period.from_year_and_code(2024, "2T"),
                 amount=Decimal("100.00"),
+                repository=IvaCompensationHistoryRepository(),
             )
 
     assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"

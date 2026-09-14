@@ -12,6 +12,7 @@
 # MUST use this segment-qualified id, never the bare number.
 [[revisions."2024".casillas]]
 id = "DP200013:00417"
+continuidad_id = "is-correcciones-aumentos-total"
 number = "00417"
 segmento = "DP200013"
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]

@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "lirpf-art-81-maternity-descendant-relations:2007-01-01"
 date_axis = "filing_period"
 valid_from = 2007-01-01
-legal_refs = ["ley-35-2006:art-81"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-81"]
 source_refs = ["boe-lirpf-statutory-facts"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -22,5 +22,9 @@ required_text = [
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "catalogue.ids", value = "descendiente,adoptado,acogimiento_preadoptivo_o_permanente,tutela" },
+  { key = "catalogue.ids", value = "descendiente,adoptado,acogimiento_preadoptivo_o_permanente,acogimiento_temporal,tutela,guarda_y_custodia_judicial" },
+  { key = "catalogue.default_id", value = "descendiente" },
+  { key = "catalogue.adoption_id", value = "adoptado" },
+  { key = "art_81_1.entitling_ids", value = "descendiente,adoptado,acogimiento_preadoptivo_o_permanente,tutela" },
+  { key = "art_58_2.entitling_ids", value = "adoptado,acogimiento_preadoptivo_o_permanente" },
 ]

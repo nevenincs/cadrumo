@@ -8,7 +8,7 @@ calculation layer. Seed and correction flows write
 flows persist an
 :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
 through ``reconcile_modelo_303_iva_compensation``. Every mutation appends a typed
-bucket event via :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`.
+bucket event through the application-owned bucket-event repository port.
 
 The facade is intentionally above the pure writers. It can scan work units and
 calculation revisions before changing an opening carry-forward basis, so
@@ -36,17 +36,15 @@ from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState, iva_compensation_period_sort_key
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
 from ...domain.modelos.errors import ModeloError
 from ..calculations.iva_compensation_history import correct_iva_compensation_period, seed_iva_compensation_period
-from ..calculations.observations_repository import (
-    CalculationObservationRepositoryProtocol,
-    IvaWalletDecisionRepositoryProtocol,
-)
 from .iva_wallet_gate import taxpayer_nif_for_bucket
+from .iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 
@@ -162,6 +160,7 @@ def seed_iva_compensation_period_for_bucket(
     bucket_id: str,
     period: Period,
     amount: Decimal,
+    ports: ModeloIvaWalletSeedPorts,
 ) -> IvaCompensationPeriodState:
     """Seed local IVA compensation history for the bucket taxpayer.
 
@@ -188,6 +187,7 @@ def seed_iva_compensation_period_for_bucket(
         taxpayer_nif=taxpayer_nif,
         period=period,
         amount=amount,
+        repository=ports.iva_compensation_history_repository,
     )
 
 
@@ -195,6 +195,7 @@ def _sealed_modelo_303_blocker_for_period(
     *,
     bucket_id: str,
     period: Period,
+    ports: ModeloIvaWalletSeedPorts,
 ) -> tuple[str, str, int, str] | None:
     """Return the first sealed Modelo 303 revision at or after the seeded period.
 
@@ -207,12 +208,9 @@ def _sealed_modelo_303_blocker_for_period(
     ``(work_unit_id, calculation_revision_id, filing_year, period)`` of the
     offending revision, or ``None`` when no sealed Modelo 303 consumed the seed.
     """
-    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-
     seeded_key = (period.filing_year, iva_compensation_period_sort_key(period))
-    work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
-    revisions = CalculationRevisionCatalogueRepository(bucket_id=bucket_id).load()
+    work_units = ports.work_unit_repository.load()
+    revisions = ports.calculation_repository.load()
     candidates: list[tuple[tuple[int, tuple[int, str]], str, str, int, str]] = []
     for revision in revisions.values():
         if revision.state not in SEALED_REVISION_STATES:
@@ -246,6 +244,7 @@ def correct_iva_compensation_period_for_bucket(
     period: Period,
     amount: Decimal,
     reason: str,
+    ports: ModeloIvaWalletSeedPorts,
 ) -> IvaCompensationPeriodState:
     """Correct a wrong opening IVA compensation balance, guarded and audited.
 
@@ -286,10 +285,8 @@ def correct_iva_compensation_period_for_bucket(
     if taxpayer_nif is None:
         raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.correct")
 
-    from ..calculations.iva_compensation_history import IvaCompensationHistoryRepository
-
-    repository = IvaCompensationHistoryRepository()
-    existing = repository.load_period(period)
+    history_repository = ports.iva_compensation_history_repository
+    existing = history_repository.load_period(period)
     if existing is None:
         raise ModeloIvaWalletCorrectionNoRecordError(
             translated_message="application.modelo.iva_wallet.correct_no_record",
@@ -299,6 +296,7 @@ def correct_iva_compensation_period_for_bucket(
     blocker = _sealed_modelo_303_blocker_for_period(
         bucket_id=bucket_id,
         period=period,
+        ports=ports,
     )
     if blocker is not None:
         work_unit_id, revision_id, blocker_year, blocker_period = blocker
@@ -318,7 +316,7 @@ def correct_iva_compensation_period_for_bucket(
         taxpayer_nif=taxpayer_nif,
         period=period,
         amount=amount,
-        repository=repository,
+        repository=history_repository,
     )
 
     _emit_iva_wallet_corrected_event(
@@ -328,6 +326,7 @@ def correct_iva_compensation_period_for_bucket(
         previous_amount=existing.available_end_amount,
         new_amount=state.available_end_amount,
         reason=reason,
+        repository=ports.bucket_event_repository,
     )
 
     return state
@@ -341,9 +340,9 @@ def _emit_iva_wallet_corrected_event(
     previous_amount: Decimal,
     new_amount: Decimal,
     reason: str,
+    repository: BucketEventHistoryRepositoryProtocol,
 ) -> None:
     """Append the ``MODELO_IVA_WALLET_CORRECTED`` audit event for a correction."""
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time.clock import now
     from ...domain.buckets.event import BucketEventObjectType, BucketEventType
     from ...domain.buckets.event_repository import emit_bucket_event
@@ -363,7 +362,7 @@ def _emit_iva_wallet_corrected_event(
     # committed in between, and content-addressed survivors leave no gap to
     # notice it.
     emit_bucket_event(
-        repository=BucketEventHistoryRepository(),
+        repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_IVA_WALLET_CORRECTED,
         occurred_at=occurred_at,
@@ -382,8 +381,7 @@ def record_iva_compensation_override_for_bucket(
     amount: Decimal,
     reason: str,
     evidence_locator: str,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    decision_repository: IvaWalletDecisionRepositoryProtocol,
+    ports: ModeloIvaWalletSeedPorts,
 ) -> IvaCompensationReconciliationDecision:
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
@@ -445,7 +443,7 @@ def record_iva_compensation_override_for_bucket(
     if taxpayer_nif is None:
         raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.override")
 
-    blocker = _sealed_modelo_303_blocker_for_period(bucket_id=bucket_id, period=period)
+    blocker = _sealed_modelo_303_blocker_for_period(bucket_id=bucket_id, period=period, ports=ports)
     if blocker is not None:
         work_unit_id, revision_id, blocker_year, blocker_period = blocker
         raise ModeloIvaWalletOverrideSealedError(
@@ -462,7 +460,8 @@ def record_iva_compensation_override_for_bucket(
 
     from ..calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 
-    existing = decision_repository.load_decision(taxpayer_nif, period)
+    observation_ports = ports.calculation_observation_ports
+    existing = observation_ports.iva_wallet_decision_repository.load_decision(taxpayer_nif, period)
     if existing is not None and not existing.blocked and str(existing.selected_authority) == "aeat_wallet":
         raise ModeloIvaWalletOverrideFreshWalletError(
             translated_message="application.modelo.iva_wallet.override_fresh_wallet_blocked",
@@ -490,14 +489,15 @@ def record_iva_compensation_override_for_bucket(
 
     local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
         snapshot,
-        repository=observation_repository,
+        repository=observation_ports.observation_repository,
+        iva_history_repository=ports.iva_compensation_history_repository,
     )
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=taxpayer_nif,
         wallet=None,
-        repository=observation_repository,
-        decision_repository=decision_repository,
+        repository=observation_ports.observation_repository,
+        decision_repository=observation_ports.iva_wallet_decision_repository,
         override=override,
         local_recurrence=local_recurrence,
         prefill_report=prefill_report,
@@ -511,6 +511,7 @@ def record_iva_compensation_override_for_bucket(
         amount=amount,
         reason=reason,
         evidence_locator=evidence_locator,
+        repository=ports.bucket_event_repository,
     )
 
     return report.decision
@@ -524,9 +525,9 @@ def _emit_iva_wallet_override_event(
     amount: Decimal,
     reason: str,
     evidence_locator: str,
+    repository: BucketEventHistoryRepositoryProtocol,
 ) -> None:
     """Append the ``MODELO_IVA_WALLET_OVERRIDE_RECORDED`` audit event for an override."""
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time.clock import now
     from ...domain.buckets.event import BucketEventObjectType, BucketEventType
     from ...domain.buckets.event_repository import emit_bucket_event
@@ -546,7 +547,7 @@ def _emit_iva_wallet_override_event(
     # committed in between, and content-addressed survivors leave no gap to
     # notice it.
     emit_bucket_event(
-        repository=BucketEventHistoryRepository(),
+        repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_IVA_WALLET_OVERRIDE_RECORDED,
         occurred_at=occurred_at,

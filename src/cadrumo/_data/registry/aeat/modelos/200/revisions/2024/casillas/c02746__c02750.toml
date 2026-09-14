@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02746"
+continuidad_id = "is-correccion-provisiones-no-deducibles-art14-permanente-disminucion"
 number = "02746"
 section = ["otras_provisiones_no_deducibles_fiscalmente_art_14", "disminucion"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
 [[revisions."2024".casillas]]
 id = "02747"
+continuidad_id = "is-correccion-provisiones-no-deducibles-art14-temporaria-ejercicio-disminucion"
 number = "02747"
 section = ["otras_provisiones_no_deducibles_fiscalmente_art_14", "disminucion"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
 [[revisions."2024".casillas]]
 id = "02748"
+continuidad_id = "is-correccion-provisiones-no-deducibles-art14-temporaria-anteriores-disminucion"
 number = "02748"
 section = ["otras_provisiones_no_deducibles_fiscalmente_art_14", "disminucion"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
 [[revisions."2024".casillas]]
 id = "02749"
+continuidad_id = "02749"
 number = "02749"
 section = ["otras_provisiones_no_deducibles_fiscalmente_art_14", "disminucion"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
 [[revisions."2024".casillas]]
 id = "02750"
+continuidad_id = "02750"
 number = "02750"
 section = ["otras_provisiones_no_deducibles_fiscalmente_art_14", "disminucion"]
 data_type = "money"

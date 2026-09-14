@@ -8,8 +8,7 @@ operator cannot confirm the long content-addressed ``invoice_id`` that
 ``aeat app ledger link --invoice-id`` resolves, nor see which transactions a
 catalogue invoice already binds; without a delete a mistaken
 ``catalogue create`` is permanent. These two services close that CRUD gap over
-the same sanctioned :class:`InvoiceCatalogueRepository` write path
-(``aeat-architecture-boundaries``). These verbs are the
+the same application-owned catalogue lifecycle capabilities. These verbs are the
 operator's single-record surface over the canonical aggregate; an earlier form
 of this docstring justified them as "keeping the slim-vs-rich split intact",
 which is a rationale the canonical-structure work removes -- the split is being
@@ -29,17 +28,15 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.enums import InvoiceClass, PaymentStatus
 from ...domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.schema import IvaCategory
-from ._catalogue_mutation import mutate_catalogue
+from .catalogue_lifecycle_ports import CatalogueLifecyclePorts
+from .catalogue_reads_ports import InvoiceCatalogueReadPorts
 
 
 class CatalogueInvoiceRemoveResult(BaseModel):
@@ -92,24 +89,22 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
 
 def resolve_catalogue_invoice_from_repository(
     *,
-    bucket_id: str,
     invoice_id: str,
-    repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> Invoice:
     """Load the catalogue and resolve one invoice by id or unambiguous prefix.
 
     Returns:
         The resolved :class:`Invoice`.
     """
-    repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    return resolve_catalogue_invoice(repo.load(), invoice_id)
+    return resolve_catalogue_invoice(ports.invoice_reader.load(), invoice_id)
 
 
 def remove_catalogue_invoice(
     *,
     bucket_id: str,
     invoice_id: str,
-    repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: CatalogueLifecyclePorts,
 ) -> CatalogueInvoiceRemoveResult:
     """Delete one rich catalogue invoice and return the updated catalogue.
 
@@ -117,10 +112,9 @@ def remove_catalogue_invoice(
     still carries ``linked_transaction_ids`` is refused: deleting it from the
     catalogue alone would leave the transaction side citing a vanished invoice
     — a one-sided link ``verify_link_consistency`` flags. The operator must
-    unlink first. The write rides the sanctioned
-    :class:`InvoiceCatalogueRepository`; no parallel write path is introduced.
+    unlink first. The write rides the required application-owned mutation
+    capability; no parallel write path is introduced.
     """
-    repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     resolved: list[Invoice] = []
 
     def _remove(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
@@ -145,7 +139,7 @@ def remove_catalogue_invoice(
     # prefix that was unambiguous a moment ago may not be after a concurrent
     # create, and refusing then is correct where deleting the wrong invoice is
     # not.
-    new_catalogue = mutate_catalogue(repo, _remove)
+    new_catalogue = ports.invoice_repository.mutate(_remove)
     return CatalogueInvoiceRemoveResult(invoice=resolved[0], catalogue=new_catalogue)
 
 
@@ -203,8 +197,7 @@ def update_catalogue_invoice(
     bucket_id: str,
     invoice_id: str,
     patch: CatalogueInvoicePatch,
-    repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: CatalogueLifecyclePorts,
     occurred_at: datetime | None = None,
     actor: str = "cli",
 ) -> CatalogueInvoiceUpdateResult:
@@ -224,15 +217,14 @@ def update_catalogue_invoice(
     The corrected record is re-validated in full, so a patch that would break
     an invariant -- a retención above its base, a counterparty country that no
     longer matches the tax id -- refuses rather than persisting an inconsistent
-    invoice. The write rides the sanctioned
-    :class:`InvoiceCatalogueRepository`; no parallel write path is introduced.
+    invoice. The write rides the required application-owned mutation
+    capability; no parallel write path is introduced.
 
     Args:
         bucket_id: Profile bucket whose encrypted catalogue holds the record.
         invoice_id: Full id or an unambiguous prefix of the invoice to correct.
         patch: The fields to change; omitted fields are left as stored.
-        repository: Optional injected catalogue repository (testing seam).
-        event_repository: Optional injected bucket-event repository.
+        ports: Required read, mutation, and bucket-event capabilities.
         occurred_at: Event timestamp; defaults to now.
         actor: Who performed the correction, recorded on the event.
 
@@ -246,7 +238,6 @@ def update_catalogue_invoice(
     """
     from .catalogue_creation import emit_catalogue_invoice_event
 
-    repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     written: list[Invoice] = []
 
     def _apply(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
@@ -281,13 +272,13 @@ def update_catalogue_invoice(
     # the one first read, which matters because the correction is a merge onto
     # stored values -- replaying a merge computed against a superseded record
     # would silently revert whatever changed in between.
-    new_catalogue = mutate_catalogue(repo, _apply)
+    new_catalogue = ports.invoice_repository.mutate(_apply)
     corrected = written[0]
     event_ids = emit_catalogue_invoice_event(
         invoice=corrected,
         bucket_id=bucket_id,
         slot=1,
-        event_repository=event_repository,
+        event_repository=ports.event_repository,
         occurred_at=occurred_at or now(),
         actor=actor,
     )

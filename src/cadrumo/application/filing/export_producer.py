@@ -8,11 +8,15 @@ from datetime import date
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.prorrata_register import ProrrataEspecialTransitionKind
-from ...domain.deadlines.models import M303RegimeComposition, ModeloIVAProfile
+from ...domain.deadlines.models import ModeloIVAProfile
 from ...domain.calculations.registry.iva_schema_vocabulary import (
+    m303_regime_composition_export_code,
     m303_tax_territory_exclusively_foral_mark,
     m303_tax_territory_is_foral,
+)
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    opcion_prorrata_transition,
+    revocacion_prorrata_transition,
 )
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
@@ -1131,11 +1135,7 @@ def m303_profile_lexicals(
     return M303ProfileLexicals(
         redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
         exclusively_foral=exclusively_foral,
-        regime_composition_code={
-            M303RegimeComposition.SIMPLIFIED: "1",
-            M303RegimeComposition.MIXED: "2",
-            M303RegimeComposition.GENERAL: "3",
-        }[iva_profile.regime_composition],
+        regime_composition_code=m303_regime_composition_export_code(iva_profile.regime_composition),
         cash_accounting_regime_enrolled=yes_no(iva_profile.cash_accounting_regime_enrolled),
         voluntary_sii_enrolled=yes_no(iva_profile.voluntary_sii_enrolled),
         hydrocarbon_deposit_advance_payment_deduction_entitled=a30,
@@ -1157,10 +1157,10 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
             m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
         ),
         prorrata_special_option=(
-            yes_no(transition.transition is ProrrataEspecialTransitionKind.OPCION) if transition_applicable else None
+            yes_no(transition.transition == opcion_prorrata_transition()) if transition_applicable else None
         ),
         prorrata_special_revocation=(
-            yes_no(transition.transition is ProrrataEspecialTransitionKind.REVOCACION)
+            yes_no(transition.transition == revocacion_prorrata_transition())
             if transition_applicable
             else None
         ),

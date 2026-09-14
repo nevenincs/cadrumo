@@ -80,7 +80,7 @@ class ModeloReconciliationDiffKind(StrEnum):
     per-casilla value disagreement between the persisted computed revision and
     a filed declaración, emitted for modelos enrolled in
     :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`
-    (:func:`application.modelo._reconcile_casilla.detect_casilla_divergences`).
+    (:func:`application.modelo.reconcile_casilla.detect_casilla_divergences`).
     """
 
     HEADER_FIELD = "header_field"
@@ -102,7 +102,7 @@ class ModeloReconciliationDiff(BaseModel):
     ``casilla`` diff, ``field_name`` is the casilla id and ``work_unit_value`` /
     ``evidence_value`` carry the computed / filed decimal strings (empty when
     the corresponding side carried no value, per
-    :class:`~application.modelo._reconcile_casilla.CasillaDivergenceKind`).
+    :class:`~application.modelo.reconcile_casilla.CasillaDivergenceKind`).
     """
 
     model_config = _STRICT_FROZEN

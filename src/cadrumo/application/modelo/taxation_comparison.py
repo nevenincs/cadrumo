@@ -66,6 +66,7 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
+from .taxation_comparison_ports import TaxationComparisonPorts
 from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,
@@ -352,14 +353,18 @@ class TaxationComparisonError(CoreError):
 # ---------------------------------------------------------------------------
 
 
-def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResult:
+def compare_taxation_for_work_unit(
+    work_unit_id: str,
+    *,
+    ports: TaxationComparisonPorts,
+) -> TaxationComparisonResult:
     """Run conjunta-vs-individual comparison for an existing Modelo 100 work unit.
 
-    Resolves the registry snapshot and all profile-sourced bindings
-    from the stored work unit, then delegates to
-    :func:`compare_taxation_modes`. The ``declaration_type`` binding is
-    injected by the comparison engine; the stored profile value is
-    intentionally ignored so both paths are always evaluated.
+    Resolves the registry snapshot and all profile-sourced bindings from the
+    supplied work-unit read capability, then delegates to
+    :func:`compare_taxation_modes`. The ``declaration_type`` binding is injected
+    by the comparison engine; the stored profile value is intentionally ignored
+    so both paths are always evaluated.
 
     Returns:
         A :class:`TaxationComparisonResult` with the conjunta and individual
@@ -386,9 +391,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
 
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
     bucket_id = resolve_modelo_work_bucket(request)
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-
-    catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    catalogue = ports.work_unit_reader.load()
     resolution = _select_taxation_work_unit(
         request,
         catalogue=catalogue,
@@ -462,7 +465,11 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     )
 
 
-def compare_taxation_for_work_address(address: object) -> TaxationComparisonResult:
+def compare_taxation_for_work_address(
+    address: object,
+    *,
+    ports: TaxationComparisonPorts,
+) -> TaxationComparisonResult:
     """Run conjunta-vs-individual comparison for a natural or exact work address.
 
     Args:
@@ -472,7 +479,6 @@ def compare_taxation_for_work_address(address: object) -> TaxationComparisonResu
     Returns:
         A :class:`TaxationComparisonResult` for the resolved work unit.
     """
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from .work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
     from .work_selection import (
         ModeloWorkSelectorRequest,
@@ -484,7 +490,7 @@ def compare_taxation_for_work_address(address: object) -> TaxationComparisonResu
     bucket_id = address.bucket_id or resolve_modelo_work_bucket(ModeloWorkSelectorRequest())
     work_unit = resolve_modelo_work_address_unit(
         address,
-        catalogue=WorkUnitCatalogueRepository(bucket_id=bucket_id).load(),
+        catalogue=ports.work_unit_reader.load(),
         bucket_id=bucket_id,
     )
-    return compare_taxation_for_work_unit(work_unit.work_unit_id)
+    return compare_taxation_for_work_unit(work_unit.work_unit_id, ports=ports)

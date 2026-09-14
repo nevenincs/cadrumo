@@ -30,7 +30,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 )
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.calculations.binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva_compensation_recurrence
-from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.iva_wallet_reconciliation import (
     IvaWalletDecisionSourceResolver,
     reconcile_modelo_303_iva_compensation,
@@ -365,6 +365,7 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
             snapshot,
             repository=repository,
             captured_at=_NOW,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
 
         report = reconcile_modelo_303_iva_compensation(

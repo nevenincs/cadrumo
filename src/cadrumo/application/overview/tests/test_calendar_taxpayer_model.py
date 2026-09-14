@@ -6,11 +6,11 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....core.period import Period
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
 from .calendar_test_support import BUCKET_ID as _BUCKET_ID
@@ -179,7 +179,7 @@ def test_calendar_undeclared_profile_preserves_observed_events() -> None:
                 captured_at=datetime(2026, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2026,
                         period=Period.from_year_and_code(2026, "1T"),

@@ -33,9 +33,6 @@ from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
@@ -58,15 +55,13 @@ from ..aggregation.source_mesh import (
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from ..persistence_errors import PersistenceDegradationError
 from ._decimal_parsing import decimal_from_string
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
-
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
-
 
 class Modelo100BorradorBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when borrador values cannot be consumed for a calculation."""
@@ -159,11 +154,13 @@ def _load_active_borrador_snapshot(
     snapshot_repository: Borrador100SnapshotRepository | None,
 ) -> Borrador100Snapshot:
     """Load the selected snapshot and enforce its axis and active lifecycle."""
-    from ..live.borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
+    from ..live.borrador_100 import BorradorSnapshotNotFoundError
     from ..live.errors import LiveApplicationInputError
     from ..live.snapshot_base import SnapshotLifecycleState
 
-    repository = snapshot_repository or Borrador100SnapshotRepository(bucket_id=command.bucket_id)
+    if snapshot_repository is None:
+        raise _borrador_snapshot_load_failure(command, snapshot_id=snapshot_id)
+    repository = snapshot_repository
     try:
         snapshot = repository.load(snapshot_id)
     except (LiveApplicationInputError, BorradorSnapshotNotFoundError) as exc:
@@ -368,7 +365,7 @@ class Modelo100BorradorSourceResolver:
                 registry_snapshot=snapshot,
                 snapshot_repository=self._snapshot_repository,
             )
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except PersistenceDegradationError as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

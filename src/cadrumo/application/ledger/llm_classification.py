@@ -210,7 +210,7 @@ def resolve_llm_evidence(
     evidence_input, reference = resolved.evidence_input, resolved.reference
     if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
         try:
-            text = extract_evidence_text(evidence_input)
+            text = extract_evidence_text(evidence_input, text_layer_ports=ports.text_layer_ports)
         except PurchaseInvoiceEvidenceInputError:
             text = ""  # scan-only / no usable text layer -> on-host vision path
         if text:

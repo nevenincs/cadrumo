@@ -75,12 +75,12 @@ from ...domain.calculations.registry.ledger_renta_income_bindings import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from ._modelo_bindings_invoice_iva import (
     category_counterparty_mismatch_diagnostics,
     missing_invoice_deduction_authority_diagnostics,
@@ -188,14 +188,14 @@ class LedgerIvaAggregationSourceResolver:
     def __init__(
         self,
         *,
-        transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+        transaction_repository: TransactionCatalogueRepositoryProtocol,
+        invoice_catalogue_read_ports: InvoiceCatalogueReadPorts,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         investment_asset_register: BienesInversionIvaRegister | None = None,
         investment_asset_profile_id: str | None = None,
     ) -> None:
         self._transaction_repository = transaction_repository
-        self._invoice_repository = invoice_repository
+        self._invoice_catalogue_read_ports = invoice_catalogue_read_ports
         self._prorrata_register_repository = prorrata_register_repository
         self._investment_asset_register = investment_asset_register
         self._investment_asset_profile_id = investment_asset_profile_id
@@ -240,7 +240,7 @@ class LedgerIvaAggregationSourceResolver:
             period=aggregation_period,
             transaction_binding_values=binding_values,
             ledger_observations=aggregation.observations,
-            invoice_repository=self._invoice_repository,
+            ports=self._invoice_catalogue_read_ports,
             prorrata_apportionment=aggregation.prorrata_apportionment,
             screened_bindings=screened_bindings,
         )
@@ -412,11 +412,9 @@ class LedgerRentaIncomeAggregationSourceResolver:
     def __init__(
         self,
         *,
-        transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+        ports: InvoiceCatalogueReadPorts,
     ) -> None:
-        self._transaction_repository = transaction_repository
-        self._invoice_repository = invoice_repository
+        self._ports = ports
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not revision_has_binding_source(context.revision, "ledger_renta_income_aggregation"):
@@ -440,10 +438,9 @@ class LedgerRentaIncomeAggregationSourceResolver:
             aggregation = income_aggregator(
                 bucket_id=context.bucket_id,
                 period=aggregation_period,
-                transaction_repository=self._transaction_repository,
-                invoice_repository=self._invoice_repository,
+                ports=self._ports,
             )
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -749,7 +746,7 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
     resolver_id: ClassVar[str] = "ledger_impatriado_income_aggregation"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol) -> None:
         self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
@@ -995,7 +992,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
     def __init__(
         self,
         *,
-        transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+        transaction_repository: TransactionCatalogueRepositoryProtocol,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     ) -> None:
         self._transaction_repository = transaction_repository

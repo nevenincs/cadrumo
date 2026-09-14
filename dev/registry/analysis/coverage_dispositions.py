@@ -105,7 +105,14 @@ _REQUIRED: Final = ("modelo", "period", "kind", "classification", "reason", "aut
 #:     gap to excuse.
 #:
 #: Adding any of the three here would make those gaps disposable. Do not.
-_KINDS: Final = frozenset({"promised_year_unserved", "promised_coordinate_unserved", "coordinate_served_twice"})
+#: Public because the screen must be able to ask whether a kind is signable AT ALL.
+#: A coordinate that now fails as one of the three kinds excluded above has not
+#: falsified its signature -- it has outgrown it, and no rewrite can make the
+#: entry apply again. The two need separate conditions, and the screen cannot
+#: tell them apart without reading this set.
+DISPOSABLE_KINDS: Final = frozenset(
+    {"promised_year_unserved", "promised_coordinate_unserved", "coordinate_served_twice"}
+)
 
 #: What a classified coordinate IS. ``inception`` is terminal and closes the
 #: coordinate; ``unauthored`` names it as debt and leaves it outstanding. There
@@ -164,7 +171,7 @@ def load_coverage_dispositions(path: Path = DISPOSITIONS_PATH) -> Mapping[Covera
         if not isinstance(year, int):
             raise ValueError(f"{path.name}: disposition #{index} has no integer filing_year")
         modelo, period, kind, classification, reason, authority = (str(entry[name]) for name in _REQUIRED)
-        if kind not in _KINDS:
+        if kind not in DISPOSABLE_KINDS:
             raise ValueError(f"{path.name}: disposition #{index} names unknown kind {kind!r}")
         if classification not in CLASSIFICATIONS:
             raise ValueError(

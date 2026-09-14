@@ -29,7 +29,11 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core.prorrata_register import ProrrataRegisterRegime
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    carried_prior_definitiva_prorrata_provenance,
+    general_prorrata_register_regime,
+)
 from ...domain.iva.prorrata import ProrrataInputs, compute_prorrata_definitiva_anual
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 
@@ -39,7 +43,7 @@ def seed_sector_carried_definitive_from_register(
     *,
     ejercicio: int,
     sector_id: str,
-    regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL,
+    regime: ProrrataRegisterRegime | None = None,
 ) -> ProrrataRegisterEntry | None:
     """Seed a sector's current-year provisional from its own prior-year definitive.
 
@@ -65,6 +69,8 @@ def seed_sector_carried_definitive_from_register(
         A seeded :class:`ProrrataRegisterEntry` carrying the sector's provisional
         percentage with ``CARRIED_PRIOR_DEFINITIVA`` provenance, or ``None``.
     """
+    if regime is None:
+        regime = general_prorrata_register_regime()
     prior = register.entry_for(ejercicio - 1, sector_id=sector_id)
     if prior is None or prior.definitive_percentage is None:
         return None
@@ -74,7 +80,7 @@ def seed_sector_carried_definitive_from_register(
         especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=prior.definitive_percentage,
-        provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        provisional_provenance=carried_prior_definitiva_prorrata_provenance(),
         source_observation_ref=f"prorrata-register:{ejercicio - 1}:{sector_id}",
         source_registry_snapshot_refs=prior.source_registry_snapshot_refs,
     )

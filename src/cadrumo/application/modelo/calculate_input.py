@@ -139,6 +139,15 @@ def _registry_calculate_input_declarations(
     return resolved
 
 
+def _registry_calculate_input_declaration(key: str, *, work_unit: WorkUnit | None = None) -> str:
+    """Return one nonblank calculate-input declaration from exact authority."""
+    resolved = _registry_calculate_input_declarations(work_unit)
+    values = tuple(str(entry.value).strip() for entry in resolved.payload.entries if str(entry.key) == key)
+    if len(values) != 1 or not values[0]:
+        raise TypeError(f"calculate-input declarations must define exactly one nonblank {key!r}")
+    return values[0]
+
+
 class ModeloCalculateInputError(ModeloError, ValueError):
     """Raised when operator-supplied modelo calculation inputs are invalid."""
 
@@ -759,9 +768,15 @@ def _refuse_detail_casilla_override(key: str) -> None:
 
 def is_detail_casilla_override_key(key: str) -> bool:
     """Return whether *key* names a reserved detail-row alias, not a scalar casilla."""
-    del key
-    _registry_calculate_input_declarations()
-    raise NotImplementedError("registry-selected detail override declarations are unresolved")
+    declarations = _registry_calculate_input_declarations()
+    prefixes = tuple(
+        str(entry.value).strip().lower()
+        for entry in declarations.payload.entries
+        if str(entry.key).startswith("detail_override.prefix.") and str(entry.value).strip()
+    )
+    if not prefixes:
+        raise TypeError("calculate-input declarations must define detail override prefixes")
+    return key.strip().lower().startswith(prefixes)
 
 
 def _capture_work_catalogue(
@@ -827,8 +842,13 @@ def _maternidad_casilla_id(work_unit: WorkUnit) -> CasillaId | None:
     modelo that does not is left untouched — including its profile read, which
     would otherwise run on every calculation of every modelo.
     """
-    _registry_calculate_input_declarations(work_unit)
-    raise NotImplementedError("registry-selected maternity semantic-role declarations are unresolved")
+    from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
+
+    return casilla_id_for_unambiguous_revision_semantic_role(
+        _revision_for_work_unit(work_unit),
+        _registry_calculate_input_declaration("modelo.role.deduccion_maternidad", work_unit=work_unit),
+        modelo_id=str(work_unit.modelo),
+    )
 
 
 def _maternidad_ceilings_unresolved_advisory(

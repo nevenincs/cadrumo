@@ -6,10 +6,9 @@ applicability are supplied by the registry boundary by callers; no filing
 declaration is embedded here.
 
 The quarterly entry point :func:`aggregate_renta_income_ledger_from_repositories`
-loads a :class:`~domain.transactions.TransactionCatalogue` via
-:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` from the
-active bucket and delegates to :func:`aggregate_renta_income_ledger` for
-period-scoped aggregation.
+loads a :class:`~domain.transactions.TransactionCatalogue` and its linked invoice
+catalogue through the application-owned catalogue read capabilities, then
+delegates to :func:`aggregate_renta_income_ledger` for period-scoped aggregation.
 
 The annual counterpart uses the same generic projection over its requested
 window. A separate caller supplies its target and model identity.
@@ -34,8 +33,6 @@ from typing import NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.aggregation import LedgerIncomeGrounding
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as t
@@ -47,17 +44,16 @@ from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport
 from ...domain.invoices.models import InvoiceCatalogue
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.volumen_ingresos import counts_toward_volumen_de_ingresos
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from . import _renta_income_evidence, _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .business_proportion import business_proportion
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
-from .errors import AggregationPeriodError, AggregationValidationError
+from .errors import AggregationPeriodError
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 
 # fact-relocation: selected Renta income model, target, selector, and binding declarations are consumed through RegistryQueryService
@@ -266,23 +262,16 @@ class RentaIncomeLedgerAggregation(
 
 def _load_income_invoices(
     *,
-    bucket_id: str,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> InvoiceCatalogue:
     """Load the bucket's invoice catalogue for sales-invoice evidence.
 
-    Both income entry points call this, and both must: the single production
-    call site chooses between the quarterly and annual aggregators, so threading
-    one and not the other would leave the two halves grounding differently --
-    the asymmetry this evidence path exists to remove.
+    Every repository-backed income entry point calls this, and all must: the
+    single production call site chooses between the quarterly and annual
+    aggregators, so threading one and not the others would leave the paths
+    grounding differently -- the asymmetry this evidence path exists to remove.
     """
-    repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    if repository.bucket_id != bucket_id:
-        raise AggregationValidationError(
-            t("aggregation.renta_ledger.errors.invoice_bucket_mismatch"),
-            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
-        )
-    return repository.load()
+    return ports.invoice_reader.load()
 
 
 def aggregate_renta_income_ledger_from_repositories(
@@ -293,25 +282,18 @@ def aggregate_renta_income_ledger_from_repositories(
     target_casilla_id: CasillaId,
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> RentaIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate a cumulative income window.
 
     Returns a :class:`RentaIncomeLedgerAggregation`.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
-    if repository.bucket_id != bucket_id:
-        raise AggregationValidationError(
-            t("aggregation.renta_ledger.errors.bucket_mismatch"),
-            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
-        )
-    invoices = _load_income_invoices(bucket_id=bucket_id, invoice_repository=invoice_repository)
+    invoices = _load_income_invoices(ports=ports)
     # Only the cumulative in-window subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
     # reported uniformly as ``OUTSIDE_PERIOD``.
     window = cumulative_year_to_date_window(period)
-    partition = repository.partition_by_date_range(window.start, window.end)
+    partition = ports.transaction_reader.partition_by_date_range(window.start, window.end)
     result = aggregate_renta_income_ledger(
         partition.in_window,
         invoices,
@@ -411,21 +393,14 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     target_casilla_id: CasillaId,
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> RentaIncomeLedgerAggregation:
     """Load the catalogue and aggregate an annual activity-income window.
 
     Returns:
         The :class:`RentaIncomeLedgerAggregation` for the requested annual period.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
-    if repository.bucket_id != bucket_id:
-        raise AggregationValidationError(
-            t("aggregation.renta_ledger.errors.bucket_mismatch"),
-            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
-        )
-    invoices = _load_income_invoices(bucket_id=bucket_id, invoice_repository=invoice_repository)
+    invoices = _load_income_invoices(ports=ports)
     # Only the in-window ejercicio subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
     # reported uniformly as ``OUTSIDE_PERIOD``. Non-annual periods fall back to
@@ -433,7 +408,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     # raises the same error.
     if period.kind is not PeriodKind.ANNUAL:
         return aggregate_renta_m100_income_ledger(
-            repository.load(),
+            ports.transaction_reader.load(),
             invoices,
             bucket_id=bucket_id,
             period=period,
@@ -442,7 +417,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
         )
-    partition = repository.partition_by_date_range(period.start_date, period.end_date)
+    partition = ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date)
     result = aggregate_renta_m100_income_ledger(
         partition.in_window,
         invoices,
@@ -545,23 +520,16 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
     agrarian_activity_codes: frozenset[TipoActividad],
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> RentaIncomeLedgerAggregation:
     """Load the catalogue and aggregate a selected activity-narrowed quarter.
 
     Returns:
         The :class:`RentaIncomeLedgerAggregation` for the requested quarter.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
-    if repository.bucket_id != bucket_id:
-        raise AggregationValidationError(
-            t("aggregation.renta_ledger.errors.bucket_mismatch"),
-            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
-        )
-    invoices = _load_income_invoices(bucket_id=bucket_id, invoice_repository=invoice_repository)
+    invoices = _load_income_invoices(ports=ports)
     return aggregate_renta_m131_agrario_income_ledger(
-        repository.load(),
+        ports.transaction_reader.load(),
         invoices,
         bucket_id=bucket_id,
         period=period,

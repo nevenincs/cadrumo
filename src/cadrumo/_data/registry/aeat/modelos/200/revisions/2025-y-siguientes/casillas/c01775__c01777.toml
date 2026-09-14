@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01775"
+continuidad_id = "01775"
+continuidad_origin = "seeded"
 number = "01775"
 section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2018"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01776"
+continuidad_id = "01776"
+continuidad_origin = "seeded"
 number = "01776"
 section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2018"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01777"
+continuidad_id = "01777"
+continuidad_origin = "seeded"
 number = "01777"
 section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2018"]
 data_type = "money"

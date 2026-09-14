@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03081"
+continuidad_id = "03081"
 number = "03081"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
 [[revisions."2024".casillas]]
 id = "03082"
+continuidad_id = "is-ute-ajuste-art451-aumento"
 number = "03082"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "aumento"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
 [[revisions."2024".casillas]]
 id = "03083"
+continuidad_id = "03083"
 number = "03083"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "aumento"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
 [[revisions."2024".casillas]]
 id = "03084"
+continuidad_id = "03084"
 number = "03084"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "aumento"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
 [[revisions."2024".casillas]]
 id = "03085"
+continuidad_id = "03085"
 number = "03085"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "aumento"]
 data_type = "money"

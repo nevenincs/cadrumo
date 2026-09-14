@@ -35,7 +35,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 
 BUCKET_ID = "30300000-0000-4000-8000-000000000303"

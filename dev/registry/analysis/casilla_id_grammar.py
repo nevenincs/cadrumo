@@ -40,11 +40,10 @@ import collections
 import re
 import sys
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-
-from ..compiler.authority import compiled_bundled_authority
-from .corpus import bundled_modelo_ids
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 __all__ = [
     "GRAMMARS",
@@ -127,6 +126,13 @@ def screen_authority(
 
 def main() -> int:
     """Print one row per modelo, then a corpus-wide census; always exit 0."""
+    # Keep the classifier importable by local registry tooling without pulling
+    # in the production authority (and its published artifact).  The full
+    # compiler authority remains the explicit source for this standalone
+    # whole-corpus screen when ``main`` is actually invoked.
+    from ..compiler.authority import compiled_bundled_authority
+    from .corpus import bundled_modelo_ids
+
     authority = compiled_bundled_authority()
     uses = screen_authority(authority, bundled_modelo_ids())
     corpus: collections.Counter[str] = collections.Counter()

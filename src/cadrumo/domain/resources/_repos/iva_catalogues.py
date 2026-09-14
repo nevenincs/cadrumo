@@ -10,6 +10,7 @@ from collections.abc import Iterable
 from datetime import date
 
 from ....core.resources.errors import ResourceNotFoundError
+from ...calculations.registry.errors import RegistrySnapshotError
 
 
 class IvaCatalogueRepository:
@@ -29,7 +30,7 @@ class IvaCatalogueRepository:
 
         try:
             return resolve_catalogue(on=date(key, 1, 1))
-        except IvaCatalogueError as exc:
+        except (IvaCatalogueError, RegistrySnapshotError) as exc:
             raise ResourceNotFoundError(f"no IVA catalogue grounded for year {key}") from exc
 
     def all(self) -> Iterable[object]:

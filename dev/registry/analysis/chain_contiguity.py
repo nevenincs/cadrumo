@@ -42,8 +42,18 @@ Conditions reported:
   parallel scheme variants, a successor withholding by design, two editions
   overlapping in period. Here the two claims contradict rather than lag -- the
   editions do not succeed one another, so rows asserting one identity across
-  them assert something the edition structure denies. This is the only one of
-  the three where the CHAIN is the likelier error.
+  them assert something the edition structure denies.
+
+  This condition once carried the prior that the CHAIN is the likelier error.
+  The corpus's only two instances disprove it, and for a reason worth stating
+  because it is not specific to them: one of the causes the law set admits,
+  ``overlapping predecessor``, is not authored at all. The migration tool mints
+  it from a predicate that compares period SELECTORS and never reads
+  ``valid_from``/``valid_to``, renders it into prose that reads like a
+  judgement, and this screen then classifies that prose as law. 308's two
+  editions meet at 2011-06-30 and 2011-07-01, so the rows crossing the root are
+  right and the root is wrong. Where the cause is minted rather than reasoned,
+  expect the ROOT to be the error.
 - ``evolution_endpoint_unknown`` - an evolution whose ``from_revision`` or
   ``to_revision`` names an edition the modelo does not declare. The transition
   it records has no site.
@@ -52,16 +62,69 @@ Conditions reported:
   not happen, and the edition it describes does not carry it.
 - ``evolution_restates_ancestor`` - an evolution whose ``from_revision`` is not
   the declaring edition's immediate predecessor, where every edition in between
-  carries the chain. The adjacent step is already a record of its own, so this
-  one restates it: the evolution family's form of the same full-copy disease
+  carries the chain AND the adjacent step has a record of its own, so this one
+  restates it: the evolution family's form of the same full-copy disease
   :mod:`edition_delta_status` measures as ``member_restated``. Measured on this
   corpus the pattern is quadratic -- one modelo's sixth edition declares a
   transition from each of the five before it for the same chains.
-- ``evolution_without_chain_members`` - an evolution naming a lineage no casilla
-  of either endpoint edition carries.
+- ``evolution_spans_unrecorded_step`` - the same non-adjacent span where the
+  adjacent step has NO record, so the span is the only statement of that
+  transition. Split out because an earlier wording asserted the adjacent record
+  existed instead of checking; at the split, 118 of the 669 non-adjacent spans had
+  none, and dropping those as duplicates would have deleted the transition. The
+  remedy is the opposite one, authoring the adjacent record.
+
+  THE TWO HALVES SIT AT OPPOSITE ENDS OF A MODELO'S HISTORY, which is what makes
+  the split worth acting on rather than merely correct. Restatement accumulates
+  FORWARD: each new edition can restate every transition below it, so the newest
+  edition carries the most. The unrecorded step accumulates BACKWARD: an early
+  transition whose adjacent record nobody authored stays unrecorded forever, so
+  the oldest editions carry the most and the newest carry none. The same modelo
+  shows both slopes at once on the same chains. Read a count on a LATE edition as
+  deletable duplication and the same count on an EARLY edition as a missing
+  record, and never pool them into one backlog: the first shrinks by removing
+  statements, the second only by adding them.
+- ``evolution_without_chain_members`` - an evolution naming a lineage neither
+  endpoint edition MATERIALISES, so the transition it records has no rows. Asked
+  of the materialised edition, not the stated rows: a delta edition inherits
+  what it does not restate, and reading its stated rows called all 258 of
+  modelo 714's evolutions orphans while every one of them had its site.
+
+- ``chain_across_structural_root`` - the sharing across a root whose cause is
+  ``official_structure_differs``: the successor's official record design genuinely
+  differs from the predecessor's, a reordering or a byte shift, so no lineage work
+  lets the predecessor materialise it. Authored from a per-family materialisation
+  harness rather than inferred, which makes it a fact about the record design and
+  NOT debt -- every one of the corpus's sites carries a reason containing a
+  measurement. Split out of ``chain_across_root_by_law`` and not out of
+  recoverable: the owning screen classifies this cause as ``root_by_law``, so
+  without the split these crossings would read as the form forbidding
+  inheritance. Both kinds are permanent and the EVIDENCE is what differs -- a
+  norm against a harness measurement -- and reporting one as the other credits
+  the legislator with what the record design did.
+- ``chain_partially_grounded`` - a chain with some links grounded and some not.
+  Exemption is per OCCURRENCE and bilateral: an occurrence is exempt only once
+  every link touching it is grounded, so grounding one link exempts the
+  occurrences at its ends whose other links are also grounded -- a final-link
+  pass buys the terminal occurrence and nothing else. It does NOT buy nothing, and
+  an earlier wording here said it did: 322 carries 114 chains grounded at their
+  final link only and sits at 148 exempt of 847 occurrences.
+- ``ruling_reference_unknown`` - an adjudicated ruling naming a casilla the
+  edition it names does not carry. The rulings file is the seeder's canonical
+  input for a modelo it will not seed mechanically, so a ruling pointing at a row
+  that is not there directs the seeder at nothing.
 
 Measured rather than reported as a fault:
 
+- ``chain_fully_grounded`` - chains every link of which is grounded. GROUNDED means the
+  successor occurrence states ``continuidad_origin = "grounded"`` and nothing else does:
+  ``seeded`` is the seeder having identified the row and not yet evidenced it, and the
+  absence origins resolve a row for LEDGER totality while discharging no link here. A
+  census of non-``None`` origins therefore overstates grounding by exactly those
+  populations -- see the note at ``_GROUNDED``.
+- ``chain_links_to_ground`` - the remaining ungrounded links, summed over chains
+  that are not yet complete. Links rather than chains, because the work is per
+  link and a chain part-way through still needs each of the rest.
 - ``chain_shared_across_modelos`` - one lineage carried by casillas of two
   different modelos. Continuity is a statement about one form's own box, so a
   shared identifier is more likely a shared LABEL than a shared identity; but
@@ -128,6 +191,12 @@ _CHAIN_ROOT_KINDS: Final[dict[str, tuple[str, str]]] = {
     "root_by_law": ("chain_across_root_by_law", "declares by law it does not succeed"),
 }
 
+#: The root cause naming a MEASURED structural difference against the prior
+#: edition. Authored from a per-family materialisation harness rather than
+#: inferred, so it is a fact about the record design and not a task: a chain
+#: crossing such a root is expected and permanent.
+_STRUCTURE_DIFFERS: Final = "official_structure_differs"
+
 #: The evolution kind that states a lineage moved to a different box. A
 #: repurpose is a legitimate reason for a lineage to be absent from an edition,
 #: so it excuses a hole the way a retirement does.
@@ -136,7 +205,7 @@ _REPURPOSED: Final = "repurposed"
 #: The measurement's version, bumped on any change to what the conditions
 #: COUNT, so a lane diffing two runs can tell instrument movement from corpus
 #: movement instead of having to remember which changed.
-_SIGNAL_SCHEMA: Final = 1
+_SIGNAL_SCHEMA: Final = 6
 
 #: Every condition this screen can report, declared once so the set cannot be
 #: misread off the source.
@@ -146,10 +215,12 @@ CONDITIONS: Final[tuple[str, ...]] = (
     "chain_ambiguous_in_edition",
     "chain_across_pending_root",
     "chain_across_recoverable_root",
+    "chain_across_structural_root",
     "chain_across_root_by_law",
     "evolution_endpoint_unknown",
     "evolution_declared_off_endpoint",
     "evolution_restates_ancestor",
+    "evolution_spans_unrecorded_step",
     "evolution_without_chain_members",
     "chain_partially_grounded",
     "ruling_reference_unknown",
@@ -166,11 +237,52 @@ _RULINGS_FILE: Final = Path(__file__).with_name("casilla_lineage_rulings.toml")
 #: how a check reports 167 breakages where there are 2: the single-id lists name
 #: successor rows only, and `merged` entries are compound `A + B` expressions
 #: rather than ids at all.
+#: Every limitation this screen can record. Declared for the same reason the delta
+#: screen declares its own: a limitation's name otherwise exists only as a literal at its
+#: emit site, so one that stops being emitted is caught by nothing -- and a lost
+#: limitation reads as an axis that was measured and found clean.
+LIMITATIONS: Final[tuple[str, ...]] = (
+    "ruling_references_unchecked",
+    "rulings_unreadable",
+)
+
+
+#: The scope-dependent limitation's prefix, named once so the emit site and the
+#: per-call reset cannot drift apart.
+_UNCHECKED_REFERENCES: Final = "ruling_references_unchecked:"
+
 _RULING_PAIR_FIELDS: Final = ("grounded", "held", "withheld")
 _RULING_SUCCESSOR_FIELDS: Final = ("new_on_form", "not_on_form")
 
 #: The origin marking a link as established from cited evidence rather than
 #: inferred from a predicate.
+#: The ONLY ``continuidad_origin`` value that discharges a link. Named here with the
+#: values that do NOT, because the field answers two different questions and a census
+#: counting non-``None`` origins reports them as one:
+#:
+#:   grounded                    3,232 rows   discharges the link
+#:   seeded                      3,932 rows   the seeder IDENTIFIED the row; no evidence yet
+#:   new_on_form                   428 rows   absence origins: they resolve a row for LEDGER
+#:   predecessor_edition_silent    349 rows   totality and discharge NOTHING here
+#:   not_on_form                    32 rows
+#:   None                       10,109 rows
+#:
+#: So 4,741 rows carry an origin and still owe their link, and 83% of those are the
+#: seeder's own ``seeded`` output -- the corpus is not mislabelled, it is mid-pipeline.
+#:
+#: DO NOT REACH FOR ``CasillaLineageOrigin.continues_a_chain``. The domain owns the typed
+#: vocabulary and that property is True for ``grounded`` AND ``seeded``, because it answers
+#: whether the row ASSERTS a continuation -- a different question from whether the link is
+#: grounded, and the one a reader looking for a ready-made predicate finds first. This
+#: screen deliberately compares a literal rather than importing the enum, because it must
+#: keep reporting when the domain cannot be imported; the cost is that a renamed enum value
+#: would silently make every link read ungrounded, taking ``chain_links_to_ground`` from
+#: 7,253 to the full 10,473 with no error anywhere. A test pins the literal against the enum
+#: so that rename fails loudly instead.
+#: Modelo 390 is the worked example: 49% of its chained rows carry an origin and EIGHT are
+#: grounded, so it reads as half-finished on the ledger axis and untouched on this one.
+#: Twice in one session a reader concluded from an origin census that grounding work was
+#: done. Counts measured 2026-09-13 and will drift; the partition will not.
 _GROUNDED: Final = "grounded"
 
 #: Measured beside the conditions and never counted as findings.
@@ -275,6 +387,17 @@ def ruling_reference_findings(
     `merged` is deliberately not checked: its entries are compound `A + B`
     expressions naming two rows that fold into one, not identifiers, and
     treating them as ids reports every one of them as broken.
+
+    A ZERO HERE MEANS NOTHING WITHOUT THE SCOPE. The rulings file is global while
+    the statuses handed in may be scoped to one modelo, and an endpoint whose
+    edition was never scanned is skipped -- correctly, since the question cannot
+    be answered, but silently. Scoped to one modelo, every one of the corpus's
+    24 ruling endpoints skips -- 2,937 individual casilla references -- and this
+    returns no findings, which reads as a clean bill for precisely the condition
+    whose whole argument above is that these accrue invisibly. So the count of
+    unchecked REFERENCES is emitted as a limitation, counted the way the loop
+    counts rather than per ruling or per endpoint, so a reader seeing zero
+    findings can tell whether that is coverage or absence.
     """
     if not path.is_file():
         return ()
@@ -286,7 +409,18 @@ def ruling_reference_findings(
     rows: dict[tuple[str, str], set[str]] = defaultdict(set)
     for status in statuses:
         rows[(status.modelo, status.edition)].update(status.rows_by_id)
+    # This answer is SCOPE-DEPENDENT, so it belongs to this call and not to the
+    # process. `_note_ruling_limitation` dedupes on exact text, which does not
+    # help: each scope produces a different string, so across two calls they
+    # accumulate and a whole-corpus run whose own answer is zero inherits every
+    # earlier scope's. A harness that runs a scoped scan and then a full one --
+    # the normal way to verify a scope fix -- then gets a full scan declaring
+    # thousands of references unchecked that it actually checked. The limitation
+    # would outlive the question it answers, which is the species of defect it
+    # was added to report.
+    _RULING_LIMITATIONS[:] = [text for text in _RULING_LIMITATIONS if not text.startswith(_UNCHECKED_REFERENCES)]
     findings: list[ChainFinding] = []
+    unchecked = 0
     for ruling in document.get("ruling", ()):
         modelo = str(ruling.get("modelo", ""))
         predecessor, successor = str(ruling.get("predecessor", "")), str(ruling.get("successor", ""))
@@ -302,7 +436,10 @@ def ruling_reference_findings(
             checks += [(successor, str(entry), field) for entry in ruling.get(field, ()) or ()]
         for edition, casilla, field in checks:
             known = rows.get((modelo, edition))
-            if known is None or not casilla or casilla in known:
+            if known is None:
+                unchecked += 1
+                continue
+            if not casilla or casilla in known:
                 continue
             findings.append(
                 ChainFinding(
@@ -313,6 +450,11 @@ def ruling_reference_findings(
                     detail=f"ruling `{field}` names a row this edition does not carry",
                 )
             )
+    if unchecked:
+        _note_ruling_limitation(
+            f"{_UNCHECKED_REFERENCES} {unchecked} casilla references across the rulings name an "
+            "edition this scan did not read, so they were not checked"
+        )
     return tuple(findings)
 
 
@@ -339,6 +481,17 @@ def grounding_by_chain(
     That makes the CHAIN the unit of work, and the cost of a chain the number of
     links in it. Sizing route (b) as a flat row count overstates how much a
     partial pass discharges, which is nothing.
+
+    A KNOWN LIMIT, checked rather than assumed. Holders are STATED rows, so a
+    delta edition that inherits an occurrence without restating it is not a
+    holder and its link is not counted. That is correct for grounding -- an
+    inherited occurrence states no row, so it has no ``semantic_role`` to
+    require and nothing to ground -- but it means the link count is a count of
+    stated steps, not of editions the chain passes through. Every modelo this
+    condition currently reports on (322, 309, 308) authors every edition in
+    full, so the two coincide there. On a delta-authored modelo they would not,
+    and the reading to keep is that a chain's cost is the grounding work it
+    needs, not the distance it travels.
     """
     per_chain: dict[str, tuple[int, int]] = {}
     by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
@@ -382,6 +535,40 @@ def _excused(evolutions: Iterable[Evolution], chain: str, edition: str) -> bool:
     )
 
 
+def _materialised_chains(
+    ordered: tuple[EditionStatus, ...],
+    carried: Mapping[str, Counter[str]],
+) -> dict[str, frozenset[str]]:
+    """Every lineage each edition SERVES, inherited rows included.
+
+    A delta edition states only what changed and inherits the rest, so the
+    lineages it carries are its own stated ones plus everything its predecessor
+    materialises. The stated set answers a different question, and two of this
+    screen's conditions genuinely want it -- ``chain_ambiguous_in_edition``
+    because two STATED rows are the ambiguity it names.
+
+    Reading one for the other reported all 258 of modelo 714's evolutions as
+    naming a lineage no casilla carries. 714's editions 2022 through 2025 each
+    declare a predecessor and state 23 rows while materialising 111, so the 86
+    lineages per edition were carried the whole time. The chain is walked rather
+    than resolved in sequence so the answer does not depend on a predecessor
+    sorting ahead of its successor.
+    """
+    by_edition = {status.edition: status for status in ordered}
+
+    def walk(edition: str, seen: frozenset[str]) -> frozenset[str]:
+        status = by_edition.get(edition)
+        if status is None or edition in seen:
+            return frozenset()
+        own = frozenset(carried.get(edition, ()))
+        parent = status.predecessor_id
+        if not parent:
+            return own
+        return own | walk(parent, seen | {edition})
+
+    return {status.edition: walk(status.edition, frozenset()) for status in ordered}
+
+
 def modelo_findings(
     modelo: str,
     statuses: tuple[EditionStatus, ...],
@@ -398,7 +585,9 @@ def modelo_findings(
     ordered = _ordered(statuses)
     positions = {status.edition: index for index, status in enumerate(ordered)}
     carried = {status.edition: _chains_of(status) for status in ordered}
+    materialised = _materialised_chains(ordered, carried)
     mine = tuple(evolution for evolution in evolutions if evolution.modelo == modelo)
+    declared = {(evolution.chain, evolution.from_revision, evolution.to_revision) for evolution in mine}
 
     for status in ordered:
         for chain, count in sorted(carried[status.edition].items()):
@@ -425,6 +614,20 @@ def modelo_findings(
                 continue
             absent = ordered[gap]
             if _excused(mine, chain, absent.edition):
+                continue
+            # A DELTA edition states only what changed and inherits the rest, so
+            # a chain it does not restate is carried, not missing. Reading a
+            # stated-row absence as a hole reported both of the corpus's only
+            # two skips as defects when neither was: 390/2024 declares
+            # predecessor 2023 and 303/2024-hasta-08-y-2t declares 2023, and
+            # both predecessors carry the chain the successor was accused of
+            # dropping.
+            #
+            # The hole this screen exists to find is a chain absent from the
+            # MATERIALISED edition, and for a delta edition that means absent
+            # from its predecessor too -- which, if it were, would make the
+            # predecessor the edition with the hole rather than this one.
+            if absent.declares_predecessor:
                 continue
             findings.append(
                 ChainFinding(
@@ -468,8 +671,32 @@ def modelo_findings(
         # and pooling any two of them loses the distinction. Read from the
         # screen that owns the classification rather than re-derived here, so a
         # kind added there cannot silently fall into the wrong bucket.
-        root = _root_kind(successor.root_reason)
+        # The declared CAUSE wins over the wording, exactly as the owning screen
+        # decides it. This passed the reason alone, so every root carrying a
+        # cause code was classified from prose -- the one thing the comment above
+        # says this must not do.
+        root = _root_kind(successor.root_reason, successor.root_cause)
         kind, why = _CHAIN_ROOT_KINDS[root]
+        # A structural root gets its own kind, and it comes out of root_by_law
+        # rather than out of recoverable: the owning screen maps
+        # `official_structure_differs` to `root_by_law`, so without this override
+        # every such crossing would read as the form forbidding inheritance. Both
+        # are permanent and the EVIDENCE differs, which is the whole reason to
+        # split them -- a root by law rests on a norm, a structural root on a
+        # measured per-family materialisation result. Calling a harness
+        # measurement "by law" attributes to the legislator what the record design
+        # did.
+        #
+        # A structural root is not work: the design really is reordered, the
+        # edition genuinely cannot be materialised from its predecessor, and no
+        # lineage or grounding pass changes that. The chains still crossing it are
+        # not a defect either -- the box is the same concept while the editions
+        # cannot be merged, and both claims are true at once.
+        if successor.root_cause == _STRUCTURE_DIFFERS:
+            kind, why = (
+                "chain_across_structural_root",
+                "roots away from on a measured structural difference, which no lineage work changes",
+            )
         detail = f"shared with {predecessor.edition}, which this edition {why}"
         findings.extend(
             ChainFinding(modelo=modelo, edition=successor.edition, kind=kind, chain=chain, detail=detail)
@@ -502,19 +729,33 @@ def modelo_findings(
         start, end = positions[evolution.from_revision], positions[evolution.to_revision]
         skipped = ordered[start + 1 : end]
         if skipped and all(evolution.chain in carried[status.edition] for status in skipped):
+            # Whether this restates anything depends on the adjacent step HAVING a
+            # record, which an earlier version of this condition asserted instead
+            # of checking. Measured on the corpus, 118 of 669 findings had no
+            # adjacent record at all, so the spanning evolution was the only
+            # statement of the transition and dropping it would have lost the
+            # transition rather than removed a duplicate. The two cases need
+            # opposite work, so they are reported apart.
+            adjacent = (evolution.chain, ordered[end - 1].edition, evolution.to_revision)
+            if adjacent in declared:
+                kind = "evolution_restates_ancestor"
+                why = f"and {', '.join(status.edition for status in skipped)} carry the chain"
+            else:
+                kind = "evolution_spans_unrecorded_step"
+                why = (
+                    f"and no evolution records {ordered[end - 1].edition} -> {evolution.to_revision}, "
+                    f"so this span is the only statement of the transition"
+                )
             findings.append(
                 ChainFinding(
                     modelo=modelo,
                     edition=evolution.edition,
-                    kind="evolution_restates_ancestor",
+                    kind=kind,
                     chain=evolution.chain,
-                    detail=(
-                        f"{evolution.from_revision} -> {evolution.to_revision} spans {end - start} steps, "
-                        f"and {', '.join(status.edition for status in skipped)} carry the chain"
-                    ),
+                    detail=f"{evolution.from_revision} -> {evolution.to_revision} spans {end - start} steps, {why}",
                 )
             )
-        endpoints = carried[evolution.from_revision] + carried[evolution.to_revision]
+        endpoints = materialised[evolution.from_revision] | materialised[evolution.to_revision]
         if evolution.chain not in endpoints:
             findings.append(
                 ChainFinding(
@@ -522,7 +763,7 @@ def modelo_findings(
                     edition=evolution.edition,
                     kind="evolution_without_chain_members",
                     chain=evolution.chain,
-                    detail=f"no casilla of {evolution.from_revision} or {evolution.to_revision} carries it",
+                    detail=f"neither {evolution.from_revision} nor {evolution.to_revision} materialises it",
                 )
             )
     return tuple(findings)
@@ -537,9 +778,14 @@ def screen(statuses: tuple[EditionStatus, ...], evolutions: tuple[Evolution, ...
     for modelo, editions in sorted(by_modelo.items()):
         findings.extend(modelo_findings(modelo, tuple(editions), evolutions))
     findings.extend(ruling_reference_findings(statuses))
-    # A chain part-way through grounding is the trap: it looks like progress and
-    # discharges nothing, because its middle occurrences are exempt only once
-    # every link touching them is grounded.
+    # A chain part-way through grounding is the trap, but not because it
+    # discharges nothing -- an earlier wording of this said so and was wrong.
+    # Exemption is per occurrence and bilateral, so grounding one link exempts
+    # only the occurrences at its ends whose OTHER links are also grounded. On
+    # 322 a pass grounded the final link of 114 chains: each gained the terminal
+    # occurrence and nothing else, leaving the modelo at 148 exempt of 847. The
+    # trap is that the work reads as 114 chains advanced when it bought a quarter
+    # of each, and the remaining two links per chain are the whole cost.
     for key, (grounded, links) in sorted(grounding_by_chain(statuses).items()):
         if 0 < grounded < links:
             modelo, _, chain = key.partition("/")
@@ -549,7 +795,10 @@ def screen(statuses: tuple[EditionStatus, ...], evolutions: tuple[Evolution, ...
                     edition="<chain>",
                     kind="chain_partially_grounded",
                     chain=chain,
-                    detail=f"{grounded} of {links} links grounded; no occurrence is exempt until all are",
+                    detail=(
+                        f"{grounded} of {links} links grounded; only occurrences whose every "
+                        f"touching link is grounded are exempt, so the ungrounded links bound the rest"
+                    ),
                 )
             )
     return tuple(findings)
@@ -610,11 +859,32 @@ def census(statuses: tuple[EditionStatus, ...], evolutions: tuple[Evolution, ...
     }
 
 
+def _declaring_sites(findings: tuple[ChainFinding, ...]) -> Counter[str]:
+    """Per condition, how many distinct editions declare the thing being reported.
+
+    A root-crossing finding is emitted once per chain crossing one root, so its
+    count scales with the modelo's chain population while the work does not: the
+    corpus's 7,444 ``chain_across_pending_root`` findings are fifteen root
+    declarations, and 6,547 of them are six editions of two frozen modelos.
+    Reporting findings alone overstated the remaining work by three orders of
+    magnitude for most of this campaign. The site count is the unit a person
+    acts on; the finding count is the evidence weight behind it.
+    """
+    return Counter(
+        {
+            kind: len({(finding.modelo, finding.edition) for finding in findings if finding.kind == kind})
+            for kind in CONDITIONS
+        }
+    )
+
+
 def _payload(findings: tuple[ChainFinding, ...], counts: Mapping[str, int]) -> dict[str, Any]:
     tally = Counter(finding.kind for finding in findings)
+    sites = _declaring_sites(findings)
     return {
         "census": dict(counts),
         "conditions": {kind: tally.get(kind, 0) for kind in CONDITIONS},
+        "declaring_sites": {kind: sites.get(kind, 0) for kind in CONDITIONS},
         "findings": [
             {
                 "modelo": finding.modelo,
@@ -631,11 +901,13 @@ def _payload(findings: tuple[ChainFinding, ...], counts: Mapping[str, int]) -> d
 def _signal_lines(findings: tuple[ChainFinding, ...], counts: Mapping[str, int]) -> list[str]:
     """The diffable record form: fixed fields, deterministic order, no paths."""
     tally = Counter(finding.kind for finding in findings)
+    sites = _declaring_sites(findings)
     per_modelo: Counter[str] = Counter(finding.modelo for finding in findings)
     lines = [
         f"# chain_contiguity schema={_SIGNAL_SCHEMA} conditions={len(CONDITIONS)} measurements={len(MEASUREMENTS)}",
         "census " + " ".join(f"{key}={value}" for key, value in sorted(counts.items())),
         " ".join(["condition", *(f"{kind}={tally.get(kind, 0)}" for kind in CONDITIONS)]),
+        " ".join(["sites", *(f"{kind}={sites.get(kind, 0)}" for kind in CONDITIONS)]),
         " ".join(["clean", *(kind for kind in CONDITIONS if not tally.get(kind))]) or "clean none",
     ]
     lines += [f"modelo {modelo} findings={count}" for modelo, count in sorted(per_modelo.items())]
@@ -684,8 +956,12 @@ def main() -> int:
         "",
         "CONDITIONS",
     ]
+    sites = _declaring_sites(findings)
     active = [(kind, tally[kind]) for kind in CONDITIONS if tally[kind]]
-    out += [f"  {kind:<34} {count:>8,}" for kind, count in active] or ["  all clean"]
+    out += [
+        f"  {kind:<34} {count:>8,}   {sites[kind]:>3} declaring {'site' if sites[kind] == 1 else 'sites'}"
+        for kind, count in active
+    ] or ["  all clean"]
     clean = [kind for kind in CONDITIONS if not tally[kind]]
     if clean and active:
         out.append("  clean: " + ", ".join(clean))

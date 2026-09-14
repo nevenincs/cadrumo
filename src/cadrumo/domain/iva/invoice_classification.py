@@ -59,6 +59,7 @@ from .flow import (
     flow_direction_for_invoice_kind,
     is_deducible_flow,
     is_devengada_flow,
+    is_inversion_sujeto_pasivo_flow,
     settlement_sides_for_flow,
 )
 from .schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -132,7 +133,7 @@ class IvaInvoiceClassification(BaseModel):
         INVERSION_SUJETO_PASIVO is the only flow that contributes to BOTH
         settlement sides on the same operation (LIVA art. 84.Uno.2).
         """
-        return self.flow_direction is IvaFlowDirection.INVERSION_SUJETO_PASIVO
+        return is_inversion_sujeto_pasivo_flow(self.flow_direction)
 
 
 def classify_invoice_line_for_iva(

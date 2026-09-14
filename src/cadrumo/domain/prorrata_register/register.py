@@ -49,11 +49,27 @@ from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core.prorrata_register import ProrrataActivityRowType as _ProrrataActivityRowType
-from ...core.prorrata_register import ProrrataEspecialTransitionKind as _ProrrataEspecialTransitionKind
-from ...core.prorrata_register import ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance
-from ...core.prorrata_register import ProrrataRegisterRegime as _ProrrataRegisterRegime
-from ...core.prorrata_register import SectorDiferenciadoLetra as _SectorDiferenciadoLetra
+from ...core.prorrata_register import (
+    ProrrataActivityRowType as _ProrrataActivityRowType,
+    ProrrataEspecialTransitionKind as _ProrrataEspecialTransitionKind,
+    ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime as _ProrrataRegisterRegime,
+    SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
+    carried_prior_definitiva_prorrata_provenance as _carried_prior_definitiva,
+    especial_prorrata_register_regime as _especial_regime,
+    general_prorrata_register_regime as _general_regime,
+    ninguna_prorrata_register_regime as _ninguna_regime,
+    opcion_prorrata_transition as _opcion_transition,
+    prorrata_provenance_precedence as _provenance_precedence_from_registry,
+    prorrata_referenced_provenances as _referenced_provenances_from_registry,
+    require_prorrata_provenance as _require_provenance,
+    require_prorrata_register_regime as _require_regime,
+    require_prorrata_transition as _require_transition,
+    require_sector_diferenciado_letra as _require_sector_letter,
+    revocacion_prorrata_transition as _revocacion_transition,
+)
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 
 
@@ -75,28 +91,14 @@ PRORRATA_REGISTER_SCHEMA_VERSION = "2"
 # (LIVA arts. 102-106) predates the lower bound, but a pre-2000 ejercicio can
 # never be a modelled filing year.
 
-#: Provenances that record an externally-referenced percentage (art. 105.Dos /
-#: 105.Tres); these MUST carry an ``authorisation_reference`` and no other
-#: provenance may.
-_REFERENCED_PROVENANCES = frozenset(
-    {
-        _ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
-        _ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
-    }
-)
+def _referenced_provenances() -> frozenset[_ProrrataProvisionalProvenance]:
+    """Resolve the registry-declared document-backed provenance partition."""
+    return _referenced_provenances_from_registry()
 
-#: Single declared precedence ladder (LIVA art. 105): the AEAT-authorised
-#: provisional (105.Dos) and the inicio-de-actividades proposal (105.Tres)
-#: outrank the carried prior definitive (105.Uno). An explicit AEAT
-#: authorisation outranks a self-proposed inicio percentage as a deterministic
-#: tie-break; the two are mutually exclusive in practice. Lower index = higher
-#: precedence.
-_PROVENANCE_PRECEDENCE: tuple[_ProrrataProvisionalProvenance, ...] = (
-    _ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
-    _ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
-    _ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-    _ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
-)
+
+def _provenance_precedence() -> tuple[_ProrrataProvisionalProvenance, ...]:
+    """Resolve the registry-declared art. 105 precedence ladder."""
+    return _provenance_precedence_from_registry()
 
 
 class ProrrataEspecialTransitionEvidence(BaseModel):
@@ -116,6 +118,12 @@ class ProrrataEspecialTransitionEvidence(BaseModel):
 
     kind: _ProrrataEspecialTransitionKind
     evidence_reference: str = Field(min_length=1, max_length=256)
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _kind_is_registry_declared(cls, value: object) -> _ProrrataEspecialTransitionKind:
+        """Translate the persisted token through the domain registry catalogue."""
+        return _require_transition(value)
 
     @field_validator("evidence_reference")
     @classmethod
@@ -157,6 +165,12 @@ class SectorDefinition(BaseModel):
     sector_id: str = Field(min_length=1, max_length=64)
     letra: _SectorDiferenciadoLetra
     member_activity_codes: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("letra", mode="before")
+    @classmethod
+    def _letra_is_registry_declared(cls, value: object) -> _SectorDiferenciadoLetra:
+        """Translate the persisted sector letter through the domain catalogue."""
+        return _require_sector_letter(value)
 
     @field_validator("member_activity_codes")
     @classmethod
@@ -274,6 +288,21 @@ class ProrrataRegisterEntry(BaseModel):
     source_registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
     schema_version: str = PRORRATA_REGISTER_SCHEMA_VERSION
 
+    @field_validator("regime", mode="before")
+    @classmethod
+    def _regime_is_registry_declared(cls, value: object) -> _ProrrataRegisterRegime:
+        """Translate the persisted regime through the domain registry catalogue."""
+        return _require_regime(value)
+
+    @field_validator("provisional_provenance", mode="before")
+    @classmethod
+    def _provenance_is_registry_declared(
+        cls,
+        value: object,
+    ) -> _ProrrataProvisionalProvenance | None:
+        """Translate a persisted provenance through the domain registry catalogue."""
+        return None if value is None else _require_provenance(value)
+
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
@@ -318,7 +347,7 @@ def _validate_provisional_field_coupling(entry: ProrrataRegisterEntry) -> None:
         raise ProrrataRegisterValidationError(
             "provisional_percentage and provisional_provenance must be present or absent together"
         )
-    referenced = entry.provisional_provenance in _REFERENCED_PROVENANCES
+    referenced = entry.provisional_provenance in _referenced_provenances()
     if referenced and entry.authorisation_reference is None:
         raise ProrrataRegisterValidationError(
             f"provenance {entry.provisional_provenance} requires an authorisation_reference"
@@ -347,7 +376,7 @@ def _validate_source_observation_provenance(entry: ProrrataRegisterEntry) -> Non
     """Restrict source observations to the carried-prior-definitive lifecycle."""
     if (
         entry.source_observation_ref is not None
-        and entry.provisional_provenance is not _ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+        and entry.provisional_provenance != _carried_prior_definitiva()
     ):
         raise ProrrataRegisterValidationError(
             "source_observation_ref is permitted only for a carried_prior_definitiva entry"
@@ -356,7 +385,7 @@ def _validate_source_observation_provenance(entry: ProrrataRegisterEntry) -> Non
 
 def _validate_registry_snapshot_coordinates(entry: ProrrataRegisterEntry) -> None:
     """Require the producing registry coordinate for every derived percentage."""
-    carries_prior_definitive = entry.provisional_provenance is _ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    carries_prior_definitive = entry.provisional_provenance == _carried_prior_definitiva()
     if carries_prior_definitive and not entry.source_registry_snapshot_refs:
         raise ProrrataRegisterValidationError("carried-prior prorrata values require source_registry_snapshot_refs")
 
@@ -367,12 +396,12 @@ def _validate_especial_transition_regime(entry: ProrrataRegisterEntry) -> None:
     if transition is None:
         return
     required_regime = (
-        _ProrrataRegisterRegime.ESPECIAL
-        if transition.kind is _ProrrataEspecialTransitionKind.OPCION
-        else _ProrrataRegisterRegime.GENERAL
+        _especial_regime()
+        if transition.kind == _opcion_transition()
+        else _general_regime()
     )
-    if entry.regime is not required_regime:
-        verb = "option" if transition.kind is _ProrrataEspecialTransitionKind.OPCION else "revocation"
+    if entry.regime != required_regime:
+        verb = "option" if transition.kind == _opcion_transition() else "revocation"
         raise ProrrataRegisterValidationError(
             f"prorrata especial {verb} requires current {required_regime.value} regime"
         )
@@ -405,7 +434,7 @@ def resolve_provisional_percentage(
 ) -> ProrrataProvisionalResolution:
     """Resolve the in-force provisional percentage among candidate entries by the LIVA art. 105 ladder.
 
-    Applies the single declared precedence ladder (:data:`_PROVENANCE_PRECEDENCE`):
+    Applies the single declared precedence ladder (:func:`_provenance_precedence`):
     an AEAT-authorised (art. 105.Dos) or inicio-de-actividades (art. 105.Tres)
     provisional percentage outranks the carried prior definitive (art. 105.Uno).
     Only candidates that actually carry a provisional percentage participate; a
@@ -427,7 +456,7 @@ def resolve_provisional_percentage(
     for entry in candidates:
         if entry.provisional_percentage is None or entry.provisional_provenance is None:
             continue
-        rank = _PROVENANCE_PRECEDENCE.index(entry.provisional_provenance)
+        rank = _provenance_precedence().index(entry.provisional_provenance)
         if winning_rank is None or rank < winning_rank:
             winner = entry
             winning_rank = rank
@@ -633,7 +662,7 @@ class ProrrataRegister(BaseModel):
     def requires_activity_rows_for(self, ejercicio: int) -> bool:
         """Whether the recorded prorrata regime makes the five rows applicable."""
         return any(
-            not entry.interrupted and entry.regime is not _ProrrataRegisterRegime.NINGUNA
+            not entry.interrupted and entry.regime != _ninguna_regime()
             for entry in self.entries_for_ejercicio(ejercicio)
         )
 
@@ -748,10 +777,10 @@ def _validate_option_follows_no_prior_especial_state(register: ProrrataRegister)
     """
     for entry in register.entries:
         transition = entry.especial_transition
-        if transition is None or transition.kind is not _ProrrataEspecialTransitionKind.OPCION:
+        if transition is None or transition.kind != _opcion_transition():
             continue
         prior_entry = register.entry_for(entry.ejercicio - 1, sector_id=entry.sector_id)
-        if prior_entry is not None and prior_entry.regime is _ProrrataRegisterRegime.ESPECIAL:
+        if prior_entry is not None and prior_entry.regime == _especial_regime():
             raise ProrrataRegisterValidationError(
                 "prorrata especial option cannot repeat an immediately prior especial regime for "
                 f"sector {entry.sector_id!r}"
@@ -762,10 +791,10 @@ def _validate_revocation_prior_especial_state(register: ProrrataRegister) -> Non
     """Require every revocation to follow the same sector's prior especial state."""
     for entry in register.entries:
         transition = entry.especial_transition
-        if transition is None or transition.kind is not _ProrrataEspecialTransitionKind.REVOCACION:
+        if transition is None or transition.kind != _revocacion_transition():
             continue
         prior_entry = register.entry_for(entry.ejercicio - 1, sector_id=entry.sector_id)
-        if prior_entry is None or prior_entry.regime is not _ProrrataRegisterRegime.ESPECIAL:
+        if prior_entry is None or prior_entry.regime != _especial_regime():
             raise ProrrataRegisterValidationError(
                 "prorrata especial revocation requires a prior-year especial register state for "
                 f"sector {entry.sector_id!r}"

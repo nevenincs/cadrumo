@@ -1,15 +1,10 @@
 """Build, verify, and export :class:`EvidenceBundle` manifests.
 
-:class:`EvidenceBundleService` persists bundles through
-:class:`EvidenceBundleRepository` and reports integrity checks as an
-:class:`EvidenceBundleVerificationReport`.
-
-The repository is a
-:class:`~adapters.persistence.storage.SecureBoundRepository` namespace for
-encrypted :class:`~adapters.persistence.storage.Envelope`-wrapped
-bucket-local manifests, with the namespace, schema version, object-key grammar,
-and custody disposition declared by
-:data:`adapters.persistence.storage.APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`.
+:class:`EvidenceBundleService` persists bundles through the required
+:class:`EvidenceBundleRepositoryPort` capability and reports integrity checks
+as an :class:`EvidenceBundleVerificationReport`.  The encrypted storage
+binding and work-unit catalogue lookup are supplied by the outer composition
+root through :class:`EvidenceBundlePorts`.
 :meth:`EvidenceBundleService.export` is the narrow operator-directed plaintext
 exception: it verifies first, writes record bytes to the requested archive path before
 ``manifest.json``, and does not mutate the secure catalogue.
@@ -24,17 +19,12 @@ See Also:
 from __future__ import annotations
 
 import zipfile
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
-from typing import ClassVar, NamedTuple, override
+from typing import NamedTuple
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.secure_object_namespaces import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
-from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
@@ -52,39 +42,10 @@ from .models import (
     VerificationCheck,
     derive_bundle_id,
 )
+from .ports import EvidenceBundlePorts, EvidenceBundleRepositoryPort
 
 _MANIFEST_VERSION = 1
 _MANIFEST_FILENAME = "manifest.json"
-
-
-class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
-    """Encrypted repository for bucket-local :class:`EvidenceBundle` manifests.
-
-    The namespace, sensitivity, schema version, and payload type come
-    from
-    :data:`adapters.persistence.storage.APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`
-    so evidence bundles use the same secure-object envelope contract as other
-    sensitive bucket-local application state.
-    The :class:`~adapters.persistence.storage.SecureBoundRepository` base
-    wraps each :class:`EvidenceBundle` in a
-    :class:`~adapters.persistence.storage.Envelope` before writing it.
-
-    See Also:
-        :class:`EvidenceBundleService`
-            Service layer that builds, verifies, and exports bundles.
-        :class:`~adapters.persistence.storage.SecureBoundRepository`
-            Generic encrypted-envelope repository base used by this store.
-    """
-
-    namespace: ClassVar[str] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.namespace
-    sensitivity: ClassVar = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = EvidenceBundle
-
-    @override
-    def extract_identifier(self, payload: EvidenceBundle) -> str:
-        """Return the stable storage key for an :class:`EvidenceBundle`."""
-        return payload.bundle_id
 
 
 class EvidenceBundleVerificationReport(BaseModel):
@@ -178,7 +139,7 @@ def _hash_payload(payload: bytes) -> str:
 
 
 def _load_exact_bundle(
-    repository: EvidenceBundleRepository,
+    repository: EvidenceBundleRepositoryPort,
     *,
     bucket_id: str,
     bundle_id: str,
@@ -200,7 +161,7 @@ def _bundle_matches_request(bundle: EvidenceBundle, *, bucket_id: str, bundle_id
 
 
 def _matching_bundles(
-    repository: EvidenceBundleRepository,
+    repository: EvidenceBundleRepositoryPort,
     *,
     bucket_id: str,
     bundle_id: str,
@@ -221,32 +182,15 @@ class EvidenceBundleService:
     are produced by the file/verify path, not the operator). ``show``,
     ``check``, and ``export`` are operator-facing.
 
-    Persisted manifests stay inside :class:`EvidenceBundleRepository`.
+    Persisted manifests stay behind the required evidence-bundle repository
+    capability.
     Exported ZIP archives are separate caller-directed artifacts and are
     never treated as authoritative storage records.
     """
 
-    def __init__(
-        self,
-        settings: Settings | None = None,
-        repository_factory: Callable[[str], EvidenceBundleRepository] | None = None,
-    ) -> None:
-        """Initialize the service with resolved settings and the repository factory."""
-        # `load_settings()` honours `override_settings`; bare `Settings()`
-        # does not. The repository factory uses the resolved settings so
-        # bucket routes are still runtime-created when a test or CLI flow
-        # scopes settings through the context variable.
-        from ...core.config import load_settings as _load_settings
-
-        self._settings = settings or _load_settings()
-        self._repository_factory = repository_factory or self._runtime_repository_for
-
-    def _runtime_repository_for(self, bucket_id: str) -> EvidenceBundleRepository:
-        objects = secure_object_repository_for_bucket(bucket_id, self._settings)
-        return EvidenceBundleRepository(objects=objects)
-
-    def _repository_for(self, bucket_id: str) -> EvidenceBundleRepository:
-        return self._repository_factory(bucket_id)
+    def __init__(self, *, ports: EvidenceBundlePorts) -> None:
+        """Initialize the service with all required bucket-bound authorities."""
+        self._ports = ports
 
     def build(
         self,
@@ -261,8 +205,8 @@ class EvidenceBundleService:
         """Build a new bundle from a mapping of (object_type, object_id) -> raw bytes.
 
         The returned :class:`EvidenceBundle` has all record refs and
-        provenance metadata populated and has already been saved through
-        :class:`EvidenceBundleRepository`.
+        provenance metadata populated and has already been saved through the
+        required repository capability.
         """
         from ...domain.buckets.event import BucketEventObjectType
 
@@ -296,7 +240,7 @@ class EvidenceBundleService:
             created_at=now(),
             notes=notes,
         )
-        self._repository_for(bucket_id).save(bundle)
+        self._ports.repository.save(bundle)
         return bundle
 
     def show(self, *, bucket_id: str, bundle_id: str) -> EvidenceBundle:
@@ -317,7 +261,7 @@ class EvidenceBundleService:
         Returns:
             :class:`EvidenceBundle`: The retrieved evidence bundle.
         """
-        repository = self._repository_for(bucket_id)
+        repository = self._ports.repository
         exact = _load_exact_bundle(repository, bucket_id=bucket_id, bundle_id=bundle_id)
         if exact is not None:
             return exact
@@ -373,8 +317,7 @@ class EvidenceBundleService:
                 detail=f"manifest bucket={bundle.bucket_id!r}",
             ),
         )
-        work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
-        work_unit_exists = work_units.get(bundle.work_unit_id) is not None
+        work_unit_exists = self._ports.work_units.exists(bundle.work_unit_id)
         findings.append(
             EvidenceBundleCheckResult(
                 check=VerificationCheck.WORK_UNIT_BINDING,
@@ -499,7 +442,6 @@ class EvidenceBundleService:
 
 
 __all__ = [
-    "EvidenceBundleRepository",
     "EvidenceBundleService",
     "EvidenceBundleVerificationReport",
 ]

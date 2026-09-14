@@ -3,7 +3,7 @@
 The coverage helper derives the RIRPF Art. 109 70 percent withholding fact from
 current-period ledger rows in a
 :class:`~domain.transactions.TransactionCatalogue`. Work-unit consumers use
-a bucket-scoped :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
+the application-facing :class:`~domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`
 to load that catalogue before applying the same pure calculation.
 
 The result is intentionally evidence-scoped: the denominator and withholding
@@ -26,7 +26,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.period import Period
@@ -48,6 +47,16 @@ from ...domain.transactions.volumen_ingresos import counts_toward_art_109_activi
 # Registry-owned ratio, activity entity sets, category applicability, and source
 # references remain in canonical versioned registry/facts TOML.  The selected
 # declarations are resolved below; evidence folding mechanics remain local.
+
+_PROVEN_ACTIVITY_STATES = frozenset({BusinessClassification.BUSINESS, BusinessClassification.MIXED})
+_UNRESOLVED_ACTIVITY_STATES = frozenset(
+    {
+        BusinessClassification.NOT_YET_PROCESSED,
+        BusinessClassification.PROCESSED_UNCLASSIFIED,
+        BusinessClassification.SKIPPED_BY_RULE,
+        BusinessClassification.FAILED_VALIDATION,
+    },
+)
 
 
 def _art109_registry_declarations(
@@ -142,7 +151,7 @@ class Art109ActivityIncomeCoverage:
 def derive_art109_activity_income_coverage_for_work_unit(
     work_unit: WorkUnit,
     *,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> Art109ActivityIncomeCoverage:
     """Derive the Art. 109 current-payment-period coverage fact for an M130 work unit.
 
@@ -158,7 +167,7 @@ def derive_art109_activity_income_coverage_for_work_unit(
     period = work_unit.period
     if not period.has_date_span():
         return _insufficient("period_without_date_span")
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    repository = transaction_repository
     if repository.bucket_id != work_unit.bucket_id:
         return _insufficient("repository_bucket_mismatch")
     return derive_art109_activity_income_coverage(repository.load(), period=period)

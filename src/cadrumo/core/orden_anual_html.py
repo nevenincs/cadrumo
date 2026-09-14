@@ -141,10 +141,18 @@ class OrdenAnualIvaDifficultJustification:
 
 @dataclass(frozen=True, slots=True)
 class OrdenAnualIvaLorca2022Reduction:
-    """The source-stated Annex-II Lorca reduction for the 2022 IVA regime."""
+    """One source-stated municipal reduction candidate from an annual Orden.
 
-    municipality: Literal["Lorca"]
+    This is deliberately source IR, not an authored-fact projection.  The
+    compiler compares the observed values with the selected facts authority
+    before the candidate can become registry data.
+    """
+
+    ejercicio: int
+    municipality: str
+    annex_scope: str
     percentage: Decimal
+    calculation_periods: tuple[str, ...]
     required_text: tuple[str, str, str]
 
 
@@ -269,12 +277,17 @@ def orden_anual_iva_authority_units(authority: OrdenAnualIvaAuthority) -> tuple[
         ),
     )
     if authority.lorca_2022_reduction is not None:
+        reduction = authority.lorca_2022_reduction
         units.append(
             OrdenAnualIvaAuthorityUnit(
-                anchor="#m303-da-4-lorca-2022-reduction",
-                title="Reducción Lorca 2022 de cuota devengada IVA",
-                section="Disposición adicional cuarta · IVA",
-                text="\n".join(authority.lorca_2022_reduction.required_text),
+                anchor=(
+                    f"#m303-annual-reduction-{_semantic_slug(reduction.municipality)}-{reduction.ejercicio}"
+                ),
+                title=f"Reducción {reduction.municipality} {reduction.ejercicio} de cuota devengada IVA",
+                section=(
+                    f"{reduction.required_text[0].split('Reducción', maxsplit=1)[0].rstrip('. ')} · IVA"
+                ),
+                text="\n".join(reduction.required_text),
             ),
         )
     return tuple(units)

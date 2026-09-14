@@ -2055,6 +2055,24 @@ required_text = [
     "Aprobación del modelo 187 y de los diseños físicos y lógicos",
 ]
 
+[legal."orden-hap-1608-2014:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-1608-2014.html#a4"
+document_id = "BOE-A-2014-9225"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-9225#a4"
+published_at = 2014-09-10
+effective_from = 2014-09-11
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-13
+reviewed_by = "agent-authored from the bundled corpus copy of BOE-A-2014-9225; operator to re-stamp"
+notes = "Orden HAP/1608/2014 articulo 4 ESTABLISHES the modelo 187 plazo: 1 to 31 January for the operations of the preceding natural year, unconditional and single-channel. Articulo 1, which the deadline windows previously cited alone, approves the modelo and states no timing, so it cannot ground a deadline. Structural analogue of orden-eha-3127-2009:art-5 for modelo 190. corpus_ref names the full orden rather than a per-article stub because no art-4 stub is bundled; same shape as orden-hac-1417-2018:art-primero."
+required_text = [
+    "Plazo de presentación",
+    "El plazo de presentación del modelo 187 será el comprendido entre el 1 y el 31 de enero de cada año",
+]
 [legal."orden-hac-1417-2018:art-primero"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2867,7 +2885,22 @@ corpus_path = "corpus/aeat_official/instructions/modelo_193/files/modelo-193-pro
 sha256 = "d6b7a7149965ab27ac5b3af4467226f306b12340d12ec4514450c3daed464d27"
 bytes = 57001
 retrieved_at = 2026-05-05
-applies_from = 2024-01-01
+# applies_from corrected to 2020-01-01. The bundled page contradicts the
+# previous date with the same evidence the modelo-190 correction was recorded
+# on (see aeat-modelo-190-procedure in irpf.toml): it carries the link title
+# "Modelo 193. Ejercicio 2020 y siguientes. Consultas y bajas de
+# declaraciones." -- the same sentence, in the same link, in the same position
+# as on 190, with only the modelo number changed. Leaving it at 2024-01-01 while 190
+# sits at 2020-01-01 on that identical string is an inconsistency in the corpus
+# rather than a difference between the documents.
+#
+# WHAT IS INFERRED HERE, stated so a reviewer can weigh it: the link scopes a
+# consultas-y-bajas SERVICE to ejercicio 2020 onward. Treating that as the
+# PROCEDURE DOCUMENT's own applicability window is an inference, and it is the
+# one the 190 correction already made rather than a new one. Anyone who thinks
+# it reasons too freely from a service scope to a document window should
+# revisit 190 first; these five stand or fall with it.
+applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI12.shtml"
 review_status = "pending_review"
 
@@ -2960,6 +2993,26 @@ required_text = [
     "rendimiento neto de las actividades económicas",
     "según las normas del Impuesto sobre Sociedades",
     "ganancias o pérdidas patrimoniales derivadas de los elementos patrimoniales afectos",
+]
+
+[legal."ley-35-2006:art-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a16"
+document_id = "BOE-A-2006-20764"
+article = "16"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a16"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-13
+reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
+notes = "LIRPF art 16: metodos de determinacion de la base imponible. Nombra la estimacion directa como metodo general y declara sus dos modalidades, normal y simplificada, que es exactamente lo que irpf-regime-vocabulary cita para directa_normal y directa_simplificada. El articulo remite al 28 para el calculo del rendimiento, de ahi que ambos se citen juntos."
+required_text = [
+    "Métodos de determinación de la base imponible",
+    "se determinará con carácter general por el método de estimación directa",
+    "Estimación directa, que se aplicará como método general, y que admitirá dos modalidades, la normal y la simplificada",
 ]
 
 [legal."ley-35-2006:art-29"]

@@ -20,7 +20,6 @@ from typing import Self
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
-from ...adapters.inbound.einvoice.parsers import FacturaeInvoiceClass
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
@@ -29,6 +28,7 @@ from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
+from .structured_invoice_ports import StructuredInvoiceClassification, StructuredInvoiceClassificationKind
 
 __all__ = [
     "DraftDiscrepancyFinding",
@@ -362,7 +362,7 @@ class DraftDiscrepancyFinding(BaseModel):
 
 def facturae_invoice_class_findings(
     *,
-    declared: FacturaeInvoiceClass | None,
+    declared: StructuredInvoiceClassification | None,
     rectifies_invoice_number: str | None,
 ) -> tuple[DraftDiscrepancyFinding, ...]:
     """Report Facturae class gaps and contradictions without choosing a side."""
@@ -370,25 +370,25 @@ def facturae_invoice_class_findings(
         return ()
 
     findings: list[DraftDiscrepancyFinding] = []
-    if declared in {FacturaeInvoiceClass.ORIGINAL_SUMMARY, FacturaeInvoiceClass.COPY_SUMMARY}:
+    if declared.kind is StructuredInvoiceClassificationKind.SUMMARY:
         findings.append(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED,
-                detail=f"Facturae InvoiceClass {declared.value!r} declares recapitulativa, which is not modelled",
+                detail=(
+                    f"Facturae InvoiceClass {declared.source_code!r} declares recapitulativa, "
+                    "which is not modelled"
+                ),
             ),
         )
 
-    declares_correction = declared in {
-        FacturaeInvoiceClass.ORIGINAL_CORRECTIVE,
-        FacturaeInvoiceClass.COPY_CORRECTIVE,
-    }
+    declares_correction = declared.kind is StructuredInvoiceClassificationKind.CORRECTIVE
     carries_correction = rectifies_invoice_number is not None
     if declares_correction != carries_correction:
         findings.append(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED,
                 detail=(
-                    f"Facturae InvoiceClass {declared.value!r} and Corrective/InvoiceNumber "
+                    f"Facturae InvoiceClass {declared.source_code!r} and Corrective/InvoiceNumber "
                     f"presence={carries_correction!r} disagree"
                 ),
             ),
@@ -610,14 +610,14 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
     provenance: tuple[FieldProvenance, ...] = ()
     discrepancies: tuple[DraftDiscrepancyFinding, ...] = ()
     raw_text_length: int = 0
-    _facturae_invoice_class: FacturaeInvoiceClass | None = PrivateAttr(default=None)
+    _facturae_invoice_class: StructuredInvoiceClassification | None = PrivateAttr(default=None)
 
     @property
-    def facturae_invoice_class(self) -> FacturaeInvoiceClass | None:
+    def facturae_invoice_class(self) -> StructuredInvoiceClassification | None:
         """Return the structured reader's document-class fact, when present."""
         return self._facturae_invoice_class
 
-    def set_facturae_invoice_class(self, value: FacturaeInvoiceClass | None) -> None:
+    def set_facturae_invoice_class(self, value: StructuredInvoiceClassification | None) -> None:
         """Attach the structured reader's document-class fact to this draft."""
         self._facturae_invoice_class = value
 

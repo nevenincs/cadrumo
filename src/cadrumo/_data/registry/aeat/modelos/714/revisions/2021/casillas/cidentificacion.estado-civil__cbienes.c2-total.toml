@@ -7,6 +7,7 @@ number = "estado-civil"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "integer"
+semantic_role = "patrimonio_estado_civil"
 required = false
 input_kind = "manual"
 
@@ -17,6 +18,7 @@ number = "fecha-nacimiento"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "date"
+semantic_role = "patrimonio_fecha_nacimiento"
 required = false
 input_kind = "manual"
 
@@ -27,6 +29,7 @@ number = "discapacidad-porcentaje"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "integer"
+semantic_role = "patrimonio_porcentaje_discapacidad"
 required = false
 input_kind = "manual"
 
@@ -37,6 +40,7 @@ number = "discapacidad-clase"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "integer"
+semantic_role = "patrimonio_clase_discapacidad"
 required = false
 input_kind = "manual"
 
@@ -47,6 +51,7 @@ number = "codigo-provincia"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "province_code"
+semantic_role = "patrimonio_domicilio_habitual_codigo_provincia"
 required = false
 input_kind = "manual"
 
@@ -57,6 +62,7 @@ number = "nacionalidad"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "integer"
+semantic_role = "patrimonio_nacionalidad"
 required = false
 input_kind = "manual"
 
@@ -67,6 +73,7 @@ number = "regimen-economico-matrimonio"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_regimen_economico_matrimonio"
 required = false
 input_kind = "manual"
 
@@ -77,6 +84,7 @@ number = "representante-nif"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "nif"
+semantic_role = "patrimonio_representante_nif"
 required = false
 input_kind = "manual"
 
@@ -87,6 +95,7 @@ number = "representante-nombre"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "name"
+semantic_role = "patrimonio_representante_nombre"
 required = false
 input_kind = "manual"
 
@@ -97,6 +106,7 @@ number = "fecha-declaracion-localidad"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_localidad_declaracion"
 required = false
 input_kind = "manual"
 
@@ -107,6 +117,7 @@ number = "fecha-declaracion-dia"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "integer"
+semantic_role = "patrimonio_dia_declaracion"
 required = false
 input_kind = "manual"
 
@@ -117,6 +128,7 @@ number = "fecha-declaracion-mes"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_mes_declaracion"
 required = false
 input_kind = "manual"
 
@@ -127,6 +139,7 @@ number = "fecha-declaracion-anio"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "year"
+semantic_role = "patrimonio_anio_declaracion"
 required = false
 input_kind = "manual"
 
@@ -137,6 +150,7 @@ number = "complementaria-cuotas-anteriores"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "money"
+semantic_role = "patrimonio_complementaria_cuotas_anteriores"
 required = false
 input_kind = "manual"
 
@@ -147,6 +161,7 @@ number = "idioma"
 segmento = "714-00"
 section = ["declarante"]
 data_type = "text"
+semantic_role = "patrimonio_idioma_declaracion"
 required = false
 input_kind = "manual"
 
@@ -157,6 +172,7 @@ number = "a"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_bienes_afectos_no_exentos_excluidos_inmuebles"
 required = false
 input_kind = "manual"
 
@@ -167,5 +183,6 @@ number = "b"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_inmuebles_afectos_no_exentos"
 required = false
 input_kind = "manual"

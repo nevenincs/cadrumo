@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from ...core.config import Settings
 from ...core.logging import get_logger
-from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+from ..filing.draft_review_ports import DraftReviewPorts
 from .enums import ReviewItemKind, ReviewState, severity_rank
 from .models import ReviewItem
 from .source_adapters import (
@@ -28,18 +28,18 @@ def _source_review_items(
     settings: Settings,
     *,
     bucket_id: str,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
     confidence_below: Decimal | None,
 ) -> list[ReviewItem]:
     """Collect the source-owned items before queue-level filters are applied."""
     if confidence_below is not None:
         return list(
-            transactions_low_confidence(settings, bucket_id=bucket_id, threshold=confidence_below),
+            transactions_low_confidence(ports=ports, threshold=confidence_below),
         )
     return [
-        *transactions_pending(settings, bucket_id=bucket_id),
-        *invoices_pending(settings, bucket_id=bucket_id),
-        *drafts_pending(settings, bucket_id=bucket_id, observation_repository=observation_repository),
+        *transactions_pending(ports=ports),
+        *invoices_pending(ports=ports),
+        *drafts_pending(settings, bucket_id=bucket_id, ports=ports),
     ]
 
 
@@ -78,7 +78,7 @@ class ReviewQueue:
         settings: Settings,
         *,
         bucket_id: str,
-        observation_repository: CalculationObservationRepositoryProtocol,
+        ports: DraftReviewPorts,
         kinds: frozenset[ReviewItemKind] | None = None,
         modelo: str | None = None,
         state: ReviewState = ReviewState.PENDING,
@@ -115,7 +115,7 @@ class ReviewQueue:
         items = _source_review_items(
             settings,
             bucket_id=bucket_id,
-            observation_repository=observation_repository,
+            ports=ports,
             confidence_below=confidence_below,
         )
         items = _filter_review_items(items, kinds=kinds, modelo=modelo)

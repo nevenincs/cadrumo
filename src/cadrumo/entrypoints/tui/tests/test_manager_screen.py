@@ -25,7 +25,7 @@ from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
-from ....tests.profile_capsule import load_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import ProfileManagerScreen

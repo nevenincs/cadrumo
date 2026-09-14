@@ -54,6 +54,7 @@ from .common import (
     transaction_catalogue_repo,
 )
 from .config.status_rendering import precondition_action_lines
+from ._ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
 from .state_projection_support import ledger_evidence_ports_factory
 
 if TYPE_CHECKING:
@@ -91,11 +92,13 @@ def evidence_batch(
 
     bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     text_mode = format_of(ctx) is not OutputFormat.JSON
+    evidence_ports = ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id)
     run = run_evidence_batch(
         bucket_id=bucket_id,
         sources=sources,
         direction=kind,
-        evidence_ports=ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id),
+        evidence_ports=evidence_ports,
+        extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
         on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
     )
     emit_envelope(

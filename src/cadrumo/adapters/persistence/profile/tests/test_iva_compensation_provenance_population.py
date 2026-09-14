@@ -78,15 +78,15 @@ from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.calculations.binding_prefill import (
-    _observation_from_iva_compensation_history,
+    observation_from_iva_compensation_history,
     extract_modelo_303_local_iva_compensation_recurrence,
 )
 from cadrumo.application.calculations.iva_compensation_annual_partition import (
-    _period_state_from_303_envelope,
+    period_state_from_303_envelope,
     resolve_iva_compensation_annual_partition_binding_values,
 )
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.iva_compensation_history import (
-    IvaCompensationHistoryRepository,
     correct_iva_compensation_period,
     seed_iva_compensation_period,
 )
@@ -332,6 +332,7 @@ def _persist_every_legitimate_row() -> None:
         period=_SEED_PERIOD,
         amount=_SEED_AMOUNT,
         seeded_at=_SEEDED_AT,
+        repository=IvaCompensationHistoryRepository(),
     )
     # A correction is only reachable over an existing seed; the corrected period
     # therefore starts seeded and ends carrying OPERATOR_CORRECTION, which is
@@ -341,12 +342,14 @@ def _persist_every_legitimate_row() -> None:
         period=_CORRECTION_PERIOD,
         amount=_SUPERSEDED_SEED_AMOUNT,
         seeded_at=_SEEDED_AT,
+        repository=IvaCompensationHistoryRepository(),
     )
     correct_iva_compensation_period(
         taxpayer_nif=_NIF,
         period=_CORRECTION_PERIOD,
         amount=_CORRECTION_AMOUNT,
         corrected_at=_CORRECTED_AT,
+        repository=IvaCompensationHistoryRepository(),
     )
     work_unit = _app_filed_work_unit()
     persist_filed_revision_observation(
@@ -356,6 +359,7 @@ def _persist_every_legitimate_row() -> None:
         captured_at=_APP_FILED_AT,
         result_disposition=ResultDisposition.COMPENSACION,
         taxpayer_nif=_NIF,
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
     )
     persist_filed_calculation_observation(_aeat_captured_303_observation())
 
@@ -363,7 +367,7 @@ def _persist_every_legitimate_row() -> None:
 def _wallet_balance_census() -> _PathCensus:
     """Measure the rows the offline wallet-balance projection loads and folds."""
     rows = IvaCompensationHistoryRepository().list_periods()
-    report = query_iva_wallet_balance(as_of_year=_AS_OF_YEAR)
+    report = query_iva_wallet_balance(as_of_year=_AS_OF_YEAR, repository=IvaCompensationHistoryRepository())
     return _PathCensus(
         path="wallet-balance projection",
         entry_point="src/cadrumo/application/calculations/iva_wallet_balance.py:30",
@@ -397,7 +401,7 @@ def _binding_prefill_census() -> _PathCensus:
                 f"{source_period.registry_token}: NO SOURCE ROW",
             )
             continue
-        projected = _observation_from_iva_compensation_history(state)
+        projected = observation_from_iva_compensation_history(state)
         snapshot = bundled_authority().snapshot(
             Modelo("303").value,
             filing_year=target_year,
@@ -446,7 +450,7 @@ def _carry_ingress_census() -> _PathCensus:
         if payload is None:
             evidence.append(f"{period.filing_year}/{period.registry_token}: NO INGRESS ENVELOPE STORED")
             continue
-        reconstructed = _period_state_from_303_envelope(payload)
+        reconstructed = period_state_from_303_envelope(payload)
         rows.append(reconstructed)
         partition = resolve_iva_compensation_annual_partition_binding_values(
             bundled_authority().snapshot(Modelo("390").value, filing_year=period.filing_year, period="0A").revision,

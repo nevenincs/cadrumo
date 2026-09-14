@@ -2,10 +2,10 @@
 
 Two things are proven here without contacting AEAT: the read is gated by
 the live-read opt-in like every other remote navigation, and the door
-reaches the sede adapter's READ symbol only. The second matters because
-the censal consulta sits in an area AEAT titles "Consulta y
+depends only on its application-owned fetch capability. The second matters
+because the censal consulta sits in an area AEAT titles "Consulta y
 modificación" — the write sibling is one link away, and the acquisition
-door is where a future edit could reach for it.
+door must not know the concrete reader.
 
 The parse and no-write-surface guarantees belong to the sede reader and
 are proven in its own suite; the projection and adopt/defer split belong
@@ -22,6 +22,7 @@ import inspect
 
 import pytest
 
+from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ....core.access_gate.errors import AeatLiveReadNotEnabledError
 from ..censo import (
     LIVE_CENSAL_READ_OPERATION,
@@ -29,6 +30,17 @@ from ..censo import (
 )
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
+
+
+async def _unused_browser_session_factory(settings: object) -> object:
+    del settings
+    raise AssertionError("the live-read gate must refuse before opening a browser")
+
+
+async def _unused_censal_fetch(session: object, *, taxpayer_nif: str, settings: object) -> object:
+    del session, taxpayer_nif, settings
+    raise AssertionError("the live-read gate must refuse before fetching censo data")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,20 +64,24 @@ def test_the_read_refuses_under_pytest_without_the_live_opt_in() -> None:
     prevent.
     """
     with pytest.raises(AeatLiveReadNotEnabledError):
-        asyncio.run(pull_censal_datos(operator_scope_ports=_OPERATOR_SCOPE_PORTS))
+        asyncio.run(
+            pull_censal_datos(
+                certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                browser_session_factory=_unused_browser_session_factory,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                censal_fetch_port=_unused_censal_fetch,
+            )
+        )
 
 
-def test_the_door_reaches_only_the_sede_read_symbol() -> None:
-    """The read imports the censal fetch and nothing that could submit.
+def test_the_door_reaches_only_the_application_fetch_capability() -> None:
+    """The application door imports no concrete Sede symbol.
 
-    Pinned at the import boundary because the consulta page AEAT serves
-    carries controls, and the censal modification surface is reachable
-    from it. Reading the rendered DOM is a read; driving a control on it
-    is not, and this door must never acquire the means to. Scoped to the
-    function's own body so the facade's other live reads, which import
-    their own sede symbols, cannot mask a submitting import added here.
+    The consulta page AEAT serves carries controls, and the censal modification
+    surface is reachable from it. The concrete reader is therefore an outer
+    binding concern; this door accepts only the application-owned capability.
     """
-    assert _sede_imports_in(inspect.getsource(pull_censal_datos)) == {"fetch_censal_datos"}
+    assert _sede_imports_in(inspect.getsource(pull_censal_datos)) == set()
 
 
 def test_a_submitting_import_would_be_caught() -> None:

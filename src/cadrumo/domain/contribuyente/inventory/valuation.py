@@ -18,16 +18,14 @@ from ....core.decimal.constants import MONEY_ZERO
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity.digest import ContentDigest
 from ....core.money.rounding import round_to_cents as _quantize
+from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_filing_year
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 
 # The record module completes the cycle-breaking model bootstrap before these
-# concrete model modules are imported directly.
-from ._anexo_d_records import InventoryAnexoDResult
-from .closing_authority_records import (
-    InventoryClosingAuthorityRecord,
-    InventoryClosingConflictDiagnostic,
-    InventoryClosingResolution,
-)
+# concrete model modules are imported directly.  Import it first: its bootstrap
+# publishes the closing-authority and Anexo D models before their concrete
+# modules are requested below.
 from .records import (
     InventoryClosingAuthority,
     InventoryLedger,
@@ -40,6 +38,12 @@ from .records import (
     ValuationMethod,
     resolve_inventory_authoritative_closing,
 )
+from .closing_authority_records import (
+    InventoryClosingAuthorityRecord,
+    InventoryClosingConflictDiagnostic,
+    InventoryClosingResolution,
+)
+from ._anexo_d_records import InventoryAnexoDResult
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,10 +127,21 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
 
 def _validate_anexo_d_ledger(ledger: InventoryLedger) -> InventoryLedger:
     """Validate the grounded year/source envelope and canonicalize movement order."""
-    if ledger.year != 2025:
+    try:
+        applicable_filing_year = resolve_inventory_anexo_d_filing_year(filing_year=int(ledger.year))
+    except RegistryValidationError as exc:
         raise InventoryLedgerError(
-            "inventory Anexo D projection is grounded only for filing year 2025",
+            "inventory Anexo D applicability is not declared for the filing year",
             context={"actividad_id": ledger.actividad_id, "filing_year": ledger.year},
+        ) from exc
+    if ledger.year != applicable_filing_year:
+        raise InventoryLedgerError(
+            "inventory Anexo D projection is not applicable for the filing year",
+            context={
+                "actividad_id": ledger.actividad_id,
+                "filing_year": ledger.year,
+                "applicable_filing_year": applicable_filing_year,
+            },
         )
     out_of_period_movements = tuple(
         movement.movement_id for movement in ledger.period_movements if movement.movement_date.year != ledger.year
@@ -194,7 +209,7 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoD
         source_ledger=validated,
         source_ledger_fingerprint=_inventory_projection_source_fingerprint(validated),
         actividad_id=validated.actividad_id,
-        filing_year=2025,
+        filing_year=validated.year,
         opening_value=opening,
         movement_derived_closing_value=resolution.movement_derived_value,
         authoritative_closing_value=resolution.authoritative_value,
@@ -219,7 +234,7 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoD
 def compute_inventory_anexo_d_projection(
     ledger: InventoryLedger,
 ) -> InventoryAnexoDResult:
-    """Project one complete 2025 activity ledger to inventory casillas."""
+    """Project one complete applicable activity ledger to inventory casillas."""
     projection_values = derive_inventory_anexo_d_values(ledger)
     payload = {field.name: getattr(projection_values, field.name) for field in dataclass_fields(projection_values)}
     projection = InventoryAnexoDResult.model_construct(

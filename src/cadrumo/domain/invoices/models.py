@@ -42,15 +42,19 @@ from ..identifiers import canonical_decimal_string
 from ..iva.classification import InvoiceKind, TransactionKind, resolve_transaction_kind_catalogue
 from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
-from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, require_eu_member_state, spanish_eu_member_state
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 from .enums import (
+    advance_payment_received_role,
+    default_invoice_class,
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,
     IvaRate,
     PaymentStatus,
+    invoice_class_rectificativa,
+    invoice_class_simplificada,
     iva_rate_percentage,
     resolve_iva_rate_token,
 )
@@ -187,7 +191,9 @@ class InvoiceLine(BaseModel):
             payload["iva_rate"] = resolve_iva_rate_token(payload["iva_rate"], date.today())
         if "oss_rate_kind" in payload and isinstance(payload["oss_rate_kind"], str):
             stripped = payload["oss_rate_kind"].strip()
-            payload["oss_rate_kind"] = require_iva_rate_kind(stripped, effective_date=date.today()) if stripped else None
+            payload["oss_rate_kind"] = (
+                require_iva_rate_kind(stripped, effective_date=date.today()) if stripped else None
+            )
         return payload
 
     @field_validator("oss_rate_kind")
@@ -250,7 +256,7 @@ class Invoice(BaseModel):
     invoice_id: InvoiceId
     bucket_id: BucketId | None = Field(default=None)
     kind: InvoiceKind
-    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA
+    invoice_class: InvoiceClass = Field(default_factory=default_invoice_class)
     series: str | None = Field(default=None, min_length=1)
     invoice_number: str = Field(min_length=1)
     issued_at: date
@@ -796,7 +802,7 @@ class Invoice(BaseModel):
         scenario; it is a document missing its own issuer's identity, so
         the relief must never fire for :attr:`kind` ``RECEIVED``.
 
-        An entrega intracomunitaria exenta is refused SIMPLIFICADA outright,
+        An entrega intracomunitaria exenta is refused for the simplified class outright,
         independent of the tax id question above: RD 1619/2012 art. 4.4.a)
         forbids a factura simplificada for this category altogether, so a
         document naming this category must never carry this class at all --
@@ -809,32 +815,34 @@ class Invoice(BaseModel):
         category = self.iva_category
         missing_tax_id = self.counterparty_tax_id is None
         category_value = getattr(category, "value", "")
-        relief_case = (self.invoice_class, self.kind) == (InvoiceClass.SIMPLIFICADA, InvoiceKind.ISSUED)
+        simplificada = invoice_class_simplificada()
+        rectificativa = invoice_class_rectificativa()
+        relief_case = (self.invoice_class, self.kind) == (simplificada, InvoiceKind.ISSUED)
         _normalization.raise_first_invoice_violation(
             (
                 (
-                    (self.invoice_class is InvoiceClass.RECTIFICATIVA, not self.series) == (True, True),
+                    (self.invoice_class == rectificativa, not self.series) == (True, True),
                     "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
                 ),
                 (
-                    (self.invoice_class is InvoiceClass.RECTIFICATIVA, not self.rectifies_invoice_number)
+                    (self.invoice_class == rectificativa, not self.rectifies_invoice_number)
                     == (True, True),
                     "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
                 ),
                 (
-                    (self.invoice_class is not InvoiceClass.RECTIFICATIVA, self.rectifies_invoice_number is not None)
+                    (self.invoice_class != rectificativa, self.rectifies_invoice_number is not None)
                     == (True, True),
                     "rectifies_invoice_number only applies to a factura rectificativa",
                 ),
                 (
                     (self.invoice_class, category)
-                    == (InvoiceClass.SIMPLIFICADA, require_iva_category("intra_community_supply")),
+                    == (simplificada, require_iva_category("intra_community_supply")),
                     "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
                     "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
                 ),
                 (
                     (missing_tax_id, not relief_case) == (True, True),
-                    "counterparty_tax_id is required unless invoice_class is SIMPLIFICADA and kind is ISSUED; "
+                    "counterparty_tax_id is required unless the invoice is simplified and kind is ISSUED; "
                     "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
                 ),
                 (
@@ -878,7 +886,7 @@ class Invoice(BaseModel):
         """
         if (
             self.iva_category == require_iva_category("intra_community_supply")
-            and self.counterparty_identification_state is EUMemberState.ES
+            and self.counterparty_identification_state == spanish_eu_member_state()
         ):
             raise InvoiceValidationError(
                 "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
@@ -895,7 +903,7 @@ class Invoice(BaseModel):
         with no stated role would leave a reader guessing which of art. 6.1.i's
         two clauses it answers, and a role with no date states nothing.
 
-        A pago anticipado devengo (``ADVANCE_PAYMENT_RECEIVED``, LIVA
+        A pago anticipado devengo (the advance-payment role, LIVA
         art. 75.Dos) requires money to have actually been received -- "el
         cobro total o parcial del precio" -- so it is refused against a
         ``payment_status`` that states none was. It is also refused outright
@@ -906,7 +914,8 @@ class Invoice(BaseModel):
         """
         if (self.operation_date is None) != (self.operation_date_role is None):
             raise InvoiceValidationError("operation_date and operation_date_role must be set together")
-        if self.operation_date_role is InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED:
+        advance_payment_role = advance_payment_received_role()
+        if self.operation_date_role == advance_payment_role:
             if self.iva_category == require_iva_category("intra_community_supply"):
                 raise InvoiceValidationError(
                     "a pago anticipado devengo does not apply to an entrega intracomunitaria exenta "
@@ -914,7 +923,7 @@ class Invoice(BaseModel):
                 )
             if self.payment_status not in _COLLECTED_PAYMENT_STATUSES:
                 raise InvoiceValidationError(
-                    "operation_date_role ADVANCE_PAYMENT_RECEIVED requires a collected payment_status "
+                    f"operation_date_role {advance_payment_role.value} requires a collected payment_status "
                     "(PAID or PARTIALLY_PAID); LIVA art. 75.Dos devengues on actual cobro",
                 )
         return self
@@ -976,21 +985,19 @@ class Invoice(BaseModel):
         :attr:`counterparty_country` carries the raw uppercase ISO-3166-1
         alpha-2 code (validated at construction time). This typed
         accessor lets downstream consumers (Modelo 369 OSS bindings,
-        intra-community classification, OSS classifier dispatch) work
-        with the closed substrate enum without a per-call lowercase /
-        membership check. Anchored to
-        :data:`domain.invoices.validators.EU_MEMBER_STATE_CODES` which
-        derives from :class:`cadrumo.domain.iva.EUMemberState`.
+        intra-community classification, OSS classifier dispatch) work with a
+        registry-projected token without a per-call lowercase / membership
+        check. It is anchored to the dated EU member-state fact 0131.
         """
         if not is_eu_member_state_code(self.counterparty_country):
             return None
-        return EUMemberState(self.counterparty_country.lower())
+        return require_eu_member_state(self.counterparty_country)
 
     @property
     def counterparty_is_eu_member(self) -> bool:
         """Return ``True`` iff the counterparty is in one of the 27 EU Member States.
 
-        Convenience predicate keyed off the substrate enum; equivalent
+        Convenience predicate keyed off the substrate projection; equivalent
         to ``invoice.counterparty_eu_member_state is not None``.
         Modelo classification routes (OSS / IOSS / intra-community)
         gate on this predicate to decide which substrate flow path

@@ -19,7 +19,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from enum import StrEnum
 from typing import TypedDict
 
 from ...core.aggregation import ThirdPartyDeclarationRole
@@ -34,12 +33,19 @@ from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.iva_schema_vocabulary import (
     default_iva_regime as _default_iva_regime,
     iva_regime_no_aplica_token,
+    m303_regime_composition_choices,
     m303_tax_territory_choices,
+    require_m303_regime_composition,
     require_m303_tax_territory,
     require_iva_regime,
 )
 from ..calculations.registry.irpf_regimes import require_irpf_special_regime
+from ..calculations.registry.irpf_income_categories import (
+    irpf_income_category_actividad_economica_token,
+    require_irpf_income_category,
+)
 from ..calculations.registry.renta_codes_catalogue import require_fiscal_residency
+from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from .errors import ProfileError
 from .models import (
     CrossPeriodGroupMemberRoster,
@@ -48,7 +54,6 @@ from .models import (
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
-    M303RegimeComposition,
     M303TaxTerritory,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -502,16 +507,6 @@ def _parse_optional_bool(raw: str | None) -> bool | None:
     return _parse_bool(raw)
 
 
-def _accepted(enum: type[StrEnum]) -> str:
-    """Render a closed value set for a refusal, derived from the enum itself.
-
-    Derived rather than hand-listed so a new member cannot ship while the
-    refusal keeps naming the old set, which would send an operator looking
-    for a value the code already accepts.
-    """
-    return ", ".join(sorted(member.value for member in enum))
-
-
 def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
     try:
         accepted = ", ".join(sorted(token.value for token in m303_tax_territory_choices()))
@@ -528,6 +523,13 @@ def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
         raise ProfileError(
             f"unsupported tax_residence.jurisdiction_scope {raw!r}; accepted values: {accepted}",
         ) from exc
+
+
+def _accepted_m303_regime_composition() -> str:
+    try:
+        return ", ".join(sorted(token.value for token in m303_regime_composition_choices()))
+    except RegistryValidationError as exc:
+        raise ProfileError("Modelo IVA regime-composition vocabulary is unavailable from the facts registry") from exc
 
 
 #: Every profile path whose presence claims the Modelo IVA block.
@@ -620,14 +622,14 @@ def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswer
     if not typed.iva_m303_regime_composition:
         raise ProfileError(
             f"iva.m303_regime_composition must be explicitly declared for Modelo IVA; "
-            f"accepted values: {_accepted(M303RegimeComposition)}",
+            f"accepted values: {_accepted_m303_regime_composition()}",
         )
     try:
-        composition = M303RegimeComposition(typed.iva_m303_regime_composition)
-    except ValueError as exc:
+        composition = require_m303_regime_composition(typed.iva_m303_regime_composition)
+    except RegistryValidationError as exc:
         raise ProfileError(
             f"unsupported iva.m303_regime_composition {typed.iva_m303_regime_composition!r}; "
-            f"accepted values: {_accepted(M303RegimeComposition)}",
+            f"accepted values: {_accepted_m303_regime_composition()}",
         ) from exc
     return ModeloIVAProfile(
         tax_territory=_resolve_m303_tax_territory(typed.tax_residence_jurisdiction_scope),
@@ -740,7 +742,7 @@ def _resolve_income_categories(raw: str) -> frozenset[IrpfIncomeCategory]:
     it into the typed ``frozenset`` ``TaxpayerProfile`` declares.
     """
     tokens = [token.strip() for token in raw.split(",") if token.strip()]
-    return frozenset(IrpfIncomeCategory(token) for token in tokens)
+    return frozenset(require_irpf_income_category(token) for token in tokens)
 
 
 def _resolve_declaration_roles(raw: str) -> frozenset[ThirdPartyDeclarationRole]:
@@ -751,7 +753,7 @@ def _resolve_declaration_roles(raw: str) -> frozenset[ThirdPartyDeclarationRole]
     this projects it into the typed ``frozenset`` ``TaxpayerProfile`` declares.
     """
     tokens = [token.strip() for token in raw.split(",") if token.strip()]
-    return frozenset(ThirdPartyDeclarationRole(token) for token in tokens)
+    return frozenset(require_third_party_declaration_role(token) for token in tokens)
 
 
 def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
@@ -767,7 +769,10 @@ def _default_iva_regime_for_profile(
     income_categories: frozenset[IrpfIncomeCategory],
     configured_default: IVARegime,
 ) -> IVARegime:
-    if entity_type == entity_type_natural_person_token() and IrpfIncomeCategory.ACTIVIDAD_ECONOMICA not in income_categories:
+    if (
+        entity_type == entity_type_natural_person_token()
+        and irpf_income_category_actividad_economica_token() not in income_categories
+    ):
         return iva_regime_no_aplica_token()
     return configured_default
 

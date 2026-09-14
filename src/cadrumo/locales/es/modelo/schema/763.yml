@@ -16,7 +16,7 @@ modelo:
           de actividades anuales o plurianuales. Autoliquidación.
         title: Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)
       revision:
-        2012-2t-3t:
+        2012-2014:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: 'Consulte la información correspondiente a la casilla: Ejercicio
@@ -32,24 +32,7 @@ modelo:
                 title: Modelo 763 autoliquidación del Impuesto sobre actividades de
                   juego
           field:
-            label: Modelo 763, ejercicio 2012 (2.º y 3.º trimestre)
-        2013-2014:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la autoliquidación.'
-              label: Ejercicio al que se refiere la autoliquidación
-            x-chim6r1ee1in4qbfchng:
-              help: 'Consulte la información correspondiente a la casilla: Período
-                (trimestre natural).'
-              label: Periodo (trimestre natural)
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
-                  juego
-          field:
-            label: Modelo 763, ejercicios 2013 y 2014
+            label: Modelo 763, ejercicios 2012 (2.º a 4.º trimestre), 2013 y 2014
         2015-2017:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

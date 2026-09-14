@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "03396"
+continuidad_id = "is-correccion-otras-correcciones-resultado-permanente-disminucion"
+continuidad_origin = "seeded"
 number = "03396"
 section = ["otras_correcciones_al_resultado_de_la_cuenta_de_pe", "disminucion"]
 data_type = "money"
@@ -11,6 +13,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03397"
+continuidad_id = "is-correccion-otras-correcciones-resultado-temporaria-ejercicio-disminucion"
+continuidad_origin = "seeded"
 number = "03397"
 section = ["otras_correcciones_al_resultado_de_la_cuenta_de_pe", "disminucion"]
 data_type = "money"
@@ -22,6 +26,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03398"
+continuidad_id = "is-correccion-otras-correcciones-resultado-temporaria-anteriores-disminucion"
+continuidad_origin = "seeded"
 number = "03398"
 section = ["otras_correcciones_al_resultado_de_la_cuenta_de_pe", "disminucion"]
 data_type = "money"
@@ -31,6 +37,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03399"
+continuidad_id = "03399"
+continuidad_origin = "seeded"
 number = "03399"
 section = ["otras_correcciones_al_resultado_de_la_cuenta_de_pe", "disminucion"]
 data_type = "money"
@@ -40,6 +48,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03400"
+continuidad_id = "03400"
+continuidad_origin = "seeded"
 number = "03400"
 section = ["otras_correcciones_al_resultado_de_la_cuenta_de_pe", "disminucion"]
 data_type = "money"

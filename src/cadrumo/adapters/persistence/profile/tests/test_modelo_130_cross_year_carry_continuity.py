@@ -34,6 +34,7 @@ assertion.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime
@@ -56,7 +57,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -291,7 +292,7 @@ def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Re
     # a real calculation with it. Nothing about the prior-year income is
     # re-keyed by hand.
     snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-    resolved = resolve_bindings_from_local_store(snapshot_n1, repository=obs_repo).binding_values
+    resolved = resolve_bindings_from_local_store(snapshot_n1, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
     assert resolved.get(_PREV_YEAR_BINDING) == _PRIOR_YEAR_NET_INCOME
 
     year_n1 = _calculate_quarter(

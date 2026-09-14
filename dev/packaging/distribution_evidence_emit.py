@@ -228,7 +228,7 @@ def _assert_mcp_oracle_bound_to_cohort(*, cohort: LoadedReleaseCohort, mcp_evide
             sibling_cli,
             distribution="cadrumo",
             entry_point="aeat",
-            expected_value="cadrumo.entrypoints._cli_main:main",
+            expected_value="cadrumo.entrypoints.cli.bootstrap:main",
         )
         assert_installed_console_entry_point(
             runtime_server,

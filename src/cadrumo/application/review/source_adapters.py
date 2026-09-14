@@ -1,14 +1,13 @@
-"""Read-only source adapters for the unified review queue.
+"""Read-only source projections for the unified review queue.
 
-Each adapter loads pending items from one on-disk source and emits a
-tuple of typed :class:`ReviewItem` records. Adapters are pure and
-stateless; they tolerate missing source files by returning an empty
-tuple. Severity is derived per source via a first-match-wins predicate table.
+Each projection reads one application-owned source capability and emits a tuple
+of typed :class:`ReviewItem` records. Projections are pure and stateless; they
+tolerate missing source records by returning an empty tuple. Severity is
+derived per source via a first-match-wins predicate table.
 
-The transaction adapter loads a :class:`TransactionCatalogue` via
-:class:`TransactionCatalogueRepository`; the invoice adapter loads an
-:class:`InvoiceCatalogue` via :class:`InvoiceCatalogueRepository`. Draft
-findings are sourced from the :class:`ModeloDraft` store via the review imports.
+Persistence is supplied by the required :class:`DraftReviewPorts` bundle. This
+module owns only source classification and typed review-item projection; the
+encrypted repositories remain outer composition concerns.
 """
 
 from __future__ import annotations
@@ -30,9 +29,9 @@ from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..filing.draft_review import ModeloApprovalStaleReason
 from ..filing.draft_revision_gate import require_modelo_draft_coordinates_current
+from ..filing.draft_review_ports import DraftReviewPorts, DraftReviewProfileRepositoryProtocol
 from .enums import ReviewSeverity
 from .errors import ReviewSourceLoadError
 from .models import (
@@ -50,9 +49,8 @@ _SUMMARY_MAX = 80
 
 
 def transactions_pending(
-    settings: Settings,
     *,
-    bucket_id: str,
+    ports: DraftReviewPorts,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[TransactionReviewItem, ...]:
     """Return one :class:`TransactionReviewItem` per pending-review transaction.
@@ -67,7 +65,7 @@ def transactions_pending(
     attention.
     """
     if catalogue is None:
-        catalogue = load_transactions(settings, bucket_id=bucket_id)
+        catalogue = load_transactions(ports=ports)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
@@ -80,21 +78,19 @@ def transactions_pending(
 
 
 def transactions_low_confidence(
-    settings: Settings,
     *,
-    bucket_id: str,
+    ports: DraftReviewPorts,
     threshold: Decimal,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[TransactionReviewItem, ...]:
     """Return transactions whose decision confidence sits below a threshold.
 
     Args:
-        settings: Active application settings.
-        bucket_id: Stable bucket identifier for the ledger to inspect.
+        ports: Composed application capabilities for the profile to inspect.
         threshold: Minimum acceptable confidence; transactions strictly below
             this value are included.
         catalogue: Optional :class:`TransactionCatalogue` override; when ``None``
-            the catalogue is loaded from the encrypted store.
+            the catalogue is loaded from the composed repository.
 
     Surfaces every transaction whose ``classification_confidence`` is
     non-None and strictly less than the threshold, regardless of
@@ -104,7 +100,7 @@ def transactions_low_confidence(
     Each element in the returned tuple is a :class:`TransactionReviewItem`.
     """
     if catalogue is None:
-        catalogue = load_transactions(settings, bucket_id=bucket_id)
+        catalogue = load_transactions(ports=ports)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
@@ -138,17 +134,15 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
     return ReviewSeverity.NORMAL
 
 
-def load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCatalogue | None:
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-
-    del settings
-    repository = TransactionCatalogueRepository(bucket_id=bucket_id)
-    if not repository.exists():
-        _LOGGER.debug("transactions catalogue secure object absent")
-        return None
+def load_transactions(*, ports: DraftReviewPorts) -> TransactionCatalogue | None:
+    """Load the transaction catalogue through the composed application port."""
+    repository = ports.transaction_repository
     try:
+        if not repository.exists():
+            _LOGGER.debug("transactions catalogue secure object absent")
+            return None
         return repository.load()
-    except (ValidationError, OSError, ValueError) as exc:
+    except (CadrumoError, ValidationError, OSError, ValueError) as exc:
         raise ReviewSourceLoadError(
             message="failed to load transactions catalogue from secure backend",
             translated_message="review.adapters.errors.transactions_load_failed",
@@ -184,21 +178,19 @@ def _to_transaction_item(
 
 
 def invoices_pending(
-    settings: Settings,
     *,
-    bucket_id: str,
+    ports: DraftReviewPorts,
     catalogue: InvoiceCatalogue | None = None,
 ) -> tuple[InvoiceReviewItem, ...]:
     """Return :class:`InvoiceReviewItem` records for unmatched / disputed / pending invoices.
 
     Args:
-        settings: Active application settings.
-        bucket_id: Stable bucket identifier for the invoice catalogue to inspect.
-        catalogue: Optional :class:`InvoiceCatalogue` override; the repository is
-            loaded when ``None``.
+        ports: Composed application capabilities for the profile to inspect.
+        catalogue: Optional :class:`InvoiceCatalogue` override; the repository
+            is loaded when ``None``.
     """
     if catalogue is None:
-        catalogue = load_invoices(settings, bucket_id=bucket_id)
+        catalogue = load_invoices(ports=ports)
         if catalogue is None:
             return ()
     items: list[InvoiceReviewItem] = []
@@ -211,17 +203,15 @@ def invoices_pending(
     return tuple(items)
 
 
-def load_invoices(settings: Settings, *, bucket_id: str) -> InvoiceCatalogue | None:
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
-    del settings
-    repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
-    if not repository.exists():
-        _LOGGER.debug("invoices catalogue secure object absent")
-        return None
+def load_invoices(*, ports: DraftReviewPorts) -> InvoiceCatalogue | None:
+    """Load the invoice catalogue through the composed application port."""
+    repository = ports.invoice_repository
     try:
+        if not repository.exists():
+            _LOGGER.debug("invoices catalogue secure object absent")
+            return None
         return repository.load()
-    except (ValidationError, OSError, ValueError) as exc:
+    except (CadrumoError, ValidationError, OSError, ValueError) as exc:
         raise ReviewSourceLoadError(
             message="failed to load invoices catalogue from secure backend",
             translated_message="review.adapters.errors.invoices_load_failed",
@@ -264,7 +254,7 @@ def drafts_pending(
     settings: Settings,
     *,
     bucket_id: str,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
     drafts: tuple[tuple[Path, ModeloDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
     """Return :class:`FindingReviewItem` records for findings + unready drafts.
@@ -281,8 +271,8 @@ def drafts_pending(
     Callers see only drafts owned by the active profile.
     """
     if drafts is None:
-        drafts = load_drafts(settings, bucket_id=bucket_id)
-    active_tax_id = _resolve_review_active_tax_id(settings)
+        drafts = load_drafts(ports=ports)
+    active_tax_id = _resolve_review_active_tax_id(ports.profile_repository, bucket_id=bucket_id)
     if active_tax_id is None:
         return ()
     items: list[FindingReviewItem] = []
@@ -294,7 +284,7 @@ def drafts_pending(
         draft, stale_reasons = reviewed_against_current_state(
             stored,
             bucket_id=bucket_id,
-            observation_repository=observation_repository,
+            ports=ports,
         )
         path_str = str(path)
         if draft.findings:
@@ -313,7 +303,7 @@ def reviewed_against_current_state(
     draft: ModeloDraft,
     *,
     bucket_id: str,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
 ) -> tuple[ModeloDraft, tuple[ModeloApprovalStaleReason, ...]]:
     """Return ``draft`` with an aged-out approval reported as aged out.
 
@@ -349,7 +339,7 @@ def reviewed_against_current_state(
         draft,
         bucket_id=bucket_id,
         schema_provider=schema_provider,
-        observation_repository=observation_repository,
+        ports=ports,
     )
     if refreshed.status is not ModeloDraftStatus.APROBACION_CADUCADA:
         return (refreshed, ())
@@ -364,7 +354,7 @@ def reviewed_against_current_state(
             draft,
             bucket_id=bucket_id,
             schema_provider=schema_provider,
-            observation_repository=observation_repository,
+            ports=ports,
         ),
     )
 
@@ -413,36 +403,29 @@ def _append_unready_draft_review_item(
         items.append(_to_stale_approval_item(draft=draft, path_str=path_str, stale_reasons=stale_reasons))
 
 
-def _resolve_review_active_tax_id(settings: Settings) -> str | None:
-    """Return the active profile's tax id, or ``None`` when unknown."""
-    del settings
+def _resolve_review_active_tax_id(
+    repository: DraftReviewProfileRepositoryProtocol,
+    *,
+    bucket_id: str,
+) -> str | None:
+    """Return the reviewed bucket's tax id through the composed profile port."""
     try:
-        from ..user_profile.projections import fact_value
-        from ..workflow.persistence import workflow_state_repository
-    except ImportError:
-        _LOGGER.debug("review adapters could not import workflow status helpers", exc_info=True)
+        values = repository.load_path_values(bucket_id=bucket_id)
+    except (CadrumoError, OSError, ValueError):
+        _LOGGER.debug("review adapters could not resolve profile tax id", exc_info=True)
         return None
-    try:
-        state = workflow_state_repository().load()
-        record = state.active_profile_record()
-    except (CadrumoError, AttributeError):
-        _LOGGER.debug("review adapters could not resolve active workflow status", exc_info=True)
-        return None
-    return fact_value(record, "identity.tax_id") or None
+    return (values or {}).get("identity.tax_id") or None
 
 
-def load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, ModeloDraft], ...]:
-    """Iterate every persisted draft via :class:`ModeloDraftRepository`.
+def load_drafts(*, ports: DraftReviewPorts) -> tuple[tuple[Path, ModeloDraft], ...]:
+    """Iterate every persisted draft via the composed application capability.
 
     Drafts are ciphertext-at-rest only. The helper returns the secure
     backend's logical path marker alongside the typed payload so callers
     can identify the draft without consulting a plaintext draft
     directory.
     """
-    from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-
-    del settings
-    repository = ModeloDraftRepository(bucket_id=bucket_id)
+    repository = ports.draft_repository
     out: list[tuple[Path, ModeloDraft]] = []
     try:
         for draft in repository.iter_drafts():

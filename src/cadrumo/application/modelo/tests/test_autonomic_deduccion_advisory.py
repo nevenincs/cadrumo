@@ -1,24 +1,23 @@
 """Madrid nacimiento/adopción indeterminate-eligibility advisory tests.
 
-Covers ``_madrid_nacimiento_adopcion_eligibility_advisory_finding``: the
+Covers ``madrid_nacimiento_adopcion_eligibility_advisory_finding``: the
 verify-path advisory fires when the calculate-path auto-trigger
 (``inject_derived_autonomic_deduccion_facts``) fail-closed on an indeterminate
 (tributación conjunta or married/pareja-de-hecho) Madrid unit with at least one
 nacimiento/adopción-eligible descendant, leaving casilla 1039 at zero with no
 operator-facing signal.
 
-Real adapters throughout: the resident registry authority for the loaded
-:class:`RegistrySnapshot`, and a genuine encrypted bucket via
-``isolated_runtime_profile`` for every scenario that constructs a
-:class:`UserProfileRecord` — no mocks, stubs, or fakes. The parity assertion
-reads the SAME weighted count the calculate-path injector would have computed
-from the identical fact set (via the shared
-``madrid_nacimiento_adopcion_candidate_weighted_count`` primitive), proving
-the verify-path advisory is not fabricating a number independent of the
+The registry authority remains real, while profile facts are supplied through
+an inward fake reader. That keeps these tests focused on advisory policy; the
+encrypted profile-capsule round trip belongs to the persistence adapter test
+tree. The parity assertion still reads the SAME weighted count the
+calculate-path injector would have computed from the identical fact set (via
+the shared ``madrid_nacimiento_adopcion_candidate_weighted_count`` primitive),
+proving the verify-path advisory is not fabricating a number independent of the
 calculate path.
 
 See Also:
-    :func:`~application.modelo._autonomic_deduccion_advisory._madrid_nacimiento_adopcion_eligibility_advisory_finding`:
+    :func:`~application.modelo._autonomic_deduccion_advisory.madrid_nacimiento_adopcion_eligibility_advisory_finding`:
         Verify-path advisory under test.
     :func:`~application.modelo.profile_binding.inject_derived_autonomic_deduccion_facts`:
         Calculate-path fail-closed injector this advisory complements.
@@ -33,19 +32,17 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
-
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import load_test_profile_record, seed_test_profile_record
-from ...user_profile.projections import profile_fact_index
-from .._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_eligibility_advisory_finding
+from ....domain.user_profile.loader import load_user_profile_schema
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
+from cadrumo.application.user_profile.projections import profile_fact_index
+from .. import _autonomic_deduccion_advisory as advisory_module
+from .._autonomic_deduccion_advisory import madrid_nacimiento_adopcion_eligibility_advisory_finding
 from ..profile_binding import (
     inject_derived_autonomic_deduccion_facts,
     madrid_nacimiento_adopcion_candidate_weighted_count,
@@ -58,6 +55,7 @@ _YEAR = 2025
 _PERIOD = "0A"
 _CLOCK = datetime(2026, 7, 4, 9, 0, 0, tzinfo=UTC)
 _CASILLA_1039: CasillaId = validated_casilla_id("1039", surface="test_autonomic_deduccion_advisory")
+_FACT_INDEXES: dict[str, dict[str, UserProfileFactValue] | None] = {}
 
 
 @pytest.fixture(scope="module")
@@ -79,10 +77,12 @@ def _base_facts(**overrides: str) -> tuple[UserProfileFact, ...]:
 
 
 @pytest.fixture
-def seeded_bucket(tmp_path: Path) -> Iterator[str]:
-    """Yield a bucket id whose profile is seeded by the calling test via ``_seed``."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield _BUCKET_ID
+def seeded_bucket(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    """Yield a bucket id backed by an inward fake profile-fact reader."""
+    _FACT_INDEXES.clear()
+    monkeypatch.setattr(advisory_module, "_load_fact_index", _FACT_INDEXES.get)
+    yield _BUCKET_ID
+    _FACT_INDEXES.clear()
 
 
 def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
@@ -93,7 +93,7 @@ def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    seed_test_profile_record(record)
+    _FACT_INDEXES[bucket_id] = profile_fact_index(record, load_user_profile_schema())
 
 
 def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant(
@@ -103,7 +103,7 @@ def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant
     """A tributación-conjunta Madrid filer with an eligible child gets the D4 advisory."""
     _seed(seeded_bucket, _base_facts(**{"renta_filing.declaration_type": "2"}))
 
-    finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+    finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
@@ -126,7 +126,7 @@ def test_advisory_fires_for_married_filer_with_eligible_descendant(
     """A married (non-conjunta) Madrid filer with an eligible child also gets the advisory."""
     _seed(seeded_bucket, _base_facts(**{"renta_taxpayer.marital_status": "2"}))
 
-    finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+    finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
@@ -149,7 +149,7 @@ def test_advisory_silent_for_determinate_single_filer(
     """
     _seed(seeded_bucket, _base_facts())
 
-    finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+    finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
@@ -165,7 +165,7 @@ def test_advisory_silent_when_casilla_already_populated(
     """A non-zero casilla 1039 means the auto-trigger already fired; nothing to advise."""
     _seed(seeded_bucket, _base_facts(**{"renta_filing.declaration_type": "2"}))
 
-    finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+    finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
         {_CASILLA_1039: Decimal("721.70")},
         bucket_id=seeded_bucket,
@@ -184,7 +184,7 @@ def test_advisory_silent_for_non_madrid_indeterminate_unit(
         _base_facts(**{"tax_residence.ccaa": "cataluna", "renta_filing.declaration_type": "2"}),
     )
 
-    finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+    finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
@@ -208,7 +208,7 @@ def test_advisory_silent_for_indeterminate_unit_with_no_eligible_descendant(
         ),
     )
 
-    finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+    finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
@@ -222,7 +222,7 @@ def test_advisory_silent_when_no_profile_record_exists(
     seeded_bucket: str,
 ) -> None:
     """No profile record at all yields no advisory (no eligibility signal to read)."""
-    finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+    finding = madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
         {_CASILLA_1039: Decimal("0")},
         bucket_id=seeded_bucket,
@@ -247,10 +247,8 @@ def test_advisory_weighted_count_matches_calculate_path_candidate_count(
     )
     _seed(seeded_bucket, facts)
 
-    from ....domain.user_profile.loader import load_user_profile_schema
-
-    record = load_test_profile_record(seeded_bucket)
-    fact_index = profile_fact_index(record, load_user_profile_schema())
+    fact_index = _FACT_INDEXES[seeded_bucket]
+    assert fact_index is not None
 
     # The calculate-path injector fail-closes for this indeterminate unit: the
     # synthetic key resolves to the neutral 0 default, never the real count.

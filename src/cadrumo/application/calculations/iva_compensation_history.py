@@ -1,17 +1,8 @@
 """Profile-scoped IVA compensation history built from filed Modelo 303s.
 
-Records are stored at
-:class:`~adapters.persistence.storage.SensitivityClass` ``AUDIT`` under
-the
-:data:`adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`.
-The repository exposes typed
-:class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`
-objects; carry-forward projection is produced by
-:func:`~domain.iva_compensation.carry_forward.build_iva_compensation_carry_forward_report`.
-Rows are written through
-:class:`~adapters.persistence.storage.SecureBoundRepository`, so
-the namespace, schema version, and sensitivity declared by the storage registry
-remain the persistence authority.
+This module owns the application policy and typed state projections.  A required
+application capability persists the state; encrypted storage and its failure
+modes are bound outside this module.
 
 This module uses
 :class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualSummary`
@@ -33,16 +24,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
-from ...adapters.persistence.storage.path_safety import safe_repository_id
-from ...adapters.persistence.storage.secure_object_namespaces import IVA_COMPENSATION_HISTORY_NAMESPACE
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_kind import CasillaValueKind
-from ...core.classification.policies import SensitivityClass
 from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
@@ -88,7 +74,6 @@ from ...domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationPeriodState,
     derive_iva_compensation_year_end_carry_partition,
-    iva_compensation_period_sort_key,
 )
 from ...domain.iva_compensation.errors import (
     IvaCompensationCasillaReferenceError,
@@ -97,6 +82,7 @@ from ...domain.iva_compensation.errors import (
     IvaCompensationYearRangeError,
 )
 from .errors import IvaCompensationModeloError
+from .iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from .ports import FiledDeclaracionObservationProtocol
 from .revision_carry_gate import revision_carry_outcome
@@ -175,7 +161,6 @@ class IvaCompensationAnnualCrossCheck(BaseModel):
 
 def iva_compensation_period_key(period: Period) -> str:
     """Return the latest-state key for one Modelo 303 period."""
-    safe_repository_id(period.registry_token, context="period")
     filing_year = period.filing_year
     if not 2000 <= filing_year <= 2099:
         raise IvaCompensationYearRangeError(
@@ -185,62 +170,7 @@ def iva_compensation_period_key(period: Period) -> str:
     return f"303:{filing_year}:{period.registry_token}"
 
 
-class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeriodState]):
-    """Encrypted profile-local store of Modelo 303 IVA compensation history.
-
-    Persists
-    :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`
-    rows in
-    :data:`adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`
-    for later carry-forward, balance, and reconciliation reads. The
-    :class:`~adapters.persistence.storage.SecureBoundRepository` base
-    writes those rows as encrypted AUDIT-class envelopes for active-bucket
-    lookup.
-    """
-
-    namespace: ClassVar[str] = IVA_COMPENSATION_HISTORY_NAMESPACE.namespace
-    sensitivity: ClassVar[SensitivityClass] = IVA_COMPENSATION_HISTORY_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = IVA_COMPENSATION_HISTORY_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = IvaCompensationPeriodState
-
-    @override
-    def extract_identifier(self, payload: IvaCompensationPeriodState) -> str:
-        return iva_compensation_period_key(payload.period)
-
-    def load_period(self, period: Period) -> IvaCompensationPeriodState | None:
-        """Return latest stored state for one period.
-
-        Returns an
-        :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`
-        when a record exists, or ``None`` when none has been persisted for the
-        given period.
-        """
-        state = self.load(iva_compensation_period_key(period))
-        if state is not None:
-            _require_period_state_registry_coordinate_current(state)
-        return state
-
-    def save_period(self, state: IvaCompensationPeriodState) -> None:
-        """Persist latest stored state for one period."""
-        self.save(state)
-
-    def list_periods(self) -> tuple[IvaCompensationPeriodState, ...]:
-        """Return stored :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState` rows.
-
-        The returned tuple is sorted in chronological filing order using the
-        same period sort key consumed by the domain carry-forward projection.
-        """
-
-        def _sort_key(item: IvaCompensationPeriodState) -> tuple[int, tuple[int, str]]:
-            return (item.filing_year, iva_compensation_period_sort_key(item.period))
-
-        states = tuple(sorted(self.iter_records(), key=_sort_key))
-        for state in states:
-            _require_period_state_registry_coordinate_current(state)
-        return states
-
-
-def _require_period_state_registry_coordinate_current(state: IvaCompensationPeriodState) -> None:
+def require_iva_compensation_period_coordinates_current(state: IvaCompensationPeriodState) -> None:
     outcome = revision_carry_outcome(state.registry_snapshot_ref)
     if outcome.refused:
         raise IvaCompensationModeloError(
@@ -272,7 +202,7 @@ def seed_iva_compensation_period(
     taxpayer_nif: str,
     period: Period,
     amount: Decimal,
-    repository: IvaCompensationHistoryRepository | None = None,
+    repository: IvaCompensationHistoryRepositoryProtocol,
     seeded_at: datetime | None = None,
 ) -> IvaCompensationPeriodState:
     """Persist a manually declared carry-forward balance for one Modelo 303 period.
@@ -288,8 +218,7 @@ def seed_iva_compensation_period(
     Raises ``IvaCompensationSeedConflictError`` if a state already exists for
     the specified period — seeding must not overwrite an existing record.
     """
-    repo = repository if repository is not None else IvaCompensationHistoryRepository()
-    existing = repo.load_period(period)
+    existing = repository.load_period(period)
     if existing is not None:
         raise IvaCompensationSeedConflictError(
             translated_message="application.calculations.iva_compensation.errors.seed_conflict",
@@ -317,7 +246,7 @@ def seed_iva_compensation_period(
         source_observation_key=f"{_SEED_SOURCE_OBS_PREFIX}:{period.filing_year}:{period.registry_token}",
         source_artefact_sha256=None,
     )
-    repo.save_period(state)
+    repository.save_period(state)
     return state
 
 
@@ -326,7 +255,7 @@ def correct_iva_compensation_period(
     taxpayer_nif: str,
     period: Period,
     amount: Decimal,
-    repository: IvaCompensationHistoryRepository | None = None,
+    repository: IvaCompensationHistoryRepositoryProtocol,
     corrected_at: datetime | None = None,
 ) -> IvaCompensationPeriodState:
     """Overwrite a manually-seeded carry-forward balance for one Modelo 303 period.
@@ -338,7 +267,7 @@ def correct_iva_compensation_period(
     seeding refuses if a record already exists, correction is the deliberate
     re-write path for a wrong opening compensation balance whose period
     pre-dates local history. It writes through the same
-    :class:`~application.calculations.iva_compensation_history.IvaCompensationHistoryRepository`
+    :class:`IvaCompensationHistoryRepositoryProtocol`
     (no parallel write path), so the corrected state replaces the stored record
     at the same period key.
 
@@ -351,8 +280,7 @@ def correct_iva_compensation_period(
     a ``correction-on-missing`` marker so the facade can surface the seed-first
     guidance.
     """
-    repo = repository if repository is not None else IvaCompensationHistoryRepository()
-    existing = repo.load_period(period)
+    existing = repository.load_period(period)
     if existing is None:
         raise IvaCompensationSeedConflictError(
             translated_message="application.calculations.iva_compensation.errors.correction_missing",
@@ -380,7 +308,7 @@ def correct_iva_compensation_period(
         source_observation_key=f"{_CORRECTED_SOURCE_OBS_PREFIX}:{period.filing_year}:{period.registry_token}",
         source_artefact_sha256=None,
     )
-    repo.save_period(state)
+    repository.save_period(state)
     return state
 
 
@@ -432,7 +360,7 @@ def iva_compensation_state_from_observation_envelope(
 def persist_observation_envelope_and_iva_history(
     *,
     observation_repository: CalculationObservationRepositoryProtocol,
-    history_repository: IvaCompensationHistoryRepository,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
     envelope: ObservationEnvelopePayload,
     taxpayer_nif: str,
     provenance: IvaCompensationStateProvenance,
@@ -658,12 +586,12 @@ def _resolve_casilla_value(values: dict[CasillaId, Decimal], semantic_id: Casill
 __all__ = [
     "IvaCompensationAnnualCrossCheck",
     "IvaCompensationAnnualSummary",
-    "IvaCompensationHistoryRepository",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",
     "iva_compensation_state_from_observation_envelope",
     "persist_observation_envelope_and_iva_history",
+    "require_iva_compensation_period_coordinates_current",
     "seed_iva_compensation_period",
 ]

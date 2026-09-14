@@ -56,6 +56,7 @@ from ..aggregation.source_mesh import (
 )
 from ..aggregation.source_resolution_operations import collect_unhandled_source_diagnostics, merge_source_resolutions
 from ..aggregation.terminal_origin_audit import collect_terminal_origin_diagnostics
+from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
@@ -122,6 +123,7 @@ def resolve_prorrata_regularizacion_sources(
     relation_values: Mapping[RelationId, Decimal] | None,
     filing_period_date: date | None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
 ) -> CalculationSourceResolution:
     """Resolve prorrata and dependent capital-goods staged mesh sources.
@@ -150,7 +152,9 @@ def resolve_prorrata_regularizacion_sources(
         filing_period_date: The filing period date used for period-sensitive
             resolution.
         prorrata_register_repository: Canonical repository for the work unit's
-            prorrata register.
+             prorrata register.
+        bienes_inversion_repository: Canonical repository for the work unit's
+            capital-goods IVA register.
         observation_repository: Canonical repository for the work unit's
             persisted calculation observations.
 
@@ -189,6 +193,7 @@ def resolve_prorrata_regularizacion_sources(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
+        register_repository=bienes_inversion_repository,
         observation_repository=observation_repository,
     )
     require_calculation_route_resolver("post_mesh", prorrata_resolver)

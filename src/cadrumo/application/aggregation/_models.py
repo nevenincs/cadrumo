@@ -30,6 +30,7 @@ from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.categories.spending_category import SpendingCategory
+from ...domain.categories.spending_category_catalogue import require_spending_category
 from .errors import AggregationValidationError
 
 
@@ -44,7 +45,7 @@ def _coerce_spending_category(value: object) -> object:
     if value is None or isinstance(value, SpendingCategory):
         return value
     if isinstance(value, str):
-        return SpendingCategory(value)
+        return require_spending_category(value)
     return value
 
 

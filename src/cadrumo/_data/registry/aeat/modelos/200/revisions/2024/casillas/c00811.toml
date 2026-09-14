@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00811"
+continuidad_id = "00811"
 number = "00811"
 section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "disminucion"]
 data_type = "money"

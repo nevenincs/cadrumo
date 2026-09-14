@@ -25,9 +25,9 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import is_unit_proportion
-from ..categories.proportionality import ProportionalityKind
 from ..categories.registry import load_category_profiles
 from ..categories.spending_category import SpendingCategory
+from ..categories.spending_category_catalogue import require_spending_category
 from .errors import UsageRatioValidationError
 
 __all__ = [
@@ -64,11 +64,6 @@ def validate_usage_ratio_bound(ratio: Decimal, *, label: str) -> Decimal:
     return ratio
 
 
-_USER_RATIO_KINDS: frozenset[ProportionalityKind] = frozenset(
-    {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL},
-)
-
-
 def _eligible_categories() -> frozenset[SpendingCategory]:
     """Return every category the shipped corpus makes eligible for a user ratio.
 
@@ -81,7 +76,7 @@ def _eligible_categories() -> frozenset[SpendingCategory]:
     return frozenset(
         category
         for category, profile in load_category_profiles().items()
-        if profile.proportionality.kind in _USER_RATIO_KINDS
+        if profile.proportionality.kind.is_usage_ratio
     )
 
 
@@ -89,10 +84,8 @@ ELIGIBLE_USAGE_RATIO_CATEGORIES: frozenset[SpendingCategory] = _eligible_categor
 """Categories for which a :class:`UsageRatioProfile` may carry an override.
 
 Derived at import time from the undated category-profile corpus: a
-category is eligible iff its
-:attr:`domain.categories.ProportionalityRule.kind` is
-:attr:`domain.categories.ProportionalityKind.USAGE_RATIO_HOME_AREA` or
-:attr:`domain.categories.ProportionalityKind.USAGE_RATIO_PERSONAL`.
+category is eligible iff its projected proportionality kind declares the
+usage-ratio evaluator role.
 """
 
 
@@ -225,16 +218,16 @@ def validate_usage_ratio_reference(
     if category_id is None:
         raise UsageRatioValidationError("usage_ratio_id requires category_id on the ledger transaction")
     try:
-        category = SpendingCategory(category_id)
-    except ValueError as exc:
+        category = require_spending_category(category_id)
+    except (TypeError, ValueError) as exc:
         raise UsageRatioValidationError(f"category_id {category_id!r} is not a spending category") from exc
     try:
-        ratio_category = SpendingCategory(usage_ratio_id)
-    except ValueError as exc:
+        ratio_category = require_spending_category(usage_ratio_id)
+    except (TypeError, ValueError) as exc:
         raise UsageRatioValidationError(
             f"usage_ratio_id {usage_ratio_id!r} must be a concrete eligible spending category",
         ) from exc
-    if ratio_category is not category:
+    if ratio_category != category:
         raise UsageRatioValidationError(
             "usage_ratio_id must match the ledger transaction category_id because "
             "usage-ratio profiles are category-keyed",

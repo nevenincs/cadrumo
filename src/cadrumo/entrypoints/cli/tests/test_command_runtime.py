@@ -364,7 +364,7 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
     )
     enabled_option = OptionSpec(
         name="enabled",
-        declarations=("--enabled/--disabled",),
+        declarations=("--enabled", "--no-enabled"),
         value=ValueContract(DeferredTarget("builtins", "bool")),
         default=ParameterDefault.value(False),
         help_key=TranslationKey("cli.root.language_help"),
@@ -411,3 +411,13 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
 
     assert result.exit_code == 0, result.output
     assert _SEEN_OPTION_RUNTIME == [("ADA", True)]
+
+    _SEEN_OPTION_RUNTIME.clear()
+    result = CliRunner().invoke(
+        build_command_app(runtime_graph),
+        ["greet", "--no-enabled"],
+        input="Ada\nAda\n",
+    )
+
+    assert result.exit_code == 0, result.output
+    assert _SEEN_OPTION_RUNTIME == [("ADA", False)]

@@ -33,8 +33,8 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ._m303_filing_evidence_support import write_m303_filing_evidence
 from .cli_runner import invoke_cached_cli
 
@@ -265,7 +265,7 @@ def _m100_activity_expense_transaction(
 
 
 def _seed_m100_profile_facts(bucket_id: str) -> None:
-    from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record
 
     record = load_test_profile_record(bucket_id)
     additions = (

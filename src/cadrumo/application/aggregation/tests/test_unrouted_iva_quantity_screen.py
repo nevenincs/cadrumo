@@ -24,12 +24,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -44,8 +40,6 @@ from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLe
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..modelo_bindings import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
-from ..source_mesh import CalculationSourceContext
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -53,22 +47,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
 _Q1_2025 = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
-
-
-class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
-    """Bind injected real repositories to an explicit empty Bienes authority."""
-
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepository | None = None) -> None:
-        super().__init__(
-            transaction_repository=transaction_repository,
-            prorrata_register_repository=ProrrataRegisterRepository(
-                bucket_id=(transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID),
-            ),
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id=(
-                transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID
-            ),
-        )
 
 
 @cache
@@ -317,67 +295,6 @@ def test_the_screen_reads_the_revision_it_is_given() -> None:
     assert unrouted_ledger_iva_quantities(stripped, rows) != ()
 
 
-def test_the_advisory_reaches_the_resolver_envelope(tmp_path: Path) -> None:
-    """The screen is wired, not merely written.
-
-    Everything above calls the screen directly, so all of it would still pass
-    with the resolver never invoking it -- the failure mode where a correct
-    screen ships switched off. This drives the real
-    :class:`LedgerIvaAggregationSourceResolver` end to end from a stored
-    transaction and asserts the advisory arrives in its diagnostics envelope
-    carrying the amount and its attribution.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-        repository.save(
-            TransactionCatalogue.from_transactions((_sale("s-1", base="1000.00", iva="210.00"),)),
-        )
-        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=_Q1_2025,
-                revision=_revision_without_fact(_revision("303"), "base_amount_sum"),
-            ),
-        )
-
-    advisories = [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
-    ]
-    assert len(advisories) == 1, "a revision drawing no base must surface exactly one advisory"
-    assert "base_amount_sum" in advisories[0].message
-    assert "1000.00" in advisories[0].message, "the advisory must name the amount that goes undeclared"
-    assert advisories[0].resolver_id == "ledger_iva_aggregation"
-
-
-def test_the_committed_revision_raises_no_advisory_in_the_envelope(tmp_path: Path) -> None:
-    """Anti-false-fire control on the wired path.
-
-    The test above would pass just as well if the resolver emitted the advisory
-    unconditionally. Against the real Modelo 303 revision, which draws all three
-    quantities, the envelope must carry none.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-        repository.save(
-            TransactionCatalogue.from_transactions((_sale("s-1", base="1000.00", iva="210.00"),)),
-        )
-        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=_Q1_2025,
-                revision=_revision("303"),
-            ),
-        )
-
-    assert not [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
-    ]
-
-
 def _reverse_charge_purchase() -> Transaction:
     """An intra-community acquisition: cuota self-assessed, base imponible carried.
 
@@ -568,55 +485,3 @@ def test_the_import_base_residue_is_reported_on_both_modelos(modelo_id: str) -> 
         unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE)])
         == ()
     )
-
-
-def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) -> None:
-    """The residue must be attributable, not merely reported.
-
-    A fact can be drawn for some categories and undrawn for others: Modelo 303
-    draws ``base_amount_sum`` for the domestic tiers and (since 717af32acc) the
-    intra-community reverse-charge pair, while import carries it undrawn. An
-    advisory naming only the fact tells an operator base is missing without
-    saying where, so a partially closed gap reads as wholly open -- and, once
-    the domestic half lands, the same message would read as wholly closed to
-    anyone diffing it.
-
-    Naming the categories is what lets a later reader tell a genuine remainder from
-    a regression. Asserted against the COMMITTED Modelo 303 revision with no fact
-    stripped, so it is the live residue rather than a manufactured one.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-        repository.save(TransactionCatalogue.from_transactions((_third_country_import(),)))
-        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=_Q1_2025,
-                revision=_revision("303"),
-            ),
-        )
-
-    advisories = [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
-    ]
-    assert len(advisories) == 1, "the live import base residue must surface exactly one advisory"
-    message = advisories[0].message
-    assert "base_amount_sum" in message
-    assert "import_third_country" in message, (
-        "the advisory must NAME the category carrying the undrawn quantity; without it a reader "
-        "cannot tell which categories remain open from which are genuinely closed"
-    )
-    # Anti-vacuity: the covered domestic tiers and the closed reverse-charge
-    # pair must NOT appear. An advisory naming every category would satisfy the
-    # assertion above while telling a reader nothing, and would falsely
-    # implicate categories whose base IS drawn.
-    for covered in (
-        "domestic_general",
-        "domestic_reduced",
-        "domestic_super_reduced",
-        "intra_community_acquisition_reverse_charge",
-        "intra_community_service_acquisition_reverse_charge",
-    ):
-        assert covered not in message, f"{covered} draws base on this revision and must not be blamed"

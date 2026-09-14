@@ -38,7 +38,6 @@ from ...core.foreign_asset_obligation import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     ForeignAssetObligationGroup,
     M720AssetClassCode,
-    foreign_asset_obligation_group,
 )
 from ...core.hashing import content_hash_hex
 from ...core.identity.transaction_ids import TransactionId
@@ -52,8 +51,11 @@ from ...domain.calculations.registry.detail_record_bindings import (
     Modelo720RowObservation,
     resolve_foreign_asset_binding_row_values,
 )
+from ...domain.calculations.registry.foreign_asset_obligation_catalogue import (
+    resolve_foreign_asset_obligation_catalogue,
+)
 from ...domain.calculations.row_source_identity import RowSourceIdentity
-from .._foreign_asset_thresholds import (
+from ..foreign_asset_thresholds import (
     ForeignAssetDeclarationThreshold,
     foreign_asset_declaration_thresholds,
     foreign_asset_declaration_thresholds_for_revision,
@@ -237,10 +239,11 @@ def declarable_asset_classes_720(
         modelo=Modelo("720").value,
         filing_year=aggregation.period.filing_year,
     )
+    catalogue = resolve_foreign_asset_obligation_catalogue()
     group_totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     asset_classes_by_group: dict[ForeignAssetObligationGroup, set[ForeignAssetClass]] = {}
     for rollup in aggregation.rollups:
-        group = foreign_asset_obligation_group(rollup.asset_class)
+        group = catalogue.group_for_asset_class(rollup.asset_class)
         group_totals[group] = group_totals.get(group, Decimal("0")) + rollup.total_valuation_eur
         asset_classes_by_group.setdefault(group, set()).add(rollup.asset_class)
     unsupported_groups = set(group_totals) - set(resolved_thresholds)

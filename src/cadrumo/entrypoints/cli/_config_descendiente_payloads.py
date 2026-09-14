@@ -17,12 +17,12 @@ deduction from every machine-readable surface, so they are carried, not summaris
 pass the typed value they already hold; ``model_dump(mode="json")`` renders the
 same ISO-8601 wire form as before.
 
-``relacion`` rides as the :class:`~cadrumo.core.DescendantRelacion` member rather
-than a bare string, so a consumer reading this transport gets the same closed set
-the engine branches on. It is what decides whether the Art. 58.2 increase applies
-at all — a temporal acogimiento takes the tranches and not the increase — so
-flattening it here would put the one distinction the axis exists to draw outside
-the machine-readable contract.
+``relacion`` rides as a registry-projected :class:`~cadrumo.core.DescendantRelacion`
+token rather than a bare string, so a consumer reading this transport gets the
+same authority-owned relationship catalogue the engine branches on. It is what
+decides whether the Art. 58.2 increase applies at all — a temporal acogimiento
+takes the tranches and not the increase — so flattening it here would put the one
+distinction the axis exists to draw outside the machine-readable contract.
 
 ``gastos_guarderia_mensuales`` rides as typed month rows rather than the canonical
 ``MM:AMOUNT`` string the ``--descendiente`` flag and the fact index carry. That
@@ -37,10 +37,13 @@ from typing import Annotated
 
 from pydantic import NonNegativeInt, StringConstraints, field_validator, model_validator
 
-from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import is_canonical_month_set
 from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_adoption_token,
+    descendant_relacion_entitling_tokens,
+)
 from ...domain.contribuyente.descendant_record import DescendantRecordFields
 
 DescendantNif = Annotated[
@@ -128,11 +131,11 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
             today = today_madrid()
             if value > today:
                 raise ValueError(f"{field_name} {value} must not be in the future (today={today})")
-        if self.inscripcion_registro_civil_date is not None and self.relacion is not DescendantRelacion.ADOPTADO:
+        if self.inscripcion_registro_civil_date is not None and self.relacion != descendant_relacion_adoption_token():
             raise ValueError(
                 f"inscripcion_registro_civil_date cannot be carried by relacion={self.relacion.value!r}",
             )
-        if self.acogimiento_resolucion_date is not None and self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+        if self.acogimiento_resolucion_date is not None and self.relacion not in descendant_relacion_entitling_tokens():
             raise ValueError(
                 f"acogimiento_resolucion_date cannot be carried by relacion={self.relacion.value!r}",
             )

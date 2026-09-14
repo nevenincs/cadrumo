@@ -1,8 +1,8 @@
 """Modelo 369 OSS/IOSS source-mesh resolver and candidate validator.
 
 The ``ledger_oss_aggregation`` source reads OSS/IOSS-tagged issued invoices
-through the bucket's :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol`
-and projects them into substrate-classified :class:`OssIossLedgerCandidate`
+through the required application-owned catalogue-read capability and projects
+them into substrate-classified :class:`OssIossLedgerCandidate`
 rows. Pre-classified callers can also pass candidates directly. Each candidate
 is validated against the destination Member State's published IVA rate through
 :func:`domain.iva.lookup_rate` and becomes a registry-ready
@@ -31,10 +31,6 @@ from typing import Annotated, ClassVar, Self
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -54,7 +50,6 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import (
     InvoiceKind,
     TransactionKind,
@@ -64,6 +59,7 @@ from ...domain.iva.classification import (
 from ...domain.iva.lookup import lookup_rate
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, IvaRateKind
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
@@ -139,12 +135,6 @@ class OssIossLedgerCandidate(BaseModel):
                 "transaction_kind is not admitted by the supplied OSS/IOSS regime",
             )
         return self
-
-
-#: Tolerance applied when comparing a persisted IVA amount against the
-#: amount derived from ``base_amount * lookup_rate(...) / 100``.
-#:
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 
 
 def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
@@ -508,9 +498,8 @@ class OssIossInvoiceProjection(BaseModel):
 
 def project_oss_ioss_invoices_from_repositories(
     *,
-    bucket_id: str,
     period: Period,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> OssIossInvoiceProjection:
     """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates.
 
@@ -521,11 +510,9 @@ def project_oss_ioss_invoices_from_repositories(
     period answers that question the same way.
 
     Args:
-        bucket_id: Active bucket id for the default invoice repository.
         period: Filing period whose date span filters issued invoices.
-        invoice_repository: Optional
-            :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol` used
-            instead of the active bucket repository.
+        ports: Required application-owned catalogue read capabilities for the
+            composed profile bucket.
 
     Returns:
         The candidates for the period beside the invoices they were projected
@@ -539,10 +526,9 @@ def project_oss_ioss_invoices_from_repositories(
         )
     if not projection_period.has_date_span():
         return OssIossInvoiceProjection()
-    repo = invoice_repository if invoice_repository is not None else InvoiceCatalogueRepository(bucket_id=bucket_id)
     candidates: list[OssIossLedgerCandidate] = []
     contributing: list[Invoice] = []
-    for invoice in repo.load():
+    for invoice in ports.invoice_reader.load():
         if invoice.kind is not InvoiceKind.ISSUED:
             continue
         if not invoice_devengo_in_period(invoice, period=projection_period):
@@ -562,9 +548,8 @@ def project_oss_ioss_invoices_from_repositories(
 
 def oss_ioss_candidates_from_repositories(
     *,
-    bucket_id: str,
     period: Period,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> tuple[OssIossLedgerCandidate, ...]:
     """Return only the Modelo 369 candidates for the period.
 
@@ -574,46 +559,39 @@ def oss_ioss_candidates_from_repositories(
     differently.
 
     Args:
-        bucket_id: Active bucket id for the default invoice repository.
         period: Filing period whose date span filters issued invoices.
-        invoice_repository: Optional
-            :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol` used
-            instead of the active bucket repository.
+        ports: Required application-owned catalogue read capabilities for the
+            composed profile bucket.
 
     Returns:
         A tuple of :class:`OssIossLedgerCandidate` rows projected from issued
         invoices devengando in the period.
     """
     return project_oss_ioss_invoices_from_repositories(
-        bucket_id=bucket_id,
         period=period,
-        invoice_repository=invoice_repository,
+        ports=ports,
     ).candidates
 
 
 def aggregate_oss_ioss_from_repositories(
     revision: ModeloRevision,
     *,
-    bucket_id: str,
     period: Period,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> dict[BindingId, Decimal]:
     """Resolve Modelo 369 OSS/IOSS bindings from the live invoice catalogue.
 
     Args:
         revision: The :class:`ModeloRevision` whose OSS/IOSS bindings are resolved.
-        bucket_id: Active bucket id for the default invoice repository.
         period: Filing period whose date span filters issued invoices.
-        invoice_repository: Optional
-            :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol` used
-            instead of the active bucket repository.
+        ports: Required application-owned catalogue read capabilities for the
+            composed profile bucket.
     """
     return aggregate_oss_ioss_bindings(
         revision,
         oss_ioss_candidates_from_repositories(
-            bucket_id=bucket_id,
             period=period,
-            invoice_repository=invoice_repository,
+            ports=ports,
         ),
     )
 
@@ -627,8 +605,8 @@ class OssIossLedgerSourceResolver:
     def __init__(
         self,
         *,
+        ports: InvoiceCatalogueReadPorts,
         candidates: Sequence[OssIossLedgerCandidate] | None = None,
-        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     ) -> None:
         """Construct the resolver with a pre-classified ledger candidate sequence.
 
@@ -636,12 +614,12 @@ class OssIossLedgerSourceResolver:
             candidates: The substrate-classified ledger lines for the
                 current period. The resolver validates and aggregates
                 these on each :meth:`resolve` call.
-            invoice_repository: Optional live invoice repository port used to
-                project OSS/IOSS-tagged invoices when ``candidates`` is not
+            ports: Required application-owned catalogue read capabilities used
+                to project OSS/IOSS-tagged invoices when ``candidates`` is not
                 supplied.
         """
+        self._ports = ports
         self._candidates = tuple(candidates) if candidates is not None else None
-        self._invoice_repository = invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Validate candidates and return the resolved OSS/IOSS binding values.
@@ -653,8 +631,9 @@ class OssIossLedgerSourceResolver:
 
         When the resolver is constructed with explicit ``candidates``, those
         candidates are folded directly. When ``candidates`` is omitted, the live
-        operator path projects OSS/IOSS-tagged issued invoices from the invoice
-        repository into candidates first. If no candidate is available, the
+        operator path projects OSS/IOSS-tagged issued invoices from the
+        application catalogue read capability into candidates first. If no
+        candidate is available, the
         resolver still CLAIMS ``ledger_oss_aggregation`` (so the binding
         compiles and is not flagged as a novel source) but surfaces one
         non-blocking ``oss_no_live_source`` advisory per declared OSS binding.
@@ -681,15 +660,14 @@ class OssIossLedgerSourceResolver:
         try:
             projection = (
                 project_oss_ioss_invoices_from_repositories(
-                    bucket_id=context.bucket_id,
                     period=context.period,
-                    invoice_repository=self._invoice_repository,
+                    ports=self._ports,
                 )
                 if self._candidates is None
                 else OssIossInvoiceProjection(candidates=self._candidates)
             )
             candidates = projection.candidates
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except InvoiceCatalogueReadPersistenceError as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

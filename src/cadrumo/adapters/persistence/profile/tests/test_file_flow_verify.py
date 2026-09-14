@@ -22,7 +22,7 @@ from cadrumo.domain.modelos.verification_report import (    ModeloVerificationFi
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from cadrumo.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
 from cadrumo.application.modelo.action_errors import (    CalculationRevisionNotFoundError,
     CalculationRevisionStateError,

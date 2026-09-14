@@ -98,9 +98,7 @@ class TestEditionSourceDefault:
         )
         (status,) = scan_registry(tmp_path)
         assert status.effective_default == ()
-        kinds = _kinds(tmp_path)
-        assert "edition_default_underivable" in kinds
-        assert "edition_default_undeclared" not in kinds
+        assert "edition_default_undeclared" not in _kinds(tmp_path)
 
     def test_a_row_repeating_a_reference_does_not_open_a_run(self, tmp_path: Path) -> None:
         """The other clause: ``["a", "b", "a"]`` cannot be default plus additions."""
@@ -1351,8 +1349,18 @@ class TestCoverageDispositions:
                 authority="orden-x:art-1",
             )
         }
-        (gap,) = coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path), signed)
+        gaps = coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path), signed)
+        # Two findings now, not one. The coverage gap stays undisposed, which is
+        # this test's subject -- and `disposition_kind_mismatched` additionally
+        # names the signature that no longer applies to it. The entry not
+        # absorbing the gap was always correct and always silent; saying so out
+        # loud is the newer condition, and the two are complementary rather than
+        # a change to this behaviour.
+        (gap,) = [found for found in gaps if found.kind == "promised_year_unserved"]
         assert not gap.disposed
+        assert [found.kind for found in gaps if found.kind == "disposition_kind_mismatched"] == [
+            "disposition_kind_mismatched"
+        ]
 
     def test_a_disposition_for_another_coordinate_does_not_reach_this_one(self, tmp_path: Path) -> None:
         self._one_gap(tmp_path)

@@ -11,15 +11,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ....adapters.outbound.aeat.sede.schema import Expediente
-from ....core.config import Settings
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ..errors import LiveApplicationInputError
 from ..justificante import resolve_period_expediente
+from ..justificante_ports import JustificanteDeclaration, JustificanteExpediente
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -30,7 +27,6 @@ _EXP_2T = "202613000020002B"
 _PERIOD_1T = Period.from_year_and_code(_YEAR, "1T")
 _PERIOD_2T = Period.from_year_and_code(_YEAR, "2T")
 _PERIOD_3T = Period.from_year_and_code(_YEAR, "3T")
-_AEAT = Settings.external_constants().aeat
 
 
 def _declaration(
@@ -39,10 +35,9 @@ def _declaration(
     expediente_id: str,
     presented_at: datetime,
     estado: str = "ALTA",
-) -> Declaracion:
-    return Declaracion(
+) -> JustificanteDeclaration:
+    return JustificanteDeclaration(
         modelo=_MODELO,
-        ejercicio=_YEAR,
         period=period,
         expediente_id=expediente_id,
         estado=estado,
@@ -50,16 +45,8 @@ def _declaration(
     )
 
 
-def _expediente(*, expediente_id: str) -> Expediente:
-    return Expediente(
-        expediente_id=expediente_id,
-        modelo=_MODELO,
-        ejercicio=_YEAR,
-        category_path=("AEAT", "Modelo 130. IRPF. Pago fraccionado."),
-        detail_url=AnyHttpUrl(
-            f"{_AEAT.domains.sede}{_AEAT.sede_paths.expediente_detail_template.format(expediente_id=expediente_id)}",
-        ),
-    )
+def _expediente(*, expediente_id: str) -> JustificanteExpediente:
+    return JustificanteExpediente(expediente_id=expediente_id)
 
 
 _DECLARATIONS = (

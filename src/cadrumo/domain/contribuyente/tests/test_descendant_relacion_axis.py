@@ -25,7 +25,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
+from ....core.descendant_relacion import DescendantRelacion
+from ...calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
 from ...calculations.registry.authority import bundled_authority
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
@@ -89,7 +90,7 @@ def test_tutela_takes_the_tranche_and_not_the_increase() -> None:
     assert guardian.is_eligible_minimo_incremento_menor_tres(_YEAR) is False
 
 
-@pytest.mark.parametrize("relacion", sorted(ART_58_2_ENTITLING_RELACIONES))
+@pytest.mark.parametrize("relacion", sorted(descendant_relacion_entitling_tokens()))
 def test_every_entitling_relacion_opens_the_window_with_its_own_anchor(
     relacion: DescendantRelacion,
 ) -> None:
@@ -233,7 +234,7 @@ def test_the_predicate_withholds_even_if_an_excluded_record_somehow_holds_a_date
     assert smuggled.art_58_2_window_anchor_missing(_YEAR) is False
 
 
-@pytest.mark.parametrize("relacion", sorted(ART_58_2_ENTITLING_RELACIONES))
+@pytest.mark.parametrize("relacion", sorted(descendant_relacion_entitling_tokens()))
 def test_an_entitling_relacion_without_its_date_is_valid_and_withholds(
     relacion: DescendantRelacion,
 ) -> None:
@@ -483,7 +484,7 @@ class TestGuardaYCustodiaJudicial:
 
     def test_it_never_opens_the_art_58_2_entry_event_window(self) -> None:
         """Absent from "adopción o acogimiento, tanto preadoptivo como permanente"."""
-        assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in ART_58_2_ENTITLING_RELACIONES
+        assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in descendant_relacion_entitling_tokens()
 
     def test_it_cannot_carry_an_entry_event_date(self) -> None:
         """The record refuses the anchor, so the window is unreachable by any door.

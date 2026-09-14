@@ -41,7 +41,7 @@ from cadrumo.application.calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
-from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.live.errors import LiveApplicationError, LiveApplicationInputError
@@ -52,13 +52,13 @@ from cadrumo.application.live.filed_observation_persistence import (
     enroll_filed_justificante_evidence,
     latest_declarations_by_period,
     persist_filed_calculation_observation,
-    persist_iva_compensation_history_observations_strict,
+    persistiva_compensation_history_observations_strict,
     select_latest_filed_observations_in_history_order,
 )
 from cadrumo.application.live.iva_remote_state import (
     list_iva_compensation_history,
 )
-from cadrumo.application.live.tests._filed_capture_history_support import (
+from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import (
     _CAPTURED_AT,
     _M303_DECLARATION_TYPE_C,
     _M303_DECLARATION_TYPE_I,
@@ -96,11 +96,12 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
         )
 
         target_snapshot = _registry_snapshot("303", 2026, "2T")
-        prefill = resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT)
+        prefill = resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT, iva_history_repository=IvaCompensationHistoryRepository())
         recurrence, recurrence_prefill = extract_modelo_303_local_iva_compensation_recurrence(
             target_snapshot,
             repository=repository,
             captured_at=_CAPTURED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
 
         assert calculation_key == "303:2026:1T"
@@ -274,7 +275,7 @@ def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tm
     """The strict IVA compensation persistence remains a distinct authority.
 
     The finalizer promotes latest filed observations into calculation history;
-    the strict IVA path (``persist_iva_compensation_history_observations_strict``)
+    the strict IVA path (``persistiva_compensation_history_observations_strict``)
     stays a separate function with its own reload-verification contract, so the
     two are not collapsed by the finalizer consolidation.
     """
@@ -284,12 +285,12 @@ def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tm
         presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
     )
     with _secure_backend(tmp_path):
-        strict_keys = persist_iva_compensation_history_observations_strict((observation,))
+        strict_keys = persistiva_compensation_history_observations_strict((observation,))
         strict_history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
 
     assert strict_keys == ("303:2026:1T",)
     assert strict_history is not None
-    assert finalize_filed_capture is not persist_iva_compensation_history_observations_strict
+    assert finalize_filed_capture is not persistiva_compensation_history_observations_strict
 
 
 def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tmp_path: Path) -> None:
@@ -306,7 +307,7 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
         )
 
         target_snapshot = _registry_snapshot("303", 2026, "1T")
-        prefill = resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT)
+        prefill = resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT, iva_history_repository=IvaCompensationHistoryRepository())
 
         assert calculation_key == "303:2025:4T"
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
@@ -357,7 +358,7 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
 
 def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
-        keys = persist_iva_compensation_history_observations_strict(
+        keys = persistiva_compensation_history_observations_strict(
             (
                 _prior_303_observation(
                     pending_compensation=Decimal("1.00"),
@@ -779,7 +780,7 @@ def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(
 
 def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
-        keys = persist_iva_compensation_history_observations_strict(
+        keys = persistiva_compensation_history_observations_strict(
             (
                 _prior_303_observation(
                     expediente_id="200030300000014Z",
@@ -805,7 +806,7 @@ def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observatio
 
 def test_iva_history_strict_persist_ignores_non_alta_only_period(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
-        keys = persist_iva_compensation_history_observations_strict(
+        keys = persistiva_compensation_history_observations_strict(
             (
                 _prior_303_observation(
                     expediente_id="200030300000016Z",
@@ -828,7 +829,7 @@ def test_iva_history_strict_persist_refuses_non_303_before_writing(tmp_path: Pat
 
     with _secure_backend(tmp_path):
         with pytest.raises(LiveApplicationInputError) as error:
-            persist_iva_compensation_history_observations_strict((non_303,))
+            persistiva_compensation_history_observations_strict((non_303,))
 
         assert error.value.translated_message == "live.errors.iva_history_modelo_303_only"
         assert error.value.context == {"modelo": "130"}
@@ -981,7 +982,7 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
             ),
         )
 
-        keys = persist_iva_compensation_history_observations_strict(observations)
+        keys = persistiva_compensation_history_observations_strict(observations)
         history = list_iva_compensation_history(as_of_year=2026)
 
         rows_by_period = {(row.year, row.period): row for row in history.rows}
@@ -1562,7 +1563,7 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
         target_snapshot = _registry_snapshot("303", 2026, "2T")
 
         with pytest.raises(RegistryValidationError, match=r"iva\.compensacion-disponible-fin-periodo"):
-            resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT)
+            resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT, iva_history_repository=IvaCompensationHistoryRepository())
 
 
 def _filed_130_observation(

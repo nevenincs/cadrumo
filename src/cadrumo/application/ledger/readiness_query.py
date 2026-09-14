@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from ...core.period import Period
 
 from .protocols import TransactionCatalogueCoCommitWriterProtocol
+from .usage_ratio_repository import UsageRatioProfileLoader
 
 
 class LedgerReadinessIssueV1(BaseModel):
@@ -58,6 +59,7 @@ def read_ledger_readiness(
     bucket_id: str,
     period: Period,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
 ) -> tuple[LedgerReadinessIssueV1, ...]:
     """Report this period's readiness issues with their explaining facts.
 
@@ -74,6 +76,7 @@ def read_ledger_readiness(
         bucket_id=bucket_id,
         period=period,
         transaction_repository=transaction_repository,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
     )
     from .actions_common import resolve_transaction_repository
 

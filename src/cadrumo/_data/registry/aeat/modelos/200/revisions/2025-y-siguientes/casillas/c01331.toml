@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01331"
+continuidad_id = "is-cooperativa-cuota-integra-previa"
+continuidad_origin = "seeded"
 number = "01331"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"

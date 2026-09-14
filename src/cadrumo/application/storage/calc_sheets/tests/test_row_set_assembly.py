@@ -1,16 +1,17 @@
 """Fail-closed worksheet row-set ingress tests.
 
-These use the loaded registry snapshots and the public Google pull records; no
-transport or calculation boundary is replaced with a test double.
+These exercise the application-owned ingress validation against loaded
+registry snapshots. The local structural fakes model the worksheet boundary
+without coupling application tests to the Google transport DTOs.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
 
 import pytest
 
-from .....adapters.outbound.google.calc_sheets_pull_records import RowSetCellEdit, RowSetEdit
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
@@ -20,20 +21,37 @@ from ..row_set_assembly import assemble_row_sets_for_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+@dataclass(frozen=True)
+class _RowSetCell:
+    """Application-test fake for one structural worksheet cell."""
+
+    binding: str
+    row_index: int
+    value: Decimal | str | None = None
+
+
+@dataclass(frozen=True)
+class _RowSet:
+    """Application-test fake for one structural worksheet row-set."""
+
+    grouping: str
+    cells: tuple[_RowSetCell, ...] = ()
+
+
 def _snapshot(modelo: str, *, filing_year: int, period: str):
     return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
-def _foreign_asset_cells(*, row_index: int = 1, country: str | None = "CH") -> tuple[RowSetCellEdit, ...]:
+def _foreign_asset_cells(*, row_index: int = 1, country: str | None = "CH") -> tuple[_RowSetCell, ...]:
     cells = [
-        RowSetCellEdit(binding="modelo-720-asset-row-class", row_index=row_index, value="C"),
-        RowSetCellEdit(binding="modelo-720-asset-row-currency", row_index=row_index, value="CHF"),
-        RowSetCellEdit(binding="modelo-720-asset-row-identifier", row_index=row_index, value="CH-iban-001"),
-        RowSetCellEdit(binding="modelo-720-asset-row-acquisition-date", row_index=row_index, value="2020-01-15"),
-        RowSetCellEdit(binding="modelo-720-asset-row-valuation", row_index=row_index, value=Decimal("120000")),
+        _RowSetCell(binding="modelo-720-asset-row-class", row_index=row_index, value="C"),
+        _RowSetCell(binding="modelo-720-asset-row-currency", row_index=row_index, value="CHF"),
+        _RowSetCell(binding="modelo-720-asset-row-identifier", row_index=row_index, value="CH-iban-001"),
+        _RowSetCell(binding="modelo-720-asset-row-acquisition-date", row_index=row_index, value="2020-01-15"),
+        _RowSetCell(binding="modelo-720-asset-row-valuation", row_index=row_index, value=Decimal("120000")),
     ]
     if country is not None:
-        cells.insert(1, RowSetCellEdit(binding="modelo-720-asset-row-country", row_index=row_index, value=country))
+        cells.insert(1, _RowSetCell(binding="modelo-720-asset-row-country", row_index=row_index, value=country))
     return tuple(cells)
 
 
@@ -41,7 +59,7 @@ def test_assemble_row_sets_delegates_a_declared_row_to_snapshot_command() -> Non
     snapshot = _snapshot("720", filing_year=2025, period="0A")
 
     assembled = assemble_row_sets_for_snapshot(
-        (RowSetEdit(grouping="per_foreign_asset", cells=_foreign_asset_cells()),),
+        (_RowSet(grouping="per_foreign_asset", cells=_foreign_asset_cells()),),
         snapshot,
     )
 
@@ -54,10 +72,10 @@ def test_assemble_row_sets_delegates_a_declared_row_to_snapshot_command() -> Non
 
 def test_assemble_row_sets_refuses_an_unknown_field_in_a_declared_grouping() -> None:
     snapshot = _snapshot("720", filing_year=2025, period="0A")
-    cells = (*_foreign_asset_cells(), RowSetCellEdit(binding="unknown-row-field", row_index=1, value="x"))
+    cells = (*_foreign_asset_cells(), _RowSetCell(binding="unknown-row-field", row_index=1, value="x"))
 
     with pytest.raises(RegistryValidationError) as exc_info:
-        assemble_row_sets_for_snapshot((RowSetEdit(grouping="per_foreign_asset", cells=cells),), snapshot)
+        assemble_row_sets_for_snapshot((_RowSet(grouping="per_foreign_asset", cells=cells),), snapshot)
 
     assert str(exc_info.value) == "application.calculations.row_set.errors.row_assembly_failed"
     assert exc_info.value.context == {
@@ -74,7 +92,7 @@ def test_assemble_row_sets_refuses_an_undeclared_grouping_before_s87() -> None:
 
     with pytest.raises(RegistryValidationError) as exc_info:
         assemble_row_sets_for_snapshot(
-            (RowSetEdit(grouping="not-a-registry-grouping", cells=_foreign_asset_cells()),),
+            (_RowSet(grouping="not-a-registry-grouping", cells=_foreign_asset_cells()),),
             snapshot,
         )
 
@@ -89,11 +107,11 @@ def test_assemble_row_sets_refuses_an_undeclared_grouping_before_s87() -> None:
 
 def test_assemble_row_sets_refuses_duplicate_cell_coordinate_before_s87() -> None:
     snapshot = _snapshot("720", filing_year=2025, period="0A")
-    duplicate = RowSetCellEdit(binding="modelo-720-asset-row-class", row_index=1, value="C")
+    duplicate = _RowSetCell(binding="modelo-720-asset-row-class", row_index=1, value="C")
 
     with pytest.raises(RegistryValidationError) as exc_info:
         assemble_row_sets_for_snapshot(
-            (RowSetEdit(grouping="per_foreign_asset", cells=(duplicate, duplicate)),),
+            (_RowSet(grouping="per_foreign_asset", cells=(duplicate, duplicate)),),
             snapshot,
         )
 
@@ -115,9 +133,9 @@ def test_assemble_row_sets_refuses_a_binding_substituted_from_another_grouping()
     with pytest.raises(RegistryValidationError) as exc_info:
         assemble_row_sets_for_snapshot(
             (
-                RowSetEdit(
+                _RowSet(
                     grouping=first_grouping.grouping,
-                    cells=(RowSetCellEdit(binding=substituted_binding, row_index=1, value="DE"),),
+                    cells=(_RowSetCell(binding=substituted_binding, row_index=1, value="DE"),),
                 ),
             ),
             snapshot,
@@ -130,13 +148,13 @@ def test_assemble_row_sets_refuses_a_binding_substituted_from_another_grouping()
 
 def test_assemble_row_sets_refuses_two_blocks_claiming_the_same_row() -> None:
     snapshot = _snapshot("720", filing_year=2025, period="0A")
-    first = RowSetEdit(
+    first = _RowSet(
         grouping="per_foreign_asset",
-        cells=(RowSetCellEdit(binding="modelo-720-asset-row-class", row_index=1, value="C"),),
+        cells=(_RowSetCell(binding="modelo-720-asset-row-class", row_index=1, value="C"),),
     )
-    second = RowSetEdit(
+    second = _RowSet(
         grouping="per_foreign_asset",
-        cells=(RowSetCellEdit(binding="modelo-720-asset-row-country", row_index=1, value="CH"),),
+        cells=(_RowSetCell(binding="modelo-720-asset-row-country", row_index=1, value="CH"),),
     )
 
     with pytest.raises(RegistryValidationError) as exc_info:
@@ -153,7 +171,7 @@ def test_assemble_row_sets_preserves_s87_sparse_row_refusal() -> None:
 
     with pytest.raises(RegistryValidationError) as exc_info:
         assemble_row_sets_for_snapshot(
-            (RowSetEdit(grouping="per_foreign_asset", cells=_foreign_asset_cells(country=None)),),
+            (_RowSet(grouping="per_foreign_asset", cells=_foreign_asset_cells(country=None)),),
             snapshot,
         )
 

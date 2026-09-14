@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
@@ -21,6 +21,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -29,7 +30,11 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..filing.draft_review_ports import DraftReviewPorts
 from ..workflow.run_models import WorkflowResult
+
+if TYPE_CHECKING:
+    from .workflow_gate_ports import WorkflowGatePorts
 
 
 @runtime_checkable
@@ -100,6 +105,9 @@ class VerificationRepositoryBundle:
     iva_compensation_decision: IvaWalletDecisionRepositoryProtocol
     participation_index: TransactionParticipationIndexRepositoryProtocol
     workflow_run: WorkflowRunRepositoryProtocol
+    justificante: JustificanteRepositoryProtocol
+    draft_review_ports: DraftReviewPorts
+    workflow_gate_ports: WorkflowGatePorts
 
 
 VerificationRepositoryBundleFactory = Callable[[str], VerificationRepositoryBundle]

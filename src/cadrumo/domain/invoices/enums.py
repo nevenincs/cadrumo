@@ -16,20 +16,27 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+
+from ...core.errors.hierarchy import CoreValidationError
 from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.schema_base import DateAxis
-from ..iva.errors import IvaRateNotFoundError
-from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, resolve_iva_rate
-from ..iva.rates import iva_rate_record_from_fact
-from ..iva.schema import EUMemberState, IvaRateKind
 from ..calculations.registry.iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
 )
+from ..calculations.registry.schema_base import DateAxis
+from ..iva.errors import IvaRateNotFoundError
+from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, resolve_iva_rate
+from ..iva.rates import iva_rate_record_from_fact
+from ..iva.schema import IvaRateKind, spanish_eu_member_state
+
+if TYPE_CHECKING:
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 
 class IvaRate(str):
@@ -43,6 +50,7 @@ class IvaRate(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct a token only after registry membership is established."""
         if not _registry_validated:
             raise TypeError("IvaRate tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -51,7 +59,33 @@ class IvaRate(str):
 
     @classmethod
     def _from_registry(cls, value: str) -> Self:
+        """Materialise one token from the typed facts projection."""
         return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        """Resolve Pydantic input through the scoped rate-slot fact."""
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, str):
+            try:
+                return resolve_iva_rate_token(value, date.today())
+            except RegistryValidationError as exc:
+                raise ValueError("IvaRate token is not declared by the scoped facts registry") from exc
+        raise TypeError("IvaRate must be a registry-projected token or string")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Expose a scoped, resolver-backed token schema with string serialization."""
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
     @property
     def name(self) -> str:
@@ -82,46 +116,154 @@ class PaymentStatus(StrEnum):
     CANCELLED = "CANCELLED"
 
 
-class InvoiceClass(StrEnum):
-    """RD 1619/2012 art. 6.1.a invoice class, closed by the reglamento's own taxonomy.
+class InvoiceClass(str):
+    """Opaque invoice-class token projected from the dated facts registry."""
 
-    ``ORDINARIA`` is the factura completa the reglamento describes by default.
-    ``RECTIFICATIVA`` is the class art. 6.1.a.2.º forces into a specific series
-    and LIVA art. 89 requires to name what it corrects. ``SIMPLIFICADA`` is the
-    class art. 7 (not yet bundled) relieves of most art. 6.1 content, including
-    -- outside the three art. 6.1.d cases -- the counterparty's tax id.
+    __slots__ = ()
 
-    Attributes:
-        ORDINARIA: The default factura completa.
-        SIMPLIFICADA: A ticket-style invoice under the simplified regime.
-        RECTIFICATIVA: An invoice correcting a previously issued one.
-    """
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("InvoiceClass tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("InvoiceClass token must be a non-empty string")
+        return str.__new__(cls, value)
 
-    ORDINARIA = "ORDINARIA"
-    SIMPLIFICADA = "SIMPLIFICADA"
-    RECTIFICATIVA = "RECTIFICATIVA"
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("InvoiceClass must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical registry token for diagnostics."""
+        return str(self)
 
 
-class InvoiceOperationDateRole(StrEnum):
-    """Why :attr:`~cadrumo.domain.invoices.Invoice.operation_date` was recorded.
+class InvoiceOperationDateRole(str):
+    """Opaque operation-date role projected from the dated facts registry."""
 
-    RD 1619/2012 art. 6.1.i treats both cases as ONE datum in one clause: "la
-    fecha en que se hayan efectuado las operaciones ... o en la que, en su
-    caso, se haya recibido el pago anticipado, siempre que se trate de una
-    fecha distinta a la de expedición de la factura." The role does not change
-    how the date is READ for devengo purposes -- both cases are the LIVA
-    art. 75 devengo date -- it records which of the two clauses the operator
-    is stating, which is otherwise lost the moment the date is read back.
+    __slots__ = ()
 
-    Attributes:
-        OPERATION_PERFORMED: The date the operation (entrega/prestación) took
-            place, art. 75.Uno.
-        ADVANCE_PAYMENT_RECEIVED: The date a pago anticipado was collected
-            before the operation, art. 75.Dos.
-    """
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("InvoiceOperationDateRole tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("InvoiceOperationDateRole token must be a non-empty string")
+        return str.__new__(cls, value)
 
-    OPERATION_PERFORMED = "OPERATION_PERFORMED"
-    ADVANCE_PAYMENT_RECEIVED = "ADVANCE_PAYMENT_RECEIVED"
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("InvoiceOperationDateRole must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical registry token for diagnostics."""
+        return str(self)
+
+
+def require_invoice_class(value: object, *, effective_date: date | None = None) -> InvoiceClass:
+    """Resolve an invoice-class token through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_invoice_class as _require
+
+    return _require(value, effective_date=effective_date)
+
+
+def require_invoice_operation_date_role(
+    value: object,
+    *,
+    effective_date: date | None = None,
+) -> InvoiceOperationDateRole:
+    """Resolve an operation-date role through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import (
+        require_invoice_operation_date_role as _require,
+    )
+
+    return _require(value, effective_date=effective_date)
+
+
+def invoice_class_ordinaria(*, effective_date: date | None = None) -> InvoiceClass:
+    """Return the registry-declared ordinary invoice-class token."""
+    from ..calculations.registry.invoice_legal_classification import invoice_class_ordinaria as _token
+
+    return _token(effective_date=effective_date)
+
+
+def invoice_class_simplificada(*, effective_date: date | None = None) -> InvoiceClass:
+    """Return the registry-declared simplified invoice-class token."""
+    from ..calculations.registry.invoice_legal_classification import invoice_class_simplificada as _token
+
+    return _token(effective_date=effective_date)
+
+
+def invoice_class_rectificativa(*, effective_date: date | None = None) -> InvoiceClass:
+    """Return the registry-declared corrective invoice-class token."""
+    from ..calculations.registry.invoice_legal_classification import invoice_class_rectificativa as _token
+
+    return _token(effective_date=effective_date)
+
+
+def operation_performed_role(*, effective_date: date | None = None) -> InvoiceOperationDateRole:
+    """Return the registry-declared performed-operation date role."""
+    from ..calculations.registry.invoice_legal_classification import operation_performed_role as _token
+
+    return _token(effective_date=effective_date)
+
+
+def advance_payment_received_role(*, effective_date: date | None = None) -> InvoiceOperationDateRole:
+    """Return the registry-declared advance-payment date role."""
+    from ..calculations.registry.invoice_legal_classification import advance_payment_received_role as _token
+
+    return _token(effective_date=effective_date)
+
+
+def default_invoice_class(*, effective_date: date | None = None) -> InvoiceClass:
+    """Return the registry-declared default invoice-class token."""
+    return invoice_class_ordinaria(effective_date=effective_date)
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,6 +291,7 @@ class InvoiceLegalMention(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct a token only after registry membership is established."""
         if not _registry_validated:
             raise TypeError("InvoiceLegalMention tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -157,15 +300,50 @@ class InvoiceLegalMention(str):
 
     @classmethod
     def _from_registry(cls, value: str) -> Self:
+        """Materialise one token from the typed facts projection."""
         return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        """Resolve Pydantic input through the scoped legal-mention fact."""
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, str):
+            try:
+                return resolve_invoice_legal_mention(value, date.today())
+            except RegistryValidationError as exc:
+                raise ValueError("InvoiceLegalMention is not declared by the scoped facts registry") from exc
+        raise TypeError("InvoiceLegalMention must be a registry-projected token or string")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Expose a scoped, resolver-backed token schema with string serialization."""
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
 
 _INVOICE_LEGAL_MENTION_FACT_ID = "iva-regime-legend-catalogue"
 
 
-def invoice_legal_mention_declarations(on_date: date) -> tuple[InvoiceLegalMentionDeclaration, ...]:
+def invoice_legal_mention_declarations(
+    on_date: date,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> tuple[InvoiceLegalMentionDeclaration, ...]:
     """Project the dated legal-mention vocabulary and semantics from the registry."""
-    resolved = bundled_authority().resolve_governed_fact(
+    if authority is None:
+        from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
+
+        authority = governed_facts_in_scope()
+    selected = authority or bundled_authority()
+    resolved = selected.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_INVOICE_LEGAL_MENTION_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -213,11 +391,16 @@ def invoice_legal_mention_declarations(on_date: date) -> tuple[InvoiceLegalMenti
     return tuple(declarations)
 
 
-def resolve_invoice_legal_mention(value: str, on_date: date) -> InvoiceLegalMention:
+def resolve_invoice_legal_mention(
+    value: str,
+    on_date: date,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> InvoiceLegalMention:
     """Return a typed invoice-mention token only when the registry accepts it."""
     if not isinstance(value, str):
         raise RegistryValidationError("invoice legal-mention token must be a string")
-    for declaration in invoice_legal_mention_declarations(on_date):
+    for declaration in invoice_legal_mention_declarations(on_date, authority=authority):
         if declaration.token == value:
             return InvoiceLegalMention._from_registry(value)
     raise RegistryValidationError(f"invoice legal-mention token is not governed: {value}")
@@ -226,9 +409,18 @@ def resolve_invoice_legal_mention(value: str, on_date: date) -> InvoiceLegalMent
 _IVA_RATE_SLOT_FACT_ID = "iva-rate-slot-catalogue"
 
 
-def _iva_rate_slot_registry_values(on_date: date) -> Mapping[str, str]:
+def _iva_rate_slot_registry_values(
+    on_date: date,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> Mapping[str, str]:
     """Resolve the dated slot membership and declarations from the registry."""
-    resolved = bundled_authority().resolve_governed_fact(
+    if authority is None:
+        from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
+
+        authority = governed_facts_in_scope()
+    selected = authority or bundled_authority()
+    resolved = selected.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_IVA_RATE_SLOT_FACT_ID,
             date_axis=DateAxis.DEVENGO_DATE,
@@ -272,11 +464,16 @@ def _iva_rate_slot_registry_declarations(rate: IvaRate, on_date: date) -> Mappin
         raise RegistryValidationError(f"IVA rate slot catalogue is missing {prefix}{exc.args[0]}") from exc
 
 
-def resolve_iva_rate_token(value: str, on_date: date) -> IvaRate:
+def resolve_iva_rate_token(
+    value: str,
+    on_date: date,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> IvaRate:
     """Project one persisted rate token only when its registry membership exists."""
     if not isinstance(value, str):
         raise RegistryValidationError("IVA rate token must be a string")
-    values = _iva_rate_slot_registry_values(on_date)
+    values = _iva_rate_slot_registry_values(on_date, authority=authority)
     if value not in _iva_rate_slot_registry_order(values):
         raise RegistryValidationError(f"IVA rate slot is not governed: {value}")
     return IvaRate._from_registry(value)
@@ -310,7 +507,7 @@ def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
     if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date).zero_token:
         return None
     return resolve_iva_rate(
-        EUMemberState.ES,
+        spanish_eu_member_state(effective_date=on_date),
         kind,
         on_date,
         rate_role=declarations["rate_role"],
@@ -363,7 +560,9 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         return None
     kind = _iva_rate_slot_kind(declarations, on_date)
     if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date).zero_token:
-        if kind not in rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0"), on_date):
+        if kind not in rate_kinds_for_declared_rate(
+            spanish_eu_member_state(effective_date=on_date), Decimal("0"), on_date
+        ):
             raise IvaRateNotFoundError("zero IVA slot is not accepted by the IVA authority")
         return Decimal("0")
     try:
@@ -379,13 +578,13 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         # tiers that same day. Saying "not in force" there sends a filer to
         # correct a figure that was right, and invites widening the table with
         # a guessed value rather than an authored, corpus-backed one.
-        if not rate_table_covers(EUMemberState.ES, on_date, kind):
+        if not rate_table_covers(spanish_eu_member_state(effective_date=on_date), on_date, kind):
             raise IvaRateNotFoundError(
                 translated_message="errors.iva.rate_registry_coverage_gap",
                 context={
                     "iva_rate_slot": rate.name,
                     "rate_kind": kind.value,
-                    "member_state": EUMemberState.ES.value,
+                    "member_state": spanish_eu_member_state(effective_date=on_date).value,
                     "on_date": on_date.isoformat(),
                     "rate_registry_covers_date": False,
                 },
@@ -395,7 +594,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
             context={
                 "iva_rate_slot": rate.name,
                 "rate_kind": kind.value,
-                "member_state": EUMemberState.ES.value,
+                "member_state": spanish_eu_member_state(effective_date=on_date).value,
                 "on_date": on_date.isoformat(),
                 "rate_registry_covers_date": True,
                 "rate_in_force": False,
@@ -448,6 +647,8 @@ def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
 
 
 __all__ = [
+    "advance_payment_received_role",
+    "default_invoice_class",
     "InvoiceClass",
     "InvoiceLegalMention",
     "InvoiceLegalMentionDeclaration",
@@ -455,11 +656,17 @@ __all__ = [
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
+    "invoice_legal_mention_declarations",
+    "invoice_class_ordinaria",
+    "invoice_class_rectificativa",
+    "invoice_class_simplificada",
     "iva_rate_kind",
     "iva_rate_percentage",
-    "invoice_legal_mention_declarations",
+    "operation_performed_role",
+    "require_invoice_class",
+    "require_invoice_operation_date_role",
+    "resolve_invoice_legal_mention",
     "resolve_iva_rate_slot",
     "resolve_iva_rate_slot_fact",
     "resolve_iva_rate_token",
-    "resolve_invoice_legal_mention",
 ]

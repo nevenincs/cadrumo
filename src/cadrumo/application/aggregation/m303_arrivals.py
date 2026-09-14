@@ -9,12 +9,16 @@ from pydantic import BaseModel, field_validator, model_validator
 from ...core.i18n.render import tr as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
+from ...core.prorrata_register import ProrrataEspecialTransitionKind
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings_previous_filing import periodic_carry_bindings_for_period
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    especial_prorrata_register_regime,
+    revocacion_prorrata_transition,
+)
 from ...domain.calculations.registry.queries import RegistryQueryService
-from ...domain.iva.schema import IvaCashAccountingTreatment, is_iva_cash_accounting_supplier_regime
+from ...domain.iva.schema import is_iva_cash_accounting_supplier_regime
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from .errors import AggregationValidationError
 from .iva_ledger import IvaLedgerAggregation
@@ -257,7 +261,7 @@ def _validate_m303_prorrata_revocation_evidence(
     invalid_revocation_sectors: list[str | None] = []
     for entry in evidence:
         prior_entry = prorrata_register.entry_for(period.filing_year - 1, sector_id=entry.sector_id)
-        if prior_entry is None or prior_entry.regime is not ProrrataRegisterRegime.ESPECIAL:
+        if prior_entry is None or prior_entry.regime != especial_prorrata_register_regime():
             invalid_revocation_sectors.append(entry.sector_id)
     if invalid_revocation_sectors:
         raise AggregationValidationError(
@@ -285,7 +289,7 @@ def resolve_m303_prorrata_transition_arrival(
         )
     evidence = _m303_prorrata_transition_evidence(period=period, prorrata_register=prorrata_register)
     transition = _m303_prorrata_transition_kind(evidence)
-    if transition is ProrrataEspecialTransitionKind.REVOCACION:
+    if transition == revocacion_prorrata_transition():
         _validate_m303_prorrata_revocation_evidence(
             period=period,
             prorrata_register=prorrata_register,

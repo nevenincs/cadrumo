@@ -27,10 +27,9 @@ from .....adapters.persistence.storage.tests.secure_sql import (
 from .....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionDisposal,
-    BienInversionDisposalRegime,
     BienInversionIvaRecord,
-    BienInversionKind,
 )
+from .....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ....persistence.storage.sql.engine import get_engine
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 

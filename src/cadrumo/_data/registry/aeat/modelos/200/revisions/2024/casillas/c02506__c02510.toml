@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02506"
+continuidad_id = "is-correccion-cambio-criterios-contables-art11-3-permanente-disminucion"
 number = "02506"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "disminucion"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02507"
+continuidad_id = "is-correccion-cambio-criterios-contables-art11-3-temporaria-ejercicio-disminucion"
 number = "02507"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "disminucion"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02508"
+continuidad_id = "is-correccion-cambio-criterios-contables-art11-3-temporaria-anteriores-disminucion"
 number = "02508"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "disminucion"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02509"
+continuidad_id = "02509"
 number = "02509"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "disminucion"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02510"
+continuidad_id = "02510"
 number = "02510"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "disminucion"]
 data_type = "money"

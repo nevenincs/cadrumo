@@ -29,7 +29,7 @@ from cadrumo.application.calculations.observations_repository import (
     iva_wallet_decision_key,
     observation_key,
 )
-from cadrumo.application.calculations.tests._iva_compensation_history_support import m303_registry_snapshot_ref
+from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

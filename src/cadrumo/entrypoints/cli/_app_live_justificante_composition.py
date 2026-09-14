@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from typing import cast
 
 from ...adapters.inbound.justificante.parser import parse_justificante_bytes
+from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
 from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
 from ...adapters.outbound.aeat.verify.contract import verify_csv
@@ -118,6 +119,7 @@ class _LiveRead:
     ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
         session, settings = await active_verified_session(
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            browser_session_factory=default_browser_session_factory,
             operator_scope_ports=self._operator_scope_ports,
             operation="live-justificante-read",
         )

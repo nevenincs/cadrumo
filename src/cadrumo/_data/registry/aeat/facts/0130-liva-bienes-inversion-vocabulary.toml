@@ -1,0 +1,65 @@
+[fact]
+fact_id = "liva-bienes-inversion-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "liva-bienes-inversion-vocabulary:1993-01-01"
+date_axis = "transaction_date"
+valid_from = 1993-01-01
+legal_refs = [
+  "ley-37-1992:art-107",
+  "ley-37-1992:art-108",
+  "ley-37-1992:art-109",
+  "ley-37-1992:art-110",
+]
+# Withdrawn 2026-09-13: "aeat-modelo-303-procedure" is a NAVIGATION page -- its whole
+# 4,612 characters are a menu of modelo links, and its two "regularización" hits are the
+# labels "Modelo 318. Regularización de las proporciones..." and "IVA. Regularización por
+# falta de presentación", neither stating anything about bienes de inversión.
+# "boe-modelo-303-2008-form" (49,231 chars) contains "inversión" exactly ONCE, inside
+# "instituciones de inversión colectiva" describing modelo 187 -- a substring match on an
+# unrelated concept. Neither document evidences this vocabulary, so neither is declared.
+source_refs = [
+  "boe-liva-art-108-statutory-facts",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-liva-art-108-statutory-facts"
+# Ley 37/1992 art. 108 is the statutory definition and grounds exactly two things this
+# payload encodes: the CONCEPT of a bien de inversión, and the mueble/inmueble kind
+# distinction. What it does NOT claim: the disposal_regime entries (sujeta_no_exenta,
+# exenta_o_no_sujeta) rest on art. 110 and the bundled document is art. 108 alone --
+# those entries carry their own legal_refs and are not sourced here.
+required_text = [
+  "Concepto de bienes de inversión",
+  "se considerarán de inversión los bienes corporales, muebles, semovientes o inmuebles",
+  "por un período de tiempo superior a un año",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "acquisition.minimum_year", value = "2000" },
+
+  { key = "kind.order", value = "mueble,inmueble" },
+  { key = "kind.non_real_estate_token", value = "mueble" },
+  { key = "kind.real_estate_token", value = "inmueble" },
+  { key = "kind.mueble.value", value = "mueble" },
+  { key = "kind.mueble.description", value = "Capital good whose LIVA regularisation window follows the non-real-estate rule." },
+  { key = "kind.mueble.legal_refs", value = "ley-37-1992:art-107,ley-37-1992:art-109" },
+  { key = "kind.inmueble.value", value = "inmueble" },
+  { key = "kind.inmueble.description", value = "Land or building capital good whose LIVA regularisation window follows the real-estate rule." },
+  { key = "kind.inmueble.legal_refs", value = "ley-37-1992:art-107,ley-37-1992:art-109" },
+
+  { key = "disposal_regime.order", value = "sujeta_no_exenta,exenta_o_no_sujeta" },
+  { key = "disposal_regime.subject_not_exempt_token", value = "sujeta_no_exenta" },
+  { key = "disposal_regime.exempt_or_outside_scope_token", value = "exenta_o_no_sujeta" },
+  { key = "disposal_regime.sujeta_no_exenta.value", value = "sujeta_no_exenta" },
+  { key = "disposal_regime.sujeta_no_exenta.description", value = "Disposal subject to IVA and not exempt for the art. 110 single regularisation rule." },
+  { key = "disposal_regime.sujeta_no_exenta.legal_refs", value = "ley-37-1992:art-110" },
+  { key = "disposal_regime.exenta_o_no_sujeta.value", value = "exenta_o_no_sujeta" },
+  { key = "disposal_regime.exenta_o_no_sujeta.description", value = "Disposal exempt from or outside the scope of IVA for the art. 110 single regularisation rule." },
+  { key = "disposal_regime.exenta_o_no_sujeta.legal_refs", value = "ley-37-1992:art-110" },
+]

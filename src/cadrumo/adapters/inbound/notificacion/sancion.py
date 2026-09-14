@@ -35,7 +35,7 @@ template:
 Reconciliation is layout-independent by construction. AEAT prints the
 reducciones either flat (each subtracted from the sanción) or sequentially
 (each applied to the running amount), and both yield the same final payable:
-``S - r30 - r40`` either way. Only the intermediate labels differ, so binding
+``S - r_conformidad - r_pronto_pago`` either way. Only the intermediate labels differ, so binding
 the payable to ``Importe a ingresar`` when printed and to ``Diferencia``
 otherwise reads both layouts correctly, and any third layout refuses loudly
 rather than answering confidently.
@@ -45,8 +45,9 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from datetime import date
 from decimal import Decimal
-from typing import Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel
 
@@ -55,9 +56,13 @@ from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import CENT, round_to_cents
 from ....core.text_fold import fold_diacritics
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.notifications.sancion import SancionLiquidacion
 from ..pdf.label_regex import parse_spanish_decimal
 from .errors import SancionArithmeticError, SancionParseError
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 _STRICT_PERCENTAGE_RE: Final[re.Pattern[str]] = re.compile(r"^\d{1,3}(?:,\d{1,2})?$")
 """Anchored percentage shape, comma-decimal, at most two decimals."""
@@ -83,10 +88,13 @@ _MONEY_FIELDS: Final = ("base_sancion", "sancion_resultante", "reduccion_conform
 _MONEY_LABELS: Final[Mapping[str, tuple[str, ...]]] = {
     "base_sancion": ("base sobre la que se liquida la sancion",),
     "sancion_resultante": ("sancion resultante",),
-    "reduccion_conformidad": ("reduccion del 30%", "reduccion del 30 %"),
-    "reduccion_pronto_pago": ("reduccion del 40%", "reduccion del 40 %"),
     "diferencia": ("diferencia",),
     "importe_a_ingresar": ("importe a ingresar",),
+}
+_SANCTION_REDUCTION_FACT_ID: Final = "lgt-art-188-sanction-reductions"
+_SANCTION_REDUCTION_FACT_KEYS: Final[Mapping[str, str]] = {
+    "reduccion_conformidad": "reduction.conformidad.percentage",
+    "reduccion_pronto_pago": "reduction.pronto_pago.percentage",
 }
 _PERCENT_LABELS: Final[Mapping[str, tuple[str, ...]]] = {
     "porcentaje_minimo": ("porcentaje minimo de sancion", "porcentaje de sancion"),
@@ -109,6 +117,63 @@ _TEXT_VALIDATORS: Final[Mapping[str, re.Pattern[str]]] = {
     "referencia": _REFERENCIA_RE,
     "nif": _NIF_RE,
 }
+
+
+def _resolved_sanction_reduction_labels(
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None,
+) -> Mapping[str, tuple[str, ...]]:
+    """Build reduction-label variants from the selected art. 188 fact.
+
+    The printed labels remain parser vocabulary, but their statutory numeric
+    fragments are owned by the facts authority. Missing, mistyped, or
+    temporally unresolved declarations refuse parsing instead of falling back
+    to a locally remembered reduction percentage.
+    """
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ....domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from ....domain.calculations.registry.schema_base import DateAxis
+
+    if not isinstance(effective_date, date):
+        raise SancionParseError("sanction reduction facts require an effective date")
+    selected_authority = authority or bundled_authority()
+    try:
+        resolved = selected_authority.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id=_SANCTION_REDUCTION_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            ),
+        )
+    except RegistryValidationError as exc:
+        raise SancionParseError(
+            "AEAT sanction reduction labels could not be resolved from the facts authority",
+        ) from exc
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise SancionParseError("sanction reduction fact must resolve as a mapping fact")
+
+    declarations: dict[str, Decimal] = {}
+    for entry in resolved.payload.entries:
+        if entry.key not in _SANCTION_REDUCTION_FACT_KEYS.values():
+            continue
+        if not isinstance(entry.key, str) or not isinstance(entry.value, Decimal) or not entry.value.is_finite():
+            raise SancionParseError("sanction reduction fact entries must be finite decimal mappings")
+        if entry.key in declarations:
+            raise SancionParseError(f"duplicate sanction reduction fact entry {entry.key!r}")
+        declarations[entry.key] = entry.value
+
+    labels: dict[str, tuple[str, ...]] = {}
+    for field, key in _SANCTION_REDUCTION_FACT_KEYS.items():
+        percentage = declarations.get(key)
+        if percentage is None or percentage <= 0:
+            raise SancionParseError(f"sanction reduction fact is missing a positive {key!r} declaration")
+        rendered = format(percentage.normalize(), "f")
+        if "." in rendered:
+            rendered = rendered.rstrip("0").rstrip(".")
+        rendered = rendered.replace(".", ",")
+        labels[field] = (f"reduccion del {rendered}%", f"reduccion del {rendered} %")
+    return labels
 
 
 def _fold_char(char: str) -> str:
@@ -318,6 +383,8 @@ def parse_sancion_document(
     *,
     certificado_id: str,
     document_sha256: str,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> SancionLiquidacion:
     """Parse the extracted text of one AEAT sanción / liquidación PDF.
 
@@ -328,6 +395,12 @@ def parse_sancion_document(
             runs against exactly what AEAT printed.
         certificado_id: The notification the document was served under.
         document_sha256: Digest of the PDF bytes the text was extracted from.
+        effective_date: Filing-period coordinate used to resolve the statutory
+            sanction reductions. When the document surface carries no reliable
+            legal coordinate, the current date is used by the direct reader.
+        authority: Optional already-validated facts authority. Omitted callers
+            use the bundled validated authority and still fail closed when the
+            reduction fact is absent or malformed.
 
     Returns:
         The complete :class:`SancionLiquidacion`.
@@ -343,7 +416,14 @@ def parse_sancion_document(
     missing: list[str] = []
     malformed: list[str] = []
     ambiguous: list[str] = []
-    values = _parse_sancion_values(lines, missing=missing, malformed=malformed, ambiguous=ambiguous)
+    values = _parse_sancion_values(
+        lines,
+        missing=missing,
+        malformed=malformed,
+        ambiguous=ambiguous,
+        effective_date=effective_date or date.today(),
+        authority=authority,
+    )
     payable = _resolve_payable(values, missing)
     _raise_if_sancion_parse_incomplete(
         certificado_id=certificado_id,
@@ -368,6 +448,8 @@ def _parse_sancion_values(
     missing: list[str],
     malformed: list[str],
     ambiguous: list[str],
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None,
 ) -> dict[str, object]:
     values: dict[str, object] = {}
     for field, labels in _TEXT_LABELS.items():
@@ -379,7 +461,14 @@ def _parse_sancion_values(
             malformed=malformed,
             ambiguous=ambiguous,
         )
-    for field, labels in _MONEY_LABELS.items():
+    money_labels = dict(_MONEY_LABELS)
+    money_labels.update(
+        _resolved_sanction_reduction_labels(
+            effective_date=effective_date,
+            authority=authority,
+        ),
+    )
+    for field, labels in money_labels.items():
         values[field] = _resolve_single(
             field,
             _collect_hits(lines, labels),

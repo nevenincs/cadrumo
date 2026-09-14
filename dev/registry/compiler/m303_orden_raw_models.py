@@ -109,10 +109,18 @@ class M303AnnualOrdenRawDifficultJustification(RegistryModel):
 
 
 class M303AnnualOrdenRawLorca2022Reduction(RegistryModel):
-    """The DA 4(2) Annex-II Lorca IVA reduction, parsed from the 2022 Orden."""
+    """One source-stated municipal IVA reduction candidate.
 
-    municipality: Literal["Lorca"]
+    The source model keeps observed values only.  Exercise applicability and
+    legal identity are checked by the compiler against the selected facts
+    authority, not by this raw extraction schema.
+    """
+
+    ejercicio: FilingYear
+    municipality: str = Field(min_length=1)
+    annex_scope: str = Field(min_length=1)
     percentage: Decimal = Field(gt=Decimal("0"), lt=Decimal("100"))
+    calculation_periods: tuple[str, ...] = Field(min_length=1)
     required_text: tuple[str, str, str]
 
 
@@ -136,7 +144,6 @@ class M303AnnualOrdenSourceCensus(RegistryModel):
         _validate_source_activity_catalogue(self)
         _validate_source_agricultural_axes(self)
         _validate_source_common_axes(self)
-        _validate_source_lorca_2022_reduction(self)
         return self
 
 
@@ -183,13 +190,9 @@ def _validate_source_common_axes(census: M303AnnualOrdenSourceCensus) -> None:
         scope="source",
         subject="difficult-justification",
     )
-
-
-def _validate_source_lorca_2022_reduction(census: M303AnnualOrdenSourceCensus) -> None:
-    reduction = census.lorca_2022_reduction
-    if census.ejercicio == 2022:
-        if reduction is None:
-            raise RegistryValidationError("annual Orden 2022 source lacks its Lorca IVA reduction authority")
-        validate_percentage_shape(reduction.percentage, scope="source", subject="Lorca IVA reduction")
-    elif reduction is not None:
-        raise RegistryValidationError("only the 2022 annual Orden may publish the Lorca 2022 reduction")
+    if census.lorca_2022_reduction is not None:
+        validate_percentage_shape(
+            census.lorca_2022_reduction.percentage,
+            scope="source",
+            subject="municipal IVA reduction",
+        )

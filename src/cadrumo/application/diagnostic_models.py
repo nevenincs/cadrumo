@@ -22,11 +22,11 @@ from ..core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ..core.requirement import RequirementValue
+from .diagnostics_ports import DiagnosticSecureObjectNamespace
 from .errors import DiagnosticModelError
 from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
-    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
     from .wizard.status import WizardStatusReport
 
 
@@ -198,7 +198,7 @@ class SecureObjectIntegrityReport(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    namespaces: tuple[SecureObjectNamespaceIntegrity, ...] = ()
+    namespaces: tuple[DiagnosticSecureObjectNamespace, ...] = ()
     readable_total: int = 0
     unreadable_total: int = 0
 
@@ -226,10 +226,9 @@ def ensure_models_rebuilt() -> None:
     global _models_rebuilt
     if _models_rebuilt:
         return
-    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
     from .wizard.status import WizardStatusReport
 
-    _model_rebuild_types = (SecureObjectNamespaceIntegrity, WizardStatusReport)
+    _model_rebuild_types = (DiagnosticSecureObjectNamespace, WizardStatusReport)
     SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
     ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
     _models_rebuilt = True

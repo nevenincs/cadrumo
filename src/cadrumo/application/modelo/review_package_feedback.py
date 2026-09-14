@@ -41,7 +41,7 @@ See Also:
     :mod:`~application.modelo.review_package_recipient_encryption`
         Owns the X25519 ECIES primitive this module reuses verbatim, in both
         directions.
-    :mod:`~application.modelo._review_package_counter_sign`
+    :mod:`~application.modelo.review_package_counter_sign`
         Owns the counter-signed receipt this module's feedback optionally
         carries and verifies on import.
     :mod:`~application.modelo.review_package_collab_audit`

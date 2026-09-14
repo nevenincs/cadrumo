@@ -52,7 +52,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.adapters.persistence.profile.tests._export_test_support import _seed_profile, _synthetic_valid_nif
-from cadrumo.application.modelo.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()

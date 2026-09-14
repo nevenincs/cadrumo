@@ -16,7 +16,7 @@ is to ask. The reason asking is viable rather than exhausting is this module:
 invoice.**
 
 **An absent fact is never a territory.** There is no branch here that produces
-:attr:`~domain.iva.IvaTerritorialScope.ES_MAINLAND` — or any other member — from
+the registry-projected mainland token — or any other projected scope — from
 the absence of a record. The peninsula is the majority population, so a default
 there would pass every test written by someone with mainland fixtures while
 silently placing Canarian and Ceutan parties inside a territory their operations
@@ -54,13 +54,10 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
-from ...adapters.persistence.storage.secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
-from ...core.classification.policies import SensitivityClass
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
@@ -70,6 +67,7 @@ from ...core.time.clock import now
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.schema import EUMemberState
 from .classification_assembly import DeclaredFact
+from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
@@ -78,7 +76,6 @@ if TYPE_CHECKING:
 __all__ = [
     "ConfirmedCounterpartyFacts",
     "ConfirmedCounterpartyFactsInputError",
-    "ConfirmedCounterpartyFactsRepository",
     "ConfirmedCounterpartyResolution",
     "CounterpartyConfirmationOutcomeV1",
     "CounterpartyEstablishmentConflictError",
@@ -324,29 +321,6 @@ class ConfirmedCounterpartyFacts(BaseModel):
         return DeclaredFact[EUMemberState](value=self.identification_state, source=self.source)
 
 
-class ConfirmedCounterpartyFactsRepository(SecureBoundRepository[ConfirmedCounterpartyFacts]):
-    """Encrypted profile-local store of confirmed counterparty establishment facts.
-
-    The namespace, its :class:`SensitivityClass`, schema version and object-key
-    contract all come from
-    :data:`~adapters.persistence.storage.LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE`,
-    so the record's confidentiality tier is declared once beside the namespace
-    rather than restated here.
-    Writes go through the shared single-writer envelope primitive rather than
-    beside it, so a record here gets the same atomicity and encryption every
-    other bucket-scoped record gets.
-    """
-
-    namespace: ClassVar[str] = LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.namespace
-    sensitivity: ClassVar[SensitivityClass] = LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = ConfirmedCounterpartyFacts
-
-    @override
-    def extract_identifier(self, payload: ConfirmedCounterpartyFacts) -> str:
-        return payload.counterparty_key
-
-
 class CounterpartyEstablishmentContradiction(BaseModel):
     """A later document's territory evidence disagreeing with the confirmed fact.
 
@@ -405,17 +379,6 @@ class ConfirmedCounterpartyResolution(BaseModel):
         return self.contradiction is not None
 
 
-def _repository(
-    *,
-    bucket_id: str,
-    repository: ConfirmedCounterpartyFactsRepository | None,
-) -> ConfirmedCounterpartyFactsRepository:
-    """Return the injected repository, or one bound to ``bucket_id``."""
-    if repository is not None:
-        return repository
-    return ConfirmedCounterpartyFactsRepository(bucket_id=bucket_id)
-
-
 def _raise_scope_conflict(
     existing: ConfirmedCounterpartyFacts,
     asserted: ConfirmedCounterpartyFacts,
@@ -455,7 +418,7 @@ def _raise_identification_conflict(
 
 
 def _merge_confirmed_counterparty_facts(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     *,
     existing: ConfirmedCounterpartyFacts,
     asserted: ConfirmedCounterpartyFacts,
@@ -484,7 +447,7 @@ def record_confirmed_counterparty_facts(
     country_code: str | None = None,
     note: str = "",
     asserted_at: datetime | None = None,
-    repository: ConfirmedCounterpartyFactsRepository | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> ConfirmedCounterpartyFacts:
     """Confirm where a counterparty is established, once, for every later document.
 
@@ -539,11 +502,10 @@ def record_confirmed_counterparty_facts(
         note=note,
         asserted_at=asserted_at,
     )
-    repo = _repository(bucket_id=bucket_id, repository=repository)
-    existing = repo.load(fact.counterparty_key)
+    existing = repository.load(fact.counterparty_key)
     if existing is not None:
-        return _merge_confirmed_counterparty_facts(repo, existing=existing, asserted=fact)
-    repo.save(fact)
+        return _merge_confirmed_counterparty_facts(repository, existing=existing, asserted=fact)
+    repository.save(fact)
     return fact
 
 
@@ -552,7 +514,7 @@ def forget_confirmed_counterparty_facts(
     bucket_id: str,
     tax_identifier: str,
     country_code: str | None = None,
-    repository: ConfirmedCounterpartyFactsRepository | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> bool:
     """Withdraw a confirmed establishment fact, returning whether one was held.
 
@@ -563,7 +525,7 @@ def forget_confirmed_counterparty_facts(
     key = confirmed_counterparty_facts_key(tax_identifier, country_code=country_code)
     if key is None:
         return False
-    return _repository(bucket_id=bucket_id, repository=repository).delete(key)
+    return repository.delete(key)
 
 
 def resolve_confirmed_counterparty_facts(
@@ -572,7 +534,7 @@ def resolve_confirmed_counterparty_facts(
     tax_identifier: str | None,
     country_code: str | None = None,
     evidenced_scope: IvaTerritorialScope | None = None,
-    repository: ConfirmedCounterpartyFactsRepository | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> ConfirmedCounterpartyResolution:
     """Ask the store what is confirmed about this counterparty, and never guess.
 
@@ -606,7 +568,7 @@ def resolve_confirmed_counterparty_facts(
     if key is None:
         return ConfirmedCounterpartyResolution()
 
-    stored = _repository(bucket_id=bucket_id, repository=repository).load(key)
+    stored = repository.load(key)
     if stored is None:
         return ConfirmedCounterpartyResolution()
 
@@ -661,7 +623,7 @@ def confirm_counterparty_establishment(
     identification_state: EUMemberState | None = None,
     country_code: str | None = None,
     note: str = "",
-    repository: ConfirmedCounterpartyFactsRepository | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> CounterpartyConfirmationOutcomeV1:
     """Confirm a counterparty's establishment and say whether this call wrote it.
 
@@ -683,7 +645,7 @@ def confirm_counterparty_establishment(
         identification_state: Where it is IVA-identified, when answered.
         country_code: Country context for canonicalising the identifier.
         note: Free prose; carries no classification weight.
-        repository: Injected store; the active-profile one by default.
+        repository: Required remembered-counterparty store capability.
 
     Returns:
         The stored facts and whether this call recorded them.

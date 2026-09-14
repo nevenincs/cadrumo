@@ -32,7 +32,7 @@ from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit

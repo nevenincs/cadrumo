@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02821"
+continuidad_id = "is-correccion-gastos-financieros-deudas-grupo-art15h-permanente-aumento"
 number = "02821"
 section = ["gastos_financieros_derivados_de_deudas_con_entidad", "aumento"]
 data_type = "money"

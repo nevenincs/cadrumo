@@ -43,6 +43,7 @@ import hashlib
 import json
 import dataclasses
 import re
+import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -576,6 +577,8 @@ def load_prior_attributes(
     attributes: dict[str, dict[str, str]] = {}
     for path in sorted(directory.glob(glob.format(segmento=segmento))):
         current: dict[str, str] = {}
+        collecting_legal_refs: list[str] | None = None
+        collecting_section: list[str] | None = None
         number: str | None = None
         pending = ""
         for raw in path.read_text(encoding="utf-8").split("\n"):
@@ -583,19 +586,63 @@ def load_prior_attributes(
             if line.startswith("# @"):
                 pending = line
             elif line.startswith("[[revisions."):
+                open_array = (
+                    "legal_refs" if collecting_legal_refs is not None
+                    else "section" if collecting_section is not None else None
+                )
+                if open_array is not None:
+                    # An array that never closed leaves the field unset and the row
+                    # takes the wave default without a word -- the exact silence
+                    # that cost modelo 036 all 530 of its legal_refs. Refuse on the
+                    # malformed prior instead, naming the casilla it belongs to.
+                    raise GenerationRefused(
+                        f"{path.name}: {open_array} array for casilla "
+                        f"{number!r} is never closed"
+                    )
                 if number:
                     attributes[number] = current
                 current, number = {"_caption": pending}, None
+                collecting_legal_refs = None
+                collecting_section = None
             elif line.startswith("number = "):
                 number = line.split("=", 1)[1].strip().strip('"')
             elif line.startswith(("id = ", "segmento = ")):
                 key, value = line.split("=", 1)
                 current[key.strip()] = value.strip().strip('"')
-            elif line.startswith("legal_refs = ") and line.rstrip().endswith("]"):
-                current["legal_refs"] = line.split("=", 1)[1].strip()
+            elif line.startswith("legal_refs = "):
+                # A prior edition may write this array on one line or across
+                # many. Requiring a closing bracket on the same line made
+                # carry_legal_refs SILENTLY INERT against any multi-line
+                # prior -- every row fell back to the wave default and the
+                # run still reported carried=N. Modelo 036 lost all 530 rows
+                # that way against a prior with 702 multi-line arrays.
+                value = line.split("=", 1)[1].strip()
+                if value.endswith("]"):
+                    current["legal_refs"] = value
+                else:
+                    collecting_legal_refs = [value]
+            elif collecting_legal_refs is not None:
+                collecting_legal_refs.append(line.strip())
+                if line.rstrip().endswith("]"):
+                    current["legal_refs"] = " ".join(collecting_legal_refs)
+                    collecting_legal_refs = None
             elif line.startswith(("section = ", "data_type = ")):
                 key, value = line.split("=", 1)
-                current[key.strip()] = value.strip()
+                key, value = key.strip(), value.strip()
+                # section is an ARRAY and a prior edition may wrap it. Taking the
+                # first line alone would store a bare "[" and emit TOML that does
+                # not parse -- worse than the legal_refs case, which merely fell
+                # back to a default. 156 section arrays are multi-line in this
+                # corpus today, all on modelo 200.
+                if key == "section" and not value.endswith("]"):
+                    collecting_section = [value]
+                else:
+                    current[key] = value
+            elif collecting_section is not None:
+                collecting_section.append(line.strip())
+                if line.rstrip().endswith("]"):
+                    current["section"] = " ".join(collecting_section)
+                    collecting_section = None
         if number:
             attributes[number] = current
     return attributes
@@ -887,6 +934,12 @@ def emit_records(
                         f"{outcome.segmento}: line {number} is neither comment nor key: "
                         f"{line[:60]!r}"
                     )
+            try:
+                tomllib.loads(back)
+            except tomllib.TOMLDecodeError as error:
+                raise GenerationRefused(
+                    f"{outcome.segmento}: the emitted shard does not parse: {error}"
+                ) from error
             marker = f'[[revisions."{spec.revision_id}".casillas]]'
             if back.count(marker) != outcome.emitted:
                 raise GenerationRefused(

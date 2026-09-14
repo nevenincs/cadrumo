@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core.aeat_csv import normalise_aeat_csv
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
@@ -21,7 +21,7 @@ from .observations_repository import ObservationSourceKind, is_official_aeat_obs
 def filing_external_evidence_blockers(
     filing: ModeloRecord,
     observation_source_kind: str | None,
-    justificante_repository: JustificanteRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
     taxpayer_tax_id: str | None,
     observation_source_metadata: Mapping[str, str] | None = None,
 ) -> list[CrossPeriodCleanStateBlocker]:
@@ -59,7 +59,7 @@ def _missing_external_evidence_blockers(
 def _external_evidence_reference_blockers(
     filing: ModeloRecord,
     observation_source_kind: str | None,
-    justificante_repository: JustificanteRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
     taxpayer_tax_id: str | None,
     observation_source_metadata: Mapping[str, str] | None,
 ) -> list[CrossPeriodCleanStateBlocker]:
@@ -104,7 +104,7 @@ def _csv_register_reference_blockers(
 
 def _receipt_reference_blockers(
     filing: ModeloRecord,
-    justificante_repository: JustificanteRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
     taxpayer_tax_id: str | None,
     observation_source_metadata: Mapping[str, str] | None,
 ) -> list[CrossPeriodCleanStateBlocker]:

@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "DP200014:01034"
+continuidad_id = "is-liquidacion-iii-reserva-nivelacion-disminuciones"
+continuidad_origin = "seeded"
 number = "01034"
 segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]

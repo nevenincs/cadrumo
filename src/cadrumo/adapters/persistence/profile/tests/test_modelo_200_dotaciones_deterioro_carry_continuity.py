@@ -29,6 +29,7 @@ are also modelled. Unsupported historical years must fail closed.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -158,7 +159,7 @@ def _calculate_200(
     # bound casillas have a fact. Bindings the store cannot satisfy default to
     # zero — the present-or-zero-carry semantics (a first-year filer has no prior
     # stock), leaving the available-value projector a complete carry set.
-    prefilled = resolve_bindings_from_local_store(snapshot, repository=obs_repo).binding_values
+    prefilled = resolve_bindings_from_local_store(snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
     bound_binding_ids = {c.binding for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding}
     carry_defaults = {bid: Decimal("0") for bid in bound_binding_ids}
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}

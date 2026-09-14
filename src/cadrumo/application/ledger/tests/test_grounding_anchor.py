@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.document_shape import DocumentShape
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
@@ -30,6 +31,7 @@ from ..grounding_anchor import (
     strip_printed_unit,
 )
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+from ._evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -271,13 +273,16 @@ def test_grounding_runs_against_a_transcription_of_a_real_corpus_document() -> N
     and that one not in it does not.
     """
     payload = (_CORPUS / "zugferd_en16931_invoice.pdf").read_bytes()
+    text_layer_ports = text_layer_ports_for_pages(("ZUGFERD Invoice",))
     transcription = transcribe_text_layer(
         EvidenceInput(
             mime_type="application/pdf",
+            document_shape=DocumentShape.PDF_EMBEDDED_XML,
             data=payload,
             content_sha256=hashlib.sha256(payload).hexdigest(),
             attachment_id="b" * 64,
         ),
+        text_layer_ports=text_layer_ports,
     )
 
     assert transcription.text.strip(), "the corpus document produced no text layer"

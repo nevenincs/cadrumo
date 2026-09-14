@@ -30,7 +30,7 @@ section = ["declaracion", "identificativos"]
 data_type = "nif"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "orden-eha-1274-2007:art-1"]
 
 # @28+125 An. Datos identificativos. Si fisica , Apellidos SIN  nombre; si juridicas,  denominación social   *
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -41,7 +41,7 @@ section = ["declaracion", "identificativos"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "orden-eha-1274-2007:art-1"]
 
 # @166+1 An. Alta. Solicitud del Número de Identificación Fiscal (N.I.F.) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -52,7 +52,7 @@ section = ["declaracion", "causas", "alta"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @167+1 An. Alta. Alta en el censo de empresarios, profesionales y retenedores   * | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -63,7 +63,7 @@ section = ["declaracion", "causas", "alta"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @168+1 An. Modificación. Solicitud de N.I.F. Definitivo, disponiendo del NIF provisional. | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -74,7 +74,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @169+1 An. Modificación. Solicitud de nueva tarjeta acreditativa del N.I.F. | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -85,7 +85,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @170+1 An. Modificación. Modificación domicilio fiscal. (pág. 2A, 2B y 2C)   * | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -96,7 +96,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @171+1 An. Modificación. Modificación domicilio social o de gestión admva. (pág. 2A y 2B) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -107,7 +107,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @172+1 An. Modificación. Modificación domicilio a efectos de notificaciones. (pág. 2A, 2B y 2C)   * | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -118,7 +118,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @173+1 An. Modificación. Modificación otros datos identificativos /dominio. (pág. 2A, 2B y 2C)   * | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -129,7 +129,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @174+1 An. Modificación. Modificación datos representantes (pág. 3) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -140,7 +140,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @175+1 An. Modificación. Modificación datos relativos a act. económicas y locales. (pág. 4)   * | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -151,7 +151,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @176+1 An. Modificación. Modificación de la condición de G.E. o Admón. Púb. de presup. sup. a 6 mill € (pág. 5) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -162,7 +162,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @177+1 An. Modificación. Solicitud de inscripción/baja en el registro de devolución mensual. (pág. 5) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -173,7 +173,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @178+1 An. Modificación. Solicitud de ata/baja en el registro de operadores intracomunitarios. (pág. 5) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -184,7 +184,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @179+1 An. Modificación. Modificación datos relativos al Impuesto sobre el Valor Añadido. (pág. 5)    * | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -195,7 +195,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @180+1 An. Modificación. Modificación datos relativos al Impuesto sobre la Renta de las Personas Físicas. (pág. 6)   * | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -206,7 +206,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @181+1 An. Modificación. Modificación datos relativos al impuesto sobre Sociedades. (pág. 6) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -217,7 +217,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @182+1 An. Modificación. Modificación datos relativos al Imp. Renta no Residentes correspondientes a establ. permant. o a entidades en atrib. de rentas constituidas en el extranjero con presencia en territorio español. (pág. 6) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -228,7 +228,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @183+1 An. Opción/renuncia por el Regimen fiscal especial del Título II de la Ley 49/2002. (pag. 6) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -239,7 +239,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @184+1 An. Modificación. Modificación datos relativos a retenciones e ingresos a cuenta. (pág. 7)   * | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -250,7 +250,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @185+1 An. Modificación. Modificación datos relativos a otros impuestos y registros. (pág. 7) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -261,7 +261,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @186+1 An. Modificación. Modificación datos relativos a regímenes especiales del comercio intracomunit. (pág. 7/7b) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -272,7 +272,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @187+1 An. Modificación. Modificación datos relativos a la relación de socios, miembros o partícipes. (pág. 8) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -283,7 +283,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @188+1 An. Modificación. Dejar de ejercer todas las activ. empr. y/o prof. (pers jcas y entidades, sin disolución). | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -294,11 +294,12 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @189+8 Num. Modificación. Fecha efectiva del cese. Día [ONE casilla over 3 printed components: @189+2, @191+2, @193+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "decl.fecha-efectiva-cese"
+continuidad_id = "decl-fecha-efectiva-cese"
 number = "141"
 section = ["declaracion", "causas", "modificacion"]
 data_type = "date"
@@ -315,7 +316,7 @@ section = ["declaracion", "causas", "baja"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @198+1 An. Baja. Causa   *
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -331,6 +332,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @199+8 Num. Baja. Fecha efectiva de la baja. Día   * [ONE casilla over 3 printed components: @199+2, @201+2, @203+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "decl.fecha-efectiva-baja"
+continuidad_id = "decl-fecha-efectiva-baja"
 number = "152"
 section = ["declaracion", "causas", "baja"]
 data_type = "date"
@@ -347,7 +349,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @382+1 An. comunicación de opcion y renuncia a la llevanza libros de iva a traves sede electronica de aeat  (pagina 5) | "S" o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -358,7 +360,7 @@ section = ["declaracion", "causas", "modificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
 
 # @383+25 An. nombre en caso de fisicas
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -369,4 +371,4 @@ section = ["declaracion", "identificativos"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-9", "orden-eha-1274-2007:art-1"]

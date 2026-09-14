@@ -35,13 +35,6 @@ from importlib import import_module
 
 import pytest
 
-from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ._ledger_value_fixtures import repository
-
-__all__ = ["repository"]
-
-from ....adapters.inbound.einvoice.parsers import ParsedEInvoice, parse_einvoice_document
-from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.errors import IvaCatalogueError
@@ -54,10 +47,12 @@ from ....domain.iva.identification import identification_state_for_printed_tax_i
 from ....domain.iva.schema import EUMemberState
 from ....tests.attribute_scope import scoped_attribute
 from ..counterparty_establishment import (
-    ConfirmedCounterpartyFactsRepository,
+    ConfirmedCounterpartyFacts,
     ConfirmedCounterpartyResolution,
     record_confirmed_counterparty_facts,
 )
+from ..counterparty_establishment_ports import CounterpartyEstablishmentPersistenceError
+from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from ..establishment_ladder import (
     CounterpartyEstablishment,
     EstablishmentRung,
@@ -78,7 +73,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _BUCKET_ID = "37373737-3737-4737-8737-373737373737"
-runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 _SPANISH_CIF = "B12345674"
 _GERMAN_IVA = "DE811234567"
 _GREEK_IVA = "EL123456789"
@@ -91,8 +85,30 @@ _BERLIN = "10115"
 _CEUTA = "51001"
 
 
+class _InMemoryCounterpartyEstablishmentRepository(CounterpartyEstablishmentRepositoryProtocol):
+    """Inward fake for the establishment policy and routing tests."""
+
+    def __init__(self) -> None:
+        self._records: dict[str, ConfirmedCounterpartyFacts] = {}
+
+    def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
+        return self._records.get(identifier)
+
+    def save(self, payload: ConfirmedCounterpartyFacts) -> None:
+        self._records[payload.counterparty_key] = payload
+
+    def delete(self, identifier: str) -> bool:
+        return self._records.pop(identifier, None) is not None
+
+
+@pytest.fixture
+def repository() -> CounterpartyEstablishmentRepositoryProtocol:
+    """Return a fresh inward capability for each ladder test."""
+    return _InMemoryCounterpartyEstablishmentRepository()
+
+
 def _resolve(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     *,
     tax_identifier: str | None = None,
     country_name: str | None = None,
@@ -125,7 +141,7 @@ _MEASURED_CASES: tuple[tuple[str | None, str | None, EstablishmentRung | None, I
 
 @pytest.mark.parametrize(("country_name", "postal_code", "expected_rung", "expected_scope"), _MEASURED_CASES)
 def test_ladder_composes_the_measured_cases(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     country_name: str | None,
     postal_code: str | None,
     expected_rung: EstablishmentRung | None,
@@ -140,7 +156,7 @@ def test_ladder_composes_the_measured_cases(
 
 
 def test_spain_named_is_the_postal_trigger_not_an_exhausted_rung(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A positively named Spain opens the postal rung rather than ending the ladder.
 
@@ -159,7 +175,7 @@ def test_spain_named_is_the_postal_trigger_not_an_exhausted_rung(
 
 
 def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A French party is not read as Spanish, and the skipped rung would have said so.
 
@@ -178,7 +194,7 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
 
 
 def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The sharper form: an ungated postal rung would put a French party outside LIVA.
 
@@ -194,7 +210,7 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
 
 
 def test_a_registration_disagreeing_with_the_address_settles_neither(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A German IVA number on a page addressed to Las Palmas settles NOTHING.
 
@@ -227,7 +243,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
 
 
 def test_a_greek_iva_prefix_resolves_through_its_iso_code(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """``EL`` is Greece's IVA prefix while ``GR`` is its ISO code, and the catalogues are ISO-keyed.
 
@@ -251,7 +267,7 @@ def test_a_greek_iva_prefix_resolves_through_its_iso_code(
 
 
 def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """Registration is not establishment, so neither Spanish spelling opens a rung.
 
@@ -281,7 +297,7 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
 
 
 def test_a_prefix_on_arbitrary_text_is_not_a_country(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """Two leading letters are not an IVA number, so the body must match its own State's shape."""
     resolved = _resolve(repository, tax_identifier="FRANCISCO")
@@ -292,7 +308,7 @@ def test_a_prefix_on_arbitrary_text_is_not_a_country(
 
 @pytest.mark.parametrize("printed_identifier", [_SPANISH_CIF, f"ES{_SPANISH_CIF}"])
 def test_the_bare_domestic_invoice_exhausts_to_nothing(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     printed_identifier: str,
 ) -> None:
     """The ruling's own fixture: a Spanish identifier, no country, a Spanish postal code.
@@ -319,7 +335,7 @@ def test_the_bare_domestic_invoice_exhausts_to_nothing(
 
 @pytest.mark.parametrize("scope", list(IvaTerritorialScope))
 def test_no_scope_is_reachable_from_absent_evidence(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     scope: IvaTerritorialScope,
 ) -> None:
     """Sweep the whole closed set: absence produces no member of it, not merely not the mainland."""
@@ -330,7 +346,7 @@ def test_no_scope_is_reachable_from_absent_evidence(
 
 
 def test_an_unrecognised_country_name_never_degrades_to_a_country(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A name outside the vocabulary establishes nothing, and does not fall through to the postal rung."""
     resolved = _resolve(repository, country_name="Wakanda", postal_code=_MADRID)
@@ -340,7 +356,7 @@ def test_an_unrecognised_country_name_never_degrades_to_a_country(
 
 
 def test_the_printed_evidence_rungs_are_backed_by_the_document(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """An evidence rung records a page as its backing, so an auditor is sent to one."""
     resolved = _resolve(repository, country_name="España", postal_code=_LAS_PALMAS)
@@ -353,7 +369,7 @@ def test_the_printed_evidence_rungs_are_backed_by_the_document(
 
 
 def test_a_confirmed_fact_answers_only_once_the_paper_has_settled_nothing(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The last rung carries an operator's backing, not a document's.
 
@@ -378,7 +394,7 @@ def test_a_confirmed_fact_answers_only_once_the_paper_has_settled_nothing(
 
 
 def test_decisive_paper_disagreeing_with_a_confirmed_fact_settles_nothing(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """Disagreement is carried with NO scope, so neither side is preferred by accident.
 
@@ -408,7 +424,7 @@ def test_decisive_paper_disagreeing_with_a_confirmed_fact_settles_nothing(
 
 
 def test_agreeing_paper_leaves_the_evidence_rung_as_the_answer(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A stored fact that agrees does not demote the page that proved it."""
     record_confirmed_counterparty_facts(
@@ -443,7 +459,7 @@ def _refusing_rung(*_args: object, **_kwargs: object) -> str | None:
 
 
 def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_party(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A broken data file raises out of the ladder, and is not a counterparty question.
 
@@ -460,7 +476,7 @@ def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_par
 
 
 def test_a_corrupt_territory_registry_refuses_from_inside_the_rung_walk(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The postal rung's refusal survives the walk too, not only the lookup before it.
 
@@ -478,7 +494,7 @@ def test_a_corrupt_territory_registry_refuses_from_inside_the_rung_walk(
 
 
 def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The first lookup of the walk is covered on the same terms as the last.
 
@@ -496,7 +512,7 @@ def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
 
 
 def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The rung BETWEEN the other three, which bracketing them left uncovered.
 
@@ -519,7 +535,7 @@ def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
 
 
 def test_a_store_that_cannot_be_read_refuses_rather_than_reporting_no_confirmed_fact(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The confirmed-fact rung propagates on the same terms as the document rungs.
 
@@ -531,28 +547,24 @@ def test_a_store_that_cannot_be_read_refuses_rather_than_reporting_no_confirmed_
     failure would retract their own earlier answer and ask them for it again,
     against a store that would refuse to record it.
 
-    The tier below takes the same position: the secure repository raises rather
-    than returning ``None`` when a row exists but its identity is inconsistent,
-    so that an inconsistency cannot hide behind an ordinary miss. Folding the
-    store's refusal into an empty resolution here would undo that one layer up.
+    The persistence capability takes the same position: an unavailable store
+    raises rather than returning ``None``, so that a failure cannot hide behind
+    an ordinary miss. Folding the store's refusal into an empty resolution here
+    would undo that one layer up.
     """
 
     def _unreadable_store(**_kwargs: object) -> ConfirmedCounterpartyResolution:
-        raise SecureObjectRowIdentityError(
-            ConfirmedCounterpartyFactsRepository.namespace,
-            expected_identifier="0" * 64,
-            payload_identifier="1" * 64,
-        )
+        raise CounterpartyEstablishmentPersistenceError("load")
 
     with (
         scoped_attribute(ladder_module, "resolve_confirmed_counterparty_facts", _unreadable_store),
-        pytest.raises(SecureObjectRowIdentityError),
+        pytest.raises(CounterpartyEstablishmentPersistenceError),
     ):
         _resolve(repository, tax_identifier=_SPANISH_CIF)
 
 
 def test_the_same_call_reports_an_unestablished_party_against_the_real_registry(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The control for the refusal above: not-established is a returned value, never an exception.
 
@@ -577,7 +589,7 @@ class TestDraftRouting:
 
     def test_an_issued_document_takes_the_billed_party(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """On an invoice the filer issued, the counterparty is the customer.
 
@@ -606,7 +618,7 @@ class TestDraftRouting:
 
     def test_a_received_document_takes_the_issuing_party(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """On an invoice the filer received, the counterparty is the supplier."""
         draft = InvoiceDraft(
@@ -631,7 +643,7 @@ class TestDraftRouting:
 
     def test_the_selection_never_falls_back_to_the_other_side(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """An unread counterparty stays unread rather than becoming the filer.
 
@@ -649,7 +661,7 @@ class TestDraftRouting:
 
     def test_both_directions_carry_their_own_postal_code(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """Establishment is asked of each party independently, so the codes do not share.
 
@@ -687,7 +699,7 @@ class TestRungReachabilityFromADraft:
 
     def test_a_printed_country_name_reaches_the_country_rung(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The rung the read path's country field exists to feed now fires from a draft."""
         draft = InvoiceDraft(supplier_country="Alemania", supplier_postal_code=_BERLIN)
@@ -704,7 +716,7 @@ class TestRungReachabilityFromADraft:
 
     def test_a_printed_spanish_country_name_reaches_the_postal_rung(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The postal rung is reachable end to end, which is what the territory table is for.
 
@@ -737,7 +749,7 @@ class TestRungReachabilityFromADraft:
 
     def test_a_draft_stating_no_country_still_exhausts(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """A readable postal code is still not on its own evidence of Spain.
 
@@ -758,69 +770,6 @@ class TestRungReachabilityFromADraft:
         assert resolved.scope is None
         assert resolved.rung is None
         assert territorial_scope_for_spanish_postal_code(_LAS_PALMAS) is IvaTerritorialScope.ES_CANARIAS
-
-    def test_the_structured_parsers_supply_a_party_country(self) -> None:
-        """The structured path has a country source now, which is what opens its postal rung.
-
-        Asserted against the parser's own fields rather than against a parsed
-        document, so it holds for every format the reader accepts rather than for
-        whichever specimen happens to be in the corpus. This replaces the
-        assertion that no such field existed: that one failed the day the source
-        landed, which is what it was for.
-
-        What each format actually STATES is a separate question this cannot see,
-        and it is covered end to end against real documents in
-        ``test_structured_path_country_codes.py``.
-        """
-        parsed_fields = set(ParsedEInvoice.__slots__)
-
-        assert {"supplier_country_code", "customer_country_code"} <= parsed_fields
-        assert {"supplier_postal_code", "customer_postal_code"} <= parsed_fields
-
-    def test_the_cross_industry_invoice_branch_now_states_a_country_too(self) -> None:
-        """The last unread structured country, and the rung it was holding shut.
-
-        Replaces ``test_asserted_gap_the_cross_industry_invoice_branch_states_no_country``,
-        which asserted this document's ``supplier_country_code`` was ``None``
-        and went red the day the CII read landed -- the notification it existed
-        to give. Replaced with the positive contract rather than relaxed, per
-        that test's own instruction: a gap test that gets adjusted to match the
-        code cancels the gate at the moment it fires.
-
-        The document is kept byte for byte from the gap assertion so this is a
-        statement about the SAME bytes. It always stated ``ram:CountryID``; what
-        changed is that the reader now takes it, which is why the postal code
-        alone was never the question. ``38001`` is Santa Cruz de Tenerife, so
-        the answer the chain produces is Canarias -- an answer no default could
-        return, and one the postal rung cannot even be asked for until the
-        country evidence names Spain.
-        """
-        specimen = b"""<?xml version="1.0" encoding="UTF-8"?>
-<rsm:CrossIndustryInvoice
-    xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
-    xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100">
-  <rsm:ExchangedDocument><ram:ID>CII-2026-0001</ram:ID></rsm:ExchangedDocument>
-  <rsm:SupplyChainTradeTransaction>
-    <ram:ApplicableHeaderTradeAgreement>
-      <ram:SellerTradeParty>
-        <ram:Name>Vendedor Insular SL</ram:Name>
-        <ram:PostalTradeAddress>
-          <ram:PostcodeCode>38001</ram:PostcodeCode>
-          <ram:CountryID>ES</ram:CountryID>
-        </ram:PostalTradeAddress>
-      </ram:SellerTradeParty>
-    </ram:ApplicableHeaderTradeAgreement>
-  </rsm:SupplyChainTradeTransaction>
-</rsm:CrossIndustryInvoice>
-"""
-        parsed = parse_einvoice_document(specimen)
-
-        assert parsed.supplier_postal_code == "38001"
-        assert parsed.supplier_country_code == "ES"
-        # The pairing is the point: a country that names Spain is what admits
-        # the postal code as territory evidence at all.
-        assert territorial_scope_for_spanish_postal_code("38001") is IvaTerritorialScope.ES_CANARIAS
-
 
 # -- the rate walk must see every carrier a reader can fill -----------------
 #

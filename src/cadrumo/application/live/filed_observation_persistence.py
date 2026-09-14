@@ -203,7 +203,7 @@ def persist_filed_calculation_observation(
         source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
         stamped_revision_id=observation.registry_snapshot_ref.revision_id,
         captured_at=observation.presented_at,
-        source_metadata=_filed_observation_source_metadata(observation, justificante_csvs=justificante_csvs),
+        source_metadata=filed_observation_source_metadata(observation, justificante_csvs=justificante_csvs),
         # Passed separately from source_metadata, and that is the whole point:
         # the metadata projection is built from a fixed key set, so a header
         # fact routed through it would be dropped here exactly as it was before.
@@ -426,7 +426,7 @@ def enroll_filed_justificante_evidence(
     )
 
 
-def persist_iva_compensation_history_observations_strict(
+def persistiva_compensation_history_observations_strict(
     observations: tuple[FiledObservationProtocol, ...],
     *,
     ports: FiledObservationPersistencePorts,
@@ -683,7 +683,7 @@ def _filed_observation_rank(observation: FiledObservationProtocol) -> tuple[bool
     return (_is_active_filed_observation(observation), observation.presented_at, observation.expediente_id)
 
 
-def _filed_observation_source_metadata(
+def filed_observation_source_metadata(
     observation: FiledObservationProtocol,
     *,
     justificante_csvs: tuple[str, ...] = (),
@@ -756,9 +756,10 @@ __all__ = [
     "FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE",
     "FiledJustificanteEnrollmentResult",
     "FiledJustificanteUnreachedReason",
+    "filed_observation_source_metadata",
     "enroll_filed_justificante_evidence",
     "latest_declarations_by_period",
     "persist_filed_calculation_observation",
-    "persist_iva_compensation_history_observations_strict",
+    "persistiva_compensation_history_observations_strict",
     "select_latest_filed_observations_in_history_order",
 ]

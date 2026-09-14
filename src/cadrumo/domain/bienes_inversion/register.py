@@ -59,9 +59,21 @@ from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _quantize
 from ...core.percentage import Percentage
+from ..calculations.registry.bienes_inversion_catalogue import (
+    is_bien_inversion_disposal_regime,
+    is_bien_inversion_kind,
+    minimum_bien_inversion_acquisition_year,
+    require_bien_inversion_disposal_regime,
+    require_bien_inversion_kind,
+)
+from ..calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
 from .regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
+)
+from .vocabulary import (
+    BienInversionDisposalRegime as _BienInversionDisposalRegime,
+    BienInversionKind as _BienInversionKind,
 )
 
 
@@ -76,53 +88,34 @@ class BienInversionValidationError(BienInversionRecordError, ValueError):
 BIENES_INVERSION_SCHEMA_VERSION = "2"
 """Forward-compatible schema version stamped onto every record in this module."""
 
-#: Lowest calendar year the register accepts; LIVA art. 107 predates it, but a
-#: pre-2000 acquisition can never be in-window for any modelled filing year.
-_MIN_ACQUISITION_YEAR = 2000
+
+def _validate_acquisition_year(value: int, *, field_name: str) -> int:
+    """Apply the registry-declared minimum acquisition-year boundary."""
+    minimum_year = minimum_bien_inversion_acquisition_year()
+    if value < minimum_year:
+        raise BienInversionValidationError(
+            f"{field_name} must be on or after the registry-declared capital-goods minimum year",
+        )
+    return value
 
 
-class BienInversionKind(StrEnum):
-    """LIVA art. 107 regularisation-window taxonomy for a capital good.
-
-    Distinct from an activity-asset LIS art. 12 amortization taxonomy: this axis
-    is the mueble-4yr / inmueble-9yr LIVA
-    regularisation window (art. 107.Uno vs art. 107.Tres), not a depreciation
-    coefficient family.
-    """
-
-    MUEBLE = "mueble"
-    INMUEBLE = "inmueble"
-
-
-def _ventana_anos(kind: BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> int:
+def _ventana_anos(kind: _BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> int:
     """Select the art-107 window the resolved bundle declares for ``kind``.
 
     The kind-to-figure mapping lives here, with the taxonomy that owns it, rather
     than on the bundle: the bundle is imported BY this module, so a bundle method
     taking a :class:`BienInversionKind` would close an import cycle.
     """
-    if kind is BienInversionKind.INMUEBLE:
+    if is_bien_inversion_kind(kind, "kind.real_estate_token"):
         return parameters.ventana_anos_inmueble
     return parameters.ventana_anos_mueble
 
 
-def _divisor(kind: BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> Decimal:
+def _divisor(kind: _BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> Decimal:
     """Select the art-109.3a divisor the resolved bundle declares for ``kind``."""
-    if kind is BienInversionKind.INMUEBLE:
+    if is_bien_inversion_kind(kind, "kind.real_estate_token"):
         return parameters.divisor_inmueble
     return parameters.divisor_mueble
-
-
-class BienInversionDisposalRegime(StrEnum):
-    """LIVA art. 110 disposal (transmisión) regime.
-
-    ``SUJETA_NO_EXENTA`` imputes the remaining window years at a 100% deduction
-    percentage (capped at the amount originally deducted); ``EXENTA_O_NO_SUJETA``
-    imputes them at 0%.
-    """
-
-    SUJETA_NO_EXENTA = "sujeta_no_exenta"
-    EXENTA_O_NO_SUJETA = "exenta_o_no_sujeta"
 
 
 class BienInversionDisposal(BaseModel):
@@ -135,8 +128,18 @@ class BienInversionDisposal(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    year: int = Field(ge=_MIN_ACQUISITION_YEAR, le=2099)
-    regime: BienInversionDisposalRegime
+    year: int = Field(ge=1, le=2099)
+    regime: _BienInversionDisposalRegime
+
+    @field_validator("year")
+    @classmethod
+    def _minimum_year_from_registry(cls, value: int) -> int:
+        return _validate_acquisition_year(value, field_name="disposal year")
+
+    @field_validator("regime", mode="before")
+    @classmethod
+    def _regime_from_registry(cls, value: object) -> _BienInversionDisposalRegime:
+        return require_bien_inversion_disposal_regime(value)
 
 
 class BienInversionIvaRecord(BaseModel):
@@ -144,7 +147,7 @@ class BienInversionIvaRecord(BaseModel):
 
     Strict, frozen, no extra fields. Carries the taxpayer facts the art-109
     annual compute needs (acquisition year, cuota soportada, initial-year
-    definitive prorrata percentage, mueble/inmueble window) plus the art-108
+    definitive prorrata percentage, and the registry-selected asset-kind window) plus the art-108
     concept-eligibility flag.
 
     Attributes:
@@ -156,8 +159,8 @@ class BienInversionIvaRecord(BaseModel):
         prorrata_inicial_pct: Definitive deduction percentage (0-100) that
             prevailed in the acquisition year — the baseline art-109 compares
             each later year's definitive percentage against.
-        kind: :class:`BienInversionKind` — the mueble/inmueble regularisation
-            window.
+        kind: :class:`BienInversionKind` — the registry-selected capital-goods
+            regularisation window.
         art108_elegible: Whether the good qualifies as a bien de inversión under
             LIVA art. 108 (value at/above the escaso-valor threshold, normally
             used over a year as an instrument of work). ``False`` marks a good
@@ -173,10 +176,10 @@ class BienInversionIvaRecord(BaseModel):
 
     identifier: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    acquisition_year: int = Field(ge=_MIN_ACQUISITION_YEAR, le=2099)
+    acquisition_year: int = Field(ge=1, le=2099)
     cuota_soportada: Decimal = Field(gt=Decimal("0"))
     prorrata_inicial_pct: Percentage
-    kind: BienInversionKind
+    kind: _BienInversionKind
     art108_elegible: bool = True
     acquisition_ledger_id: str = Field(min_length=1, max_length=128)
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
@@ -190,6 +193,16 @@ class BienInversionIvaRecord(BaseModel):
         if value != BIENES_INVERSION_SCHEMA_VERSION:
             raise BienInversionValidationError(f"unsupported BienInversionIvaRecord schema_version {value!r}")
         return value
+
+    @field_validator("acquisition_year")
+    @classmethod
+    def _minimum_year_from_registry(cls, value: int) -> int:
+        return _validate_acquisition_year(value, field_name="acquisition year")
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _kind_from_registry(cls, value: object) -> _BienInversionKind:
+        return require_bien_inversion_kind(value)
 
     @model_validator(mode="after")
     def _validate_disposal_window(self) -> BienInversionIvaRecord:
@@ -212,8 +225,7 @@ class BienInversionIvaRecord(BaseModel):
         """Whether ``regularization_year`` is one of the art-107 following window years.
 
         The window is the registry-declared count of calendar years *following*
-        acquisition (art. 107.Uno for a mueble, art. 107.Tres for terrenos o
-        edificaciones). The acquisition year itself is excluded: that is the year
+        acquisition under the applicable art. 107 category. The acquisition year itself is excluded: that is the year
         the original deduction was made, not a regularisation year.
         """
         last_year = self.acquisition_year + _ventana_anos(self.kind, parameters)
@@ -259,7 +271,7 @@ class RegularizacionAnualResult(BaseModel):
         aplica: Whether the art-107 over-10-point gate fired (a regularisation is due).
         diferencia_puntos: Absolute percentage-point difference between the current
             year's definitive percentage and the acquisition-year one.
-        divisor: Art-109 divisor applied (5 mueble / 10 inmueble).
+        divisor: Art-109 divisor selected by the registry-declared asset category.
         importe: The regularisation quotient (deducción efectuada − deducción que
             procedería) ÷ divisor, rounded to cents. Positive = ingreso
             complementario, negative = deducción complementaria; ``0.00`` when the
@@ -281,7 +293,7 @@ def compute_regularizacion_anual(
     cuota_soportada: Decimal,
     prorrata_inicial_pct: Decimal,
     prorrata_anio_pct: Decimal,
-    kind: BienInversionKind,
+    kind: _BienInversionKind,
     parameters: BienesInversionRegularizacionParameters,
 ) -> RegularizacionAnualResult:
     """Compute the LIVA art-109 annual regularización for one capital good.
@@ -323,6 +335,7 @@ def compute_regularizacion_anual(
         BienInversionValidationError: On a non-positive cuota or an out-of-range
             percentage.
     """
+    kind = require_bien_inversion_kind(kind)
     if cuota_soportada <= Decimal("0"):
         raise BienInversionValidationError("cuota_soportada must be strictly positive")
     for label, pct in (("prorrata_inicial_pct", prorrata_inicial_pct), ("prorrata_anio_pct", prorrata_anio_pct)):
@@ -366,7 +379,7 @@ class RegularizacionTransmisionResult(BaseModel):
         anos_restantes: Count of window years — the disposal year plus every later
             year through window expiry — the single regularización covers
             (art. 110.Uno "el tiempo de dicho período que quede por transcurrir").
-        divisor: Art-109 divisor applied (5 mueble / 10 inmueble), carried into the
+        divisor: Art-109 divisor selected by the registry-declared asset category, carried into the
             art-110 single computation per art. 110.Uno's cross-reference to the
             art-109 procedure.
         importe_sin_limite: The signed quotient before the regla-1ª cap, i.e.
@@ -382,7 +395,7 @@ class RegularizacionTransmisionResult(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    regime: BienInversionDisposalRegime
+    regime: _BienInversionDisposalRegime
     anos_restantes: int
     divisor: Decimal
     importe_sin_limite: Decimal
@@ -414,12 +427,15 @@ def _transmision_uncapped_amount(
     cuota_soportada: Decimal,
     prorrata_inicial_pct: Decimal,
     anos_restantes: int,
-    kind: BienInversionKind,
-    regime: BienInversionDisposalRegime,
+    kind: _BienInversionKind,
+    regime: _BienInversionDisposalRegime,
     parameters: BienesInversionRegularizacionParameters,
 ) -> tuple[Decimal, Decimal]:
     """Return the art-109 divisor and art-110 amount before regla-1ª capping."""
-    prorrata_imputada_pct = HUNDRED if regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA else Decimal("0")
+    prorrata_imputada_pct = HUNDRED if is_bien_inversion_disposal_regime(
+        regime,
+        "disposal_regime.subject_not_exempt_token",
+    ) else Decimal("0")
     divisor = _divisor(kind, parameters)
     deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
     deduccion_imputada = cuota_soportada * prorrata_imputada_pct / HUNDRED
@@ -429,13 +445,13 @@ def _transmision_uncapped_amount(
 
 def _apply_transmision_cap(
     *,
-    regime: BienInversionDisposalRegime,
+    regime: _BienInversionDisposalRegime,
     cuota_devengada_entrega: Decimal | None,
     importe_sin_limite: Decimal,
 ) -> tuple[Decimal, bool]:
     """Apply the regla-1ª disposal cap only to a negative additional deduction."""
     if (
-        regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA
+        is_bien_inversion_disposal_regime(regime, "disposal_regime.subject_not_exempt_token")
         and cuota_devengada_entrega is not None
         and importe_sin_limite < Decimal("0")
         and -importe_sin_limite > cuota_devengada_entrega
@@ -458,8 +474,8 @@ def compute_regularizacion_transmision(
     cuota_soportada: Decimal,
     prorrata_inicial_pct: Decimal,
     anos_restantes: int,
-    kind: BienInversionKind,
-    regime: BienInversionDisposalRegime,
+    kind: _BienInversionKind,
+    regime: _BienInversionDisposalRegime,
     parameters: BienesInversionRegularizacionParameters,
     cuota_devengada_entrega: Decimal | None = None,
 ) -> RegularizacionTransmisionResult:
@@ -521,6 +537,8 @@ def compute_regularizacion_transmision(
             percentage, a non-positive ``anos_restantes``, or a negative
             ``cuota_devengada_entrega``.
     """
+    kind = require_bien_inversion_kind(kind)
+    regime = require_bien_inversion_disposal_regime(regime)
     _validate_transmision_inputs(
         cuota_soportada=cuota_soportada,
         prorrata_inicial_pct=prorrata_inicial_pct,
@@ -654,7 +672,7 @@ class RegistroRegularizacionRow(BaseModel):
     model_config = _STRICT_FROZEN_CONFIG
 
     identifier: str
-    kind: BienInversionKind
+    kind: _BienInversionKind
     prorrata_sector_id: str | None
     prorrata_anio_pct: Decimal | None
     result: RegularizacionAnualResult | None
@@ -846,7 +864,7 @@ class RegistroTransmisionRow(BaseModel):
     model_config = _STRICT_FROZEN_CONFIG
 
     identifier: str
-    kind: BienInversionKind
+    kind: _BienInversionKind
     prorrata_sector_id: str | None
     disposal_year: int
     result: RegularizacionTransmisionResult
@@ -1011,9 +1029,9 @@ def _validate_investment_observation(
 def _is_investment_acquisition_observation(observation: _InvestmentAssetLink) -> bool:
     kind = observation.deduction_fact_kind
     asset_id = observation.investment_asset_id
-    if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
+    if kind is not None and is_iva_deduction_kind(kind, "kind.owner_only"):
         raise BienInversionValidationError("regularisation is not a ledger acquisition observation")
-    if kind is None or not kind.is_investment_acquisition:
+    if kind is None or not is_iva_deduction_kind(kind, "kind.investment_acquisition"):
         if asset_id is not None:
             raise BienInversionValidationError("non-investment observation cannot carry investment_asset_id")
         return False

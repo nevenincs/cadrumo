@@ -19,7 +19,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.modelos.errors import ModeloError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
 from cadrumo.application.modelo.history import assemble_work_unit_history
 from cadrumo.application.modelo.history_ports import ModeloHistoryPorts

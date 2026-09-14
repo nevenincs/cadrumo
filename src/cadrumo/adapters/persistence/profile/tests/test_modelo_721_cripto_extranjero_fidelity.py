@@ -77,7 +77,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from cadrumo.application._foreign_asset_thresholds import foreign_asset_declaration_thresholds
+from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip

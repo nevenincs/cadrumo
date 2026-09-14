@@ -25,7 +25,6 @@ from cadrumo.domain.calculations.registry.runtime_catalogues import (
 from cadrumo.domain.iva.country_vocabulary import normalise_printed_country_name
 
 from ..authority import compile_validated_authority
-from ..legal_grounding import legal_reference_quotes_corpus
 from ..runtime_catalogues import compile_runtime_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -180,7 +179,11 @@ def test_the_compiler_refuses_an_unquoted_verified_citation(tmp_path: Path) -> N
     root = _runtime_root(tmp_path)
     _replace(
         root / "iva" / "catalogues.toml",
-        'quoted_text = "Artículo 90. Tipo impositivo general. Uno. El Impuesto se exigirá al tipo del 21 por ciento, salvo lo dispuesto en el artículo siguiente. Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo. Tres."',
+        (
+            'quoted_text = "Artículo 90. Tipo impositivo general. Uno. El Impuesto se exigirá al tipo del 21 '
+            "por ciento, salvo lo dispuesto en el artículo siguiente. Dos. El tipo impositivo aplicable a cada "
+            'operación será el vigente en el momento del devengo. Tres."'
+        ),
         'quoted_text = ""',
     )
 
@@ -188,7 +191,7 @@ def test_the_compiler_refuses_an_unquoted_verified_citation(tmp_path: Path) -> N
         compile_runtime_catalogues(root)
 
 
-def test_the_compiler_exposes_a_mutated_quotation_to_the_public_grounding_check(tmp_path: Path) -> None:
+def test_the_compiler_refuses_a_verified_quotation_absent_from_the_corpus(tmp_path: Path) -> None:
     root = _authoring_root(tmp_path)
     _replace(
         root / "iva" / "catalogues.toml",
@@ -196,15 +199,16 @@ def test_the_compiler_exposes_a_mutated_quotation_to_the_public_grounding_check(
         "El Impuesto se exigirá al tipo del 25 por ciento",
     )
 
-    authority = compile_validated_authority(root, bundled_path())
-    citation = authority.catalogues.runtime.iva_regulations["domestic_general"].citations[0]
-    reference = authority.catalogues.legal[citation.legal_reference]
-
-    assert not legal_reference_quotes_corpus(reference, citation.quoted_text, source_root=bundled_path())
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"runtime IVA regulation 'domestic_general'.*quotation does not occur in the anchored corpus text",
+    ) as exc_info:
+        compile_validated_authority(root, bundled_path())
+    assert "runtime IVA regulation 'domestic_zero'" not in str(exc_info.value)
 
 
 def test_two_countries_claiming_one_normalised_name_are_refused() -> None:
-    with pytest.raises(RegistryValidationError, match="multiple countries"):
+    with pytest.raises(ValidationError, match="multiple countries"):
         _country_catalogues(
             CountryVocabularyRecord(code="MX", alpha3="MEX", names=("México",)),
             CountryVocabularyRecord(code="AR", alpha3="ARG", names=("Mexico",)),
@@ -244,7 +248,7 @@ def test_a_country_carrying_no_printed_name_is_refused() -> None:
 
 
 def test_a_blank_printed_name_is_refused() -> None:
-    with pytest.raises(RegistryValidationError, match="blank printed name"):
+    with pytest.raises(ValidationError, match="blank printed name"):
         _country_catalogues(CountryVocabularyRecord(code="DE", alpha3="DEU", names=("  ",)))
 
 
@@ -297,11 +301,7 @@ def test_the_bundled_alpha3_column_names_each_country_exactly_once() -> None:
 
 def test_northern_ireland_is_absent_from_both_bundled_columns() -> None:
     records = compile_runtime_catalogues(_bundled_registry_root()).countries.values()
-    printed = {
-        normalise_printed_country_name(name): record.code
-        for record in records
-        for name in record.names
-    }
+    printed = {normalise_printed_country_name(name): record.code for record in records for name in record.names}
     alpha3 = {record.alpha3: record.code for record in records}
 
     assert "XI" not in printed.values()
@@ -320,7 +320,7 @@ def test_a_malformed_alpha3_is_refused(alpha3: str) -> None:
 
 
 def test_two_countries_claiming_one_alpha3_are_refused() -> None:
-    with pytest.raises(RegistryValidationError, match="alpha-3"):
+    with pytest.raises(ValidationError, match="alpha-3"):
         _country_catalogues(
             CountryVocabularyRecord(code="DE", alpha3="DEU", names=("Alemania",)),
             CountryVocabularyRecord(code="AT", alpha3="DEU", names=("Österreich",)),

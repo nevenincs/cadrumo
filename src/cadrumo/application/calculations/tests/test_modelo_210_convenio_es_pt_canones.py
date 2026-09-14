@@ -16,21 +16,18 @@ the Art 25.1.a general 24% rate). Grounded verbatim from the bundled BOE corpus
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.calculations.registry.authority import bundled_authority
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_pt_canones_resolves_treaty_ceiling_of_5_percent(tmp_path: Path) -> None:
+def test_pt_canones_resolves_treaty_ceiling_of_5_percent() -> None:
     """PT-resident cánones: min(domestic 0.24, treaty 0.05) = 0.05 (art 12.2)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="canones", country_code="PT", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="canones", country_code="PT", base="1000.00")
 
     assert tipo == Decimal("0.05")
     assert cuota == Decimal("50.00")  # 1000 × 0.05

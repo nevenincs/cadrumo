@@ -47,8 +47,8 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import (
     build_certificate_secret_backend,
 )
 from .ephemeral_master_key import EphemeralMasterKeyProvider
-from cadrumo.tests.profile_storage_root_fixture import bucket_session_storage_fixture
-from cadrumo.tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage import certificate_secret_backend as _backend_module
 from cadrumo.application.auth.certificate_source_operations import (
     register_operator_certificate_source,

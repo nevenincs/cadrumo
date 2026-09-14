@@ -5,11 +5,10 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 import pytest
-from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ...live.notifications import PersistedNotificationsSnapshot
+from ...live.notification_ports import RemoteNotification
 from .. import calendar_models as _calendar_models
 from ..calendar import calendar_events_from_notification_snapshots
 from ..calendar_models import OverviewCalendarEvent, OverviewCalendarRange
@@ -32,7 +31,7 @@ def test_calendar_event_projection_materialises_models_from_their_canonical_owne
         fecha_notificacion=date(2025, 3, 12),
         modo_notificacion="DEH",
         leida=False,
-        source_url=AnyHttpUrl(source_url),
+        source_url=source_url,
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="b" * 64,

@@ -54,7 +54,7 @@ from cadrumo.core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.tests.user_profile import complete_profile_facts
+from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -19,4 +19,4 @@ formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["orden-hfp-227-2017:art-2"]
-source_refs = ["aeat-dr-222-2023-2024"]
+source_refs = ["aeat-dr-222-2023-2024", "aeat-modelo-222-instructions"]

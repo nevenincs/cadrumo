@@ -8,15 +8,12 @@ from decimal import Decimal
 from functools import lru_cache
 
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
-from .....core.resources.bundled_data import bundled_path
 from ..ids import LegalRefId, SourceRefId
 from ._published_authority import artifact_components
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
 )
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _operand_refs(*values: object) -> tuple[str, ...]:

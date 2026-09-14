@@ -1,11 +1,10 @@
 """Application service for the capital-goods IVA regularización register.
 
-Thin orchestration over
-:class:`adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`:
-the operator declares tracked capital goods and lists them. The register is
-authoritative profile-scoped state; this service owns no calculation, only the
-declare/list surface the CLI exposes. The art-109 annual compute lives in the
-pure domain module :mod:`domain.bienes_inversion`.
+Thin orchestration over an application-owned register capability: the operator
+declares tracked capital goods and lists them. The register is authoritative
+profile-scoped state; this service owns no calculation, only the declare/list
+surface the CLI exposes. The art-109 annual compute lives in the pure domain
+module :mod:`domain.bienes_inversion`.
 
 The register is source evidence for the live
 ``bienes_inversion_regularizacion`` calculation source: application calculation
@@ -21,9 +20,8 @@ See Also:
     :mod:`domain.bienes_inversion`
         Pure LIVA arts. 107-110 register records and annual regularización
         computations.
-    :mod:`adapters.persistence.profile.bienes_inversion`
-        FINANCIAL secure-object repository that stores the profile-scoped
-        register singleton.
+    :mod:`application.bienes_inversion.ports`
+        Required bucket-bound register capability supplied by composition.
     :mod:`application.calculations`
         Calculation-source and advisory surfaces that can project the register
         once definitive prorrata inputs exist.

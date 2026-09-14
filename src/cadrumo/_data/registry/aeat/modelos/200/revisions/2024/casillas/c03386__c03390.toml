@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03386"
+continuidad_id = "is-correccion-eliminaciones-pendientes-grupo-permanente-disminucion"
 number = "03386"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "03387"
+continuidad_id = "is-correccion-eliminaciones-pendientes-sociedades-cooperativas-temporaria-ejercicio-disminucion"
 number = "03387"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "03388"
+continuidad_id = "is-correccion-eliminaciones-pendientes-grupo-temporaria-anteriores-disminucion"
 number = "03388"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "03389"
+continuidad_id = "03389"
 number = "03389"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "03390"
+continuidad_id = "03390"
 number = "03390"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"

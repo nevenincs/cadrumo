@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from pydantic import ValidationError
+
 from cadrumo.core.corpus_text import (
     CorpusAnchorResolutionError,
     corpus_redaction_marks,
@@ -212,11 +214,12 @@ def _validate_manual_legal_reference(reference: LegalReference, source_root: Pat
     path = (source_root / reference.corpus_ref.split("#", 1)[0]).resolve()
     if not path.is_file():
         return
-    try:
-        from cadrumo.domain.manuals.schema import Section
+    from cadrumo.domain.manuals.schema import Section
 
-        Section.model_validate_json(path.read_text(encoding="utf-8"))
-    except Exception as exc:
+    section_json = path.read_text(encoding="utf-8")
+    try:
+        Section.model_validate_json(section_json)
+    except (ValidationError, ValueError) as exc:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} manual section JSON validation failed: {exc}"
         ) from exc

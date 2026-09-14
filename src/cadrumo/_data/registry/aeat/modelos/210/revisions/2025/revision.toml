@@ -1,4 +1,12 @@
 [revisions."2025"]
+predecessor = "2024"
+# reviewed_against names 2024 although this edition was stamped before 2024
+# existed, and the direction is what makes that honest: the 2023 and 2024
+# editions were authored FROM this edition's own declarations, against the
+# same registered design (aeat-dr-210-2022, devengos 2022-06-01..2025-12-31,
+# the epoch this edition already renders). Nothing reaches this edition by
+# inheritance that its reviewer did not read here first.
+reviewed_against = "2024"
 binding_source_refs = ["aeat-modelo-210-procedure"]
 formula_source_refs = ["aeat-modelo-210-procedure"]
 casilla_source_refs = ["aeat-modelo-210-procedure"]

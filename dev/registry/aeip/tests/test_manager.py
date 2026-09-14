@@ -21,6 +21,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.core.identity.continuidad import ContinuidadId
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_continuity_locale_key,
@@ -29,7 +30,6 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 from dev._paths import REPO_ROOT as _REPO_ROOT
 
 from ..adjudications import (
-    AdjudicationError,
     AdjudicationSet,
     ChainIdOverride,
     Exclusion,
@@ -665,5 +665,5 @@ def test_ungrounded_adjudication_is_refused(tmp_path: Path) -> None:
         '[[exclusions]]\nrevision = "2020"\ncasilla = "0757"\n',
         encoding="utf-8",
     )
-    with pytest.raises(AdjudicationError, match="reason"):
+    with pytest.raises(RegistryError, match="reason"):
         load_adjudications(path)

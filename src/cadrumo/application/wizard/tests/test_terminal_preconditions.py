@@ -452,6 +452,14 @@ def test_taken_profile_label_has_an_exact_application_state_operator_decision_ve
     )
 
 
+def test_unregistered_profile_label_passes_the_application_state_gate() -> None:
+    _require_profile_label_available(
+        SETUP_FLOW,
+        "Unregistered profile",
+        label_is_registered=False,
+    )
+
+
 def test_edit_without_an_interactive_console_has_an_exact_runtime_safety_verdict() -> None:
     with pytest.raises(WizardEditUnsupportedConsoleError) as raised:
         _run_full_flow(

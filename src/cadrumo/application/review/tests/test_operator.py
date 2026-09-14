@@ -7,11 +7,9 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....core.config import Settings
+from ....core.config import Settings, override_settings
 from ....core.errors.error_codes import resolve_error_message
 from ....core.i18n.render import tr
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_minimal_profile
 from ..enums import ReviewSeverity, ReviewState
 from ..errors import ReviewError
 from ..models import FindingReviewItem
@@ -23,6 +21,7 @@ from ..operator import (
     _to_row,
     project_review_item,
 )
+from ._fakes import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -78,12 +77,9 @@ def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
     sensitive_item_id = "review-client-tax-id-12345678Z-private-note"
 
     bucket_id = "23232323-2323-4232-8232-232323232323"
-    with open_test_profile_session(bucket_id):
-        # Registered first: the engine refuses to materialise a bucket custody
-        # never published, which would mask the refusal actually under test.
-        register_minimal_profile(profile_id=bucket_id, overrides={"identity.tax_id": "00000000T"})
+    with override_settings(cadrumo_active_profile=bucket_id):
         with pytest.raises(ReviewError) as exc_info:
-            project_review_item(sensitive_item_id, settings=Settings())
+            project_review_item(sensitive_item_id, settings=Settings(), ports=draft_review_ports())
 
     assert exc_info.value.translated_message == "review.operator.errors.item_not_found"
     assert exc_info.value.context is None

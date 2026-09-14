@@ -28,3 +28,48 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: inspected the official AEAT hash-pinned Modelo 194 design for ejercicio 2023 and the cited full BOE amendment. The revision is bounded exactly to the design's stated ejercicio; no record-design evidence is reused for a different year. The five hoja-resumen casillas remain manual input, no export layout is declared, and no authority grade is promoted. The 2020-2022 gap remains unselectable, and this 2023 evidence does not establish a predecessor or successor."""
 reviewed_at = 2026-08-25
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-perceptores-base-positiva"
+from_revision = "2019"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-base-positiva"
+from_revision = "2019"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-retenciones"
+from_revision = "2019"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-perceptores-base-negativa"
+from_revision = "2019"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-base-negativa"
+from_revision = "2019"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]

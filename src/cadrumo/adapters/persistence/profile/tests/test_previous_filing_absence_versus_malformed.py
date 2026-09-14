@@ -16,6 +16,7 @@ must keep refusing, while the empty repository exercises genuine absence.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date
 from decimal import Decimal
@@ -68,11 +69,13 @@ def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_
             snapshot,
             repository=repository,
             activity_start_date=None,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report_with_activity_start = resolve_bindings_from_local_store(
             snapshot,
             repository=repository,
             activity_start_date=date(2015, 1, 1),
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
 
     for report in (report_without_activity_start, report_with_activity_start):
@@ -105,7 +108,7 @@ def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(t
             ),
         )
 
-        report = resolve_bindings_from_local_store(snapshot, repository=repository)
+        report = resolve_bindings_from_local_store(snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
 
     assert report.binding_values[_BINDING_ID] == Decimal("1")
 
@@ -130,7 +133,7 @@ def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses
         )
 
         with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
-            resolve_bindings_from_local_store(snapshot, repository=repository)
+            resolve_bindings_from_local_store(snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
 
 
 def test_an_ambiguous_multiple_observed_filing_match_still_refuses() -> None:

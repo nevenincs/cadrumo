@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01331"
+continuidad_id = "is-cooperativa-cuota-integra-previa"
 number = "01331"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"

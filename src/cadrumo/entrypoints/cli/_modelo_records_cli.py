@@ -150,7 +150,8 @@ def _import_record(
         from ...application.workflow.persistence import workflow_state_repository
 
         expected_tax_id = declared_tax_id(workflow_state_repository().load().active_profile_record())
-        work_unit = get_work_unit(work_unit_id)
+        calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse())
+        work_unit = get_work_unit(work_unit_id, ports=calculation_ports.work_lifecycle_ports)
         calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=work_unit.bucket_id)
         if file is not None:
             return import_external_filing_source(
@@ -166,6 +167,7 @@ def _import_record(
                 ),
                 bucket_id=work_unit.bucket_id,
                 actor=actor or _actor(),
+                work_lifecycle_ports=calculation_ports.work_lifecycle_ports,
                 observation_repository=calculation_ports.observation_repository,
             )
         return import_external_filing_evidence(

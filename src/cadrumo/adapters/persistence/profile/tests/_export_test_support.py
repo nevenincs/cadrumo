@@ -39,8 +39,8 @@ from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInsta
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.tests.profile_capsule import open_test_profile_session
-from cadrumo.tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False

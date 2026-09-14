@@ -343,7 +343,7 @@ async def ensure_authenticated_aeat_session(
     reset_lock: bool = False,
     operation: str = "auth-ensure-session",
     target_url: str | None = None,
-    browser_session_factory: BrowserSessionFactoryPort | None = None,
+    browser_session_factory: BrowserSessionFactoryPort,
     certificate_credentials: ActiveCertificateCredentials | None = None,
     operator_scope_ports: OperatorScopePorts,
 ) -> AuthenticatedAeatSessionResult:
@@ -382,7 +382,7 @@ async def _ensure_authenticated_aeat_session_locked(
     reset_lock: bool = False,
     operation: str = "auth-ensure-session",
     target_url: str | None = None,
-    browser_session_factory: BrowserSessionFactoryPort | None = None,
+    browser_session_factory: BrowserSessionFactoryPort,
     certificate_credentials: ActiveCertificateCredentials | None = None,
     operator_scope_ports: OperatorScopePorts,
 ) -> AuthenticatedAeatSessionResult:
@@ -408,7 +408,11 @@ async def _ensure_authenticated_aeat_session_locked(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=operator_scope_ports,
     )
-    settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
+    settings, expected_identity = _prepare_clave_auth(
+        settings,
+        provider_kind,
+        operator_scope_ports=operator_scope_ports,
+    )
     reset_status = (
         clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-before-ensure")
         if reset_lock
@@ -639,6 +643,8 @@ def _normalise_credential(value: object) -> str:
 def _prepare_clave_auth(
     settings: Settings,
     provider_kind: AuthProviderKind,
+    *,
+    operator_scope_ports: OperatorScopePorts,
 ) -> tuple[Settings, str | None]:
     """Bind profile-borne Cl@ve credentials and refuse an incomplete mode.
 
@@ -660,8 +666,13 @@ def _prepare_clave_auth(
     meaningless, and a provider that returned no expectation would leave
     the session check silently no-opping.
     """
-    facts = _active_profile_auth_facts()
-    credentials = _resolve_clave_credentials(settings, provider_kind, facts=facts)
+    facts = _active_profile_auth_facts(operator_scope_ports=operator_scope_ports)
+    credentials = _resolve_clave_credentials(
+        settings,
+        provider_kind,
+        facts=facts,
+        operator_scope_ports=operator_scope_ports,
+    )
     if credentials is None:
         _assert_profile_identity_available_for_deferred_check(facts)
         return settings, facts.tax_id or None
@@ -688,6 +699,7 @@ def _resolve_clave_credentials(
     provider_kind: AuthProviderKind,
     *,
     facts: ClaveAuthFacts | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> ClaveCredentials | None:
     """Resolve the Cl@ve halves for ``provider_kind`` from the active profile.
 
@@ -702,7 +714,11 @@ def _resolve_clave_credentials(
     return resolve_clave_credentials(
         provider_kind,
         settings=settings,
-        facts=facts if facts is not None else _active_profile_auth_facts(),
+        facts=(
+            facts
+            if facts is not None
+            else _active_profile_auth_facts(operator_scope_ports=operator_scope_ports)
+        ),
     )
 
 
@@ -1000,7 +1016,7 @@ def clave_auth_facts_from_profile_values(
     )
 
 
-def _active_profile_auth_facts() -> ClaveAuthFacts:
+def _active_profile_auth_facts(*, operator_scope_ports: OperatorScopePorts) -> ClaveAuthFacts:
     """Read the active profile's identity and Cl@ve credentials in one pass.
 
     Returns empty facts when no profile is active, when no authenticated
@@ -1016,7 +1032,6 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     surface, which is the same outcome this function already returns when no
     profile is active.
     """
-    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -1025,7 +1040,8 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     bucket_id = resolve_active_bucket_id()
     # Read through the ambient session only when it is THIS bucket's; a session
     # bound to another profile would decrypt this record under the wrong key.
-    if bucket_id is None or not active_bucket_session_serves(bucket_id):
+    current_session = operator_scope_ports.session.current()
+    if bucket_id is None or not operator_scope_ports.session.serves_bucket(current_session, bucket_id):
         return ClaveAuthFacts()
     try:
         record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
@@ -1062,7 +1078,7 @@ async def _try_probe_verified_session(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     target_url: str | None,
-    browser_session_factory: BrowserSessionFactoryPort | None,
+    browser_session_factory: BrowserSessionFactoryPort,
     certificate_credentials: ActiveCertificateCredentials | None,
     operator_scope_ports: OperatorScopePorts,
 ) -> tuple[AeatSession, AeatLoginAssertion] | None:
@@ -1090,14 +1106,10 @@ def _build_provider(
     kind: AuthProviderKind,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    browser_session_factory: BrowserSessionFactoryPort | None,
+    browser_session_factory: BrowserSessionFactoryPort,
     certificate_credentials: ActiveCertificateCredentials | None,
     operator_scope_ports: OperatorScopePorts,
 ) -> AuthProvider:
-    if browser_session_factory is None:
-        from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
-
-        browser_session_factory = default_browser_session_factory
     return select_provider(
         kind,
         settings=settings,

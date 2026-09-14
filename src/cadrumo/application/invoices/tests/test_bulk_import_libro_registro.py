@@ -1,4 +1,4 @@
-"""A real libro registro imports fully, under its own column names.
+"""A libro registro resolves its semantic columns under their own names.
 
 The measured defect this closes: ``ledger invoice import`` demanded fixed
 English column names and refused the whole file on anything else. A real Spanish
@@ -10,27 +10,21 @@ withheld IRPF would have vanished silently.
 
 The mapping is supplied here as data, which is what it is at runtime: the
 semantic lane decides one role per column, once per file, and deterministic code
-copies the cells. These tests exercise the real reader, the real resolution and
-the real catalogue writer; only the role verdict is injected, so no model runs.
+copies the cells. These tests exercise the reader and resolution policy. The
+encrypted catalogue writer is covered at the profile persistence adapter seam.
 """
 
 from __future__ import annotations
 
-from decimal import Decimal
-from pathlib import Path
-
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.field_role import FieldRole
-from ....domain.iva.classification import InvoiceKind
 from ....tests.inventory import FIXTURES_DIR
-from ..bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
+from ..bulk_import import read_bulk_invoice_import_source
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _LIBRO = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_expedidas_2025_2026.csv"
-_BUCKET_ID = "31313131-3131-4131-8131-313131313131"
 
 #: The role of each column of the bundled libro de facturas expedidas, in column
 #: order: fecha_expedicion, numero_factura, destinatario, nif_destinatario,
@@ -53,17 +47,6 @@ _LIBRO_ROLES = (
     FieldRole.RETENCION_AMOUNT,
     FieldRole.GRAND_TOTAL,
 )
-
-
-#: The rows this book cannot yet create, and the substring naming why. Every one
-#: is a domain rule upstream of column mapping, so a change here is a change in
-#: what the product accepts, not in what it can read.
-_ROWS_REFUSED_BY_DOMAIN_RULES: dict[int, str] = {
-    5: "totals must be non-negative",
-    6: "must be exactly 9 characters",
-    7: "must be exactly 9 characters",
-    9: "required field is missing or blank",
-}
 
 
 def _mapper(headers):
@@ -101,44 +84,6 @@ def test_the_libro_registro_resolves_every_field_under_a_mapping() -> None:
     } <= source.resolution.fields_present
 
 
-def test_the_libro_registro_imports_with_no_column_resolution_failure(tmp_path: Path) -> None:
-    """Every one of the book's rows is read, and no row fails on column resolution.
-
-    Four of the eight rows are still refused, and each one is refused by a
-    pre-existing domain rule that has nothing to do with reading the file: a
-    rectificativa's negative total, two EU IVA identifiers held to the nine-
-    character Spanish NIF shape, and a factura simplificada to a consumidor
-    final carrying no NIF at all. They are named in
-    :data:`_ROWS_REFUSED_BY_DOMAIN_RULES` so this test states which failures it
-    is accepting, and would break rather than absorb a new one silently.
-
-    What this test owns is that the file is read at all: every row reaches the
-    importer under Spanish column names, and not one refusal says a column could
-    not be resolved.
-    """
-    source = read_bulk_invoice_import_source(_LIBRO, mapper=_mapper)
-    assert len(source.rows) == 8
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        result = import_invoices_from_rows(
-            source,
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            # The libro registro format carries no country column in either
-            # book, so the operator states one for the whole import. It
-            # applies to EVERY row, which is why a book carrying foreign
-            # counterparties needs the column rather than this flag.
-            declared_country="ES",
-        )
-
-    assert result.rows == 8
-    assert result.created == 4
-    assert {failure.row_number for failure in result.refused} == set(_ROWS_REFUSED_BY_DOMAIN_RULES)
-    for failure in result.refused:
-        assert _ROWS_REFUSED_BY_DOMAIN_RULES[failure.row_number] in failure.reason, failure
-        assert "column" not in failure.reason.casefold(), failure
-
-
 def test_unknown_columns_are_reported_rather_than_refused() -> None:
     """The three columns with no importer slot are named, and cost no row."""
     source = read_bulk_invoice_import_source(_LIBRO, mapper=_mapper)
@@ -148,40 +93,6 @@ def test_unknown_columns_are_reported_rather_than_refused() -> None:
     assert len(source.rows) == 8
     for row in source.rows:
         assert "cuota_iva" not in row.values
-
-
-def test_the_retencion_amount_reaches_the_catalogue_invoice(tmp_path: Path) -> None:
-    """Retención is carried, not dropped: the withheld IRPF lands on the record.
-
-    The first row of the book withholds 640.80 EUR at 15% on a 4272.00 base. The
-    importer previously had no column for it at all, so this figure had nowhere
-    to go even once the column names were understood.
-    """
-    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
-    source = read_bulk_invoice_import_source(_LIBRO, mapper=_mapper)
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        result = import_invoices_from_rows(
-            source,
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            # The libro registro format carries no country column in either
-            # book, so the operator states one for the whole import. It
-            # applies to EVERY row, which is why a book carrying foreign
-            # counterparties needs the column rather than this flag.
-            declared_country="ES",
-        )
-        assert result.created == 4
-        catalogue = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load()
-
-    by_number = {invoice.invoice_number: invoice for invoice in catalogue.invoices.values()}
-    first = by_number["2025/0142"]
-    assert first.base_total == Decimal("4272.00")
-    assert first.retention_amount == Decimal("640.80")
-
-    withheld = [inv for inv in catalogue.invoices.values() if inv.retention_amount]
-    assert withheld, "no invoice carried a retención; the column was dropped"
 
 
 def test_an_exact_column_name_is_never_displaced_by_the_mapping() -> None:

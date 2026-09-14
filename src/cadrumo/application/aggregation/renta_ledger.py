@@ -3,10 +3,9 @@
 This is the annual first-slice expense projection behind the
 ``ledger_renta_gastos_estimacion_directa_aggregation`` source. It loads both a
 :class:`~domain.transactions.TransactionCatalogue` and a
-:class:`~domain.invoices.InvoiceCatalogue` from the active bucket through
-:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` and
-:class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`, uses
-purchase-invoice evidence to validate deductible-expense facts, and returns
+:class:`~domain.invoices.InvoiceCatalogue` from the application-owned catalogue
+read capabilities, uses purchase-invoice evidence to validate deductible-expense
+facts, and returns
 binding-ready :class:`~domain.renta.RentaDeductibleExpenseObservation`
 records.
 
@@ -30,8 +29,6 @@ from typing import overload
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
@@ -40,10 +37,10 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
-from ...core.prorrata_register import regime_apportions_deduction
 from ...core.prose_elision import IssueDetail
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
 from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_exento_token, require_iva_regime
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -56,7 +53,6 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
 )
 from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
@@ -74,7 +70,6 @@ from ...domain.renta.ledger_expenses import (
 from ...domain.resources.registry import resources
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileRecord
@@ -93,7 +88,8 @@ from .currency_predicates import (
     effective_eur_taxable_base,
     is_non_eur_without_conversion,
 )
-from .errors import AggregationPeriodError, AggregationValidationError
+from .errors import AggregationPeriodError
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
 _LEDGER_CATALOGUE_ID = "ledger"
 
@@ -371,8 +367,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     *,
     bucket_id: str,
     period: Period,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: InvoiceCatalogueReadPorts,
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
@@ -403,12 +398,6 @@ def aggregate_renta_ledger_expenses_from_repositories(
 
     Returns a :class:`RentaLedgerExpenseAggregation`.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
-    if repository.bucket_id != bucket_id:
-        raise AggregationValidationError(
-            t("aggregation.renta_ledger.errors.bucket_mismatch"),
-            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
-        )
     # NOT pre-filtered by date range: a transaction's OWN
     # date can fall outside the requested annual window while its LINKED
     # INVOICE's issue date (the actual ``fact.filing_date`` the classifier
@@ -420,14 +409,8 @@ def aggregate_renta_ledger_expenses_from_repositories(
     # multi-year catalogue. Mirrors the same revert already applied to
     # ``_iva_ledger`` / ``_renta_income_ledger`` / ``_renta_gasto_ledger`` /
     # ``_impatriado_income_ledger`` for the identical reason.
-    transactions = repository.load()
-    invoices_repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    if invoices_repository.bucket_id != bucket_id:
-        raise AggregationValidationError(
-            t("aggregation.renta_ledger.errors.invoice_bucket_mismatch"),
-            context={"bucket_id": bucket_id, "repository_bucket_id": invoices_repository.bucket_id},
-        )
-    invoices = invoices_repository.load()
+    transactions = ports.transaction_reader.load()
+    invoices = ports.invoice_reader.load()
     residence_ccaa = _resolve_residence_ccaa(bucket_id=bucket_id, profile_record=profile_record)
     resolved_ejercicio = profile_year if profile_year is not None else period.filing_year
     iva_deduction_ratio = resolve_iva_deduction_ratio(

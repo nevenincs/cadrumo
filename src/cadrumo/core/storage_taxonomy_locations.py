@@ -536,7 +536,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # anywhere else.
         StorageCategory.CONFIG_RESET_JOURNAL,
         "reset-operations",
-        consumer_module="application/_config_reset_repository.py",
+        consumer_module="application/config_reset_repository.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,

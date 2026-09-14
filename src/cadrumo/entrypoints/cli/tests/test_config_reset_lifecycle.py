@@ -16,8 +16,8 @@ from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from .._bootstrap_exempt import is_bootstrap_exempt
 from .cli_runner import invoke_cached_cli
 

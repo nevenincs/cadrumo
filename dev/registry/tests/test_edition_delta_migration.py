@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
@@ -42,7 +43,6 @@ from ..edition_delta_migration import (
     KeptReason,
     MigrationOutcome,
     MigrationPlan,
-    MigrationRefusedError,
     PredecessorBasis,
     main,
     migrate_modelo,
@@ -297,7 +297,7 @@ def test_a_rerun_is_a_no_op_and_a_restated_default_is_refused(pilot: MigrationOu
     )
     assert restated != block
     fragment.write_text(fragment.read_text(encoding="utf-8").replace(block, restated), encoding="utf-8", newline="\n")
-    with pytest.raises(MigrationRefusedError, match="re-planning it would change it"):
+    with pytest.raises(RegistryError, match="re-planning it would change it"):
         migrate_modelo(
             registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "refused", declare_blocked_roots=True
         )
@@ -343,7 +343,7 @@ def test_a_lower_grade_successor_is_blocked_and_refused_without_the_flag(
         BlockedCause.LOWER_GRADE
         in next(item for item in plan.editions if item.revision_id == edition.revision_id).blocked
     )
-    with pytest.raises(MigrationRefusedError, match="needs an explicit no-predecessor declaration"):
+    with pytest.raises(RegistryError, match="needs an explicit no-predecessor declaration"):
         migrate_modelo(registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "work")
     assert not (tmp_path / "work").exists()
 
@@ -541,7 +541,7 @@ def test_work_directory_must_not_be_inside_the_registry_root(tmp_path: Path) -> 
     registry = _registry(tmp_path / "target", _NO_EXPORT_SURFACE)
     work_dir = registry / "migration-work"
 
-    with pytest.raises(MigrationRefusedError, match="inside registry root"):
+    with pytest.raises(RegistryError, match="inside registry root"):
         migrate_modelo(registry_root=registry, modelo_id=_NO_EXPORT_SURFACE, work_dir=work_dir)
 
     assert not work_dir.exists()
@@ -552,7 +552,7 @@ def test_work_directory_must_not_be_inside_the_production_source_tree(tmp_path: 
     work_dir = REPO_ROOT / "src" / f".edition-delta-migration-test-work-{tmp_path.name}"
 
     assert not work_dir.exists()
-    with pytest.raises(MigrationRefusedError, match="inside production source tree"):
+    with pytest.raises(RegistryError, match="inside production source tree"):
         migrate_modelo(registry_root=registry, modelo_id=_NO_EXPORT_SURFACE, work_dir=work_dir)
 
     assert not work_dir.exists()
@@ -563,7 +563,7 @@ def test_work_directory_must_not_exist_before_migration(tmp_path: Path) -> None:
     work_dir = tmp_path / "existing-work"
     work_dir.mkdir()
 
-    with pytest.raises(MigrationRefusedError, match="already exists"):
+    with pytest.raises(RegistryError, match="already exists"):
         migrate_modelo(registry_root=registry, modelo_id=_NO_EXPORT_SURFACE, work_dir=work_dir)
 
 

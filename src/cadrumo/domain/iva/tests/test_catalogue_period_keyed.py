@@ -6,8 +6,8 @@ from datetime import date
 
 import pytest
 
+from ...calculations.registry.errors import RegistrySnapshotError
 from ..catalogue import bundled_iva_catalogue, iva_catalogue_years, resolve_catalogue
-from ..errors import IvaCatalogueError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -37,8 +37,12 @@ def test_a_resolved_catalogue_carries_only_citations_asserted_over_that_year() -
     assert all(citation.window.covers_year(year) for citation in citations)
 
 
-def test_resolving_the_same_year_twice_returns_the_same_projection() -> None:
-    assert resolve_catalogue(on=date(2025, 6, 15)) is resolve_catalogue(on=date(2025, 1, 1))
+def test_resolving_the_same_year_twice_uses_one_authority_without_a_projection_cache() -> None:
+    first = resolve_catalogue(on=date(2025, 6, 15))
+    second = resolve_catalogue(on=date(2025, 1, 1))
+
+    assert first == second
+    assert first is not second
 
 
 def test_the_undated_corpus_carries_every_citation_regardless_of_span() -> None:
@@ -56,5 +60,5 @@ def test_resolve_catalogue_requires_a_grounded_year() -> None:
     # window. A supported year used here would assert that a year the product
     # claims to file is permanently ungrounded, pinning today's coverage gap as
     # the contract and reddening the moment that year is correctly added.
-    with pytest.raises(IvaCatalogueError, match="year=1990"):
+    with pytest.raises(RegistrySnapshotError, match="filing year 1990"):
         resolve_catalogue(on=date(1990, 6, 15))

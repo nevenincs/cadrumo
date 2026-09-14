@@ -17,22 +17,18 @@ from __future__ import annotations
 
 import hashlib
 import inspect
-import json
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.llm import evidence_draft_text
-from ....adapters.outbound.llm.errors import LLMProviderError
-from ....adapters.outbound.llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ....core.config import load_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.document_shape import DocumentShape
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....tests.attribute_scope import scoped_attribute
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
@@ -40,6 +36,7 @@ from .. import invoice_draft_extraction as invoice_draft_extraction_module
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import EvidenceInput
+from ..evidence_input_ports import EvidenceInputPorts
 from ..evidence_textlayer import transcribe_text_layer
 from ..grounded_reading import (
     GROUNDABLE_ORIGINS,
@@ -48,8 +45,10 @@ from ..grounded_reading import (
     verified_provenance,
 )
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ..invoice_draft_extraction_ports import InvoiceDraftExtractionPorts, InvoiceDraftReaderUnavailableError
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 from ..preconditions import LedgerPreconditionCondition
+from ._evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -76,6 +75,40 @@ _CONTROL = _CORPUS / "com_2026_0005_layout_minimal.pdf"
 #: one checksum-valid token on the page.
 _FILER_CIF = "B17283946"
 _SUPPLIER_CIF_BAD_CHECKSUM = "B1234567X"
+_CONTROL_TEXT_LAYER_PORTS = text_layer_ports_for_pages(
+    (_SUPPLIER_CIF_BAD_CHECKSUM, _FILER_CIF, "766,30 21% 890,00 9.999,99")
+)
+
+
+class _ReaderUnavailableForTest(Exception):
+    """Application-test failure representing an unavailable semantic reader."""
+
+
+def _reader_unavailable_ports() -> InvoiceDraftExtractionPorts:
+    """Bind the application reader seam to a focused unavailable-reader fake."""
+
+    def unavailable(*args: object, **kwargs: object) -> object:
+        raise InvoiceDraftReaderUnavailableError(_ReaderUnavailableForTest("reader unavailable"))
+
+    def structured_reader_was_not_expected(*args: object, **kwargs: object) -> object:
+        raise AssertionError("the structured reader is not part of this text-reader case")
+
+    def vision_reader_was_not_expected(*args: object, **kwargs: object) -> object:
+        raise AssertionError("the vision reader is not part of this text-reader case")
+
+    return InvoiceDraftExtractionPorts(
+        resolve_evidence_input=lambda *args, **kwargs: _control_evidence(),
+        evidence_input_ports=EvidenceInputPorts(
+            document_shape_probe=lambda _data: DocumentShape.PDF_TEXT_LAYER,
+        ),
+        text_layer_ports=_CONTROL_TEXT_LAYER_PORTS,
+        parse_structured_invoice=structured_reader_was_not_expected,
+        read_text=unavailable,
+        propose_supply_nature=lambda *args, **kwargs: None,
+        rasterise_pdf=lambda _data: (),
+        transcribe_vision=vision_reader_was_not_expected,
+        consent_binding_error=lambda _facts: RuntimeError("consent binding was not expected"),
+    )
 
 
 def _control_transcription():
@@ -83,10 +116,12 @@ def _control_transcription():
     return transcribe_text_layer(
         EvidenceInput(
             mime_type="application/pdf",
+            document_shape=DocumentShape.PDF_TEXT_LAYER,
             data=payload,
             content_sha256=hashlib.sha256(payload).hexdigest(),
             attachment_id="b" * 64,
         ),
+        text_layer_ports=_CONTROL_TEXT_LAYER_PORTS,
     )
 
 
@@ -94,6 +129,7 @@ def _control_evidence() -> EvidenceInput:
     payload = _CONTROL.read_bytes()
     return EvidenceInput(
         mime_type="application/pdf",
+        document_shape=DocumentShape.PDF_TEXT_LAYER,
         data=payload,
         content_sha256=hashlib.sha256(payload).hexdigest(),
         attachment_id="b" * 64,
@@ -315,7 +351,8 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
     router = Path(__file__).parents[1] / "invoice_draft_extraction.py"
     source = router.read_text(encoding="utf-8")
 
-    assert "transcribe_text_layer(evidence_input)" in source
+    assert "transcribe_text_layer(" in source
+    assert "text_layer_ports=ports.text_layer_ports" in source
     assert "extract_invoice_fields_from_text" in source
     assert "ground_draft_against_transcription" in source
     # And the vision lane runs the SAME chain: transcribe with the vision model,
@@ -342,7 +379,7 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _refuse_a_text_read_with_no_reader(LLMProviderError("no provider reachable"))
+        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTest("no provider reachable"))
 
     assert raised.value.terminal_precondition_verdict is not None
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
@@ -351,7 +388,7 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     assert raised.value.args == ()
     assert raised.value.context == {
         "semantic_reader_available": False,
-        "reader_error_type": "LLMProviderError",
+        "reader_error_type": "_ReaderUnavailableForTest",
     }
     assert raised.value.terminal_precondition_verdict.evidence[0].values == raised.value.context
 
@@ -398,23 +435,14 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     reader is the ENVIRONMENT this case is about, and making it unavailable is
     the condition being reproduced. Nothing about the router is stubbed.
     """
-    # The reader is imported inside the consumer from its defining module, so the
-    # substitution has to land there. Patching the `llm` package namespace reached
-    # nothing once that facade went inert.
-    reader_module = evidence_draft_text
     from ..invoice_draft_extraction import _read_transcription_semantically
 
-    def unavailable(*args: object, **kwargs: object) -> object:
-        raise LLMProviderError("Ollama is not reachable")
-
-    with (
-        scoped_attribute(reader_module, "extract_invoice_fields_from_text", unavailable),
-        pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
-    ):
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _read_transcription_semantically(
             _control_evidence(),
             _control_transcription(),
             settings=load_settings(),
+            ports=_reader_unavailable_ports(),
         )
 
     assert raised.value.terminal_precondition_verdict is not None
@@ -495,7 +523,7 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _refuse_a_text_read_with_no_reader(LLMProviderError("Ollama is not reachable"))
+        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTest("Ollama is not reachable"))
 
     assert raised.value.terminal_precondition_verdict is not None
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
@@ -734,16 +762,18 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         stamps a verdict nobody ran or discards the claim before an operator
         can see it.
         """
-        response = parse_invoice_extraction_response(
-            json.dumps(
-                {
-                    "supplier_tax_id": "B12345674",
-                    "supplier_tax_id_anchor": "B12345674",
-                    "supplier_tax_id_role_evidence": "Lieferant:",
-                },
+        draft = InvoiceDraft(
+            supplier_tax_id="B12345674",
+            provenance=(
+                FieldProvenance(
+                    field="supplier_tax_id",
+                    origin=FieldOrigin.TEXT_LAYER,
+                    grounding=FieldGroundingOutcome.UNANCHORED,
+                    anchor="B12345674",
+                    role_evidence="Lieferant:",
+                ),
             ),
         )
-        draft = ground_extracted_fields(response, raw_text_length=64, origin=FieldOrigin.TEXT_LAYER)
 
         recorded = next(e for e in draft.provenance if e.field == "supplier_tax_id")
         assert recorded.role_evidence == "Lieferant:", "the reading stage must record the claim verbatim"

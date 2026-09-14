@@ -22,25 +22,13 @@ Ley 37/1992 (LIVA) art. 116 (the monthly-refund right of an inscribed taxpayer).
 
 from __future__ import annotations
 
-from typing import Final
-
-from ...core.period import Period, StandardPeriodCode
-
-#: The last Modelo 303 filing-period codes of a year, after which a negative
-#: result may be requested as a refund: ``4T`` (quarterly cadence), ``12`` (monthly
-#: cadence), ``0A`` (annual). Membership is the "annual liquidación" condition.
-LAST_FILING_PERIOD_TOKENS: Final[frozenset[StandardPeriodCode]] = frozenset(
-    {
-        StandardPeriodCode.Q4,
-        StandardPeriodCode.DEC,
-        StandardPeriodCode.ANNUAL,
-    },
-)
+from ...core.period import Period
+from ..calculations.registry.refund_eligibility import resolve_refund_eligibility_policy_for_period
 
 
 def is_last_filing_period_of_year(period: Period) -> bool:
     """Return whether ``period`` is the last Modelo 303 filing period of its year."""
-    return period.registry_token in LAST_FILING_PERIOD_TOKENS
+    return resolve_refund_eligibility_policy_for_period(period).is_final_period(period)
 
 
 def refund_disposition_available(*, redeme_enrolled: bool, period: Period) -> bool:

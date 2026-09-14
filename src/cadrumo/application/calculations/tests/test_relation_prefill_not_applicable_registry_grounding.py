@@ -20,24 +20,26 @@ Two properties matter, and they pull in opposite directions:
   suffered is a real credit. Folding those legs in as zero would strip the credit
   from the declaration, so they must stay unresolved and operator-supplied.
 
-Real registry authority, real encrypted bucket profile, real repositories. No
-mocks, no stubs, no monkeypatching of the derivation under test.
+Real registry authority is paired with a deterministic application-owned
+profile projection fake. The test keeps the derivation itself pure and does
+not reach encrypted storage or composition roots.
 """
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from pathlib import Path
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import seed_test_profile_record
-from ..relation_prefill import _economic_activity_conditional_source_modelos, _not_applicable_source_modelos_for_bucket
+from ....domain.user_profile.values import UserProfileFact
+from cadrumo.application.user_profile.profile_read_ports import ProfilePathValuesReadPort
+from ..relation_prefill import (
+    _economic_activity_conditional_source_modelos,
+    _not_applicable_source_modelos_for_bucket,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,29 +50,34 @@ if TYPE_CHECKING:
 _M100_YEARS: tuple[int, ...] = (2021, 2022, 2023, 2024, 2025)
 
 _PROFILE_ID = "30030030-0300-4300-8300-300300300300"
-_T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 
 
 def _m100_snapshot(filing_year: int) -> RegistrySnapshot:
     return bundled_authority().snapshot(Modelo("100").value, filing_year=filing_year, period="0A")
 
 
-def _save_profile(bucket_id: str, extra_facts: tuple[UserProfileFact, ...]) -> None:
-    """Persist a real encrypted bucket profile carrying ``extra_facts``."""
-    record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="00000000T"),
-            UserProfileFact(path="identity.legal_name", value="Relation Prefill Grounding"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            *extra_facts,
-        ),
-        created_at=_T0,
-        updated_at=_T0,
+class _ProfilePathValuesFake:
+    """Deterministic inward fake for the application profile projection port."""
+
+    def __init__(self, values: Mapping[str, str] | None) -> None:
+        self._values = values
+
+    def load_path_values(self, *, bucket_id: str) -> Mapping[str, str] | None:
+        del bucket_id
+        return self._values
+
+
+def _profile_reader(extra_facts: tuple[UserProfileFact, ...]) -> ProfilePathValuesReadPort:
+    """Build the path projection used by a pure relation-prefill test."""
+    return _ProfilePathValuesFake(
+        {
+            "identity.tax_id": "00000000T",
+            "identity.legal_name": "Relation Prefill Grounding",
+            "tax_residence.ccaa": "madrid",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            **{fact.path: fact.value for fact in extra_facts},
+        },
     )
-    seed_test_profile_record(record)
 
 
 class TestCandidateSetIsRegistryGrounded:
@@ -133,108 +140,119 @@ class TestCandidateSetIsRegistryGrounded:
 class TestVerdictWithinTheCandidateSet:
     """The profile decides the verdict; every arm stays inside the registry candidate set."""
 
-    def test_no_economic_activity_suppresses_the_whole_conditional_set(self, tmp_path: Path) -> None:
+    def test_no_economic_activity_suppresses_the_whole_conditional_set(self) -> None:
         """A salaried/rental-only filer owes no quarterly pago fraccionado at all."""
         bucket_id = _PROFILE_ID
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-            _save_profile(
-                bucket_id,
-                (
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
-                ),
-            )
-            snapshot = _m100_snapshot(2024)
+        profile_reader = _profile_reader(
+            (
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+            ),
+        )
+        snapshot = _m100_snapshot(2024)
 
-            assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == (
-                _economic_activity_conditional_source_modelos(snapshot)
-            ), "a filer with no actividad económica owes neither pago-fraccionado modelo"
+        assert _not_applicable_source_modelos_for_bucket(
+            snapshot,
+            bucket_id,
+            profile_path_values_reader=profile_reader,
+        ) == _economic_activity_conditional_source_modelos(snapshot), (
+            "a filer with no actividad económica owes neither pago-fraccionado modelo"
+        )
 
-    def test_estimacion_directa_suppresses_only_the_objetiva_modelo(self, tmp_path: Path) -> None:
+    def test_estimacion_directa_suppresses_only_the_objetiva_modelo(self) -> None:
         """An estimación-directa autónomo files Modelo 130; Modelo 131 does not apply."""
         bucket_id = _PROFILE_ID
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-            _save_profile(
-                bucket_id,
-                (
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
-                ),
-            )
-            snapshot = _m100_snapshot(2024)
+        profile_reader = _profile_reader(
+            (
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
+            ),
+        )
+        snapshot = _m100_snapshot(2024)
 
-            assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == frozenset(
-                {Modelo("131").value},
-            ), "estimación directa suppresses only the estimación-objetiva modelo (RIRPF art. 110)"
+        assert _not_applicable_source_modelos_for_bucket(
+            snapshot,
+            bucket_id,
+            profile_path_values_reader=profile_reader,
+        ) == frozenset({Modelo("131").value}), (
+            "estimación directa suppresses only the estimación-objetiva modelo (RIRPF art. 110)"
+        )
 
-    def test_estimacion_objetiva_suppresses_only_the_directa_modelo(self, tmp_path: Path) -> None:
+    def test_estimacion_objetiva_suppresses_only_the_directa_modelo(self) -> None:
         """An estimación-objetiva autónomo files Modelo 131; Modelo 130 does not apply."""
         bucket_id = _PROFILE_ID
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-            _save_profile(
-                bucket_id,
-                (
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
-                ),
-            )
-            snapshot = _m100_snapshot(2024)
+        profile_reader = _profile_reader(
+            (
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
+            ),
+        )
+        snapshot = _m100_snapshot(2024)
 
-            assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == frozenset(
-                {Modelo("130").value},
-            ), "estimación objetiva suppresses only the estimación-directa modelo (RIRPF art. 110)"
+        assert _not_applicable_source_modelos_for_bucket(
+            snapshot,
+            bucket_id,
+            profile_path_values_reader=profile_reader,
+        ) == frozenset({Modelo("130").value}), (
+            "estimación objetiva suppresses only the estimación-directa modelo (RIRPF art. 110)"
+        )
 
 
 class TestFailClosed:
     """A missing or undeclared profile fact leaves every source ENFORCED."""
 
-    def test_absent_profile_suppresses_nothing(self, tmp_path: Path) -> None:
+    def test_absent_profile_suppresses_nothing(self) -> None:
         """No profile for the bucket means no positive not-applicable verdict."""
         bucket_id = _PROFILE_ID
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-            snapshot = _m100_snapshot(2024)
+        snapshot = _m100_snapshot(2024)
 
-            assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == frozenset(), (
-                "an absent profile must leave every cross-period source enforced, never fold a "
-                "relation in as a zero the operator never declared"
-            )
+        assert _not_applicable_source_modelos_for_bucket(
+            snapshot,
+            bucket_id,
+            profile_path_values_reader=_ProfilePathValuesFake(None),
+        ) == frozenset(), (
+            "an absent profile must leave every cross-period source enforced, never fold a "
+            "relation in as a zero the operator never declared"
+        )
 
-    def test_undeclared_income_categories_suppress_nothing(self, tmp_path: Path) -> None:
+    def test_undeclared_income_categories_suppress_nothing(self) -> None:
         """Undeclared income categories are not a negative declaration."""
         bucket_id = _PROFILE_ID
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-            _save_profile(
-                bucket_id,
-                (UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),),
-            )
-            snapshot = _m100_snapshot(2024)
+        profile_reader = _profile_reader((UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),))
+        snapshot = _m100_snapshot(2024)
 
-            assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == frozenset(), (
-                "undeclared income categories must fail closed: the taxpayer may well carry on an "
-                "economic activity, so both pago-fraccionado sources stay enforced"
-            )
+        assert _not_applicable_source_modelos_for_bucket(
+            snapshot,
+            bucket_id,
+            profile_path_values_reader=profile_reader,
+        ) == frozenset(), (
+            "undeclared income categories must fail closed: the taxpayer may well carry on an "
+            "economic activity, so both pago-fraccionado sources stay enforced"
+        )
 
-    def test_economic_activity_with_undeclared_regime_suppresses_nothing(self, tmp_path: Path) -> None:
+    def test_economic_activity_with_undeclared_regime_suppresses_nothing(self) -> None:
         """Economic activity whose estimation regime is undeclared cannot pick a modelo."""
         bucket_id = _PROFILE_ID
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-            _save_profile(
-                bucket_id,
-                (
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                ),
-            )
-            snapshot = _m100_snapshot(2024)
+        profile_reader = _profile_reader(
+            (
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            ),
+        )
+        snapshot = _m100_snapshot(2024)
 
-            assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == frozenset(), (
-                "an undeclared estimation regime must fail closed here: neither pago-fraccionado "
-                "source is positively not applicable, so both stay enforced"
-            )
+        assert _not_applicable_source_modelos_for_bucket(
+            snapshot,
+            bucket_id,
+            profile_path_values_reader=profile_reader,
+        ) == frozenset(), (
+            "an undeclared estimation regime must fail closed here: neither pago-fraccionado "
+            "source is positively not applicable, so both stay enforced"
+        )
 
-    def test_a_revision_declaring_no_conditional_source_suppresses_nothing(self, tmp_path: Path) -> None:
+    def test_a_revision_declaring_no_conditional_source_suppresses_nothing(self) -> None:
         """A revision with no economic-activity-conditional dependency yields the empty set.
 
         Modelo 303 declares no ``conditional_on_economic_activity`` dependency, so
@@ -242,19 +260,21 @@ class TestFailClosed:
         nothing there - the registry classification, not the profile, bounds the set.
         """
         bucket_id = _PROFILE_ID
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-            _save_profile(
-                bucket_id,
-                (
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
-                ),
-            )
-            snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=2024, period="1T")
-            assert _economic_activity_conditional_source_modelos(snapshot) == frozenset(), (
-                "test precondition: Modelo 303 must declare no economic-activity-conditional dependency"
-            )
+        profile_reader = _profile_reader(
+            (
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+            ),
+        )
+        snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=2024, period="1T")
+        assert _economic_activity_conditional_source_modelos(snapshot) == frozenset(), (
+            "test precondition: Modelo 303 must declare no economic-activity-conditional dependency"
+        )
 
-            assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == frozenset(), (
-                "a revision declaring no conditional dependency must suppress nothing regardless of the profile"
-            )
+        assert _not_applicable_source_modelos_for_bucket(
+            snapshot,
+            bucket_id,
+            profile_path_values_reader=profile_reader,
+        ) == frozenset(), (
+            "a revision declaring no conditional dependency must suppress nothing regardless of the profile"
+        )

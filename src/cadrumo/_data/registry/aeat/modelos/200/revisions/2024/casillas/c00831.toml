@@ -1,5 +1,6 @@
 [[revisions.2024.casillas]]
 id = '00831'
+continuidad_id = "is-deduccion-actividades-total-pendiente"
 number = '00831'
 data_type = 'money'
 semantic_role = 'is_deduccion_actividades_total_pendiente'

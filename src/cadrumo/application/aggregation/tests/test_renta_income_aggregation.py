@@ -7,14 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
-
-__all__ = ["secure_objects"]
 from pydantic import ValidationError
 
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..renta_income_ledger import (
@@ -29,10 +24,13 @@ from .renta_income_aggregation_support import (
     _Q1_2024,
     _Q2_2024,
     _income_transaction,
+    _catalogue_read_ports,
     raw_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 
 # Pure-aggregator tests (no repository)
@@ -220,25 +218,22 @@ def test_non_quarterly_period_raises() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_repository_backed_aggregation_emits_casilla_01_sum(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Full path: persist -> load from repo -> aggregate -> correct casilla 01 value."""
+def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
+    """The application partition path aggregates the supplied catalogue correctly."""
     q1_tx1 = _income_transaction("q1-a", value_date=date(2024, 2, 1), amount=Decimal("2500.00"))
     q1_tx2 = _income_transaction("q1-b", value_date=date(2024, 3, 15), amount=Decimal("1500.00"))
     # Q2-only transaction: excluded from Q1 window summary, included in Q2 window
     q2_only = _income_transaction("q2-only", value_date=date(2024, 5, 10), amount=Decimal("3000.00"))
 
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((q1_tx1, q1_tx2, q2_only)))
+    catalogue = TransactionCatalogue.from_transactions((q1_tx1, q1_tx2, q2_only))
 
     result_q1 = aggregate_renta_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_catalogue_read_ports(
+            invoices=InvoiceCatalogue(),
+            transactions=catalogue,
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
 
     # q2_only is outside Q1 window so it produces one compact summary entry.
@@ -257,10 +252,10 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     result_q2 = aggregate_renta_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q2_2024,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_catalogue_read_ports(
+            invoices=InvoiceCatalogue(),
+            transactions=catalogue,
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
 
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
@@ -274,9 +269,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     assert observation_ids_q2 == {q1_tx1.transaction_id, q1_tx2.transaction_id, q2_only.transaction_id}
 
 
-def test_repository_backed_aggregation_summarizes_previously_silent_out_of_window_rows(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_partitioned_aggregation_summarizes_previously_silent_out_of_window_rows() -> None:
     """Out-of-window rows surface as one compact period-exclusion summary.
 
     An archived row is ignored before the in-window income classifier runs.
@@ -291,16 +284,15 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
         amount=Decimal("900.00"),
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((in_window, archived_out_of_window)))
+    catalogue = TransactionCatalogue.from_transactions((in_window, archived_out_of_window))
 
     result = aggregate_renta_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_catalogue_read_ports(
+            invoices=InvoiceCatalogue(),
+            transactions=catalogue,
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
 
     assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
@@ -311,9 +303,7 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     assert result.out_of_window_summary.max_filing_date == date(2024, 5, 10)
 
 
-def test_repository_backed_aggregation_partition_matches_full_scan(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_partitioned_aggregation_matches_full_scan() -> None:
     """The partitioned result matches the full-scan result for declared values.
 
     The same multi-period catalogue is aggregated once through the
@@ -330,16 +320,13 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
     catalogue = TransactionCatalogue.from_transactions((q1_row, q3_row, archived_q3_row))
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(catalogue)
-
     partitioned = aggregate_renta_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_catalogue_read_ports(
+            invoices=InvoiceCatalogue(),
+            transactions=catalogue,
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
     full_scan = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 

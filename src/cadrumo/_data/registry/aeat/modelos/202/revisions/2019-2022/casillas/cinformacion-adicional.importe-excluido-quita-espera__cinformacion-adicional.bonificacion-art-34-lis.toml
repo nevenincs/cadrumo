@@ -5,6 +5,13 @@
 # amounts and the design gives each its own slot, so they are casillas; their
 # ids are slugs taken from AEAT's own label rather than invented numbers, which
 # would assert an official identity the design does not print.
+#
+# semantic_role restates continuidad_id here, which is modelo 202's own
+# convention (126 of its 129 roled rows do exactly this; the three that do
+# not belong to casilla 25, whose continuidad_id is a bare number). The
+# lineage check documents a matching role as the weaker proof of the same
+# link, so these eleven close the linkage requirement without adding any
+# identity the continuidad_id did not already carry.
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.importe-excluido-quita-espera"
@@ -12,6 +19,7 @@ continuidad_id = "importe-excluido-quita-espera"
 number = "informacion-adicional.importe-excluido-quita-espera"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "importe_excluido_quita_espera"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
@@ -22,6 +30,7 @@ continuidad_id = "importe-integrado-base-imponible-quita-espera"
 number = "informacion-adicional.integrado-base-imponible-quita-espera"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "importe_integrado_base_imponible_quita_espera"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
@@ -32,6 +41,7 @@ continuidad_id = "importe-integrado-cuota-quita-espera-cooperativas"
 number = "informacion-adicional.integrado-cuota-quita-espera-cooperativas"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "importe_integrado_cuota_quita_espera_cooperativas"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
@@ -42,6 +52,7 @@ continuidad_id = "rentas-reversion-deterioros-integradas-base-imponible"
 number = "informacion-adicional.rentas-reversion-deterioros"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "rentas_reversion_deterioros_integradas_base_imponible"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
@@ -52,6 +63,7 @@ continuidad_id = "importe-reserva-inversiones-canarias"
 number = "informacion-adicional.reserva-inversiones-canarias"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "importe_reserva_inversiones_canarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-19-1994:art-27"]
@@ -62,6 +74,7 @@ continuidad_id = "importe-bonificacion-art-26-ley-19-1994"
 number = "informacion-adicional.bonificacion-ley-19-1994-art-26"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "importe_bonificacion_art_26_ley_19_1994"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
@@ -72,6 +85,7 @@ continuidad_id = "importe-no-computable-regimen-zec"
 number = "informacion-adicional.no-computable-regimen-zec"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "importe_no_computable_regimen_zec"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
@@ -82,6 +96,7 @@ continuidad_id = "minoracion-rentas-bonificacion-art-33-lis"
 number = "informacion-adicional.minoracion-rentas-bonificacion-art-33-lis"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "minoracion_rentas_bonificacion_art_33_lis"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
@@ -92,6 +107,7 @@ continuidad_id = "importe-excluido-aumento-capital-art-17-2-lis"
 number = "informacion-adicional.excluido-aumento-capital-art-17-2"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "importe_excluido_aumento_capital_art_17_2_lis"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
@@ -102,6 +118,7 @@ continuidad_id = "renta-exenta-cap-xiv-tit-vii-lis"
 number = "informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "renta_exenta_cap_xiv_tit_vii_lis"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
@@ -112,6 +129,7 @@ continuidad_id = "importe-bonificacion-art-34-lis"
 number = "informacion-adicional.bonificacion-art-34-lis"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
+semantic_role = "importe_bonificacion_art_34_lis"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]

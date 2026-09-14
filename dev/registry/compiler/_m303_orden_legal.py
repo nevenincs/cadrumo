@@ -20,6 +20,7 @@ from cadrumo.core.orden_anual_html import (
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import LegalRefId
+from cadrumo.domain.calculations.registry.lorca_reduction import resolve_lorca_reduction
 from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, PublishingAuthority
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, LegalReferenceKind, SourceReference
@@ -318,6 +319,9 @@ def _compile_lorca_2022_reduction_legal_reference(
     effective_from: date,
     effective_to: date,
 ) -> None:
+    declared = resolve_lorca_reduction(effective_date=effective_from)
+    if source.id != declared.source_ref or source.sha256 != declared.source_content_digest:
+        raise RegistryValidationError("annual Orden municipal reduction legal source disagrees with facts authority")
     _add_annual_orden_legal_reference(
         output,
         source=source,
@@ -325,11 +329,12 @@ def _compile_lorca_2022_reduction_legal_reference(
         effective_from=effective_from,
         effective_to=effective_to,
         key=lorca_2022_reduction_legal_key(),
-        axis="da-4-lorca-2022-reduction",
+        axis="annual-orden-municipal-reduction",
         anchor=anchor,
-        article="disposición adicional cuarta.2",
-        section="Reducción Lorca 2022 de cuota devengada por operaciones corrientes IVA",
-        required_text=reduction.required_text,
+        article=declared.article,
+        section=declared.section,
+        required_text=declared.required_text,
+        legal_ref_id=declared.legal_ref,
     )
 
 
@@ -346,11 +351,12 @@ def _add_annual_orden_legal_reference(
     article: str,
     section: str,
     required_text: tuple[str, ...],
+    legal_ref_id: LegalRefId | None = None,
 ) -> None:
     if key in output:
         raise RegistryValidationError("annual Orden compiler generated duplicate legal identity")
     output[key] = LegalReference(
-        id=_axis_legal_ref_id(source, axis=axis, identity=key.rsplit(":", maxsplit=1)[-1]),
+        id=legal_ref_id or _axis_legal_ref_id(source, axis=axis, identity=key.rsplit(":", maxsplit=1)[-1]),
         evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority=PublishingAuthority.BOE,
         kind=LegalReferenceKind.ORDEN,
@@ -430,8 +436,11 @@ def _shared_annual_orden_authority(census: M303AnnualOrdenSourceCensus) -> Orden
             None
             if census.lorca_2022_reduction is None
             else OrdenAnualIvaLorca2022Reduction(
+                ejercicio=int(census.lorca_2022_reduction.ejercicio),
                 municipality=census.lorca_2022_reduction.municipality,
+                annex_scope=census.lorca_2022_reduction.annex_scope,
                 percentage=census.lorca_2022_reduction.percentage,
+                calculation_periods=census.lorca_2022_reduction.calculation_periods,
                 required_text=census.lorca_2022_reduction.required_text,
             )
         ),

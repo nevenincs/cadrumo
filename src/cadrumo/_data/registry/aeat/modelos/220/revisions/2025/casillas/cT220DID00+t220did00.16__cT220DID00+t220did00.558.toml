@@ -123,6 +123,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @129+17 Num. Liquidación (3) - Cuota íntegra del grupo . {DID_liq_CI}
 [[revisions."2025".casillas]]
 id = "T220DID00:00562"
+continuidad_id = "t220did00-00562"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md (sha256 a8f398dd42db) record T220DID00 campo at byte position 00562 continues as corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx.extracted.md (sha256 69c3a234e96e) record T220DID00 campo at byte position 00562."
 number = "00562"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "liquidacion"]
@@ -134,6 +137,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @146+17 N. Liquidación (3)-  Resultado: Estado
 [[revisions."2025".casillas]]
 id = "T220DID00:00621"
+continuidad_id = "t220did00-00621"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md (sha256 a8f398dd42db) record T220DID00 campo at byte position 00621 continues as corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx.extracted.md (sha256 69c3a234e96e) record T220DID00 campo at byte position 00621."
 number = "00621"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "liquidacion"]
@@ -145,6 +151,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @163+17 N. Liquidación (3)-  Opción de fraccionamiento art. 19.1 LIS. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS: Estado. Estado
 [[revisions."2025".casillas]]
 id = "T220DID00:02800"
+continuidad_id = "t220did00-02800"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md (sha256 a8f398dd42db) record T220DID00 campo at byte position 02800 continues as corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx.extracted.md (sha256 69c3a234e96e) record T220DID00 campo at byte position 02800."
 number = "02800"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "liquidacion"]
@@ -321,6 +330,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @507+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: Abono
 [[revisions."2025".casillas]]
 id = "T220DID00:02806"
+continuidad_id = "t220did00-02806"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md (sha256 a8f398dd42db) record T220DID00 campo at byte position 02806 continues as corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx.extracted.md (sha256 69c3a234e96e) record T220DID00 campo at byte position 02806."
 number = "02806"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]
@@ -332,6 +344,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @524+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: Compensación
 [[revisions."2025".casillas]]
 id = "T220DID00:02809"
+continuidad_id = "t220did00-02809"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md (sha256 a8f398dd42db) record T220DID00 campo at byte position 02809 continues as corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx.extracted.md (sha256 69c3a234e96e) record T220DID00 campo at byte position 02809."
 number = "02809"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]
@@ -343,6 +358,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @541+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: A ingresar
 [[revisions."2025".casillas]]
 id = "T220DID00:02812"
+continuidad_id = "t220did00-02812"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md (sha256 a8f398dd42db) record T220DID00 campo at byte position 02812 continues as corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx.extracted.md (sha256 69c3a234e96e) record T220DID00 campo at byte position 02812."
 number = "02812"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]

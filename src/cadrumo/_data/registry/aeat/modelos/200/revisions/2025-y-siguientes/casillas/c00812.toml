@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00812"
+continuidad_id = "is-conversion-aid-art130-importe"
+continuidad_origin = "seeded"
 number = "00812"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"

@@ -12,8 +12,6 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
-import os
-import shutil
 import subprocess
 from dataclasses import dataclass
 from functools import cache
@@ -54,6 +52,8 @@ from cadrumo.application.operator_surface.manifest import CommandSchemaRef
 from cadrumo.core.json_contract import OutputSchema, ResolvedActionReference
 from cadrumo.core.operator_action_enums import ActionArgumentStatus
 
+from ._cli_executable import installed_cli_executable
+
 
 class _WireOutputSchema(OutputSchema):
     """A strict envelope result carrier backed by a graph-projected schema."""
@@ -77,10 +77,7 @@ def _wire_schema_type(command: str, schema: dict[str, Any]) -> type[OutputSchema
 
 
 def _cli_executable() -> str:
-    executable = os.environ.get("CADRUMO_CLI_EXECUTABLE") or shutil.which("aeat")
-    if not executable:
-        raise RuntimeError("the installed aeat executable is required for the command-surface port")
-    return executable
+    return installed_cli_executable(purpose="the command-surface port")
 
 
 def _load_wire_manifest() -> dict[str, Any]:

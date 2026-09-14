@@ -1171,6 +1171,7 @@ def filed_pull_all_cmd(
     run = asyncio.run(
         pull_filed_history(
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            browser_session_factory=composition.browser_session_factory,
             operator_scope_ports=operator_scope_ports(ctx),
             filed_data_port=composition.filed_data_port,
             iva_remote_state_port=composition.iva_remote_state_port,

@@ -53,7 +53,7 @@ from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -749,6 +749,7 @@ def _evaluate_clean_state(
         verification_repository=verification_repository
         if verification_repository is not None
         else VerificationReportCatalogueRepository(),
+        justificante_repository=JustificanteRepository(),
         taxpayer_tax_id=taxpayer_tax_id,
         expected_member_sets=expected_member_sets,
         activity_start_date=activity_start_date,

@@ -984,7 +984,25 @@ corpus_path = "corpus/aeat_official/instructions/modelo_222/files/modelo-222-ins
 sha256 = "55c90330904a9fcdbef770a5917faed7514d4c9cf9091de29415f003131461b3"
 bytes = 106810
 retrieved_at = 2026-09-11
-applies_from = 2025-01-01
+# applies_from corrected from 2025-01-01 to 2018-01-01. The bundled page is a
+# SINGLE document carrying instructions for four eras, and its own index says
+# so: "Instrucciones para periodos impositivos iniciados en 2023 y 2024",
+# "Instrucciones para periodos impositivos 2019 a 2022", "Instrucciones para
+# periodos impositivos iniciados en 2018", and "Modelo 222. Instrucciones para
+# 2025 y siguientes". The old date admitted only the last of the four, which
+# left revisions 222/2023 and 222/2024 with no guidance source at all even
+# though this document instructs their exact periods.
+#
+# This is a stronger claim than the aeat-modelo-190-procedure correction and
+# does not rest on it: 190's marker scopes a consultation SERVICE and the
+# document window is inferred from it, whereas this page states which periods
+# its own instructions cover.
+#
+# NOT modelled as per-era sources the way modelo 202 is
+# (aeat-modelo-202-instructions-2018-2022 / -2023-2024): those are separate
+# corpus FILES, one per era. Modelo 222 publishes one file containing every
+# era, so one source with the full window is what the corpus actually holds.
+applies_from = 2018-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-sociedades/modelo-222-is-regimen-consolidacion-fraccionado_/instrucciones.html"
 review_status = "pending_review"
 

@@ -45,8 +45,8 @@ class SensitivityClass(StrEnum):
         FINANCIAL: Bank transaction rows, invoice records, attachment
             blobs, usage ratios, draft and submission payloads,
             amendment records. Treatment: ciphertext at rest by
-            default; redaction rules govern log echo; retention aligns
-            to the fiscal year plus statute of limitations.
+            default; redaction rules govern log echo; retention is
+            consumer-owned and separately governed.
         AUDIT: Submission audit log, run-trace records, divergence
             records, workflow-run records. Treatment: redaction at
             write time (NIF hashed, URL host-only, token fingerprinted)
@@ -104,15 +104,9 @@ class RetentionPolicy(BaseModel):
     some caller already honours.
 
     Wiring ``max_age`` up is not a matter of finding its missing reader.
-    It is declared at five fiscal years for IDENTITY, FINANCIAL and
-    AUDIT, and enforcing that as the read-time refusal this docstring
-    once claimed would make a taxpayer's own filed records unreadable
-    on their fifth birthday -- while ``domain.retention`` independently
-    BLOCKS erasing those same records for four years after filing,
-    because the law requires them kept. The two rules point opposite
-    ways, so an implementer has to reconcile them (against a decision
-    about what the app owes a taxpayer holding old records) rather than
-    simply connect this field to a caller.
+    The field is currently an unused declaration and must not be treated
+    as a statutory retention rule. Any operational retention boundary is
+    owned by the consumer that enforces it.
 
     The retention that does ship -- LLM usage and run telemetry pruning,
     external session-file pruning -- runs on its own consumer-owned bounds and
@@ -145,11 +139,10 @@ class RedactionStrategy(StrEnum):
         SHA256_PREFIX: Replace the matched value with the first eight
             hex characters of its SHA-256 digest.
         SHA256_PREFIX_IF_IDENTITY: As ``SHA256_PREFIX``, but only when the
-            matched span parses as a real Spanish tax identity document;
-            a match that fails its check character is left verbatim. For
-            a shape whose leading character class is wide enough to
-            collide with ordinary document references, the check
-            character is what separates an identity from a lookalike.
+            matched span has the lexical shape of a Spanish tax identity;
+            filing-grade leader and checksum validation remains an explicit
+            authority operation at the owning boundary. This keeps the core
+            redaction primitive independent of the runtime registry.
         SHA256_PREFIX_IF_IBAN: As ``SHA256_PREFIX``, but only when the
             matched span passes the ISO 13616 mod-97 check. An IBAN shape
             is a long alphanumeric run that collides freely with hashes,
@@ -248,9 +241,6 @@ class ClassificationPolicy(BaseModel):
     redaction_rules: tuple[str, ...] = Field(default=())
 
 
-_FISCAL_YEAR_RETENTION = timedelta(days=365 * 5)
-"""Five fiscal years — Spanish autónomo statute-of-limitations envelope."""
-
 _SHORT_SESSION_RETENTION = timedelta(hours=24)
 """Default upper bound on raw bearer-state retention before invalidation."""
 
@@ -289,19 +279,19 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
         SensitivityClass.IDENTITY: ClassificationPolicy(
             sensitivity=SensitivityClass.IDENTITY,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
-            retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
+            retention=RetentionPolicy(),
             redaction_rules=("nif-hash", "nif-separated-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
         ),
         SensitivityClass.FINANCIAL: ClassificationPolicy(
             sensitivity=SensitivityClass.FINANCIAL,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
-            retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
+            retention=RetentionPolicy(),
             redaction_rules=("nif-hash", "nif-separated-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
         ),
         SensitivityClass.AUDIT: ClassificationPolicy(
             sensitivity=SensitivityClass.AUDIT,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
-            retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
+            retention=RetentionPolicy(),
             redaction_rules=_AUDIT_REDACTION_RULES,
         ),
         SensitivityClass.CACHE: ClassificationPolicy(

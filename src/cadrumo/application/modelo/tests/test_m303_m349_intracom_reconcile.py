@@ -3,13 +3,14 @@
 The cross-validator reads the persisted totals of both declarations for the same
 bucket and period and surfaces a non-blocking WARNING advisory when the Modelo
 303 intra-community total (box 10 acquisitions + box 59 supplies) diverges from
-the Modelo 349 resumen total (``decl.importe-operaciones``) beyond a de-minimis
-euro tolerance. These tests build both sides with the real secure backend and the
-registry-grounded observation fixtures, then assert the advisory fires on a
-genuine divergence and stays silent when the totals reconcile. The expected
-fire/silent outcomes derive from the reconcile contract (which boxes, which
-tolerance), not from re-running any registry formula, so they are not
-tautological calculation assertions.
+ the Modelo 349 resumen total (``decl.importe-operaciones``) beyond a de-minimis
+euro tolerance. These tests build both sides through local implementations of
+the application-facing catalogue ports and the registry-grounded observation
+fixtures, then assert the advisory fires on a genuine divergence and stays
+silent when the totals reconcile. Encrypted catalogue round-trips belong to
+the persistence adapter tests. The expected fire/silent outcomes derive from
+the reconcile contract (which boxes, which tolerance), not from re-running any
+registry formula, so they are not tautological calculation assertions.
 """
 
 from __future__ import annotations
@@ -20,12 +21,6 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests.profile_backend_fixtures import isolated_backend
-
-__all__ = ["isolated_backend"]
-
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -33,29 +28,69 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ...workflow.persistence import workflow_state_repository
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROFILE_TAX_ID = "00000000T"
+_BUCKET_ID = "00000000-0000-4000-8000-000000000349"
 _CLOCK = datetime(2025, 4, 15, tzinfo=UTC)
 _M303_ADQUISICIONES: CasillaId = validated_casilla_id("10", surface="test")
 _M303_ENTREGAS: CasillaId = validated_casilla_id("59", surface="test")
 _M349_IMPORTE_OPERACIONES: CasillaId = validated_casilla_id("decl.importe-operaciones", surface="test")
 
 
-def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
+class _InMemoryWorkUnitRepository:
+    """Application-test fake for the work-unit catalogue port."""
+
+    def __init__(self) -> None:
+        self._catalogue = WorkUnitCatalogue()
+
+    @property
+    def bucket_id(self) -> str | None:
+        return _BUCKET_ID
+
+    def load(self) -> WorkUnitCatalogue:
+        return self._catalogue
+
+    def save(self, catalogue: WorkUnitCatalogue) -> None:
+        self._catalogue = catalogue
+
+
+class _InMemoryCalculationRevisionRepository:
+    """Application-test fake for the calculation-revision catalogue port."""
+
+    def __init__(self) -> None:
+        self._catalogue = CalculationRevisionCatalogue()
+
+    def load(self) -> CalculationRevisionCatalogue:
+        return self._catalogue
+
+    def save(self, catalogue: CalculationRevisionCatalogue) -> None:
+        self._catalogue = catalogue
+
+
+@pytest.fixture
+def repositories() -> tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository]:
+    return _InMemoryWorkUnitRepository(), _InMemoryCalculationRevisionRepository()
+
+
+def _seed_work_unit(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    repository: _InMemoryWorkUnitRepository,
+) -> WorkUnit:
+    bucket_id = repository.bucket_id
     assert bucket_id is not None
     typed_period = Period.from_year_and_code(filing_year, period)
     revision_id = (
@@ -79,8 +114,7 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
+    repository.save(upsert_work_unit(repository.load(), work_unit))
     return work_unit
 
 
@@ -122,10 +156,13 @@ def _build_revision(work_unit: WorkUnit, casilla_values: dict[CasillaId, Decimal
     )
 
 
-def _persist_revision(work_unit: WorkUnit, casilla_values: dict[CasillaId, Decimal]) -> CalculationRevision:
+def _persist_revision(
+    work_unit: WorkUnit,
+    casilla_values: dict[CasillaId, Decimal],
+    repository: _InMemoryCalculationRevisionRepository,
+) -> CalculationRevision:
     revision = _build_revision(work_unit, casilla_values)
-    repo = CalculationRevisionCatalogueRepository()
-    repo.save(upsert_calculation_revision(repo.load(), revision))
+    repository.save(upsert_calculation_revision(repository.load(), revision))
     return revision
 
 
@@ -137,22 +174,36 @@ def _m349_values(*, importe: Decimal) -> dict[CasillaId, Decimal]:
     return {_M349_IMPORTE_OPERACIONES: importe}
 
 
-def _reconcile(work_unit: WorkUnit, target: CalculationRevision):
+def _reconcile(
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    *,
+    work_unit_repository: _InMemoryWorkUnitRepository,
+    calculation_repository: _InMemoryCalculationRevisionRepository,
+):
     return m303_m349_intracom_reconcile_findings(
         work_unit=work_unit,
         target=target,
-        work_unit_repository=WorkUnitCatalogueRepository(),
-        calculation_repository=CalculationRevisionCatalogueRepository(),
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
     )
 
 
-def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen() -> None:
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T")
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T")
+def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+) -> None:
+    work_unit_repository, calculation_repository = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
-    _persist_revision(m349, _m349_values(importe=Decimal("8000")))
+    _persist_revision(m349, _m349_values(importe=Decimal("8000")), calculation_repository)
 
-    findings = _reconcile(m303, target)
+    findings = _reconcile(
+        m303,
+        target,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
 
     assert len(findings) == 1
     finding = findings[0]
@@ -166,22 +217,45 @@ def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen() -> None:
     assert finding.legal_refs  # grounded, non-empty
 
 
-def test_advisory_silent_when_totals_reconcile() -> None:
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T")
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T")
+def test_advisory_silent_when_totals_reconcile(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+) -> None:
+    work_unit_repository, calculation_repository = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
-    _persist_revision(m349, _m349_values(importe=Decimal("10000")))
+    _persist_revision(m349, _m349_values(importe=Decimal("10000")), calculation_repository)
 
-    assert _reconcile(m303, target) == []
+    assert (
+        _reconcile(
+            m303,
+            target,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+        )
+        == []
+    )
 
 
-def test_advisory_fires_when_verifying_the_m349_side() -> None:
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T")
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T")
-    _persist_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
+def test_advisory_fires_when_verifying_the_m349_side(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+) -> None:
+    work_unit_repository, calculation_repository = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
+    _persist_revision(
+        m303,
+        _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")),
+        calculation_repository,
+    )
     target = _build_revision(m349, _m349_values(importe=Decimal("8000")))
 
-    findings = _reconcile(m349, target)
+    findings = _reconcile(
+        m349,
+        target,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.RECONCILIATION_MISMATCH
@@ -189,36 +263,80 @@ def test_advisory_fires_when_verifying_the_m349_side() -> None:
     assert findings[0].message_facts["m349_total"] == Decimal("8000")
 
 
-def test_no_finding_when_sibling_declaration_absent() -> None:
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T")
+def test_no_finding_when_sibling_declaration_absent(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+) -> None:
+    work_unit_repository, calculation_repository = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
 
-    assert _reconcile(m303, target) == []
+    assert (
+        _reconcile(
+            m303,
+            target,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+        )
+        == []
+    )
 
 
-def test_within_de_minimis_gap_is_silent() -> None:
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T")
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T")
+def test_within_de_minimis_gap_is_silent(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+) -> None:
+    work_unit_repository, calculation_repository = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
     # gap of 0.50 EUR <= 1.00 de-minimis tolerance -> no advisory.
-    _persist_revision(m349, _m349_values(importe=Decimal("9999.50")))
+    _persist_revision(m349, _m349_values(importe=Decimal("9999.50")), calculation_repository)
 
-    assert _reconcile(m303, target) == []
+    assert (
+        _reconcile(
+            m303,
+            target,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+        )
+        == []
+    )
 
 
-def test_no_finding_when_nothing_intracommunity_declared() -> None:
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T")
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T")
+def test_no_finding_when_nothing_intracommunity_declared(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+) -> None:
+    work_unit_repository, calculation_repository = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")))
-    _persist_revision(m349, _m349_values(importe=Decimal("0")))
+    _persist_revision(m349, _m349_values(importe=Decimal("0")), calculation_repository)
 
-    assert _reconcile(m303, target) == []
+    assert (
+        _reconcile(
+            m303,
+            target,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+        )
+        == []
+    )
 
 
-def test_reconcile_skipped_for_unrelated_modelo() -> None:
-    m130 = _seed_work_unit(modelo="130", filing_year=2024, period="1T")
+def test_reconcile_skipped_for_unrelated_modelo(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+) -> None:
+    work_unit_repository, calculation_repository = repositories
+    m130 = _seed_work_unit(modelo="130", filing_year=2024, period="1T", repository=work_unit_repository)
     # The reconcile short-circuits before reading any casilla for a non-303/349
     # modelo, so an empty-values draft (no grounded observations required) suffices.
     target = _build_revision(m130, {})
 
-    assert _reconcile(m130, target) == []
+    assert (
+        _reconcile(
+            m130,
+            target,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+        )
+        == []
+    )

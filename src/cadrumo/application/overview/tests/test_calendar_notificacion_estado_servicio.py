@@ -12,12 +12,11 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 import pytest
-from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
 from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ....core.post_filing_event import ACTIONABLE_POST_FILING_EVENT_KINDS, PostFilingEventKind
 from ...live.notifications import PersistedNotificationsSnapshot
+from ...live.notification_ports import RemoteNotification
 from ..calendar import actionable_post_filing_events, calendar_events_from_notification_snapshots
 from ..calendar_models import OverviewCalendarRange
 from .calendar_test_support import BUCKET_ID, SOURCE_URL
@@ -41,7 +40,7 @@ def _snapshot(*, leida: bool | None, fecha_notificacion: date | None = PUESTA_A_
         fecha_notificacion=fecha_notificacion,
         modo_notificacion="DEH" if fecha_notificacion is not None else None,
         leida=leida,
-        source_url=AnyHttpUrl(SOURCE_URL),
+        source_url=SOURCE_URL,
     )
     return PersistedNotificationsSnapshot(
         snapshot_id="b" * 64,

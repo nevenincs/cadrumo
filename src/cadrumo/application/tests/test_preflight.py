@@ -17,7 +17,6 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import override_settings
 from ..auth.operator_probe_ports import ClaveIdentityFailure
@@ -39,10 +38,11 @@ from ..preflight import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Measured from the storage adapter's real on-disk grammar, the same value the
-#: composition root supplies in production. Reaching for it here keeps these
-#: probes exercising the true margin rather than a hand-picked sample.
-_SUFFIX_LENGTH = windows_worst_case_object_path_suffix_length()
+#: The application probe accepts a caller-supplied positive suffix budget. The
+#: outbound adapter derives its real on-disk budget at its own seam; this
+#: inward suite uses the smallest valid contract value to exercise application
+#: grading without importing storage layout knowledge.
+_SUFFIX_LENGTH = 1
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
 

@@ -72,17 +72,20 @@ from __future__ import annotations
 from datetime import date
 from decimal import ROUND_CEILING, Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Self
 
 from pydantic import (
     BaseModel,
     Field,
+    GetCoreSchemaHandler,
     StringConstraints,
     ValidationError,
     field_validator,
     model_validator,
 )
+from pydantic_core import CoreSchema, core_schema
 
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents
 from ...core.percentage import Percentage
@@ -152,36 +155,89 @@ def _default_registry_prorrata_regime(*, effective_date: date | None = None) -> 
         raise ProrrataInputError(str(exc)) from exc
 
 
-class ProrrataKind(StrEnum):
-    """Lifecycle stage of the prorrata percentage.
+class _ProrrataRegistryToken(str):
+    """Opaque token base whose membership is projected by the facts registry."""
 
-    * ``PROVISIONAL`` — applied during the tax year on Modelo 303 quarters
-      or months, normally derived from the prior year's definitiva.
-    * ``DEFINITIVA`` — computed at year-end with the year's actual
-      operations; drives the regularisation entry on Q4 303 and Modelo
-      390.
-    """
+    __slots__ = ()
 
-    PROVISIONAL = "provisional"
-    DEFINITIVA = "definitiva"
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError(f"{cls.__name__} tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{cls.__name__} token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        """Materialise a token only from a typed registry projection."""
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        """Refuse unprojected strings at Pydantic/domain boundaries."""
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError(f"{cls.__name__} must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical registry token for diagnostics."""
+        return str(self)
 
 
-class InputClassification(StrEnum):
-    """How a specific input IVA amount maps to deductible activity under prorrata especial.
+class ProrrataKind(_ProrrataRegistryToken):
+    """Opaque dated token for a provisional or definitive prorrata result."""
 
-    Governed by art. 106.Uno LIVA.
 
-    * ``EXCLUSIVELY_DEDUCTIBLE`` — used only in operations that grant the
-      right to deduct; 100% deductible.
-    * ``EXCLUSIVELY_NON_DEDUCTIBLE`` — used only in operations that do
-      NOT grant the right; 0% deductible.
-    * ``COMMON`` — used in both kinds of operations; the general prorrata
-      percentage applies.
-    """
+class InputClassification(_ProrrataRegistryToken):
+    """Opaque dated token for one LIVA art. 106 input-use classification."""
 
-    EXCLUSIVELY_DEDUCTIBLE = "exclusively_deductible"
-    EXCLUSIVELY_NON_DEDUCTIBLE = "exclusively_non_deductible"
-    COMMON = "common"
+
+def _require_registry_prorrata_kind(
+    value: object,
+    *,
+    effective_date: date | None = None,
+) -> ProrrataKind:
+    """Resolve one lifecycle token through the dated 0116 facts authority."""
+    from ..calculations.registry.errors import RegistryValidationError
+    from ..calculations.registry.prorrata_vocabulary import require_prorrata_kind
+
+    try:
+        return require_prorrata_kind(value, effective_date=effective_date)
+    except RegistryValidationError as exc:
+        raise ProrrataInputError(str(exc)) from exc
+
+
+def _require_registry_input_classification(
+    value: object,
+    *,
+    effective_date: date | None = None,
+) -> InputClassification:
+    """Resolve one art. 106 input token through the dated 0116 authority."""
+    from ..calculations.registry.errors import RegistryValidationError
+    from ..calculations.registry.prorrata_vocabulary import require_input_classification
+
+    try:
+        return require_input_classification(value, effective_date=effective_date)
+    except RegistryValidationError as exc:
+        raise ProrrataInputError(str(exc)) from exc
 
 
 class ProrrataInputs(_ProrrataStrictFrozen):
@@ -240,12 +296,20 @@ class ProrrataResult(_ProrrataStrictFrozen):
 
     @model_validator(mode="after")
     def _validate_period_matches_kind(self) -> ProrrataResult:
-        # PROVISIONAL applies during the year, so a quarterly/monthly
-        # period token is required. DEFINITIVA is annual.
-        if self.kind is ProrrataKind.PROVISIONAL and self.period is None:
-            raise ProrrataInputError("provisional prorrata result must carry a period (Qn or Mnn)")
-        if self.kind is ProrrataKind.DEFINITIVA and self.period not in (None, "annual"):
-            raise ProrrataInputError("definitiva prorrata result period must be 'annual' or omitted")
+        # The selected facts variant owns whether a lifecycle kind requires a
+        # sub-period or is annual-only.  The period grammar itself remains a
+        # structural contract of this result model.
+        from ..calculations.registry.errors import RegistryValidationError
+        from ..calculations.registry.prorrata_vocabulary import resolve_prorrata_kind_definition
+
+        try:
+            definition = resolve_prorrata_kind_definition(self.kind, effective_date=date(self.year, 1, 1))
+        except RegistryValidationError as exc:
+            raise ProrrataInputError(str(exc)) from exc
+        if definition.period_required and self.period is None:
+            raise ProrrataInputError("registry-declared prorrata kind requires a period (Qn or Mnn)")
+        if definition.annual_only and self.period not in (None, "annual"):
+            raise ProrrataInputError("registry-declared prorrata kind requires an annual or omitted period")
         return self
 
 
@@ -356,8 +420,8 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
         raise ProrrataInputError(f"prorrata_reference year must be an integer: {parts[1]!r}") from exc
     _validate_year(year)
     try:
-        kind = ProrrataKind(parts[2])
-    except ValueError as exc:
+        kind = _require_registry_prorrata_kind(parts[2], effective_date=date(year, 1, 1))
+    except (ProrrataInputError, ValueError) as exc:
         raise ProrrataInputError(f"unknown prorrata_reference kind: {parts[2]!r}") from exc
     try:
         regime = _require_registry_prorrata_regime(parts[3], effective_date=date(year, 1, 1))
@@ -420,6 +484,7 @@ def compute_prorrata_general(
         A :class:`ProrrataResult` with the computed percentage and inputs.
     """
     _validate_year(year)
+    kind = _require_registry_prorrata_kind(kind, effective_date=date(year, 1, 1))
     percentage = _compute_percentage_general(inputs)
     try:
         return ProrrataResult(
@@ -441,22 +506,23 @@ def deductible_percentage_for(
 ) -> Decimal:
     """Map an input classification to its deductible percentage under LIVA art. 106.Uno.
 
-    The single canonical mapping of the art. 106.Uno reglas:
-    ``EXCLUSIVELY_DEDUCTIBLE`` → 100 (regla 1.ª, deducted in full),
-    ``EXCLUSIVELY_NON_DEDUCTIBLE`` → 0 (regla 2.ª, no deduction),
-    ``COMMON`` → ``general_percentage`` (regla 3.ª, deducted at the general
-    prorrata percentage). Consumed both by :func:`deductible_percentage_for`
-    (per-input deduction) and by the ledger IVA aggregation's regime-aware
-    especial apportionment, so the reglas live in exactly one place.
+    The selected 0116 input-classification definition supplies either a fixed
+    deductible percentage or the general percentage source.  Both the
+    per-input deduction and the ledger's especial apportionment therefore
+    consume one dated registry projection.
     """
-    if classification is InputClassification.EXCLUSIVELY_DEDUCTIBLE:
-        return Decimal("100")
-    if classification is InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE:
-        return Decimal("0")
-    # COMMON: apply the general prorrata percentage (art. 106.Uno.3.ª,
-    # which routes to "el porcentaje a que se refiere el artículo 104,
-    # apartados Dos y siguientes").
-    return general_percentage
+    from ..calculations.registry.errors import RegistryValidationError
+    from ..calculations.registry.prorrata_vocabulary import resolve_input_classification_definition
+
+    try:
+        definition = resolve_input_classification_definition(classification)
+    except RegistryValidationError as exc:
+        raise ProrrataInputError(str(exc)) from exc
+    if definition.uses_general_percentage:
+        return general_percentage
+    if definition.deductible_percentage is None:
+        raise ProrrataInputError("registry input classification has no deductible percentage")
+    return definition.deductible_percentage
 
 
 def especial_mandatory_rule(
@@ -622,10 +688,17 @@ def compute_prorrata_definitiva_anual(
     Returns:
         The definitive :class:`ProrrataResult` for the year.
     """
+    from ..calculations.registry.errors import RegistryValidationError
+    from ..calculations.registry.prorrata_vocabulary import definitive_prorrata_kind
+
+    try:
+        definitive_kind = definitive_prorrata_kind(effective_date=date(year, 1, 1))
+    except RegistryValidationError as exc:
+        raise ProrrataInputError(str(exc)) from exc
     return compute_prorrata_general(
         inputs,
         year=year,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=definitive_kind,
         period="annual",
         sector_id=sector_id,
     )

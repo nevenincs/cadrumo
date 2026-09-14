@@ -30,6 +30,7 @@ from ._app_live_borrador_payloads import (
     Borrador100ViewResult,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
+from .state_projection_support import borrador_100_snapshot_repository_factory
 
 
 class _BorradorRow(TypedDict):
@@ -106,7 +107,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
     if coverage is None:
         raise typer.BadParameter(tr("cli.app.live.borrador.import_coverage_absent"))
 
-    record = Borrador100SnapshotService(bucket_id=bucket_id).capture(
+    record = _borrador_service(ctx, bucket_id).capture(
         filing_year=filing_year,
         period=resolved_period,
         captured_at=datetime.now(UTC),
@@ -140,7 +141,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
 def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotStateFilter.ACTIVE) -> None:
     """List persisted Modelo 100 borrador snapshots for the active bucket."""
     bucket_id = active_bucket_id_or_refuse()
-    rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(state=state.as_lifecycle_state())
+    rows = _borrador_service(ctx, bucket_id).list_snapshots(state=state.as_lifecycle_state())
     result = Borrador100ListResult(
         bucket_id=bucket_id,
         count=len(rows),
@@ -158,7 +159,7 @@ def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotS
 def borrador_100_show(ctx: typer.Context, snapshot_id: str) -> None:
     """Show one Modelo 100 borrador snapshot with its binding values."""
     bucket_id = active_bucket_id_or_refuse()
-    record = Borrador100SnapshotService(bucket_id=bucket_id).show(snapshot_id)
+    record = _borrador_service(ctx, bucket_id).show(snapshot_id)
     binding_values = {
         key: format(value, "f") if isinstance(value, Decimal) else str(value)
         for key, value in record.binding_values.items()
@@ -184,7 +185,7 @@ def borrador_100_show(ctx: typer.Context, snapshot_id: str) -> None:
 def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
     """Show the most recent active Modelo 100 borrador snapshot for a year."""
     bucket_id = active_bucket_id_or_refuse()
-    record = Borrador100SnapshotService(bucket_id=bucket_id).latest_for_year(filing_year=filing_year)
+    record = _borrador_service(ctx, bucket_id).latest_for_year(filing_year=filing_year)
     if record is None:
         result = Borrador100LatestResult(bucket_id=bucket_id, filing_year=filing_year, snapshot_id=None)
         emit_envelope(
@@ -216,6 +217,14 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
             f"captured_at\t{record.captured_at.isoformat()}",
             f"binding_count\t{len(record.binding_values)}",
         ],
+    )
+
+
+def _borrador_service(ctx: typer.Context, bucket_id: str) -> Borrador100SnapshotService:
+    """Bind the application service to the repository composed by the CLI root."""
+    return Borrador100SnapshotService(
+        bucket_id=bucket_id,
+        repository=borrador_100_snapshot_repository_factory(ctx)(bucket_id=bucket_id),
     )
 
 

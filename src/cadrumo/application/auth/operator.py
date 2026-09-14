@@ -109,6 +109,7 @@ from .operator_scope import (
     auth_operator_settings_scope as _auth_operator_settings_scope,
 )
 from .operator_scope import resolve_auth_operation_scope
+from .protocols import BrowserSessionFactoryPort
 from .sessions import (
     ensure_authenticated_aeat_session,
 )
@@ -586,6 +587,7 @@ async def login_operator_auth(
     provider: str | None = None,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
     fresh: bool = False,
@@ -613,6 +615,7 @@ async def login_operator_auth(
             return await login_operator_auth(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
+                browser_session_factory=browser_session_factory,
                 operator_probe_ports=operator_probe_ports,
                 operator_scope_ports=operator_scope_ports,
                 fresh=fresh,
@@ -685,6 +688,7 @@ async def login_operator_auth(
             result = await ensure_authenticated_aeat_session(
                 resolved_settings,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
+                browser_session_factory=browser_session_factory,
                 kind=provider_kind,
                 certificate_credentials=certificate_credentials,
                 fresh=fresh,

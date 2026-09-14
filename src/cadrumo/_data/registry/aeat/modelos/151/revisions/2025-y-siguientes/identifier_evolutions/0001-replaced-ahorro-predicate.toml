@@ -1,0 +1,23 @@
+# The 2015-2022 edition's ahorro soundness gate named the liquidation boxes as
+# that era's design printed them, on page 08: p08.base-liquidable-del-ahorro-18
+# and p08.cuota-correspondiente-e-general-del-ahorro-20. This edition moves the
+# liquidation onto the impatriado boxes and reprints the detail page as p10, so
+# the inherited predicate travelled forward naming two casillas no edition from
+# 2025 declares -- an inherited member carrying the identifiers it states, not
+# the ones its new edition has.
+#
+# It is REPLACED rather than retired: this edition already states the same gate
+# over its own boxes as 'implies-nonzero:base-ahorro-implica-cuota-ahorro', so
+# the soundness check is not being withdrawn, only re-identified. Re-pointing
+# the old predicate at the p10 boxes would have been the wrong repair -- p10 is
+# the record-design detail page, it is absent from this edition's completeness
+# manifest, and no formula derives p10 cuota from p10 base, so the implication
+# would assert a derivation this edition does not make.
+[[revisions."2025-y-siguientes".identifier_evolutions]]
+kind = "replaced"
+family = "verification_predicates"
+identifier = "implies-nonzero:base-liquidable-ahorro-implica-cuota-del-ahorro"
+replaced_by = "implies-nonzero:base-ahorro-implica-cuota-ahorro"
+to_revision = "2025-y-siguientes"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]

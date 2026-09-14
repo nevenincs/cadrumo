@@ -36,10 +36,10 @@ from ..categories.proportionality import (
     CategoryCitation,
     ProportionalityKind,
     ProportionalityRule,
-    StatutoryCapPeriod,
     StatutoryCapVariant,
 )
 from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
+from ..categories.spending_category_catalogue import require_spending_category, spending_category_tokens
 from ..contribuyente.ccaa import CCAA
 from ._first_slice_routing import resolve_first_slice_expense_routing
 from .errors import RentaValidationError
@@ -264,6 +264,10 @@ def _resolve_first_slice_expense_routing(
     try:
         routing = resolve_first_slice_expense_routing(
             category_type=SpendingCategory,
+            category_tokens=lambda selected_authority, coordinate: spending_category_tokens(
+                effective_date=coordinate,
+                authority=selected_authority,
+            ),
             casilla_factory=_validated_first_slice_casilla,
             model_code=Modelo("100").value,
             fact_id="modelo-100-first-slice-expense-routing-mapping",
@@ -346,7 +350,7 @@ def normalize_spending_category(value: SpendingCategory | str) -> SpendingCatego
     """
     if isinstance(value, SpendingCategory):
         return value
-    return SpendingCategory(value)
+    return require_spending_category(value)
 
 
 def resolve_region_category_profiles(
@@ -537,17 +541,23 @@ _RentaDeductibilityEvaluator = Callable[
     [RentaDeductibleExpenseFact, ProportionalityRule, RentaDeductibilityContext, Decimal],
     _RentaDeductibilityDecision,
 ]
-_RENTA_DEDUCTIBILITY_EVALUATORS: Mapping[ProportionalityKind, _RentaDeductibilityEvaluator] = MappingProxyType(
-    {
-        ProportionalityKind.FULL_DEDUCTIBLE: _evaluate_full_deductible_rule,
-        ProportionalityKind.FIXED_PERCENTAGE: _evaluate_fixed_percentage_rule,
-        ProportionalityKind.USAGE_RATIO_HOME_AREA: _evaluate_usage_ratio_rule,
-        ProportionalityKind.USAGE_RATIO_PERSONAL: _evaluate_usage_ratio_rule,
-        ProportionalityKind.STATUTORY_CAP: _evaluate_statutory_cap_rule,
-        ProportionalityKind.NON_DEDUCTIBLE: _evaluate_non_deductible_rule,
-        ProportionalityKind.REQUIRES_EXCLUSIVE_USE: _evaluate_exclusive_use_rule,
-    },
-)
+def _evaluator_for_proportionality_kind(
+    kind: ProportionalityKind,
+) -> _RentaDeductibilityEvaluator | None:
+    """Route a projected kind through its registry-declared evaluator role."""
+    if kind.is_full_deductible:
+        return _evaluate_full_deductible_rule
+    if kind.requires_fixed_pct:
+        return _evaluate_fixed_percentage_rule
+    if kind.is_usage_ratio:
+        return _evaluate_usage_ratio_rule
+    if kind.is_statutory_cap:
+        return _evaluate_statutory_cap_rule
+    if kind.is_non_deductible:
+        return _evaluate_non_deductible_rule
+    if kind.requires_exclusive_use:
+        return _evaluate_exclusive_use_rule
+    return None
 
 
 def evaluate_renta_deductibility(
@@ -562,13 +572,13 @@ def evaluate_renta_deductibility(
     ``context.iva_deduction_ratio`` states it, so an exempt or prorrata-rationed
     activity does not lose that real cost.
     """
-    if profile.category is not fact.category:
+    if profile.category != fact.category:
         raise RentaValidationError(
             f"profile category {profile.category.value!r} does not match fact category {fact.category.value!r}",
         )
     rule = profile.proportionality
     deductible_basis = _deductible_basis_amount(fact, context)
-    evaluator = _RENTA_DEDUCTIBILITY_EVALUATORS.get(rule.kind)
+    evaluator = _evaluator_for_proportionality_kind(rule.kind)
     if evaluator is None:  # pragma: no cover - closed enum exhaustiveness guard
         raise RentaValidationError(f"unsupported proportionality kind: {rule.kind.value}")
     decision = evaluator(fact, rule, context, deductible_basis)
@@ -625,7 +635,7 @@ def build_renta_deductible_expense_observation(
     """
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
         raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
-    if fact.category is not result.category:
+    if fact.category != result.category:
         raise RentaValidationError("fact and result categories must match")
     if not Period.from_year_and_code(tax_year, "0A").contains(fact.filing_date):
         raise RentaValidationError("fact filing date falls outside the requested tax year")
@@ -693,7 +703,7 @@ def _resolve_fixed_statutory_cap(
     amount = rule.statutory_cap_eur
     if amount is None:
         return None
-    if rule.statutory_cap_period is StatutoryCapPeriod.YEAR_PER_PERSON:
+    if rule.statutory_cap_period is not None and rule.statutory_cap_period.is_per_person:
         return amount * Decimal(context.statutory_cap_person_count)
     return amount
 

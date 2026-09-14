@@ -18,6 +18,8 @@ from datetime import date
 from typing import TYPE_CHECKING, Final
 
 from ...core.concepto_ingreso import ConceptoIngreso
+from ..calculations.registry.concepto_ingreso import resolve_concepto_ingreso_catalogue
+from ..calculations.registry.errors import RegistryError
 from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
 from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError
@@ -53,10 +55,16 @@ def _excluded_concepts(
         raise
     if not isinstance(resolved, ResolvedEntitySetFact):
         raise TransactionValidationError(f"income-concept fact {fact_id!r} did not resolve to an entity set")
+    catalogue = resolve_concepto_ingreso_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    )
     try:
-        return frozenset(ConceptoIngreso(token) for token in resolved.payload.entities)
-    except ValueError as exc:
-        raise TransactionValidationError(f"income-concept fact {fact_id!r} contains an unknown concept") from exc
+        return frozenset(catalogue.require(token) for token in resolved.payload.entities)
+    except RegistryError as exc:
+        raise TransactionValidationError(
+            f"income-concept fact {fact_id!r} contains an unknown concept",
+        ) from exc
 
 
 def counts_toward_volumen_de_ingresos(

@@ -51,11 +51,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
@@ -183,55 +181,50 @@ def _calculate_210_result(
     )
 
 
-def test_inmobiliaria_cadastral_recent_revision_computes_art_85_base(tmp_path: Path) -> None:
+def test_inmobiliaria_cadastral_recent_revision_computes_art_85_base() -> None:
     """M210 inmobiliaria uses the LIRPF Art. 85 1.1% cadastral-value imputation branch."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        values, _ = _calculate_210(
-            filing_year=_YEAR_N,
-            base=Decimal("0"),
-            tipo_renta="inmobiliaria",
-            country_code="",
-            extra_casilla_inputs={
-                _VALOR_CATASTRAL_CASILLA: Decimal("100000.00"),
-                _COEFICIENTE_IMPUTACION_CASILLA: Decimal("0.011"),
-                _DIAS_IMPUTACION_CASILLA: Decimal("365"),
-            },
-        )
+    values, _ = _calculate_210(
+        filing_year=_YEAR_N,
+        base=Decimal("0"),
+        tipo_renta="inmobiliaria",
+        country_code="",
+        extra_casilla_inputs={
+            _VALOR_CATASTRAL_CASILLA: Decimal("100000.00"),
+            _COEFICIENTE_IMPUTACION_CASILLA: Decimal("0.011"),
+            _DIAS_IMPUTACION_CASILLA: Decimal("365"),
+        },
+    )
 
     assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("1100.00")
     assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.24")
     assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("264.00")
 
 
-def test_inmobiliaria_without_cadastral_value_uses_half_of_greater_value(tmp_path: Path) -> None:
+def test_inmobiliaria_without_cadastral_value_uses_half_of_greater_value() -> None:
     """M210 inmobiliaria uses the Art. 85 no-cadastral 50% × 1.1% substitute base."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        values, _ = _calculate_210(
-            filing_year=_YEAR_N,
-            base=Decimal("0"),
-            tipo_renta="inmobiliaria",
-            country_code="",
-            extra_casilla_inputs={
-                _VALOR_CATASTRAL_CASILLA: Decimal("0"),
-                _DIAS_IMPUTACION_CASILLA: Decimal("365"),
-                _VALOR_ADQUISICION_CASILLA: Decimal("150000.00"),
-                _VALOR_COMPROBADO_ADMINISTRACION_CASILLA: Decimal("180000.00"),
-            },
-        )
+    values, _ = _calculate_210(
+        filing_year=_YEAR_N,
+        base=Decimal("0"),
+        tipo_renta="inmobiliaria",
+        country_code="",
+        extra_casilla_inputs={
+            _VALOR_CATASTRAL_CASILLA: Decimal("0"),
+            _DIAS_IMPUTACION_CASILLA: Decimal("365"),
+            _VALOR_ADQUISICION_CASILLA: Decimal("150000.00"),
+            _VALOR_COMPROBADO_ADMINISTRACION_CASILLA: Decimal("180000.00"),
+        },
+    )
 
     assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("990.00")
     assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.24")
     assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("237.60")
 
 
-def test_inmobiliaria_cadastral_branch_rejects_unregistered_coefficient(tmp_path: Path) -> None:
+def test_inmobiliaria_cadastral_branch_rejects_unregistered_coefficient() -> None:
     """The imputation coefficient must match a registry-authored Art. 85 rate."""
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path),
-        pytest.raises(
-            RegistryValidationError,
-            match="coefficient must be one of",
-        ),
+    with pytest.raises(
+        RegistryValidationError,
+        match="coefficient must be one of",
     ):
         _calculate_210(
             filing_year=_YEAR_N,
@@ -246,15 +239,14 @@ def test_inmobiliaria_cadastral_branch_rejects_unregistered_coefficient(tmp_path
         )
 
 
-def test_pension_first_band_computes_art_25_1_b_tariff(tmp_path: Path) -> None:
+def test_pension_first_band_computes_art_25_1_b_tariff() -> None:
     """M210 pension applies the TRLIRNR Art. 25.1.b 8% first bracket."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        result = _calculate_210_result(
-            filing_year=_YEAR_N,
-            base=Decimal("10000.00"),
-            tipo_renta="pension",
-            country_code="",
-        )
+    result = _calculate_210_result(
+        filing_year=_YEAR_N,
+        base=Decimal("10000.00"),
+        tipo_renta="pension",
+        country_code="",
+    )
 
     values = result.values
     assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("10000.00")
@@ -269,16 +261,15 @@ def test_pension_first_band_computes_art_25_1_b_tariff(tmp_path: Path) -> None:
     assert "trlirnr-rdleg-5-2004:art-25.1.b" in cuota_observation.legal_refs
 
 
-def test_ue_resident_deductible_expenses_reduce_art_24_6_base(tmp_path: Path) -> None:
+def test_ue_resident_deductible_expenses_reduce_art_24_6_base() -> None:
     """M210 Art. 24.6 expenses reduce the UE/EEE non-imputed taxable base."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        result = _calculate_210_result(
-            filing_year=_YEAR_N,
-            base=Decimal("1000.00"),
-            tipo_renta="ue_residente",
-            country_code="",
-            extra_casilla_inputs={_GASTOS_DEDUCIBLES_CASILLA: Decimal("250.00")},
-        )
+    result = _calculate_210_result(
+        filing_year=_YEAR_N,
+        base=Decimal("1000.00"),
+        tipo_renta="ue_residente",
+        country_code="",
+        extra_casilla_inputs={_GASTOS_DEDUCIBLES_CASILLA: Decimal("250.00")},
+    )
 
     values = result.values
     assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("750.00")
@@ -290,14 +281,11 @@ def test_ue_resident_deductible_expenses_reduce_art_24_6_base(tmp_path: Path) ->
     assert _GASTOS_DEDUCIBLES_CASILLA in base_observation.operand_casilla_refs
 
 
-def test_non_ue_resident_deductible_expenses_are_refused(tmp_path: Path) -> None:
+def test_non_ue_resident_deductible_expenses_are_refused() -> None:
     """M210 refuses nonzero gastos_deducibles outside the Art. 24.6 UE/EEE path."""
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path),
-        pytest.raises(
-            RegistryValidationError,
-            match="Art\\. 24\\.6",
-        ),
+    with pytest.raises(
+        RegistryValidationError,
+        match="Art\\. 24\\.6",
     ):
         _calculate_210(
             filing_year=_YEAR_N,
@@ -308,37 +296,35 @@ def test_non_ue_resident_deductible_expenses_are_refused(tmp_path: Path) -> None
         )
 
 
-def test_ar_pension_second_band_uses_domestic_tariff_allocation(tmp_path: Path) -> None:
+def test_ar_pension_second_band_uses_domestic_tariff_allocation() -> None:
     """AR/pension treaty allocation delegates the amount to the domestic pension tariff."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        values, _ = _calculate_210(
-            filing_year=_YEAR_N,
-            base=Decimal("15000.00"),
-            tipo_renta="pension",
-            country_code="AR",
-        )
+    values, _ = _calculate_210(
+        filing_year=_YEAR_N,
+        base=Decimal("15000.00"),
+        tipo_renta="pension",
+        country_code="AR",
+    )
 
     assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("15000.00")
     assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.124")
     assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("1860.00")
 
 
-def test_pension_top_band_carries_fixed_addition_and_marginal_slice(tmp_path: Path) -> None:
+def test_pension_top_band_carries_fixed_addition_and_marginal_slice() -> None:
     """The top pension band carries 2,970 fixed plus 40% above 18,700."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        values, _ = _calculate_210(
-            filing_year=_YEAR_N,
-            base=Decimal("20000.00"),
-            tipo_renta="pension",
-            country_code="",
-        )
+    values, _ = _calculate_210(
+        filing_year=_YEAR_N,
+        base=Decimal("20000.00"),
+        tipo_renta="pension",
+        country_code="",
+    )
 
     assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("20000.00")
     assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.1745")
     assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("3490.00")
 
 
-def test_year_n_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None:
+def test_year_n_gb_general_tipo_gravamen_is_24pct() -> None:
     """Year N: GB/general landlord resolves tipo_gravamen to 0.24 via Convenio override.
 
     The GB/general Convenio row (rate=0.24) is read from the registry
@@ -346,29 +332,27 @@ def test_year_n_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None:
     Convenio seed entry: 24% is both the Convenio rate for GB/general and the
     TRLIRNR Art 25.1.a baseline.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        values, _ = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
+    values, _ = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
 
     assert values[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
     assert values[_BASE_IMPONIBLE_CASILLA] == _BASE_YEAR_N
     assert values[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
 
 
-def test_year_n_plus_1_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None:
+def test_year_n_plus_1_gb_general_tipo_gravamen_is_24pct() -> None:
     """Year N+1: same GB landlord, same Convenio rate — treaty-rate determinism across years.
 
     The GB/general Convenio row is year-stable (no annual override change).
     The engine must resolve the same 0.24 for 2026 as for 2025.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        values, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
+    values, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
 
     assert values[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
     assert values[_BASE_IMPONIBLE_CASILLA] == _BASE_YEAR_N_PLUS_1
     assert values[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
 
 
-def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Path) -> None:
+def test_cuota_integra_differs_between_years_due_to_distinct_bases() -> None:
     """The cuota_integra is distinct between years because the bases differ.
 
     Anti-cross-year-bleed assertion: the cuota values from each year
@@ -376,9 +360,8 @@ def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Pat
     base bled into the other's calculation, the cuotas would match
     incorrectly or one would be wrong.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        values_n, _ = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
-        values_n1, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
+    values_n, _ = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
+    values_n1, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
 
     cuota_n = values_n[_CUOTA_INTEGRA_CASILLA]
     cuota_n1 = values_n1[_CUOTA_INTEGRA_CASILLA]
@@ -390,7 +373,7 @@ def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Pat
     assert cuota_n1 == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
 
 
-def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_210_irnr_continuity_enrolls_two_renta_years() -> None:
     """End-to-end enrollment: GB general-rate landlord across two renta years (2025, 2026).
 
     Drives the REAL M210 primary engine for both annual groupings (real
@@ -409,12 +392,11 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
     year-stable per RDLeg 5/2004 arts. 24-25).
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        # Year N: real primary-engine run.
-        values_n, _produced_n = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
+    # Year N: real primary-engine run.
+    values_n, _produced_n = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
 
-        # Year N+1: same engine, same treaty rate, distinct base.
-        values_n1, _produced_n1 = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
+    # Year N+1: same engine, same treaty rate, distinct base.
+    values_n1, _produced_n1 = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
 
     # Treaty-rate determinism: GB/general Convenio rate 0.24 in both years.
     assert values_n[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO

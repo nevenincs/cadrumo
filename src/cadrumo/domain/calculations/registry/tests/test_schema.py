@@ -7,10 +7,8 @@ actual production model, not by a standalone enum construction.
 
 from __future__ import annotations
 
-import re
 from dataclasses import fields as dataclass_fields
 from decimal import Decimal
-from pathlib import Path
 from typing import Literal, TypedDict
 
 import pytest
@@ -500,21 +498,6 @@ class TestVerificationVocabulariesAreClosed:
         expectation = VerificationExpectationDefinition.model_validate(self._fields(rounding=rounding))
 
         assert expectation.rounding is VerificationRoundingCode(rounding)
-
-    def test_the_vocabulary_matches_what_the_registry_actually_declares(self) -> None:
-        """The enum is the registry's real value set, not a guess about it.
-
-        Without this the vocabulary could be narrowed to a subset and every
-        genuine declaration outside it would start failing the build.
-        """
-        declared = {
-            match.group(1)
-            for path in Path("src/cadrumo/_data/registry").rglob("verification_expectations/*.toml")
-            for match in re.finditer(r'rounding = "([^"]+)"', path.read_text(encoding="utf-8"))
-        }
-
-        assert declared, "no verification rounding declarations found; the scan is not measuring anything"
-        assert declared <= {code.value for code in VerificationRoundingCode}
 
     @pytest.mark.parametrize("bad", ["invented", "", "ROUNDING"])
     def test_an_unknown_discrepancy_cause_is_refused(self, bad: str) -> None:

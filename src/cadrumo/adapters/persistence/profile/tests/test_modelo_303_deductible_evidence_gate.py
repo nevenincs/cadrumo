@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cadrumo.application.modelo.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -50,7 +50,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.tests.env_scope import ready_clave_settings
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -63,7 +63,7 @@ from cadrumo.application.modelo.export import ModeloExportCommand, ModeloExportE
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
 from cadrumo.application.modelo.verification_actions import (
-    _missing_evidence_findings,
+    missing_evidence_findings,
     verify_modelo_revision,
     verify_modelo_revision_with_preconditions,
 )
@@ -793,7 +793,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
         source_provenance=(),
     )
 
-    findings = _missing_evidence_findings(
+    findings = missing_evidence_findings(
         target=revision,
         work_unit=work_unit,
         transaction_repository=tx_repo,

@@ -63,7 +63,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 

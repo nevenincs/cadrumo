@@ -99,7 +99,6 @@ id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-c-cuota-devenga
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-c-cuota-devengada-operaciones-corrientes", offset = 206, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termin"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termino-municipal-de-lorca", offset = 223, length = 17, data_type = "money", signed = false }

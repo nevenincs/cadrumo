@@ -8,16 +8,10 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
-
-__all__ = ["secure_objects"]
-
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
+from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.models import TransactionCatalogue
 from ..renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
@@ -31,10 +25,13 @@ from .renta_income_aggregation_support import (
     _M130_INGRESOS_CASILLA,
     _Q1_2024,
     _actividad_transaction_with_source,
+    _catalogue_read_ports,
     _income_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 
 # Source-jurisdiction provenance pass-through.
@@ -151,9 +148,7 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
     assert result.issues[0].transaction_id == prior.transaction_id
 
 
-def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_transactions(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_partitioned_m100_aggregation_reports_out_of_period_catalogue_transactions() -> None:
     """A catalogue transaction outside the requested ejercicio must surface as a summary.
 
     Regression test: the repository-backed M100 entry point must
@@ -163,16 +158,15 @@ def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_tran
     jan_amount, prior_amount = Decimal("3000.00"), Decimal("999.00")
     jan = _income_transaction("m100-repo-jan", value_date=date(2024, 1, 20), amount=jan_amount)
     prior = _income_transaction("m100-repo-prior", value_date=date(2023, 12, 31), amount=prior_amount)
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((jan, prior)))
+    catalogue = TransactionCatalogue.from_transactions((jan, prior))
 
     result = aggregate_renta_m100_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2024,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_catalogue_read_ports(
+            invoices=InvoiceCatalogue(),
+            transactions=catalogue,
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
 
     assert {o.transaction_id for o in result.observations} == {jan.transaction_id}
@@ -184,9 +178,7 @@ def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_tran
     assert result.out_of_window_summary.max_filing_date == date(2023, 12, 31)
 
 
-def test_repository_backed_m100_aggregation_partition_matches_full_scan(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_partitioned_m100_aggregation_matches_full_scan() -> None:
     """The M100 partitioned result matches the full-scan result for declared values.
 
     The same multi-year catalogue is aggregated once through the
@@ -197,16 +189,13 @@ def test_repository_backed_m100_aggregation_partition_matches_full_scan(
     in_year = _income_transaction("m100-parity-in-year", value_date=date(2024, 6, 1), amount=Decimal("4000.00"))
     prior_year = _income_transaction("m100-parity-prior-year", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((in_year, prior_year))
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(catalogue)
-
     partitioned = aggregate_renta_m100_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2024,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_catalogue_read_ports(
+            invoices=InvoiceCatalogue(),
+            transactions=catalogue,
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
     full_scan = aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
 

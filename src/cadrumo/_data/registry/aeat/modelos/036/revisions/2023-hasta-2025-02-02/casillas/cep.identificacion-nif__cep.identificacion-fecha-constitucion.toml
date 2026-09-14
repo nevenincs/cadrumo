@@ -629,6 +629,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @1286+8 Num. Establecimiento perm. de una per.jca. o ent. no resid. Identificación. Fecha inscripción registro mercantil. Día [ONE casilla over 3 printed components: @1286+2, @1288+2, @1290+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "ep.identificacion-fecha-inscripcion-registro-mercantil"
+continuidad_id = "ep-identificacion-fecha-inscripcion-registro-mercantil"
 number = "C70"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "date"
@@ -639,6 +640,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @1294+8 Num. Establecimiento perm. de una per.jca. o ent. no resid.. Fecha de constitucion. Día [ONE casilla over 3 printed components: @1294+2, @1296+2, @1298+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "ep.identificacion-fecha-constitucion"
+continuidad_id = "ep-identificacion-fecha-constitucion"
 number = "C71"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "date"

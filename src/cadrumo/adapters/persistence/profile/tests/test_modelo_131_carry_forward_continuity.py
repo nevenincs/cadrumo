@@ -41,6 +41,7 @@ cross-checked against the cross-year claim via
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -232,7 +233,7 @@ def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(tmp_path: Path) -> No
             )
         )
         q2_snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N, period="2T")
-        report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo)
+        report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository())
 
     assert report.binding_values.get(_CARRY_BINDING) == _EXPECTED_Q1_2024_SALDO
 

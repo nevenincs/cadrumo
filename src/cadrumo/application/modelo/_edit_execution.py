@@ -31,7 +31,6 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...core.secure_object_write import SecureObjectWrite
@@ -42,6 +41,7 @@ from .calculation_actions import calculate_modelo_revision_from_bucket_aggregati
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
+from .edit_receipt_ports import ModeloEditReceiptRepositoryPort
 from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
@@ -246,7 +246,7 @@ def _capture_edit_receipt(
     *,
     request: ModeloEditApplyRequestV1,
     submission: ModeloEditSubmissionV1,
-    receipt_repository: ModeloEditReceiptRepository,
+    receipt_repository: ModeloEditReceiptRepositoryPort,
     now: datetime,
     result_destination: str,
     captured_receipt: list[ModeloEditMutationResultReceiptV1],
@@ -285,7 +285,7 @@ def _execute_modelo_edit(
     cleared_casilla_ids: tuple[CasillaId, ...],
     detail_rows: tuple[ModeloDetailRow, ...],
     ports: CalculationActionPorts,
-    receipt_repository: ModeloEditReceiptRepository,
+    receipt_repository: ModeloEditReceiptRepositoryPort,
     now: datetime,
     result_destination: str,
 ) -> ModeloEditExecutionUpdatedV1:
@@ -346,7 +346,7 @@ def apply_modelo_edit(
     request: ModeloEditApplyRequestV1,
     *,
     ports: CalculationActionPorts,
-    receipt_repository: ModeloEditReceiptRepository | None = None,
+    receipt_repository: ModeloEditReceiptRepositoryPort,
     now: datetime,
     result_destination: str,
 ) -> ModeloEditExecutionResultV1:
@@ -361,7 +361,6 @@ def apply_modelo_edit(
     outer composition root. This executor owns no calculation repository
     construction.
     """
-    receipt_repository = receipt_repository or ModeloEditReceiptRepository()
     submission = request.submission
     baseline = submission.baseline
 

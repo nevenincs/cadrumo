@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DP200014:00552"
+continuidad_id = "is-liquidacion-iii-base-imponible"
 number = "00552"
 segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]

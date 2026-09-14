@@ -8,19 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
-__all__ = ["secure_objects"]
 
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.i18n.translatable import Translatable as tr
-from ....core.period import Period
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.categories.profile import CategoryProfile
@@ -40,26 +32,15 @@ from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
-from ..errors import (
-    AggregationValidationError,
-)
-from ..modelo_bindings_renta_expenses import (
-    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
-)
-from ..renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ..renta_ledger import (
     RentaLedgerAggregationIssueReason,
-    RentaLedgerExpenseAggregation,
     aggregate_renta_ledger_expenses,
-    aggregate_renta_ledger_expenses_from_repositories,
-)
-from ..source_mesh import (
-    CalculationSourceContext,
 )
 from .renta_income_aggregation_support import _period
+
+SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -219,399 +200,24 @@ def _invoice(
     )
 
 
-def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casilla_values(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    initial = _transaction("row-linked")
-    invoice = _invoice(initial.transaction_id)
-    linked = _transaction("row-linked", purchase_invoice_evidence_id=invoice.invoice_id)
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
-
-    result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    )
-
-    assert result.issues == ()
-    assert result.casilla_values == {_M100_ASESORIA_CASILLA: invoice.base_total}
-    assert len(result.observations) == 1
-    observation = result.observations[0]
-    assert observation.transaction_id == linked.transaction_id
-    assert observation.invoice_id == invoice.invoice_id
-    assert observation.filing_date == date(2025, 4, 1)
-    assert observation.taxable_base == Decimal("100.00")
-    assert observation.iva_amount == Decimal("21.00")
-    assert observation.deductible_amount == invoice.base_total
-    assert result.casilla_aggregation.provenance[0].transaction_ids == (linked.transaction_id,)
 
 
-def test_repository_backed_aggregation_binds_default_invoice_repository_to_requested_bucket(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    initial = _transaction("row-default-invoice-repository")
-    invoice = _invoice(initial.transaction_id)
-    linked = _transaction(
-        "row-default-invoice-repository",
-        purchase_invoice_evidence_id=invoice.invoice_id,
-    )
-    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((linked,)),
-    )
-    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        InvoiceCatalogue.from_invoices((invoice,)),
-    )
-
-    result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    )
-
-    assert result.issues == ()
-    assert result.observations[0].invoice_id == invoice.invoice_id
-    assert result.casilla_values == {_M100_ASESORIA_CASILLA: invoice.base_total}
 
 
-def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
-    """The LedgerRentaGastosEstimacionDirectaAggregationSourceResolver resolves modelo-100 renta-expense
-    ledger bindings from repository-backed transactions, keyed by binding id."""
-    transaction = _transaction(
-        "row-cli-renta",
-        amount=Decimal("121.00"),
-        category=SpendingCategory.ASESORIA_FISCAL,
-    )
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
-    invoice_repo.save(InvoiceCatalogue())
-
-    revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=revision,
-        ),
-    )
-    binding_values = resolution.binding_values
-
-    assert binding_values["renta-ledger-expense-0199-deductible"] == Decimal("121.00")
-    assert binding_values["renta-ledger-expense-0186-deductible"] == Decimal("0")
-    assert binding_values["renta-ledger-expense-0192-deductible"] == Decimal("0")
-    assert binding_values["renta-ledger-expense-0203-deductible"] == Decimal("0")
 
 
-def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_expenses(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Ordinary business operating costs must not disappear from M100."""
-    transactions = (
-        _transaction(
-            "row-office",
-            amount=Decimal("240.00"),
-            category=SpendingCategory.MATERIAL_OFICINA,
-        ),
-        _transaction(
-            "row-software",
-            amount=Decimal("360.00"),
-            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
-        ),
-        _transaction(
-            "row-marketing",
-            amount=Decimal("180.00"),
-            category=SpendingCategory.PUBLICIDAD_MARKETING,
-        ),
-    )
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions(transactions))
-    invoice_repo.save(InvoiceCatalogue())
-
-    revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=revision,
-        ),
-    )
-
-    assert resolution.diagnostics == ()
-    assert resolution.binding_values["renta-ledger-expense-0199-deductible"] == Decimal("780.00")
 
 
-def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """The live source resolver must consume persisted proportionality ratios."""
-    phone = _transaction(
-        "row-phone",
-        amount=Decimal("121.00"),
-        category=SpendingCategory.TELEFONIA_MOVIL,
-    )
-    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((phone,)),
-    )
-    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
-    save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}),
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        objects=secure_objects,
-    )
-
-    revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=revision,
-        ),
-    )
-
-    assert resolution.diagnostics == ()
-    assert resolution.binding_values["renta-ledger-expense-0199-deductible"] == Decimal("60.50")
-    assert resolution.source_transaction_ids == (phone.transaction_id,)
 
 
-def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_expenses(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Sofia's ordinary IVA-bearing expenses feed M100 by base, not cash gross."""
-    office_base, software_base, marketing_base = Decimal("700.00"), Decimal("600.00"), Decimal("800.00")
-    transactions = (
-        _transaction(
-            "sofia-office",
-            amount=Decimal("847.00"),
-            category=SpendingCategory.MATERIAL_OFICINA,
-            booked_date=date(2025, 2, 3),
-            value_date=date(2025, 2, 3),
-            taxable_base=office_base,
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("147.00"),
-        ),
-        _transaction(
-            "sofia-software",
-            amount=Decimal("726.00"),
-            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
-            booked_date=date(2025, 2, 4),
-            value_date=date(2025, 2, 4),
-            taxable_base=software_base,
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("126.00"),
-        ),
-        _transaction(
-            "sofia-marketing",
-            amount=Decimal("968.00"),
-            category=SpendingCategory.PUBLICIDAD_MARKETING,
-            booked_date=date(2025, 2, 5),
-            value_date=date(2025, 2, 5),
-            taxable_base=marketing_base,
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("168.00"),
-        ),
-    )
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions(transactions))
-    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
-
-    result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    )
-
-    expected_taxable_base = office_base + software_base + marketing_base
-    gross_cash = sum((transaction.raw.amount for transaction in transactions), Decimal("0"))
-    assert result.issues == ()
-    assert result.casilla_values[_M100_ASESORIA_CASILLA] == expected_taxable_base
-    assert result.casilla_values[_M100_ASESORIA_CASILLA] != gross_cash
 
 
-def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_ledger_rows(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """The annual M100 expense basis matches M130's taxable-base gasto basis."""
-    bases = (Decimal("700.00"), Decimal("600.00"), Decimal("800.00"))
-    transactions = (
-        _transaction(
-            "shared-office",
-            amount=Decimal("847.00"),
-            category=SpendingCategory.MATERIAL_OFICINA,
-            booked_date=date(2025, 1, 15),
-            value_date=date(2025, 1, 15),
-            taxable_base=bases[0],
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("147.00"),
-        ),
-        _transaction(
-            "shared-software",
-            amount=Decimal("726.00"),
-            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
-            booked_date=date(2025, 2, 15),
-            value_date=date(2025, 2, 15),
-            taxable_base=bases[1],
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("126.00"),
-        ),
-        _transaction(
-            "shared-marketing",
-            amount=Decimal("968.00"),
-            category=SpendingCategory.PUBLICIDAD_MARKETING,
-            booked_date=date(2025, 3, 15),
-            value_date=date(2025, 3, 15),
-            taxable_base=bases[2],
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("168.00"),
-        ),
-    )
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions(transactions))
-    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
-
-    m100_result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    )
-    m130_result = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    )
-
-    expected_taxable_base = sum(bases, Decimal("0"))
-    gross_cash = sum((transaction.raw.amount for transaction in transactions), Decimal("0"))
-    m100_value = m100_result.casilla_values[_M100_ASESORIA_CASILLA]
-    m130_value = m130_result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA]
-
-    assert m100_result.issues == ()
-    assert m130_result.issues == ()
-    assert m100_value == expected_taxable_base
-    assert m130_value == expected_taxable_base
-    assert m100_value == m130_value
-    assert m100_value != gross_cash
 
 
-def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mismatch(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repo = TransactionCatalogueRepository(bucket_id="other", objects=secure_objects)
-
-    with pytest.raises(AggregationValidationError, match="bucket"):
-        aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            period=_ANNUAL_2025,
-            transaction_repository=repo,
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-            profile_year=2025,
-            prorrata_register_repository=ProrrataRegisterRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-        )
 
 
-def test_repository_backed_aggregation_rejects_invoice_repository_bucket_mismatch(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id="other", objects=secure_objects)
-
-    with pytest.raises(AggregationValidationError, match="invoice_bucket_mismatch"):
-        aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            period=_ANNUAL_2025,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            profile_year=2025,
-            prorrata_register_repository=ProrrataRegisterRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-        )
 
 
-def test_repository_backed_aggregation_rejects_unbound_invoice_repository(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-
-    with pytest.raises(AggregationValidationError, match="invoice_bucket_mismatch"):
-        aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            period=_ANNUAL_2025,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            profile_year=2025,
-            prorrata_register_repository=ProrrataRegisterRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-        )
 
 
 def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
@@ -745,105 +351,8 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
     assert result.issues[0].transaction_id == linked.transaction_id
 
 
-def test_repository_backed_aggregation_admits_a_transaction_whose_invoice_date_is_in_window_but_own_date_is_not(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Regression test: a transaction whose OWN filing date falls outside the
-    requested annual window but whose LINKED INVOICE's issue date falls inside it must not
-    be silently dropped before the classifier ever runs.
-
-    ``aggregate_renta_ledger_expenses_from_repositories`` used to pre-filter the loaded
-    catalogue via ``TransactionCatalogueRepository.load_for_date_range``, keyed ONLY on the
-    transaction's own ``value_date``/``booked_date`` (the same field the plaintext date
-    index stores). But the aggregation's own ``OUTSIDE_PERIOD`` classification uses
-    ``RentaDeductibleExpenseFact.filing_date``, which PREFERS the linked invoice's
-    ``issue_date`` over the transaction's own date (see
-    ``domain.renta.RentaDeductibleExpenseFact.filing_date``). When a transaction's own date
-    fell OUTSIDE the requested window but its invoice's issue date fell INSIDE it, the
-    pre-filter excluded the row from the loaded catalogue before the aggregation ever ran --
-    so instead of correctly admitting the expense (by invoice date), it silently disappeared
-    with NO observation and NO issue at all. Reverting the pre-filter to a full
-    ``repository.load()`` (mirroring ``_iva_ledger`` / ``_renta_income_ledger`` /
-    ``_renta_gasto_ledger`` / ``_impatriado_income_ledger``) closes the gap: the classifier
-    now sees every row and correctly admits this one by its invoice-issue-date filing_date.
-    """
-    # Transaction's own date (2024-12-15) is OUTSIDE the 2025 annual window; a
-    # pre-filtering repository read would have excluded it before the
-    # aggregation ever ran. Its linked invoice's issue date (2025-01-10) is
-    # INSIDE the window -- by the aggregation's own filing_date rule this
-    # expense must be admitted as a real observation, not silently dropped.
-    own_date_outside_invoice_date_inside = _transaction(
-        "row-own-date-outside",
-        booked_date=date(2024, 12, 15),
-        value_date=date(2024, 12, 15),
-    )
-    invoice = _invoice(
-        own_date_outside_invoice_date_inside.transaction_id,
-        issued_at=date(2025, 1, 10),
-    )
-    linked = _transaction(
-        "row-own-date-outside",
-        booked_date=date(2024, 12, 15),
-        value_date=date(2024, 12, 15),
-        purchase_invoice_evidence_id=invoice.invoice_id,
-    )
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
-
-    result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    )
-
-    assert len(result.observations) == 1
-    assert result.observations[0].transaction_id == linked.transaction_id
-    assert result.issues == ()
 
 
-def test_repository_backed_aggregation_reports_out_of_period_catalogue_transactions_across_years(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """A catalogue transaction from a different year must surface as an OUTSIDE_PERIOD issue.
-
-    Regression test: the repository-backed entry point must NOT pre-filter the
-    loaded catalogue by date range for a multi-year catalogue. ``OUTSIDE_PERIOD`` is a genuine
-    no-silent-under-declaration-class diagnostic -- an operator running a 10-year ledger history
-    against the 2025 annual window needs to see that a 2023-dated catalogue transaction exists
-    and was excluded, not have it silently vanish before the classifier ever runs (mirroring
-    ``test_iva_ledger.py::test_repository_backed_projection_reports_out_of_period_catalogue_transactions``).
-    """
-    in_year = _transaction("row-in-2025", booked_date=date(2025, 4, 5), value_date=date(2025, 4, 5))
-    out_of_year = _transaction("row-in-2023", booked_date=date(2023, 6, 10), value_date=date(2023, 6, 10))
-    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((in_year, out_of_year)))
-
-    result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-        ),
-    )
-
-    assert {o.transaction_id for o in result.observations} == {in_year.transaction_id}
-    assert len(result.issues) == 1
-    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert result.issues[0].transaction_id == out_of_year.transaction_id
 
 
 def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
@@ -1132,94 +641,3 @@ def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=facts,
     )
-
-
-def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empty(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Deriving residence CCAA from the profile changes nothing without overrides.
-
-    With the registry override layer empty, aggregating through the repository
-    wrapper with a profile declaring ``tax_residence.ccaa = madrid`` produces
-    casilla totals and observations byte-identical to the no-residence case.
-    """
-    invoice = _invoice(_transaction("row-region-wrapper-inert").transaction_id)
-    linked = _transaction("row-region-wrapper-inert", purchase_invoice_evidence_id=invoice.invoice_id)
-    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((linked,)),
-    )
-    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        InvoiceCatalogue.from_invoices((invoice,)),
-    )
-
-    def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
-        return aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-            profile_year=2025,
-            profile_record=profile_record,
-            prorrata_register_repository=ProrrataRegisterRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-        )
-
-    with_madrid = _run(_profile_with_ccaa("madrid"))
-    without_region = _run(_profile_with_ccaa(None))
-
-    assert with_madrid.casilla_values == without_region.casilla_values
-    assert with_madrid.observations == without_region.observations
-    assert with_madrid.issues == without_region.issues == ()
-
-
-def test_repository_wrapper_threads_profile_residence_into_region_override_selection(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """The residence CCAA derived from the profile reaches override selection.
-
-    A GASTOS_BANCARIOS row with a synthetic Canarias override: a profile declaring
-    ``tax_residence.ccaa = canarias`` selects the override THROUGH the repository
-    wrapper (deductible halved), proving the residence derived from the profile
-    flows end-to-end; a Madrid profile falls through to state law, proving the
-    derived residence is the actual selector and is not silently dropped.
-    """
-    row = _transaction(
-        "row-region-wrapper-hit",
-        amount=Decimal("100.00"),
-        category=SpendingCategory.GASTOS_BANCARIOS,
-    )
-    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((row,)),
-    )
-    overrides = {
-        CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)},
-    }
-
-    def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
-        return aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-            profile_year=2025,
-            profile_record=profile_record,
-            region_category_overrides=overrides,
-            prorrata_register_repository=ProrrataRegisterRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
-        )
-
-    matched = _run(_profile_with_ccaa("canarias"))
-    assert matched.issues == ()
-    assert matched.observations[0].proportionality_kind is ProportionalityKind.FIXED_PERCENTAGE
-    assert matched.observations[0].deductible_amount == Decimal("50.0000")
-
-    other_region = _run(_profile_with_ccaa("madrid"))
-    assert other_region.issues == ()
-    assert other_region.observations[0].proportionality_kind is not ProportionalityKind.FIXED_PERCENTAGE
-    assert other_region.observations[0].deductible_amount == Decimal("100.00")

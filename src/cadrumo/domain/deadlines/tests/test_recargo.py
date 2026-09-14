@@ -9,15 +9,14 @@ completo de retraso"), so the schedule is keyed on completed months.
 
 from __future__ import annotations
 
+import inspect
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ..errors import DeadlineValidationError
 from ..models import Recovery
 from ..recargo import (
     build_recovery_for_overdue,
@@ -31,12 +30,11 @@ from ..recargo import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_recargo_bands_load_from_registry_toml_in_order() -> None:
-    """The band TOML must materialise sorted by min_completed_months.
+def test_recargo_bands_load_from_published_authority_in_order() -> None:
+    """The published bands must materialise sorted by min_completed_months.
 
     External authority: ley-58-2003:art-27.2 (Ley General Tributaria,
-    post-Ley 11/2021). The canonical TOML lives at
-    ``registry/aeat/legal/ley-58-2003-recargo-bands.toml``.
+    post-Ley 11/2021).
     """
     bands = load_recargo_bands()
     assert len(bands) >= 4
@@ -146,11 +144,9 @@ def test_build_recovery_uses_completed_months_not_day_bracket() -> None:
     assert "next_command" not in type(recovery).model_fields
 
 
-def test_load_recargo_bands_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
-    missing = tmp_path / "missing-recargo-bands.toml"
-
-    with pytest.raises(DeadlineValidationError, match=r"cannot stat recargo bracket registry"):
-        load_recargo_bands(missing)
+def test_load_recargo_bands_exposes_no_raw_path_override() -> None:
+    """Runtime cannot substitute a raw authoring table for published authority."""
+    assert tuple(inspect.signature(load_recargo_bands).parameters) == ()
 
 
 # ---------------------------------------------------------------------------

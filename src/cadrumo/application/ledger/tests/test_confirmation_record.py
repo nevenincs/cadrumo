@@ -9,12 +9,9 @@ together: a record keeping only the new value cannot answer what the document
 said, and a confirmed view still showing the document's origin would present the
 operator's figure as something the document stated.
 
-**The record claim.** The confirmation record crosses the real encrypted
-boundary by strict equality with every defaultable field populated NON-default,
-because a save-drops-field / load-re-defaults-field regression is invisible when
-the fixture uses defaults --- and an anti-tautology proof reddens the load when a
-persisted field is deleted, without which every equality assertion here would
-prove only that two objects are equal.
+**The record claim.** The confirmation record's model and serialization contract
+remain application-owned; its encrypted repository boundary is exercised at the
+profile persistence adapter seam with every defaultable field populated NON-default.
 """
 
 from __future__ import annotations
@@ -26,11 +23,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ._confirmation_profile_fixture import profile
-
-__all__ = ["profile"]
-
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -42,9 +34,7 @@ from ..confirmation_record import (
     ResolvedFinding,
     build_confirmation_record,
     field_assertions,
-    load_confirmation_records,
     re_stamped_provenance,
-    write_confirmation_record,
 )
 from ..invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 
@@ -223,45 +213,6 @@ def _populated_record() -> InvoiceConfirmationRecord:
             ),
         ),
     )
-
-
-def test_the_confirmation_record_survives_the_real_encrypted_boundary(profile: TestRuntimeProfile) -> None:
-    """Strict equality across the real store, every defaultable field non-default.
-
-    Asserted against the real encrypted namespace rather than a JSON round trip:
-    the serializer is not the boundary that matters, the repository is, and a
-    field the repository declines to persist would round-trip through JSON
-    perfectly.
-    """
-    record = _populated_record().model_copy(update={"bucket_id": profile.bucket_id})
-
-    write_confirmation_record(record=record, settings=profile.settings)
-    reloaded = load_confirmation_records(profile.bucket_id, profile.settings)
-
-    assert reloaded.records == (record,), "the boundary must return exactly what crossed it"
-    stored = reloaded.records[0]
-    assert stored.evidence_sha256 == _EVIDENCE_SHA
-    assert stored.transcription_sha256 == _TRANSCRIPTION_SHA
-    # The prior value and origin are the point of the record; they are nested two
-    # levels deep, which is exactly what a flattening boundary loses.
-    assert stored.assertions[0].prior_value == "100.00"
-    assert stored.assertions[0].prior_origin is FieldOrigin.VISION
-    assert stored.assertions[0].asserted_value == "150.00"
-    assert stored.resolutions[0].resolution.action is FindingResolutionAction.CHOOSE_CANDIDATE
-    assert stored.resolutions[0].blocker.candidate_values == ("ESB12345674", "ESX1234567L")
-
-
-def test_a_retried_confirmation_addresses_the_stored_record_rather_than_appending(
-    profile: TestRuntimeProfile,
-) -> None:
-    """One human decision, one record, however many times the call is retried."""
-    record = _populated_record().model_copy(update={"bucket_id": profile.bucket_id})
-
-    write_confirmation_record(record=record, settings=profile.settings)
-    write_confirmation_record(record=record, settings=profile.settings)
-
-    assert len(load_confirmation_records(profile.bucket_id, profile.settings).records) == 1
-
 
 def test_the_derived_id_is_clock_free() -> None:
     """Two confirmations of the same outcome at different moments address one record.

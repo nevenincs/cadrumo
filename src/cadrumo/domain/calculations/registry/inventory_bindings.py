@@ -25,6 +25,7 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
+from .binding_selector_utils import selector_against_model
 from .binding_temporal import BindingTemporalSelector, SameTargetContext
 from .errors import RegistryValidationError
 
@@ -93,12 +94,16 @@ class InventoryProvider(BaseModel):
 
 
 def validate_inventory_binding(binding: BindingDefinition) -> list[str]:
-    """Validate the inventory op invariant for snapshot build.
+    """Validate the inventory operation invariants for snapshot build.
 
-    The provider shape is the union member's own gate; the operation template's
-    requirement of a row aggregation is the invariant left to lift.
+    The operation-to-destination identity is re-run here through the shared
+    selector gate rather than trusted to have happened earlier: a snapshot is
+    built from provider objects that may reach this boundary without having
+    passed model validation, and an operation silently landing on another
+    operation's casilla is a filing-grade misdeclaration, not a shape detail.
+    The identity itself is never restated here -- the union member owns it.
     """
-    failures: list[str] = []
+    failures = selector_against_model(binding, InventoryProvider)
     if binding.aggregation is None or binding.aggregation.op is not BindingAggregationOp.ROWS:
         failures.append(f"binding {binding.id!r} inventory operation template requires aggregation op 'rows'")
     return failures

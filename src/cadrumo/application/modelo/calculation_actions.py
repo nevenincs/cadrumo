@@ -95,7 +95,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
-from ._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
 )
@@ -464,6 +464,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
         ledger_preflight_transaction_repository=ports.transaction_repository,
+        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
         iva_compensation_decision=iva_compensation_decision,
         observation_repository=ports.observation_repository,
         iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
@@ -695,10 +696,15 @@ def resolve_bucket_source_mesh(
     )
     from ..calculations.multi_year import PreviousFilingSourceResolver
     from ..calculations.relation_prefill import RelationPrefillSourceResolver
+    from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
     from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
 
     resolved_work_unit_repository = ports.work_unit_repository
     resolved_calculation_repository = ports.calculation_repository
+    renta_catalogue_read_ports = InvoiceCatalogueReadPorts(
+        invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
+        transaction_reader=memoized_transaction_repository,
+    )
     context = CalculationSourceContext(
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit.work_unit_id,
@@ -744,6 +750,7 @@ def resolve_bucket_source_mesh(
             resolve_declared(
                 LedgerIvaAggregationSourceResolver(
                     transaction_repository=memoized_transaction_repository,
+                    invoice_catalogue_read_ports=ports.invoice_catalogue_read_ports,
                     prorrata_register_repository=prorrata_register_repository,
                     investment_asset_register=iva_investment_asset_register,
                     investment_asset_profile_id=iva_investment_asset_profile_id,
@@ -751,15 +758,15 @@ def resolve_bucket_source_mesh(
             ),
             resolve_declared(
                 LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-                    transaction_repository=memoized_transaction_repository,
-                    invoice_repository=ports.invoice_repository,
+                    ports=renta_catalogue_read_ports,
                     prorrata_register_repository=prorrata_register_repository,
+                    usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
                 )
             ),
             # M130 actividad-económica income (ledger_renta_income_aggregation).
             resolve_declared(
                 LedgerRentaIncomeAggregationSourceResolver(
-                    transaction_repository=memoized_transaction_repository,
+                    ports=renta_catalogue_read_ports,
                 )
             ),
             # M130 deductible-expense / gasto into casilla 02
@@ -792,23 +799,23 @@ def resolve_bucket_source_mesh(
             # OSS/IOSS-tagged issued invoices into validated ledger candidates;
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
-            resolve_declared(OssIossLedgerSourceResolver(invoice_repository=ports.invoice_repository)),
+            resolve_declared(OssIossLedgerSourceResolver(ports=ports.invoice_catalogue_read_ports)),
             # Retenciones family source (retenciones_aggregation): M115 reads the
             # dedicated per-perceptor store for quarterly count/base, while M180/M193
             # read it for distinct perceptor-NIF counts. Empty store on a declaring
             # revision surfaces a no-silent advisory.
-            resolve_declared(RetencionesAggregationSourceResolver()),
+            resolve_declared(RetencionesAggregationSourceResolver(ports=ports.retencion_observation_ports)),
             # M190 distinct percepción count (withholding): reads the dedicated
             # per-perceptor-clave withholding store and materialises scalar
             # withholding bindings. Empty store on a declaring revision surfaces
             # a no-silent advisory while still materialising an explicit zero.
-            resolve_declared(WithholdingSourceResolver()),
+            resolve_declared(WithholdingSourceResolver(ports=ports.percepciones_observation_ports)),
             # M349 collectible / payable invoices (collectible_invoice,
             # payable_invoice).  Loads the encrypted invoice catalogue and resolves
             # binding values for intra-community transactions in scope.
             resolve_declared(
                 InvoiceCatalogueSourceResolver(
-                    invoice_repository=ports.invoice_repository,
+                    ports=ports.invoice_source_ports,
                 )
             ),
             # Modelo 720 foreign assets (foreign_asset). This resolver is
@@ -835,6 +842,8 @@ def resolve_bucket_source_mesh(
                 PreviousFilingSourceResolver(
                     registry_snapshot=snapshot,
                     repository=ports.observation_repository,
+                    iva_history_repository=ports.iva_compensation_history_repository,
+                    profile_read_ports=ports.profile_read_ports,
                     excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
                         modelo_id=str(snapshot.modelo.id),
                         revision_id=str(snapshot.revision.id),
@@ -855,6 +864,7 @@ def resolve_bucket_source_mesh(
                 RelationPrefillSourceResolver(
                     registry_snapshot=snapshot,
                     repository=ports.observation_repository,
+                    profile_read_ports=ports.profile_read_ports,
                 )
             ),
             # Modelo 390 annual compensation carry boxes 97 / 662 are one FIFO
@@ -883,6 +893,7 @@ def resolve_bucket_source_mesh(
         relation_values=relation_values,
         filing_period_date=filing_period_date,
         prorrata_register_repository=prorrata_register_repository,
+        bienes_inversion_repository=ports.bienes_inversion_repository,
         observation_repository=ports.observation_repository,
     )
     source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
@@ -1420,7 +1431,10 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         period_token=preparation.work_unit.period.registry_token,
         filing_year=preparation.work_unit.filing_year,
         bucket_id=preparation.work_unit.bucket_id,
+        bienes_inversion_repository=ports.bienes_inversion_repository,
         observation_repository=ports.observation_repository,
+        prorrata_register_repository=ports.prorrata_register_repository,
+        transaction_repository=ports.transaction_repository,
     )
     source_diagnostics = (
         channels.reconciliation.source_diagnostics + channels.override_diagnostics + advisory_diagnostics

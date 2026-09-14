@@ -92,3 +92,66 @@ AEAT publishes no positional record design for modelo 721. Measured on the sourc
 same shape. Authoring a layout here would require inventing byte offsets AEAT has not published, which is fabricating wire facts. The runtime filing check still refuses a filing-grade snapshot from a revision carrying no layout, so this disposition records why one cannot exist and grants nothing."""
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
 source_refs = ["aeat-modelo-721-procedure", "boe-modelo-721-2024-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "custodio-nombre"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-2", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "custodio-pais"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-2", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "moneda-virtual-clave-token"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-2", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "moneda-virtual-saldo-31-diciembre"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-2", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "moneda-virtual-saldo-inicio"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-2", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-721-2024-layout"]

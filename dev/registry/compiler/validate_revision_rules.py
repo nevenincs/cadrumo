@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.deadline_coordinate import (
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
+from cadrumo.domain.calculations.registry.revision_order import revision_windows_intersect
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedule_period_kind_mismatches
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -28,13 +29,25 @@ _M210_TIPO_RENTA_CODE_PARAMETER_PREFIX = "m210-tipo-renta-code-"
 
 
 def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
+    """Reject revisions that could be in force simultaneously for one period.
+
+    Two revisions are a genuine ambiguity only when both halves hold: their
+    validity windows intersect AND their period selectors address a common
+    period. The window half is asked through the registry's canonical
+    :func:`~cadrumo.domain.calculations.registry.revision_order.revision_windows_intersect`
+    predicate -- inclusive bounds, ``valid_to`` of ``None`` meaning open-ended
+    -- so this gate cannot drift from the coexistence rule the cross-revision
+    checks apply. Windows that merely meet end-to-start are a temporal
+    succession and are not reported, however identical their selectors.
+    """
     failures: list[str] = []
     revisions = sorted(modelo.revisions.values(), key=lambda item: item.valid_from)
     for index, earlier in enumerate(revisions):
         for later in revisions[index + 1 :]:
-            if earlier.valid_to is not None and earlier.valid_to < later.valid_from:
-                # Later revisions are ordered by valid_from, so no subsequent
-                # revision can overlap this bounded earlier window either.
+            if not revision_windows_intersect(earlier, later):
+                # Revisions are ordered by valid_from, so a bounded earlier
+                # window that has already closed before `later` opens has
+                # closed before every subsequent candidate too.
                 break
             if period_selectors_overlap(earlier.period_selector, later.period_selector):
                 failures.append(

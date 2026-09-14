@@ -29,6 +29,7 @@ from cadrumo.core.orden_anual_html import (
     orden_anual_iva_authority_units,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.lorca_reduction import resolve_lorca_reduction
 from cadrumo.domain.calculations.registry.m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_MODULE_DISTRIBUTION,
@@ -125,7 +126,7 @@ def extract_m303_annual_orden_source(
             source_root=source_root,
             authority=parsed_authority,
         )
-        return M303AnnualOrdenSourceCensus(
+        census = M303AnnualOrdenSourceCensus(
             ejercicio=ejercicio,
             source_ref=source.id,
             source_content_digest=source.sha256,
@@ -145,6 +146,8 @@ def extract_m303_annual_orden_source(
             difficult_justification=_registry_raw_difficult_justification(parsed_authority.difficult_justification),
             lorca_2022_reduction=_registry_raw_lorca_2022_reduction(parsed_authority.lorca_2022_reduction),
         )
+        validate_m303_annual_orden_lorca_projection(census, source=source)
+        return census
     except (TypeError, ValueError) as exc:
         raise RegistryLoadError(f"annual Orden source {source.id!r} is incomplete or malformed: {exc}") from exc
 
@@ -243,10 +246,65 @@ def _registry_raw_lorca_2022_reduction(
     if item is None:
         return None
     return M303AnnualOrdenRawLorca2022Reduction(
+        ejercicio=item.ejercicio,
         municipality=item.municipality,
+        annex_scope=item.annex_scope,
         percentage=item.percentage,
+        calculation_periods=item.calculation_periods,
         required_text=item.required_text,
     )
+
+
+def validate_m303_annual_orden_lorca_projection(
+    census: M303AnnualOrdenSourceCensus,
+    *,
+    source: SourceReference,
+) -> None:
+    """Compare observed municipal-reduction data with authored fact 0136.
+
+    Raw extraction is intentionally value-neutral.  This compiler boundary is
+    where a candidate fact authority decides whether the observed reduction is
+    applicable to the source exercise and whether its source evidence is the
+    authored one.  A source may omit the reduction when no fact variant applies;
+    an observed reduction without a matching fact is refused.
+    """
+    reduction = census.lorca_2022_reduction
+    try:
+        declared = resolve_lorca_reduction(effective_date=date(int(census.ejercicio), 12, 31))
+    except RegistryValidationError:
+        if reduction is None:
+            return
+        raise RegistryValidationError(
+            f"annual Orden source {source.id!r} exposes a municipal reduction without a matching facts projection",
+        ) from None
+    if reduction is None:
+        raise RegistryValidationError(
+            f"annual Orden source {source.id!r} is missing the municipal reduction required by its facts projection",
+        )
+    observed = (
+        int(reduction.ejercicio),
+        reduction.municipality,
+        reduction.annex_scope,
+        reduction.percentage,
+        reduction.calculation_periods,
+        reduction.required_text,
+        census.source_ref,
+        census.source_content_digest,
+    )
+    expected = (
+        declared.ejercicio,
+        declared.municipality,
+        declared.annex_scope,
+        declared.percentage,
+        declared.calculation_periods,
+        declared.required_text,
+        declared.source_ref,
+        declared.source_content_digest,
+    )
+    if observed != expected:
+        raise RegistryValidationError(
+            f"annual Orden source {source.id!r} municipal reduction disagrees with its facts projection",
+        )
 
 
 def shared_annual_orden_activity_table(activity: M303AnnualOrdenRawActivity) -> OrdenAnualIvaActivityTable:

@@ -28,7 +28,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .._reconcile_casilla import (
+from ..reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )

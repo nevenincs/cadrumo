@@ -77,7 +77,7 @@ from __future__ import annotations
 from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.invoices.enums import InvoiceClass
+from ...domain.invoices.enums import invoice_class_simplificada
 from ...domain.invoices.models import Invoice
 from ...domain.iva.classification import InvoiceKind
 
@@ -127,7 +127,7 @@ def simplificada_requires_tax_id_for_domestic_issuer(invoice: Invoice, profile: 
 
     The ``kind`` check is defence in depth rather than the only thing
     preventing a false positive: :class:`~cadrumo.domain.invoices.Invoice`'s
-    own class-consistency validator already refuses a RECEIVED SIMPLIFICADA
+    own class-consistency validator already refuses a received simplified invoice
     with no tax id, so ``counterparty_tax_id is None`` alone already implies
     ``kind is ISSUED`` for every :class:`~cadrumo.domain.invoices.Invoice`
     reachable through normal construction. The check is kept, and tested via
@@ -153,7 +153,7 @@ def simplificada_requires_tax_id_for_domestic_issuer(invoice: Invoice, profile: 
     """
     if invoice.kind is not InvoiceKind.ISSUED:
         return False
-    if invoice.invoice_class is not InvoiceClass.SIMPLIFICADA:
+    if invoice.invoice_class != invoice_class_simplificada():
         return False
     if invoice.counterparty_tax_id is not None:
         return False

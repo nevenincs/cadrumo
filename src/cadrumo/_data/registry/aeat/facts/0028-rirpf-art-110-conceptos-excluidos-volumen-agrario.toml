@@ -16,3 +16,22 @@ required_text = ["excluidas las subvenciones de capital y las indemnizaciones"]
 [fact.variants.payload]
 kind = "entity_set"
 entities = ["subvencion_capital", "indemnizacion"]
+
+[[fact.variants]]
+variant_id = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario:vocabulary:2018-12-23"
+selectors = [{ name = "scope", value = "vocabulary" }]
+date_axis = "filing_period"
+valid_from = 2018-12-23
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["boe-rirpf-art-110-2018-12-23", "aeat-modelo-131-instructions"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-110-2018-12-23"
+required_text = ["2 por ciento del volumen de ingresos del trimestre"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 05", "incluidas las subvenciones corrientes", "excluidas las subvenciones de capital y las indemnizaciones"]
+[fact.variants.payload]
+kind = "entity_set"
+entities = ["ordinario", "subvencion_corriente", "subvencion_capital", "indemnizacion"]

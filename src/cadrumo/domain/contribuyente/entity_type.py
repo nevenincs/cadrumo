@@ -95,6 +95,15 @@ def legal_entity_form_tokens(*, effective_date: date | None = None) -> tuple[Leg
     return _tokens(effective_date=effective_date)
 
 
+def legal_entity_form_choice_description_tokens(*, effective_date: date | None = None) -> tuple[LegalEntityForm, ...]:
+    """Return legal-form choices whose registry metadata enables choice copy."""
+    from ..calculations.registry.entity_type import (
+        legal_entity_form_choice_description_tokens as _tokens,
+    )
+
+    return _tokens(effective_date=effective_date)
+
+
 def entity_type_natural_person_token(*, effective_date: date | None = None) -> EntityType:
     from ..calculations.registry.entity_type import entity_type_natural_person_token as _token
 

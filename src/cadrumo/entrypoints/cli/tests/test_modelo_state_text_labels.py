@@ -102,14 +102,17 @@ def test_calculation_revision_text_lines_render_human_state_label_but_payload_ke
     revision = _verified_revision()
 
     with override_settings(cadrumo_output_language="en"):
-        lines = calculation_revision_lines(revision)
+        lines = calculation_revision_lines(revision, include_result_summary=False)
         observation_lines = calculation_observation_lines(revision)
 
     assert f"state\t{CalculationRevisionState.VERIFICADO_COMPLETO.value}" not in lines
     assert "state\tverified complete" in lines
     assert f"state\t{CalculationRevisionState.VERIFICADO_COMPLETO.value}" not in observation_lines
     assert "state\tverified complete" in observation_lines
-    assert calculation_revision_payload(revision).state == CalculationRevisionState.VERIFICADO_COMPLETO.value
+    assert (
+        calculation_revision_payload(revision, include_result_summary=False).state
+        == CalculationRevisionState.VERIFICADO_COMPLETO.value
+    )
 
 
 def test_work_unit_text_lines_render_human_state_label_but_payload_keeps_token() -> None:

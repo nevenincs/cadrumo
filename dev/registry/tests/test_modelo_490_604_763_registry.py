@@ -135,10 +135,13 @@ def test_committed_definition_legal_authority_and_deadline_windows(
 @pytest.mark.parametrize(
     ("filing_year", "period", "revision_id", "layout_source", "deadline_id", "opens_on", "closes_on"),
     [
-        (2012, "2T", "2012-2t-3t", "aeat-dr-763-2012", "modelo-763-2012-2t", date(2012, 7, 1), date(2012, 7, 31)),
-        (2012, "3T", "2012-2t-3t", "aeat-dr-763-2012", "modelo-763-2012-3t", date(2012, 10, 1), date(2012, 10, 31)),
-        (2013, "1T", "2013-2014", "aeat-dr-763-2012", "modelo-763-2013-1t", date(2013, 4, 1), date(2013, 4, 30)),
-        (2014, "4T", "2013-2014", "aeat-dr-763-2012", "modelo-763-2014-4t", date(2015, 1, 1), date(2015, 1, 31)),
+        (2012, "2T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2012-2t", date(2012, 7, 1), date(2012, 7, 31)),
+        (2012, "3T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2012-3t", date(2012, 10, 1), date(2012, 10, 31)),
+        # The trimestre the former 2012-2t-3t / 2013-2014 split served from neither
+        # side. Orden EHA/1881/2011 art. 4 puts it in the month after the quarter.
+        (2012, "4T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2012-4t", date(2013, 1, 1), date(2013, 1, 31)),
+        (2013, "1T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2013-1t", date(2013, 4, 1), date(2013, 4, 30)),
+        (2014, "4T", "2012-2014", "aeat-dr-763-2012", "modelo-763-2014-4t", date(2015, 1, 1), date(2015, 1, 31)),
         (2015, "1T", "2015-2017", "aeat-dr-763-2015", "modelo-763-2015-1t", date(2015, 4, 1), date(2015, 4, 30)),
         (2017, "4T", "2015-2017", "aeat-dr-763-2015", "modelo-763-2017-4t", date(2018, 1, 1), date(2018, 1, 31)),
         (2018, "3T", "2018-1t-3t", "aeat-dr-763-2015", "modelo-763-2018-3t", date(2018, 10, 1), date(2018, 10, 31)),

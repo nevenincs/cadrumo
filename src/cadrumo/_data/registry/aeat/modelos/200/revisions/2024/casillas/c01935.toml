@@ -1,5 +1,6 @@
 [[revisions.2024.casillas]]
 id = '01935'
+continuidad_id = "01935"
 number = '01935'
 data_type = 'money'
 semantic_role = 'is_deduccion_idi_excluida_limite_info_adicional'

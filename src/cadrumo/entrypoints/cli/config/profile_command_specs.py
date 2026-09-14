@@ -181,7 +181,11 @@ def _leaf(
         parameters,
         policy,
         _handler(module, handler),
-        _schema(schema_module, schema_name, key.replace("_", ".")),
+        _schema(
+            schema_module,
+            schema_name,
+            f"{parent.replace('_', '.')}.{token.replace('-', '_')}",
+        ),
         machine_secret=machine_secret,
         recovery_handoff=recovery_handoff,
         profile_target_parameter=profile_target_parameter,

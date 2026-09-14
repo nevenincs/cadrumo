@@ -14,13 +14,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
-from .....application.calculations.iva_compensation_history import (
-    IvaCompensationHistoryRepository,
-    persist_observation_envelope_and_iva_history,
-)
 from .....adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
 )
+from .....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from .....application.calculations.iva_compensation_history import persist_observation_envelope_and_iva_history
 from .....application.calculations.observations_repository import (
     ObservationEnvelopePayload,
     ObservationSourceKind,
@@ -42,6 +40,7 @@ from .....application.modelo.external_import_actions import (
     ExternalFilingBaselineSource,
     import_external_filing_source,
 )
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
@@ -58,7 +57,6 @@ from ....persistence.profile.buckets import BucketEventHistoryRepository
 from ....persistence.profile.justificante import JustificanteRepository
 from ....persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....persistence.storage.sql.secure_objects import SecureObjectRepository
 from .declarations_observations import (
     non_numeric_observed_casillas,
@@ -381,23 +379,21 @@ class BucketEventRepositoryAdapter(BucketEventHistoryRepositoryProtocol):
 
 
 class BaselineImportAdapter(FiledBaselineImportPort):
-    """Adapt the external-baseline application operation with explicit repositories."""
+    """Adapt the external-baseline application operation with explicit ports."""
 
     def __init__(
         self,
         *,
-        work_unit_repository: WorkUnitCatalogueRepository,
+        work_lifecycle_ports: WorkLifecyclePorts,
         calculation_repository: CalculationRevisionCatalogueRepository,
         filing_repository: ModeloRecordCatalogueRepository,
-        bucket_event_repository: BucketEventHistoryRepository,
         justificante_repository: JustificanteRepository,
         observation_repository: CalculationObservationRepository,
     ) -> None:
         """Bind all baseline dependencies to one secure-object backend."""
-        self._work_unit_repository = work_unit_repository
         self._calculation_repository = calculation_repository
         self._filing_repository = filing_repository
-        self._bucket_event_repository = bucket_event_repository
+        self._work_lifecycle_ports = work_lifecycle_ports
         self._justificante_repository = justificante_repository
         self._observation_repository = observation_repository
 
@@ -416,10 +412,9 @@ class BaselineImportAdapter(FiledBaselineImportPort):
                 source,
                 bucket_id=bucket_id,
                 actor=actor,
-                work_unit_repository=self._work_unit_repository,
+                work_lifecycle_ports=self._work_lifecycle_ports,
                 calculation_repository=self._calculation_repository,
                 filing_repository=self._filing_repository,
-                bucket_event_repository=self._bucket_event_repository,
                 justificante_repository=self._justificante_repository,
                 observation_repository=self._observation_repository,
                 clock=clock,

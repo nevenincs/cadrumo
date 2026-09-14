@@ -1,10 +1,8 @@
 """Source-mesh resolver for governed invoice records.
 
 :class:`InvoiceCatalogueSourceResolver` reads the
-:class:`~domain.invoices.InvoiceCatalogue` selected by
-:attr:`~application.aggregation.CalculationSourceContext.bucket_id` through
-:class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`. It projects those records
-into the calculation mesh as
+:class:`~domain.invoices.InvoiceCatalogue` supplied through its application-owned
+read capability. It projects those records into the calculation mesh as
 :class:`~application.aggregation.CalculationSourceResolution` values for
 :attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE`,
 :attr:`~core.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
@@ -25,16 +23,11 @@ from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
 from ...core.aggregation import (
     BindingSourceKind,
     CalculationSourceLineageRole,
     IntracomOperationType,
     ThirdPartyDeclarationRole,
-    TravelAgencyMediationType,
 )
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
@@ -52,9 +45,14 @@ from ...domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_values,
 )
 from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue, require_iva_category
+from ...domain.calculations.registry.travel_agency_mediation import (
+    is_travel_agency_air_passenger_transport,
+)
+from ...domain.calculations.registry.third_party_declaration_roles import (
+    resolve_third_party_declaration_role_catalogue,
+)
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.models import Invoice
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, validate_m349_country_prefix_context
@@ -65,18 +63,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-
-#: Modelo 347 clave D's four disjoint filer-role populations (RD 1065/2007
-#: art. 31.1's last paragraph and art. 31.2). Any ONE of them, combined with
-#: the transaction-level ``outside_economic_activity`` fact, classifies D.
-_M347_CLAVE_D_ROLES: frozenset[ThirdPartyDeclarationRole] = frozenset(
-    {
-        ThirdPartyDeclarationRole.PROPIEDAD_HORIZONTAL_ENTITY,
-        ThirdPartyDeclarationRole.SOCIAL_CHARACTER_ENTITY,
-        ThirdPartyDeclarationRole.STATUTORY_INFORMATION_DUTY_ENTITY,
-        ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY,
-    },
-)
+from .source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -85,7 +72,6 @@ _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
 )
 _ObservedInvoice = tuple[Invoice, InvoiceObservation]
 _IncoherentInvoice = tuple[Invoice, InvoiceDecomposition]
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
     "iva-349-declarante-numero-operadores-adquisicion": "iva-349-declarante-numero-operadores",
     "iva-349-declarante-importe-operaciones-adquisicion": "iva-349-declarante-importe-operaciones",
@@ -278,16 +264,15 @@ class InvoiceCatalogueSourceResolver:
     def __init__(
         self,
         *,
-        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+        ports: InvoiceSourceResolverPorts,
     ) -> None:
-        """Bind the resolver to an invoice catalogue repository.
+        """Bind the resolver to its explicitly composed invoice read capability.
 
         Args:
-            invoice_repository: Repository the resolver reads invoices from. When
-                omitted, each :meth:`resolve` call opens the catalogue for the
-                bucket named by its own context.
+            ports: Required application-owned capabilities for invoice source
+                resolution.
         """
-        self._invoice_repository = invoice_repository
+        self._ports = ports
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve this context's invoice-source bindings against the catalogue.
@@ -307,10 +292,9 @@ class InvoiceCatalogueSourceResolver:
         if not active_sources:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
-        repository = self._invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         try:
-            catalogue = repository.load()
-        except STORAGE_DEGRADATION_ERRORS as exc:
+            catalogue = self._ports.catalogue_reader.load()
+        except InvoiceSourcePersistenceError as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -606,8 +590,9 @@ def _m347_role_fact_advisories(
     declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
     if not declaration_roles:
         return ()
-    clave_d_eligible = bool(declaration_roles & _M347_CLAVE_D_ROLES)
-    clave_e_eligible = ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
+    role_catalogue = resolve_third_party_declaration_role_catalogue()
+    clave_d_eligible = bool(declaration_roles & role_catalogue.roles_for_clave("D"))
+    clave_e_eligible = bool(declaration_roles & role_catalogue.roles_for_clave("E"))
     diagnostics: list[CalculationSourceDiagnostic] = []
     for invoice in invoices:
         if clave_d_eligible and invoice.kind is InvoiceKind.RECEIVED and invoice.outside_economic_activity is None:
@@ -657,7 +642,7 @@ def _invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> 
 
     Only a POPULATED, mismatching bucket excludes. An unattributed invoice
     belongs to the store it was loaded from, and that store is opened against
-    ``context.bucket_id`` -- with ``InvoiceCatalogueRepository`` refusing a
+    ``context.bucket_id`` -- with the composed catalogue reader refusing a
     foreign row on read, so nothing another bucket owns reaches here.
 
     Treating ``None`` as a mismatch is what this reads as if the check is
@@ -788,8 +773,8 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
     Clave C additionally needs the filer's own
     :class:`ThirdPartyDeclarationRole` membership, loaded here via
     ``context.bucket_id``. When the invoice IS a clave-C collection
-    (``collected_on_behalf_of_tax_id`` set AND the filer carries
-    ``THIRD_PARTY_FEE_COLLECTOR``), the declared counterparty is the
+    (``collected_on_behalf_of_tax_id`` set AND the filer carries the
+    registry-selected collector role), the declared counterparty is the
     BENEFICIARY whose fees were collected (RD 1065/2007 art. 34.g), not
     whoever actually paid this invoice -- so ``party_tax_id`` and
     ``party_legal_name`` are substituted, not merely the clave.
@@ -831,16 +816,17 @@ def _m347_role_operation_clave(
     *,
     declaration_roles: frozenset[ThirdPartyDeclarationRole],
 ) -> str | None:
+    role_catalogue = resolve_third_party_declaration_role_catalogue()
     if (
         invoice.collected_on_behalf_of_tax_id is not None
-        and ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR in declaration_roles
+        and declaration_roles & role_catalogue.roles_for_clave("C")
     ):
         return "C"
-    if invoice.outside_economic_activity is True and declaration_roles & _M347_CLAVE_D_ROLES:
+    if invoice.outside_economic_activity is True and declaration_roles & role_catalogue.roles_for_clave("D"):
         return "D"
     if (
         invoice.is_subvencion_ayuda is True
-        and ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
+        and declaration_roles & role_catalogue.roles_for_clave("E")
     ):
         return "E"
     return None
@@ -850,7 +836,14 @@ def _m347_mediation_operation_clave(invoice: Invoice) -> str | None:
     mediation = invoice.travel_agency_mediation
     if mediation is not None and invoice.kind is InvoiceKind.ISSUED:
         return "F"
-    if mediation is TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT and invoice.kind is InvoiceKind.RECEIVED:
+    if (
+        mediation is not None
+        and invoice.kind is InvoiceKind.RECEIVED
+        and is_travel_agency_air_passenger_transport(
+            mediation,
+            effective_date=invoice.issued_at,
+        )
+    ):
         return "G"
     return None
 

@@ -1,0 +1,67 @@
+# Modelo 210 presentation windows for 2025 devengos. EVENT-N owns per-devengo
+# filings but denotes a set of concrete EVENT-<n> periods, not a Period itself.
+# Fixed annual facts therefore use canonical 0A. No quarter or resultado-shaped
+# period token is fabricated. Tipo 28 remains event-shaped without a numeric
+# window because its event-relative offset authority is not bundled.
+# Domiciliation cutoffs do not narrow these presentation windows.
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-210-2024-0a-arrendamiento-ingreso"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-04-01
+closes_on = 2025-04-20
+resultado_scope = "I"
+tipo_renta_scope = ["01", "35"]
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-base-order"]
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-210-2024-0a-cuota-cero"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-01-01
+closes_on = 2025-01-20
+resultado_scope = "N"
+tipo_renta_scope = ["01", "35"]
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-base-order"]
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-210-2024-0a-devolucion"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-02-01
+closes_on = 2029-02-01
+resultado_scope = "D"
+tipo_renta_scope = ["01", "35"]
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-base-order"]
+
+[[revisions."2024".deadline_windows]]
+# opens_on corrected 2025-01-01 -> 2025-04-01. Orden EHA/3316/2010 art 5.b
+# fixes the rentas-imputadas plazo as "del 1 de abril al 31 de diciembre del
+# ano natural siguiente a la fecha de devengo", and Orden HAC/623/2026 art 1.2
+# re-enacts article 5 with that sentence unchanged -- so 1 April is the opening
+# under both the original and the current redaction, and no version of the rule
+# opens in January. The 2026-y-siguientes edition already states 2027-04-01 for
+# the identical tipo_renta_scope, so this edition was the outlier. A window
+# opening three months early tells a tipo-02 filer the plazo is open when AEAT
+# will not accept the autoliquidacion.
+#
+# NOT changed: closes_on stays 2025-12-31. Orden HAC/623/2026 does shorten this
+# to 23 December, but that is its DOMICILIACION schedule, and its own entry-into
+# -force clause applies the new plazos "respecto de los devengos correspondientes
+# a 2026" -- neither reaches 2025 devengos.
+id = "modelo-210-2024-0a-renta-imputada"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-04-01
+closes_on = 2025-12-31
+tipo_renta_scope = ["02"]
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-base-order"]

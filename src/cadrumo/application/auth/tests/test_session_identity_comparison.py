@@ -1,4 +1,4 @@
-"""Real-behavior tests for the comparison at the far end of the identity guard.
+"""Application-policy tests for the comparison at the far end of the identity guard.
 
 The fail-closed promise is a chain of two halves. The near half resolves
 what the profile expects and is covered by
@@ -17,11 +17,13 @@ its identity exists only once the certificate is read at session bind.
 The certificate is therefore checked HERE rather than exempted, which
 makes this comparison its only identity check.
 
-Every test drives the real profile store and derives its expectation from
-the real resolver rather than passing a literal, so a pass here exercises
-the two halves joined. Sessions are real :class:`AeatSession` records -
-value objects the guard genuinely receives, not test doubles - because the
-comparison reads the neutral identity fact off the bound session.
+Application-owned authentication facts are supplied directly to the public
+credential resolver rather than opening a profile store here. The encrypted
+profile projection and storage wiring are covered at the persistence seam by
+``test_profile_auth_facts_require_a_session``. Sessions remain real
+:class:`AeatSession` records - value objects the guard genuinely receives,
+not test doubles - because the comparison reads the neutral identity fact off
+the bound session.
 """
 
 from __future__ import annotations
@@ -35,41 +37,22 @@ from pydantic import SecretStr, ValidationError
 
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
-from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
-from ....tests.user_profile import register_minimal_profile
 from .. import sessions as sessions
 from ..session_types import AeatSession, CertificateSessionDetail, ClaveMovilSessionDetail
 from ..sessions import (
     AuthProfileIdentityMismatchError,
+    ClaveAuthFacts,
     _assert_session_identity_matches_expected,
-    _prepare_clave_auth,
+    resolve_clave_credentials,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: This module's OWN bucket. A bucket shared with a sibling module makes
-#: the two suites' isolation fixtures interchangeable and puts both on one
-#: bucket-scoped master-key session in the same run.
-_BUCKET_ID = "c0000004-0000-4000-8000-000000000004"
-_PROFILE_LABEL = "session-identity-operator"
 _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
 
 _LIVE_SESSION_RETURN_TYPES = ("AeatSession", "AuthenticatedAeatSessionResult")
 _GUARD = "_assert_session_identity_matches_expected"
-
-
-def _register_profile(**overrides: str) -> None:
-    facts = {"identity.tax_id": _TAX_ID}
-    facts.update(overrides)
-    # Seeded ahead of any workflow-state read: the capsule publishes by an
-    # atomic no-replace rename onto ``buckets/<profile-id>``, and the workflow
-    # repository materialises that same directory on first access.
-    register_minimal_profile(
-        profile_id=_BUCKET_ID,
-        display_name=_PROFILE_LABEL,
-        overrides=facts,
-    )
 
 
 def _clave_session(identity_nif: str) -> AeatSession:
@@ -105,12 +88,19 @@ def _expectation_for(kind: AuthProviderKind) -> str | None:
     incompleteness refusal, which would be a refusal for the wrong reason and
     would let these tests pass without exercising what they claim to.
     """
+    facts = ClaveAuthFacts(
+        tax_id=_TAX_ID,
+        dni_nie=_TAX_ID,
+        clave_movil_route=ClaveMovilRoute.QR,
+    )
     with override_settings(
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_permanente_dni_nie=SecretStr(_TAX_ID),
     ) as settings:
-        _bound, expected_identity = _prepare_clave_auth(settings, kind)
-    return expected_identity
+        credentials = resolve_clave_credentials(kind, settings=settings, facts=facts)
+    if credentials is None:
+        return facts.tax_id or None
+    return sessions._assert_active_profile_identity_matches_provider(credentials)
 
 
 def test_a_session_bound_to_another_taxpayer_is_refused() -> None:
@@ -121,7 +111,6 @@ def test_a_session_bound_to_another_taxpayer_is_refused() -> None:
     handed down, and compared against what the session actually carries.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
     assert expected_identity == _TAX_ID
 
@@ -138,7 +127,6 @@ def test_a_certificate_session_bound_to_another_taxpayer_is_refused() -> None:
     taxpayer would authenticate against this profile unremarked.
     """
 
-    _register_profile()
     expected_identity = _expectation_for(AuthProviderKind.CERTIFICATE)
     assert expected_identity == _TAX_ID
 
@@ -157,7 +145,6 @@ def test_the_taxpayers_own_session_is_accepted() -> None:
     pass through untouched.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
 
     _assert_session_identity_matches_expected(_clave_session(_TAX_ID).identity_nif, expected_identity)
@@ -173,7 +160,6 @@ def test_the_comparison_normalises_before_it_refuses() -> None:
     the formatting artefact it is.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
 
     _assert_session_identity_matches_expected(
@@ -285,9 +271,6 @@ def test_every_path_that_hands_back_a_session_compares_its_identity() -> None:
         f"{unguarded} (name -> line numbers). A return that skips the comparison restores "
         "the silent pass this guard exists to prevent."
     )
-
-
-_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
 
 
 class TestClaveIdentityIsComparedCanonically:

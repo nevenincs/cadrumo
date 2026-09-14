@@ -500,7 +500,7 @@ def work_calculate_input_bundle_from_cli(
         row=row,
     )
     try:
-        _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows)
+        _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows, ports=ports)
         return build_work_calculate_input_bundle(
             work_unit_id=work_unit_id,
             ports=ports,
@@ -633,11 +633,16 @@ def _validate_m349_rectification_rows(
             raise bad_parameter_from_error(exc) from exc
 
 
-def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[ModeloDetailRow, ...]) -> None:
+def _validate_m349_detail_rows_for_work_unit(
+    work_unit_id: str,
+    rows: tuple[ModeloDetailRow, ...],
+    *,
+    ports: CalculationActionPorts,
+) -> None:
     operador_rows, rectification_rows = _m349_detail_rows(rows)
     if not operador_rows and not rectification_rows:
         return
-    unit = get_work_unit(work_unit_id)
+    unit = get_work_unit(work_unit_id, ports=ports.work_lifecycle_ports)
     if str(unit.modelo) != Modelo("349").value:
         return
     _validate_m349_operador_rows(

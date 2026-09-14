@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal.formatting import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority
 from ...core.period import Period
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.attachments.service import link_attachment_transaction
@@ -34,6 +33,7 @@ from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
+from ...domain.calculations.registry.iva_deduction_catalogue import invoice_evidence_authority
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
@@ -100,6 +100,7 @@ from .models import (
 )
 from .preflight import preflight_ledger_tax_readiness
 from .review_projection import ledger_transaction_review_status, project_ledger_review_query
+from .usage_ratio_repository import UsageRatioProfileLoader
 
 _MANUAL_PROVIDER_NAME = "manual-ledger"
 
@@ -593,6 +594,7 @@ def _readiness_summary(
     bucket_id: str,
     period: Period | None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
 ) -> tuple[int, int, bool | None]:
     """Return readiness counts while preserving the period-gated repository read."""
     if period is None:
@@ -604,6 +606,7 @@ def _readiness_summary(
             bucket_id=bucket_id,
             repository=transaction_repository,
         ),
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
     )
     return preflight.checked_transaction_count, len(preflight.issues), preflight.ready
 
@@ -692,6 +695,7 @@ def summarize_manual_transactions(
         bucket_id=bucket_id,
         period=period,
         transaction_repository=ports.transaction_repository,
+        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
     )
     # Money roll-up over active business/mixed rows (period-filtered when given):
     # the year-end / readiness money picture the personas asked for. Gross EUR
@@ -1364,9 +1368,8 @@ def _invoice_evidence_provenance(
     """
     if command.deduction_fact_kind is None or command.purchase_invoice_evidence_id is None:
         return None
-    if required_deduction_evidence_authority(command.deduction_fact_kind) is not (
-        IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE
-    ):
+    invoice_authority = invoice_evidence_authority()
+    if required_deduction_evidence_authority(command.deduction_fact_kind) != invoice_authority:
         return None
     evidence_id = command.purchase_invoice_evidence_id
     record = next(
@@ -1376,7 +1379,7 @@ def _invoice_evidence_provenance(
     if record is None:
         return None
     return IvaDeductionClassificationProvenance(
-        authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+        authority=invoice_authority,
         source_locator=record.evidence_id,
         evidence_digest=record.attachment_id,
     )

@@ -141,6 +141,7 @@ from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .identifier_evolutions import IdentifierEvolution
+from .lineage_attestation import LineageAttestation
 from .modelo_inception import DeclaredInception, ModeloInceptionField, UnauthoredBefore
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
 from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
@@ -199,7 +200,6 @@ from .schema_surfaces import (
     CasillaDefinition,
     validate_family_identity_uniqueness,
 )
-from .source_default_dispositions import SourceDefaultDisposition
 
 # Scalar and annotated value types live in ``_schema_scalars``; retaining these
 # assignments keeps the historical ``_schema`` import surface authoritative.
@@ -564,13 +564,6 @@ def _casilla_producer(
     )
 
 
-#: The casilla family's key in ``source_default_dispositions``. It carries an
-#: edition source default like the families in ``FAMILY_SOURCE_DEFAULT_FIELDS``
-#: but is absent from that pairing, which enumerates the SECTION families whose
-#: members lift; casillas are lifted by the loader's own casilla pass.
-_CASILLA_SOURCE_DEFAULT_FAMILY: Final = "casillas"
-
-
 class SchemaFamilyDispositionDeclaration(RegistryModel):
     """A revision's declared reason that one of its schema families does not apply.
 
@@ -710,15 +703,8 @@ class ModeloRevision(RegistryRevisionDeclaration):
     :data:`~.reference_sections.FAMILY_SOURCE_DEFAULT_FIELDS`, which is what the
     loader fills from, so no family can be defaulted from another's grounding.
 
-    ``source_default_dispositions`` is what an edition says when one of those
-    defaults cannot be derived at all: its rows share no leading run of
-    ``source_refs``, so each row keeps its own and there is nothing to lift.
-    Keyed by family -- ``casillas`` and every family in
-    :data:`~.reference_sections.FAMILY_SOURCE_DEFAULT_FIELDS` -- and carrying
-    a :class:`~.source_default_dispositions.SourceDefaultDisposition` reason,
-    it separates an edition that has nothing to lift from one nobody has lifted
-    yet, which a missing key alone cannot distinguish. A disposition for a
-    family that also declares its default is refused as the contradiction it is.
+    Whether a useful family source default can be derived is an optimization
+    result calculated from the member declarations. It is not revision data.
     """
 
     localization_key: str = Field(min_length=1, exclude=True, repr=False)
@@ -792,15 +778,18 @@ class ModeloRevision(RegistryRevisionDeclaration):
     continuidad_validation: ContinuidadValidationModeField = ContinuidadValidationMode.ADVISORY
     casilla_continuidad_evolutions: Annotated[tuple[CasillaContinuidadEvolutionDefinition, ...], CHAIN_FAMILY] = ()
     identifier_evolutions: Annotated[tuple[IdentifierEvolution, ...], CHAIN_FAMILY] = ()
+    lineage_attestations: Annotated[tuple[LineageAttestation, ...], MANIFEST_ONLY] = Field(
+        default=(),
+        exclude_if=lambda value: not value,
+        description=(
+            "Edge-local lineage evidence for members inherited from this revision's declared predecessor. "
+            "Each attestation names exactly one family identity and is authored in this revision's manifest."
+        ),
+    )
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
     family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
         Field(default_factory=dict, validate_default=True)
     )
-    source_default_dispositions: Annotated[
-        Mapping[str, SourceDefaultDisposition],
-        MANIFEST_ONLY,
-        FROZEN_MAPPING,
-    ] = Field(default_factory=dict, validate_default=True)
     restated_families: Annotated[tuple[RestatedFamilyDeclaration, ...], MANIFEST_ONLY] = Field(
         default=(),
         exclude_if=lambda value: not value,
@@ -953,40 +942,6 @@ class ModeloRevision(RegistryRevisionDeclaration):
                 raise RegistryValidationError(
                     f"revision {self.id!r} declares family {family!r} not applicable but also declares "
                     f"{len(getattr(self, family))} of them; drop the disposition or drop the content",
-                )
-        return self
-
-    @model_validator(mode="after")
-    def _validate_source_default_dispositions(self) -> ModeloRevision:
-        """Refuse an underivability claim about a family that has no default, or has one.
-
-        The claim is only readable against the family whose default field it
-        explains, so a key naming no such family explains nothing while reading
-        as though it did. And a family that DECLARES its default has plainly
-        derived one, which the same edition cannot also call underivable: the
-        screen would then have an authored disposition and a declared default
-        saying opposite things about the same key.
-        """
-        # Imported at call time: reference_sections reaches this module's model
-        # through the reference checker, so a module-level import would close a
-        # cycle through a half-initialised schema.
-        from .reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
-
-        default_field_by_family = {
-            _CASILLA_SOURCE_DEFAULT_FAMILY: "casilla_source_refs",
-            **dict(FAMILY_SOURCE_DEFAULT_FIELDS),
-        }
-        for family in self.source_default_dispositions:
-            default_field = default_field_by_family.get(family)
-            if default_field is None:
-                raise RegistryValidationError(
-                    f"revision {self.id!r} declares a source-default disposition for {family!r}, which declares no "
-                    f"edition source default; families carrying one are {sorted(default_field_by_family)!r}",
-                )
-            if getattr(self, default_field) is not None:
-                raise RegistryValidationError(
-                    f"revision {self.id!r} calls the {family!r} source default underivable but also declares "
-                    f"{default_field!r}; drop the disposition or drop the default",
                 )
         return self
 

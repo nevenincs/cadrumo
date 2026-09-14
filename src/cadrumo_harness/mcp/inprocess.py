@@ -26,7 +26,6 @@ in-process.
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 import threading
 import time
@@ -38,6 +37,7 @@ from cadrumo.application.operator_surface.command_ports import VerbInputSchema, 
 from cadrumo.core.json_contract import OutputSchemaError, validate_registered_envelope_document
 
 from ._call_runtime import CallTier
+from ._cli_executable import installed_cli_executable
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -157,9 +157,7 @@ def run_cli_in_process(
     with _STATE_LOCK:
         _HOLDER_SINCE = time.monotonic()
     try:
-        executable = shutil.which("aeat")
-        if executable is None:
-            raise RuntimeError("the installed aeat executable is required for command dispatch")
+        executable = installed_cli_executable(purpose="command dispatch")
         completed = subprocess.run(  # noqa: S603 - fixed installed executable and validated argv projection
             [executable, *argv_tail],
             check=False,

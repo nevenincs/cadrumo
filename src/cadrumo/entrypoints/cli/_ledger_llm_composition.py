@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import httpx
 
+from ...adapters.inbound.einvoice.shape import probe_document_shape
 from ...adapters.outbound.llm.errors import LLMCacheError, LLMProviderError
 from ...adapters.outbound.llm.models import MultimodalImageInput
 from ...adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
@@ -24,6 +25,7 @@ from ...application.ledger.evidence_input import (
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
+from ...application.ledger.evidence_input_ports import EvidenceInputPorts
 from ...application.ledger.evidence_reference import (
     find_bytes_bearing_evidence_record,
     refuse_reference_without_document_bytes,
@@ -41,6 +43,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import LLMClassifierError, TransactionValidationError
 from ...domain.transactions.models import Transaction
 from ..adapter_composition import build_ledger_evidence_ports
+from ._ledger_evidence_extraction_wiring import evidence_text_layer_ports
 
 
 class _VisionReader:
@@ -89,6 +92,8 @@ class LedgerLlmComposition:
 def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmComposition:
     """Bind storage, local readers, and telemetry for one CLI ledger invocation."""
     evidence_ports = build_ledger_evidence_ports(bucket_id=bucket_id)
+    evidence_input_ports = EvidenceInputPorts(document_shape_probe=probe_document_shape)
+    text_layer_ports = evidence_text_layer_ports()
 
     def resolve_evidence_input(
         resolved_bucket_id: str, evidence_id: str | None, attachment_ids: tuple[str, ...]
@@ -106,12 +111,14 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         )
         if record is not None:
             return ResolvedEvidenceInput(
-                evidence_input=resolve_purchase_invoice_evidence_input(record, store=store),
+                evidence_input=resolve_purchase_invoice_evidence_input(record, store=store, ports=evidence_input_ports),
                 reference=record.evidence_id,
             )
         if attachment_ids:
             return ResolvedEvidenceInput(
-                evidence_input=resolve_attachment_evidence_input(attachment_ids[0], store=store),
+                evidence_input=resolve_attachment_evidence_input(
+                    attachment_ids[0], store=store, ports=evidence_input_ports
+                ),
                 reference=attachment_ids[0],
             )
         if evidence_id is None:
@@ -163,6 +170,7 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
 
     ports = LLMClassificationPorts(
         resolve_evidence_input=resolve_evidence_input,
+        text_layer_ports=text_layer_ports,
         rasterise_pdf=rasterise_pdf_pages_to_base64_png,
         make_text_classifier=lambda spec: LocalTextLLMClassifier(spec=spec, settings=settings),
         make_vision_classifier=lambda spec, model: _VisionReader(

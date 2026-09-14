@@ -50,6 +50,7 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError, ModeloPreconditionErrorMixin
@@ -69,6 +70,7 @@ from .selectors import (
     resolve_modelo_calculation_revision_pick,
 )
 from .work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
+from .work_lifecycle_ports import WorkLifecyclePorts
 from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
@@ -1143,6 +1145,7 @@ def ensure_modelo_work_unit_for_active_target(
     causante_ccaa: CCAA | None = None,
     enforce_applicability: bool = True,
     catalogue: WorkUnitCatalogue,
+    ports: WorkLifecyclePorts,
 ) -> ModeloWorkEnsureResult:
     """Resume or create the active work unit for one visible filing target.
 
@@ -1174,7 +1177,7 @@ def ensure_modelo_work_unit_for_active_target(
         require_profile_ready_for_work_unit(unit, enforce_applicability=enforce_applicability)
         name_applied: str | None = None
         if name is not None and name.strip() and name.strip() != unit.name:
-            unit = rename_work_unit(unit.work_unit_id, name, actor=actor)
+            unit = rename_work_unit(unit.work_unit_id, name, actor=actor, ports=ports)
             name_applied = unit.name
         return ModeloWorkEnsureResult(work_unit=unit, reused=True, name_applied=name_applied)
 
@@ -1194,6 +1197,7 @@ def ensure_modelo_work_unit_for_active_target(
         actor=actor,
         causante_ccaa=causante_ccaa,
         enforce_applicability=enforce_applicability,
+        ports=ports,
     )
     return ModeloWorkEnsureResult(work_unit=unit, reused=False)
 
@@ -1290,6 +1294,7 @@ def resolve_modelo_calculation_revision_address(
         selector=selector,
         calculation_revision_id=calculation_revision_id,
         default_for=default_for,
+        calculation_repository=ports.calculation_repository,
     ).revision
     return _require_revision_parent_admitted_for_operation(
         revision,
@@ -1368,6 +1373,7 @@ def resolve_modelo_revision_pick(
     pick: ModeloRevisionPick | None = None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> ModeloResolvedRevisionProjection:
     """Resolve and project a revision selection as :class:`ModeloResolvedRevisionProjection`."""
     if pick is None:
@@ -1382,6 +1388,7 @@ def resolve_modelo_revision_pick(
         selector=pick.selector,
         calculation_revision_id=pick.calculation_revision_id,
         default_for=pick.default_for,
+        calculation_repository=calculation_repository,
     )
     return ModeloResolvedRevisionProjection.from_revision(selection.revision, selector=selection.selector)
 

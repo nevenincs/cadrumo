@@ -1,47 +1,107 @@
-"""Closed authority axes for IVA deduction facts.
-
-These names identify the source family of an IVA deduction.  They are not an
-IVA category, rate, flow, or prorrata classification; those remain independent
-axes in :mod:`cadrumo.domain.iva`.
-"""
+"""Opaque IVA-deduction authority axes projected from the facts registry."""
 
 from __future__ import annotations
 
-from enum import StrEnum
+from typing import Self
+
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+
+from .errors.hierarchy import CoreValidationError
 
 
-class IvaDeductionFactKind(StrEnum):
-    """The complete, non-inferable M303 deduction-source taxonomy."""
+class IvaDeductionFactKind(str):
+    """Opaque deduction-kind token projected from governed fact 0085."""
 
-    DOMESTIC_CURRENT = "domestic_current"
-    DOMESTIC_INVESTMENT = "domestic_investment"
-    IMPORT_CURRENT = "import_current"
-    IMPORT_INVESTMENT = "import_investment"
-    INTRA_EU_CURRENT = "intra_eu_current"
-    INTRA_EU_INVESTMENT = "intra_eu_investment"
-    REAGP_COMPENSATION = "reagp_compensation"
-    RECTIFICATION = "rectification"
-    INVESTMENT_GOODS_REGULARISATION = "investment_goods_regularisation"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("IvaDeductionFactKind tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("IvaDeductionFactKind token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("IvaDeductionFactKind must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
     @property
-    def is_investment_acquisition(self) -> bool:
-        """Whether this kind must have a reciprocal capital-good record."""
-        return self in {
-            self.DOMESTIC_INVESTMENT,
-            self.IMPORT_INVESTMENT,
-            self.INTRA_EU_INVESTMENT,
-        }
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical token for diagnostics."""
+        return str(self)
+
+class IvaDeductionEvidenceAuthority(str):
+    """Opaque evidence-authority token projected from governed fact 0085."""
+
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError(
+                "IvaDeductionEvidenceAuthority tokens must be projected from the facts registry",
+            )
+        if not isinstance(value, str) or not value:
+            raise ValueError("IvaDeductionEvidenceAuthority token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("IvaDeductionEvidenceAuthority must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical token for diagnostics."""
+        return str(self)
 
 
-class IvaDeductionEvidenceAuthority(StrEnum):
-    """Authoritative evidence family that established a deduction kind."""
-
-    INVOICE_EVIDENCE = "invoice_evidence"
-    CUSTOMS_DECLARATION = "customs_declaration"
-    INTRA_EU_SELF_ASSESSMENT = "intra_eu_self_assessment"
-    REAGP_RECEIPT = "reagp_receipt"
-    RECTIFICATION_EVIDENCE = "rectification_evidence"
-    BIENES_INVERSION_REGISTER = "bienes_inversion_register"
-
-
-__all__ = ["IvaDeductionEvidenceAuthority", "IvaDeductionFactKind"]
+__all__ = [
+    "IvaDeductionEvidenceAuthority",
+    "IvaDeductionFactKind",
+]

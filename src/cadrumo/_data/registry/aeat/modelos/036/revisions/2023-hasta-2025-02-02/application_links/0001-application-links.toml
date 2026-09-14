@@ -1,0 +1,58 @@
+# Modelo 036 application links for the 2023-to-2025-02-02 era.
+#
+# ONE LINK, NOT THE SUCCESSOR'S THREE, AND THE REFS ARE NOT COPIED. The 2025
+# edition declares workflow, filing and extractor links, but every one of them
+# cites sources this span cannot carry: aeat-modelo-036-procedure opens
+# 2025-02-03, aeat-dr-036-2025 is the successor design, and
+# orden-hac-1526-2024:art-1 is the 037 suppression that takes effect the day
+# this span ends. All three are excluded here for the same reason the revision
+# excludes them from its own source_refs, and the layout authority that does
+# cover every day of this span -- aeat-dr-036-2023 -- is cited instead.
+#
+# THE EXTRACTOR LINK IS DELIBERATELY NOT CARRIED. It names
+# parse_declaracion as the consumer, which asserts the inbound parser handles
+# the design of this era. That is a capability claim about code, not a fact
+# about the form, and nothing in this corpus establishes it for the 2023
+# diseno. Declaring a filing link and withholding the extractor states what is
+# known and no more.
+#
+# THE WORKFLOW LINK IS NOT CARRIED EITHER, for the narrower reason that its
+# only source_ref on the successor is aeat-modelo-036-procedure, which this
+# span cannot cite; it would have to be authored from different grounding
+# rather than mirrored, and nothing here needs it.
+
+#
+# THIS LINK DOES NOT YET VALIDATE, AND THE REASON IS A CATALOGUE AMBIGUITY
+# RATHER THAN ANYTHING MISSING HERE. The schema requires a filing link to carry
+# official_source_guidance evidence. aeat-dr-036-2023 is layout_authority, and
+# the only guidance sources for this modelo are two catalogue entries pointing
+# at THE SAME document -- identical corpus_path, identical sha256
+# (fd5264e1a8c3...), identical byte count -- with windows seventeen years apart:
+#
+#   aeat-modelo-036-procedure                 applies_from 2025-02-03
+#   aeat-modelo-036-roi-enrollment-procedure  applies_from 2008-01-01
+#
+# Both are pending_review and neither carries a note. One of the two windows is
+# wrong and this span turns on which: the first covers no day of it, the second
+# covers all of it. The second id also names ROI enrolment, and the bundled page
+# never mentions ROI at all.
+#
+# NOT RESOLVED HERE BY PICKING ONE. The page does mention 2003, 2007, 2008,
+# 2013 and 2017, but those read as legal citations -- Ley 58/2003, RD 1065/2007,
+# Orden EHA/1274/2007 -- rather than applicability markers, so they are not
+# evidence for the wider window. Unlike the modelo 190 procedure source, whose
+# own page carried "Ejercicio 2020 y siguientes" and settled it, nothing in this
+# page dates itself. Citing either id to make this link pass would assert a
+# window the corpus does not establish.
+[[revisions."2023-hasta-2025-02-02".application_links]]
+id = "modelo-036-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+]
+source_refs = ["aeat-dr-036-2023"]

@@ -6,9 +6,9 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....core.period import Period
 from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import calendar_events_from_expedientes_snapshots
 from ..calendar_evidence import calendar_filing_evidence_from_sources
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange, OverviewLocalFilingState
@@ -50,7 +50,7 @@ def test_calendar_entry_carries_distinct_local_and_aeat_states() -> None:
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,
@@ -88,7 +88,7 @@ def test_calendar_warns_when_aeat_submission_lacks_verified_justificante() -> No
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,
@@ -129,7 +129,7 @@ def test_calendar_uses_generic_justificante_fix_when_multiple_periods_need_pull(
                 captured_at=datetime(2025, 7, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,
@@ -137,7 +137,7 @@ def test_calendar_uses_generic_justificante_fix_when_multiple_periods_need_pull(
                         estado="ALTA",
                         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
                     ),
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=Period.from_year_and_code(2025, "2T"),
@@ -175,7 +175,7 @@ def test_calendar_clears_justificante_warning_when_filed_history_verifies_receip
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,
@@ -214,7 +214,7 @@ def test_calendar_event_carries_verified_justificante_from_filed_observation() -
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,
@@ -255,7 +255,7 @@ def test_calendar_event_justificante_verification_is_expediente_specific() -> No
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,
@@ -263,7 +263,7 @@ def test_calendar_event_justificante_verification_is_expediente_specific() -> No
                         estado="ALTA",
                         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
                     ),
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,

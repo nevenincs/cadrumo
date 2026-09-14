@@ -34,17 +34,21 @@ from datetime import date
 from decimal import Decimal
 from typing import NoReturn
 
-from ...adapters.inbound.einvoice.parsers import FacturaeInvoiceClass
 from ...application.invoices.catalogue_creation import resolve_iva_rate_slot
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing.dates import parse_iso8601_date
-from ...domain.invoices.enums import InvoiceClass
+from ...domain.invoices.enums import (
+    InvoiceClass,
+    invoice_class_ordinaria,
+    invoice_class_rectificativa,
+)
 from ...domain.invoices.models import InvoiceLine
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
-from ...domain.iva.schema import EUMemberState, IvaRateKind
+from ...domain.iva.schema import IvaRateKind, spanish_eu_member_state
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .invoice_draft_records import InvoiceDraft
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .structured_invoice_ports import StructuredInvoiceClassificationKind
 
 __all__ = ["domestic_rate_tier_from_the_document"]
 
@@ -146,17 +150,14 @@ def resolve_invoice_class(
 ) -> InvoiceClass:
     """Resolve Facturae class, preserving explicit operator and rectification facts."""
     declared_class = draft.facturae_invoice_class
-    if declared_class in {FacturaeInvoiceClass.ORIGINAL, FacturaeInvoiceClass.COPY}:
-        return InvoiceClass.ORDINARIA
-    if declared_class in {
-        FacturaeInvoiceClass.ORIGINAL_CORRECTIVE,
-        FacturaeInvoiceClass.COPY_CORRECTIVE,
-    }:
-        return InvoiceClass.RECTIFICATIVA
+    if declared_class is not None and declared_class.kind is StructuredInvoiceClassificationKind.ORDINARY:
+        return invoice_class_ordinaria()
+    if declared_class is not None and declared_class.kind is StructuredInvoiceClassificationKind.CORRECTIVE:
+        return invoice_class_rectificativa()
     if invoice_class is not None:
         # Recapitulativa has no domain member; preserve the operator's statement.
         return invoice_class
-    return InvoiceClass.RECTIFICATIVA if rectifies_invoice_number is not None else InvoiceClass.ORDINARIA
+    return invoice_class_rectificativa() if rectifies_invoice_number is not None else invoice_class_ordinaria()
 
 
 def operator_restated_the_amounts(
@@ -234,7 +235,9 @@ def domestic_rate_tier_from_the_document(draft: InvoiceDraft, *, invoice_date: d
         return None
     # The lookup takes the rate as a FRACTION, matching how a transaction stores
     # it; the draft carries the bare percentage the document prints.
-    tiers = rate_kinds_for_declared_rate(EUMemberState.ES, entry.iva_rate / Decimal("100"), invoice_date)
+    tiers = rate_kinds_for_declared_rate(
+        spanish_eu_member_state(effective_date=invoice_date), entry.iva_rate / Decimal("100"), invoice_date
+    )
     if len(tiers) != 1:
         return None
     return tiers[0]

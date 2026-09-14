@@ -9,7 +9,7 @@ wrong key / tampered ciphertext / mismatched recipient key all fail closed.
 
 Also proves composition with the recipient fingerprint registry: a public
 key registered via
-:mod:`~application.modelo._review_package_recipient_registry` is the
+:mod:`~application.modelo.review_package_recipient_registry` is the
 same public key this module's encryption targets.
 
 Also exercises the expiry, review-only, and replay-defence follow-up slice:
@@ -24,7 +24,7 @@ See Also:
         X25519 ECIES encryption primitive under test.
     :func:`~application.modelo.decrypt_review_package_for_recipient`:
         Expiry-aware decrypt primitive that returns typed recovered bytes.
-    :class:`~application.modelo.RecipientFingerprintRegistryRepository`:
+    :class:`~adapters.persistence.profile.review_package_recipient_registry.RecipientFingerprintRegistryAdapter`:
         Trusted-recipient public-key registry used by the composition tests.
     :func:`~entrypoints.cli._modelo_review_package_cli.review_package_decrypt`:
         CLI call site that composes decryption with replay-guard consumption.
@@ -43,36 +43,37 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
-from cadrumo.application.modelo.recipient_replay_guard import (
+from cadrumo.adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
 )
-from cadrumo.application.modelo.review_package_recipient_encryption import (
+from cadrumo.adapters.persistence.profile.review_package_recipient_encryption import (
     RecipientEncryptionAdapter,
     _recipient_encryption_key_object_key,
 )
-from cadrumo.application.storage.secure_object_namespaces import (
+from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
 )
-from cadrumo.application.storage.sql.orm import SecureObjectRow
-from cadrumo.application.storage.sql.session import session_scope
-from cadrumo.application.storage.tests.secure_sql import isolated_runtime_profile
-from core.casilla_id import validated_casilla_id
-from core.period import Period
-from domain.calculations.registry.bindings import CasillaObservation
-from domain.calculations.registry.schema_references import RegistrySnapshotRef
-from domain.modelos.calculation_revision import (
+from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from domain.modelos.codes import ModeloCode
-from domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from application.modelo.recipient_encryption import (
+from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from cadrumo.application.modelo.recipient_encryption import (
     RecipientEncryptedPackage,
     RecipientEncryptionKeypair,
 )
-from application.modelo.review_package_recipient_encryption import (
+from cadrumo.application.modelo.review_package_recipient_encryption import (
     RecipientDecryptionError,
     RecipientEncryptionError,
     RecipientPackageExpiredError,
@@ -80,11 +81,13 @@ from application.modelo.review_package_recipient_encryption import (
     encrypt_review_package_for_recipient,
     ensure_recipient_encryption_keypair,
 )
-from application.modelo.review_package_recipient_registry import (
-    RecipientFingerprintRegistryRepository,
+from cadrumo.application.modelo.review_package_recipient_registry import (
+    add_recipient_fingerprint,
+    get_recipient_fingerprint,
     public_key_hex_from_raw_bytes,
 )
-from cadrumo.application.modelo.tests._review_package_bytes_support import build_package_bytes
+from cadrumo.application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
+from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -300,9 +303,16 @@ def test_registered_recipient_public_key_is_the_encryption_target(tmp_path: Path
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f47793db-b91f-4d35-95fd-5e68ce6fcbac") as profile:
-        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="my-accountant", public_key_hex=recipient_public_key_hex, added_at=_NOW)
-        registered = repository.get("my-accountant")
+        ports = RecipientFingerprintRegistryPorts(
+            registry_repository=RecipientFingerprintRegistryAdapter(repository=profile.repository),
+        )
+        add_recipient_fingerprint(
+            recipient_id="my-accountant",
+            public_key_hex=recipient_public_key_hex,
+            added_at=_NOW,
+            ports=ports,
+        )
+        registered = get_recipient_fingerprint("my-accountant", ports=ports)
 
     envelope = encrypt_review_package_for_recipient(
         package_bytes,

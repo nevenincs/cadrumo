@@ -63,6 +63,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @12+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rendimientos del trabajo personal. ONE casilla over @12+2 dia, @14+2 mes and @16+4 ano, all printed under the single number 720.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-trabajo-personal-fecha"
+continuidad_id = "ret-retenciones-trabajo-personal-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:836 (sha256 3ecea6c06e3d) box [720] over 3 printed components @12+8 (4 12 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:896 (sha256 791479fbf9e9) box [720] over 3 printed components @12+8 (4 12 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de...)."
 number = "720"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "date"
@@ -96,6 +99,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @21+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rendimientos de actividades profesionales. ONE casilla over @21+2 dia, @23+2 mes and @25+4 ano, all printed under the single number 721.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-actividades-profesionales-fecha"
+continuidad_id = "ret-retenciones-actividades-profesionales-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:840 (sha256 3ecea6c06e3d) box [721] over 3 printed components @21+8 (8 21 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:900 (sha256 791479fbf9e9) box [721] over 3 printed components @21+8 (8 21 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de...)."
 number = "721"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "date"
@@ -129,6 +135,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @30+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rendimientos procedentes del arrendamiento o subarrendamiento. ONE casilla over @30+2 dia, @32+2 mes and @34+4 ano, all printed under the single number 722.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-arrendamiento-fecha"
+continuidad_id = "ret-retenciones-arrendamiento-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:844 (sha256 3ecea6c06e3d) box [722] over 3 printed components @30+8 (12 30 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rend. P...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:904 (sha256 791479fbf9e9) box [722] over 3 printed components @30+8 (12 30 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rend. P...)."
 number = "722"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "date"
@@ -162,6 +171,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @39+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre transmisiones o reembolsos de acciones o participaciones. ONE casilla over @39+2 dia, @41+2 mes and @43+4 ano, all printed under the single number 723.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-transmision-acciones-fecha"
+continuidad_id = "ret-retenciones-transmision-acciones-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:848 (sha256 3ecea6c06e3d) box [723] over 3 printed components @39+8 (16 39 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre las tra...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:908 (sha256 791479fbf9e9) box [723] over 3 printed components @39+8 (16 39 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre las tra...)."
 number = "723"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "date"
@@ -195,6 +207,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @48+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rentas o rendimientos de capital mobiliario derivados de la transmision. ONE casilla over @48+2 dia, @50+2 mes and @52+4 ano, all printed under the single number 724.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-capital-mobiliario-transmision-fecha"
+continuidad_id = "ret-retenciones-capital-mobiliario-transmision-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:852 (sha256 3ecea6c06e3d) box [724] over 3 printed components @48+8 (20 48 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rentas ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:912 (sha256 791479fbf9e9) box [724] over 3 printed components @48+8 (20 48 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rentas ...)."
 number = "724"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "date"
@@ -228,6 +243,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @57+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rentas o rendimientos de capital mobiliario obtenidos por la contraprestacion. ONE casilla over @57+2 dia, @59+2 mes and @61+4 ano, all printed under the single number 725.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-capital-mobiliario-contraprestacion-fecha"
+continuidad_id = "ret-retenciones-capital-mobiliario-contraprestacion-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:856 (sha256 3ecea6c06e3d) box [725] over 3 printed components @57+8 (24 57 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rentas ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:916 (sha256 791479fbf9e9) box [725] over 3 printed components @57+8 (24 57 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rentas ...)."
 number = "725"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "date"
@@ -261,6 +279,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @66+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rentas o rendimientos de capital mobiliario procedentes de operaciones. ONE casilla over @66+2 dia, @68+2 mes and @70+4 ano, all printed under the single number 726.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-capital-mobiliario-operaciones-fecha"
+continuidad_id = "ret-retenciones-capital-mobiliario-operaciones-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:860 (sha256 3ecea6c06e3d) box [726] over 3 printed components @66+8 (28 66 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rentas ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:920 (sha256 791479fbf9e9) box [726] over 3 printed components @66+8 (28 66 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre rentas ...)."
 number = "726"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "date"
@@ -294,6 +315,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @75+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre otras rentas o rendimientos de capital mobiliario. ONE casilla over @75+2 dia, @77+2 mes and @79+4 ano, all printed under the single number 727.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-capital-mobiliario-otros-fecha"
+continuidad_id = "ret-retenciones-capital-mobiliario-otros-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:864 (sha256 3ecea6c06e3d) box [727] over 3 printed components @75+8 (32 75 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre otras r...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:924 (sha256 791479fbf9e9) box [727] over 3 printed components @75+8 (32 75 2 Num 9. Oblig. de realizar retenc. o ing. cta. sobre otras r...)."
 number = "727"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "date"
@@ -327,6 +351,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @84+8. Impuestos especiales. Fecha. Obligacion de inscribir sus establecimientos en el registro territorial de la oficina gestora. ONE casilla over @84+2 dia, @86+2 mes and @88+4 ano, all printed under the single number 730.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.impuestos-especiales-inscripcion-registro-territorial-fecha"
+continuidad_id = "ret-impuestos-especiales-inscripcion-registro-territorial-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:868 (sha256 3ecea6c06e3d) box [730] over 3 printed components @84+8 (36 84 2 Num 10. IIEE. Obligac. de inscribir sus establ. en el reg. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:928 (sha256 791479fbf9e9) box [730] over 3 printed components @84+8 (36 84 2 Num 10. IIEE. Obligac. de inscribir sus establ. en el reg. ...)."
 number = "730"
 section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
 data_type = "date"
@@ -360,6 +387,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @93+8. Impuestos especiales. Fecha. Obligado a presentar autoliquidacion por el Impuesto sobre la Electricidad. ONE casilla over @93+2 dia, @95+2 mes and @97+4 ano, all printed under the single number 731.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.impuestos-especiales-impuesto-electricidad-fecha"
+continuidad_id = "ret-impuestos-especiales-impuesto-electricidad-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:872 (sha256 3ecea6c06e3d) box [731] over 3 printed components @93+8 (40 93 2 Num 10. IIEE. Obligado a presentar autoliquidación por el I...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:932 (sha256 791479fbf9e9) box [731] over 3 printed components @93+8 (40 93 2 Num 10. IIEE. Obligado a presentar autoliquidación por el I...)."
 number = "731"
 section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
 data_type = "date"
@@ -393,6 +423,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @102+8. Impuestos especiales. Fecha. Obligado a presentar declaracion resumen anual de operaciones del Impuesto Especial sobre el Carbon. ONE casilla over @102+2 dia, @104+2 mes and @106+4 ano, all printed under the single number 732.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.impuestos-especiales-resumen-anual-carbon-fecha"
+continuidad_id = "ret-impuestos-especiales-resumen-anual-carbon-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:876 (sha256 3ecea6c06e3d) box [732] over 3 printed components @102+8 (44 102 2 Num 10. IIEE. Obligado a presentar decl. resumen anual de ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:936 (sha256 791479fbf9e9) box [732] over 3 printed components @102+8 (44 102 2 Num 10. IIEE. Obligado a presentar decl. resumen anual de ...)."
 number = "732"
 section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
 data_type = "date"
@@ -426,6 +459,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @111+8. Impuestos especiales. Fecha. Obligacion de presentar declaracion por el Impuesto Especial sobre Primas de Seguros. ONE casilla over @111+2 dia, @113+2 mes and @115+4 ano, all printed under the single number 733.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.impuestos-especiales-primas-seguros-fecha"
+continuidad_id = "ret-impuestos-especiales-primas-seguros-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:880 (sha256 3ecea6c06e3d) box [733] over 3 printed components @111+8 (48 111 2 Num 10. B) Obligación de presentar declaración por el Impu...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:940 (sha256 791479fbf9e9) box [733] over 3 printed components @111+8 (48 111 2 Num 10. B) Obligación de presentar declaración por el Impu...)."
 number = "733"
 section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
 data_type = "date"
@@ -493,6 +529,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @207+8. Impuestos medioambientales. Fecha de la obligacion por impuestos medioambientales. ONE casilla over @207+2 dia, @209+2 mes and @211+4 ano, all printed under the single number 709.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.medioambientales-obligacion-declarar-fecha"
+continuidad_id = "ret-medioambientales-obligacion-declarar-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:888 (sha256 3ecea6c06e3d) box [709] over 3 printed components @207+8 (56 207 2 Num 10. C) Obligación de presentar declaración por Impuest...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:948 (sha256 791479fbf9e9) box [709] over 3 printed components @207+8 (56 207 2 Num 10. C) Obligación de presentar declaración por Impuest...)."
 number = "709"
 section = ["declaracion", "otras_obligaciones", "medioambientales"]
 data_type = "date"
@@ -526,6 +565,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @216+8. Impuesto sobre determinados servicios digitales. Fecha de la obligacion por el Impuesto sobre Determinados Servicios Digitales. ONE casilla over @216+2 dia, @218+2 mes and @220+4 ano, all printed under the single number 715.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.servicios-digitales-obligacion-autoliquidar-fecha"
+continuidad_id = "ret-servicios-digitales-obligacion-autoliquidar-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:892 (sha256 3ecea6c06e3d) box [715] over 3 printed components @216+8 (60 216 2 Num 10. D) Obligado a presentar autoliquidación por el Imp...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:952 (sha256 791479fbf9e9) box [715] over 3 printed components @216+8 (60 216 2 Num 10. D) Obligado a presentar autoliquidación por el Imp...)."
 number = "715"
 section = ["declaracion", "otras_obligaciones", "servicios_digitales"]
 data_type = "date"
@@ -594,6 +636,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @227+8. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.4.a). Fecha. ONE casilla over @227+2 dia, @229+2 mes and @231+4 ano, all printed under the single number 754.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.telecom-art-70-uno-4-fecha"
+continuidad_id = "ret-telecom-art-70-uno-4-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:899 (sha256 3ecea6c06e3d) box [754] over 3 printed components @227+8 (66 227 2 Num serv.telecom radiotv y via electronica prestados a par...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:959 (sha256 791479fbf9e9) box [754] over 3 printed components @227+8 (66 227 2 Num serv.telecom radiotv y via electronica prestados a par...)."
 number = "754"
 section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
 data_type = "date"
@@ -662,6 +707,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @238+8. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.8). Fecha. ONE casilla over @238+2 dia, @240+2 mes and @242+4 ano, all printed under the single number 759.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.telecom-art-70-uno-8-fecha"
+continuidad_id = "ret-telecom-art-70-uno-8-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:906 (sha256 3ecea6c06e3d) box [759] over 3 printed components @238+8 (72 238 2 Num serv.telecom radiotv y via electronica prestados a par...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:966 (sha256 791479fbf9e9) box [759] over 3 printed components @238+8 (72 238 2 Num serv.telecom radiotv y via electronica prestados a par...)."
 number = "759"
 section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
 data_type = "date"

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-from ...adapters.persistence.storage.errors import STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -17,10 +16,13 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..persistence_errors import PersistenceDegradationError
+from ..user_profile.profile_read_ports import ProfileReadPorts
+from .iva_compensation_history_ports import (
+    IvaCompensationHistoryPersistenceError,
+    IvaCompensationHistoryRepositoryProtocol,
+)
 from .observations_repository import CalculationObservationRepositoryProtocol
-
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
-
 
 if TYPE_CHECKING:
     from .binding_prefill import PrefilledBinding
@@ -51,11 +53,15 @@ class PreviousFilingSourceResolver:
         self,
         *,
         repository: CalculationObservationRepositoryProtocol,
+        iva_history_repository: IvaCompensationHistoryRepositoryProtocol,
+        profile_read_ports: ProfileReadPorts,
         registry_snapshot: RegistrySnapshot | None = None,
         excluded_binding_ids: frozenset[BindingId] | None = None,
     ) -> None:
         """Bind the composed observation repository and registry collaborators."""
         self._repository = repository
+        self._iva_history_repository = iva_history_repository
+        self._profile_read_ports = profile_read_ports
         self._registry_snapshot = registry_snapshot
         self._excluded_binding_ids = excluded_binding_ids or frozenset()
 
@@ -71,10 +77,14 @@ class PreviousFilingSourceResolver:
             report = resolve_bindings_from_local_store(
                 snapshot,
                 repository=self._repository,
-                activity_start_date=activity_start_date_for_bucket(str(context.bucket_id)),
+                iva_history_repository=self._iva_history_repository,
+                activity_start_date=activity_start_date_for_bucket(
+                    str(context.bucket_id),
+                    profile_path_values_reader=self._profile_read_ports.path_values,
+                ),
                 excluded_binding_ids=self._excluded_binding_ids,
             )
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except (PersistenceDegradationError, IvaCompensationHistoryPersistenceError) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

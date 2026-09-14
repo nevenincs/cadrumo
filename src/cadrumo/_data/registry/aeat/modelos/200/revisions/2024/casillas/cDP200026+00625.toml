@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DP200026:00625"
+continuidad_id = "is-tributacion-conjunta-porcentaje-estado"
 number = "00625"
 segmento = "DP200026"
 section = ["tributacion_conjunta_estado_adm_forales", "calculo_porcentajes_tributacion"]

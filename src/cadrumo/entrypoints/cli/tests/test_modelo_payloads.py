@@ -456,7 +456,7 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
         source_provenance=(),
     )
 
-    payload = calculation_revision_payload(revision)
+    payload = calculation_revision_payload(revision, include_result_summary=False)
     by_casilla = {row.casilla_id: row for row in payload.observations}
 
     assert by_casilla[_PAYLOAD_CASILLA].absent_by_design is True
@@ -527,7 +527,7 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
         filing_instance_evidence=None,
     )
 
-    payload = calculation_revision_payload(revision)
+    payload = calculation_revision_payload(revision, include_result_summary=False)
     by_source_ref = {row.source_ref: row for row in payload.source_provenance}
 
     assert by_source_ref["193:2024:0A:withholding-total"].resolver_id == "previous_filing"

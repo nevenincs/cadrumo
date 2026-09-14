@@ -44,7 +44,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 from cadrumo.application.calculations.errors import ObservationCasillaReferenceError
 from cadrumo.application.calculations.observations_repository import IvaWalletDecisionEnvelopePayload, ObservationEnvelopePayload, ObservationSourceKind, ResultDispositionProjection, iva_wallet_decision_event_key, iva_wallet_decision_key
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
-from cadrumo.application.calculations.tests._iva_compensation_history_support import m303_registry_snapshot_ref
+from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

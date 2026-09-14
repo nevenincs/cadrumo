@@ -126,12 +126,13 @@ class RegistryAuthorityCurrentCoordinate:
 
 
 def _artifact_coordinate_domain(identity_digest: str) -> ContentDigest:
-    """Mint an opaque coordinate for one signed artifact in this process."""
+    """Mint an opaque coordinate for one constructed artifact incarnation."""
     domain = content_hash_hex(
         {
             "schema": "published-authority-artifact-coordinate/v1",
             "artifact_identity_digest": identity_digest,
             "process_incarnation": _artifact_process_nonce.hex(),
+            "artifact_incarnation": token_bytes(32).hex(),
         }
     )
     _artifact_coordinate_domains.add(domain)
@@ -617,6 +618,8 @@ def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tup
 
 
 _BUNDLED_AUTHORITY_ARTIFACT_PARTS = ("registry", "authority", "authority.json")
+_published_authorities_lock = RLock()
+_published_authorities: dict[str, tuple[AuthorityArtifact, ValidatedRegistryAuthority]] = {}
 
 
 def bundled_authority() -> ValidatedRegistryAuthority:
@@ -628,22 +631,27 @@ def bundled_authority() -> ValidatedRegistryAuthority:
 
 
 def published_authority(artifact_path: Path) -> ValidatedRegistryAuthority:
-    """Return a fresh authority over the published artifact at ``artifact_path``.
+    """Return the shared authority over the current artifact at ``artifact_path``.
 
     Publication validates authoring inputs before producing the artifact.  A
     product process never recompiles those inputs: a missing, corrupt, or
     unsupported-version publication is refused here, on every call, before a
     calculation or filing can begin.
 
-    The verified model graph is decoded once per artifact file identity and
-    shared, because it is deeply immutable: every model is frozen and every
-    mapping is a frozen mapping, so no consumer can change the modelos or
-    catalogues another consumer observes.  The authority object itself, with
-    its own snapshot cache and validation bookkeeping, is new on every call.
-    A republished artifact is detected by its file identity and decoded afresh.
+    The verified model graph and its authority-private snapshot cache are
+    shared for one artifact file identity.  A republished artifact is detected
+    by the artifact reader and receives a fresh authority, so no filing-layer
+    cache can outlive the semantic authority inputs that selected a snapshot.
     """
-    artifact = read_shared_authority_artifact(artifact_path)
-    return _authority_from_published_artifact(artifact, artifact_path=artifact_path)
+    key = str(artifact_path.resolve())
+    with _published_authorities_lock:
+        artifact = read_shared_authority_artifact(artifact_path)
+        cached = _published_authorities.get(key)
+        if cached is not None and cached[0] is artifact:
+            return cached[1]
+        authority = _authority_from_published_artifact(artifact, artifact_path=artifact_path)
+        _published_authorities[key] = (artifact, authority)
+        return authority
 
 
 def bundled_authority_artifact_path() -> Path:

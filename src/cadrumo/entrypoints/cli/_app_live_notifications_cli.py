@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 import typer
 
 from ...adapters.inbound.notificacion.document_reader import NotificationDocumentReader
+from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ...adapters.outbound.aeat.sede.notifications import (
     assert_notification_content_readable,
     fetch_notification_document,
@@ -100,6 +101,7 @@ def notifications_pull(ctx: typer.Context) -> None:
         capture_notifications(
             bucket_id=bucket_id,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            browser_session_factory=default_browser_session_factory,
             operator_scope_ports=operator_scope_ports(ctx),
             ports=notifications_ports,
         )
@@ -405,6 +407,7 @@ def notifications_document_pull(
             certificado_id=certificado_id,
             service=service,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            browser_session_factory=default_browser_session_factory,
             operator_scope_ports=operator_scope_ports(ctx),
             ports=notifications_ports,
         )

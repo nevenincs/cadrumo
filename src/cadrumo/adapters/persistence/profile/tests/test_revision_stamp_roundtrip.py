@@ -17,6 +17,7 @@
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -317,7 +318,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
             filing_year=_M303_CARRY_YEAR,
             period=_M303_CARRY_TARGET_PERIOD,
         )
-        report = resolve_bindings_from_local_store(snapshot, repository=repo)
+        report = resolve_bindings_from_local_store(snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository())
 
         assert isinstance(report, BindingPrefillReport)
         # The carry was refused: 1T was dropped by the R2 gate.
@@ -355,7 +356,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
             filing_year=_M303_CARRY_YEAR,
             period=_M303_CARRY_TARGET_PERIOD,
         )
-        report = resolve_bindings_from_local_store(snapshot, repository=repo)
+        report = resolve_bindings_from_local_store(snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository())
 
         assert isinstance(report, BindingPrefillReport)
         assert report.prefilled, "correctly stamped 1T observation must carry; the prefill must not be empty."

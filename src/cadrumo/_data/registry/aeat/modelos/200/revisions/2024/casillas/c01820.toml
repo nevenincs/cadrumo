@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01820"
+continuidad_id = "01820"
 number = "01820"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "aumento"]
 data_type = "money"

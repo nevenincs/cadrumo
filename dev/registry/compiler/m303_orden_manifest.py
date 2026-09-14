@@ -27,7 +27,10 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 
 from ._m303_orden_legal import compile_annual_orden_legal_references
 from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
-from ._m303_orden_source import extract_m303_annual_orden_source
+from ._m303_orden_source import (
+    extract_m303_annual_orden_source,
+    validate_m303_annual_orden_lorca_projection,
+)
 from .m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
@@ -72,6 +75,8 @@ def generate_manifest_with_censuses(
                 source=source,
                 source_root=source_root,
             )
+        else:
+            validate_m303_annual_orden_lorca_projection(census, source=source)
         censuses[source.id] = census
         generated_sources.append(_generated_source_from_census(census, ejercicio=ejercicio, source_ref=source.id))
     manifest = M303AnnualOrdenGeneratedManifest(

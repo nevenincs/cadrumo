@@ -14,10 +14,10 @@ record typed by :class:`domain.buckets.BucketEventObjectType`. They are
 audit packaging records, not purchase-invoice evidence or official AEAT filing
 evidence claims.
 
-The persisted manifest is encrypted bucket-local state managed by
-:class:`EvidenceBundleRepository`. The ZIP produced by ``export`` is an
-operator-directed plaintext handoff artifact written only to the caller's
-requested path after verification.
+The persisted manifest is encrypted bucket-local state reached through the
+required :class:`EvidenceBundlePorts` capabilities supplied by outer
+composition. The ZIP produced by ``export`` is an operator-directed plaintext
+handoff artifact written only to the caller's requested path after verification.
 
 Verbs supported by the operator surface (`aeat app modelo audit ...`):
     show     - render the bundle's manifest and referenced records
@@ -32,14 +32,14 @@ The audit surface never contacts AEAT and never performs live submission.
 Export refuses on failed verification unless ``--force-incomplete`` is
 explicitly passed at the operator boundary.
 
-Models are defined in ``models`` and repository/service operations in
-``service``. The package initializer exports no symbols.
+Models are defined in ``models``, required capabilities in ``ports``, and
+service operations in ``service``. The package initializer exports no symbols.
 
 See Also:
     :class:`EvidenceBundleService`
         Build, verify, and export service for audit bundles.
-    :class:`EvidenceBundleRepository`
-        Encrypted bucket-local repository for bundle manifests.
+    :class:`EvidenceBundlePorts`
+        Required application capabilities for one bucket-bound service call.
     :class:`EvidenceBundleVerificationReport`
         Integrity-check summary emitted by ``check`` and ``export`` flows.
     :class:`BundleVerificationState`

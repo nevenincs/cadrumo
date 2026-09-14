@@ -23,93 +23,83 @@ called them sectoral; the declaration says otherwise and now wins.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import seed_test_profile_record
+from ....domain.user_profile.values import UserProfileFact
+from .. import _retencion_rate_advisory
 from .._retencion_rate_advisory import _profile_suggests_sectoral_activity
-from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
-_PROFILE_ID = "20020020-0200-4200-8200-200200200200"
-_BUCKET_ID = _PROFILE_ID
+_BUCKET_ID = "20020020-0200-4200-8200-200200200200"
 
 
-@pytest.fixture
-def bucket_id() -> str:
-    return _BUCKET_ID
-
-
-def _save_profile(*facts: UserProfileFact) -> None:
-    """Persist a profile carrying ``facts`` through the real repository."""
-    seed_test_profile_record(
-        UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_PROFILE_ID,
-            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"), *facts),
-            created_at=_CLOCK,
-            updated_at=_CLOCK,
+def _profile_for_facts(*facts: UserProfileFact) -> SimpleNamespace:
+    """Build the projected profile shape consumed by the advisory policy."""
+    values = {fact.path: fact.value for fact in facts}
+    return SimpleNamespace(
+        irpf_activity_kind=values.get("irpf.activity_kind"),
+        iva_regime=values.get("iva.regime"),
+        irpf_estimation_regime=values.get("irpf.estimation_regime"),
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur=values.get(
+            "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"
         ),
     )
 
 
-def test_a_declared_sectorial_activity_answers_the_hint(secure_profile_backend: None) -> None:  # noqa: F811
+def _suggests(*facts: UserProfileFact) -> bool | None:
+    """Exercise the policy with an inward fake profile, without persistence."""
+    profile = _profile_for_facts(*facts)
+    with patch.object(_retencion_rate_advisory, "_load_profile_for_bucket", return_value=profile):
+        return _profile_suggests_sectoral_activity(_BUCKET_ID)
+
+
+def test_a_declared_sectorial_activity_answers_the_hint() -> None:
     """A SECTORIAL declaration alone resolves the hint, with no surrogate present."""
-    _save_profile(UserProfileFact(path="irpf.activity_kind", value="sectorial"))
-
-    assert _profile_suggests_sectoral_activity(_BUCKET_ID) is True
+    assert _suggests(UserProfileFact(path="irpf.activity_kind", value="sectorial")) is True
 
 
-def test_a_declared_professional_activity_answers_the_hint(secure_profile_backend: None) -> None:  # noqa: F811
+def test_a_declared_professional_activity_answers_the_hint() -> None:
     """A PROFESIONAL declaration alone resolves the hint negatively.
 
     Previously unreachable without an estimación directa régimen: a profile
     declaring only its activity had no non-sectoral signal at all and fell
     through to ``None``.
     """
-    _save_profile(UserProfileFact(path="irpf.activity_kind", value="profesional"))
-
-    assert _profile_suggests_sectoral_activity(_BUCKET_ID) is False
+    assert _suggests(UserProfileFact(path="irpf.activity_kind", value="profesional")) is False
 
 
-def test_the_declaration_outranks_the_estimacion_objetiva_surrogate(secure_profile_backend: None) -> None:  # noqa: F811
+def test_the_declaration_outranks_the_estimacion_objetiva_surrogate() -> None:
     """PROFESIONAL wins over objetiva -- the one case where the ordering shows.
 
     This is the assertion that would fail if the declaration were consulted
     after the surrogates instead of before, so it pins the ordering rather than
     merely exercising the new branch.
     """
-    _save_profile(
+    assert _suggests(
         UserProfileFact(path="irpf.activity_kind", value="profesional"),
         UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
-    )
-
-    assert _profile_suggests_sectoral_activity(_BUCKET_ID) is False
+    ) is False
 
 
-def test_the_objetiva_surrogate_still_answers_an_undeclared_profile(secure_profile_backend: None) -> None:  # noqa: F811
+def test_the_objetiva_surrogate_still_answers_an_undeclared_profile() -> None:
     """Without a declaration the surrogate is unchanged -- the fallback survives.
 
     Anti-regression counterpart to the test above: proves the new branch did not
     simply displace the surrogates for every profile, only for declaring ones.
     """
-    _save_profile(UserProfileFact(path="irpf.estimation_regime", value="objetiva"))
-
-    assert _profile_suggests_sectoral_activity(_BUCKET_ID) is True
+    assert _suggests(UserProfileFact(path="irpf.estimation_regime", value="objetiva")) is True
 
 
-def test_an_undeclared_silent_profile_still_yields_no_hint(secure_profile_backend: None) -> None:  # noqa: F811
+def test_an_undeclared_silent_profile_still_yields_no_hint() -> None:
     """A profile silent on both axes remains unresolved rather than guessing."""
-    _save_profile()
-
-    assert _profile_suggests_sectoral_activity(_BUCKET_ID) is None
+    assert _suggests() is None
 
 
-def test_a_declared_sectorial_activity_needs_no_agrarian_gross_figure(secure_profile_backend: None) -> None:  # noqa: F811
+def test_a_declared_sectorial_activity_needs_no_agrarian_gross_figure() -> None:
     """The declaration stands alone, with the agrarian-gross surrogate absent.
 
     Guards against a reading where the new branch is redundant because a
@@ -118,9 +108,7 @@ def test_a_declared_sectorial_activity_needs_no_agrarian_gross_figure(secure_pro
     directa simplificada, which the surrogates read as NON-sectoral, so a True
     can only have come from the declaration.
     """
-    _save_profile(
+    assert _suggests(
         UserProfileFact(path="irpf.activity_kind", value="sectorial"),
         UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
-    )
-
-    assert _profile_suggests_sectoral_activity(_BUCKET_ID) is True
+    ) is True

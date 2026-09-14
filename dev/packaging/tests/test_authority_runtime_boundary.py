@@ -19,18 +19,6 @@ _YEAR_SELECTION_MODULES = (
     _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "snapshot.py",
     _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "temporal.py",
 )
-_KNOWN_SHIPPED_REGISTRY_AUTHORING_TESTS = frozenset(
-    {
-        "_registry_scenarios_support.py",
-        "test_continuidad_completeness_ratchet.py",
-        "test_deduccion_madrid_nacimiento_adopcion.py",
-        "test_legal_anchor_verification_ratchet.py",
-        "test_m100_2024_final_settlement_chain_wiring.py",
-        "test_modelo_200_registry.py",
-        "test_reduccion_art_84_conjunta.py",
-        "test_renta_chain_behaviour.py",
-    }
-)
 
 
 def _production_modules(root: Path = _SHIPPED_ROOT) -> list[Path]:
@@ -57,6 +45,8 @@ def _literal_path_parts(node: ast.AST, bindings: dict[str, tuple[str, ...]]) -> 
         return (node.value,)
     if isinstance(node, ast.Name):
         return bindings.get(node.id, ())
+    if isinstance(node, (ast.List, ast.Tuple)):
+        return tuple(part for item in node.elts for part in _literal_path_parts(item, bindings))
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
         return _literal_path_parts(node.left, bindings) + _literal_path_parts(node.right, bindings)
     if isinstance(node, ast.Call):
@@ -89,16 +79,43 @@ def _literal_call_path(call: ast.Call, bindings: dict[str, tuple[str, ...]]) -> 
     return "/".join(part.strip("/\\") for part in _literal_path_parts(call, bindings)).replace("\\", "/").lower()
 
 
-def _authored_registry_accesses(tree: ast.AST) -> tuple[ast.Call, ...]:
+def _call_name(call: ast.Call) -> str:
+    if isinstance(call.func, ast.Name):
+        return call.func.id
+    if isinstance(call.func, ast.Attribute):
+        return call.func.attr
+    return ""
+
+
+def _receiver_calls(call: ast.Call, name: str) -> bool:
+    if not isinstance(call.func, ast.Attribute):
+        return False
+    return any(isinstance(node, ast.Call) and _call_name(node) == name for node in ast.walk(call.func.value))
+
+
+def _authored_registry_accesses(tree: ast.AST, *, include_corpus: bool = False) -> tuple[ast.Call, ...]:
     """Return direct calls that construct or access the authored registry path."""
     bindings = _literal_path_bindings(tree)
+    path_reader_methods = {"glob", "is_file", "iterdir", "read_bytes", "read_text", "rglob"}
+    path_call_names = path_reader_methods | {"Path", "bundled_path", "read_toml", "scan_directory"}
+    process_call_names = {"Popen", "check_call", "check_output", "run"}
     return tuple(
         node
         for node in ast.walk(tree)
         if isinstance(node, ast.Call)
         and (
-            "registry/aeat" in _literal_call_path(node, bindings)
-            or "_data/registry/aeat" in _literal_call_path(node, bindings)
+            (
+                _call_name(node) in path_call_names
+                and (
+                    "registry/aeat" in _literal_call_path(node, bindings)
+                    or "_data/registry/aeat" in _literal_call_path(node, bindings)
+                    or "_data/registry" in _literal_call_path(node, bindings)
+                    or (include_corpus and "corpus/aeat_official" in _literal_call_path(node, bindings))
+                    or (include_corpus and "corpus/manuals" in _literal_call_path(node, bindings))
+                )
+            )
+            or (_call_name(node) in process_call_names and "_data/registry" in _literal_call_path(node, bindings))
+            or (include_corpus and _call_name(node) in path_reader_methods and _receiver_calls(node, "bundled_path"))
         )
     )
 
@@ -113,6 +130,19 @@ def test_raw_reader_census_resolves_indirect_path_composition() -> None:
 
     assert len(accesses) == 1
     assert accesses[0].lineno == 2
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        'for path in Path("src/cadrumo/_data/registry").rglob("verification_expectations/*.toml"):\n    pass\n',
+        '(bundled_path() / source.corpus_path).read_text(encoding="utf-8")\n',
+        'subprocess.run(["git", "grep", "token", "HEAD", "--", "src/cadrumo/_data/registry"])\n',
+    ),
+)
+def test_raw_reader_census_detects_direct_and_dynamic_authored_reads(source: str) -> None:
+    """Direct registry scans and dynamic corpus receivers cannot evade the census."""
+    assert _authored_registry_accesses(ast.parse(source), include_corpus=True)
 
 
 def test_shipped_runtime_has_no_operative_authored_registry_reader() -> None:
@@ -152,8 +182,8 @@ def test_shipped_runtime_has_no_operative_authored_registry_reader() -> None:
     )
 
 
-def test_shipped_registry_authoring_test_backlog_only_shrinks() -> None:
-    """No new mutable-source test enters the runtime package during relocation."""
+def test_shipped_registry_tests_have_no_operative_authored_registry_reader() -> None:
+    """Tests that inspect mutable authoring inputs live under ``dev/registry``."""
 
     offenders: dict[str, list[str]] = {}
     paths = tuple(scan_directory(_SHIPPED_REGISTRY_TESTS, pattern="*.py", recursive=True))
@@ -162,7 +192,7 @@ def test_shipped_registry_authoring_test_backlog_only_shrinks() -> None:
         tree = ast.parse(source, filename=str(path))
         accesses = tuple(
             call
-            for call in _authored_registry_accesses(tree)
+            for call in _authored_registry_accesses(tree, include_corpus=True)
             if not (isinstance(call.func, ast.Name) and call.func.id == "SourceReference")
         )
         if accesses:
@@ -170,12 +200,8 @@ def test_shipped_registry_authoring_test_backlog_only_shrinks() -> None:
                 f"line {call.lineno}: {ast.get_source_segment(source, call) or '<call>'}" for call in accesses
             ]
 
-    assert len(paths) > 200, "the registry-test relocation census is not covering the package test tree"
-    unexpected = sorted(set(offenders) - _KNOWN_SHIPPED_REGISTRY_AUTHORING_TESTS)
-    assert not unexpected, (
-        "new registry authoring tests entered the shipped package; relocate them under dev/registry/tests: "
-        f"{unexpected!r}"
-    )
+    assert len(paths) >= 190, "the registry-test relocation census is not covering the package test tree"
+    assert offenders == {}, f"registry authoring tests remain under the shipped package: {offenders}"
 
 
 def test_revision_selection_delegates_year_admission_to_the_shared_catalogue() -> None:

@@ -78,10 +78,13 @@ build_diseno_coverage_report against this era's own design (aeat-dr-604-2021, sh
 262e743d) reads 7 of 7 derived casillas covered, zero gaps. All 3 locales complete, 129 \
 strings, no stale keys. NOT CLAIMED -- EXPORT LAYOUT COMPLETENESS: the layout writes 58 of \
 the 60 positions the design requires; the two entidad-desarrolladora slots @93+4 and \
-@101+9 are deliberately unwritten rather than filled with a wrong identity. NOT CLAIMED -- \
-FILING YEAR 2024: this modelo has NO windows for 2024 at all. The gap is on the sibling \
-2024-y-siguientes revision, which claims valid_from 2024-01-01 but enumerates only 2025. \
-It is a real hole, reported not closed here, and outside this revision's span. NOT CLAIMED \
+@101+9 are deliberately unwritten rather than filled with a wrong identity. CLOSED SINCE THIS STAMP -- \
+FILING YEAR 2024: this note previously recorded that the modelo had NO windows for 2024 \
+at all, a real hole reported here and left open as outside this span. That reading was \
+correct when made. It was closed on 2026-09-12 on the sibling 2024-y-siguientes \
+revision, which now carries twelve 2024 windows authored from the same \
+orden-hac-510-2021 art 3 cadence this revision uses; what changed is the corpus, not \
+the reading. NOT CLAIMED \
 -- ART 1 AND ART 3 remain agent-fetched excerpts pending operator re-verification. NOT \
 CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- the 3 \
 locales are complete but their strings were not audited for accuracy."""

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -50,6 +51,9 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.ids import RevisionId
 
 from ._toml_helpers import as_toml_table as _as_toml_table
+
+type TomlReader = Callable[..., dict[str, object]]
+"""Parses one authored registry TOML file, refusing through ``error_factory``."""
 
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
 
@@ -151,15 +155,28 @@ def _validate_modelos_directory_entries(modelos_dir: Path) -> tuple[Path, ...]:
     return tuple(directories)
 
 
-def _read_modelo_id(path: Path, *, description: str) -> str:
+def _read_modelo_id(path: Path, *, description: str, read: TomlReader | None = None) -> str:
+    """Read ``[modelo].id`` from one authored manifest or revision TOML.
+
+    Only a read/parse refusal from the TOML reader is relabelled with
+    ``description``; the missing-key refusal already names ``path`` itself, and
+    every other exception keeps its own subject.
+
+    Args:
+        path: The manifest or revision TOML to read.
+        description: Subject named in the relabelled read/parse refusal.
+        read: Reader override used by the tests to exercise the refusal paths;
+            defaults to the shared TOML reader.
+    """
+    reader = read or read_toml
     try:
-        raw_data = read_toml(path, error_factory=RegistryLoadError)
-        modelo_table = _as_toml_table(raw_data.get("modelo"))
-        if modelo_table is None or "id" not in modelo_table:
-            raise RegistryLoadError(f"{path}: missing [modelo].id")
-        return str(modelo_table["id"])
-    except Exception as exc:
+        raw_data = reader(path, error_factory=RegistryLoadError)
+    except RegistryLoadError as exc:
         raise RegistryLoadError(f"{path}: invalid {description}: {exc}") from exc
+    modelo_table = _as_toml_table(raw_data.get("modelo"))
+    if modelo_table is None or "id" not in modelo_table:
+        raise RegistryLoadError(f"{path}: missing [modelo].id")
+    return str(modelo_table["id"])
 
 
 def _directory_modelo_sources(modelo_directories: tuple[Path, ...]) -> tuple[ModeloSource, ...]:

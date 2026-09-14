@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01884"
+continuidad_id = "01884"
+continuidad_origin = "seeded"
 number = "01884"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "disminucion"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:da-18"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01885"
+continuidad_id = "is-correccion-libertad-amortizacion-vehiculos-permanente-disminucion"
+continuidad_origin = "seeded"
 number = "01885"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "disminucion"]
 data_type = "money"

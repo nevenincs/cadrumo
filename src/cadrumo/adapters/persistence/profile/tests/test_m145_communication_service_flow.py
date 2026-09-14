@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from .....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
@@ -58,30 +59,36 @@ def test_m145_communication_service_flow_creates_validates_exports_delivers_and_
             ),
             bucket_id=runtime.bucket_id,
             actor="service-flow-test",
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         validation = validate_m145_communication_record(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         exported = export_m145_communication_record(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             renderer=RegistryFixedWidthRecordRenderer(),
             actor="service-flow-test",
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         delivered = mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             actor="service-flow-test",
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         completed = mark_m145_communication_record_locally_completed(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             actor="service-flow-test",
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         read_back = read_m145_communication_record(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
 
     assert created.state is M145CommunicationRecordState.CREATED

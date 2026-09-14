@@ -4,11 +4,74 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction
+from ....domain.transactions.models import (
+    LedgerDatePartition,
+    OutOfWindowTransactionIndexEntry,
+    OutOfWindowTransactionSummary,
+    Transaction,
+    TransactionCatalogue,
+)
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+
+class _InvoiceCatalogueReader:
+    """Inward fake for the application invoice projection capability."""
+
+    def __init__(self, catalogue: InvoiceCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def load(self) -> InvoiceCatalogue:
+        return self._catalogue
+
+
+class _TransactionCatalogueReader:
+    """Inward fake for the application transaction projection capability."""
+
+    def __init__(self, catalogue: TransactionCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def load(self) -> TransactionCatalogue:
+        return self._catalogue
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        """Mirror the public date-partition contract over an in-memory catalogue."""
+        in_window: list[Transaction] = []
+        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+        for transaction in self._catalogue.values():
+            earliest, latest = transaction_eligible_date_span(transaction)
+            if earliest <= end and latest >= start:
+                in_window.append(transaction)
+                continue
+            out_of_window.append(
+                OutOfWindowTransactionIndexEntry(
+                    transaction_id=transaction.transaction_id,
+                    filing_date=transaction_filing_date(transaction),
+                ),
+            )
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue.from_transactions(in_window),
+            out_of_window=tuple(out_of_window),
+            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
+            index_complete=False,
+        )
+
+
+def _catalogue_read_ports(
+    *,
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
+) -> InvoiceCatalogueReadPorts:
+    """Compose inward fakes for repository-backed aggregation tests."""
+    return InvoiceCatalogueReadPorts(
+        invoice_reader=_InvoiceCatalogueReader(invoices),
+        transaction_reader=_TransactionCatalogueReader(transactions),
+    )
 
 
 def _period(year: int, code: str) -> Period:

@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
+from ..auth.protocols import BrowserSessionFactoryPort
+from .censo_ports import CensalFetchPort
 from .session import active_verified_session
 
 if TYPE_CHECKING:
@@ -21,17 +23,18 @@ LIVE_CENSAL_READ_OPERATION = "live-censal-read"
 async def pull_censal_datos(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
+    censal_fetch_port: CensalFetchPort,
 ) -> CensalObservation:
     """Read the authenticated taxpayer's censo state without persisting or adopting it."""
-    from ...adapters.outbound.aeat.sede.censal_datos import fetch_censal_datos
-
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operation=LIVE_CENSAL_READ_OPERATION,
         operator_scope_ports=operator_scope_ports,
     )
-    return await fetch_censal_datos(session, taxpayer_nif=session.identity_nif, settings=settings)
+    return await censal_fetch_port(session, taxpayer_nif=session.identity_nif, settings=settings)
 
 
 __all__ = ["LIVE_CENSAL_READ_OPERATION", "pull_censal_datos"]

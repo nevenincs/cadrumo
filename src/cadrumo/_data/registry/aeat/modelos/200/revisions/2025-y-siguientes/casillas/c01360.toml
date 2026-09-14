@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01360"
+continuidad_id = "01360"
+continuidad_origin = "seeded"
 number = "01360"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2023"]
 data_type = "money"

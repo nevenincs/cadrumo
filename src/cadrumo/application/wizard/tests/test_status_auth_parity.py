@@ -14,14 +14,12 @@ never echoes an invalid selector. These pin the wizard to that verdict.
 
 from __future__ import annotations
 
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 from datetime import UTC, datetime
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from ._operator_probe_fakes import fake_operator_probe_ports
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...state_projection_auth import build_auth_readiness
 from ...workflow.state_models import WorkflowState
@@ -30,8 +28,6 @@ from ..status import build_wizard_status
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-__all__ = ["isolated_profile_storage"]
 
 _AUTHENTICATED_AT = datetime(2026, 8, 1, 12, 0, tzinfo=UTC)
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()

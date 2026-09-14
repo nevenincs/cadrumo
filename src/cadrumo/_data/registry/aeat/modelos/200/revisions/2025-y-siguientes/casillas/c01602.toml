@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01602"
+continuidad_id = "is-correccion-deterioro-participaciones-dt16-all-temporaria-ejercicio-aumento"
+continuidad_origin = "seeded"
 number = "01602"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
 data_type = "money"

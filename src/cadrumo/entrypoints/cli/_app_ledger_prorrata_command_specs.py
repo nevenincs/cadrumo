@@ -41,7 +41,13 @@ _SECTOR_LETTER_VALUE: Final[ValueContract] = ValueContract(
 _REQUIRED: Final[ParameterDefault] = ParameterDefault.required()
 _OPTIONAL: Final[ParameterDefault] = ParameterDefault.value(None)
 _EMPTY_TUPLE: Final[ParameterDefault] = ParameterDefault.value(())
-_CARRIED_PRIOR_DEFINITIVA: Final[ParameterDefault] = ParameterDefault.value("carried_prior_definitiva")
+_CARRIED_PRIOR_DEFINITIVA: Final[ParameterDefault] = ParameterDefault.from_factory(
+    DeferredTarget(
+        "...domain.calculations.registry.prorrata_register_catalogue",
+        "carried_prior_definitiva_prorrata_provenance",
+        __package__,
+    ),
+)
 _UNCONSTRAINED: Final[ParameterConstraint] = ParameterConstraint()
 _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
     invoke_without_command=False,

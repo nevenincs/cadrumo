@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01745"
+continuidad_id = "01745"
 number = "01745"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2022"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-19-1994:art-27"]
 [[revisions."2024".casillas]]
 id = "01746"
+continuidad_id = "01746"
 number = "01746"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2022"]
 data_type = "money"

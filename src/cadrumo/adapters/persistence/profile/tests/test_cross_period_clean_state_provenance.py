@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -87,6 +88,7 @@ def test_cross_period_clean_state_blocks_missing_aeat_register_observation_prove
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             taxpayer_tax_id="X1234567L",
         )
 
@@ -114,6 +116,7 @@ def test_cross_period_clean_state_blocks_live_capture_observation_without_regist
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             taxpayer_tax_id="X1234567L",
         )
 
@@ -144,6 +147,7 @@ def test_cross_period_clean_state_blocks_non_alta_aeat_register_observation_prov
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             taxpayer_tax_id="X1234567L",
         )
 
@@ -173,6 +177,7 @@ def test_cross_period_clean_state_blocks_missing_aeat_register_reference(tmp_pat
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             taxpayer_tax_id="X1234567L",
         )
 
@@ -204,6 +209,7 @@ def test_cross_period_clean_state_blocks_wrong_authenticated_identity_observatio
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             taxpayer_tax_id="X1234567L",
         )
 
@@ -236,6 +242,7 @@ def test_cross_period_clean_state_blocks_member_observation_authenticated_identi
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             expected_member_sets=(
                 CrossPeriodExpectedMemberSet(
                     source_modelo="322",
@@ -266,6 +273,7 @@ def test_cross_period_clean_state_blocks_dangling_justificante_evidence_referenc
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             taxpayer_tax_id="X1234567L",
         )
 
@@ -292,6 +300,7 @@ def test_cross_period_clean_state_blocks_csv_register_without_justificante_verif
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             taxpayer_tax_id="X1234567L",
         )
 
@@ -318,6 +327,7 @@ def test_cross_period_clean_state_accepts_csv_register_with_matching_justificant
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
         )
 
     first_quarter = _m390_first_quarter_evidence(verdict)
@@ -341,6 +351,7 @@ def test_cross_period_clean_state_accepts_live_capture_with_matching_justificant
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
         )
 
     first_quarter = _m390_first_quarter_evidence(verdict)
@@ -365,6 +376,7 @@ def test_cross_period_clean_state_blocks_live_capture_without_justificante_verif
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
         )
 
     first_quarter = _m390_first_quarter_evidence(verdict)
@@ -395,6 +407,7 @@ def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_pa
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
         )
 
     first_quarter = _m390_first_quarter_evidence(verdict)

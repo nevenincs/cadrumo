@@ -17,12 +17,18 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.profile.evidence_bundles import (
+    EvidenceBundleRepository,
+    EvidenceBundleWorkUnitRepository,
+)
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....application.evidence.ports import EvidenceBundlePorts
 from ....application.evidence.service import EvidenceBundleService
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -57,7 +63,14 @@ def _seed_bundle() -> str:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    bundle = EvidenceBundleService().build(
+    objects = secure_object_repository_for_bucket(bucket_id)
+    service = EvidenceBundleService(
+        ports=EvidenceBundlePorts(
+            repository=EvidenceBundleRepository(objects=objects),
+            work_units=EvidenceBundleWorkUnitRepository(bucket_id=bucket_id, objects=objects),
+        ),
+    )
+    bundle = service.build(
         bucket_id=bucket_id,
         work_unit_id=_WORK_UNIT_ID,
         record_payloads={

@@ -8,6 +8,7 @@ from typing import TypeVar
 
 from .....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .....application.auth.operator_scope_ports import OperatorScopePorts
+from .....application.auth.protocols import BrowserSessionFactoryPort
 from .....application.live.errors import LiveApplicationError
 from .....application.live.filed_data_ports import (
     FiledArtefactSink,
@@ -17,7 +18,6 @@ from .....application.live.filed_data_ports import (
 )
 from .....application.live.filed_observation_ports import FiledObservationProtocol
 from .....application.live.session import active_verified_session
-from .....core.config import Settings, load_settings
 from .....core.period import Period
 from .....domain.calculations.registry.schema import ModeloRevision
 from .declarations import (
@@ -94,10 +94,12 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         self,
         *,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
     ) -> None:
         """Bind the required certificate-secret capability for live reads."""
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._browser_session_factory = browser_session_factory
         self._operator_scope_ports = operator_scope_ports
 
     @asynccontextmanager
@@ -108,6 +110,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                 "filed_register_session",
                 lambda: active_verified_session(
                     certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                    browser_session_factory=self._browser_session_factory,
                     operation=operation,
                     operator_scope_ports=self._operator_scope_ports,
                 ),
@@ -135,6 +138,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
             "filed_register_session",
             lambda: active_verified_session(
                 certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                browser_session_factory=self._browser_session_factory,
                 operation=operation,
                 operator_scope_ports=self._operator_scope_ports,
             ),
@@ -168,6 +172,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
             "filed_register_session",
             lambda: active_verified_session(
                 certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                browser_session_factory=self._browser_session_factory,
                 operation=operation,
                 operator_scope_ports=self._operator_scope_ports,
             ),

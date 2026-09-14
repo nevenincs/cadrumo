@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00802"
+continuidad_id = "00802"
 number = "00802"
 section = ["deducciones_inversion_canarias", "inversiones_canarias_2017"]
 data_type = "money"

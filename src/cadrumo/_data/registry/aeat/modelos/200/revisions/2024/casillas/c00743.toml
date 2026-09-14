@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00743"
+continuidad_id = "00743"
 number = "00743"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2007"]
 data_type = "money"

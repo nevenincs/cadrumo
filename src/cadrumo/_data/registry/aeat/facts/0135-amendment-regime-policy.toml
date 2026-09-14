@@ -1,0 +1,91 @@
+[fact]
+fact_id = "amendment-regime-policy"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "amendment-regime-policy:2004-07-01"
+date_axis = "filing_period"
+valid_from = 2004-07-01
+legal_refs = [
+  "ley-58-2003:art-120",
+  "ley-58-2003:art-122",
+  "orden-hac-242-2025:art-3",
+  "orden-hac-657-2025:modelo-200",
+]
+source_refs = [
+  "aeat-dr-303-2024-late",
+  "aeat-dr-303-2025",
+  "aeat-dr-303-2026",
+  "aeat-renta-2025-manual-parte1",
+  "aeat-dr-200-2024",
+  "aeat-modelo-200-manual-2024",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2024-late"
+required_text = [
+  "Motivo de la rectificación: Rectificaciones",
+  "Motivo de la rectificación: Discrepancia criterio administrativo",
+]
+
+# the 303 record design publishes the rectificativa motive flags; it does not publish 'sustitutiva' (0 occurrences) -- that element is grounded in the modelo 200 manual.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2025"
+required_text = [
+  "Motivo de la rectificación: Rectificaciones",
+  "Motivo de la rectificación: Discrepancia criterio administrativo",
+]
+
+# carries the same two motive flags as 2025, confirming the post-boundary regime persists; not evidence for any boundary DATE.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = [
+  "Motivo de la rectificación: Rectificaciones",
+  "Motivo de la rectificación: Discrepancia criterio administrativo",
+]
+
+# grounds that modelo 100 names both procedures in 2025; the boundary.100.date of 2024-12-31 is NOT quoted here.
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = [
+  "la autoliquidación rectificativa",
+  "declaración complementaria, o rectificativa, según corresponda",
+]
+
+# ASCII-only span: this .xls source loses every accented character to replacement chars, so an accented quote cannot match. Grounds that 2024's 200 design carries rectificativa casillas; nothing about complementaria/sustitutiva ordering.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-200-2024"
+required_text = [
+  "rectificativa que no deban incluirse en otras casillas - total [00031]",
+]
+
+# the one source that grounds regime.pre_order -> regime.post_order as a SUBSTITUTION, and ties it to periods from 2024-01-01 via Orden HAC/657/2025.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+  "la aplicación efectiva de la autoliquidación rectificativa como mecanismo de corrección de autoliquidaciones en sustitución del actual sistema de autoliquidación complementaria y solicitud de rectificación",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "procedure.order", value = "complementaria,sustitutiva,rectificativa" },
+  { key = "procedure.complementaria.value", value = "complementaria" },
+  { key = "procedure.complementaria.description", value = "Pre-rectificativa complementary self-assessment procedure for an increased liability." },
+  { key = "procedure.sustitutiva.value", value = "sustitutiva" },
+  { key = "procedure.sustitutiva.description", value = "Material replacement procedure retained in both amendment regimes." },
+  { key = "procedure.rectificativa.value", value = "rectificativa" },
+  { key = "procedure.rectificativa.description", value = "Unified self-assessment correction procedure once the selected modelo reaches its adoption boundary." },
+  { key = "regime.pre_order", value = "complementaria,sustitutiva" },
+  { key = "regime.post_order", value = "rectificativa,sustitutiva" },
+  { key = "boundary.order", value = "303,100,200" },
+  { key = "boundary.303.date", value = "2024-09-30" },
+  { key = "boundary.303.source_fact", value = "modelo-303-rectificativa-record-design-mapping" },
+  { key = "boundary.303.source_path", value = "facts/2025/mapping/0095-2025-modelo-303-rectificativa-record-design-mapping.toml" },
+  { key = "boundary.100.date", value = "2024-12-31" },
+  { key = "boundary.100.source", value = "aeat-renta-2025-manual-parte1" },
+  { key = "boundary.200.date", value = "2024-12-31" },
+  { key = "boundary.200.source", value = "aeat-dr-200-2024" },
+]

@@ -1,0 +1,35 @@
+"""Shared wizard-registered profile bucket for the mínimo advisory suite.
+
+Every advisory test in this cluster does the same setup: open an isolated,
+wizard-registered profile bucket scoped to the test's own ``tmp_path``. What
+must NOT be shared is which bucket id each module opens -- some modules read
+their own module-level ``_BUCKET_ID`` again later, in assertions and collector
+calls, so a module that silently inherited another module's id would still
+pass while asserting against the wrong bucket. Each consuming module supplies
+its own id by overriding ``bucket_id`` (the shared scaffold in
+:mod:`cadrumo.tests.bucket_id_fixture`); its default raises so a module that
+forgets the override fails loudly instead of inheriting one.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.tests.bucket_id_fixture import bucket_id  # noqa: F401
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+
+
+@pytest.fixture(autouse=True)
+def advisory_profile_bucket(tmp_path: Path, bucket_id: str) -> Iterator[None]:  # noqa: F811 - pytest injects the imported fixture
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(profile_id=bucket_id)
+        yield

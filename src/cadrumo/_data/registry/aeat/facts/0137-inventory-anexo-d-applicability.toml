@@ -1,0 +1,25 @@
+[fact]
+fact_id = "inventory-anexo-d-applicability"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "inventory-anexo-d-applicability:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = [
+  "aeat-renta-2025-manual-parte1",
+  "aeat-dr-100-2025-dictionary",
+  "boe-modelo-100-2025-form",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Variación de existencias", "Compra de mercaderías"]
+
+[fact.variants.payload]
+kind = "scalar"
+value = 2025
+unit = "filing_year"

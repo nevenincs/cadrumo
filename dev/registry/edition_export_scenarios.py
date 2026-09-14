@@ -100,9 +100,6 @@ from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.prorrata_register import (
     ProrrataActivityRowType,
-    ProrrataProvisionalProvenance,
-    ProrrataRegisterRegime,
-    SectorDiferenciadoLetra,
 )
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
@@ -110,6 +107,11 @@ from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister,
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import resolve_bienes_inversion_regularizacion_parameters
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
+    carried_prior_definitiva_prorrata_provenance,
+    general_prorrata_register_regime,
+    prorrata_sector_letters,
+)
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.deadlines.models import ChargeAccount, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
@@ -371,10 +373,27 @@ _EVIDENCE: Final = FilingEvidenceReference(reference="edition-round-trip:m303-fa
 _M303_EXONERADO_ENDPOINT: Final = validated_casilla_id("79", surface="edition round-trip scenario")
 _M303_EXONERADO_ACTIVITY_SLOTS: Final = range(1, 7)
 _M303_PRORRATA_ACTIVITY_SLOTS: Final = range(1, 6)
-_M303_DIFFERENTIATED_SECTORS: Final = (
-    SectorDefinition(sector_id="a", letra=SectorDiferenciadoLetra.A, member_activity_codes=("4711",)),
-    SectorDefinition(sector_id="b", letra=SectorDiferenciadoLetra.B, member_activity_codes=("6820",)),
-)
+def _m303_differentiated_sectors() -> tuple[SectorDefinition, ...]:
+    """Modelo 303's two differentiated sectors, built on demand rather than at import.
+
+    `SectorDiferenciadoLetra` is an opaque registry-projected token: it refuses
+    construction outside the facts-registry projection path and exposes no class
+    members. Building these at module scope therefore made the ENTIRE scenarios
+    module unimportable the moment that refactor landed -- and with it every
+    other modelo's scenario, none of which involves a differentiated sector.
+
+    Deferring it does not fix 303, which still needs a projection entry point it
+    can reach. It stops 303's dependency from deciding whether eight unrelated
+    modelos can be read at all, and it keeps the failure loud at the point of
+    use, where the token class raises with its own message. Module-scope
+    construction of a projected token is the anti-pattern that has broken this
+    import chain repeatedly; this is one instance of it removed.
+    """
+    letters = prorrata_sector_letters()
+    return (
+        SectorDefinition(sector_id="a", letra=letters[0], member_activity_codes=("4711",)),
+        SectorDefinition(sector_id="b", letra=letters[1], member_activity_codes=("6820",)),
+    )
 _M303_NON_AGRICULTURAL: Final = "no_agricola"
 
 
@@ -553,18 +572,18 @@ def _m303_prorrata_register(period: Period, *, authority: ValidatedRegistryAutho
         str(Modelo("303")), filing_year=period.filing_year - 1, period="4T"
     ).snapshot_ref
     return ProrrataRegister(
-        sector_definitions=_M303_DIFFERENTIATED_SECTORS,
+        sector_definitions=_m303_differentiated_sectors(),
         entries=tuple(
             ProrrataRegisterEntry(
                 ejercicio=period.filing_year,
                 sector_id=sector_id,
-                regime=ProrrataRegisterRegime.GENERAL,
+                regime=general_prorrata_register_regime(),
                 especial_transition=None,
                 provisional_percentage=Decimal("50"),
-                provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                provisional_provenance=carried_prior_definitiva_prorrata_provenance(),
                 source_registry_snapshot_refs=(prior_snapshot_ref,),
             )
-            for sector_id in (None, *(sector.sector_id for sector in _M303_DIFFERENTIATED_SECTORS))
+            for sector_id in (None, *(sector.sector_id for sector in _m303_differentiated_sectors()))
         ),
         activity_rows=tuple(
             ProrrataActivityRow(
@@ -596,7 +615,7 @@ def _m303_differentiated_contributions() -> tuple[IvaDifferentiatedDeductionCont
             base_amount=Decimal("100"),
             deducible_iva_amount=Decimal("20"),
         )
-        for sector in _M303_DIFFERENTIATED_SECTORS
+        for sector in _m303_differentiated_sectors()
         for index, kind in enumerate(kinds, start=1)
     )
 

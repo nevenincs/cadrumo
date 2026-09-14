@@ -12,7 +12,7 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

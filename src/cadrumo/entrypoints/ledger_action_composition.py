@@ -31,6 +31,7 @@ def compose_ledger_action_ports(*, bucket_id: str) -> LedgerActionPorts:
         invoice_repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
         attachment_store=resolve_attachment_store(None),
         usage_ratio_profile=load_usage_ratios(bucket_id=bucket_id),
+        usage_ratio_profile_loader=load_usage_ratios,
         work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
         calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=bucket_id),
         purchase_invoice_evidence_records=evidence_records,

@@ -13,6 +13,7 @@ See Also:
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -66,7 +67,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.application.calculations.prorrata_regularizacion import (
     build_prorrata_declared_volume_divergence_advisory,
     build_prorrata_missing_provisional_advisory,
-    build_prorrata_regularizacion_advisory,
+    buildprorrata_regularizacion_advisory,
     derive_prorrata_applicability,
     project_prorrata_regularizacion_feed,
 )
@@ -241,7 +242,7 @@ def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() ->
 
 def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_differ() -> None:
     """A trader with sin-derecho volumes and a percentage delta is alerted, not silent."""
-    result, diagnostic = build_prorrata_regularizacion_advisory(
+    result, diagnostic = buildprorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=Decimal("20000.00"),
         prorrata_provisional_pct=Decimal("80"),
         prorrata_definitiva_pct=Decimal("90"),
@@ -527,7 +528,7 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
 
 def test_advisory_is_silent_when_no_sin_derecho_operations() -> None:
     """No exempt-without-right volume ⇒ prorrata does not apply ⇒ no advisory noise."""
-    result, diagnostic = build_prorrata_regularizacion_advisory(
+    result, diagnostic = buildprorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=Decimal("20000.00"),
         prorrata_provisional_pct=Decimal("80"),
         prorrata_definitiva_pct=Decimal("90"),
@@ -540,7 +541,7 @@ def test_advisory_is_silent_when_no_sin_derecho_operations() -> None:
 
 def test_advisory_is_silent_when_percentages_coincide() -> None:
     """No regularización is due when provisional equals definitive."""
-    _result, diagnostic = build_prorrata_regularizacion_advisory(
+    _result, diagnostic = buildprorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=Decimal("20000.00"),
         prorrata_provisional_pct=Decimal("90"),
         prorrata_definitiva_pct=Decimal("90"),
@@ -552,7 +553,7 @@ def test_advisory_is_silent_when_percentages_coincide() -> None:
 
 def test_advisory_reports_ingreso_direction_when_definitiva_below_provisional() -> None:
     """A downward regularización is surfaced as an ingreso in the message."""
-    result, diagnostic = build_prorrata_regularizacion_advisory(
+    result, diagnostic = buildprorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=Decimal("12000.00"),
         prorrata_provisional_pct=Decimal("85"),
         prorrata_definitiva_pct=Decimal("70"),
@@ -566,7 +567,7 @@ def test_advisory_reports_ingreso_direction_when_definitiva_below_provisional() 
 
 def test_zero_definitive_deduction_side_still_surfaces_casilla_44_advisory() -> None:
     """A 0% definitive prorrata is visible as settlement regularizacion, not silence."""
-    result, diagnostic = build_prorrata_regularizacion_advisory(
+    result, diagnostic = buildprorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=Decimal("12000.00"),
         prorrata_provisional_pct=Decimal("80"),
         prorrata_definitiva_pct=Decimal("0"),
@@ -589,7 +590,7 @@ def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
         provisional_resolution=_unresolved_prorrata(),
         ejercicio=2026,
     )
-    result, regularizacion = build_prorrata_regularizacion_advisory(
+    result, regularizacion = buildprorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=Decimal("12000.00"),
         prorrata_provisional_pct=Decimal("100"),
         prorrata_definitiva_pct=Decimal("100"),
@@ -632,6 +633,7 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
             participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
             prorrata_register_repository=prorrata_repository,
             result_disposition=ResultDisposition.NEGATIVA,
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
 
         settled_entry = prorrata_repository.load().entry_for(_SETTLEMENT_YEAR)

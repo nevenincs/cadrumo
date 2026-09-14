@@ -38,7 +38,7 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.application.calculations.m303_carry_ingress import m303_declaration_type_header_key
-from cadrumo.application.modelo._prior_domiciliation import resolve_prior_domiciliation_election
+from cadrumo.application.modelo.prior_domiciliation import resolveprior_domiciliation_election
 from cadrumo.application.modelo.action_errors import ModeloPriorDomiciliationElectionRefusedError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -183,7 +183,7 @@ def test_keep_is_neutral_and_needs_no_filing_evidence(tmp_path: Path) -> None:
     revision = _revision(work_unit, amendment_kind=None)
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        projection = resolve_prior_domiciliation_election(
+        projection = resolveprior_domiciliation_election(
             election=PriorDomiciliationElection.KEEP,
             work_unit=work_unit,
             revision=revision,
@@ -232,7 +232,7 @@ def test_cancel_or_modify_refuses_raw_unsupported_and_non_rectificativa_requests
             ModeloPriorDomiciliationElectionRefusedError,
         ),
     ):
-        resolve_prior_domiciliation_election(
+        resolveprior_domiciliation_election(
             election=election,
             work_unit=work_unit,
             revision=revision,
@@ -370,7 +370,7 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
         )
 
         with pytest.raises(ModeloPriorDomiciliationElectionRefusedError):
-            resolve_prior_domiciliation_election(
+            resolveprior_domiciliation_election(
                 election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
                 work_unit=work_unit,
                 revision=revision,
@@ -414,7 +414,7 @@ def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(tmp_path
             baseline_filing_record_id=baseline.filing_record_id,
         )
 
-        projection = resolve_prior_domiciliation_election(
+        projection = resolveprior_domiciliation_election(
             election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
             work_unit=work_unit,
             revision=revision,

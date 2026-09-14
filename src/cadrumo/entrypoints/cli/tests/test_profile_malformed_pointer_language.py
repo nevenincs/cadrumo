@@ -14,7 +14,7 @@ from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_
 from ....core.bucket_pointer import pointer_path
 from ....core.i18n.render import clear_output_language_cache, tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,7 +49,7 @@ def _run_cli(*args: str, storage_root: Path, tmp_path: Path) -> subprocess.Compl
         [
             sys.executable,
             "-c",
-            "from cadrumo.entrypoints._cli_main import main; main()",
+            "from cadrumo.entrypoints.cli.bootstrap import main; main()",
             *args,
         ],
         capture_output=True,

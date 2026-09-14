@@ -65,6 +65,7 @@ def expedientes_pull(
     :class:`ExpedientesCaptureResult`, while failed rows are rendered as
     :class:`ExpedientesCaptureFailurePayload`.
     """
+    from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
     from ...application.live.expedientes import capture_expedientes
     from ._app_live_expedientes_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
@@ -80,6 +81,7 @@ def expedientes_pull(
                 year=year,
                 ports=ports,
                 certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+                browser_session_factory=default_browser_session_factory,
                 operator_scope_ports=operator_scope_ports(ctx),
             )
         )
@@ -110,6 +112,7 @@ def expedientes_pull(
             modelos=selected_modelos or None,
             ports=ports,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            browser_session_factory=default_browser_session_factory,
             operator_scope_ports=operator_scope_ports(ctx),
         ),
     )

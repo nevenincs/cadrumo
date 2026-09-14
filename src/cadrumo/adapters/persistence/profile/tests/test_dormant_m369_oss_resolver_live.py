@@ -17,6 +17,7 @@ from typing import Any
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -35,6 +36,7 @@ from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedg
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
@@ -48,6 +50,7 @@ from cadrumo.application.aggregation.oss_ioss import (    OssIossLedgerCandidate
 )
 from cadrumo.application.aggregation.source_mesh import (    CalculationSourceContext,
 )
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_actions import (    BucketAggregationCalculationResult,
     calculate_modelo_revision,
@@ -68,6 +71,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _M369_BUCKET = "36900000-0000-4000-8000-000000000013"
 _M369_REVISION = "esquema-union"
 _M369_YEAR = 2026
+
+
+class _EmptyInvoiceCatalogueReader:
+    def load(self) -> InvoiceCatalogue:
+        return InvoiceCatalogue()
+
+
+class _EmptyTransactionCatalogueReader:
+    def load(self) -> TransactionCatalogue:
+        return TransactionCatalogue()
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
+
+
+def _empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
+    return InvoiceCatalogueReadPorts(
+        invoice_reader=_EmptyInvoiceCatalogueReader(),
+        transaction_reader=_EmptyTransactionCatalogueReader(),
+    )
 
 # Three DISTINCT OSS candidates whose persisted IVA matches the destination MS
 # published rate (DE general 19%, FR general 20%): the resolver validates each
@@ -142,7 +165,10 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
     candidates = (_M369_DE_SERVICES, _M369_FR_SERVICES, _M369_DE_GOODS)
 
     # Resolver path (what the live mesh WOULD fold if it had candidates).
-    resolution = OssIossLedgerSourceResolver(candidates=candidates).resolve(
+    resolution = OssIossLedgerSourceResolver(
+        ports=_empty_catalogue_read_ports(),
+        candidates=candidates,
+    ).resolve(
         CalculationSourceContext(
             bucket_id=_M369_BUCKET,
             modelo="369",
@@ -517,7 +543,12 @@ def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
     )
 
     def _resolve(code: str) -> Any:
-        return OssIossLedgerSourceResolver(invoice_repository=invoice_repo).resolve(
+        return OssIossLedgerSourceResolver(
+            ports=InvoiceCatalogueReadPorts(
+                invoice_reader=InvoiceCatalogueReadAdapter(repository=invoice_repo),
+                transaction_reader=_EmptyTransactionCatalogueReader(),
+            ),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_M369_BUCKET,
                 modelo="369",

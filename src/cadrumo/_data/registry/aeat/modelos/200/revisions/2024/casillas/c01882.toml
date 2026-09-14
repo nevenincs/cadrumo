@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01882"
+continuidad_id = "is-correccion-socio-sicav-liquidaciones-permanente-disminucion"
 number = "01882"
 section = ["socio_sicav_rentas_derivadas_de_liquidaciones_de_s", "disminucion"]
 data_type = "money"

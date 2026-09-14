@@ -62,6 +62,12 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.text_bounds import is_calendar_month
 from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_default_token,
+    descendant_relacion_tokens,
+    require_descendant_relacion,
+)
+from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.schema_base import DateAxis
 from .descendant import DescendantInfo
@@ -200,7 +206,7 @@ def _identity_fact_values(descendant: DescendantInfo) -> tuple[tuple[str, str | 
     return (
         (
             "relacion",
-            None if descendant.relacion is DescendantRelacion.DESCENDIENTE else descendant.relacion.value,
+            None if descendant.relacion == descendant_relacion_default_token() else descendant.relacion.value,
         ),
         (
             "inscripcion_registro_civil",
@@ -334,7 +340,7 @@ def relacion_kwarg(relacion: DescendantRelacion | None) -> RelacionKwarg:
 
 
 def _stored_relacion(raw: str | None, *, index: int) -> DescendantRelacion | None:
-    """Read one descendant's stored relación, refusing a token outside the closed set.
+    """Read one descendant's stored relación, refusing a token outside the registry catalogue.
 
     Returns ``None`` for an absent token — UNSTATED, not "ordinary". The two
     differ: :class:`~domain.contribuyente.DescendantInfo` reads an unstated
@@ -354,9 +360,9 @@ def _stored_relacion(raw: str | None, *, index: int) -> DescendantRelacion | Non
     if raw is None:
         return None
     try:
-        return DescendantRelacion(raw.strip().lower())
-    except ValueError:
-        accepted = ", ".join(member.value for member in DescendantRelacion)
+        return require_descendant_relacion(raw.strip().lower(), authority=bundled_authority())
+    except (RegistryValidationError, ValueError):
+        accepted = ", ".join(member.value for member in descendant_relacion_tokens(authority=bundled_authority()))
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.relacion must be one of {accepted}; got {raw!r}.",
         ) from None

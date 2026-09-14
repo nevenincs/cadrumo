@@ -923,7 +923,6 @@ class TestPlantedAttestationOnAnAlreadyWrittenRow:
         assert dropped == 0
         assert "planted-lineage" not in dropped_body
         assert "planted_role" not in dropped_body
-        assert "planted-lineage" in kept and "planted-lineage" not in dropped or True
 
     def test_a_row_that_would_vanish_refuses_rather_than_losing_its_stamp(
         self, tmp_path: Path

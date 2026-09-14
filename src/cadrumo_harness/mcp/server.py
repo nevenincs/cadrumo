@@ -42,6 +42,7 @@ import os
 import sys
 import time
 import uuid
+from collections.abc import Callable
 from functools import partial
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
@@ -264,7 +265,7 @@ def serve(*, profile_secrets_file: Path | None = None) -> None:
 
     enforce_required_runtime_cohort()
     if profile_secrets_file is not None:
-        load_profile_secret_file(profile_secrets_file)
+        _load_profile_secret_after_composition(profile_secrets_file, loader=load_profile_secret_file)
     persona = active_persona()
     surface_mode = resolve_surface_mode(os.environ.get(SURFACE_ENV_VAR))
     try:
@@ -276,6 +277,16 @@ def serve(*, profile_secrets_file: Path | None = None) -> None:
         _run_server(build_tool_descriptors(), persona=persona, surface_mode=surface_mode)
     finally:
         clear_profile_secret()
+
+
+def _load_profile_secret_after_composition(
+    profile_secrets_file: Path,
+    *,
+    loader: Callable[[Path], None],
+) -> None:
+    """Compose custody ports before a secret channel resumes the active profile."""
+    _ensure_adapter_composition()
+    loader(profile_secrets_file)
 
 
 def filter_descriptors_for_persona(

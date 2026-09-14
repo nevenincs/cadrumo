@@ -43,7 +43,7 @@ from .fact_validation import (
     iva_binding_cash_accounting_vocabulary_failures,
     retired_fact_provider_closure_failures,
 )
-from .legal_grounding import verify_legal_catalogue_grounding
+from .legal_grounding import legal_reference_quotes_corpus, verify_legal_catalogue_grounding
 from .registry_scope import validate_registry_scope
 from .source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
@@ -234,6 +234,22 @@ class RegistryValidator:
             )
         )
         if self._source_root is not None:
+            for category, regulation in self._runtime.iva_regulations.items():
+                for citation in regulation.citations:
+                    if citation.grounding != "verified":
+                        continue
+                    reference = self._legal.get(citation.legal_reference)
+                    if reference is None:
+                        continue
+                    if not legal_reference_quotes_corpus(
+                        reference,
+                        citation.quoted_text,
+                        source_root=self._source_root,
+                    ):
+                        failures.append(
+                            f"runtime IVA regulation {category!r} citation {citation.legal_reference!r} "
+                            "claims verified grounding, but its quotation does not occur in the anchored corpus text"
+                        )
             try:
                 verify_legal_catalogue_grounding(self._legal, source_root=self._source_root)
             except RegistryValidationError as exc:

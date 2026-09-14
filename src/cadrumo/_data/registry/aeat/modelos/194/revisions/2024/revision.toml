@@ -37,3 +37,48 @@ ejercicios-anteriores page. Closing this era at 2024 would refuse ejercicio 2025
 that no orden has withdrawn. The five hoja-resumen casillas remain manual input, no export layout is \
 declared, and no authority grade is promoted."""
 reviewed_at = 2026-08-30
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-perceptores-base-positiva"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-base-positiva"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-retenciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-perceptores-base-negativa"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-resumen-base-negativa"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]

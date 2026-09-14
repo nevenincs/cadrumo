@@ -9,6 +9,7 @@ import pytest
 
 from ....core.hashing import sha256_hex
 from ...calculations.registry import authority as authority_module
+from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityEvidenceProjection,
@@ -53,11 +54,17 @@ def _article_90_reference() -> LegalReference:
 def _stage_catalogue_artifact(root: Path, anchored_text: str) -> None:
     artifact_path = root / "registry" / "authority" / "authority.json"
     artifact_path.parent.mkdir(parents=True)
+    published_catalogues = bundled_authority().catalogues
     write_authority_artifact(
         artifact_path,
         AuthorityArtifact(
             modelos=(),
-            catalogues=RegistryCatalogues(legal={_ARTICLE_90: _article_90_reference()}, sources={}),
+            catalogues=RegistryCatalogues(
+                legal={_ARTICLE_90: _article_90_reference()},
+                sources={},
+                facts=published_catalogues.facts,
+                runtime=published_catalogues.runtime,
+            ),
             identity_digest="a4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f",
             evidence=AuthorityEvidenceProjection(
                 legal=(
@@ -90,13 +97,13 @@ def test_iva_grounding_reads_its_legal_basis_from_a_staged_published_artifact(
 ) -> None:
     """A rate citation validates against artifact catalogues and evidence, not corpus files."""
     _stage_catalogue_artifact(tmp_path, _ARTICLE_90_TEXT)
-    package_data_root = _use_staged_package(monkeypatch, tmp_path)
+    _use_staged_package(monkeypatch, tmp_path)
 
     legal, _sources, source_root = registry_catalogues()
     verify_table_legal_refs("iva rates", [("ES general 21", (_ARTICLE_90,))])
 
     assert set(legal) == {_ARTICLE_90}
-    assert source_root == package_data_root
+    assert source_root == tmp_path / "registry" / "authority" / "authority.json"
 
 
 def test_iva_grounding_refuses_a_citation_the_published_evidence_does_not_support(

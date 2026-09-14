@@ -931,7 +931,7 @@ errors:
       tamogatott.
     refused_modelo_payment_election_incompatible: A valasztott fizetesi modhoz pozitiv
       eredmeny szukseges.
-    refused_modelo_prior_domiciliation_election: A korábbi csoportos beszedés törlését
+    refused_modeloprior_domiciliation_election: A korábbi csoportos beszedés törlését
       vagy módosítását elutasítottuk, mert hiányzik vagy érvénytelen a 303-as helyesbítő
       bevallás, illetve az U alapbevallás hivatalos igazolása.
     refused_modelo_refund_account_missing: Visszatérítést kértek, de nincs visszatérítési

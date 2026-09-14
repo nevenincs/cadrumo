@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00870"
+continuidad_id = "00870"
+continuidad_origin = "seeded"
 number = "00870"
 section = ["deducc_para_incentivar_determ_actividades", "2023_inversiones_en_territ_africa_occidental_y_gas"]
 data_type = "money"

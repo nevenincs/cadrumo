@@ -14,11 +14,12 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
+from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
-from cadrumo.tests.profile_capsule import open_test_profile_session
-from cadrumo.tests.user_profile import register_cli_profile, register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile, register_minimal_profile
 
 from ..maintenance_support import load_modelo_path
 
@@ -279,7 +280,9 @@ def test_emilio_catalogue_service_invoice_feeds_m349() -> None:
         repository = InvoiceCatalogueRepository()
         stored = next(invoice for invoice in repository.load().values() if invoice.invoice_number == "OUT-2024-Q1-DE-S")
         assert stored.bucket_id is not None
-        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        resolution = InvoiceCatalogueSourceResolver(
+            ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=stored.bucket_id,
                 modelo="349",

@@ -46,7 +46,6 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ValidationError
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
@@ -59,13 +58,13 @@ from ...domain.calculations.registry.tax_id_runtime import validate_runtime_span
 from ...domain.invoices.enums import resolve_iva_rate_slot
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
 from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
-from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.iva.schema import IvaCategory, spanish_eu_member_state
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from .catalogue_creation_ports import CatalogueCreationPorts
 
 __all__ = [
     "InvoiceWizardFieldError",
@@ -361,7 +360,9 @@ def _derived_domestic_category(
     """
     if country_code != _DOMESTIC_COUNTRY or iva_rate is None:
         return None
-    tiers = rate_kinds_for_declared_rate(EUMemberState.ES, iva_rate / Decimal("100"), on_date)
+    tiers = rate_kinds_for_declared_rate(
+        spanish_eu_member_state(effective_date=on_date), iva_rate / Decimal("100"), on_date
+    )
     if len(tiers) != 1:
         return None
     return domestic_categories_by_rate_kind().get(tiers[0])
@@ -496,6 +497,7 @@ def _build_wizard_invoice(
     iva_category: IvaCategory | None,
     operation_type: IntracomOperationType | None,
     notes: str,
+    ports: CatalogueCreationPorts,
 ) -> Invoice:
     try:
         # Derived once, before construction, so the built candidate and the
@@ -523,6 +525,7 @@ def _build_wizard_invoice(
             operation_type=operation_type,
             retention_rate=fields.retention_rate,
             retention_amount=fields.retention_amount,
+            rate_provider=ports.rate_provider,
         )
     except (InvoiceValidationError, ValidationError, CoreValidationError) as exc:
         reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
@@ -536,9 +539,9 @@ def _build_wizard_invoice(
 def _persist_or_resolve_wizard_invoice(
     candidate: Invoice,
     *,
-    repository: InvoiceCatalogueRepositoryProtocol,
+    ports: CatalogueCreationPorts,
 ) -> InvoiceWizardResult:
-    catalogue = repository.load()
+    catalogue = ports.invoice_repository.load()
     existing = catalogue.get(candidate.invoice_id)
     if existing is not None:
         # Guarded idempotent retry (aeat-cli-contract):
@@ -549,7 +552,7 @@ def _persist_or_resolve_wizard_invoice(
 
     result = create_catalogue_invoice(
         invoice=candidate,
-        repository=repository,
+        ports=ports,
     )
     return InvoiceWizardResult(invoice=result.invoice, already_existed=False)
 
@@ -579,7 +582,7 @@ def create_invoice_via_wizard(
     operation_type: IntracomOperationType | None = None,
     retention_rate: str | None = None,
     retention_amount: str | None = None,
-    repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: CatalogueCreationPorts,
 ) -> InvoiceWizardResult:
     """Validate every field, then create (or resolve) one catalogue invoice.
 
@@ -615,7 +618,7 @@ def create_invoice_via_wizard(
             ``retention_amount``; never derives it.
         retention_amount: Raw RIRPF art. 95 retención euro amount string, or
             ``None``/blank for no declared retención.
-        repository: Optional injected catalogue repository (tests).
+        ports: Required catalogue-creation capabilities for the active bucket.
 
     Returns:
         :class:`InvoiceWizardResult` naming the resolved invoice and whether
@@ -641,7 +644,6 @@ def create_invoice_via_wizard(
     )
     _raise_wizard_field_errors(field_errors)
     resolved_date, resolved_base = _require_wizard_core_fields(fields)
-    repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     candidate = _build_wizard_invoice(
         bucket_id=bucket_id,
         kind=kind,
@@ -651,5 +653,6 @@ def create_invoice_via_wizard(
         iva_category=iva_category,
         operation_type=operation_type,
         notes=notes,
+        ports=ports,
     )
-    return _persist_or_resolve_wizard_invoice(candidate, repository=repo)
+    return _persist_or_resolve_wizard_invoice(candidate, ports=ports)

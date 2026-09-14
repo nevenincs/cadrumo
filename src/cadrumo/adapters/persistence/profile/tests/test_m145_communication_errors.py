@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
@@ -111,14 +112,16 @@ def test_m145_communication_create_delivery_completion_logs_use_communication_vo
     caplog.set_level(logging.INFO, logger=_LOGGER_NAME)
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        created = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id)
+        created = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
         mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         mark_m145_communication_record_locally_completed(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
 
     messages = _captured_service_messages(caplog)
@@ -137,11 +140,12 @@ def test_m145_communication_invalid_delivery_raises_typed_error_and_logs_refusal
     field_values.pop("perceptor.nif")
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        record = create_m145_communication_record(_command(field_values=field_values), bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(_command(field_values=field_values), bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
         with pytest.raises(M145CommunicationRecordValidationError) as raised:
             mark_m145_communication_record_delivered_to_payer(
                 record.communication_record_id,
                 bucket_id=runtime.bucket_id,
+                ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
 
     assert isinstance(raised.value, ValueError)
@@ -160,11 +164,12 @@ def test_m145_communication_completion_before_delivery_raises_typed_error_and_lo
     caplog.set_level(logging.WARNING, logger=_LOGGER_NAME)
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        record = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
         with pytest.raises(M145CommunicationRecordTransitionError) as raised:
             mark_m145_communication_record_locally_completed(
                 record.communication_record_id,
                 bucket_id=runtime.bucket_id,
+                ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
 
     assert isinstance(raised.value, ValueError)
@@ -185,7 +190,7 @@ def test_m145_communication_missing_record_raises_typed_key_error_and_logs_looku
         isolated_runtime_profile(tmp_path=tmp_path) as runtime,
         pytest.raises(M145CommunicationRecordNotFoundError) as raised,
     ):
-        read_m145_communication_record(missing_id, bucket_id=runtime.bucket_id)
+        read_m145_communication_record(missing_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
 
     assert isinstance(raised.value, KeyError)
     assert raised.value.context == {"communication_record_id": missing_id}

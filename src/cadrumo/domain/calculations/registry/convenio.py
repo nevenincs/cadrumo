@@ -219,6 +219,26 @@ class ResolvedConvenioOverride:
     document_id: str
     fact: ResolvedOverrideFact
 
+    @property
+    def is_exempt(self) -> bool:
+        """Whether the selected registry row drives the source rate to zero."""
+        return self.kind.value == "exempt"
+
+    @property
+    def has_flat_rate(self) -> bool:
+        """Whether the selected registry row replaces the domestic rate."""
+        return self.kind.value == "flat"
+
+    @property
+    def has_ceiling_rate(self) -> bool:
+        """Whether the selected registry row caps the domestic rate."""
+        return self.kind.value == "ceiling"
+
+    @property
+    def delegates_to_domestic_tariff(self) -> bool:
+        """Whether the selected registry row delegates to the domestic tariff."""
+        return self.kind.value == "allocation_domestic_tariff"
+
 
 def resolve_convenio_override(
     *,

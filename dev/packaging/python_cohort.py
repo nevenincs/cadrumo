@@ -46,42 +46,6 @@ _MANIFEST_NAME: Final[str] = "python-cohort.json"
 # unmanifested wheel or sdist, which a broader pattern would stop doing.
 _BUILD_TOOL_EMITTED_FILES: Final[frozenset[str]] = frozenset({".gitignore"})
 _BUILD_TREE_SOURCE_DIR: Final[str] = "src"
-_WHEEL_REGISTRY_ROOT: Final[str] = "cadrumo/_data/registry/aeat"
-"""Where the registry tree sits inside the wheel. A packaging fact, owned here.
-
-Deliberately only the ROOT. What the stamped records beside it are called, and
-that they sit beside rather than within, belong to the registry package's
-identity module, and are read from it below rather than respelled — a second
-spelling is how the build comes to write a name the runtime never looks for.
-"""
-
-
-def cohort_stamped_wheel_data_paths() -> frozenset[str]:
-    """Return the wheel-relative data members a cohort build stamps in.
-
-    ``_stamp_bundled_registry_records_into_build_tree`` writes the install-stable
-    registry identity and its verdict into the extracted build tree before
-    ``uv build``, so a cohort wheel carries data members that no tracked source
-    path can account for. The wheel payload check derives its expectation from
-    tracked sources, so it must union this set for a cohort wheel — a plain
-    ``uv build`` wheel is never stamped and stays strictly tracked-only.
-
-    Derived by asking the registry package where it puts each record, so a
-    rename or a relocation there moves this expectation automatically instead of
-    surfacing as an ``unexpected`` wheel member in CI. Pinned against a real
-    stamp by ``test_cohort_stamped_paths.py``.
-
-    Returns:
-        The wheel-relative paths of every stamped member.
-    """
-    from dev.registry.compiler.identity import registry_identity_stamp_location
-    from dev.registry.compiler.verdict_cache import shipped_verdict_location
-
-    root = PurePosixPath(_WHEEL_REGISTRY_ROOT)
-    return frozenset(
-        locate(Path(root.as_posix())).as_posix()
-        for locate in (registry_identity_stamp_location, shipped_verdict_location)
-    )
 
 
 _DISTRIBUTIONS: Final[tuple[str, ...]] = (
@@ -130,9 +94,10 @@ for dependency_site in os.environ["AEAT_DEPENDENCY_SITE"].split(os.pathsep):
 
 from click.testing import CliRunner
 from typer.main import get_command
-from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
-from cadrumo.entrypoints import cli
+from cadrumo.entrypoints.cli.main import app
 from cadrumo.entrypoints.cli.command_spec import DeferredTarget, TranslationKey
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
@@ -250,7 +215,6 @@ selected_contracts = {
     "aeat app modelo work calculate": (
         "compute",
         {
-            "cadrumo.core.irnr",
             "cadrumo.core.rescate_type",
         },
     ),
@@ -269,14 +233,14 @@ elif probe_mode in selected_contracts:
     # command was selected. The budget below is what SELECTING a command costs
     # beyond the root, which is the property worth policing.
     runner = CliRunner()
-    warm = runner.invoke(get_command(cli.app), ["--help"])
+    warm = runner.invoke(get_command(app), ["--help"])
     if warm.exit_code != 0:
         raise AssertionError(f"installed root help failed: {warm.output}")
     before = set(sys.modules)
     selected = COMMAND_GRAPH.resolve_path(path)
     if selected.policy.performance != expected_performance:
         raise AssertionError(f"selected path performance class drifted: {path}")
-    result = runner.invoke(get_command(cli.app), [*path[1:], "--help"])
+    result = runner.invoke(get_command(app), [*path[1:], "--help"])
     if result.exit_code != 0:
         raise AssertionError(f"selected installed help failed: {path}: {result.output}")
     delta = sorted(name for name in set(sys.modules) - before if first_party(name))
@@ -907,37 +871,6 @@ def _archive_source_snapshot(build_root: Path, files: Sequence[str], destination
     return destination
 
 
-def _stamp_bundled_registry_records_into_build_tree(build_root: Path) -> frozenset[str]:
-    """Stamp the install-stable registry identity and verdict into the wheel tree.
-
-    Written before ``uv build`` so the cadrumo wheel ships both records beside
-    the registry tree: the identity lets a matching install establish which tree
-    it has without walking seventeen thousand files, and the verdict — keyed on
-    that identity — lets it skip runtime registry validation on its very first
-    touch. Computed against the extracted build tree, which is byte-identical to
-    what the wheel packages, so the install-stable key matches at runtime.
-
-    Both records come from ONE call into the registry package's own release
-    stamper. This function derives neither the digest, the filenames, nor the
-    locations: doing any of that here would be a second derivation that could
-    drift from what the runtime reads, which is exactly the failure the single
-    canonical identity module exists to prevent.
-
-    Returns:
-        The wheel-relative paths of the stamped members, as the archive carries them.
-    """
-    from cadrumo.core.package_version import PACKAGE_VERSION
-    from dev.registry.maintenance_support import stamp_bundled_registry_release
-
-    source_root = build_root / _BUILD_TREE_SOURCE_DIR
-    registry_root = source_root / "cadrumo" / "_data" / "registry" / "aeat"
-    stamped = stamp_bundled_registry_release(registry_root, package_version=PACKAGE_VERSION)
-    resolved_source_root = source_root.resolve()
-    return frozenset(
-        path.relative_to(resolved_source_root).as_posix() for path in (stamped.identity_path, stamped.verdict_path)
-    )
-
-
 def _assert_closed_cohort_inventory(cohort_dir: Path, declared_filenames: Collection[str]) -> None:
     """Refuse a cohort directory holding anything the manifest does not declare.
 
@@ -1072,12 +1005,10 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         # files with the repository's own line-ending rules applied -- what a
         # checkout of this exact content would carry, without touching the
         # live tree the rest of the process may still be editing. The archive
-        # is written from this same copy, and BEFORE the registry records are
-        # stamped in below, so the retained source archive carries only
-        # tracked source content, never build-time stamps.
+        # is written from this same copy, so the retained source archive carries
+        # only tracked source content.
         snapshot(root, source_files, build_root)
         _archive_source_snapshot(build_root, source_files, archive)
-        _stamp_bundled_registry_records_into_build_tree(build_root)
         uv = shutil.which("uv")
         if uv is None:
             raise SystemExit("uv is required to build the Python cohort")

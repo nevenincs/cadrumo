@@ -17,6 +17,7 @@ reimplementing the registry formulas.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -40,7 +41,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -158,7 +159,7 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
     snapshot = _snapshot()
     from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 
-    carry = resolve_bindings_from_local_store(snapshot, repository=obs_repo).binding_values
+    carry = resolve_bindings_from_local_store(snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
     binding_values, relation_values = _zeroed_channels(snapshot)
     binding_values.update(carry)
 

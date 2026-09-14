@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, Protocol, TypedDict
 
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ..auth.protocols import BrowserSessionFactoryPort
     from .iva_remote_state_ports import IvaRemoteStatePort
 
 from pydantic import BaseModel, Field, field_validator
@@ -387,7 +388,7 @@ class _CaptureReportFields(TypedDict):
 
 
 @dataclass(slots=True)
-class _CaptureAccumulator:
+class FiledCaptureAccumulator:
     """Mutable accumulator for one filed-declaration capture run.
 
     Holds the persisted-artefact ledgers shared by the single-shot, bulk, and
@@ -639,7 +640,7 @@ async def capture_filed_data(
     :class:`~ModeloRecord` ids, conflicts, and calculation
     observation keys produced from the captured AEAT rows.
     """
-    accumulator = _CaptureAccumulator()
+    accumulator = FiledCaptureAccumulator()
     bucket_id = require_active_bucket_id()
 
     async with filed_data_port.open_register(operation="live-filed-read") as register:
@@ -704,7 +705,7 @@ async def _absorb_declarations(
     declarations: tuple[FiledRegisterDeclarationProtocol, ...],
     *,
     opened_register: FiledDataRegisterPort,
-    accumulator: _CaptureAccumulator,
+    accumulator: FiledCaptureAccumulator,
     ports: FiledObservationPersistencePorts,
     bucket_id: str,
     output_root: Path,
@@ -826,7 +827,7 @@ async def _capture_filed_data_query_pair(
     *,
     opened_register: FiledDataRegisterPort,
     walk_timeout_ms: int,
-    accumulator: _CaptureAccumulator,
+    accumulator: FiledCaptureAccumulator,
     ports: FiledObservationPersistencePorts,
     bucket_id: str,
     output_root: Path,
@@ -890,7 +891,7 @@ async def _capture_filed_data_query_pairs(
     query_pairs: Sequence[tuple[str, int]],
     *,
     filed_data_port: FiledDataCapturePort,
-    accumulator: _CaptureAccumulator,
+    accumulator: FiledCaptureAccumulator,
     ports: FiledObservationPersistencePorts,
     bucket_id: str,
     output_root: Path,
@@ -936,7 +937,7 @@ def _dry_run_bulk_filed_capture_report(
     modelos: Sequence[str],
     year_from: int,
     year_to: int,
-    accumulator: _CaptureAccumulator,
+    accumulator: FiledCaptureAccumulator,
     failures: Sequence[FiledDataCaptureFailureRow],
 ) -> BulkFiledDataCaptureReport:
     """Project the read-only bulk result without reaching any persistence finalizer."""
@@ -961,7 +962,7 @@ def _persisted_bulk_filed_capture_report(
     modelos: Sequence[str],
     year_from: int,
     year_to: int,
-    accumulator: _CaptureAccumulator,
+    accumulator: FiledCaptureAccumulator,
     failures: list[FiledDataCaptureFailureRow],
     bucket_id: str,
     sync_run_repository: SyncRunRecordRepositoryProtocol,
@@ -1092,7 +1093,7 @@ async def capture_filed_data_bulk(
         )
 
     resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in bundled_authority().modelos)
-    accumulator = _CaptureAccumulator()
+    accumulator = FiledCaptureAccumulator()
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
     pair_total = await _announce_bulk_capture_plan(
         query_pairs=query_pairs,
@@ -1182,7 +1183,7 @@ async def capture_source_filed_data(
         )
         .revision
     )
-    accumulator = _CaptureAccumulator()
+    accumulator = FiledCaptureAccumulator()
     seen: set[tuple[str, int, str, str]] = set()
     bucket_id = require_active_bucket_id()
 
@@ -1996,6 +1997,7 @@ class _FiledHistoryNotificationsStage:
 async def _capture_filed_history_notifications(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     notifications_ports: NotificationsPorts,
     operator_scope_ports: OperatorScopePorts,
     events: OperationEventEmitter | None = None,
@@ -2008,6 +2010,7 @@ async def _capture_filed_history_notifications(
             bucket_id=require_active_bucket_id(),
             ports=notifications_ports,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            browser_session_factory=browser_session_factory,
             operator_scope_ports=operator_scope_ports,
         )
     except Exception as exc:
@@ -2026,6 +2029,7 @@ async def _capture_filed_history_notifications(
 async def pull_filed_history(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
     filed_data_port: FiledDataCapturePort,
     iva_remote_state_port: IvaRemoteStatePort,
@@ -2130,6 +2134,7 @@ async def pull_filed_history(
         await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_NOTIFICATIONS)
         notifications = await _capture_filed_history_notifications(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            browser_session_factory=browser_session_factory,
             notifications_ports=notifications_ports,
             operator_scope_ports=operator_scope_ports,
             events=events,
@@ -2169,6 +2174,7 @@ __all__ = [
     "FiledHistoryDiscoveryReport",
     "FiledHistoryOnboardingRun",
     "FiledHistoryPairOutcome",
+    "FiledCaptureAccumulator",
     "capture_filed_data",
     "capture_filed_data_bulk",
     "capture_report_path",

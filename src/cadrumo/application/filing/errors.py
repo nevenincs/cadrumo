@@ -12,9 +12,6 @@ See Also:
     :mod:`domain.filing.errors`
         Domain filing error hierarchy raised by draft, import, and export
         records.
-    :mod:`application.filing.persistence_wiring`
-        Runtime persistence helper that raises :class:`ModeloApplicationError`
-        for filing-bucket resolution failures.
 """
 
 from __future__ import annotations

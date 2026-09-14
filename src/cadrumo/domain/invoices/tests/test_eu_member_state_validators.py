@@ -9,20 +9,16 @@ from __future__ import annotations
 import pytest
 
 from ...iva.schema import EUMemberState
-from ..validators import (
-    EU_MEMBER_STATE_CODES,
-    is_eu_member_state_code,
-    validate_country_code,
-)
+from ..validators import is_eu_member_state_code, validate_country_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_eu_member_state_codes_match_substrate_enum_27_states() -> None:
-    expected = {member.value.upper() for member in EUMemberState if member is not EUMemberState.XI}
-    assert expected == EU_MEMBER_STATE_CODES
-    assert len(EU_MEMBER_STATE_CODES) == 27
-    assert "XI" not in EU_MEMBER_STATE_CODES
+    members = tuple(member for member in EUMemberState if member is not EUMemberState.XI)
+    assert len(members) == 27
+    assert all(is_eu_member_state_code(member.value.upper()) for member in members)
+    assert not is_eu_member_state_code("XI")
 
 
 def test_is_eu_member_state_code_accepts_each_substrate_member() -> None:

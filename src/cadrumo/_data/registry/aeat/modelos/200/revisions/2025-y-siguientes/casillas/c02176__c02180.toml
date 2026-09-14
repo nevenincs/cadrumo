@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02176"
+continuidad_id = "is-correccion-copa-america-barcelona-saldo-inicial-neto"
+continuidad_origin = "seeded"
 number = "02176"
 section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02177"
+continuidad_id = "is-correccion-copa-america-barcelona-permanente-aumento"
+continuidad_origin = "seeded"
 number = "02177"
 section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02178"
+continuidad_id = "is-correccion-copa-america-barcelona-temporaria-ejercicio-aumento"
+continuidad_origin = "seeded"
 number = "02178"
 section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
 data_type = "money"
@@ -27,6 +33,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02179"
+continuidad_id = "is-correccion-copa-america-barcelona-temporaria-anteriores-aumento"
+continuidad_origin = "seeded"
 number = "02179"
 section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
 data_type = "money"
@@ -36,6 +44,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02180"
+continuidad_id = "is-correccion-copa-america-ley-31-2022-saldo-final"
+continuidad_origin = "seeded"
 number = "02180"
 section = ["xxxvii_copa_america_barcelona_ley_31_2022", "aumento"]
 data_type = "money"

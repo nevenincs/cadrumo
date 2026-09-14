@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00999"
+continuidad_id = "is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-base-de-la-deduc"
+continuidad_origin = "seeded"
 number = "00999"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "6_deduc_evitar_doble_imposicion_base_de_la_deduc"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01108"
+continuidad_id = "is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-importe-de-la-de"
+continuidad_origin = "seeded"
 number = "01108"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "6_deduc_evitar_doble_imposicion_importe_de_la_de"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01138"
+continuidad_id = "01138"
+continuidad_origin = "seeded"
 number = "01138"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "6_deduc_evitar_doble_imposicion_base_de_la_deduc"]
 data_type = "money"
@@ -27,6 +33,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01174"
+continuidad_id = "01174"
+continuidad_origin = "seeded"
 number = "01174"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "6_deduc_evitar_doble_imposicion_importe_de_la_de"]
 data_type = "money"
@@ -36,6 +44,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01227"
+continuidad_id = "is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e"
+continuidad_origin = "seeded"
 number = "01227"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "2_gastos_financieros_netos_no_deducidos_por_la_e"]
 data_type = "money"
@@ -45,6 +55,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01228"
+continuidad_id = "is-agrupacion-interes-econo-3-reserva-capitaliz-no-aplicada-por-la-entidad"
+continuidad_origin = "seeded"
 number = "01228"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "3_reserva_capitaliz_no_aplicada_por_la_entidad"]
 data_type = "money"
@@ -54,6 +66,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01277"
+continuidad_id = "is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-total-base-de-la"
+continuidad_origin = "seeded"
 number = "01277"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "6_deduc_evitar_doble_imposicion_total_base_de_la"]
 data_type = "money"
@@ -65,6 +79,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01278"
+continuidad_id = "is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-total-importe-de"
+continuidad_origin = "seeded"
 number = "01278"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "6_deduc_evitar_doble_imposicion_total_importe_de"]
 data_type = "money"
@@ -76,6 +92,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01279"
+continuidad_id = "is-agrupacion-interes-econo-datos-relativos-a-la-participacion-valoracion-de"
+continuidad_origin = "seeded"
 number = "01279"
 section = ["agrupacion_interes_economico_y_utes_participes", "datos_relativos_a_la_participacion_valoracion_de"]
 data_type = "money"
@@ -85,6 +103,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01455"
+continuidad_id = "01455"
+continuidad_origin = "seeded"
 number = "01455"
 section = ["agrupacion_interes_economico_y_utes_participes", "datos_relativos_a_la_participacion_valoracion_de"]
 data_type = "money"
@@ -94,6 +114,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01456"
+continuidad_id = "is-agrupacion-interes-econo-datos-relativos-a-la-participacion-ingresos-fina"
+continuidad_origin = "seeded"
 number = "01456"
 section = ["agrupacion_interes_economico_y_utes_participes", "datos_relativos_a_la_participacion_ingresos_fina"]
 data_type = "money"
@@ -103,6 +125,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01458"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-importe-del-resultado-contabl"
+continuidad_origin = "seeded"
 number = "01458"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_del_resultado_contabl"]
 data_type = "money"
@@ -112,6 +136,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01459"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-gastos-financieros-netos-impu"
+continuidad_origin = "seeded"
 number = "01459"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_gastos_financieros_netos_impu"]
 data_type = "money"
@@ -121,6 +147,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01460"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-reserva-de-capitalizacion-que"
+continuidad_origin = "seeded"
 number = "01460"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_reserva_de_capitalizacion_que"]
 data_type = "money"
@@ -130,6 +158,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01461"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-base-imponible-imputada"
+continuidad_origin = "seeded"
 number = "01461"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_base_imponible_imputada"]
 data_type = "money"
@@ -139,6 +169,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01467"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-importe-de-la-deduccion-gener"
+continuidad_origin = "seeded"
 number = "01467"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_de_la_deduccion_gener"]
 data_type = "money"
@@ -148,6 +180,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01468"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-importe-bonificacion-generada"
+continuidad_origin = "seeded"
 number = "01468"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_bonificacion_generada"]
 data_type = "money"
@@ -157,6 +191,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01523"
+continuidad_id = "01523"
+continuidad_origin = "seeded"
 number = "01523"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_de_la_deduccion_gener"]
 data_type = "money"
@@ -166,6 +202,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01601"
+continuidad_id = "01601"
+continuidad_origin = "seeded"
 number = "01601"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_de_la_deduccion_gener"]
 data_type = "money"
@@ -175,6 +213,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01638"
+continuidad_id = "01638"
+continuidad_origin = "seeded"
 number = "01638"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_de_la_deduccion_gener"]
 data_type = "money"
@@ -184,6 +224,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01639"
+continuidad_id = "01639"
+continuidad_origin = "seeded"
 number = "01639"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_de_la_deduccion_gener"]
 data_type = "money"
@@ -193,6 +235,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01640"
+continuidad_id = "01640"
+continuidad_origin = "seeded"
 number = "01640"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_de_la_deduccion_gener"]
 data_type = "money"
@@ -202,6 +246,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01743"
+continuidad_id = "01743"
+continuidad_origin = "seeded"
 number = "01743"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_de_la_deduccion_gener"]
 data_type = "money"
@@ -211,6 +257,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01909"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-importe-del-resto-de-deduccio"
+continuidad_origin = "seeded"
 number = "01909"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_del_resto_de_deduccio"]
 data_type = "money"
@@ -220,6 +268,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01910"
+continuidad_id = "01910"
+continuidad_origin = "seeded"
 number = "01910"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_del_resto_de_deduccio"]
 data_type = "money"
@@ -229,6 +279,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01911"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-retenciones-e-ingresos-a-cuen"
+continuidad_origin = "seeded"
 number = "01911"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_retenciones_e_ingresos_a_cuen"]
 data_type = "money"
@@ -238,6 +290,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01912"
+continuidad_id = "is-agrupacion-interes-econo-importes-imputados-dividendos-y-participaciones"
+continuidad_origin = "seeded"
 number = "01912"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_dividendos_y_participaciones"]
 data_type = "money"
@@ -247,6 +301,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01934"
+continuidad_id = "01934"
+continuidad_origin = "seeded"
 number = "01934"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_dividendos_y_participaciones"]
 data_type = "money"
@@ -256,6 +312,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02376"
+continuidad_id = "is-participaciones-directas-b-reversion-de-perdidas-por-deterioro-de-valores"
+continuidad_origin = "seeded"
 number = "02376"
 section = ["participaciones_directas_declarante", "total"]
 data_type = "money"
@@ -265,6 +323,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02942"
+continuidad_id = "is-agrupacion-interes-econo-base-de-la-bonificacion"
+continuidad_origin = "seeded"
 number = "02942"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "7_bonificaciones"]
 data_type = "money"
@@ -274,6 +334,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02944"
+continuidad_id = "02944"
+continuidad_origin = "seeded"
 number = "02944"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "7_bonificaciones"]
 data_type = "money"
@@ -283,6 +345,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02946"
+continuidad_id = "02946"
+continuidad_origin = "seeded"
 number = "02946"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "7_bonificaciones"]
 data_type = "money"
@@ -292,6 +356,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02948"
+continuidad_id = "02948"
+continuidad_origin = "seeded"
 number = "02948"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "7_bonificaciones"]
 data_type = "money"
@@ -301,6 +367,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02950"
+continuidad_id = "02950"
+continuidad_origin = "seeded"
 number = "02950"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "7_bonificaciones"]
 data_type = "money"
@@ -310,6 +378,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02962"
+continuidad_id = "02962"
+continuidad_origin = "seeded"
 number = "02962"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "7_bonificaciones"]
 data_type = "money"
@@ -319,6 +389,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02964"
+continuidad_id = "is-agrupacion-interes-econo-base-de-la-deduccion"
+continuidad_origin = "seeded"
 number = "02964"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -328,6 +400,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02967"
+continuidad_id = "02967"
+continuidad_origin = "seeded"
 number = "02967"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -337,6 +411,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02969"
+continuidad_id = "02969"
+continuidad_origin = "seeded"
 number = "02969"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -346,6 +422,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02973"
+continuidad_id = "02973"
+continuidad_origin = "seeded"
 number = "02973"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -355,6 +433,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02978"
+continuidad_id = "02978"
+continuidad_origin = "seeded"
 number = "02978"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -364,6 +444,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02980"
+continuidad_id = "02980"
+continuidad_origin = "seeded"
 number = "02980"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -373,6 +455,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03063"
+continuidad_id = "03063"
+continuidad_origin = "seeded"
 number = "03063"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -382,6 +466,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03065"
+continuidad_id = "03065"
+continuidad_origin = "seeded"
 number = "03065"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -391,6 +477,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03067"
+continuidad_id = "03067"
+continuidad_origin = "seeded"
 number = "03067"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -400,6 +488,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03069"
+continuidad_id = "03069"
+continuidad_origin = "seeded"
 number = "03069"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -409,6 +499,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03247"
+continuidad_id = "03247"
+continuidad_origin = "seeded"
 number = "03247"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -418,6 +510,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03249"
+continuidad_id = "03249"
+continuidad_origin = "seeded"
 number = "03249"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -427,6 +521,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03281"
+continuidad_id = "03281"
+continuidad_origin = "seeded"
 number = "03281"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -436,6 +532,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03283"
+continuidad_id = "03283"
+continuidad_origin = "seeded"
 number = "03283"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -445,6 +543,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03285"
+continuidad_id = "03285"
+continuidad_origin = "seeded"
 number = "03285"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -454,6 +554,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03288"
+continuidad_id = "03288"
+continuidad_origin = "seeded"
 number = "03288"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -463,6 +565,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03290"
+continuidad_id = "03290"
+continuidad_origin = "seeded"
 number = "03290"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -472,6 +576,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03314"
+continuidad_id = "03314"
+continuidad_origin = "seeded"
 number = "03314"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -481,6 +587,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03355"
+continuidad_id = "03355"
+continuidad_origin = "seeded"
 number = "03355"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"
@@ -490,6 +598,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03359"
+continuidad_id = "03359"
+continuidad_origin = "seeded"
 number = "03359"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deducciones_generadas_en_el_periodo_impositivo"]
 data_type = "money"

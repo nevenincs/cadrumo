@@ -23,9 +23,6 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -33,7 +30,10 @@ from ...domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
-from .percepciones_observations_repository import PercepcionObservationRepository
+from .percepciones_observations_repository import (
+    PercepcionObservationPersistenceError,
+    PercepcionObservationPorts,
+)
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -41,8 +41,6 @@ from .source_mesh import (
     CalculationSourceResolution,
 )
 from .source_resolution_operations import storage_degradation_resolution
-
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 
 _WITHHOLDING_SOURCE = BindingSourceKind.WITHHOLDING
 
@@ -82,16 +80,17 @@ class WithholdingSourceResolver:
     resolver_id: ClassVar[str] = _WITHHOLDING_SOURCE.value
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_WITHHOLDING_SOURCE,)
 
-    def __init__(self, *, withholding_repository: PercepcionObservationRepository | None = None) -> None:
-        self._withholding_repository = withholding_repository
+    def __init__(self, *, ports: PercepcionObservationPorts) -> None:
+        """Bind the required bucket-scoped percepciones capability."""
+        self._ports = ports
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_declares_withholding_scalar(context.revision):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
-        repository = self._withholding_repository or PercepcionObservationRepository()
+        repository = self._ports.repository
         try:
             observations = repository.load_observations(str(context.modelo), context.period)
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except PercepcionObservationPersistenceError as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

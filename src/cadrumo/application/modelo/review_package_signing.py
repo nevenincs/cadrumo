@@ -18,14 +18,13 @@ verification is even attempted (see :func:`verify_review_package_signature`).
 
 Key custody (``sensitive-financial-data-secure-storage-only`` /
 ``no-legacy-compatibility``): the private key is generated once per profile
-bucket and persisted ONLY as ciphertext through
-:class:`~adapters.persistence.storage.SecureObjectRepository` at
-``MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.sensitivity`` classification
-(:data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`).
-It is never logged, never written to a plaintext file, and never leaves this
-module as raw bytes except transiently in process memory to sign. The public
-key is, by construction, safe to export and hand to a receiving accountant for
-signature verification -- it carries no secrecy requirement.
+bucket and persisted ONLY as ciphertext by the required signing-keypair
+capability. Its outer binding owns the secure-storage classification and
+failure translation. The key is never logged, never written to a plaintext
+file, and never leaves this module as raw bytes except transiently in process
+memory to sign. The public key is, by construction, safe to export and hand
+to a receiving accountant for signature verification -- it carries no secrecy
+requirement.
 
 Counter-signed accountant feedback-package round trips remain OUT OF SCOPE for
 this module; it exposes only the primitive: mint/load a per-profile keypair,
@@ -34,10 +33,8 @@ sign a package's manifest digest, verify a signature against a public key.
 See Also:
     :mod:`~application.modelo.review_package`
         Builds and integrity-verifies the review package this module signs.
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
-        Encrypted substrate the private key is persisted through.
-    :class:`~adapters.persistence.storage.SensitivityClass`
-        Storage classification policy used for the persisted signing keypair.
+    :mod:`~application.modelo.review_package_signing_ports`
+        Application-owned keypair capability contract.
 """
 
 from __future__ import annotations
@@ -52,31 +49,26 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 )
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage.secure_object_namespaces import (
-    MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE,
-)
 from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError
 from ...core.corpus_manifest.manifest import verify_corpus_bundle
 from ...core.ed25519_signing import (
     digest_signature_is_valid,
     ed25519_private_key_from_hex,
     ed25519_public_key_from_hex,
-    generate_ed25519_keypair_hex,
     sign_digest_hex,
 )
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core.hex import HEX_PATTERN_128 as _HEX_PATTERN_128
-from ...core.identity.bucket import BucketId, canonical_bucket_id
+from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
-from ._review_package_keypair import ensure_singleton_keypair
 from .review_package import assert_review_package_verifies
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+    from .review_package_signing_ports import ReviewPackageSigningKeypairCapability
 
 #: Wire-format version of the signature envelope. Bumped when the envelope
 #: schema changes shape (e.g. a future multi-signer / counter-sign extension).
@@ -95,8 +87,8 @@ class ReviewPackageSigningKeypair(BaseModel):
     :meth:`public_key` reconstruct live ``cryptography`` key objects from the
     stored raw hex bytes. Nothing about this model changes the secure-storage
     contract: the caller (:func:`ensure_review_package_signing_keypair`) is
-    responsible for persisting it only through
-    :class:`~adapters.persistence.storage.SecureObjectRepository`.
+    responsible for obtaining it through the required signing-keypair
+    capability.
     """
 
     model_config = _STRICT_FROZEN
@@ -153,73 +145,21 @@ class SignedReviewPackage(BaseModel):
     signed_at: UtcInstant
 
 
-def _signing_key_object_key(bucket_id: str) -> str:
-    """Return the natural :class:`~adapters.persistence.storage.SecureObjectRepository` key for ``bucket_id``'s keypair.
-
-    Matches the namespace's declared
-    ``object_key_grammar="review-package-signing-key:{bucket_id}"``.
-    """
-    return f"review-package-signing-key:{canonical_bucket_id(bucket_id)}"
-
-
 def ensure_review_package_signing_keypair(
     *,
     bucket_id: str,
-    repository: SecureObjectRepository,
+    signing_keypair: ReviewPackageSigningKeypairCapability,
     generated_at: datetime | None = None,
 ) -> ReviewPackageSigningKeypair:
-    """Return the profile's Ed25519 signing keypair, minting one on first use.
-
-    Composes :func:`~application.modelo._review_package_keypair.ensure_singleton_keypair`
-    for the mint-or-load-winner mechanic shared with
-    :func:`~application.modelo.ensure_recipient_encryption_keypair` (that
-    function's X25519 counterpart): loads the existing keypair from
-    :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`
-    when present; otherwise generates a fresh keypair via
-    :func:`~core.ed25519_signing.generate_ed25519_keypair_hex`, persists it
-    (private key included) as ciphertext, and returns it. Idempotent: a second
-    call against the same
-    bucket returns the SAME keypair rather than rotating it, so a package
-    signed today verifies against a keypair fetched next week.
+    """Return the profile's Ed25519 signing keypair through its capability.
 
     Args:
         bucket_id: The active profile bucket id this keypair is scoped to.
-        repository: The bucket's
-            :class:`~adapters.persistence.storage.SecureObjectRepository`,
-            e.g. obtained via
-            :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
+        signing_keypair: The required application-facing keypair capability.
         generated_at: Optional override for the keypair's ``created_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    normalised_bucket_id = canonical_bucket_id(bucket_id)
-    object_key = _signing_key_object_key(normalised_bucket_id)
-
-    def _generate() -> ReviewPackageSigningKeypair:
-        minted = generate_ed25519_keypair_hex()
-        return ReviewPackageSigningKeypair(
-            bucket_id=normalised_bucket_id,
-            private_key_hex=minted.private_key_hex,
-            public_key_hex=minted.public_key_hex,
-            created_at=generated_at or _utc_now(),
-        )
-
-    def _mismatch_error() -> ReviewPackageSigningError:
-        return ReviewPackageSigningError(
-            "stored review-package signing keypair does not belong to the bucket it was read from",
-        )
-
-    return ensure_singleton_keypair(
-        repository=repository,
-        namespace=_NAMESPACE,
-        object_key=object_key,
-        model_type=ReviewPackageSigningKeypair,
-        generate=_generate,
-        bucket_id_of=lambda keypair: keypair.bucket_id,
-        created_at_of=lambda keypair: keypair.created_at,
-        expected_bucket_id=normalised_bucket_id,
-        mismatch_error=_mismatch_error,
-        write_provenance="application.modelo.review_package_signing.ensure_keypair",
-    )
+    return signing_keypair.ensure_keypair(bucket_id=bucket_id, generated_at=generated_at)
 
 
 def review_package_signing_public_key(

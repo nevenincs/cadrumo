@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from ...core.descendant_relacion import DescendantRelacion
-from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.schema_base import DateAxis
+from ..calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_default_token,
+    descendant_relacion_maternity_tokens,
+)
 from .descendant_record import DescendantRecordBase
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
@@ -28,29 +29,10 @@ class DescendantMaternityMixin(DescendantRecordBase):
         or wrong-family fact is a refusal rather than permission to fall back to
         a local set, because a local set would become a second legal authority.
         """
-        resolved = context.authority.resolve_governed_fact(
-            MappingFactQuery(
-                fact_id="lirpf-art-81-maternity-descendant-relations",
-                date_axis=DateAxis.FILING_PERIOD,
-                effective_date=context.filing_period,
-            ),
+        return descendant_relacion_maternity_tokens(
+            effective_date=context.filing_period,
+            authority=context.authority,
         )
-        if not isinstance(resolved, ResolvedMappingFact):
-            raise RegistryValidationError("Art. 81.1 maternity relations must resolve as a mapping fact")
-        declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
-        raw_relations = declarations.get("catalogue.ids", "")
-        relation_tokens = tuple(token.strip() for token in raw_relations.split(",") if token.strip())
-        if not relation_tokens:
-            raise RegistryValidationError("Art. 81.1 maternity relations catalogue is empty")
-        try:
-            relations = tuple(DescendantRelacion(token) for token in relation_tokens)
-        except ValueError as exc:
-            raise RegistryValidationError(
-                "Art. 81.1 maternity relations catalogue contains an unknown relation",
-            ) from exc
-        if len(set(relations)) != len(relations):
-            raise RegistryValidationError("Art. 81.1 maternity relations catalogue contains duplicates")
-        return frozenset(relations)
 
     def maternidad_eligible_meses(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Months of *filing_year* the Art. 81.1 deducción may reach for this descendant.
@@ -264,8 +246,8 @@ def relacion_is_ambiguous_for_maternidad(relacion: DescendantRelacion) -> bool:
 
     Both sites used to name a SECOND population here -- a minor held under
     guarda y custodia by judicial resolución -- and both were out of date.
-    :attr:`~core.DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL` was added for
-    exactly that carer and is excluded by the dated Art. 81.1 registry
+    The judicial-guard relationship is represented by its own dated registry
+    token and is excluded by the Art. 81.1 registry
     catalogue, so they can state their relationship truthfully and the
     deducción already does not reach them. The behaviour was right; the
     reasoning beside it was written twice and neither copy followed the axis
@@ -277,8 +259,8 @@ def relacion_is_ambiguous_for_maternidad(relacion: DescendantRelacion) -> bool:
     months gate -- declared months at declaration time, contributing months at
     calculate time -- because those genuinely differ. What must not differ is
     which relación is ambiguous, and that lived as a repeated
-    ``is DescendantRelacion.DESCENDIENTE`` at both sites with the reasoning
+    the ordinary descendant token at both sites with the reasoning
     restated beside each. A member added to the axis for either population would
     have had to reach both.
     """
-    return relacion is DescendantRelacion.DESCENDIENTE
+    return relacion == descendant_relacion_default_token()

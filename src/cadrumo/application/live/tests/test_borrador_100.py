@@ -1,4 +1,4 @@
-"""Live borrador 100 snapshot persistence contract tests."""
+"""Application-owned Modelo 100 borrador snapshot contract tests."""
 
 from __future__ import annotations
 
@@ -8,24 +8,16 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.envelope.contract import Envelope
-from ....adapters.persistence.storage.secure_object_namespaces import (
-    LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
-)
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..borrador_100 import (
     Borrador100Snapshot,
-    Borrador100SnapshotRepository,
     Borrador100SnapshotService,
-    borrador_100_snapshot_object_key,
+    BorradorSnapshotNotFoundError,
     derive_borrador_100_snapshot_id,
 )
-from ..errors import LiveApplicationInputError
 from ..snapshot_base import SnapshotLifecycleState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -33,7 +25,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "0acc74be-7842-4530-95f8-8ffca3a6b654"  # was 'bucket-renta'
 _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
-_WRITTEN_AT = datetime(2026, 4, 3, 10, 5, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "0A")
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="100",
@@ -43,26 +34,54 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
 )
 
 
-def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = Borrador100Snapshot(
-        snapshot_id="a" * 64,
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=2025,
-        period=_PERIOD,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        captured_at=_CAPTURED_AT,
-        source_url=_SOURCE,
-        state=SnapshotLifecycleState.ACTIVE,
-        binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("15.25")},
-    )
+class _InMemoryBorradorRepository:
+    """Inward fake for lifecycle tests that do not exercise secure storage."""
 
-    repository.save(snapshot)
+    def __init__(self, *, bucket_id: str) -> None:
+        self.bucket_id = bucket_id
+        self._snapshots: dict[str, Borrador100Snapshot] = {}
 
-    assert repository.load(snapshot.snapshot_id) == snapshot
+    def exists(self, snapshot_id: str) -> bool:
+        return snapshot_id in self._snapshots
+
+    def load(self, snapshot_id: str) -> Borrador100Snapshot:
+        try:
+            return self._snapshots[snapshot_id]
+        except KeyError as exc:
+            raise BorradorSnapshotNotFoundError(
+                translated_message="application.live.borrador.errors.snapshot_not_found",
+                context={"snapshot_id": snapshot_id},
+            ) from exc
+
+    def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
+        return tuple(
+            sorted(
+                self._snapshots.values(),
+                key=lambda snapshot: (snapshot.captured_at, snapshot.snapshot_id),
+            )
+        )
+
+    def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
+        trimmed = snapshot_id.strip()
+        matches = tuple(
+            snapshot
+            for snapshot in self.list_snapshots()
+            if snapshot.snapshot_id == trimmed or snapshot.snapshot_id.startswith(trimmed)
+        )
+        if not matches:
+            raise BorradorSnapshotNotFoundError(
+                translated_message="application.live.borrador.errors.snapshot_not_found",
+                context={"snapshot_id": snapshot_id},
+            )
+        if len(matches) > 1:
+            raise BorradorSnapshotNotFoundError(
+                translated_message="application.live.borrador.errors.snapshot_prefix_ambiguous",
+                context={"snapshot_id": snapshot_id, "match_count": len(matches)},
+            )
+        return matches[0]
+
+    def save(self, snapshot: Borrador100Snapshot) -> None:
+        self._snapshots[snapshot.snapshot_id] = snapshot
 
 
 @pytest.mark.parametrize("snapshot_id", ("bad-id", "A" * 64, "a" * 63))
@@ -97,98 +116,8 @@ def test_borrador_snapshot_requires_canonical_registry_coordinate() -> None:
         )
 
 
-def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    payload = Borrador100Snapshot(
-        snapshot_id="b" * 64,
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=2025,
-        period=_PERIOD,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        captured_at=_CAPTURED_AT,
-        source_url=_SOURCE,
-        state=SnapshotLifecycleState.ACTIVE,
-        binding_values={},
-    )
-    envelope = Envelope[Borrador100Snapshot](
-        schema_version=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
-        written_at=_WRITTEN_AT,
-        classification=SensitivityClass.FINANCIAL,
-        payload=payload,
-    )
-    secure_objects.save(
-        namespace=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namespace,
-        object_key=borrador_100_snapshot_object_key(_BUCKET_ID, "requested-id"),
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
-        written_at=envelope.written_at,
-        payload=envelope.model_dump_json().encode("utf-8"),
-    )
-
-    with pytest.raises(LiveApplicationInputError, match="does not match requested snapshot"):
-        repository.load("requested-id")
-
-
-def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    first = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    first_snapshot = Borrador100Snapshot(
-        snapshot_id="c" * 64,
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=2025,
-        period=_PERIOD,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        captured_at=_CAPTURED_AT,
-        source_url=_SOURCE,
-        state=SnapshotLifecycleState.ACTIVE,
-        binding_values={},
-    )
-    first.save(first_snapshot)
-
-    # A bucket-scoped repository over its own store returns its own rows.
-    assert first.list_snapshots() == (first_snapshot,)
-
-    # In production each bucket owns its encrypted DB. A store polluted with
-    # another bucket's row is corruption: the shared SecureSnapshotRepository
-    # contract refuses it loudly (rather than silently filtering), and the
-    # bucket-scoped facade inherits that guarantee.
-    second = Borrador100SnapshotRepository(bucket_id="other-bucket", objects=secure_objects)
-    second_snapshot = first_snapshot.model_copy(update={"snapshot_id": "d" * 64, "bucket_id": "other-bucket"})
-    second.save(second_snapshot)
-    with pytest.raises(LiveApplicationInputError, match="does not match repository bucket"):
-        first.list_snapshots()
-
-
-def test_borrador_100_snapshot_repository_resolves_unambiguous_prefix(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = Borrador100Snapshot(
-        snapshot_id="abcdef" + "1" * 58,
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=2025,
-        period=_PERIOD,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        captured_at=_CAPTURED_AT,
-        source_url=_SOURCE,
-        state=SnapshotLifecycleState.ACTIVE,
-        binding_values={},
-    )
-    repository.save(snapshot)
-
-    assert repository.resolve("abcdef") == snapshot
-
-
-def test_borrador_100_snapshot_service_captures_content_addressed_snapshot(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_borrador_100_snapshot_service_captures_content_addressed_snapshot() -> None:
+    repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
     values = {"renta-modelo-111-retenciones-periodicas": Decimal("15.25")}
 
@@ -211,11 +140,9 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot(
     assert repository.load(snapshot.snapshot_id) == snapshot
 
 
-def test_borrador_show_refuses_persisted_registry_revision_divergence(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_borrador_show_refuses_persisted_registry_revision_divergence() -> None:
     """The operator-facing show boundary never exposes stale binding values."""
-    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
     snapshot = service.capture(
         filing_year=2025,
@@ -238,12 +165,10 @@ def test_borrador_show_refuses_persisted_registry_revision_divergence(
         service.show(snapshot.snapshot_id)
 
 
-def test_borrador_100_snapshot_service_rejects_non_binding_id_keys(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_borrador_100_snapshot_service_rejects_non_binding_id_keys() -> None:
     service = Borrador100SnapshotService(
         bucket_id=_BUCKET_ID,
-        repository=Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        repository=_InMemoryBorradorRepository(bucket_id=_BUCKET_ID),
     )
 
     with pytest.raises(ValidationError, match="binding_values"):
@@ -256,12 +181,10 @@ def test_borrador_100_snapshot_service_rejects_non_binding_id_keys(
         )
 
 
-def test_borrador_100_snapshot_service_deduplicates_identical_captures(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_borrador_100_snapshot_service_deduplicates_identical_captures() -> None:
     service = Borrador100SnapshotService(
         bucket_id=_BUCKET_ID,
-        repository=Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        repository=_InMemoryBorradorRepository(bucket_id=_BUCKET_ID),
     )
     kwargs = {
         "filing_year": 2025,
@@ -278,10 +201,8 @@ def test_borrador_100_snapshot_service_deduplicates_identical_captures(
     assert service.list_snapshots() == (first,)
 
 
-def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot() -> None:
+    repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
     older = service.capture(
         filing_year=2025,
@@ -309,10 +230,8 @@ def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot(
     )
 
 
-def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_capture(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_capture() -> None:
+    repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
     newer = service.capture(
         filing_year=2025,

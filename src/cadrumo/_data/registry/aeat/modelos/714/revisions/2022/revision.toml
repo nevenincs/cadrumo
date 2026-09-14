@@ -105,3 +105,881 @@ source_refs = [
     "boe-modelo-714-layout",
     "aeat-dr-714-2022",
 ]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-inmuebles-urbanos-no-exentos"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-02 Patrimonio, campo 87, filas 92/92: (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Total bienes inmuebles naturaleza urbana  ( [62] + [63] ) [01]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-inmuebles-rusticos"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-02 Patrimonio, campo 130, filas 135/135: (1) Bienes y derechos - B. Bienes inmuebles naturaleza rústica - Total [02]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-bienes-afectos-no-exentos"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-03 Patrimonio, campo 116, filas 122/122: (1) Bienes y derechos - C. Bienes y derechos no exentos afectos activ. empres. y profes. - Total ( [a] + [b] ]    [03]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-bienes-afectos-exentos"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-03 Patrimonio, campo 198, filas 204/204: (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Total (neto de deudas)    [04]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-depositos-cuentas"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-04 Patrimonio, campo 57, filas 62/62: (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Total [05]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-valores-cesion-capitales-negociados"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-04 Patrimonio, campo 148, filas 143/153: (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Total [06]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-valores-cesion-capitales-no-negociados"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-04 Patrimonio, campo 191, filas 186/196: (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Total [07]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-inversion-colectiva-negociada-no-exenta"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-05 Patrimonio, campo 70, filas 76/75: (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Total [08]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-otras-entidades-negociadas-no-exentas"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-05 Patrimonio, campo 134, filas 141/139: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades - Total [09]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-inversion-colectiva-no-negociada-no-exenta"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-05 Patrimonio, campo 163, filas 170/168: (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas.- Total [10]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-otras-entidades-no-negociadas-no-exentas"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-05 Patrimonio, campo 192, filas 199/197: (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Total [11]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-participaciones-negociadas-exentas"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-06 Patrimonio, campo 37, filas 39/42: (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Total (neto deudas) [12]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-participaciones-no-negociadas-exentas"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-06 Patrimonio, campo 62, filas 64/67: (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Total (neto deudas) [13]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-seguros-vida"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-06 Patrimonio, campo 75, filas 77/80: (1) Bienes y derechos - I. Seguros de vida - Total [14]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-rentas-temporales-vitalicias"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-06 Patrimonio, campo 96, filas 98/101: (1) Bienes y derechos - J. Rentas temporales y vitalicias - Total [15]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-vehiculos-joyas-pieles-embarcaciones-aeronaves"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-07 Patrimonio, campo 42, filas 47/47: (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Total [16]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-arte-antiguedades"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-07 Patrimonio, campo 67, filas 72/72: (1) Bienes y derechos - L. Objetos de arte y antigüedades - Total [17]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-derechos-reales-uso-disfrute"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-07 Patrimonio, campo 116, filas 121/121: (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Total [18]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-concesiones-administrativas"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-07 Patrimonio, campo 123, filas 128/128: (1) Bienes y derechos - N. Concesiones administrativas - Total [19]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-propiedad-intelectual-industrial"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 16, filas 21/21: (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - Total [20]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-opciones-contractuales"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 26, filas 31/31: (1) Bienes y derechos - P. Opciones contractuales - Total [21]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-demas-bienes-derechos"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 63, filas 68/68: (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Total [22]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-total-bienes-derechos-no-exentos"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-09 Patrimonio, campo 26, filas 31/31: (3) Resumen patrimonio neto: base liquidable - Total bienes y derechos no exentos [23]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-deudas-deducibles"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 104, filas 109/109: (2) Deudas deducibles - Total [24]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-exento-progresividad"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-09 Patrimonio, campo 36, filas 41/41: (5) Patrimonio exento con progresividad - Bienes y derechos exentos, excepto determinar tipo gravamen aplicable resto [28]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-deduccion-impuestos-extranjero"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 21, filas 26/26: (6) Liquidación - Deducción impuestos extranjero - Importe de la deducción [41]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-valor-neto-bienes-ceuta-melilla"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 22, filas 27/27: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto de los bienes y derechos en Ceuta y Melilla [42]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-cuota-proporcional-bienes-ceuta-melilla"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 23, filas 28/28: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota proporcional. corresponde dichos bienes y derechos [43]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-bonificacion-ceuta-melilla"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 24, filas 29/29: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Importe de la bonificación: \"75 % casilla [43]\"    [44]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-monedas-virtuales"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 42, filas 47/47: (1) Bienes y derechos - Q. Saldos en monedas virtuales - Total [46]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-deducciones-autonomicas-derecho"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 26, filas 31/31: (6) Liquidación - Deducciones y bonificaciones autonómicas - Deducciones autonómicas - Importe total con derecho a deducción [48]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-deducciones-autonomicas-aplicadas"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 27, filas 32/32: (6) Liquidación - Deducciones y bonificaciones autonómicas - Deducciones autonómicas - Importe aplicado [49]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-bonificacion-autonomica-aplicada"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 28, filas 33/33: (6) Liquidación - Deducciones y bonificaciones autonómicas - Bonificación autonómica - Importe aplicado [50]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-cuotas-previas-complementaria"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 30, filas 35/35: (7) Regularización declaración complementaria - Cuota ingresar anteriores autoliquidaciones/liquidaciones [56]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-diferencia-ingresar-complementaria"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 31, filas 36/36: (7) Regularización declaración complementaria - Diferencia a ingresar resultado declaración complementaria [57]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-otros-inmuebles-urbanos"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-02 Patrimonio, campo 86, filas 91/91: (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Total [63]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-comunidad-mayor-valor-bienes"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 46, filas 51/51: Modalidades especiales de tributación - Comunidad Autónoma donde radique el mayor de los bienes o derechos [3]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-comunidad-residencia"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 51, filas 56/56. Ayuda Patrimonio 4.1.5: Comunidad o Ciudad Autonoma de residencia habitual durante el ejercicio; mismo dato anual. El diseno 2021 conserva 2020; la ayuda 2021 confirma el ejercicio 2021."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-declaracion-complementaria"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 52, filas 57/57: Declaración Complementaria [10]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-opcion-normativa-autonomica-impatriados"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 61, filas 66/66: Si ha consignado la modalidad de la casilla 4 y desea optar por la aplicación de la normativa autonómica [12]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-via"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 16, filas 21/21: Sujeto Pasivo - Domicilio habitual - Tipo de Vía [15]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-nombre-via"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 18, filas 23/23: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública [16]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-numeracion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 19, filas 24/24: Sujeto Pasivo - Domicilio habitual - Tipo de numeración [17]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-numero-casa"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 20, filas 25/25: Sujeto Pasivo - Domicilio habitual - Número de Casa [18]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-calificador-numero"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 21, filas 26/26: Sujeto Pasivo - Domicilio habitual - Calificador del número [19]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-bloque"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 22, filas 27/27: Sujeto Pasivo - Domicilio habitual - Bloque [20]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-portal"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 23, filas 28/28: Sujeto Pasivo - Domicilio habitual - Portal [21]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-escalera"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 24, filas 29/29: Sujeto Pasivo - Domicilio habitual - Escalera [22]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-planta"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 25, filas 30/30: Sujeto Pasivo - Domicilio habitual - Planta [23]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-puerta"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 26, filas 31/31: Sujeto Pasivo - Domicilio habitual - Puerta [24]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-datos-complementarios"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 27, filas 32/32: Sujeto Pasivo - Domicilio habitual - Datos complementarios del domicilio  [25]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-localidad"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 28, filas 33/33: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si es distinta del municipio) [26]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-postal"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 29, filas 34/34: Sujeto Pasivo - Domicilio habitual - Código Postal [27]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-municipio"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 31, filas 36/36: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio [28]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-provincia"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 33, filas 38/38: Sujeto Pasivo - Domicilio habitual - Provincia [29]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-extranjero-direccion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 34, filas 39/39: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address [35]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-extranjero-datos-complementarios"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 35, filas 40/40: Sujeto Pasivo - Domicilio extranjero - Datos complementarios del domicilio [36]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-extranjero-poblacion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 36, filas 41/41: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad [37]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-postal"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 38, filas 43/43: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP] [39]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-extranjero-provincia-region-estado"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 39, filas 44/44: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado [40]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-extranjero-pais"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 40, filas 45/45: Sujeto Pasivo - Domicilio extranjero - País [41]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-pais"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 41, filas 46/46: Sujeto Pasivo - Domicilio extranjero - Código País [42]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2021"
+to_revision = "2022"
+origin = "seeded"
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-period"
+from_revision = "2021"
+to_revision = "2022"
+origin = "seeded"
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-impuestos-satisfechos-extranjero"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 19, filas 24/24: (6) Liquidación - Deducción impuestos extranjero - Impuestos efectivamente satisfechos en el extranjero [a]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-base-liquidable-gravada-extranjero"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 20, filas 25/25: (6) Liquidación - Deducción impuestos extranjero - Parte de la base liquidable gravada en el extranjero [b]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-importe-ingreso"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-Ingreso o Devolución, campo 12, filas 17/17: Ingreso - Importe (casilla [55] o casilla [57] en caso declaración complementaria)  [I]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-forma-pago"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-Ingreso o Devolución, campo 13, filas 18/18: Ingreso - Forma de pago. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-declaracion-negativa"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-Ingreso o Devolución, campo 15, filas 20/20: Negativa - Declaración negativa. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-tipo-declaracion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 6, filas 11/11: Tipo de declaración (Ver Nota). Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-sexo-contribuyente"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 11, filas 16/16: Sujeto pasivo - Sexo \"H\" Hombre, \"M\" Mujer (45). Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-estado-civil"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 12, filas 17/17: Sujeto pasivo - Estado Civil. \"1\" Soltero/a, \"2\" Casado/a, \"3\" Viudo/a, \"4\" Divorciado/a o Separado/a. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-fecha-nacimiento"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 13, filas 18/18. Ayuda Patrimonio 4.1.1: fecha de nacimiento del sujeto pasivo. El anio limite y la referencia de nota cambian en el diseno; permanece el mismo dato biografico. El diseno 2021 conserva 2020; la ayuda 2021 confirma el ejercicio 2021."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-porcentaje-discapacidad"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 14, filas 19/19: Sujeto pasivo - Discapacidad  - % discapacidad (09). Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-clase-discapacidad"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 15, filas 20/20: Sujeto pasivo - Discapacidad  - Clase discapacidad física o psíquica  (11) (\"0, 1 física o 2 psíquica\"). Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-provincia"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 32, filas 37/37: Sujeto Pasivo - Domicilio habitual - Código provincia. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-nacionalidad"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 43, filas 48/48: Sujeto Pasivo - Nacionalidad \"0\" No consta; \"1\" Española; \"2\" Otra (43). Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-regimen-economico-matrimonio"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 50, filas 55/55: Régimen Económico del matrimonio. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-representante-nif"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 53, filas 58/58: Representante -  NIF. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-representante-nombre"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 54, filas 59/59: Representante - Apellidos y nombre o razón social. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-localidad-declaracion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 55, filas 60/60: Fecha de la declaración - Localidad. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-dia-declaracion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 56, filas 61/61: Fecha de la declaración - Día. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-mes-declaracion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 57, filas 62/62: Fecha de la declaración - Mes. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-anio-declaracion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 58, filas 63/63: Fecha de la declaración - Año. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-complementaria-cuotas-anteriores"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-01 Patrimonio, campo 62, filas 67/67. Ayuda Patrimonio 4.1.4: cuotas de anteriores autoliquidaciones o liquidaciones del mismo ejercicio en la complementaria; mismo importe previo, cambia el anio. El diseno 2021 conserva 2020; la ayuda 2021 confirma el ejercicio 2021."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-idioma-declaracion"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-00 Patrimonio, campo 4, filas 9/9: Idioma de la declaración (**). Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-bienes-afectos-no-exentos-excluidos-inmuebles"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-03 Patrimonio, campo 66, filas 72/72: (1) Bienes y derechos - C1. No exentos afectos activ. empresariales y profesionales (no inm.) - Total [a]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "patrimonio-inmuebles-afectos-no-exentos"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-03 Patrimonio, campo 115, filas 121/121: (1) Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ. empres. y profes. - Total [b]. Descripcion, tipo, validacion y contenido coinciden."
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]

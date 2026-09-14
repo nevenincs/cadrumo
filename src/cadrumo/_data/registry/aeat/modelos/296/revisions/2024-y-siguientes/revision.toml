@@ -1,4 +1,11 @@
 [revisions."2024-y-siguientes"]
+# Explicit root rather than an omitted key, so a 2023 edition can sit ahead of
+# it. The 2024 design is not a revision of the 2023 one: aeat-dr-296-2023
+# carries THREE record types and aeat-dr-296-2024 carries FIVE, the two extra
+# being the Anexos al registro tipo 2 ("Valores negociables") that AEAT
+# introduced for ejercicio 2024. This edition cannot be materialised from the
+# earlier one by the merge, so it states itself in full.
+predecessor = { none = { cause = "official_structure_differs", reason = "aeat-dr-296-2023 carries three record types (declarante, perceptor, anexo de desglose de retenciones) and aeat-dr-296-2024 carries five, adding the two Anexos al registro tipo 2 for valores negociables -- relacion de pago a contribuyentes and relacion de certificados de pago -- first published for ejercicio 2024. The record set differs, so no merge from the 2023 edition produces this one.", legal_refs = ["orden-eha-3290-2008:art-6"], source_refs = ["aeat-dr-296-2024"] } }
 binding_source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
 casilla_source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
 application_link_source_refs = ["aeat-modelo-296-procedure"]

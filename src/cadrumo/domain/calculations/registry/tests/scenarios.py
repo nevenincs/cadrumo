@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
@@ -240,18 +239,12 @@ class RegistryScenarioRunReport(RegistryScenarioModel):
 
 def run_registry_calculation_scenario(
     scenario: RegistryCalculationScenario,
-    *,
-    registry_root: Path,
-    source_root: Path,
 ) -> RegistryScenarioRunReport:
     """Execute ``scenario`` against the registry calculator and compare outputs.
 
     Returns:
         A :class:`RegistryScenarioRunReport` with per-casilla comparison results.
     """
-    # Runtime scenarios deliberately exercise the published artifact; the
-    # path parameters remain part of this test helper's existing call shape.
-    del registry_root, source_root
     authority = bundled_authority()
     try:
         authority.modelo(scenario.modelo)

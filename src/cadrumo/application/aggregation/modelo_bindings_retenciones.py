@@ -20,7 +20,10 @@ from ._retencion_rate_advisory import (
     administrador_retencion_rate_advisory_observations,
 )
 from .errors import AggregationValidationError
-from .retencion_observations_repository import RetencionObservationRepository
+from .retencion_observations_repository import (
+    RetencionObservationPersistenceError,
+    RetencionObservationPorts,
+)
 from .retenciones import (
     RetencionesAggregation,
     RetencionObservation,
@@ -66,9 +69,9 @@ class RetencionesAggregationSourceResolver:
     resolver_id: ClassVar[str] = "retenciones_aggregation"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.RETENCIONES_AGGREGATION,)
 
-    def __init__(self, *, retencion_repository: RetencionObservationRepository | None = None) -> None:
-        """Optionally use the supplied encrypted retención-observation repository."""
-        self._retencion_repository = retencion_repository
+    def __init__(self, *, ports: RetencionObservationPorts) -> None:
+        """Use the required retención-observation capability bundle."""
+        self._ports = ports
 
     @staticmethod
     def aggregate(
@@ -103,10 +106,9 @@ class RetencionesAggregationSourceResolver:
             # Defensive: a revision declares the source for a modelo with no
             # retenciones aggregator. Resolve empty rather than guess values.
             return empty_source_resolution(self.resolver_id, self.owned_sources)
-        repository = self._retencion_repository or RetencionObservationRepository()
         try:
-            observations = repository.load_observations(str(context.modelo), context.period)
-        except STORAGE_DEGRADATION_ERRORS as exc:
+            observations = self._ports.repository.load_observations(str(context.modelo), context.period)
+        except (RetencionObservationPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

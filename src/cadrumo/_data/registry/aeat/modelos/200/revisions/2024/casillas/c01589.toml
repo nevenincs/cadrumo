@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01589"
+continuidad_id = "01589"
 number = "01589"
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"

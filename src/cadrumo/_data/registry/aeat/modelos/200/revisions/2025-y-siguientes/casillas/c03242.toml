@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "03242"
+continuidad_id = "03242"
+continuidad_origin = "seeded"
 number = "03242"
 section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
 data_type = "money"

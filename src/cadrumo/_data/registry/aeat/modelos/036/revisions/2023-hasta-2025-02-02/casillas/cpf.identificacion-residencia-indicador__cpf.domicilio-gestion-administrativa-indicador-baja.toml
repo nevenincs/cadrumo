@@ -869,6 +869,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @1788+8 Num. Persona Física. Identificación. Empresario de Responsabilidad Limitada. Alta y baja. Fecha. Día   * [ONE casilla over 3 printed components: @1788+2, @1790+2, @1792+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "pf.identificacion-erl-fecha"
+continuidad_id = "pf-identificacion-erl-fecha"
 number = "A10"
 section = ["declaracion", "persona_fisica", "identificacion"]
 data_type = "date"

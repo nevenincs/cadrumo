@@ -534,6 +534,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.calculations.iva_compensation_history_ports.IvaCompensationHistoryPersistenceError",
+        ErrorCode(
+            code="FAIL_IVA_COMPENSATION_HISTORY_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.error.error_storage_bucket",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.calculations.errors.BindingPrefillTypeError",
         ErrorCode(
             code="REFUSED_BINDING_PREFILL_TYPE",

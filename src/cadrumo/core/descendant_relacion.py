@@ -1,125 +1,65 @@
-"""Closed value set for the legal relationship linking a descendant to the filer.
-
-LIRPF draws the descendant line twice, with different scopes, and the two clauses
-do not coincide:
-
-* **Art. 58.1** assimilates to descendants those "vinculadas al contribuyente por
-  razón de tutela y acogimiento", and — as a third category, "fuera de los casos
-  anteriores" — "a quienes tengan atribuida por resolución judicial su guarda y
-  custodia". The tranche amounts therefore reach a tutela guardian, every
-  acogimiento carer, and a judicial guarda y custodia holder alike.
-* **Art. 58.2** grants the under-three increase, age-independently, "en los
-  supuestos de adopción o acogimiento, **tanto preadoptivo como permanente**".
-  Tutela is absent from that sentence, and the acogimiento it names is qualified.
-
-The consequence is a boundary no single flag can carry: a **temporal** acogimiento
-carer is assimilated for the tranches (58.1) and excluded from the supplement
-(58.2). Collapsing the two acogimiento shapes onto one member would leave that
-carer no honest value to record, so they would select the entitling one and take
-a supplement the statute withholds — an over-grant produced by the axis that
-exists to correct an under-grant. The two are therefore separate members, and
-:attr:`DescendantRelacion.ACOGIMIENTO_TEMPORAL` is deliberately non-entitling
-rather than merely unused.
-
-:attr:`DescendantRelacion.DESCENDIENTE` is the default, so the ABSENCE of a
-declared relación means an ordinary descendant — the overwhelming case, which
-would otherwise force every filer to answer a question that concerns a minority.
-
-Tutela is one member. The 2021 reform (Ley 8/2021) replaced tutela over minors
-with the *representación legal* / *curatela* successors, but no LIRPF provision
-distinguishes them from tutela for this purpose, so splitting the member would
-encode a difference the statute does not draw.
-
-Which members open the Art. 58.2 window is declared once, as
-:data:`ART_58_2_ENTITLING_RELACIONES`, rather than restated at each predicate:
-the whole point of the axis is that the entitling set is narrower than the
-assimilated set, and two hand-maintained copies of that judgement is how the
-narrower one drifts back to the wider.
-
-See Also:
-    :class:`~domain.contribuyente.DescendantInfo`
-        Carries this axis as its ``relacion`` field alongside the two named
-        entry-event dates the Art. 58.2 window anchors on.
-"""
+"""Opaque descendant-relationship tokens projected from the facts authority."""
 
 from __future__ import annotations
 
-from enum import StrEnum
+from typing import Self
+
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+
+from .errors.hierarchy import CoreValidationError
 
 
-class DescendantRelacion(StrEnum):
-    """The legal relationship linking one descendant to the contribuyente.
+class DescendantRelacion(str):
+    """Registry-projected relationship token carried by a descendant record.
 
-    The value byte-equals the stored fact token, so a member compares, hashes,
-    and JSON-serialises identically to its string.
-
-    Attributes:
-        DESCENDIENTE: An ordinary descendant — biological or otherwise
-            established filiation. The default: an absent relación fact means
-            this. Takes the Art. 58.1 tranches; reaches the Art. 58.2 increase
-            only through the ordinary age-under-three limb, never through the
-            age-independent entry-event limb.
-        ADOPTADO: An adopted descendant (Art. 58.2 "adopción"). Entitling: the
-            window anchors on the Registro Civil inscription, or on the
-            resolución judicial o administrativa where inscription is not
-            required.
-        ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE: An acogimiento placement of the
-            two shapes Art. 58.2 names explicitly. Entitling, anchored on the
-            first entitling acogimiento resolución.
-        ACOGIMIENTO_TEMPORAL: A temporal acogimiento placement. Assimilated by
-            Art. 58.1 — the tranches apply — but ABSENT from Art. 58.2's
-            "tanto preadoptivo como permanente", so the increase does not.
-            This member exists precisely to give that carer a truthful value.
-        TUTELA: Tutela, and its post-2021 legal-representation successors.
-            Assimilated by Art. 58.1 for the tranches; omitted from Art. 58.2,
-            so it never opens the entry-event window.
-        GUARDA_Y_CUSTODIA_JUDICIAL: A minor whose guarda y custodia is held by
-            the contribuyente through a resolución judicial, outside tutela and
-            outside every acogimiento shape. Art. 58.1 assimilates it
-            positively and as a THIRD category — "o, fuera de los casos
-            anteriores, a quienes tengan atribuida por resolución judicial su
-            guarda y custodia" — so the tranches apply. It is absent from
-            Art. 58.2, so the entry-event window never opens, and Art. 81.1
-            excludes it BY NAME, so the deducción por maternidad never reaches
-            it.
+    Membership, default meaning, and Art. 58.2 entitlement are governed by
+    fact ``lirpf-art-81-maternity-descendant-relations``. This type retains
+    only the opaque token shape and cannot mint an unprojected value.
     """
 
-    DESCENDIENTE = "descendiente"
-    ADOPTADO = "adoptado"
-    ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE = "acogimiento_preadoptivo_o_permanente"
-    ACOGIMIENTO_TEMPORAL = "acogimiento_temporal"
-    TUTELA = "tutela"
-    GUARDA_Y_CUSTODIA_JUDICIAL = "guarda_y_custodia_judicial"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct a token; only the registry projection may set the guard."""
+        if not _registry_validated:
+            raise TypeError("DescendantRelacion tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("DescendantRelacion token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("DescendantRelacion must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Register strict projected-token validation with Pydantic."""
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the persisted registry token."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the persisted token for diagnostics."""
+        return str(self)
 
 
-ART_58_2_ENTITLING_RELACIONES: frozenset[DescendantRelacion] = frozenset(
-    {
-        DescendantRelacion.ADOPTADO,
-        DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
-    },
-)
-"""The relaciones whose entry event opens the Art. 58.2 age-independent window.
-
-Derived from the statute's own enumeration — "adopción o acogimiento, tanto
-preadoptivo como permanente" — and deliberately narrower than the Art. 58.1
-assimilated set, which additionally reaches tutela and temporal acogimiento.
-Every predicate testing the entry-event limb reads this set rather than
-re-listing members, so the narrowing cannot be lost at one call site while
-holding at another.
-
-It doubles as the permission set for the acogimiento resolución date, and that
-is one judgement rather than two reused by coincidence. The date field means the
-first **entitling** resolución, so a temporal placement has no truthful value to
-put in it — recording one would both misdescribe the placement and leave an
-entitling anchor sitting on a record the statute excludes, which is exactly how
-the excluded case becomes reachable through the only available field. An
-adoptado record may carry one, because a fostered-then-adopted child's window
-anchors on the earlier placement: Art. 58.2's three periods are a CAP measured
-from the first entitling event, not a count restarted by the adoption.
-"""
-
-
-__all__ = [
-    "ART_58_2_ENTITLING_RELACIONES",
-    "DescendantRelacion",
-]
+__all__ = ["DescendantRelacion"]

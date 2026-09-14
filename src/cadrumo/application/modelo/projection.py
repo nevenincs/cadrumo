@@ -457,7 +457,7 @@ def _best_revision_for_compare(
     filing_year: int,
     ports: CalculationActionPorts,
 ) -> tuple[CalculationRevision, bool, str]:
-    units_for_year = _comparison_work_units(modelo=modelo, filing_year=filing_year)
+    units_for_year = _comparison_work_units(modelo=modelo, filing_year=filing_year, ports=ports)
     if not units_for_year:
         raise ModeloCompareNoWorkUnitsError(
             context={"modelo": modelo, "filing_year": filing_year},
@@ -487,9 +487,13 @@ def _best_revision_for_compare(
     )
 
 
-def _comparison_work_units(*, modelo: str, filing_year: int) -> list[WorkUnit]:
+def _comparison_work_units(*, modelo: str, filing_year: int, ports: CalculationActionPorts) -> list[WorkUnit]:
     """Return persisted work units matching one comparison coordinate."""
-    return [unit for unit in list_work_units() if str(unit.modelo) == modelo and unit.filing_year == filing_year]
+    return [
+        unit
+        for unit in list_work_units(ports=ports.work_lifecycle_ports)
+        if str(unit.modelo) == modelo and unit.filing_year == filing_year
+    ]
 
 
 def _comparison_revisions_for_units(

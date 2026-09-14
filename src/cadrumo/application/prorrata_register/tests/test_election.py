@@ -21,13 +21,11 @@ from __future__ import annotations
 import pytest
 
 from ....core.prorrata_register import ProrrataProvisionalProvenance
-from ..election import (
-    ELECTABLE_PROVENANCES,
-    REFERENCED_PROVENANCES,
-    ProrrataElectionError,
-    ProrrataElectionRefusal,
-    validate_prorrata_election,
+from ....domain.calculations.registry.prorrata_register_catalogue import (
+    prorrata_electable_provenances,
+    prorrata_referenced_provenances,
 )
+from ..election import ProrrataElectionError, ProrrataElectionRefusal, validate_prorrata_election
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -110,7 +108,7 @@ def test_a_reference_against_an_undocumented_provenance_is_refused() -> None:
 
 def test_every_electable_provenance_is_a_real_art_105_provenance() -> None:
     """The declarable set is a subset of the regulated one, never an extension."""
-    assert set(ELECTABLE_PROVENANCES) <= set(ProrrataProvisionalProvenance)
+    assert set(prorrata_electable_provenances()) <= set(ProrrataProvisionalProvenance)
 
 
 def test_every_referenced_provenance_is_itself_electable() -> None:
@@ -119,7 +117,7 @@ def test_every_referenced_provenance_is_itself_electable() -> None:
     The two sets are maintained separately, so nothing but this stops one
     drifting into naming a provenance the other refuses.
     """
-    assert set(ELECTABLE_PROVENANCES) >= REFERENCED_PROVENANCES
+    assert set(prorrata_electable_provenances()) >= set(prorrata_referenced_provenances())
 
 
 def test_exactly_one_electable_provenance_carries_no_document() -> None:
@@ -128,6 +126,6 @@ def test_exactly_one_electable_provenance_carries_no_document() -> None:
     Pinned as a count so adding a fourth declarable provenance has to state
     which side of the evidence rule it falls on rather than defaulting.
     """
-    undocumented = set(ELECTABLE_PROVENANCES) - REFERENCED_PROVENANCES
+    undocumented = set(prorrata_electable_provenances()) - set(prorrata_referenced_provenances())
 
     assert undocumented == {ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA}

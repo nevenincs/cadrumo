@@ -151,15 +151,15 @@ def _treaty_rate(
                 source_refs=source_refs,
             ),
         ]
-    if override.kind.value == "exempt":
+    if override.is_exempt:
         return ZERO, []
-    if override.kind.value == "flat" and override.rate is not None:
+    if override.has_flat_rate and override.rate is not None:
         return override.rate, []
-    if override.kind.value == "ceiling" and override.rate is not None:
+    if override.has_ceiling_rate and override.rate is not None:
         if baseline_rate is None:
             return None, []
         return min(baseline_rate, override.rate), []
-    if override.kind.value != "allocation_domestic_tariff":
+    if not override.delegates_to_domestic_tariff:
         raise RegistryValidationError(f"unsupported convenio override kind {override.kind.value!r}")
     # Base-dependent treaty branches remain owned by the registry formula runtime.
     return None, []

@@ -1,0 +1,123 @@
+[fact]
+fact_id = "liva-orden-auxiliary-activity-indicator"
+family = "mapping"
+
+# These four relations are repeated as dated variants because each annual
+# Orden is a separately evidenced source vintage.  The relation keys are the
+# canonical IAE epigraph/activity identities consumed by the projection
+# compiler; the values are the official auxiliary-activity indicators.
+
+[[fact.variants]]
+variant_id = "liva-orden-auxiliary-activity-indicator:2022-01-01"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+legal_refs = ["orden-hfp-1335-2021:art-4"]
+source_refs = ["boe-orden-hfp-1335-2021-iva-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hfp-1335-2021-iva-authority"
+required_text = ["691.9", "722"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "691.9|reparacion-de-calzado", value = "1" },
+  { key = "691.9|reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales", value = "2" },
+  { key = "722|transporte-de-mercancias-por-carretera-excepto-residuos", value = "1" },
+  { key = "722|transporte-de-residuos-por-carretera", value = "2" },
+]
+
+[[fact.variants]]
+variant_id = "liva-orden-auxiliary-activity-indicator:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+legal_refs = ["orden-hfp-1172-2022:art-4"]
+source_refs = ["boe-orden-hfp-1172-2022-iva-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hfp-1172-2022-iva-authority"
+required_text = ["691.9", "722"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "691.9|reparacion-de-calzado", value = "1" },
+  { key = "691.9|reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales", value = "2" },
+  { key = "722|transporte-de-mercancias-por-carretera-excepto-residuos", value = "1" },
+  { key = "722|transporte-de-residuos-por-carretera", value = "2" },
+]
+
+[[fact.variants]]
+variant_id = "liva-orden-auxiliary-activity-indicator:2024-01-01"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+legal_refs = ["orden-hfp-1359-2023:art-4"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hfp-1359-2023-iva-authority"
+required_text = ["691.9", "722"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "691.9|reparacion-de-calzado", value = "1" },
+  { key = "691.9|reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales", value = "2" },
+  { key = "722|transporte-de-mercancias-por-carretera-excepto-residuos", value = "1" },
+  { key = "722|transporte-de-residuos-por-carretera", value = "2" },
+]
+
+[[fact.variants]]
+variant_id = "liva-orden-auxiliary-activity-indicator:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+legal_refs = ["orden-hac-1347-2024:art-4"]
+source_refs = ["boe-orden-hac-1347-2024-iva-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hac-1347-2024-iva-authority"
+required_text = ["691.9", "722"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "691.9|reparacion-de-calzado", value = "1" },
+  { key = "691.9|reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales", value = "2" },
+  { key = "722|transporte-de-mercancias-por-carretera-excepto-residuos", value = "1" },
+  { key = "722|transporte-de-residuos-por-carretera", value = "2" },
+]
+
+[[fact.variants]]
+variant_id = "liva-orden-auxiliary-activity-indicator:2026-01-01"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+legal_refs = ["orden-hac-1425-2025:art-4"]
+source_refs = ["boe-orden-hac-1425-2025-iva-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hac-1425-2025-iva-authority"
+required_text = ["691.9", "722"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "691.9|reparacion-de-calzado", value = "1" },
+  { key = "691.9|reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales", value = "2" },
+  { key = "722|transporte-de-mercancias-por-carretera-excepto-residuos", value = "1" },
+  { key = "722|transporte-de-residuos-por-carretera", value = "2" },
+]

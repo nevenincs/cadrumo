@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DP200014:SAL_RESERVA_DOTACION"
+continuidad_id = "is-sal-reserva-especial-dotacion"
 number = "SAL_RESERVA_DOTACION"
 segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]

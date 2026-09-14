@@ -44,6 +44,7 @@ the *wiring*, leaving the rate's legal currency to the registry grounding gate.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 
@@ -91,7 +92,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.tests.env_scope import ready_clave_settings
 from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
@@ -100,7 +101,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -359,6 +360,7 @@ def _calculate_and_file_m130_quarter(
         work_unit=work_unit,
         repository=CalculationObservationRepository(objects=secure_objects),
         captured_at=_FILE_AT,
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
     )
     return revision
 

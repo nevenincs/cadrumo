@@ -32,7 +32,7 @@ from ....application.user_profile.bundle_export_operation import (
 from ....core.directory_scan import scan_directory
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile.portable_export import UserProfilePortableExport
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

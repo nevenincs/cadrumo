@@ -91,7 +91,7 @@ from .classification_assembly import (
 )
 from .classifier_inputs import collect_classifier_inputs
 from .confirmation_gate import ConfirmationBlocker, blocker_id
-from .counterparty_establishment import ConfirmedCounterpartyFactsRepository
+from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .establishment_ladder import CounterpartyEstablishment, resolve_draft_counterparty_establishment
 from .filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 
@@ -336,7 +336,7 @@ def resolve_confirmed_establishment(
     invoice_date: date | None = None,
     rate_tier: IvaRateKind | None = None,
     supply_nature: SupplyNature | None = None,
-    repository: ConfirmedCounterpartyFactsRepository | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> ConfirmedEstablishment:
     """Resolve both parties' territories for one confirm, and classify the operation.
 

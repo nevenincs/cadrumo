@@ -38,12 +38,12 @@ import pytest
 from ..classification.policies import RedactionRule, SensitivityClass
 from ..hashing import sha256_hex
 from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ..identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
 from ..identity.documents import (
-    SPANISH_TAX_ID_BOOTSTRAP_FORMAT,
     IdentityError,
     validate_identity,
 )
-from ..identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
+from ..identity.nif_iva import is_nif_iva_structurally_shaped, normalise_nif_iva
 from ..redaction.rules import (
     NIF_PATTERN,
     default_rules_for_class,
@@ -205,12 +205,11 @@ def _admitting_authority(span: str) -> str | None:
         candidates.append(normalised[2:])
     for candidate in candidates:
         try:
-            validate_identity(candidate, SPANISH_TAX_ID_BOOTSTRAP_FORMAT)
+            validate_identity(candidate, SPANISH_TAX_ID_FORMAT)
         except IdentityError:
             continue
         return "identity"
-    spec = nif_iva_format_for_country(normalised[:2])
-    if spec is not None and spec.pattern.match(normalised):
+    if is_nif_iva_structurally_shaped(normalised):
         return "nif-iva"
     canonical = normalise_iban(span)
     if IBAN_SHAPE_RE.match(canonical) and iban_mod_97(canonical) == 1:

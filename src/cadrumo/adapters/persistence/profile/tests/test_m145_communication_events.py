@@ -22,6 +22,7 @@ import pytest
 
 from .....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
@@ -96,26 +97,26 @@ def test_m145_communication_lifecycle_emits_communication_specific_events(tmp_pa
             _command(),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         exported = export_m145_communication_record(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             renderer=RegistryFixedWidthRecordRenderer(),
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         mark_m145_communication_record_locally_completed(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         events = _events_for_record(event_repository, created.communication_record_id)
 
@@ -153,37 +154,37 @@ def test_m145_communication_idempotent_retries_do_not_duplicate_mutation_events(
             _command(),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         create_m145_communication_record(
             _command(),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         mark_m145_communication_record_locally_completed(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         mark_m145_communication_record_locally_completed(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         events = _events_for_record(event_repository, created.communication_record_id)
 
@@ -204,14 +205,14 @@ def test_m145_communication_invalid_delivery_does_not_emit_delivery_event(tmp_pa
             _command(field_values=field_values),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
-            bucket_event_repository=event_repository,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         with pytest.raises(ValueError, match="validation passes"):
             mark_m145_communication_record_delivered_to_payer(
                 created.communication_record_id,
                 bucket_id=runtime.bucket_id,
                 actor=_ACTOR,
-                bucket_event_repository=event_repository,
+                ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
         events = _events_for_record(event_repository, created.communication_record_id)
 

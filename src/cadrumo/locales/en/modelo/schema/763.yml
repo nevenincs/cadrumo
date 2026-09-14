@@ -14,7 +14,7 @@ modelo:
           activities. Self-assessment.
         title: Gambling Activities Tax - self-assessment (annual/multi-year)
       revision:
-        2012-2t-3t:
+        2012-2014:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Tax information for casilla of Modelo 763.
@@ -28,20 +28,6 @@ modelo:
                 title: Modelo 763— tax information
           field:
             label: Casilla — tax field
-        2013-2014:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 763.
-              label: Filing year to which the self-assessment relates
-            x-chim6r1ee1in4qbfchng:
-              help: Tax information for casilla of Modelo 763.
-              label: Period (calendar quarter)
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— tax information
-          field:
-            label: Casilla— tax information
         2015-2017:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

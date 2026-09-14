@@ -21,10 +21,11 @@ into the exact ``renta_family.descendiente.{n}.*`` fact shape the
 ``_minimo_descendientes_facts`` injector and the registry selectors
 consume.
 
-Every ``wizard.setup.descendientes.*`` copy reference is declared as a
-``_LOCALE_KEY`` module constant so the locale scaffold's static usage
-scanner treats it as live -- the keys are referenced only through the
-frozen page literals below, never at a ``tr()`` call site.
+Every static ``wizard.setup.descendientes.*`` copy reference is declared as a
+``_LOCALE_KEY`` module constant so the locale scaffold's static usage scanner
+treats it as live. Relationship-choice labels are the one data-driven
+exception: their locale key is projected from the registry-owned relationship
+token, never maintained as a second Python catalogue.
 """
 
 from __future__ import annotations
@@ -33,13 +34,17 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, FlowWidgetKind
 from ...core.identity.documents import IdentityError
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_adoption_token,
+    descendant_relacion_entitling_tokens,
+    descendant_relacion_tokens,
+)
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ..flows.definition import (
@@ -166,17 +171,22 @@ _MESES_MAX = 12
 
 #: Relación tokens that may carry a Registro Civil inscription date.
 #:
-#: Derived from the core enum, never re-listed: the inscription is the adoption
-#: anchor, so this is the single-member set the canonical record enforces.
-_INSCRIPCION_RELACIONES: frozenset[str] = frozenset({DescendantRelacion.ADOPTADO.value})
+#: Derived from the authority projection, never re-listed: the inscription is
+#: the adoption anchor, so this is the single-member set the canonical record
+#: enforces.
+_DESCENDANT_RELACION_TOKENS = descendant_relacion_tokens()
+_ADOPTION_TOKEN = descendant_relacion_adoption_token()
+_INSCRIPCION_RELACIONES: frozenset[str] = frozenset({_ADOPTION_TOKEN.value})
 
 #: Relación tokens that may carry an entitling acogimiento resolución date.
 #:
-#: Derived from :data:`~cadrumo.core.ART_58_2_ENTITLING_RELACIONES` so the wizard
-#: gate and the model validator cannot disagree about which placements the
+#: Derived from the authority's Art. 58.2 projection so the wizard gate and the
+#: model validator cannot disagree about which placements the
 #: statute entitles — a temporal acogimiento is excluded from both by
 #: construction rather than by two hand-maintained lists agreeing today.
-_ACOGIMIENTO_RELACIONES: frozenset[str] = frozenset(member.value for member in ART_58_2_ENTITLING_RELACIONES)
+_ACOGIMIENTO_RELACIONES: frozenset[str] = frozenset(
+    member.value for member in descendant_relacion_entitling_tokens()
+)
 
 # --- copy references (new wizard.setup.descendientes.* locale keys) ---------
 
@@ -186,18 +196,6 @@ _COUNT_HELP_LOCALE_KEY = "wizard.setup.descendientes.count.help"
 _BIRTH_DATE_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.birth-date.prompt"
 _RELACION_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.relacion.prompt"
 _RELACION_HELP_LOCALE_KEY = "wizard.setup.descendientes.relacion.help"
-_RELACION_CHOICE_DESCENDIENTE_LOCALE_KEY = "wizard.setup.descendientes.relacion.choices.descendiente.label"
-_RELACION_CHOICE_ADOPTADO_LOCALE_KEY = "wizard.setup.descendientes.relacion.choices.adoptado.label"
-_RELACION_CHOICE_ACOGIMIENTO_PP_LOCALE_KEY = (
-    "wizard.setup.descendientes.relacion.choices.acogimiento_preadoptivo_o_permanente.label"
-)
-_RELACION_CHOICE_ACOGIMIENTO_TEMPORAL_LOCALE_KEY = (
-    "wizard.setup.descendientes.relacion.choices.acogimiento_temporal.label"
-)
-_RELACION_CHOICE_TUTELA_LOCALE_KEY = "wizard.setup.descendientes.relacion.choices.tutela.label"
-_RELACION_CHOICE_GUARDA_JUDICIAL_LOCALE_KEY = (
-    "wizard.setup.descendientes.relacion.choices.guarda_y_custodia_judicial.label"
-)
 _INSCRIPCION_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.inscripcion-registro-civil.prompt"
 _INSCRIPCION_HELP_LOCALE_KEY = "wizard.setup.descendientes.inscripcion-registro-civil.help"
 _ACOGIMIENTO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.acogimiento-resolucion.prompt"
@@ -588,45 +586,25 @@ DESCENDANTS_COUNT_PAGE: FlowPage = FlowPage(
 
 #: Art. 58.1 / 58.2 relación choices, in the order an operator recognises them.
 #:
-#: Every member of the closed set is offered, including the two that take the
+#: Every member of the authority catalogue is offered, including the two that take the
 #: tranches without the increase (temporal acogimiento, tutela). Omitting either
 #: would leave that carer no honest answer, and an operator with no honest answer
 #: picks the nearest entitling one -- which is the over-grant this axis exists to
 #: prevent, arriving through the surface rather than through the model.
-_RELACION_CHOICES: tuple[FlowChoice, ...] = (
+_RELACION_CHOICES: tuple[FlowChoice, ...] = tuple(
     FlowChoice(
-        value=DescendantRelacion.DESCENDIENTE.value,
-        label=_locale_ref(_RELACION_CHOICE_DESCENDIENTE_LOCALE_KEY),
-    ),
-    FlowChoice(
-        value=DescendantRelacion.ADOPTADO.value,
-        label=_locale_ref(_RELACION_CHOICE_ADOPTADO_LOCALE_KEY),
-    ),
-    FlowChoice(
-        value=DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE.value,
-        label=_locale_ref(_RELACION_CHOICE_ACOGIMIENTO_PP_LOCALE_KEY),
-    ),
-    FlowChoice(
-        value=DescendantRelacion.ACOGIMIENTO_TEMPORAL.value,
-        label=_locale_ref(_RELACION_CHOICE_ACOGIMIENTO_TEMPORAL_LOCALE_KEY),
-    ),
-    FlowChoice(
-        value=DescendantRelacion.TUTELA.value,
-        label=_locale_ref(_RELACION_CHOICE_TUTELA_LOCALE_KEY),
-    ),
-    FlowChoice(
-        value=DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL.value,
-        label=_locale_ref(_RELACION_CHOICE_GUARDA_JUDICIAL_LOCALE_KEY),
-    ),
+        value=token.value,
+        label=_locale_ref(f"wizard.setup.descendientes.relacion.choices.{token.value}.label"),
+    )
+    for token in _DESCENDANT_RELACION_TOKENS
 )
 
 
 #: Visibility for the acogimiento resolución page: every entitling relación.
 #:
-#: Built from :data:`~cadrumo.core.ART_58_2_ENTITLING_RELACIONES` and sorted so
-#: the clause order is stable, rather than listing the two members here. Adding
-#: an entitling relación to the statute's set therefore reaches the wizard gate
-#: without a second edit that could be forgotten.
+#: Built from the authority's Art. 58.2 projection and sorted so the clause
+#: order is stable. Adding an entitling relación to the statute's set therefore
+#: reaches the wizard gate without a second edit that could be forgotten.
 _ACOGIMIENTO_VISIBILITY: FlowVisibility = FlowVisibility(
     any_of=tuple(FlowCondition(page_id=_RELACION_PAGE_ID, equals=value) for value in sorted(_ACOGIMIENTO_RELACIONES)),
 )
@@ -697,7 +675,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         answer_type=str,
         visible_when=FlowCondition(
             page_id=_RELACION_PAGE_ID,
-            equals=DescendantRelacion.ADOPTADO.value,
+            equals=_ADOPTION_TOKEN.value,
         ),
     ),
     FlowPage(

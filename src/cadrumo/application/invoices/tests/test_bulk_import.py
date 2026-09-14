@@ -4,9 +4,9 @@
 write to :func:`~application.invoices.create_catalogue_invoice` -- the sole
 sanctioned :class:`~domain.invoices.Invoice` writer
 (``aeat-architecture-boundaries``) -- and never persists a row
-itself. These tests exercise it against the real encrypted
-:class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository` (real
-master-key provider, real engine) -- no mocks.
+itself. These tests exercise its parsing and partial-success policy through
+the application-owned :class:`~application.invoices.catalogue_creation_ports.CatalogueCreationPorts`
+fake. Encrypted catalogue integration lives in the profile-adapter test seam.
 
 See Also:
     :class:`~application.invoices.BulkInvoiceImportRow`
@@ -19,6 +19,8 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 import zipfile
 from decimal import Decimal
 from pathlib import Path
@@ -27,16 +29,21 @@ import pytest
 from openpyxl import Workbook
 from pydantic import ValidationError
 
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
+from ..catalogue_creation_ports import CatalogueCreationPorts
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source
+from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "29292929-2929-4292-8292-292929292929"
 _CIF = "A58818501"
+
+
+@contextmanager
+def _in_memory_ports() -> Iterator[CatalogueCreationPorts]:
+    yield in_memory_catalogue_creation_ports()
 
 
 def _csv_source(text: str, tmp_path: Path):
@@ -52,61 +59,18 @@ def test_bulk_invoice_row_model_requires_all_mandatory_fields() -> None:
         BulkInvoiceImportRow.model_validate({})
 
 
-def test_import_invoices_from_rows_persists_through_create_catalogue_invoice(tmp_path: Path) -> None:
-    """Each valid row creates a real, reloadable catalogue invoice."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        rows = _csv_source(
-            "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-            f"{_CIF},Papeleria Sol SL,BULK-A-001,2026-05-01,100.00,21\n"
-            f"{_CIF},Papeleria Sol SL,BULK-A-002,2026-05-02,50.00,10\n",
-            tmp_path,
-        )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
-
-        assert result.rows == 2
-        assert result.created == 2
-        assert result.skipped_duplicate == 0
-        assert result.refused == ()
-        assert len(result.created_invoice_ids) == 2
-
-        catalogue = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load()
-        stored_numbers = {invoice.invoice_number for invoice in catalogue.invoices.values()}
-        assert stored_numbers == {"BULK-A-001", "BULK-A-002"}
-        for invoice_id in result.created_invoice_ids:
-            assert invoice_id in catalogue.invoices
-
-
-def test_import_invoices_from_rows_reimport_is_idempotent_no_op(tmp_path: Path) -> None:
-    """Re-running the identical rows a second time skips every row as a duplicate."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        rows = _csv_source(
-            "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-            f"{_CIF},Papeleria Sol SL,BULK-B-001,2026-05-01,100.00,21\n",
-            tmp_path,
-        )
-        first = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
-        assert first.created == 1
-
-        second = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
-        assert second.created == 0
-        assert second.skipped_duplicate == 1
-        assert second.refused == ()
-
-        catalogue = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load()
-        matching = [inv for inv in catalogue.invoices.values() if inv.invoice_number == "BULK-B-001"]
-        assert len(matching) == 1
-
-
 def test_import_invoices_from_rows_refuses_malformed_row_names_field(tmp_path: Path) -> None:
     """A malformed row (bad date) is refused naming its row number and field; valid rows still import."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
             f"{_CIF},Papeleria Sol SL,BULK-C-001,2026-05-01,100.00,21\n"
             f"{_CIF},Papeleria Sol SL,BULK-C-002,not-a-date,50.00,10\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
+        result = import_invoices_from_rows(
+            rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
+        )
 
         assert result.created == 1
         assert len(result.refused) == 1
@@ -117,13 +81,15 @@ def test_import_invoices_from_rows_refuses_malformed_row_names_field(tmp_path: P
 
 def test_import_invoices_from_rows_refuses_unsupported_iva_rate(tmp_path: Path) -> None:
     """An IVA percentage outside the closed slot taxonomy refuses that row, not the whole batch."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
             f"{_CIF},Papeleria Sol SL,BULK-D-001,2026-05-01,100.00,13\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
+        result = import_invoices_from_rows(
+            rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
+        )
         assert result.created == 0
         assert len(result.refused) == 1
         assert result.refused[0].field == "invoice"
@@ -144,13 +110,15 @@ def test_import_refuses_the_spanish_thousands_amount_instead_of_reading_it_as_ce
     equally be written in, and guessing between them would trade a loud
     refusal for a quiet reinterpretation of somebody's tax base.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
             f"{_CIF},Papeleria Sol SL,BULK-ES-001,2026-05-01,1.234,21\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
+        result = import_invoices_from_rows(
+            rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
+        )
 
         assert result.created == 0
         assert len(result.refused) == 1
@@ -173,13 +141,15 @@ def test_import_refuses_every_spanish_amount_grammar(taxable_base: str, tmp_path
     raised, and testing those alone would have proved nothing about the one
     that did not. That asymmetry is exactly how the defect shipped.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
             f'{_CIF},Papeleria Sol SL,BULK-ES-002,2026-05-01,"{taxable_base}",21\n',
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
+        result = import_invoices_from_rows(
+            rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
+        )
 
         assert result.created == 0
         assert [failure.field for failure in result.refused] == ["taxable_base"]
@@ -195,13 +165,15 @@ def test_the_amount_refusal_teaches_the_grammar_it_wants(tmp_path: Path) -> None
     the field disagreed with, and the likeliest guess is that the amount is
     wrong rather than the notation.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
             f"{_CIF},Papeleria Sol SL,BULK-ES-005,2026-05-01,1.234,21\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
+        result = import_invoices_from_rows(
+            rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
+        )
 
         reason = result.refused[0].reason
         assert "1234.56" in reason, "the refusal must show a correctly-written amount"
@@ -215,13 +187,15 @@ def test_import_still_accepts_the_canonical_euro_amount(tmp_path: Path) -> None:
     Without this, a parser that refused every amount would pass the Spanish
     tests while breaking every real import.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
             f"{_CIF},Papeleria Sol SL,BULK-ES-003,2026-05-01,1234.56,21\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
+        result = import_invoices_from_rows(
+            rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
+        )
 
         assert result.refused == ()
         assert result.created == 1
@@ -245,9 +219,11 @@ def test_import_keeps_an_already_numeric_workbook_cell_unjudged(tmp_path: Path) 
     sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-004", "2026-05-01", 1000 / 3, 21])
     workbook.save(xlsx_path)
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         rows = read_bulk_invoice_import_source(xlsx_path)
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
+        result = import_invoices_from_rows(
+            rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
+        )
 
         assert result.refused == ()
         assert result.created == 1
@@ -317,9 +293,9 @@ def test_an_unrecognised_column_is_reported_and_the_file_still_imports(tmp_path:
     assert len(source.rows) == 1
     assert "bogus" not in source.rows[0].values
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         result = import_invoices_from_rows(
-            source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES"
+            source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
         )
         assert result.created == 1
         assert result.refused == ()
@@ -450,11 +426,11 @@ def test_import_refuses_a_file_that_can_state_no_country_at_all(tmp_path: Path) 
     comparison. Refusing per-row instead would emit one identical failure per
     row and bury the single fact the operator needs.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         source = _csv_source(_EXPORT_WITHOUT_COUNTRY_COLUMN, tmp_path)
 
         with pytest.raises(InvoiceValidationError, match="country"):
-            import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+            import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, ports=ports)
 
 
 def test_a_declared_country_lets_a_book_without_the_column_import(tmp_path: Path) -> None:
@@ -464,7 +440,7 @@ def test_a_declared_country_lets_a_book_without_the_column_import(tmp_path: Path
     refuses this file for some unrelated reason, and the recourse the refusal
     names would be unproven.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         source = _csv_source(_EXPORT_WITHOUT_COUNTRY_COLUMN, tmp_path)
 
         result = import_invoices_from_rows(
@@ -472,6 +448,7 @@ def test_a_declared_country_lets_a_book_without_the_column_import(tmp_path: Path
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             declared_country="ES",
+            ports=ports,
         )
 
         assert result.created == 1
@@ -485,41 +462,10 @@ def test_a_blank_country_cell_refuses_only_its_own_row(tmp_path: Path) -> None:
     fact, so an empty cell is an omission specific to that row. Partial-success
     semantics keep every row that did state a country.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with _in_memory_ports() as ports:
         source = _csv_source(_EXPORT_WITH_COUNTRY_COLUMN_ONE_BLANK, tmp_path)
 
-        result = import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, ports=ports)
 
         assert result.created == 1
         assert [(f.row_number, f.field) for f in result.refused] == [(3, "country_code")]
-
-
-def test_a_declared_country_never_overrides_a_row_that_states_one(tmp_path: Path) -> None:
-    """The whole-import country is a fallback for an unanswerable file, not an override.
-
-    If it silently won over a stated cell, declaring ES to get a legacy book
-    moving would rewrite every foreign counterparty in a book that had them
-    right -- the same reclassification the default caused, reintroduced through
-    the recourse.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        source = _csv_source(_EXPORT_WITH_COUNTRY_COLUMN_ONE_BLANK, tmp_path)
-
-        result = import_invoices_from_rows(
-            source,
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            declared_country="DE",
-        )
-
-        assert result.created == 2
-        assert result.refused == ()
-
-        # The stated ES row kept ES rather than taking the declared DE, and
-        # the blank row took DE rather than refusing. Read back through the
-        # real repository, so this is what was persisted and not what the
-        # in-memory result happened to carry.
-        catalogue = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load()
-        by_number = {inv.invoice_number: inv.counterparty_country for inv in catalogue.invoices.values()}
-        assert by_number["BULK-CTY-010"] == "ES"
-        assert by_number["BULK-CTY-011"] == "DE"

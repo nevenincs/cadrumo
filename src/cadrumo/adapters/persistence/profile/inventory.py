@@ -21,10 +21,10 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import ClassVar
 
 from pydantic import ValidationError
 
+from ....application.inventory.errors import InventoryClosingAuthorityConflictError
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....domain.contribuyente.inventory.records import (
@@ -44,15 +44,6 @@ from ._secure_model_document import (
 _log = get_logger(__name__)
 
 INVENTORY_LEDGER_FILENAME = "inventory-ledger.secure-object"
-
-
-class InventoryClosingAuthorityConflictError(RuntimeError):
-    """A different immutable closing-authority record already exists."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal-inventory-closing-authority-conflict-carrier: the service catches this by name and re- "
-        "raises InventoryServiceInputError, which carries the registered code and the operator message"
-    )
 
 
 def record_movement(
@@ -343,7 +334,6 @@ class InventoryLedgerRepository:
 
 
 __all__ = [
-    "InventoryClosingAuthorityConflictError",
     "InventoryLedgerRepository",
     "record_movement",
 ]

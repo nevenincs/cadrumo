@@ -53,7 +53,7 @@ from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 from cadrumo.tests.env_scope import ready_clave_settings
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,

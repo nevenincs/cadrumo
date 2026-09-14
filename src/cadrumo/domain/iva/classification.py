@@ -15,22 +15,22 @@ priorities, or fallback treatment are authored here.
 Examples:
     >>> from datetime import date
     >>> from . import (
-    ...     IvaTerritorialScope,
-    ...     CustomerTaxStatus,
     ...     EUMemberState,
-    ...     IvaTerritorialScope,
     ...     InvoiceKind,
     ...     TransactionKind,
     ...     IvaRateKind,
     ...     IvaInvoiceClassificationCriteria,
+    ...     customer_tax_status_alias,
+    ...     iva_territorial_scope_alias,
+    ...     require_eu_member_state,
     ...     classify_iva,
     ... )
     >>> criteria = IvaInvoiceClassificationCriteria(
     ...     transaction_date=date(2025, 6, 15),
-    ...     issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-    ...     customer_residency=IvaTerritorialScope.EU_MEMBER,
-    ...     customer_identification_state=EUMemberState.DE,
-    ...     customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    ...     issuer_residency=iva_territorial_scope_alias("mainland"),
+    ...     customer_residency=iva_territorial_scope_alias("eu_member"),
+    ...     customer_identification_state=require_eu_member_state("DE"),
+    ...     customer_tax_status=customer_tax_status_alias("b2b_registered"),
     ...     kind=registry_transaction_kind,
     ...     direction=InvoiceKind.ISSUED,
     ... )
@@ -45,9 +45,10 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, Self
 
-from pydantic import Field, model_validator
+from pydantic import Field, GetCoreSchemaHandler, model_validator
+from pydantic_core import CoreSchema, core_schema
 
 from ...core.logging import get_logger
 from ..calculations.registry.iva_category_catalogue import require_iva_category
@@ -63,46 +64,69 @@ from .schema import (
     IvaRateKind,
     IvaRateRecord,
     IvaStrictFrozen,
+    spanish_eu_member_state,
 )
 
 _logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from ...domain.calculations.registry.facts.resolution import ResolvedMappingFact
 
 
-# -- Closed enumerations --------------------------------------------------
+# -- Registry-projected classification vocabulary ------------------------
 
 
-class IvaTerritorialScope(StrEnum):
-    """Territorial-scope classification of an invoice party.
+class _RegistryProjectedToken(str):
+    """Opaque token whose membership is established by a facts projection."""
 
-    Per Ley 37/1992 Art. 3.Dos and Arts. 68-72, the substrate segments
-    parties by ``territorio de aplicación del impuesto`` and the
-    ``lugar de realización`` rules rather than tax residency in the
-    civil-law sense. The five values partition that territorial scope
-    for both issuer and customer roles via field-name semantics
-    (``issuer_residency: IvaTerritorialScope``,
-    ``customer_residency: IvaTerritorialScope`` — the field name keeps
-    the role label; the type carries the territorial framing). Parties
-    in Canarias, Ceuta or Melilla are NOT subject to LIVA; the
-    classifier short-circuits to
-            the registry-declared domestic-not-subject category for issuers
-    in those territories (out of TAI).
+    __slots__ = ()
 
-    Attributes:
-        ES_MAINLAND: Spanish mainland and Balearic Islands (TAI).
-        ES_CANARIAS: Canary Islands — IGIC territory, out of LIVA.
-        ES_CEUTA_MELILLA: Ceuta and Melilla — IPSI territory, out of LIVA.
-        EU_MEMBER: Any of the other 26 EU member states.
-        THIRD_COUNTRY: Any non-EU jurisdiction.
-    """
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError(f"{cls.__name__} tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{cls.__name__} token must be a non-empty string")
+        return str.__new__(cls, value)
 
-    ES_MAINLAND = "es_mainland"
-    ES_CANARIAS = "es_canarias"
-    ES_CEUTA_MELILLA = "es_ceuta_melilla"
-    EU_MEMBER = "eu_member"
-    THIRD_COUNTRY = "third_country"
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, str):
+            if cls is IvaTerritorialScope:
+                return require_iva_territorial_scope(value)  # type: ignore[return-value]
+            if cls is CustomerTaxStatus:
+                return require_customer_tax_status(value)  # type: ignore[return-value]
+        raise IvaValidationError(f"{cls.__name__} must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        return str(self)
+
+
+class IvaTerritorialScope(_RegistryProjectedToken):
+    """Registry-projected territorial scope token for an invoice party."""
 
 
 class PartyFact(StrEnum):
@@ -111,7 +135,7 @@ class PartyFact(StrEnum):
     They were one output before they were two, and the conflation had a
     direction. A printed foreign IVA prefix was read as decisive EVIDENCE OF
     PLACE, so a German-identified entity actually established in Spain resolved
-    silently to :attr:`IvaTerritorialScope.EU_MEMBER` and fed the table as
+    silently to a registry-projected EU-member token and fed the table as
     settled fact — while the mirror case, a non-resident holding a Spanish
     registration, was correctly refused. Every Member State registers
     non-residents on the same terms Spain does, so the two are one situation seen
@@ -163,27 +187,76 @@ class InvoiceKind(StrEnum):
     RECEIVED = "received"
 
 
-class CustomerTaxStatus(StrEnum):
-    """IVA-status classification of the customer.
+class CustomerTaxStatus(_RegistryProjectedToken):
+    """Registry-projected customer IVA-status token."""
 
-    Classifier rules that depend on reverse-charge mechanics check
-    :attr:`B2B_IVA_REGISTERED`, which requires a valid NIF-IVA on record.
-    :attr:`UNKNOWN` is a sentinel for transactions whose counterparty status
-    has not been resolved upstream.
 
-    Attributes:
-        B2B_IVA_REGISTERED: Business customer with a valid IVA-ID.
-        B2B_NOT_REGISTERED: Business customer without an IVA-ID.
-        B2C_CONSUMER: Private individual.
-        PUBLIC_ADMINISTRATION: Public-sector body.
-        UNKNOWN: Counterparty status unresolved.
-    """
+@dataclass(frozen=True, slots=True)
+class IvaClassificationCatalogue:
+    """Typed projection of the 0083 territorial/status vocabularies."""
 
-    B2B_IVA_REGISTERED = "b2b_iva_registered"
-    B2B_NOT_REGISTERED = "b2b_not_registered"
-    B2C_CONSUMER = "b2c_consumer"
-    PUBLIC_ADMINISTRATION = "public_administration"
-    UNKNOWN = "unknown"
+    territorial_scopes: tuple[IvaTerritorialScope, ...]
+    customer_tax_statuses: tuple[CustomerTaxStatus, ...]
+    territorial_aliases: Mapping[str, IvaTerritorialScope]
+    customer_status_aliases: Mapping[str, CustomerTaxStatus]
+
+    @property
+    def territorial_scope_set(self) -> frozenset[IvaTerritorialScope]:
+        """Return all territorial tokens declared by the selected fact."""
+        return frozenset(self.territorial_scopes)
+
+    @property
+    def customer_tax_status_set(self) -> frozenset[CustomerTaxStatus]:
+        """Return all customer-status tokens declared by the selected fact."""
+        return frozenset(self.customer_tax_statuses)
+
+    def require_territorial_scope(self, value: object) -> IvaTerritorialScope:
+        """Validate and return one registry-projected territorial token."""
+        if isinstance(value, IvaTerritorialScope):
+            token = value
+        elif isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                raise IvaValidationError("IVA territorial scope token must not be blank")
+            if raw not in {str(item) for item in self.territorial_scopes}:
+                raise IvaValidationError(f"IVA territorial scope {raw!r} is not registry-declared")
+            token = IvaTerritorialScope._from_registry(raw)
+        else:
+            raise IvaValidationError("IVA territorial scope must be a string token")
+        if token not in self.territorial_scope_set:
+            raise IvaValidationError(f"IVA territorial scope {str(token)!r} is not registry-declared")
+        return token
+
+    def require_customer_tax_status(self, value: object) -> CustomerTaxStatus:
+        """Validate and return one registry-projected customer-status token."""
+        if isinstance(value, CustomerTaxStatus):
+            token = value
+        elif isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                raise IvaValidationError("customer tax status token must not be blank")
+            if raw not in {str(item) for item in self.customer_tax_statuses}:
+                raise IvaValidationError(f"customer tax status {raw!r} is not registry-declared")
+            token = CustomerTaxStatus._from_registry(raw)
+        else:
+            raise IvaValidationError("customer tax status must be a string token")
+        if token not in self.customer_tax_status_set:
+            raise IvaValidationError(f"customer tax status {str(token)!r} is not registry-declared")
+        return token
+
+    def territorial_scope_alias(self, alias: str) -> IvaTerritorialScope:
+        """Return a named territorial alias from the selected fact."""
+        try:
+            return self.territorial_aliases[alias]
+        except KeyError as exc:
+            raise IvaValidationError(f"IVA territorial scope alias {alias!r} is not registry-declared") from exc
+
+    def customer_tax_status_alias(self, alias: str) -> CustomerTaxStatus:
+        """Return a named customer-status alias from the selected fact."""
+        try:
+            return self.customer_status_aliases[alias]
+        except KeyError as exc:
+            raise IvaValidationError(f"customer tax status alias {alias!r} is not registry-declared") from exc
 
 
 class TransactionKind(str):
@@ -296,6 +369,126 @@ def _classification_csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]
     return tokens
 
 
+_TERRITORIAL_SCOPE_ALIAS_NAMES = frozenset({"mainland", "canarias", "ceuta_melilla", "eu_member", "third_country"})
+_CUSTOMER_STATUS_ALIAS_NAMES = frozenset(
+    {"b2b_registered", "b2b_not_registered", "b2c_consumer", "public_administration", "unknown"},
+)
+
+
+def _classification_vocabulary_group(
+    entries: Mapping[str, str],
+    *,
+    prefix: str,
+    order_key: str,
+    token_type: type[_RegistryProjectedToken],
+    alias_names: frozenset[str],
+) -> tuple[tuple[_RegistryProjectedToken, ...], Mapping[str, _RegistryProjectedToken]]:
+    """Project one membership order and its named aliases from fact 0083."""
+    raw_tokens = _classification_csv(entries, order_key)
+    tokens: list[_RegistryProjectedToken] = []
+    for raw_token in raw_tokens:
+        declared = _required_classification_entry(entries, f"{prefix}.{raw_token}.value")
+        if declared != raw_token:
+            raise IvaValidationError(
+                f"IVA classification mapping {prefix}.{raw_token!s}.value declares {declared!r}, "
+                f"not {raw_token!r}",
+            )
+        tokens.append(token_type._from_registry(raw_token))
+    declared_set = frozenset(str(token) for token in tokens)
+    aliases: dict[str, _RegistryProjectedToken] = {}
+    alias_prefix = f"{prefix}.alias."
+    for key, value in entries.items():
+        if not key.startswith(alias_prefix):
+            continue
+        alias = key.removeprefix(alias_prefix)
+        if not alias or alias in aliases:
+            raise IvaValidationError(f"duplicate IVA classification alias {alias!r}")
+        raw_value = value.strip()
+        if raw_value not in declared_set:
+            raise IvaValidationError(
+                f"IVA classification alias {key!r} names undeclared token {raw_value!r}",
+            )
+        aliases[alias] = token_type._from_registry(raw_value)
+    if aliases.keys() != alias_names:
+        missing = sorted(alias_names - aliases.keys())
+        extra = sorted(aliases.keys() - alias_names)
+        raise IvaValidationError(
+            f"IVA classification aliases for {prefix!r} do not match the required projection "
+            f"(missing={missing!r}, extra={extra!r})",
+        )
+    return tuple(tokens), MappingProxyType(aliases)
+
+
+def resolve_iva_classification_catalogue(
+    effective_date: date | None = None,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaClassificationCatalogue:
+    """Resolve the territorial and customer-status vocabulary from fact 0083."""
+    resolved = _registry_iva_classification_catalogue(effective_date or date.today(), authority=authority)
+    entries = _classification_mapping_entries(resolved)
+    territorial_scopes, territorial_aliases = _classification_vocabulary_group(
+        entries,
+        prefix="territorial_scope",
+        order_key="territorial_scope.order",
+        token_type=IvaTerritorialScope,
+        alias_names=_TERRITORIAL_SCOPE_ALIAS_NAMES,
+    )
+    customer_statuses, customer_status_aliases = _classification_vocabulary_group(
+        entries,
+        prefix="customer_tax_status",
+        order_key="customer_tax_status.order",
+        token_type=CustomerTaxStatus,
+        alias_names=_CUSTOMER_STATUS_ALIAS_NAMES,
+    )
+    return IvaClassificationCatalogue(
+        territorial_scopes=territorial_scopes,  # type: ignore[arg-type]
+        customer_tax_statuses=customer_statuses,  # type: ignore[arg-type]
+        territorial_aliases=territorial_aliases,  # type: ignore[arg-type]
+        customer_status_aliases=customer_status_aliases,  # type: ignore[arg-type]
+    )
+
+
+def require_iva_territorial_scope(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaTerritorialScope:
+    """Return a territorial scope only when 0083 declares it."""
+    return resolve_iva_classification_catalogue(effective_date, authority=authority).require_territorial_scope(value)
+
+
+def require_customer_tax_status(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> CustomerTaxStatus:
+    """Return a customer status only when 0083 declares it."""
+    return resolve_iva_classification_catalogue(effective_date, authority=authority).require_customer_tax_status(value)
+
+
+def iva_territorial_scope_alias(
+    alias: str,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaTerritorialScope:
+    """Return one named territorial projection from fact 0083."""
+    return resolve_iva_classification_catalogue(effective_date, authority=authority).territorial_scope_alias(alias)
+
+
+def customer_tax_status_alias(
+    alias: str,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> CustomerTaxStatus:
+    """Return one named customer-status projection from fact 0083."""
+    return resolve_iva_classification_catalogue(effective_date, authority=authority).customer_tax_status_alias(alias)
+
+
 def resolve_transaction_kind_catalogue(
     effective_date: date,
     *,
@@ -360,14 +553,19 @@ def domestic_rate_tier_is_required(
     """
     if kind in exempt_kinds:
         return False
-    if issuer_residency is IvaTerritorialScope.ES_MAINLAND and customer_residency is IvaTerritorialScope.ES_MAINLAND:
+    vocabulary = resolve_iva_classification_catalogue(transaction_date)
+    mainland = vocabulary.territorial_scope_alias("mainland")
+    if issuer_residency == mainland and customer_residency == mainland:
         return True
     services_kind = resolve_transaction_kind_catalogue(transaction_date or date.today()).for_supply_nature("services")
     return (
-        issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        issuer_residency == mainland
         and customer_residency in outside_territories
         and kind == services_kind
-        and (customer_tax_status is None or customer_tax_status is CustomerTaxStatus.B2C_CONSUMER)
+        and (
+            customer_tax_status is None
+            or customer_tax_status == vocabulary.customer_tax_status_alias("b2c_consumer")
+        )
         and art_69_dos_service is None
     )
 
@@ -446,6 +644,9 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
     @model_validator(mode="after")
     def _validate_member_state_consistency(self) -> IvaInvoiceClassificationCriteria:
         """Keep criteria validation independent from registry-owned facts."""
+        require_iva_territorial_scope(self.issuer_residency, effective_date=self.transaction_date)
+        require_iva_territorial_scope(self.customer_residency, effective_date=self.transaction_date)
+        require_customer_tax_status(self.customer_tax_status, effective_date=self.transaction_date)
         require_transaction_kind(self.kind, effective_date=self.transaction_date)
         if self.rate_tier is not None:
             require_iva_rate_kind(self.rate_tier, effective_date=self.transaction_date)
@@ -585,6 +786,10 @@ def _registry_iva_classification_catalogue(
     from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
     from ...domain.calculations.registry.schema_base import DateAxis
 
+    if authority is None:
+        from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+
+        authority = governed_facts_in_scope()
     authority = authority or bundled_authority()
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -673,7 +878,7 @@ def _resolve_rate_for_category(
         return None
     if criteria.issuer_residency not in rate_territories:
         return None
-    member_state = EUMemberState.ES
+    member_state = spanish_eu_member_state(effective_date=criteria.transaction_date)
     try:
         return lookup_rate(member_state, tier, criteria.transaction_date)
     except IvaRateNotFoundError:
@@ -689,6 +894,7 @@ def _resolve_rate_for_category(
 __all__ = [
     "CustomerTaxStatus",
     "InvoiceKind",
+    "IvaClassificationCatalogue",
     "IvaClassificationResult",
     "IvaClassificationRule",
     "IvaInvoiceClassificationCriteria",
@@ -699,8 +905,13 @@ __all__ = [
     "TransactionKindDefinition",
     "classifiable_categories",
     "classify_iva",
+    "customer_tax_status_alias",
     "domestic_categories_by_rate_kind",
+    "iva_territorial_scope_alias",
     "rate_kind_for_domestic_category",
+    "require_customer_tax_status",
+    "require_iva_territorial_scope",
     "require_transaction_kind",
+    "resolve_iva_classification_catalogue",
     "resolve_transaction_kind_catalogue",
 ]

@@ -55,11 +55,11 @@ from pydantic import BaseModel, Field
 from ...core.decimal.constants import HUNDRED, ONE, ZERO
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
-from .errors import IvaRateNotFoundError
-from .lookup import coexisting_tier_rates, lookup_rate
-from .schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
 from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
+from .errors import IvaRateNotFoundError
+from .lookup import coexisting_tier_rates, lookup_rate
+from .schema import IvaCategory, IvaRateKind, IvaRateRecord, spanish_eu_member_state
 
 """Non-derivable category reasons are projected from fact 0084."""
 
@@ -89,7 +89,7 @@ def _ambiguous_tier_reason(
 def _ordinary_tier_rates(rate_kind: IvaRateKind, on_date: date) -> tuple[IvaRateRecord, ...]:
     """Return the tier's ordinary in-force rate, for wording the refusal only."""
     try:
-        return (lookup_rate(EUMemberState.ES, rate_kind, on_date),)
+        return (lookup_rate(spanish_eu_member_state(effective_date=on_date), rate_kind, on_date),)
     except IvaRateNotFoundError:
         return ()
 
@@ -143,7 +143,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
 
     Maps ``category`` to its :class:`IvaRateKind` and looks the applicable
     rate up via :func:`cadrumo.domain.iva.lookup_rate` for
-    :attr:`EUMemberState.ES` on ``on_date``, returning the percentage as a
+    registry-declared Spanish member-state token on ``on_date``, returning the percentage as a
     decimal *fraction* (``IvaRateRecord.pct / 100``). Domestic
     general / reduced / super-reduced derive a positive fraction; domestic
     zero and exempt derive ``Decimal("0")``. Every category with no simple
@@ -179,7 +179,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             rate_kind=None,
             reason=category_catalogue.reason(category),
         )
-    coexisting = coexisting_tier_rates(EUMemberState.ES, rate_kind, on_date)
+    coexisting = coexisting_tier_rates(spanish_eu_member_state(effective_date=on_date), rate_kind, on_date)
     if coexisting:
         return IvaRateResolution(
             category=category,
@@ -196,7 +196,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             rate_kind=rate_kind,
             reason="",
         )
-    record = lookup_rate(EUMemberState.ES, rate_kind, on_date)
+    record = lookup_rate(spanish_eu_member_state(effective_date=on_date), rate_kind, on_date)
     return IvaRateResolution(
         category=category,
         derivable=True,

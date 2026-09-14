@@ -56,8 +56,8 @@ from cadrumo.application.config_reset import (
     resume_config_reset,
     start_config_reset,
 )
-from cadrumo.tests.profile_capsule import open_test_profile_session
-from cadrumo.tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 root = sys.argv[1]
 profile_id = sys.argv[2]
@@ -107,8 +107,8 @@ from pathlib import Path
 from uuid import UUID
 
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from cadrumo.tests.profile_capsule import open_test_profile_session
-from cadrumo.tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 root = Path(sys.argv[1])
 profile_id = sys.argv[2]

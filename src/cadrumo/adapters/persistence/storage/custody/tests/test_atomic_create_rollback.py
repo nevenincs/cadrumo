@@ -37,7 +37,7 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.config import load_settings
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.tests.profile_storage_root_fixture import profile_storage_root_fixture
+from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import profile_storage_root_fixture
 
 __all__ = ["profile_storage_root_fixture"]
 

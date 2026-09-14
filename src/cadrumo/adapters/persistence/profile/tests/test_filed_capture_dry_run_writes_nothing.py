@@ -2,7 +2,7 @@
 
 The decision record's binding requirement: a preview leaves the store and the
 remote plan byte-identical across a run. This proves the store half with the
-real production write path -- :meth:`_CaptureAccumulator.absorb`, the exact
+real production write path -- :meth:`FiledCaptureAccumulator.absorb`, the exact
 method both :func:`capture_filed_data_bulk` and :func:`capture_filed_data`
 call per observation -- against a genuine encrypted bucket database, never a
 mock or an in-memory substitute.
@@ -24,8 +24,8 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.live.filed_data_capture import _CaptureAccumulator, recapture_divergence_notices
-from cadrumo.application.live.tests._filed_capture_history_support import _prior_303_observation
+from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator, recapture_divergence_notices
+from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import _prior_303_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,7 +37,7 @@ def test_dry_run_absorb_leaves_the_bucket_database_byte_identical(tmp_path: Path
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0981a5d8-4224-4246-b73c-4fe7b1d3ff51") as profile:
         store = FiledDeclaracionObservationStore(tmp_path, objects=profile.repository)
-        accumulator = _CaptureAccumulator()
+        accumulator = FiledCaptureAccumulator()
 
         # Warm-up: exercise the exact read path `absorb` runs (the recapture
         # divergence lookup) BEFORE the baseline snapshot, so any first-touch

@@ -327,13 +327,16 @@ def _emit_wizard_result(
         {
             "saved": True,
             "saved_confirmation": saved_confirmation,
-            **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
+            **calculation_revision_payload(
+                calculation_revision,
+                work_unit=calculation_result.work_unit,
+            ).model_dump(mode="python"),
             "prompted_casillas": prompted_payload,
         }
     )
     lines = [
         "operation\tmodelo.work.wizard",
-        *calculation_revision_lines(calculation_revision),
+        *calculation_revision_lines(calculation_revision, work_unit=calculation_result.work_unit),
         *(f"prompted\t{step.number}\t{step.channel}\t{value}" for step, value in prompted),
         saved_confirmation,
     ]

@@ -38,11 +38,9 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
@@ -119,15 +117,14 @@ def _calculate_151(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     return result, len(result.values)
 
 
-def test_cuota_matches_boe_escala_at_threshold_crossing(tmp_path: Path) -> None:
+def test_cuota_matches_boe_escala_at_threshold_crossing() -> None:
     """The 151 engine cuota equals the BOE art.93.2.e.1º escala for a threshold-crossing base.
 
     Base 700.000 € crosses the €600.000 boundary, so both the 24 % and 47 %
     tramos are exercised. The expected cuota (191.000,00) is hand-derived from
     the BOE rates, not the registry formula — non-tautological.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        result, _produced = _calculate_151(filing_year=2024)
+    result, _produced = _calculate_151(filing_year=2024)
 
     assert _produced > 0
     expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[2024])
@@ -137,7 +134,7 @@ def test_cuota_matches_boe_escala_at_threshold_crossing(tmp_path: Path) -> None:
     assert result.values[_CUOTA_DIFERENCIAL_CASILLA] == expected - _RETENCIONES_BY_YEAR[2024]
 
 
-def test_modelo_151_beckham_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_151_beckham_enrolls_two_renta_years() -> None:
     """End-to-end enrollment: 151 cuota escala across two in-window renta years.
 
     Drives the REAL 151 engine for 2024 and 2025 (both inside one taxpayer's
@@ -147,13 +144,12 @@ def test_modelo_151_beckham_enrolls_two_renta_years(tmp_path: Path) -> None:
     and cross-checks the year-set against the manifest. A single-year or stub run
     would raise, turning the gate RED.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        for filing_year in _RENTA_YEARS:
-            result, _produced = _calculate_151(filing_year=filing_year)
-            expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[filing_year])
-            assert result.values[_CUOTA_INTEGRA_GENERAL_CASILLA] == expected, (
-                f"151 cuota for {filing_year} drifted from the BOE art.93.2.e.1º escala"
-            )
+    for filing_year in _RENTA_YEARS:
+        result, _produced = _calculate_151(filing_year=filing_year)
+        expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[filing_year])
+        assert result.values[_CUOTA_INTEGRA_GENERAL_CASILLA] == expected, (
+            f"151 cuota for {filing_year} drifted from the BOE art.93.2.e.1º escala"
+        )
 
     # Independent oracle check: the two years' expected cuotas are the BOE values.
     assert _expected_cuota_from_boe_escala(_BASE_BY_YEAR[2025]) == Decimal("285000.00")

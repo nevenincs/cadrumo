@@ -60,9 +60,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -109,8 +106,9 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..persistence_errors import PersistenceDegradationError
 from ..storage.calc_sheets.records import RelationValue, RelationValues, SheetRelationProvenance
-from ..user_profile.projections import profile_path_values_for_bucket as _profile_path_values_for_bucket
+from ..user_profile.profile_read_ports import ProfilePathValuesReadPort, ProfileReadPorts
 from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
     m111_no_retenciones_periods_for_bucket,
@@ -124,7 +122,6 @@ from .revision_carry_gate import revision_carry_outcome
 if TYPE_CHECKING:
     from ...domain.contribuyente.entity_type import EntityType
 
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
 _log = get_logger(__name__)
 
@@ -149,7 +146,7 @@ def _gather_observations_for_snapshot(
     gather set matches the scoped requirement set the resolver folds.
     """
     needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
-    requirements = _scoped_relation_source_requirements(
+    requirements = scoped_relation_source_requirements(
         snapshot,
         activity_start_date,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
@@ -231,7 +228,8 @@ def _relation_provenance_ref(item: RelationValue) -> str:
 def _contains_profile_token(raw: str | None, token: str) -> bool | None:
     """Return whether a profile projection value contains ``token``, or None if absent.
 
-    ``raw`` is a :func:`_profile_path_values_for_bucket` projection leaf, always a
+    ``raw`` is a :class:`~application.user_profile.profile_read_ports.ProfilePathValuesReadPort`
+    projection leaf, always a
     plain ``str`` (the projection renders every fact value to text) or ``None``
     when the fact is absent.
     """
@@ -269,7 +267,12 @@ def _economic_activity_conditional_source_modelos(snapshot: RegistrySnapshot) ->
     )
 
 
-def _not_applicable_source_modelos_for_bucket(snapshot: RegistrySnapshot, bucket_id: str) -> frozenset[str]:
+def _not_applicable_source_modelos_for_bucket(
+    snapshot: RegistrySnapshot,
+    bucket_id: str,
+    *,
+    profile_path_values_reader: ProfilePathValuesReadPort,
+) -> frozenset[str]:
     """Return the revision's economic-activity-conditional sources not applicable to the bucket.
 
     The registry classification bounds the candidate set
@@ -289,7 +292,7 @@ def _not_applicable_source_modelos_for_bucket(snapshot: RegistrySnapshot, bucket
     candidates = _economic_activity_conditional_source_modelos(snapshot)
     if not candidates:
         return frozenset[str]()
-    values = _profile_path_values_for_bucket(bucket_id)
+    values = profile_path_values_reader.load_path_values(bucket_id=bucket_id)
     if values is None:
         return frozenset[str]()
 
@@ -346,11 +349,17 @@ def _entity_type_from_token(raw: str | None) -> EntityType | None:
         return None
 
 
-def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> bool:
+def _first_year_modalidad_cuota_no_m202(
+    bucket_id: str,
+    *,
+    filing_year: int,
+    profile_path_values_reader: ProfilePathValuesReadPort,
+) -> bool:
     """Engine-side counterpart of the clean-state first-year-fractional suppression (IS-3).
 
     Reads the modality inputs (entity type, INCN) and the activity-start date off
-    the WIZARD-FREE profile projection (:func:`_profile_path_values_for_bucket`)
+    the WIZARD-FREE profile projection supplied by
+    :class:`~application.user_profile.profile_read_ports.ProfilePathValuesReadPort`
     and applies the SINGLE modality definition
     (:func:`modelo_202_modality_from_inputs`) — no duplicated INCN/threshold
     logic, and NO dependency on the wizard ``SETUP_FLOW`` catalogue (so a non-CLI
@@ -366,7 +375,7 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
         modelo_202_modality_from_inputs,
     )
 
-    values = _profile_path_values_for_bucket(bucket_id)
+    values = profile_path_values_reader.load_path_values(bucket_id=bucket_id)
     if values is None:
         return False
     modality = modelo_202_modality_from_inputs(
@@ -382,11 +391,16 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     return activity_start_date.year >= filing_year
 
 
-def activity_start_date_for_bucket(bucket_id: str) -> date | None:
+def activity_start_date_for_bucket(
+    bucket_id: str,
+    *,
+    profile_path_values_reader: ProfilePathValuesReadPort,
+) -> date | None:
     """Operator-declared activity-start date for ``bucket_id``, or ``None``.
 
     Reads ``censo.activity_start_date`` off the WIZARD-FREE profile projection
-    (:func:`_profile_path_values_for_bucket`) — the SAME value the cross-period
+    (:class:`~application.user_profile.profile_read_ports.ProfilePathValuesReadPort`)
+    — the SAME value the cross-period
     clean-state gate partitions against (the verify gate threads it in as
     ``workflow_profile.activity_start_date``), so gate and engine share one
     activity-start source with no wizard-catalogue dependency. Fail-safe: a
@@ -394,13 +408,13 @@ def activity_start_date_for_bucket(bucket_id: str) -> date | None:
     scoped and the resolver keeps its full all-quarters behaviour (never a silent
     drop).
     """
-    values = _profile_path_values_for_bucket(bucket_id)
+    values = profile_path_values_reader.load_path_values(bucket_id=bucket_id)
     if values is None:
         return None
     return _parse_canonical_iso_date(values.get("censo.activity_start_date"))
 
 
-def _scoped_relation_source_requirements(
+def scoped_relation_source_requirements(
     snapshot: RegistrySnapshot,
     activity_start_date: date | None,
     *,
@@ -514,14 +528,8 @@ def _relation_period_scoped_out(
 
 
 def _default_activity_start_date(activity_start_date: date | None) -> date | None:
-    if activity_start_date is not None:
-        return activity_start_date
-    from ...core.bucket_pointer import resolve_active_bucket_id
-
-    active_bucket_id = resolve_active_bucket_id()
-    if active_bucket_id is None:
-        return None
-    return activity_start_date_for_bucket(active_bucket_id)
+    """Return the caller-supplied activity date without consulting global state."""
+    return activity_start_date
 
 
 def _default_m111_no_retenciones_periods(
@@ -529,34 +537,18 @@ def _default_m111_no_retenciones_periods(
     *,
     snapshot: RegistrySnapshot,
 ) -> frozenset[tuple[int, str]]:
-    if m111_no_retenciones_periods is not None:
-        return m111_no_retenciones_periods
-    from ...core.bucket_pointer import resolve_active_bucket_id
-
-    active_bucket_id = resolve_active_bucket_id()
-    if active_bucket_id is None:
-        return frozenset[tuple[int, str]]()
-    return m111_no_retenciones_periods_for_bucket(
-        active_bucket_id,
-        modelo=str(snapshot.modelo.id),
-        filing_year=int(snapshot.filing_year),
-        period_token=str(snapshot.period),
-        revision=snapshot.revision,
-    )
+    """Return explicit schedule attestations; no implicit active bucket is read."""
+    del snapshot
+    return m111_no_retenciones_periods or frozenset[tuple[int, str]]()
 
 
 def _default_not_applicable_source_modelos(
     snapshot: RegistrySnapshot,
     not_applicable_source_modelos: frozenset[str] | None,
 ) -> frozenset[str]:
-    if not_applicable_source_modelos is not None:
-        return not_applicable_source_modelos
-    from ...core.bucket_pointer import resolve_active_bucket_id
-
-    active_bucket_id = resolve_active_bucket_id()
-    if active_bucket_id is None:
-        return frozenset[str]()
-    return _not_applicable_source_modelos_for_bucket(snapshot, active_bucket_id)
+    """Return explicit profile applicability facts; no implicit active bucket is read."""
+    del snapshot
+    return not_applicable_source_modelos or frozenset[str]()
 
 
 def _unresolved_relation_value(
@@ -735,7 +727,7 @@ def resolve_relations_from_local_store(
         m111_no_retenciones_periods=m111_no_retenciones_periods,
     )
     requirements_by_relation = relation_requirement_index(
-        _scoped_relation_source_requirements(
+        scoped_relation_source_requirements(
             snapshot,
             activity_start_date,
             m111_no_retenciones_periods=m111_no_retenciones_periods,
@@ -1158,10 +1150,15 @@ def _snapshot_for_context(
 def _relation_prefill_context_inputs(
     snapshot: RegistrySnapshot,
     context: CalculationSourceContext,
+    *,
+    profile_path_values_reader: ProfilePathValuesReadPort,
 ) -> _RelationPrefillContextInputs:
     bucket_id = str(context.bucket_id)
     return _RelationPrefillContextInputs(
-        activity_start_date=activity_start_date_for_bucket(bucket_id),
+        activity_start_date=activity_start_date_for_bucket(
+            bucket_id,
+            profile_path_values_reader=profile_path_values_reader,
+        ),
         m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(
             bucket_id,
             modelo=str(snapshot.modelo.id),
@@ -1169,12 +1166,17 @@ def _relation_prefill_context_inputs(
             period_token=str(snapshot.period),
             revision=snapshot.revision,
         ),
-        not_applicable_source_modelos=_not_applicable_source_modelos_for_bucket(snapshot, bucket_id),
+        not_applicable_source_modelos=_not_applicable_source_modelos_for_bucket(
+            snapshot,
+            bucket_id,
+            profile_path_values_reader=profile_path_values_reader,
+        ),
         modelo_202_first_year_cuota=(
             str(context.modelo) == str(Modelo("200"))
             and _first_year_modalidad_cuota_no_m202(
                 bucket_id,
                 filing_year=context.filing_year,
+                profile_path_values_reader=profile_path_values_reader,
             )
         ),
     )
@@ -1184,7 +1186,7 @@ def _resolve_context_relation_values(
     snapshot: RegistrySnapshot,
     *,
     context: CalculationSourceContext,
-    repository: CalculationObservationRepositoryProtocol | None,
+    repository: CalculationObservationRepositoryProtocol,
     captured_at: datetime | None,
     inputs: _RelationPrefillContextInputs,
 ) -> RelationValues:
@@ -1210,7 +1212,7 @@ def _relation_prefill_resolution(
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution:
     requirements_by_relation = relation_requirement_index(
-        _scoped_relation_source_requirements(
+        scoped_relation_source_requirements(
             snapshot,
             activity_start_date,
             m111_no_retenciones_periods=m111_no_retenciones_periods,
@@ -1302,11 +1304,13 @@ class RelationPrefillSourceResolver:
         self,
         *,
         repository: CalculationObservationRepositoryProtocol,
+        profile_read_ports: ProfileReadPorts,
         registry_snapshot: RegistrySnapshot | None = None,
         captured_at: datetime | None = None,
     ) -> None:
-        """Initialize the resolver with its composed repository and context."""
+        """Initialize the resolver with its composed repositories and profile projection."""
         self._repository = repository
+        self._profile_read_ports = profile_read_ports
         self._registry_snapshot = registry_snapshot
         self._captured_at = captured_at
 
@@ -1319,8 +1323,12 @@ class RelationPrefillSourceResolver:
             unresolved formula relations, and provenance for local filings.
         """
         snapshot = _snapshot_for_context(self._registry_snapshot, context)
-        inputs = _relation_prefill_context_inputs(snapshot, context)
         try:
+            inputs = _relation_prefill_context_inputs(
+                snapshot,
+                context,
+                profile_path_values_reader=self._profile_read_ports.path_values,
+            )
             relation_values = _resolve_context_relation_values(
                 snapshot,
                 context=context,
@@ -1328,7 +1336,7 @@ class RelationPrefillSourceResolver:
                 captured_at=self._captured_at,
                 inputs=inputs,
             )
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except PersistenceDegradationError as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -1348,5 +1356,6 @@ class RelationPrefillSourceResolver:
 
 __all__ = [
     "RelationPrefillSourceResolver",
+    "scoped_relation_source_requirements",
     "resolve_relations_from_local_store",
 ]

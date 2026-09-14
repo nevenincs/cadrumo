@@ -58,9 +58,9 @@ from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.iva_compensation_history import (
-    IvaCompensationHistoryRepository,
     persist_observation_envelope_and_iva_history,
 )
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     APP_FILING_SOURCE_KIND,
     CalculationObservationRepositoryProtocol,
@@ -72,10 +72,10 @@ from .action_errors import ModeloLocalObservationError
 
 
 def _history_repository_in_observation_context(
-    override: IvaCompensationHistoryRepository | None,
+    override: IvaCompensationHistoryRepositoryProtocol,
     *,
     observation_repository: CalculationObservationRepositoryProtocol,
-) -> IvaCompensationHistoryRepository:
+) -> IvaCompensationHistoryRepositoryProtocol:
     """Return the IVA history repository bound to the observation's own store.
 
     One filed Modelo 303 period produces two rows that describe the same event:
@@ -85,32 +85,26 @@ def _history_repository_in_observation_context(
     leaves the carry row discoverable while the history lookup returns ``None``,
     with nothing reporting the divergence.
 
-    Nothing previously tied the two together. With no override the history
-    repository resolved the ACTIVE bucket while ``observation_repository`` was
-    whatever the caller threaded in, so even the default path could split; with
-    an override the caller could pass an unrelated database outright.
-
-    Deriving the default from ``observation_repository``'s own secure-object
-    backend makes the shared context structural rather than coincidental. An
-    override is still honoured -- the filing path and its tests legitimately
-    supply one -- but only when it is backed by the same database; a foreign
-    pairing is refused before either row is written, never half-persisted.
+    The required history capability is honoured only when it is backed by the
+    same database; a foreign pairing is refused before either row is written,
+    never half-persisted.  The application layer does not construct a storage
+    implementation when a caller forgets the capability.
     """
     context = observation_repository.secure_object_repository
-    if override is None:
-        return IvaCompensationHistoryRepository(objects=context)
     override_context = override.secure_object_repository
     if override_context is context:
         return override
-    if override_context.engine.url != context.engine.url:
+    override_url = getattr(getattr(override_context, "engine", None), "url", None)
+    context_url = getattr(getattr(context, "engine", None), "url", None)
+    if override_url is None or context_url is None or override_url != context_url:
         raise ModeloLocalObservationError(
             translated_message="application.modelo.errors.filed_observation_split_storage_context",
             context={
-                "history_backend": str(override_context.engine.url),
-                "observation_backend": str(context.engine.url),
+                "history_backend": str(override_url),
+                "observation_backend": str(context_url),
             },
         )
-    return IvaCompensationHistoryRepository(objects=context)
+    return override
 
 
 def require_filing_result_disposition(
@@ -150,7 +144,7 @@ def persist_filed_revision_observation(
     prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
     taxpayer_nif: str | None = None,
     filing_record_id: str | None = None,
-    iva_compensation_history_repository: IvaCompensationHistoryRepository | None = None,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
 ) -> str:
     """Persist a filed revision's casilla observations as a cross-period record.
 
@@ -187,7 +181,7 @@ def persist_filed_revision_observation(
         filing_record_id: Local filing record id used only to distinguish the
             ``source_observation_key``. ``APP_FILING`` provenance is declared
             by the required enum.
-        iva_compensation_history_repository: Optional repository override for
+        iva_compensation_history_repository: Required repository capability for
             the Modelo 303 history projection.
 
     Returns:
@@ -203,14 +197,14 @@ def persist_filed_revision_observation(
     :class:`~cadrumo.domain.iva_compensation.IvaCompensationPeriodState` via
     :func:`~cadrumo.application.calculations.persist_observation_envelope_and_iva_history`
     together with
-    :class:`~cadrumo.application.calculations.IvaCompensationHistoryRepository`;
+    :class:`~cadrumo.application.calculations.IvaCompensationHistoryRepositoryProtocol`;
     that history is read only by the explicit IVA-wallet recurrence comparison
     path, not as a second direct owner of the effective casilla 110 value.
 
     See Also:
         :class:`~cadrumo.application.calculations.CalculationObservationRepositoryProtocol`:
             Stores the non-official cross-period observation envelope.
-        :class:`~cadrumo.application.calculations.IvaCompensationHistoryRepository`:
+        :class:`~cadrumo.application.calculations.IvaCompensationHistoryRepositoryProtocol`:
             Stores the profile-local Modelo 303 compensation period state.
         :func:`~cadrumo.application.calculations.extract_modelo_303_local_iva_compensation_recurrence`:
             Reads the local IVA history for wallet reconciliation.

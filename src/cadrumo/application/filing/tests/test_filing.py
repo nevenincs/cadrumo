@@ -5,12 +5,9 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
@@ -22,25 +19,16 @@ from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, Model
 from ....domain.filing.validator import ModeloValidator
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.submission.models import ModeloDraftStatus
-from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.transactions.models import TransactionCatalogue
 from .filing_support import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
-from ....tests.profile_capsule import seed_test_profile_record
-from ..conftest import _BUCKET_ID
 from ..draft_construction import binding_provenance, build_draft
 from ..draft_review import (
     approve_draft,
-    compute_current_approval_basis,
     refresh_review_status,
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-#: The isolated capsule predates every filing this module drafts.
-_PROFILE_SEEDED_AT = datetime(2025, 1, 6, 9, 0, 0, tzinfo=UTC)
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 
@@ -170,40 +158,6 @@ def _draft(
             _M130_CASILLA_18: Decimal("0"),
         },
         schema_provider=schema_provider or _schema_provider(),
-    )
-
-
-def _transaction(
-    *,
-    provider_id: str,
-    amount: Decimal,
-    description: str,
-) -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 10),
-        value_date=date(2026, 4, 10),
-        amount=amount,
-        currency="EUR",
-        counterparty="Supplier SL",
-        description=description,
-        provenance=RawProvenance(
-            source_path=Path(f"/bank/{provider_id}.csv"),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": description},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-        },
     )
 
 
@@ -560,77 +514,6 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
     assert approved.review_checksum is not None
-
-
-def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) -> None:
-    """Both fingerprints are SELF-LOADED, from a capsule that still has its record row.
-
-    The module-scoped runtime is truncated before every test, which also
-    removes the capsule's one current profile-record row -- a state no
-    published capsule reaches, and one the record loader is right to refuse.
-    Entering a fresh runtime here gives the self-load a real capsule to read,
-    so the profile fingerprint is loaded rather than supplied and the
-    transaction-catalogue reload stays the subject under test.
-    """
-    schema_provider = _schema_provider()
-    draft = _draft(schema_provider)
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        # The published capsule's revision-one record is factless, so its
-        # projection digests to the EMPTY constant and could not be told apart
-        # from a supplied empty fingerprint. Seeding real facts through the
-        # production replacement door gives the self-load something distinctive
-        # to digest, which is what makes the assertion below discriminating.
-        seed_test_profile_record(
-            UserProfileRecord(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=profile.bucket_id,
-                facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-                created_at=_PROFILE_SEEDED_AT,
-                updated_at=_PROFILE_SEEDED_AT,
-            ),
-        )
-        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-
-        repository.save(
-            TransactionCatalogue.from_transactions(
-                (
-                    _transaction(
-                        provider_id="first-catalogue-row",
-                        amount=Decimal("80.00"),
-                        description="First persisted catalogue row",
-                    ),
-                ),
-            ),
-        )
-        first_basis = compute_current_approval_basis(
-            draft,
-            bucket_id=profile.bucket_id,
-            schema_provider=schema_provider,
-        )
-
-        repository.save(
-            TransactionCatalogue.from_transactions(
-                (
-                    _transaction(
-                        provider_id="second-catalogue-row",
-                        amount=Decimal("125.00"),
-                        description="Second persisted catalogue row",
-                    ),
-                ),
-            ),
-        )
-        second_basis = compute_current_approval_basis(
-            draft,
-            bucket_id=profile.bucket_id,
-            schema_provider=schema_provider,
-        )
-
-    assert first_basis.transaction_catalogue_fingerprint != second_basis.transaction_catalogue_fingerprint
-    # The self-load actually ran: a real capsule's projection digest is not the
-    # empty-projection constant the supplied-value shortcut would have produced.
-    assert first_basis.profile_activity_fingerprint == second_basis.profile_activity_fingerprint
-    assert first_basis.profile_activity_fingerprint != empty_profile_activity_fingerprint()
 
 
 def test_approve_draft_rejects_blank_approver_with_translated_message() -> None:

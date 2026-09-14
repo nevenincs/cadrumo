@@ -81,7 +81,7 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.aggregation.foreign_assets import ForeignAssetIngestObservation
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit

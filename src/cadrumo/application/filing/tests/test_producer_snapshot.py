@@ -25,10 +25,10 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionIvaRecord,
-    BienInversionKind,
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
+from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,

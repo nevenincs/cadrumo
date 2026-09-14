@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00744"
+continuidad_id = "is-deduccion-dt24a1-periodificacion"
 number = "00744"
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "00745"
+continuidad_id = "00745"
 number = "00745"
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "00746"
+continuidad_id = "00746"
 number = "00746"
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 data_type = "money"

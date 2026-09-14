@@ -2,18 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
-
-
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 
 _CASILLA_01: CasillaId = validated_casilla_id("01")
 _CASILLA_02: CasillaId = validated_casilla_id("02")
@@ -37,43 +29,9 @@ _M200_BIN_CLOSING_CASILLA: CasillaId = validated_casilla_id("00671")
 _M200_BIN_APPLIED_CASILLA: CasillaId = validated_casilla_id("DP200014:00547")
 _M200_BIN_GENERATED_CASILLA: CasillaId = validated_casilla_id("DP200014:00552")
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
-
 
 def _casilla_values(*entries: tuple[CasillaId, str]) -> dict[CasillaId, Decimal]:
     return {casilla_id: Decimal(value) for casilla_id, value in entries}
-
-
-def _seed_ready_profile(*, bucket_id: str, irpf_estimation_regime: str = "directa_normal") -> None:
-    facts = tuple(
-        UserProfileFact(path=fact.path, value=irpf_estimation_regime) if fact.path == "irpf.estimation_regime" else fact
-        for fact in _READY_PROFILE_FACTS
-    )
-    seed_test_profile_record(
-        UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=facts,
-            created_at=_T0,
-            updated_at=_T0,
-        ),
-    )
 
 
 def workflow_profile() -> TaxpayerProfile:

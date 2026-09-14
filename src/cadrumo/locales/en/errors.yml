@@ -911,7 +911,7 @@ errors:
       supported yet.
     refused_modelo_payment_election_incompatible: The selected payment election requires
       a positive result.
-    refused_modelo_prior_domiciliation_election: The prior-direct-debit cancellation
+    refused_modeloprior_domiciliation_election: The prior-direct-debit cancellation
       or modification was refused because the required Modelo 303 rectificativa and
       official baseline U evidence are incomplete or unavailable.
     refused_modelo_refund_account_missing: A refund was requested but no refund account

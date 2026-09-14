@@ -30,7 +30,7 @@ See Also:
         Finding-kind enum proving the guard remains advisory, not blocking.
     :func:`~application.modelo.tests.verification_substance_support.workflow_profile`
         Real workflow-profile fixture used by the predicate evaluator.
-    :mod:`~application.modelo.tests.test_prorrata_regularizacion_advisory`
+    :mod:`~application.modelo.tests.testprorrata_regularizacion_advisory`
         Calculate-path prorrata advisory regression that complements this
         settlement verify gate.
 """

@@ -888,91 +888,108 @@ class IntracomOperationType(StrEnum):
     C = "C"
 
 
-class TravelAgencyMediationType(StrEnum):
-    """RD 1619/2012 disposición adicional cuarta mediation-service classification.
+class TravelAgencyMediationType(str):
+    """Opaque travel-agency mediation token projected from fact 0133.
 
-    That disposition lets a travel agency, acting as intermediary "en nombre
-    y por cuenta ajena", invoice a listed set of services (passenger
-    transport and luggage; hostelería/acampamento/balneario; restauración y
-    catering; short-term transport-means rental; visits to museums/galleries/
-    monuments/gardens/parks; access to cultural/artistic/sporting/scientific/
-    educational/recreational events, fairs and exhibitions; travel insurance;
-    and services under the special travel-agency IVA regime) under the
-    agency's own invoice series rather than the actual supplier's. Modelo
-    347's claves F ("ventas agencia viaje", any listed service, ISSUED
-    direction) and G ("compras agencia viaje", air passenger transport only,
-    RECEIVED direction) key on this fact, not on invoice direction alone.
-
-    ``MEDIATED_SERVICE`` covers the full listed set and is the fact clave F
-    checks for. ``AIR_PASSENGER_TRANSPORT`` is the narrower subset clave G
-    checks for -- G names only "transportes de viajeros y sus equipajes por
-    vía aérea", not the disposition's full service list, so a RECEIVED
-    invoice for a non-air mediated service (e.g. mediated hostelería) is
-    neither F nor G and falls through to the ordinary A/B classification.
+    RD 1619/2012 disposición adicional cuarta owns the vocabulary and its
+    Modelo 347 consequences. Core carries only the typed token boundary;
+    callers must receive instances through the facts-registry projection.
     """
 
-    MEDIATED_SERVICE = "mediated_service"
-    AIR_PASSENGER_TRANSPORT = "air_passenger_transport"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("TravelAgencyMediationType tokens must be projected from the registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("TravelAgencyMediationType token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("TravelAgencyMediationType must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Accept only an already projected token and serialize it as text."""
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical wire token."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical token for diagnostics."""
+        return str(self)
 
 
-class ThirdPartyDeclarationRole(StrEnum):
-    """The filer's Modelo 347 declaring role -- orthogonal to :class:`EntityType`.
+class ThirdPartyDeclarationRole(str):
+    """Opaque third-party declaration-role token projected from fact 0134.
 
-    :class:`EntityType` selects the TAX a taxpayer is assessed under (IRPF,
-    Impuesto sobre Sociedades, or régimen de atribución de rentas), and that
-    selection in turn drives which modelos, calendar and rate schedule apply.
-    This axis answers a different question entirely: whether the filer's own
-    institutional ROLE additionally requires declaring Modelo 347 claves C, D
-    or E, a fact that coexists with any :class:`EntityType` value unchanged. A
-    colegio profesional that also collects fees on behalf of its colegiados
-    is a ``LEGAL_ENTITY`` for tax purposes, full stop; it is SEPARATELY a
-    ``THIRD_PARTY_FEE_COLLECTOR`` for Modelo 347 clave C purposes, and neither
-    fact touches the other.
-
-    Every member is named for the population it identifies rather than for
-    the article that names it, because article numbers renumber and a
-    renumbering should be a citation update, not a member rename. Legal
-    grounding lives here and in each binding's own ``legal_refs``, never in
-    the member's own name:
-
-    Attributes:
-        THIRD_PARTY_FEE_COLLECTOR: RD 1065/2007 art. 31.3 -- a sociedad,
-            asociación, colegio profesional or other entity that collects
-            professional fees or intellectual/industrial/authorship-rights
-            income on behalf of its socios, asociados or colegiados. Feeds
-            clave C alone, at its own 300,51 EUR threshold (arts. 32.c,
-            33.4) rather than the general 3.005,06 EUR floor.
-        PROPIEDAD_HORIZONTAL_ENTITY: RD 1065/2007 art. 31.1's last
-            paragraph -- a comunidad de propietarios under Ley 49/1960 sobre
-            propiedad horizontal. Feeds clave D.
-        SOCIAL_CHARACTER_ENTITY: RD 1065/2007 art. 31.1's last paragraph,
-            cross-referencing Ley 37/1992 (LIVA) art. 20.tres -- a private
-            entity or establishment of carácter social. Feeds clave D.
-        STATUTORY_INFORMATION_DUTY_ENTITY: RD 1065/2007 art. 31.2,
-            cross-referencing Ley 58/2003 (LGT) art. 94.1 and 94.2 -- the
-            authorities, public bodies, cámaras y corporaciones, colegios y
-            asociaciones profesionales, mutualidades de previsión social and
-            other entities exercising public functions subject to the
-            general duty to supply tax information, together with the
-            partidos políticos, sindicatos and asociaciones empresariales
-            LGT art. 94.2 subjects to the same duty. Feeds clave D.
-        PUBLIC_ADMINISTRATION_ENTITY: RD 1065/2007 art. 31.2's second
-            paragraph -- "las entidades integradas en las distintas
-            Administraciones públicas", a narrower population properly
-            contained within ``STATUTORY_INFORMATION_DUTY_ENTITY`` but named
-            as its own member because clave E is EXCLUSIVE to it while
-            clave D is not: modelling the subset as a distinct member lets
-            clave D check the broader set and clave E check this member
-            alone, without re-deriving the subset relationship at each call
-            site. Feeds clave D (as part of the broader population) and,
-            exclusively, clave E.
+    The role vocabulary, legal grounding, and C/D/E role projections belong to
+    the facts registry. Core carries only the validated token boundary; callers
+    must obtain instances through the typed registry projection.
     """
 
-    THIRD_PARTY_FEE_COLLECTOR = "third_party_fee_collector"
-    PROPIEDAD_HORIZONTAL_ENTITY = "propiedad_horizontal_entity"
-    SOCIAL_CHARACTER_ENTITY = "social_character_entity"
-    STATUTORY_INFORMATION_DUTY_ENTITY = "statutory_information_duty_entity"
-    PUBLIC_ADMINISTRATION_ENTITY = "public_administration_entity"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("ThirdPartyDeclarationRole tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("ThirdPartyDeclarationRole token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("ThirdPartyDeclarationRole must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Accept only an already projected token and serialize it as text."""
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical wire token."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical token for diagnostics."""
+        return str(self)
 
 
 class ForeignAssetClass(StrEnum):

@@ -99,7 +99,7 @@ from typing import Final
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
-from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
@@ -227,7 +227,7 @@ def edition_predecessors(definition: ModeloDefinition) -> tuple[EditionPredecess
             resolved.append(EditionPredecessor(str(revision.id), None, PredecessorBasis.ROOT_FIRST_IN_ORDER))
         else:
             earlier = ordered[position - 1]
-            if revisions_overlap(earlier, revision):
+            if revisions_coexist(earlier, revision):
                 resolved.append(EditionPredecessor(str(revision.id), str(earlier.id), PredecessorBasis.UNDECIDABLE))
             else:
                 resolved.append(EditionPredecessor(str(revision.id), str(earlier.id), PredecessorBasis.ADJACENT))

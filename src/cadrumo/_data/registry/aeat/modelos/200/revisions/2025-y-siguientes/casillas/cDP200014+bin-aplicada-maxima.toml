@@ -10,6 +10,8 @@
 # En todo caso ... hasta el importe de 1 millón de euros").
 [[revisions."2025-y-siguientes".casillas]]
 id = "DP200014:bin-aplicada-maxima"
+continuidad_id = "is-liquidacion-iii-compensacion-bin-maxima"
+continuidad_origin = "seeded"
 number = "DP200014:bin-aplicada-maxima"
 segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]

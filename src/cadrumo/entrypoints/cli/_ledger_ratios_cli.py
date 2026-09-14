@@ -10,7 +10,7 @@ import typer
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from ...domain.categories.spending_category import SpendingCategory
+from ...domain.categories.spending_category_catalogue import require_spending_category
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import ledger_cli_no_recovery
 from .common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -90,7 +90,7 @@ def ratios_list(
 
 def ratios_set(
     ctx: typer.Context,
-    category: SpendingCategory,
+    category: str,
     ratio: str,
     year: int | None = None,
     output_language: OutputLanguage | None = None,
@@ -101,6 +101,7 @@ def ratios_set(
     from ...application.user_profile.censo_sync import CensoSyncService
     from ._ledger_ratios_payloads import RatiosSetResult
 
+    category = require_spending_category(category)
     parsed = parse_decimal_amount(ratio, label="ratio")
     bucket_id, profile_id = _ratios_bucket_and_profile()
     raw_afectacion = (
@@ -126,7 +127,7 @@ def ratios_set(
 
 def ratios_unset(
     ctx: typer.Context,
-    category: SpendingCategory,
+    category: str,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
@@ -135,6 +136,7 @@ def ratios_unset(
     from ...domain.usage_ratios.errors import UsageRatioValidationError
     from ._ledger_ratios_payloads import RatiosUnsetResult
 
+    category = require_spending_category(category)
     bucket_id = _ratios_bucket_id()
     try:
         clear_usage_ratio_override(bucket_id=bucket_id, category=category)

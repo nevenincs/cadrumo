@@ -32,12 +32,10 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import InvalidOperation
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, field_validator, model_validator
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core.casilla_id import CasillaId, validated_casilla_id_map
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.error_codes import resolve_error_message
@@ -53,7 +51,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
@@ -74,11 +71,9 @@ from .m145_communication import (
     build_m145_communication_service_contract,
 )
 from .m145_communication_period import M145CommunicationPeriod
+from .m145_communication_records_ports import M145CommunicationRecordsPorts
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
-
-if TYPE_CHECKING:
-    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 
 _FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")
 _ISO_DATE_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
@@ -392,53 +387,6 @@ def m145_communication_record_object_key(bucket_id: str, communication_record_id
     return f"m145-communication:{bucket_id}:{communication_record_id}"
 
 
-def _m145_communication_record_not_found(communication_record_id: str) -> KeyError:
-    _LOGGER.warning(
-        "m145 communication record lookup missing communication_record_id=%s",
-        communication_record_id,
-    )
-    return M145CommunicationRecordNotFoundError(
-        f"Modelo 145 communication record {communication_record_id!r} not found",
-        context={"communication_record_id": communication_record_id},
-    )
-
-
-def _m145_communication_record_ambiguous_prefix(
-    communication_record_id: str,
-    full_ids: tuple[str, ...],
-) -> KeyError:
-    _LOGGER.warning(
-        "m145 communication record lookup ambiguous communication_record_id=%s match_count=%d",
-        communication_record_id,
-        len(full_ids),
-    )
-    return M145CommunicationRecordAmbiguousError(
-        f"Modelo 145 communication record prefix {communication_record_id!r} is ambiguous; matches {list(full_ids)!r}",
-        context={"communication_record_id": communication_record_id, "match_count": len(full_ids)},
-    )
-
-
-def _m145_communication_record_repository(
-    bucket_id: BucketId,
-) -> SecureSnapshotRepository[M145CommunicationRecord]:
-    # The repository class is adapter-side and imports nothing from
-    # application, so it needs no deferral. The error class still does: it is
-    # owned by application.live, which depends transitively on this package.
-    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-    from ..live.errors import LiveApplicationInputError
-
-    return SecureSnapshotRepository(
-        bucket_id=bucket_id,
-        payload_model=M145CommunicationRecord,
-        namespace_definition=M145_COMMUNICATION_RECORD_NAMESPACE,
-        object_key=m145_communication_record_object_key,
-        not_found_factory=_m145_communication_record_not_found,
-        ambiguous_prefix_factory=_m145_communication_record_ambiguous_prefix,
-        domain_label="m145_communication_record",
-        input_error_cls=LiveApplicationInputError,
-    )
-
-
 def _snapshot_for_command(command: M145CommunicationCreateCommand):
     return _snapshot_for_scope(
         communication_year=command.communication_year,
@@ -490,9 +438,23 @@ def read_m145_communication_record(
     communication_record_id: str,
     *,
     bucket_id: BucketId,
+    ports: M145CommunicationRecordsPorts,
 ) -> M145CommunicationRecord:
     """Return one Modelo 145 communication record by id or unambiguous prefix."""
-    record = _m145_communication_record_repository(bucket_id).resolve(communication_record_id)
+    try:
+        record = ports.record_repository.resolve(communication_record_id)
+    except M145CommunicationRecordNotFoundError:
+        _LOGGER.warning(
+            "m145 communication record lookup missing communication_record_id=%s",
+            communication_record_id,
+        )
+        raise
+    except M145CommunicationRecordAmbiguousError:
+        _LOGGER.warning(
+            "m145 communication record lookup ambiguous communication_record_id=%s",
+            communication_record_id,
+        )
+        raise
     return _require_m145_record_coordinates_current(record)
 
 
@@ -519,7 +481,7 @@ def _emit_m145_communication_event(
     event_type: BucketEventType,
     occurred_at: datetime,
     actor: str,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    ports: M145CommunicationRecordsPorts,
     payload: Mapping[str, str] | None = None,
 ) -> BucketEvent:
     """Emit an event that records no persisted record state of its own.
@@ -529,9 +491,8 @@ def _emit_m145_communication_event(
     standalone emit is correct there. Every transition that DOES change record
     state co-commits instead, through :func:`_build_m145_communication_event`.
     """
-    repository = bucket_event_repository or BucketEventHistoryRepository()
     return _emit_bucket_event(
-        repository=repository,
+        repository=ports.bucket_event_repository,
         bucket_id=record.bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
@@ -567,11 +528,9 @@ def _build_m145_communication_event(
 
 
 def _save_m145_record_with_event(
-    repository: SecureSnapshotRepository[M145CommunicationRecord],
+    ports: M145CommunicationRecordsPorts,
     record: M145CommunicationRecord,
     event: BucketEvent,
-    *,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
 ) -> None:
     """Commit a transitioned record and its history event in one transaction.
 
@@ -579,8 +538,10 @@ def _save_m145_record_with_event(
     communication record in its new state with the history showing no
     transition -- an M145 lifecycle change the audit trail cannot account for.
     """
-    events = bucket_event_repository or BucketEventHistoryRepository()
-    repository.save_with_secure_object_writes(record, (bucket_event_history_write(events, (event,)),))
+    ports.record_repository.save_with_secure_object_writes(
+        record,
+        (bucket_event_history_write(ports.bucket_event_repository, (event,)),),
+    )
 
 
 def _issue(
@@ -690,9 +651,10 @@ def validate_m145_communication_record(
     communication_record_id: str,
     *,
     bucket_id: BucketId,
+    ports: M145CommunicationRecordsPorts,
 ) -> M145CommunicationValidationResult:
     """Validate one persisted Modelo 145 communication record against registry authority."""
-    record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id)
+    record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id, ports=ports)
     snapshot = _snapshot_for_scope(
         communication_year=record.communication_year,
         period_token=record.period_token,
@@ -877,8 +839,8 @@ def export_m145_communication_record(
     *,
     bucket_id: BucketId,
     renderer: FicheroBoeRecordRenderer,
+    ports: M145CommunicationRecordsPorts,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationExportResult:
     """Render one Modelo 145 communication record through the registry export layout.
 
@@ -886,7 +848,7 @@ def export_m145_communication_record(
     the fixed-width AEAT wire format is an adapter concern, and importing it
     from this layer is what the port exists to avoid.
     """
-    validation = validate_m145_communication_record(communication_record_id, bucket_id=bucket_id)
+    validation = validate_m145_communication_record(communication_record_id, bucket_id=bucket_id, ports=ports)
     if not validation.valid:
         _LOGGER.warning(
             "m145 communication record export refused communication_record_id=%s issue_count=%d",
@@ -902,7 +864,7 @@ def export_m145_communication_record(
                 "issue_kinds": tuple(issue.kind.value for issue in validation.issues),
             },
         )
-    record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id)
+    record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id, ports=ports)
     snapshot = _snapshot_for_scope(
         communication_year=record.communication_year,
         period_token=record.period_token,
@@ -949,7 +911,7 @@ def export_m145_communication_record(
         event_type=BucketEventType.MODELO_145_COMMUNICATION_EXPORTED,
         occurred_at=now(),
         actor=actor,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         payload={
             "export_layout_id": result.export_layout_id,
             "payload_sha256": result.payload_sha256,
@@ -979,11 +941,11 @@ def mark_m145_communication_record_delivered_to_payer(
     communication_record_id: str,
     *,
     bucket_id: BucketId,
+    ports: M145CommunicationRecordsPorts,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationRecord:
     """Mark one valid local communication record as delivered to the payer."""
-    repository = _m145_communication_record_repository(bucket_id)
+    repository = ports.record_repository
     record = _require_m145_record_coordinates_current(repository.resolve(communication_record_id))
     if record.state in {
         M145CommunicationRecordState.DELIVERED_TO_PAYER,
@@ -995,7 +957,11 @@ def mark_m145_communication_record_delivered_to_payer(
             record.state.value,
         )
         return record
-    validation = validate_m145_communication_record(record.communication_record_id, bucket_id=bucket_id)
+    validation = validate_m145_communication_record(
+        record.communication_record_id,
+        bucket_id=bucket_id,
+        ports=ports,
+    )
     if not validation.valid:
         _LOGGER.warning(
             "m145 communication record delivery refused communication_record_id=%s issue_count=%d",
@@ -1025,10 +991,9 @@ def mark_m145_communication_record_delivered_to_payer(
         actor=actor,
     )
     _save_m145_record_with_event(
-        repository,
+        ports,
         transitioned,
         transition_event,
-        bucket_event_repository=bucket_event_repository,
     )
     _LOGGER.info(
         "m145 communication record delivered_to_payer communication_record_id=%s",
@@ -1041,11 +1006,11 @@ def mark_m145_communication_record_locally_completed(
     communication_record_id: str,
     *,
     bucket_id: BucketId,
+    ports: M145CommunicationRecordsPorts,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationRecord:
     """Mark one payer-delivered local communication record as locally completed."""
-    repository = _m145_communication_record_repository(bucket_id)
+    repository = ports.record_repository
     record = _require_m145_record_coordinates_current(repository.resolve(communication_record_id))
     if record.state is M145CommunicationRecordState.LOCALLY_COMPLETED:
         _LOGGER.debug(
@@ -1078,10 +1043,9 @@ def mark_m145_communication_record_locally_completed(
         actor=actor,
     )
     _save_m145_record_with_event(
-        repository,
+        ports,
         transitioned,
         transition_event,
-        bucket_event_repository=bucket_event_repository,
     )
     _LOGGER.info(
         "m145 communication record locally_completed communication_record_id=%s",
@@ -1094,8 +1058,8 @@ def create_m145_communication_record(
     command: M145CommunicationCreateCommand,
     *,
     bucket_id: BucketId,
+    ports: M145CommunicationRecordsPorts,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationRecord:
     """Persist a bucket-local Modelo 145 communication record.
 
@@ -1124,7 +1088,7 @@ def create_m145_communication_record(
         revision_id=snapshot.revision.id,
         field_values=field_values,
     )
-    repository = _m145_communication_record_repository(bucket_id)
+    repository = ports.record_repository
     if repository.exists(record_id):
         _LOGGER.debug(
             "m145 communication record create reused existing communication_record_id=%s",
@@ -1152,10 +1116,9 @@ def create_m145_communication_record(
         actor=actor,
     )
     _save_m145_record_with_event(
-        repository,
+        ports,
         record,
         transition_event,
-        bucket_event_repository=bucket_event_repository,
     )
     _LOGGER.info(
         "m145 communication record created communication_record_id=%s communication_year=%d period=%s",

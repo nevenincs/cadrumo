@@ -25,22 +25,25 @@ from .....application.diagnostics import (
     render_config_repair_text,
     secure_object_unreadable_total,
 )
+from .....application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
 from .....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from .....application.overview.next_actions import declare_next_action
 from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .....tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from .ephemeral_master_key import EphemeralMasterKeyProvider
 from .secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ..errors import StorageValidationError
 from ..master_key.active_session import (
+    NoActiveBucketSessionError,
     activate_session,
     has_active_bucket_session,
     suspend_active_session,
 )
 from ..master_key.bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
+from ..runtime_repository import secure_object_repository_for_active_bucket_or_default_route
 from ..secure_object_namespaces import SECURE_OBJECT_WORKFLOW_STATE_KEY
 from ..sql.engine import dispose_engine
 from ..sql.secure_objects import SecureObjectRepository
@@ -49,6 +52,53 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _ACTIVE_BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _OTHER_BUCKET_ID = "55555555-5555-4555-8555-555555555555"
+
+
+class _StorageDiagnosticsPort:
+    """Translate the real storage repository for this outward adapter test."""
+
+    @staticmethod
+    def _repository() -> SecureObjectRepository:
+        return secure_object_repository_for_active_bucket_or_default_route()
+
+    @staticmethod
+    def _translate(row) -> DiagnosticSecureObjectNamespace:
+        return DiagnosticSecureObjectNamespace(
+            namespace=row.namespace,
+            readable=row.readable,
+            unreadable=row.unreadable,
+        )
+
+    def list_namespaces(self) -> tuple[str, ...]:
+        return self._repository().list_namespaces()
+
+    def probe_namespace_integrity(self, namespace: str) -> DiagnosticSecureObjectNamespace:
+        return self._translate(self._repository().probe_namespace_integrity(namespace))
+
+    def quarantine_unreadable_rows(self) -> tuple[DiagnosticSecureObjectNamespace, ...]:
+        return tuple(self._translate(row) for row in self._repository().quarantine_unreadable_rows())
+
+
+def _diagnostics_ports() -> DiagnosticsPorts:
+    """Provide an outward adapter fake for the application diagnostics port."""
+
+    def classify_session_failure(error: BaseException) -> bool:
+        seen: set[int] = set()
+        pending: list[BaseException] = [error]
+        while pending:
+            current = pending.pop()
+            if id(current) in seen:
+                continue
+            seen.add(id(current))
+            if isinstance(current, NoActiveBucketSessionError):
+                return True
+            pending.extend(link for link in (current.__cause__, current.__context__) if link is not None)
+        return False
+
+    return DiagnosticsPorts(
+        secure_object_repository=_StorageDiagnosticsPort(),
+        session_failure_classifier=classify_session_failure,
+    )
 
 
 #: A declared continuation this module never expects to see rendered. It was a
@@ -84,7 +134,7 @@ def _explicit_database(db_path: Path) -> Generator[None]:
 def config_repair_report(tmp_path_factory: pytest.TempPathFactory) -> ConfigRepairReport:
     tmp_path = tmp_path_factory.mktemp("diagnostics-config-repair")
     with isolated_runtime_profile(tmp_path=tmp_path):
-        return build_config_repair_report()
+        return build_config_repair_report(ports=_diagnostics_ports())
 
 
 def _save_probe_row(namespace: str, object_key: str, payload: bytes) -> None:
@@ -209,7 +259,7 @@ def test_diagnostic_models_reject_retired_recovery_transport_fields() -> None:
 def test_config_repair_preserves_the_active_profile_typed_verdict() -> None:
     """Cold-profile repair rows carry the health authority, never command prose."""
 
-    report = build_config_repair_report()
+    report = build_config_repair_report(ports=_diagnostics_ports())
     profile_check = next(check for check in report.checks if check.name == "profile.readiness")
 
     assert profile_check.status == "warn"
@@ -230,7 +280,7 @@ def test_profile_readiness_reports_no_profile_configured_when_genuinely_absent()
     """
     from .....core.i18n.render import tr
 
-    report = build_config_repair_report()
+    report = build_config_repair_report(ports=_diagnostics_ports())
     profile_readiness = next(check for check in report.checks if check.name == "profile.readiness")
 
     assert profile_readiness.summary == tr("cli.diagnostics.summary.profile_none", default="No profile configured")
@@ -248,7 +298,7 @@ def test_profile_readiness_reports_the_lock_rather_than_no_profile_configured(tm
 
     with isolated_runtime_profile(tmp_path=tmp_path), suspend_active_session():
         assert not has_active_bucket_session()
-        report = build_config_repair_report()
+        report = build_config_repair_report(ports=_diagnostics_ports())
 
     profile_readiness = next(check for check in report.checks if check.name == "profile.readiness")
 
@@ -314,7 +364,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
         _save_probe_row(namespace, "repair-row-4", b"new-4")
         # The default repair pipeline resolves storage from settings and
         # decrypts through the active K2 provider bound by this context.
-        report = build_config_repair_report()
+        report = build_config_repair_report(ports=_diagnostics_ports())
         integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
         assert integrity_check.status == "warn"
         assert str(report.secure_objects.unreadable_total) in integrity_check.summary
@@ -339,7 +389,7 @@ def test_secure_objects_integrity_check_reports_ok_on_clean_database(
     """An empty or fully-decryptable secure-objects table renders ``ok``."""
 
     with isolated_runtime_profile(tmp_path=tmp_path):
-        report = build_config_repair_report()
+        report = build_config_repair_report(ports=_diagnostics_ports())
     integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
     assert integrity_check.status == "ok"
     assert report.secure_objects.unreadable_total == 0
@@ -370,7 +420,7 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
             _save_probe_row(namespace, key, payload)
 
     with key_new, _explicit_database(db_path):
-        total = secure_object_unreadable_total()
+        total = secure_object_unreadable_total(ports=_diagnostics_ports())
         assert total >= 3, f"expected at least three unreadable rows; got {total}"
 
 
@@ -380,7 +430,7 @@ def test_secure_object_unreadable_total_is_zero_on_clean_database(
     """Aggregate returns zero when no namespace has unreadable rows."""
 
     with isolated_runtime_profile(tmp_path=tmp_path):
-        assert secure_object_unreadable_total() == 0
+        assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
 
 
 def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
@@ -394,7 +444,7 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings:
         dispose_engine(settings)
         try:
-            assert secure_object_unreadable_total() == 0
+            assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
         finally:
             dispose_engine(settings)
 
@@ -418,7 +468,7 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
     ):
         dispose_engine(settings)
         try:
-            assert secure_object_unreadable_total() == 0
+            assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
         finally:
             dispose_engine(settings)
 
@@ -437,7 +487,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     three workflow states (no provider, provider only, fully
     authenticated) and asserting the report shape across each.
     """
-    from .....tests.profile_capsule import open_test_profile_session
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
     from .....application.auth.actions import update_auth
     from .....application.workflow.persistence import workflow_state_repository
 
@@ -472,7 +522,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
         for state in (no_provider, provider_only, fully_authenticated):
             workflow_state_repository().save(state)
             setup_report = build_wizard_status(state)
-            repair_report = build_config_repair_report()
+            repair_report = build_config_repair_report(ports=_diagnostics_ports())
             auth_check = next(check for check in repair_report.checks if check.name == "auth.readiness")
             if state is no_provider:
                 assert setup_report.login_ready is False
@@ -531,7 +581,7 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
     with key_new, _explicit_database(db_path):
         _save_probe_row("cadrumo-test.quar.alpha", "row-new-1", b"new-1")
 
-        report = quarantine_unreadable_secure_objects()
+        report = quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
         assert report.unreadable_total == 2
         assert report.readable_total == 1
 
@@ -572,7 +622,7 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     with key_new, _explicit_database(db_path):
         _save_probe_row("cadrumo-test.preview.alpha", "row-new-1", b"new-1")
 
-        preview = preview_quarantine_unreadable_secure_objects()
+        preview = preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
         assert preview.unreadable_total == 2
         assert preview.readable_total == 1
 
@@ -609,10 +659,10 @@ def test_the_preview_reports_nothing_without_a_session_rather_than_a_false_corru
             written_at=datetime.now(UTC),
             payload=b"repair-preview-sessionless",
         )
-        served = preview_quarantine_unreadable_secure_objects()
+        served = preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
         with suspend_active_session():
             assert not has_active_bucket_session()
-            sessionless = preview_quarantine_unreadable_secure_objects()
+            sessionless = preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
 
     assert any(item.namespace == namespace for item in served.namespaces)
     assert served.unreadable_total == 0
@@ -645,8 +695,8 @@ def test_a_sessionless_quarantine_moves_nothing(tmp_path: Path) -> None:
         with suspend_active_session():
             assert not has_active_bucket_session()
             with pytest.raises(StorageValidationError) as refusal:
-                quarantine_unreadable_secure_objects()
-        survived = preview_quarantine_unreadable_secure_objects()
+                quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
+        survived = preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
 
     assert refusal.value.translated_message == "errors.storage.runtime.not_ready"
     assert any(item.namespace == namespace for item in survived.namespaces)
@@ -813,7 +863,7 @@ def test_missing_log_parent_has_no_false_read_only_recovery_action(tmp_path: Pat
 
     missing_log_dir = tmp_path / "not-created" / "logs"
     with override_settings(cadrumo_log_dir=missing_log_dir):
-        report = build_config_repair_report()
+        report = build_config_repair_report(ports=_diagnostics_ports())
     check = next(item for item in report.checks if item.name == "logging.file")
     assert check.status == "warn"
     verdict = check.precondition_verdict
@@ -960,7 +1010,7 @@ def test_missing_active_bucket_session_is_classified_from_the_typed_chain_not_th
 
     session_error = NoActiveBucketSessionError()
     assert "NoActiveBucketSessionError" not in str(session_error)
-    assert is_missing_active_bucket_session_failure(session_error) is True
+    assert is_missing_active_bucket_session_failure(session_error, ports=_diagnostics_ports()) is True
 
     try:
         try:
@@ -971,10 +1021,10 @@ def test_missing_active_bucket_session_is_classified_from_the_typed_chain_not_th
             # typed link is reachable on the context edge alone.
             raise RuntimeError("secure state probe failed") from ValueError("unrelated root cause")
     except RuntimeError as forked:
-        assert is_missing_active_bucket_session_failure(forked) is True
+        assert is_missing_active_bucket_session_failure(forked, ports=_diagnostics_ports()) is True
 
     impostor = RuntimeError("NoActiveBucketSessionError was mentioned in passing")
-    assert is_missing_active_bucket_session_failure(impostor) is False
+    assert is_missing_active_bucket_session_failure(impostor, ports=_diagnostics_ports()) is False
 
 
 def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain() -> None:
@@ -993,4 +1043,4 @@ def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain()
     first.__cause__ = second
     second.__context__ = first
 
-    assert is_missing_active_bucket_session_failure(first) is False
+    assert is_missing_active_bucket_session_failure(first, ports=_diagnostics_ports()) is False

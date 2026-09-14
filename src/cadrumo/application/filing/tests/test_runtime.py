@@ -10,6 +10,7 @@ and representative of the registry's legal-grounding requirements.
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable
 from datetime import date
 
@@ -42,6 +43,14 @@ _TEST_PERIOD = Period.from_year_and_code(_TEST_YEAR, "1T")
 _CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 _CASILLA_02: CasillaId = validated_casilla_id("02", surface="_CASILLA_02")
 _MISSING_INPUT_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_INPUT_CASILLA")
+
+
+def test_runtime_provider_exposes_no_application_layer_cache() -> None:
+    source = inspect.getsource(build_runtime_schema_provider)
+
+    assert "bundled_authority()" in source
+    for attribute in ("cache_clear", "cache_info", "__wrapped__"):
+        assert not hasattr(build_runtime_schema_provider, attribute)
 
 
 def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:

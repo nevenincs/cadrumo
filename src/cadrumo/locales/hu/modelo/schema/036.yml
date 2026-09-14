@@ -835,11 +835,15 @@ modelo:
               label: Azonositas. Az illetoseg szerinti allam orszagkodja
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
               label: Azonositas. Internetes domain vagy cim
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Azonositas. Internetes domain vagy cim (masodik)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
               label: Azonositas. Bejegyzes vagy torles korlatolt felelossegu vallalkozokent
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
               label: Azonositas. A korlatolt felelossegu vallalkozokent torteno bejegyzes
                 vagy torles datuma
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Azonositas. Az adougyi illetoseg hatalybalepesenek datuma
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
               label: Azonositas. A kulfoldi illetosegu szemely allampolgarsaga
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
@@ -851,6 +855,8 @@ modelo:
               label: Azonositas. Keresztnev
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
               label: Azonositas. Kereskedelmi nev
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Azonositas. A termeszetes szemely belfoldi vagy kulfoldi illetosegu-e
             x-e1l2sobmd5pmubb5dlgmir0:
               label: Jogi szemely vagy szervezet. Ertesitesek. E-mail
             x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
@@ -1049,6 +1055,9 @@ modelo:
               label: Jogi szemely vagy szervezet. Azonositas. A megallapodas datuma
             x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
               label: Jogi szemely vagy szervezet. Azonositas. Az alapitas datuma
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Jogi szemely vagy szervezet. Azonositas. Az adougyi illetoseg
+                hatalybalepesenek datuma
             x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
               label: Jogi szemely vagy szervezet. Azonositas. A nyilvantartasba vetel
                 datuma
@@ -1315,30 +1324,84 @@ modelo:
             x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
               label: Tagok, resztvevok vagy reszesedok. Vezetek- es keresztnev vagy
                 cegnev
+            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13a jogutod)
             x-edqm6bb15pn6ipg:
               help: 'A Modelo 036 920. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13a
                 jogutod)
+            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13a jogutod)
+            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13a jogutod)
+            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13b jogutod)
             x-edqm6bb25pn6ipg:
               help: 'A Modelo 036 924. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13b
                 jogutod)
+            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13b jogutod)
+            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13b jogutod)
+            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13c jogutod)
             x-edqm6bb35pn6ipg:
               help: 'A Modelo 036 928. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13c
                 jogutod)
+            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13c jogutod)
+            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13c jogutod)
+            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13d jogutod)
             x-edqm6bb45pn6ipg:
               help: 'A Modelo 036 932. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13d
                 jogutod)
+            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13d jogutod)
+            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13d jogutod)
+            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13e jogutod)
             x-edqm6bb55pn6ipg:
               help: 'A Modelo 036 936. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13e
                 jogutod)
+            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13e jogutod)
+            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13e jogutod)
+            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
+                hanyada (13f jogutod)
             x-edqm6bb65pn6ipg:
               help: 'A Modelo 036 940. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13f
                 jogutod)
+            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
+                (13f jogutod)
+            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
+                oroklesi szazaleka (13f jogutod)
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:

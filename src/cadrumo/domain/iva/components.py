@@ -1,8 +1,9 @@
 """Typed IVA component models and the registry projection boundary.
 
-Concrete category/component rows are canonical registry data.  This module
-retains only the enum and validation models, generic component calculations,
-and the explicit boundary that accepts a registry-projected catalogue.
+Concrete category/component rows are canonical registry data. This module
+retains only opaque registry tokens, validation models, generic component
+calculations, and the explicit boundary that accepts a registry-projected
+catalogue.
 """
 
 from __future__ import annotations
@@ -36,104 +37,81 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 
-class IvaComponentPresence(StrEnum):
-    """Whether an invoice component exists for a given :class:`~domain.iva.IvaCategory`.
+class _IvaRegistryToken(str):
+    """Opaque token base for component vocabularies authored in fact 0084."""
 
-    The values grade *legal expectation*, not data availability: ``REQUIRED``
-    means the law produces the component for this category, so a row missing it
-    is ungrounded rather than merely sparse.
-    """
+    __slots__ = ()
 
-    REQUIRED = "required"
-    """The component exists by law; a row without it is not calculation-grounded."""
+    @classmethod
+    def _token_label(cls) -> str:
+        return "IVA component registry token"
 
-    OPTIONAL = "optional"
-    """The component may legitimately be present or absent on this category."""
+    def __new__(cls, value: str, *, _registry_validated: bool = False):
+        if not _registry_validated:
+            raise TypeError(f"{cls._token_label()} must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{cls._token_label()} must be a non-empty string")
+        return str.__new__(cls, value)
 
-    ZERO_BY_LAW = "zero_by_law"
-    """The component is structurally zero; a non-zero value is a defect."""
+    @classmethod
+    def _from_registry(cls, value: str):
+        return cls(value, _registry_validated=True)
 
-    UNKNOWN = "unknown"
-    """Not determinable from the category alone — the category declares nothing."""
+    @classmethod
+    def _require_registry_token(cls, value: object):
+        if isinstance(value, cls):
+            return value
+        raise IvaValidationError(f"{cls._token_label()} must be a registry-projected token")
 
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        from pydantic_core import core_schema
 
-class IvaRetencionExpectation(StrEnum):
-    """Whether an IRPF retención is expected on an operation in this category.
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
-    Retención is an IRPF settlement-side deduction, not an IVA price component,
-    so it gets its own graded axis rather than reusing
-    :class:`IvaComponentPresence`: the IVA category never *requires* a
-    retención, it only makes one more or less likely by fixing the payer's
-    residency and the operation's nature.
-    """
+    @property
+    def value(self) -> str:
+        return str(self)
 
-    EXPECTED = "expected"
-    """The withholding obligation normally applies to this category."""
-
-    POSSIBLE = "possible"
-    """Applies only when further, non-category facts hold (the rendimiento is
-    profesional and the payer is an obliged retenedor)."""
-
-    NOT_EXPECTED = "not_expected"
-    """The obligation normally does not apply. A default, not a prohibition —
-    see the row's ``retencion_note`` for the carve-outs."""
-
-    UNKNOWN = "unknown"
-    """Not determinable from the category alone."""
-
-
-class IvaRetencionRole(StrEnum):
-    """Whose money a retención on this invoice is, and which way it flows.
-
-    The retención amount is the same arithmetic on both kinds of invoice and
-    means opposite things. On an ISSUED invoice the payer withholds from what
-    they owe the taxpayer and remits it to AEAT on the taxpayer's account: the
-    taxpayer is the *retenido* and the amount is a CREDIT, deducted from the
-    pago fraccionado (RIRPF art. 110.3.a) and from the annual cuota. On a
-    RECEIVED invoice from a resident professional the taxpayer is the obligated
-    *retenedor*: they pay the supplier net, and the withheld amount is a
-    LIABILITY they owe AEAT through the retenciones modelos.
-
-    Reading the amount without the role inverts a credit into a debt. The role
-    is therefore declared per row and validated against the row's kind, so it
-    can be read directly but cannot be authored wrong.
-    """
-
-    TAXPAYER_CREDIT = "taxpayer_credit"
-    """Withheld from the taxpayer by the payer; deductible against their own tax."""
-
-    TAXPAYER_LIABILITY = "taxpayer_liability"
-    """Withheld by the taxpayer from a supplier; owed onward to AEAT."""
-
-    NONE = "none"
-    """No retención is expected on this (category, kind), so no role arises."""
-
-    UNKNOWN = "unknown"
-    """Not determinable — the row's retención expectation is itself unknown."""
+    @property
+    def name(self) -> str:
+        return str(self)
 
 
-class IvaKindApplicability(StrEnum):
-    """Whether a (category, kind) pair describes an operation that can occur.
+class IvaComponentPresence(_IvaRegistryToken):
+    """Registry-projected component-presence token."""
 
-    Several categories are directional by law: an entrega intracomunitaria
-    exenta (LIVA art. 25) is something the taxpayer *supplies*, and its
-    received-side counterpart is a different category entirely
-    (the registry-declared intra-community acquisition reverse-charge category).
+    @classmethod
+    def _token_label(cls) -> str:
+        return "IVA component-presence token"
 
-    A pair that cannot occur is declared here rather than omitted from the
-    table. Omission would make the completeness gate satisfiable by narrowing
-    what counts as a valid pair — the gameable form — and would leave a caller
-    holding such an invoice with a lookup failure instead of an answer stating
-    that the combination is not a real operation.
-    """
 
-    ARISES = "arises"
-    """The pair describes an operation that occurs; the component columns apply."""
+class IvaRetencionExpectation(_IvaRegistryToken):
+    """Registry-projected retención-expectation token."""
 
-    DOES_NOT_ARISE = "does_not_arise"
-    """The category is directional and this kind is not its side. Components are
-    declared UNKNOWN because there is no operation to describe, and the row's
-    note names the category that *is* this kind's counterpart."""
+    @classmethod
+    def _token_label(cls) -> str:
+        return "IVA retención-expectation token"
+
+
+class IvaRetencionRole(_IvaRegistryToken):
+    """Registry-projected retención-role token."""
+
+    @classmethod
+    def _token_label(cls) -> str:
+        return "IVA retención-role token"
+
+
+class IvaKindApplicability(_IvaRegistryToken):
+    """Registry-projected category/kind applicability token."""
+
+    @classmethod
+    def _token_label(cls) -> str:
+        return "IVA kind-applicability token"
 
 
 class IvaCuotaSettlement(str):
@@ -195,6 +173,71 @@ class IvaCuotaSettlementCatalogue:
                 f"IVA cuota settlement {str(token)!r} is not declared by the facts registry",
             )
         return token
+
+
+@dataclass(frozen=True, slots=True)
+class IvaComponentVocabulary:
+    """Typed membership projection for the four component axes in fact 0084."""
+
+    component_presence: frozenset[IvaComponentPresence]
+    retencion_expectation: frozenset[IvaRetencionExpectation]
+    retencion_role: frozenset[IvaRetencionRole]
+    kind_applicability: frozenset[IvaKindApplicability]
+
+    @staticmethod
+    def _require(
+        value: object,
+        token_type: type[_IvaRegistryToken],
+        declared: frozenset[_IvaRegistryToken],
+        label: str,
+    ) -> _IvaRegistryToken:
+        if isinstance(value, token_type):
+            token = value
+        elif isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                raise IvaValidationError(f"{label} must be a non-empty string")
+            try:
+                token = token_type._from_registry(raw)
+            except (TypeError, ValueError) as exc:
+                raise IvaValidationError(f"{label} must be a non-empty string") from exc
+        else:
+            raise IvaValidationError(f"{label} must be a string token")
+        if token not in declared:
+            raise IvaValidationError(f"{label} {str(token)!r} is not declared by fact 0084")
+        return token
+
+    def require_component_presence(self, value: object) -> IvaComponentPresence:
+        return self._require(
+            value,
+            IvaComponentPresence,
+            self.component_presence,
+            "IVA component-presence token",
+        )  # type: ignore[return-value]
+
+    def require_retencion_expectation(self, value: object) -> IvaRetencionExpectation:
+        return self._require(
+            value,
+            IvaRetencionExpectation,
+            self.retencion_expectation,
+            "IVA retención-expectation token",
+        )  # type: ignore[return-value]
+
+    def require_retencion_role(self, value: object) -> IvaRetencionRole:
+        return self._require(
+            value,
+            IvaRetencionRole,
+            self.retencion_role,
+            "IVA retención-role token",
+        )  # type: ignore[return-value]
+
+    def require_kind_applicability(self, value: object) -> IvaKindApplicability:
+        return self._require(
+            value,
+            IvaKindApplicability,
+            self.kind_applicability,
+            "IVA kind-applicability token",
+        )  # type: ignore[return-value]
 
 
 class IvaGroundingConfidence(StrEnum):
@@ -280,8 +323,17 @@ class IvaCategoryComponents(IvaStrictFrozen):
     def _validate_row(self, info: ValidationInfo) -> IvaCategoryComponents:
         """Enforce the internal coherence the table's readers rely on."""
         label = f"IvaCategoryComponents[{self.category.value}/{self.kind.value}]"
-        self._validate_retencion_role(label)
-        self._validate_applicability(label)
+        component_vocabulary: IvaComponentVocabulary | None = None
+        if isinstance(info.context, Mapping):
+            context_vocabulary = info.context.get("component_vocabulary")
+            if isinstance(context_vocabulary, IvaComponentVocabulary):
+                component_vocabulary = context_vocabulary
+        if component_vocabulary is None:
+            raise IvaValidationError(
+                f"{label}: component vocabulary must be projected from fact 0084 before row validation",
+            )
+        self._validate_retencion_role(label, component_vocabulary)
+        self._validate_applicability(label, component_vocabulary)
         self._validate_reference_integrity(label)
         no_settlement_token: IvaCuotaSettlement | None = None
         if isinstance(info.context, Mapping):
@@ -290,8 +342,12 @@ class IvaCategoryComponents(IvaStrictFrozen):
                 no_settlement_token = context_token
             elif isinstance(context_token, str):
                 no_settlement_token = IvaCuotaSettlement(context_token)
-        self._validate_cuota_settlement(label, no_settlement_token=no_settlement_token)
-        self._validate_retencion_notes(label)
+        self._validate_cuota_settlement(
+            label,
+            component_vocabulary=component_vocabulary,
+            no_settlement_token=no_settlement_token,
+        )
+        self._validate_retencion_notes(label, component_vocabulary)
         self._validate_grounding_references(label)
         return self
 
@@ -310,6 +366,7 @@ class IvaCategoryComponents(IvaStrictFrozen):
         self,
         label: str,
         *,
+        component_vocabulary: IvaComponentVocabulary,
         no_settlement_token: IvaCuotaSettlement | None = None,
     ) -> None:
         """Refuse a cuota whose declared settlement disagrees with its presence."""
@@ -318,12 +375,14 @@ class IvaCategoryComponents(IvaStrictFrozen):
             if no_settlement_token is not None
             else registry_cuota_settlement_catalogue().no_settlement_token
         )
-        if (self.cuota is IvaComponentPresence.ZERO_BY_LAW) != (self.cuota_settlement == no_settlement):
+        zero_by_law = component_vocabulary.require_component_presence("zero_by_law")
+        cuota = component_vocabulary.require_component_presence(self.cuota)
+        if (cuota == zero_by_law) != (self.cuota_settlement == no_settlement):
             raise IvaValidationError(
                 f"{label}: a zero-by-law cuota must declare the registry's no-settlement token, and vice versa",
             )
 
-    def _validate_retencion_notes(self, label: str) -> None:
+    def _validate_retencion_notes(self, label: str, component_vocabulary: IvaComponentVocabulary) -> None:
         """Require caveats for weakly grounded or default retención expectations."""
         if self.retencion_grounding is not IvaGroundingConfidence.BUNDLED_CORPUS and not self.retencion_note.strip():
             raise IvaValidationError(
@@ -340,7 +399,9 @@ class IvaCategoryComponents(IvaStrictFrozen):
         # is deliberate: bundling the provision must not be able to switch the
         # disclosure off, which is exactly what happened when these rows were
         # promoted from live-source-only to bundled-corpus.
-        if self.retencion is IvaRetencionExpectation.NOT_EXPECTED and not self.retencion_note.strip():
+        not_expected = component_vocabulary.require_retencion_expectation("not_expected")
+        retencion = component_vocabulary.require_retencion_expectation(self.retencion)
+        if retencion == not_expected and not self.retencion_note.strip():
             raise IvaValidationError(
                 f"{label}: a not-expected retención requires a retencion_note stating the "
                 "carve-outs under which the obligation nevertheless arises",
@@ -363,7 +424,7 @@ class IvaCategoryComponents(IvaStrictFrozen):
                     f"{label}: {name} grounding claims bundled corpus but the row cites no legal_refs",
                 )
 
-    def _validate_retencion_role(self, label: str) -> None:
+    def _validate_retencion_role(self, label: str, component_vocabulary: IvaComponentVocabulary) -> None:
         """Refuse a retención role that contradicts the row's kind or expectation.
 
         The role is a function of the kind whenever a retención can arise at
@@ -373,23 +434,27 @@ class IvaCategoryComponents(IvaStrictFrozen):
         be wrong, so a consumer may trust the column without re-deriving it.
         """
         expected_by_kind = {
-            InvoiceKind.ISSUED: IvaRetencionRole.TAXPAYER_CREDIT,
-            InvoiceKind.RECEIVED: IvaRetencionRole.TAXPAYER_LIABILITY,
+            InvoiceKind.ISSUED: component_vocabulary.require_retencion_role("taxpayer_credit"),
+            InvoiceKind.RECEIVED: component_vocabulary.require_retencion_role("taxpayer_liability"),
         }[self.kind]
+        expectation = component_vocabulary.require_retencion_expectation(self.retencion)
         required = {
-            IvaRetencionExpectation.EXPECTED: expected_by_kind,
-            IvaRetencionExpectation.POSSIBLE: expected_by_kind,
-            IvaRetencionExpectation.NOT_EXPECTED: IvaRetencionRole.NONE,
-            IvaRetencionExpectation.UNKNOWN: IvaRetencionRole.UNKNOWN,
-        }[self.retencion]
-        if self.retencion_role is not required:
+            component_vocabulary.require_retencion_expectation("expected"): expected_by_kind,
+            component_vocabulary.require_retencion_expectation("possible"): expected_by_kind,
+            component_vocabulary.require_retencion_expectation("not_expected"):
+                component_vocabulary.require_retencion_role("none"),
+            component_vocabulary.require_retencion_expectation("unknown"):
+                component_vocabulary.require_retencion_role("unknown"),
+        }[expectation]
+        role = component_vocabulary.require_retencion_role(self.retencion_role)
+        if role != required:
             raise IvaValidationError(
-                f"{label}: retención expectation {self.retencion.value!r} on a "
+                f"{label}: retención expectation {str(expectation)!r} on a "
                 f"{self.kind.value!r} invoice requires role {required.value!r}, "
-                f"got {self.retencion_role.value!r}",
+                f"got {role.value!r}",
             )
 
-    def _validate_applicability(self, label: str) -> None:
+    def _validate_applicability(self, label: str, component_vocabulary: IvaComponentVocabulary) -> None:
         """Refuse a non-arising row that still asserts component expectations.
 
         A pair that cannot occur has nothing to describe, so asserting a
@@ -398,8 +463,11 @@ class IvaCategoryComponents(IvaStrictFrozen):
         useful thing such a row carries is which category IS this kind's
         counterpart.
         """
-        if self.applicability is not IvaKindApplicability.DOES_NOT_ARISE:
+        does_not_arise = component_vocabulary.require_kind_applicability("does_not_arise")
+        applicability = component_vocabulary.require_kind_applicability(self.applicability)
+        if applicability != does_not_arise:
             return
+        unknown_presence = component_vocabulary.require_component_presence("unknown")
         asserted = [
             name
             for name, value in (
@@ -407,14 +475,16 @@ class IvaCategoryComponents(IvaStrictFrozen):
                 ("cuota", self.cuota),
                 ("recargo", self.recargo),
             )
-            if value is not IvaComponentPresence.UNKNOWN
+            if component_vocabulary.require_component_presence(value) != unknown_presence
         ]
         if asserted:
             raise IvaValidationError(
                 f"{label}: pair does not arise, so it cannot assert {sorted(asserted)!r}; "
                 "declare every component UNKNOWN",
             )
-        if self.retencion is not IvaRetencionExpectation.UNKNOWN:
+        if component_vocabulary.require_retencion_expectation(self.retencion) != (
+            component_vocabulary.require_retencion_expectation("unknown")
+        ):
             raise IvaValidationError(
                 f"{label}: pair does not arise, so its retención expectation must be UNKNOWN",
             )
@@ -445,6 +515,10 @@ _CATEGORY_PROJECTION_NAMES = frozenset(
 _CUOTA_SETTLEMENT_ORDER_KEY = "cuota_settlement.order"
 _CUOTA_SETTLEMENT_NO_TOKEN_KEY = "cuota_settlement.no_settlement"
 _CUOTA_SETTLEMENT_PREFIX = "cuota_settlement."
+_COMPONENT_PRESENCE_ORDER_KEY = "component_presence.order"
+_RETENCION_EXPECTATION_ORDER_KEY = "retencion_expectation.order"
+_RETENCION_ROLE_ORDER_KEY = "retencion_role.order"
+_KIND_APPLICABILITY_ORDER_KEY = "kind_applicability.order"
 
 
 def _resolve_component_catalogue_entries(
@@ -566,6 +640,167 @@ def _ordered_component_rows(entries: Mapping[str, str]) -> tuple[str, ...]:
     return ordered_keys
 
 
+def _component_axis_membership(
+    entries: Mapping[str, str],
+    *,
+    key: str,
+    token_type: type[_IvaRegistryToken],
+    observed: set[str],
+    label: str,
+) -> frozenset[_IvaRegistryToken]:
+    order_text = entries.get(key)
+    if order_text is None or not order_text.strip():
+        raise IvaValidationError(f"IVA component mapping is missing {key!r}")
+    raw_tokens = tuple(token.strip() for token in order_text.split(",") if token.strip())
+    if not raw_tokens or len(raw_tokens) != len(set(raw_tokens)):
+        raise IvaValidationError(f"{label} membership must contain unique non-empty tokens")
+    if not observed.issubset(set(raw_tokens)):
+        missing = sorted(observed - set(raw_tokens))
+        raise IvaValidationError(f"{label} rows use undeclared tokens {missing!r}")
+    return frozenset(token_type._from_registry(raw_token) for raw_token in raw_tokens)
+
+
+def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaComponentVocabulary:
+    """Project the four explicit component-axis memberships from fact 0084."""
+    observed: dict[str, set[str]] = {
+        "applicability": set(),
+        "retencion_role": set(),
+        "base": set(),
+        "cuota": set(),
+        "recargo": set(),
+        "retencion": set(),
+    }
+    for row_key in _ordered_component_rows(entries):
+        raw_row = entries.get(f"row.{row_key}")
+        if raw_row is None:
+            raise IvaValidationError(f"IVA component mapping is missing row {row_key!r}")
+        try:
+            decoded = json.loads(raw_row)
+        except json.JSONDecodeError as exc:
+            raise IvaValidationError(f"IVA component row {row_key!r} is not valid JSON") from exc
+        if not isinstance(decoded, Mapping):
+            raise IvaValidationError(f"IVA component row {row_key!r} must decode as an object")
+        for field in observed:
+            value = decoded.get(field)
+            if not isinstance(value, str) or not value.strip():
+                raise IvaValidationError(f"IVA component row {row_key!r} is missing {field!r}")
+            observed[field].add(value.strip())
+    return IvaComponentVocabulary(
+        component_presence=frozenset(
+            _component_axis_membership(
+                entries,
+                key=_COMPONENT_PRESENCE_ORDER_KEY,
+                token_type=IvaComponentPresence,
+                observed=observed["base"] | observed["cuota"] | observed["recargo"],
+                label="IVA component-presence",
+            ),
+        ),
+        retencion_expectation=frozenset(
+            _component_axis_membership(
+                entries,
+                key=_RETENCION_EXPECTATION_ORDER_KEY,
+                token_type=IvaRetencionExpectation,
+                observed=observed["retencion"],
+                label="IVA retención-expectation",
+            ),
+        ),
+        retencion_role=frozenset(
+            _component_axis_membership(
+                entries,
+                key=_RETENCION_ROLE_ORDER_KEY,
+                token_type=IvaRetencionRole,
+                observed=observed["retencion_role"],
+                label="IVA retención-role",
+            ),
+        ),
+        kind_applicability=frozenset(
+            _component_axis_membership(
+                entries,
+                key=_KIND_APPLICABILITY_ORDER_KEY,
+                token_type=IvaKindApplicability,
+                observed=observed["applicability"],
+                label="IVA kind-applicability",
+            ),
+        ),
+    )
+
+
+@lru_cache(maxsize=64)
+def _bundled_component_vocabulary(effective_date: date) -> IvaComponentVocabulary:
+    """Cache the immutable 0084 component-axis vocabulary."""
+    from ..calculations.registry.authority import bundled_authority
+
+    entries = _resolve_component_catalogue_entries(
+        effective_date=effective_date,
+        authority=bundled_authority(),
+    )
+    return _component_vocabulary_from_entries(entries)
+
+
+def registry_component_vocabulary(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaComponentVocabulary:
+    """Resolve the four typed component-axis memberships from fact 0084."""
+    selected_date = date.today() if effective_date is None else effective_date
+    if authority is None:
+        return _bundled_component_vocabulary(selected_date)
+    entries = _resolve_component_catalogue_entries(
+        effective_date=selected_date,
+        authority=authority,
+    )
+    return _component_vocabulary_from_entries(entries)
+
+
+def registry_component_presence_token(
+    value: str,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaComponentPresence:
+    return registry_component_vocabulary(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_component_presence(value)
+
+
+def registry_retencion_expectation_token(
+    value: str,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaRetencionExpectation:
+    return registry_component_vocabulary(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_retencion_expectation(value)
+
+
+def registry_retencion_role_token(
+    value: str,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaRetencionRole:
+    return registry_component_vocabulary(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_retencion_role(value)
+
+
+def registry_kind_applicability_token(
+    value: str,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaKindApplicability:
+    return registry_component_vocabulary(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_kind_applicability(value)
+
+
 def _category_projection_from_entries(
     entries: Mapping[str, str],
     projection: CategoryProjectionName,
@@ -659,6 +894,7 @@ def _project_component_catalogue(
     entries = _resolve_component_catalogue_entries(effective_date=effective_date, authority=authority)
     category_catalogue = resolve_iva_category_catalogue(effective_date=effective_date, authority=authority)
     ordered_keys = _ordered_component_rows(entries)
+    component_vocabulary = _component_vocabulary_from_entries(entries)
     cuota_settlement_catalogue = _cuota_settlement_catalogue_from_entries(entries)
 
     # Keep the conversion helper as the narrow mechanical boundary. The helper
@@ -687,10 +923,36 @@ def _project_component_catalogue(
         if "cuota_settlement" not in decoded:
             raise IvaValidationError(f"IVA component row {row_key!r} is missing cuota settlement")
         decoded = dict(decoded)
+        decoded.pop("label", None)
+        decoded.pop("fact_ids", None)
+        decoded["category"] = category
+        decoded["kind"] = kind
+        for grounding_field in ("cuota_grounding", "recargo_grounding", "retencion_grounding"):
+            raw_grounding = decoded.get(grounding_field)
+            try:
+                decoded[grounding_field] = IvaGroundingConfidence(raw_grounding)
+            except (TypeError, ValueError) as exc:
+                raise IvaValidationError(
+                    f"IVA component row {row_key!r} has invalid {grounding_field}",
+                ) from exc
+        for reference_field in ("legal_refs", "pending_legal_refs"):
+            raw_references = decoded.get(reference_field, ())
+            if not isinstance(raw_references, list) or any(not isinstance(item, str) for item in raw_references):
+                raise IvaValidationError(
+                    f"IVA component row {row_key!r} has invalid {reference_field}",
+                )
+            decoded[reference_field] = tuple(raw_references)
+        decoded["applicability"] = component_vocabulary.require_kind_applicability(decoded["applicability"])
+        decoded["retencion_role"] = component_vocabulary.require_retencion_role(decoded["retencion_role"])
+        decoded["base"] = component_vocabulary.require_component_presence(decoded["base"])
+        decoded["cuota"] = component_vocabulary.require_component_presence(decoded["cuota"])
+        decoded["recargo"] = component_vocabulary.require_component_presence(decoded["recargo"])
+        decoded["retencion"] = component_vocabulary.require_retencion_expectation(decoded["retencion"])
         decoded["cuota_settlement"] = cuota_settlement_catalogue.require(decoded["cuota_settlement"])
         row = component_row_from_registry(
             decoded,
             cuota_settlement_no_token=cuota_settlement_catalogue.no_settlement_token,
+            component_vocabulary=component_vocabulary,
         )
         if row.category != category or row.kind is not kind:
             raise IvaValidationError(
@@ -747,8 +1009,8 @@ def category_components(
     Returns:
         The :class:`IvaCategoryComponents` row for the pair. A row whose
         ``applicability`` is
-        :attr:`IvaKindApplicability.DOES_NOT_ARISE` is a real answer — the
-        combination is not an operation — not a lookup failure.
+        the registry's ``does_not_arise`` applicability token is a real answer
+        — the combination is not an operation — not a lookup failure.
 
     Raises:
         IvaValidationError: If no registry catalogue was supplied or it has
@@ -803,14 +1065,12 @@ def category_bears_taxable_base(
     Returns:
         ``True`` when the pair requires a taxable base.
     """
-    return (
-        category_components(
-            category,
-            kind,
-            component_catalogue=component_catalogue,
-        ).base
-        is IvaComponentPresence.REQUIRED
+    row = category_components(
+        category,
+        kind,
+        component_catalogue=component_catalogue,
     )
+    return row.base == registry_component_presence_token("required")
 
 
 def category_cuota_is_zero_by_law(
@@ -837,14 +1097,12 @@ def category_cuota_is_zero_by_law(
     Returns:
         ``True`` when the cuota is zero by law for this pair.
     """
-    return (
-        category_components(
-            category,
-            kind,
-            component_catalogue=component_catalogue,
-        ).cuota
-        is IvaComponentPresence.ZERO_BY_LAW
+    row = category_components(
+        category,
+        kind,
+        component_catalogue=component_catalogue,
     )
+    return row.cuota == registry_component_presence_token("zero_by_law")
 
 
 __all__ = [
@@ -852,6 +1110,7 @@ __all__ = [
     "ComponentCatalogue",
     "IvaCategoryComponents",
     "IvaComponentPresence",
+    "IvaComponentVocabulary",
     "IvaCuotaSettlement",
     "IvaCuotaSettlementCatalogue",
     "IvaCuotaSettlementDefinition",
@@ -865,5 +1124,10 @@ __all__ = [
     "cuota_less_m303_categories_from_table",
     "registry_category_projection",
     "registry_cuota_settlement_catalogue",
+    "registry_component_presence_token",
+    "registry_component_vocabulary",
     "registry_component_catalogue",
+    "registry_kind_applicability_token",
+    "registry_retencion_expectation_token",
+    "registry_retencion_role_token",
 ]

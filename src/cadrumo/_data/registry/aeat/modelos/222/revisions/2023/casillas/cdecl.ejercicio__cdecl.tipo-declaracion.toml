@@ -15,7 +15,7 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["boe-modelo-202-base-order"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
 
 [[revisions."2023".casillas]]
 id = "decl.tipo-declaracion"
@@ -27,4 +27,4 @@ semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["boe-modelo-202-base-order"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]

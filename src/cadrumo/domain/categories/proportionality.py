@@ -1,7 +1,7 @@
 """Proportionality and explainability primitives for category profiles.
 
-Defines the closed enums and strict pydantic models that encode how
-a spending category is deducted on the autónomo filings, plus the
+Defines registry-projected vocabulary tokens and strict pydantic models that
+encode how a spending category is deducted on the autónomo filings, plus the
 citation chain back to the relevant authority that makes each rule
 explainable. Every :class:`ProportionalityRule` carries at least one
 :class:`CategoryCitation`; the consistency rules between
@@ -15,9 +15,11 @@ import re
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from typing import Self
 from urllib.parse import urlsplit
 
-from pydantic import AnyHttpUrl, BaseModel, Field, field_validator, model_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, GetCoreSchemaHandler, field_validator, model_validator
+from pydantic_core import CoreSchema, core_schema
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.external_constants import load_external_constants
@@ -326,41 +328,188 @@ def parse_http_url(value: str) -> AnyHttpUrl:
     return ANY_HTTP_URL_ADAPTER.validate_python(value)
 
 
-class ProportionalityKind(StrEnum):
-    """Supported proportionality kinds for downstream evaluator engines.
+class ProportionalityKind:
+    """Opaque proportionality token projected from the facts registry.
 
-    Attributes:
-        FULL_DEDUCTIBLE: Fully deductible against the activity.
-        FIXED_PERCENTAGE: Deductible at a fixed percentage; requires
-            ``fixed_pct``.
-        USAGE_RATIO_PERSONAL: Deductible at a personal-usage ratio
-            chosen by the taxpayer; may carry ``default_ratio``.
-        USAGE_RATIO_HOME_AREA: Deductible at the home-office area
-            ratio; may carry ``default_ratio``.
-        STATUTORY_CAP: Capped by a statutory daily or annual limit;
-            requires the matching ``statutory_cap_*`` fields.
-        NON_DEDUCTIBLE: Not deductible against the activity.
+    The token and its evaluator-role metadata are governed category facts. This
+    object retains only the projected token plus mechanics-facing role flags;
+    callers cannot mint a token without a validated registry projection.
     """
 
-    FULL_DEDUCTIBLE = "full_deductible"
-    FIXED_PERCENTAGE = "fixed_percentage"
-    USAGE_RATIO_PERSONAL = "usage_ratio_personal"
-    USAGE_RATIO_HOME_AREA = "usage_ratio_home_area"
-    STATUTORY_CAP = "statutory_cap"
-    NON_DEDUCTIBLE = "non_deductible"
-    REQUIRES_EXCLUSIVE_USE = "requires_exclusive_use"
+    __slots__ = (
+        "_token",
+        "_is_full_deductible",
+        "_is_usage_ratio",
+        "_is_statutory_cap",
+        "_requires_fixed_pct",
+        "_is_non_deductible",
+        "_requires_exclusive_use",
+    )
+
+    def __new__(
+        cls,
+        token: str,
+        *,
+        is_full_deductible: bool,
+        is_usage_ratio: bool,
+        is_statutory_cap: bool,
+        requires_fixed_pct: bool,
+        is_non_deductible: bool,
+        requires_exclusive_use: bool,
+        _registry_validated: bool = False,
+    ) -> Self:
+        if not _registry_validated:
+            raise TypeError("ProportionalityKind tokens must be projected from the facts registry")
+        if not isinstance(token, str) or not token.strip():
+            raise ValueError("ProportionalityKind token must be a non-empty string")
+        if not any(
+            (
+                is_full_deductible,
+                is_usage_ratio,
+                is_statutory_cap,
+                requires_fixed_pct,
+                is_non_deductible,
+                requires_exclusive_use,
+            )
+        ):
+            raise ValueError("ProportionalityKind projection must declare an evaluator role")
+        self = super().__new__(cls)
+        self._token = token
+        self._is_full_deductible = is_full_deductible
+        self._is_usage_ratio = is_usage_ratio
+        self._is_statutory_cap = is_statutory_cap
+        self._requires_fixed_pct = requires_fixed_pct
+        self._is_non_deductible = is_non_deductible
+        self._requires_exclusive_use = requires_exclusive_use
+        return self
+
+    @classmethod
+    def _from_registry(cls, token: str, **roles: bool) -> Self:
+        return cls(token, _registry_validated=True, **roles)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CategoryValidationError("ProportionalityKind must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return self._token
+
+    @property
+    def name(self) -> str:
+        return self._token
+
+    @property
+    def is_full_deductible(self) -> bool:
+        return self._is_full_deductible
+
+    @property
+    def is_usage_ratio(self) -> bool:
+        return self._is_usage_ratio
+
+    @property
+    def is_statutory_cap(self) -> bool:
+        return self._is_statutory_cap
+
+    @property
+    def requires_fixed_pct(self) -> bool:
+        return self._requires_fixed_pct
+
+    @property
+    def is_non_deductible(self) -> bool:
+        return self._is_non_deductible
+
+    @property
+    def requires_exclusive_use(self) -> bool:
+        return self._requires_exclusive_use
+
+    def __str__(self) -> str:
+        return self._token
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self._token!r})"
+
+    def __hash__(self) -> int:
+        return hash(self._token)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ProportionalityKind) and self._token == other._token
 
 
-class StatutoryCapPeriod(StrEnum):
-    """Supported statutory-cap accounting periods.
+class StatutoryCapPeriod:
+    """Opaque statutory-cap period token projected from the facts registry."""
 
-    Attributes:
-        DAY: Cap applies per day.
-        YEAR_PER_PERSON: Cap applies per year per covered person.
-    """
+    __slots__ = ("_token", "_is_per_person")
 
-    DAY = "day"
-    YEAR_PER_PERSON = "year_per_person"
+    def __new__(cls, token: str, *, is_per_person: bool, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("StatutoryCapPeriod tokens must be projected from the facts registry")
+        if not isinstance(token, str) or not token.strip():
+            raise ValueError("StatutoryCapPeriod token must be a non-empty string")
+        self = super().__new__(cls)
+        self._token = token
+        self._is_per_person = is_per_person
+        return self
+
+    @classmethod
+    def _from_registry(cls, token: str, *, is_per_person: bool) -> Self:
+        return cls(token, is_per_person=is_per_person, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CategoryValidationError("StatutoryCapPeriod must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return self._token
+
+    @property
+    def name(self) -> str:
+        return self._token
+
+    @property
+    def is_per_person(self) -> bool:
+        return self._is_per_person
+
+    def __str__(self) -> str:
+        return self._token
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self._token!r})"
+
+    def __hash__(self) -> int:
+        return hash(self._token)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, StatutoryCapPeriod) and self._token == other._token
 
 
 class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
@@ -575,9 +724,8 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
 
     Attributes:
         kind: One of :class:`ProportionalityKind`.
-        fixed_pct: Required when ``kind`` is
-            :attr:`ProportionalityKind.FIXED_PERCENTAGE`; otherwise
-            must be ``None``.
+        fixed_pct: Required when the projected kind declares a fixed-percent
+            evaluator role; otherwise must be ``None``.
         default_ratio: Optional default usage ratio; only valid for
             usage-ratio kinds.
         statutory_multiplier: Optional statutory factor applied on
@@ -592,10 +740,10 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             ``Decimal("1")``); the operator's chosen ratio is the
             effective deductible percentage.
         statutory_cap_eur_per_day: Daily statutory cap; only valid
-            for :attr:`ProportionalityKind.STATUTORY_CAP`.
+            for a projected statutory-cap kind.
         statutory_cap_eur: Generic statutory cap amount; only valid
-            for :attr:`ProportionalityKind.STATUTORY_CAP` and must
-            be paired with :attr:`statutory_cap_period`.
+            for a projected statutory-cap kind and must be paired with
+            :attr:`statutory_cap_period`.
         statutory_cap_period: :class:`StatutoryCapPeriod` that the
             generic cap applies over; required when
             :attr:`statutory_cap_eur` is set.
@@ -629,25 +777,22 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         _require_translatable_text(self.notes, "proportionality rule notes")
         self._validate_fixed_percentage_invariants()
         self._validate_usage_ratio_invariants()
-        if self.kind is ProportionalityKind.STATUTORY_CAP:
+        if self.kind.is_statutory_cap:
             self._validate_statutory_cap_invariants()
         else:
             self._reject_statutory_cap_fields_outside_cap_kind()
         return self
 
     def _validate_fixed_percentage_invariants(self) -> None:
-        """``fixed_pct`` is required for FIXED_PERCENTAGE rules and forbidden elsewhere."""
-        if self.kind is ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is None:
-            raise CategoryValidationError("fixed_percentage rules require fixed_pct")
-        if self.kind is not ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is not None:
-            raise CategoryValidationError("fixed_pct is only valid for fixed_percentage rules")
+        """``fixed_pct`` follows the projected fixed-percent evaluator role."""
+        if self.kind.requires_fixed_pct and self.fixed_pct is None:
+            raise CategoryValidationError("fixed-percentage rules require fixed_pct")
+        if not self.kind.requires_fixed_pct and self.fixed_pct is not None:
+            raise CategoryValidationError("fixed_pct is only valid for fixed-percentage rules")
 
     def _validate_usage_ratio_invariants(self) -> None:
         """``default_ratio`` and ``statutory_multiplier`` are only valid on usage-ratio rules."""
-        is_usage_ratio = self.kind in {
-            ProportionalityKind.USAGE_RATIO_HOME_AREA,
-            ProportionalityKind.USAGE_RATIO_PERSONAL,
-        }
+        is_usage_ratio = self.kind.is_usage_ratio
         if not is_usage_ratio and self.default_ratio is not None:
             raise CategoryValidationError("default_ratio is only valid for usage_ratio rules")
         if not is_usage_ratio and self.statutory_multiplier is not None:
@@ -724,10 +869,7 @@ def effective_usage_ratio(rule: ProportionalityRule, chosen_ratio: Decimal) -> D
     Raises:
         CategoryValidationError: When ``rule.kind`` is not a usage-ratio kind.
     """
-    if rule.kind not in {
-        ProportionalityKind.USAGE_RATIO_HOME_AREA,
-        ProportionalityKind.USAGE_RATIO_PERSONAL,
-    }:
+    if not rule.kind.is_usage_ratio:
         raise CategoryValidationError(
             f"effective_usage_ratio is only valid for usage_ratio rules; got {rule.kind}",
         )

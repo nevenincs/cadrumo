@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00075"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial"
+continuidad_origin = "seeded"
 number = "00075"
 section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00076"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento"
+continuidad_origin = "seeded"
 number = "00076"
 section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00077"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-importe"
+continuidad_origin = "seeded"
 number = "00077"
 section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
 data_type = "money"

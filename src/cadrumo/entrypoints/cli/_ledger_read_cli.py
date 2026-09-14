@@ -21,6 +21,7 @@ import typer
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.export.tabular import ExportSerializationFormat
+from ...application.ledger.action_ports import LedgerActionPorts
 from ...application.ledger.actions_export import export_ledger_transactions
 from ...application.ledger.actions_manual import (
     get_manual_transaction,
@@ -48,7 +49,8 @@ from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.buckets.event import BucketEventType
-from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily
+from ...domain.categories.spending_category import SpendingCategoryFamily, categories_for_family
+from ...domain.categories.spending_category_catalogue import spending_category_tokens
 from ...domain.invoices.service import LinkInconsistency
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.models import Transaction
@@ -102,13 +104,21 @@ def ledger_llm_diagnostics(
 ) -> None:
     """Report existing LLM usage, cost, and classification-confidence metrics."""
     from ...application.ledger.llm_diagnostics import build_llm_diagnostics_report
+    from ...entrypoints.ledger_llm_diagnostics_composition import compose_ledger_llm_diagnostics_ports
+    from .common import active_bucket_id_or_refuse
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
     threshold = coerce_decimal_strict(low_confidence_below)
     if not is_unit_proportion(threshold):
         raise bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
-    report = build_llm_diagnostics_report(since=since_date, until=until_date, low_confidence_threshold=threshold)
+    ports = compose_ledger_llm_diagnostics_ports(bucket_id=active_bucket_id_or_refuse())
+    report = build_llm_diagnostics_report(
+        ports=ports,
+        since=since_date,
+        until=until_date,
+        low_confidence_threshold=threshold,
+    )
     result = _llm_diagnostics_result(report, since=since_date, until=until_date)
     lines, notices = _llm_diagnostics_lines_and_notices(report)
     emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
@@ -223,7 +233,7 @@ def _spending_category_projection() -> tuple[list[dict[str, object]], list[str],
     ]
     first_category_id: str | None = None
     for family in SpendingCategoryFamily:
-        members = CATEGORY_FAMILY_MEMBERS.get(family, ())
+        members = categories_for_family(family)
         if not members:
             continue
         category_ids = tuple(member.value for member in members)
@@ -235,7 +245,7 @@ def _spending_category_projection() -> tuple[list[dict[str, object]], list[str],
     if first_category_id is not None:
         lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
     lines.append(tr("cli.ledger.categories.income_note"))
-    return families, [category.value for category in SpendingCategory], lines
+    return families, [category.value for category in spending_category_tokens()], lines
 
 
 def _irpf_category_projection() -> tuple[list[dict[str, object]], list[str]]:
@@ -357,6 +367,7 @@ def ledger_check(
     ctx: typer.Context, bucket_id_option: str | None = None, period: str | None = None, year: int | None = None
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
+    from ...adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
     from ...application.ledger.check_query import read_ledger_check
     from ._ledger_payloads import LedgerCheckResult, LedgerLinkInconsistencyPayload
 
@@ -368,6 +379,7 @@ def ledger_check(
     check = read_ledger_check(
         bucket_id=transaction_repository.bucket_id,
         transactions=transaction_repository.load(),
+        ports=build_invoice_catalogue_read_ports(bucket_id=transaction_repository.bucket_id),
         period=_optional_canonical_period(period, year=year),
     )
     link_rows = [
@@ -419,7 +431,10 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     canonical = _canonical_period(period, year=year)
     report = preflight_ledger_tax_readiness(
-        bucket_id=transaction_repository.bucket_id, period=canonical, transaction_repository=transaction_repository
+        bucket_id=transaction_repository.bucket_id,
+        period=canonical,
+        transaction_repository=transaction_repository,
+        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
     )
     payload = report.model_dump(mode="json")
     lines = [
@@ -464,7 +479,7 @@ def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblin
     history = read_ledger_history(
         LedgerHistoryQuery(transaction_id=resolved_id, include_split_siblings=include_split_siblings),
         bucket_id=transaction_repository.bucket_id,
-        ports=ports,
+        transaction_repository=ports.transaction_repository,
         bucket_event_repository=ports.bucket_event_repository,
     )
     lines = [
@@ -647,7 +662,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
     from ._ledger_payloads import LedgerViewResult
 
     notices: list[Notice] = []
-    rejection_notice = _latest_llm_rejection_notice(transaction_repository, resolved_id=resolved_id)
+    rejection_notice = _latest_llm_rejection_notice(transaction_repository, resolved_id=resolved_id, ports=ports)
     if rejection_notice is not None:
         notices.append(rejection_notice)
         reason = (rejection_notice.context or {}).get("operator_reason", "")
@@ -704,7 +719,8 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
         readiness_issues = read_ledger_readiness(
             bucket_id=transaction_repository.bucket_id,
             period=report.period,
-            ports=ports,
+            transaction_repository=ports.transaction_repository,
+            usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
         )
         lines.extend(_ledger_status_readiness_issue_line(issue) for issue in readiness_issues)
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -827,6 +843,7 @@ def _latest_llm_rejection_notice(
     transaction_repository: TransactionCatalogueRepository,
     *,
     resolved_id: str,
+    ports: LedgerActionPorts,
 ) -> Notice | None:
     """Return a notice when the row's most recent LLM decision was a rejection.
 
@@ -843,7 +860,8 @@ def _latest_llm_rejection_notice(
     history = read_ledger_history(
         LedgerHistoryQuery(transaction_id=resolved_id),
         bucket_id=transaction_repository.bucket_id,
-        ports=ports,
+        transaction_repository=ports.transaction_repository,
+        bucket_event_repository=ports.bucket_event_repository,
     )
     decisions = [event for event in history.events if event.event_type in LLM_DECISION_EVENT_TYPES]
     if not decisions:

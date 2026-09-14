@@ -31,6 +31,7 @@ from hashlib import sha256
 
 import pytest
 
+from ....core.document_shape import DocumentShape
 from ..evidence_input import EvidenceInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -41,6 +42,7 @@ _PDF_BYTES = b"%PDF-1.7\nin-flight evidence bytes\n"
 def _evidence() -> EvidenceInput:
     return EvidenceInput(
         mime_type="application/pdf",
+        document_shape=DocumentShape.PDF_TEXT_LAYER,
         data=_PDF_BYTES,
         content_sha256=sha256(_PDF_BYTES).hexdigest(),
         evidence_id="ev_inflight",

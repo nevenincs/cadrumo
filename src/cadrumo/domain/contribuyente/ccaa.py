@@ -1,150 +1,111 @@
-"""The closed catalogue of ordinary common-regime Spanish autonomous communities.
+"""Opaque CCAA tokens projected from the governed tax-residence catalogue.
 
-Lives in its own module so wizard descriptor construction can reference
-the enum without triggering the rest of ``cadrumo.domain.contribuyente``'s
-import-time chain.
-
-Canonical CCAA shape
---------------------
-This module is the **single canonical owner** of the CCAA type.  All
-other packages must import from here; no parallel CCAA enum may exist
-elsewhere in the codebase.
-
-Canonical value space
-~~~~~~~~~~~~~~~~~~~~~
-Each member's *value* is the lowercase Spanish name token used by the
-TOML dispatch tables (e.g. ``andalucia``, ``madrid``).  The dispatch
-table keys in ``registry/aeat/modelos/100/revisions/2025.toml`` are
-deliberately written to match these values so no translation is
-required at the binding-resolution boundary.
-
-Retired ISO-code Mapping
-~~~~~~~~~~~~~~~~~~~~~~~~
-:meth:`CCAA.from_iso_code` maps the 3-letter codes that were used by
-the now-deleted ``RentaCCAA`` enum (``AND`` → ``ANDALUCIA``, etc.) for
-call sites that still need to translate those retired codes.
+The community membership and the retired ISO aliases are filing facts.  This
+module keeps only the token type and compatibility-shaped parsing mechanics;
+the dated vocabulary is resolved by :mod:`ccaa_catalogue`.
 """
 
 from __future__ import annotations
 
-from enum import StrEnum
+from typing import Self
 
-from ...core.errors.hierarchy import ProfileAnswerTypeError
-from ...core.logging import get_logger
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
 
-# Maps the 3-letter ISO-like codes from the former ``RentaCCAA`` enum to
-# the canonical CCAA member names.  Foral regimes (NAV, PVA) and the two
-# autonomous cities (CEU, MEL) were present in RentaCCAA but fall outside
-# the common-regime scope of this enum; callers must handle them separately
-# (see ``ForalRegimeError`` in ``cadrumo.domain.contribuyente``).
-_ISO_CODE_MAP: dict[str, str] = {
-    "AND": "ANDALUCIA",
-    "ARA": "ARAGON",
-    "AST": "ASTURIAS",
-    "BAL": "BALEARES",
-    "CAN": "CANARIAS",
-    "CAB": "CANTABRIA",
-    "CLM": "CASTILLA_LA_MANCHA",
-    "CYL": "CASTILLA_Y_LEON",
-    "CAT": "CATALUNA",
-    "VAL": "COMUNIDAD_VALENCIANA",
-    "EXT": "EXTREMADURA",
-    "GAL": "GALICIA",
-    "LAR": "LA_RIOJA",
-    "MAD": "MADRID",
-    "MUR": "MURCIA",
-}
+from ...core.errors.hierarchy import CoreValidationError, ProfileAnswerTypeError
 
 
-class CCAA(StrEnum):
-    """Ordinary common-regime autonomous communities for residence profile data.
+class _CCAAType(type):
+    """Expose registry-projected choices through the historical type surface."""
 
-    The canonical value for each member is the lowercase Spanish name token
-    (e.g. ``"andalucia"``, ``"madrid"``).  These tokens match the dispatch
-    table keys in the Renta 100 registry TOML verbatim.
+    def __iter__(cls):  # type: ignore[no-untyped-def]
+        from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 
-    Foral regimes (País Vasco, Navarra) and the autonomous cities (Ceuta,
-    Melilla) are intentionally excluded; those raise
-    :class:`domain.contribuyente.ForalRegimeError` when a user selects them.
+        return iter(resolve_ccaa_catalogue().choices)
+
+    def __getattr__(cls, name: str) -> CCAA:
+        from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+
+        try:
+            return resolve_ccaa_catalogue().require_member_name(name)
+        except (KeyError, ValueError) as exc:
+            raise AttributeError(name) from exc
+
+
+class CCAA(str, metaclass=_CCAAType):
+    """Registry-projected ordinary common-regime CCAA token.
+
+    Instantiation is deliberately fail-closed: arbitrary strings cannot become
+    CCAA values without passing through the selected dated facts catalogue.
+    ``_from_registry`` is private to the typed projection module.
     """
 
-    ANDALUCIA = "andalucia"
-    ARAGON = "aragon"
-    ASTURIAS = "asturias"
-    BALEARES = "baleares"
-    CANARIAS = "canarias"
-    CANTABRIA = "cantabria"
-    CASTILLA_LA_MANCHA = "castilla_la_mancha"
-    CASTILLA_Y_LEON = "castilla_y_leon"
-    CATALUNA = "cataluna"
-    COMUNIDAD_VALENCIANA = "comunidad_valenciana"
-    EXTREMADURA = "extremadura"
-    GALICIA = "galicia"
-    LA_RIOJA = "la_rioja"
-    MADRID = "madrid"
-    MURCIA = "murcia"
+    __slots__ = ()
 
-    @classmethod
-    def from_iso_code(cls, code: str) -> CCAA:
-        """Return the canonical member for a 3-letter ISO-like CCAA code.
+    def __new__(cls, value: object, *, _registry_validated: bool = False) -> Self:
+        if _registry_validated:
+            if not isinstance(value, str) or not value:
+                raise ValueError("CCAA token must be a non-empty string")
+            return str.__new__(cls, value)
+        from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+        from ..calculations.registry.errors import RegistryValidationError
 
-        The code set corresponds to the values used by the former
-        ``RentaCCAA`` enum (``AND``, ``ARA``, ``AST``, …).  Foral-regime
-        codes (``NAV``, ``PVA``) and autonomous-city codes (``CEU``,
-        ``MEL``) are not members of this enum; pass-through to the
-        foral-regime error path is the caller's responsibility.
-
-        Args:
-            code: 3-letter ISO-like CCAA code (e.g. ``"AND"``, ``"MAD"``).
-
-        Returns:
-            The matching :class:`CCAA` member.
-
-        Raises:
-            KeyError: when ``code`` is not a recognised 3-letter alias.
-        """
-        upper = code.strip().upper()
-        member_name = _ISO_CODE_MAP.get(upper)
-        if member_name is None:
-            valid = ", ".join(sorted(_ISO_CODE_MAP))
-            raise KeyError(f"unknown ISO CCAA code {code!r}; recognised codes: {valid}")
-        return cls[member_name]
-
-    @classmethod
-    def from_label(cls, label: str) -> CCAA:
-        """Parse a free-form label into the canonical member.
-
-        Accepts both the canonical lowercase token (``"andalucia"``) and
-        the 3-letter ISO-like code (``"AND"``), case-insensitively.
-        Underscores and hyphens are normalised to underscores before
-        matching.
-
-        Args:
-            label: Free-form label to parse into a :class:`CCAA` member.
-
-        Returns:
-            The matching :class:`CCAA` member.
-
-        Raises:
-            ProfileAnswerTypeError: when ``label`` cannot be mapped to any member.
-        """
-        normalised = label.strip().lower().replace("-", "_")
-        # Try canonical value first.
         try:
-            return cls(normalised)
-        except ValueError as exc:
-            get_logger(__name__).debug(
-                "CCAA.from_label: canonical lookup failed for %r; trying ISO code (%s)",
-                label,
-                exc,
-            )
-        # Try 3-letter ISO code (case-insensitive).
-        upper = normalised.upper()
-        member_name = _ISO_CODE_MAP.get(upper)
-        if member_name is not None:
-            return cls[member_name]
-        valid = ", ".join(sorted(m.value for m in cls))
-        raise ProfileAnswerTypeError(f"unknown CCAA label {label!r}; valid values: {valid}")
+            return resolve_ccaa_catalogue().require(value)
+        except RegistryValidationError as exc:
+            raise ValueError(str(exc)) from exc
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("CCAA must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Accept only a projected CCAA token and serialize it as text."""
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @classmethod
+    def from_iso_code(cls, code: str) -> Self:
+        """Resolve one of the registry-declared three-letter aliases."""
+        from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+
+        return resolve_ccaa_catalogue().from_iso_code(code)
+
+    @classmethod
+    def from_label(cls, label: str) -> Self:
+        """Resolve a canonical token, normalized label, or ISO alias."""
+        from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+        from ..calculations.registry.errors import RegistryValidationError
+
+        try:
+            return resolve_ccaa_catalogue().from_label(label)
+        except (KeyError, RegistryValidationError) as exc:
+            raise ProfileAnswerTypeError(str(exc)) from exc
+
+    @property
+    def value(self) -> str:
+        """Return the canonical token used by profile and registry bindings."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical token as a diagnostic name."""
+        return str(self)
 
 
 __all__ = ["CCAA"]

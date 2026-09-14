@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01676"
+continuidad_id = "is-correccion-operaciones-art19-otras-saldo-inicial"
 number = "01676"
 section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "saldo_pendiente_a_principio_de_ejercicio"]
 data_type = "money"

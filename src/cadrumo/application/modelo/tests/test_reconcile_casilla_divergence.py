@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .._reconcile_casilla import (
+from ..reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )

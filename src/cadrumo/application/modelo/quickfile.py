@@ -72,7 +72,6 @@ from .work_addressing import (
     ensure_modelo_work_unit_for_active_target,
     law_selected_revision_for_work_target,
 )
-from .work_unit_repository import work_unit_catalogue_repository
 
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -321,7 +320,8 @@ def run_modelo_quickfile(
             period=command.period,
             registry_revision_id=registry_revision_id,
             actor=command.actor,
-            catalogue=work_unit_catalogue_repository(bucket_id=command.bucket_id).load(),
+            catalogue=calculation_action_ports.work_lifecycle_ports.work_unit_repository.load(),
+            ports=calculation_action_ports.work_lifecycle_ports,
         )
     except CadrumoError as exc:
         return _halted(

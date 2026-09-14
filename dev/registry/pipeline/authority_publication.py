@@ -37,9 +37,12 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityArtifactError,
     AuthorityEvidenceProjection,
+    FactsAuthorityMergeBase,
     PublishedLegalEvidence,
     PublishedSourceEvidence,
+    read_facts_authority_merge_base,
     read_authority_artifact,
+    write_facts_authority_artifact,
     write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -167,7 +170,7 @@ class FactsAuthorityCandidate:
     artifact_path: Path
     receipt: FactsAuthorityPublicationReceipt
     facts: GovernedFactCatalogue
-    artifact: AuthorityArtifact
+    merge_base: FactsAuthorityMergeBase
     provider_counts: tuple[tuple[str, int], ...]
 
 
@@ -290,7 +293,7 @@ def validate_facts_authority_candidate(
     facts_fingerprints_before = _fact_source_fingerprints(resolved_registry_root)
     base_artifact_sha256_before = _artifact_sha256(resolved_artifact_path)
     base_artifact = _read_facts_merge_base(resolved_artifact_path)
-    compiled = _compile_merged_facts(resolved_registry_root, base_artifact.catalogues.facts)
+    compiled = _compile_merged_facts(resolved_registry_root, base_artifact.facts)
     facts = compiled.facts
     facts_digest = fact_catalogue_digest(facts)
     facts_fingerprints_after = _fact_source_fingerprints(resolved_registry_root)
@@ -303,12 +306,6 @@ def validate_facts_authority_candidate(
         raise RegistryValidationError(
             "authority artifact changed while facts were being compiled; facts authority publication is refused",
         )
-    artifact = AuthorityArtifact(
-        modelos=base_artifact.modelos,
-        catalogues=base_artifact.catalogues.model_copy(update={"facts": facts}),
-        identity_digest=facts_digest,
-        evidence=base_artifact.evidence,
-    )
     receipt = FactsAuthorityPublicationReceipt(
         fact_source_fingerprints=facts_fingerprints_after,
         base_artifact_sha256=base_artifact_sha256_after,
@@ -319,7 +316,7 @@ def validate_facts_authority_candidate(
         artifact_path=resolved_artifact_path,
         receipt=receipt,
         facts=facts,
-        artifact=artifact,
+        merge_base=base_artifact,
         provider_counts=compiled.provider_counts,
     )
 
@@ -335,7 +332,7 @@ def facts_authority_candidate_identity(*, registry_root: Path, artifact_path: Pa
     return fact_catalogue_digest(
         _compile_merged_facts(
             _canonical_facts_registry_root(registry_root),
-            base_artifact.catalogues.facts,
+            base_artifact.facts,
         ).facts,
     )
 
@@ -398,7 +395,12 @@ def _publish_facts_candidate(
         raise RegistryValidationError(
             "authority artifact changed after facts compilation; facts authority publication is refused",
         )
-    write_authority_artifact(resolved_artifact_path, candidate.artifact)
+    write_facts_authority_artifact(
+        resolved_artifact_path,
+        candidate.merge_base,
+        candidate.facts,
+        identity_digest=candidate.receipt.facts_digest,
+    )
     try:
         published = read_authority_artifact(resolved_artifact_path)
     except AuthorityArtifactError as exc:
@@ -513,14 +515,14 @@ def _artifact_sha256(artifact_path: Path) -> str:
         ) from exc
 
 
-def _read_facts_merge_base(artifact_path: Path) -> AuthorityArtifact:
-    """Read the typed merge base through the same strict reader as runtime."""
+def _read_facts_merge_base(artifact_path: Path) -> FactsAuthorityMergeBase:
+    """Read only the authenticated facts merge base, not unrelated Modelo data."""
     try:
-        return read_authority_artifact(artifact_path)
+        return read_facts_authority_merge_base(artifact_path)
     except AuthorityArtifactError as exc:
         raise RegistryValidationError(
-            "facts authority publication requires a readable current authority artifact; "
-            "corrupt unrelated sections cannot be merged safely",
+            "facts authority publication requires a readable current authority facts merge base; "
+            "frame, payload digest, identity, and typed facts provenance must all validate",
         ) from exc
 
 

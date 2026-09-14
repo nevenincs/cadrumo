@@ -21,6 +21,7 @@ from datetime import date
 
 import pytest
 
+from ....core.aggregation import IntracomOperationType
 from ....domain.iva.classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -30,7 +31,8 @@ from ....domain.iva.classification import (
     classify_iva,
 )
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
-from ..source_resolver import _CLAVE_BY_KIND_AND_CATEGORY
+from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,12 +67,19 @@ def test_an_acquired_service_files_under_a_different_clave_than_acquired_goods()
     assert goods.matched_rule_id == "R11_intra_community_acquisition"
     assert services.matched_rule_id == "R13_services_b2b_eu_inbound"
 
-    goods_clave = _CLAVE_BY_KIND_AND_CATEGORY[(InvoiceKind.RECEIVED, goods.category)]
-    services_clave = _CLAVE_BY_KIND_AND_CATEGORY[(InvoiceKind.RECEIVED, services.category)]
+    catalogue = resolve_iva_category_catalogue()
+    goods_clave = IntracomOperationType(
+        catalogue.operation_type("received.intra_community_acquisition_reverse_charge"),
+    )
+    services_clave = IntracomOperationType(
+        catalogue.operation_type("received.intra_community_service_acquisition_reverse_charge"),
+    )
 
     assert goods_clave.value == "A"
     assert services_clave.value == "I"
     assert goods_clave is not services_clave
+    assert iva_category_for_operation_type(goods_clave) is goods.category
+    assert iva_category_for_operation_type(services_clave) is services.category
 
 
 def test_every_category_the_inbound_classifier_can_emit_for_the_eu_has_a_clave() -> None:
@@ -82,9 +91,19 @@ def test_every_category_the_inbound_classifier_can_emit_for_the_eu_has_a_clave()
     membership from the CLASSIFIER's side rather than restating the table means
     the two cannot drift apart silently.
     """
+    catalogue = resolve_iva_category_catalogue()
+    operation_by_category = {
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: IntracomOperationType(
+            catalogue.operation_type("received.intra_community_acquisition_reverse_charge"),
+        ),
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: IntracomOperationType(
+            catalogue.operation_type("received.intra_community_service_acquisition_reverse_charge"),
+        ),
+    }
     for kind in (TransactionKind.GOODS, TransactionKind.SERVICES_GENERAL):
         verdict = classify_iva(_eu_inbound_b2b(kind=kind))
-        assert (InvoiceKind.RECEIVED, verdict.category) in _CLAVE_BY_KIND_AND_CATEGORY, verdict.category
+        clave = operation_by_category[verdict.category]
+        assert iva_category_for_operation_type(clave) is verdict.category
 
 
 def test_the_goods_and_services_acquisition_categories_are_distinct_members() -> None:

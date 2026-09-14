@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.identity.documents import IdentityError
-from ....core.identity.nif_iva import NIF_IVA_FORMATS, nif_iva_prefix_for_country
+from ...calculations.registry.nif_iva_catalogue import nif_iva_format_for_country, nif_iva_prefix_for_country
 from ...calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...iva.schema import EUMemberState
 from ..validators import validate_country_code, validate_iva_number
@@ -292,4 +292,6 @@ def test_every_eu_member_state_except_spain_has_a_nif_iva_format() -> None:
             continue
         prefix = nif_iva_prefix_for_country(member.value.upper())
         assert prefix is not None, f"no NIF-IVA prefix resolves for EU member {member.value}"
-        assert prefix in NIF_IVA_FORMATS, f"no NIF-IVA format declared for {prefix}"
+        assert nif_iva_format_for_country(member.value) is not None, (
+            f"no NIF-IVA format resolves for EU member {member.value} ({prefix.value})"
+        )

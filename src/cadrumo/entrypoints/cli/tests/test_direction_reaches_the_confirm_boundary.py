@@ -25,6 +25,9 @@ from typing import ClassVar, override
 
 import pytest
 
+from ....adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
+from ....adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
+from ....adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.ledger import invoice_confirmation
@@ -33,12 +36,13 @@ from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH
 from ....application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from ....application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ....application.ledger.invoice_draft_records import InvoiceDraft
-from ....application.ledger.tests.loopback_reader import READING_RUNTIME_MODEL
 from ....core.config import load_settings, override_settings
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.iva.classification import InvoiceKind
 from ....domain.user_profile.values import UserProfileFact
+from ....entrypoints.adapter_composition import build_ledger_evidence_ports
+from ....entrypoints.cli._ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -47,13 +51,14 @@ from ....tests.loopback_llm import (
     write_json_response,
 )
 from ....tests.pdf_fixtures import text_pdf_bytes
-from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, set_active_test_profile_facts
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10"
+READING_RUNTIME_MODEL = "qwen2.5:7b"
 _FILER_CIF = "B17283946"
 _COUNTERPARTY_CIF = "B12345674"
 _BAD_CHECKSUM_CIF = "B1234567X"
@@ -174,12 +179,18 @@ class _LiveDocument:
         )
 
     def confirm(self, *, kind: InvoiceKind) -> None:
+        evidence_ports = build_ledger_evidence_ports(bucket_id=_PROFILE_ID)
         confirm_invoice_draft_from_evidence(
             bucket_id=_PROFILE_ID,
             kind=kind,
             counterparty_country="ES",
             evidence_id=self.evidence_id,
             settings=load_settings(),
+            catalogue_creation_ports=build_catalogue_creation_ports(bucket_id=_PROFILE_ID),
+            invoice_confirmation_ports=build_invoice_confirmation_ports(bucket_id=_PROFILE_ID),
+            counterparty_establishment_repository=CounterpartyEstablishmentRepository(bucket_id=_PROFILE_ID),
+            evidence_ports=evidence_ports,
+            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
         )
 
 

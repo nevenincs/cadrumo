@@ -46,6 +46,8 @@ from ...core.text_bounds import NonEmptyStr
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
+from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
+from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -171,6 +173,22 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
         if value is None:
             return None
         return require_art104_tres_exclusion(value)
+
+    @field_validator("deduction_fact_kind", mode="before", check_fields=False)
+    @classmethod
+    def _require_registry_deduction_fact_kind(cls, value: object) -> object:
+        """Accept only deduction-kind tokens declared by fact 0085."""
+        if value is None or isinstance(value, IvaDeductionFactKind):
+            return value
+        return require_iva_deduction_fact_kind(value)
+
+    @field_validator("input_classification", mode="before", check_fields=False)
+    @classmethod
+    def _require_registry_input_classification(cls, value: object) -> object:
+        """Accept only input-use tokens declared by fact 0116."""
+        if value is None or isinstance(value, InputClassification):
+            return value
+        return require_input_classification(value)
 
 
 class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):

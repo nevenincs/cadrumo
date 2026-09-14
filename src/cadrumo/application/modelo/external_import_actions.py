@@ -8,7 +8,7 @@ referenced :class:`Justificante`, stamp an
 :class:`ExternalEvidence` payload on the filing record,
 supersede any prior current filing for the same target, and emit
 ``modelo.filing.imported`` through
-:class:`BucketEventHistoryRepository`.
+:class:`~cadrumo.domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`.
 
 The imported record is the production baseline consumed by the amendment path.
 It is intentionally distinct from a locally calculated and filed return:
@@ -116,6 +116,7 @@ from .work_selection import (
     select_modelo_work_resolution,
 )
 from .work_unit_repository import work_unit_catalogue_repository
+from .work_lifecycle_ports import WorkLifecyclePorts
 
 
 @dataclass(frozen=True, slots=True)
@@ -292,8 +293,7 @@ def _create_external_source_work_unit(
     *,
     bucket_id: str,
     actor: str,
-    repository: WorkUnitCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    ports: WorkLifecyclePorts,
     clock: datetime | None,
 ) -> WorkUnit:
     """Create a source import target using the law-selected registry revision."""
@@ -310,8 +310,7 @@ def _create_external_source_work_unit(
         period=source.period,
         revision_id=revision_id,
         actor=actor,
-        repository=repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         clock=clock,
     )
 
@@ -321,20 +320,18 @@ def _resolve_external_source_work_unit(
     *,
     bucket_id: str,
     actor: str,
-    repository: WorkUnitCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    ports: WorkLifecyclePorts,
     clock: datetime | None,
 ) -> WorkUnit:
     """Resolve the active target or create one when the target is absent."""
-    resolution = _select_external_source_work_unit(source, catalogue=repository.load(), bucket_id=bucket_id)
+    resolution = _select_external_source_work_unit(source, catalogue=ports.work_unit_repository.load(), bucket_id=bucket_id)
     if resolution.work_unit is not None:
         return resolution.work_unit
     return _create_external_source_work_unit(
         source,
         bucket_id=bucket_id,
         actor=actor,
-        repository=repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         clock=clock,
     )
 
@@ -343,12 +340,11 @@ def import_external_filing_source(
     source: ExternalFilingBaselineSource,
     *,
     bucket_id: str,
+    work_lifecycle_ports: WorkLifecyclePorts,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     actor: str = "aeat-import",
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     justificante_repository: JustificanteRepositoryProtocol | None = None,
     observation_repository: CalculationObservationRepositoryProtocol,
     clock: datetime | None = None,
@@ -379,13 +375,12 @@ def import_external_filing_source(
         justificante_repository=justificante_repository,
     )
 
-    wu_repo = work_unit_repository or work_unit_catalogue_repository(bucket_id=bucket_id)
+    wu_repo = work_lifecycle_ports.work_unit_repository
     work_unit = _resolve_external_source_work_unit(
         source,
         bucket_id=bucket_id,
         actor=actor,
-        repository=wu_repo,
-        bucket_event_repository=bucket_event_repository,
+        ports=work_lifecycle_ports,
         clock=clock,
     )
     return import_external_filing_evidence(
@@ -398,7 +393,7 @@ def import_external_filing_source(
         work_unit_repository=wu_repo,
         calculation_repository=calculation_repository,
         filing_repository=filing_repository,
-        bucket_event_repository=bucket_event_repository,
+        bucket_event_repository=work_lifecycle_ports.bucket_event_repository,
         justificante_repository=resolved_justificante_repository,
         observation_repository=observation_repository,
         expected_tax_id=source.tax_id,

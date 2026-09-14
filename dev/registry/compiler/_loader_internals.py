@@ -32,6 +32,20 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.keyed_families import (
+    INHERITED_FAMILY_SPECS as _CANONICAL_INHERITED_FAMILY_SPECS,
+    KEYED_FAMILY_SPECS as _CANONICAL_KEYED_FAMILY_SPECS,
+)
+from cadrumo.domain.calculations.registry.keyed_families import (
+    KeyedFamilySpec as _KeyedFamily,
+)
+from cadrumo.domain.calculations.registry.keyed_families import (
+    family_identity_value as _family_identity_value,
+)
+from cadrumo.domain.calculations.registry.lineage_attestation import (
+    LineageAttestation,
+    validate_lineage_attestations,
+)
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     as_toml_array,
@@ -102,29 +116,6 @@ _ROW_INHERITED_FROM_FIELD: Final = "inherited_from"
 _ROW_LINEAGE_CLAIM_FIELDS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
 
 
-@dataclass(frozen=True, slots=True)
-class _KeyedFamily:
-    """One collection family that a delta edition may inherit from its predecessor.
-
-    ``section`` is the raw table key the family declares under, ``identity``
-    the field whose value names the same member across editions, and
-    Retirements come from the one ``identifier_evolutions`` section, whose
-    entries name the collection they belong to in ``family``, so a family adds
-    no section of its own.
-
-    The casilla family is deliberately NOT described here. Its identity is a
-    lineage claim rather than the member's own id, which is why it can refuse a
-    repurpose that reuses an id without carrying the lineage, and it alone
-    carries label origins down the chain. Merging it through this mechanism
-    would lose both, so it keeps its own merge.
-    """
-
-    section: str
-    identity: str
-    identity_fields: tuple[str, ...] = ()
-    period_scoped: bool = False
-
-
 #: The families this loader inherits along a predecessor chain, beyond casillas.
 #:
 #: Enrolment is explicit rather than derived from ``collection_shaped_fields``,
@@ -135,36 +126,10 @@ class _KeyedFamily:
 #: completeness manifest's graded closure claim is the worked example - would
 #: attest for the successor something nobody established, so it stays full copy
 #: however stable its ids are. Adding a family here is that judgement, made once
-#: and reviewed on its own, not a consequence of the field existing.
-_KEYED_FAMILIES: Final[tuple[_KeyedFamily, ...]] = (
-    _KeyedFamily(
-        section="formulas",
-        identity="id",
-        identity_fields=("target_casilla_id",),
-    ),
-    _KeyedFamily(section="applicability", identity="id"),
-    _KeyedFamily(section="filing_schedules", identity="id"),
-    _KeyedFamily(section="live_cross_references", identity="id"),
-    _KeyedFamily(section="extraction_profiles", identity="id"),
-    _KeyedFamily(section="dependency_classifications", identity="id"),
-    _KeyedFamily(section="constructs", identity="id"),
-    _KeyedFamily(section="application_links", identity="id"),
-    _KeyedFamily(section="parameters", identity="id", identity_fields=("data_type",)),
-    _KeyedFamily(section="deadline_windows", identity="id", period_scoped=True),
-    # Both families were held out of the union while their members had no
-    # identity to key on. Required ids now exist on every member -- 2,460
-    # endpoints and 183 predicates, verified on disk -- so they inherit like
-    # any other keyed family.
-    #
-    # Endpoints carry no identity_fields: a casilla id renumbers between
-    # editions while the endpoint stays the same endpoint, so treating one as
-    # identity would read a renumbering as a repurpose and refuse the edition.
-    _KeyedFamily(section="projection_endpoints", identity="id"),
-    # A predicate softened from a blocking rule to an advisory one is no longer
-    # the same claim about the filing, so finding_kind is identity: the change
-    # must be declared as a repurpose rather than inherited in place.
-    _KeyedFamily(section="verification_predicates", identity="id", identity_fields=("finding_kind",)),
-)
+#: and reviewed on its own, not a consequence of the field existing.  The
+#: immutable domain-owned table is the only family enrolment source so the
+#: status and migration consumers cannot drift from this merge.
+_KEYED_FAMILIES: Final[tuple[_KeyedFamily, ...]] = _CANONICAL_KEYED_FAMILY_SPECS
 
 
 def _restated_families(successor: Mapping[str, object]) -> frozenset[str]:
@@ -342,13 +307,7 @@ def _refuse_undeclared_repurpose(
 
 def _field_at(member: object, path: str) -> object:
     """Return the value at a dotted ``path`` within ``member``, or ``None`` where it does not resolve."""
-    current: object = member
-    for segment in path.split("."):
-        table = _as_toml_table(current)
-        if table is None:
-            return None
-        current = table.get(segment)
-    return current
+    return _family_identity_value(member, path)
 
 
 def _period_token(value: object) -> str | None:
@@ -472,6 +431,7 @@ def _build_modelo_definition_from_data(
     if not declared_revisions:
         raise RegistryLoadError(f"{source_path}: missing [revisions.<id>] tables")
     materialised = _materialise_revisions(source_path, str(modelo_id_for_context), declared_revisions)
+    predecessor_declarations = _raw_predecessor_declarations(declared_revisions)
     revisions: dict[str, ModeloRevision] = {}
     for revision_id, raw_revision in materialised.revisions.items():
         raw_revision_table = _as_toml_table(raw_revision)
@@ -515,6 +475,13 @@ def _build_modelo_definition_from_data(
         )
         revisions[revision_id] = revision
     try:
+        _validate_lineage_sidecars(
+            revisions,
+            predecessors=predecessor_declarations.named if predecessor_declarations is not None else {},
+        )
+    except RegistryValidationError as exc:
+        raise RegistryLoadError(f"{source_path}: invalid lineage attestations: {exc}") from exc
+    try:
         return ModeloDefinition.model_validate(
             {
                 **modelo_table,
@@ -526,6 +493,59 @@ def _build_modelo_definition_from_data(
         )
     except ValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
+
+
+def _validate_lineage_sidecars(
+    revisions: Mapping[str, ModeloRevision],
+    *,
+    predecessors: Mapping[str, str],
+) -> None:
+    """Validate authored lineage sidecars against the typed materialised revisions.
+
+    The sidecar is revision-level and therefore must be authored on the
+    successor it names.  Family identities come from the same canonical keyed
+    family policy the materialiser uses: casillas are keyed by
+    ``continuidad_id`` and identifier-keyed families by their declared
+    identity.  Building the index from typed revisions means inherited members
+    are present while row-local claims remain exactly as authored.
+    """
+    sidecars: list[LineageAttestation] = []
+    members_by_revision: dict[str, dict[str, tuple[str, ...]]] = {}
+    for revision_id, revision in revisions.items():
+        # Casillas participate in predecessor materialisation through their
+        # continuity key, but are intentionally absent from the generic keyed
+        # family tuple.  The sidecar validator still needs their canonical
+        # membership on both ends of an edge; omitting it made every valid
+        # casilla attestation look stale at load time.
+        families: dict[str, tuple[str, ...]] = {
+            _INHERITED_SECTION: tuple(
+                str(member.continuidad_id)
+                for member in revision.casillas
+                if member.continuidad_id is not None
+            )
+        }
+        for family in _CANONICAL_INHERITED_FAMILY_SPECS:
+            identities = tuple(
+                str(identity)
+                for member in getattr(revision, family.section)
+                if family.identity is not None
+                and (identity := _family_identity_value(member, family.identity)) is not None
+            )
+            families[family.section] = identities
+        members_by_revision[revision_id] = families
+        for attestation in revision.lineage_attestations:
+            if attestation.to_revision != revision_id:
+                raise RegistryValidationError(
+                    f"revision {revision_id!r} authors lineage attestation for target "
+                    f"revision {attestation.to_revision!r}; sidecars are edge-local and "
+                    "must be authored on their target revision",
+                )
+            sidecars.append(attestation)
+    validate_lineage_attestations(
+        sidecars,
+        predecessors=predecessors,
+        members_by_revision=members_by_revision,
+    )
 
 
 @dataclass(frozen=True, slots=True)

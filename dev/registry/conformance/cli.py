@@ -12,6 +12,7 @@ Verbs:
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
 * ``valid`` -- fail-closed whole-registry and legal-catalogue validation.
+* ``source-load`` -- mutable registry TOML loadability, independent of the published artifact.
 * ``runtime-load`` -- exact artifact-backed bundled-authority loadability.
 * ``integrity`` -- fail-closed registry, legal-corpus and authority-artifact
   currency gate.
@@ -84,6 +85,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ..compiler.authority import compile_validated_authority
+from ..compiler.loader import load_registry_tree
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_artifact_currency
 from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
@@ -264,6 +266,50 @@ def runtime_load(as_json: _AsJson = False) -> None:
         f"\tmodelos={len(authority.modelos)}"
         f"\trevisions={revision_count}"
         f"\tartifact={bundled_authority_artifact_path()}",
+    )
+
+
+@app.command("source-load")
+def source_load(
+    as_json: _AsJson = False,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Mutable registry tree; defaults to the bundled source tree."),
+    ] = None,
+) -> None:
+    """Fail first unless the mutable registry source parses and loads as one tree."""
+    resolved = registry_root or bundled_path("registry", "aeat")
+    try:
+        modelos, catalogues = load_registry_tree(resolved)
+    except Exception as error:
+        detail = f"{type(error).__name__}: {error}"
+        if as_json:
+            typer.echo(json.dumps({"status": "failed", "loadable": False, "detail": detail}, indent=2), err=True)
+        else:
+            typer.echo(f"registry-source-load\tstatus=failed\tloadable=false\tdetail={detail}", err=True)
+        raise typer.Exit(code=1) from error
+    revision_count = sum(len(modelo.revisions) for modelo in modelos)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "loadable": True,
+                    "modelo_count": len(modelos),
+                    "revision_count": revision_count,
+                    "legal_reference_count": len(catalogues.legal),
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(
+        "registry-source-load"
+        "\tstatus=passed"
+        "\tloadable=true"
+        f"\tmodelos={len(modelos)}"
+        f"\trevisions={revision_count}"
+        f"\tlegal_references={len(catalogues.legal)}",
     )
 
 

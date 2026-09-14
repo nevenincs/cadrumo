@@ -52,7 +52,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.user_profile import complete_profile_facts
+from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -106,7 +106,7 @@ def _recovery_envelope(profile_id: UUID, dek_epoch: str) -> ProfileCustodyRecove
 
 def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -> None:
     """Durably replace the label after its pending head witness, then terminate."""
-    from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
+    from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 
     root = Path(root_text)
     profile_id = UUID(profile_id_text)

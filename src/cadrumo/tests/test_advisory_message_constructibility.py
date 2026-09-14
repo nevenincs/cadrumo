@@ -340,8 +340,8 @@ def test_every_advisory_message_is_constructible(advisory_builders: tuple[_Build
 #: now elides as well, so the shape cannot return silently.
 _KNOWN_CRAMPED_BUILDERS: frozenset[str] = frozenset(
     {
-        "cadrumo/application/modelo/_prior_payment_advisory.py:184",
-        "cadrumo/application/modelo/_prorrata_regularizacion_advisory.py:444",
+        "cadrumo/application/modelo/prior_payment_advisory.py:184",
+        "cadrumo/application/modelo/prorrata_regularizacion_advisory.py:444",
     },
 )
 

@@ -9,18 +9,18 @@ from types import MappingProxyType
 
 from pydantic import BaseModel
 
-from ....application.aggregation.percepciones_observations_repository import PercepcionObservationRepository
-from ....application.aggregation.retencion_observations_repository import RetencionObservationRepository
-from ....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from ..profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+from ..profile.retencion_observations import RetencionObservationRepositoryAdapter
 from ....adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from ..profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....application.calculations.observations_repository import (
     IvaWalletDecisionEnvelopePayload,
     iva_wallet_decision_event_key,
 )
-from ....application.evidence.service import EvidenceBundleRepository
+from ..profile.evidence_bundles import EvidenceBundleRepository
 from ....adapters.persistence.profile.filing_history import FilingHistoryRepositoryAdapter
 from ....application.filing.history_ports import FilingHistoryPorts
 from ....application.filing.history_repository import ModeloHistoryRepository
@@ -28,7 +28,7 @@ from ....application.ledger.confirmation_record import (
     ConfirmationRecordDocument,
     confirmation_record_object_key,
 )
-from ....application.ledger.counterparty_establishment import ConfirmedCounterpartyFactsRepository
+from ..profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceDocument
 from ....application.ledger.extraction_draft_store import ExtractionDraftDocument, extraction_draft_object_key
 from ....application.ledger.rule_repository import ledger_classification_rule_object_key
@@ -192,13 +192,13 @@ def _natural_key_resolvers(*, bucket_id: str) -> dict[str, NaturalKeyResolver]:
 
     resolvers["cadrumo.domain.justificante.metadata"] = _bound_resolver(_justificante_metadata_repo)
 
-    def _retencion_repo() -> RetencionObservationRepository:
-        return RetencionObservationRepository()
+    def _retencion_repo() -> RetencionObservationRepositoryAdapter:
+        return RetencionObservationRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
 
     resolvers["cadrumo.retenciones.observations"] = _bound_resolver(_retencion_repo)
 
-    def _percepciones_repo() -> PercepcionObservationRepository:
-        return PercepcionObservationRepository()
+    def _percepciones_repo() -> PercepcionObservationRepositoryAdapter:
+        return PercepcionObservationRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
 
     resolvers["cadrumo.withholding.observations"] = _bound_resolver(_percepciones_repo)
 
@@ -220,7 +220,7 @@ def _natural_key_resolvers(*, bucket_id: str) -> dict[str, NaturalKeyResolver]:
     resolvers["cadrumo.application.live.iva_remote_state_acquisitions"] = _bound_resolver(_iva_remote_state_repo)
 
     def _evidence_bundle_repo() -> EvidenceBundleRepository:
-        return EvidenceBundleRepository()
+        return EvidenceBundleRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
     resolvers["cadrumo.application.evidence.bundles"] = _bound_resolver(_evidence_bundle_repo)
 
@@ -388,8 +388,8 @@ def _ledger_extraction_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     resolvers["cadrumo.application.ledger.confirmation_record"] = _confirmation_record_key
 
-    def _confirmed_counterparty_facts_repo() -> ConfirmedCounterpartyFactsRepository:
-        return ConfirmedCounterpartyFactsRepository()
+    def _confirmed_counterparty_facts_repo() -> CounterpartyEstablishmentRepository:
+        return CounterpartyEstablishmentRepository()
 
     resolvers["cadrumo.application.ledger.confirmed_counterparty_facts"] = _bound_resolver(
         _confirmed_counterparty_facts_repo,

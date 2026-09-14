@@ -22,6 +22,8 @@ that open end.
 
 from __future__ import annotations
 
+import inspect
+
 import pytest
 
 from ....core.period import Period
@@ -42,6 +44,13 @@ def test_every_declared_year_is_admitted() -> None:
     """Anti-tautology: a guard that refused everything would pass the refusal proof below."""
     for year in _declared_years():
         _refuse_unsupported_filing_year(Period.from_year_and_code(year, "1T"))
+
+
+def test_filing_year_admission_delegates_to_the_validated_authority() -> None:
+    source = inspect.getsource(_refuse_unsupported_filing_year)
+
+    assert ".project_filing_year(" in source
+    assert ".admits_filing_year(" not in source
 
 
 def test_a_year_below_the_declared_window_refuses() -> None:

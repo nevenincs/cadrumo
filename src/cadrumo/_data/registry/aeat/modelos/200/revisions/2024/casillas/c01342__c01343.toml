@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01342"
+continuidad_id = "is-deduccion-di-interna-total"
 number = "01342"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 [[revisions."2024".casillas]]
 id = "01343"
+continuidad_id = "01343"
 number = "01343"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"

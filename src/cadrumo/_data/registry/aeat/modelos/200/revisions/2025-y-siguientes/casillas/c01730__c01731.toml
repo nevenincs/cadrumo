@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01730"
+continuidad_id = "01730"
+continuidad_origin = "seeded"
 number = "01730"
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01731"
+continuidad_id = "01731"
+continuidad_origin = "seeded"
 number = "01731"
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 data_type = "money"

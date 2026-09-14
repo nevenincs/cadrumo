@@ -29,6 +29,7 @@ The four behaviours under test:
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
@@ -43,7 +44,6 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -58,11 +58,10 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
-from cadrumo.application.aggregation.source_mesh import CalculationSourceProvenance, CalculationSourceResolution
-from cadrumo.application.aggregation.source_resolution_operations import merge_source_resolutions
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -536,7 +535,12 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         period=Period.from_year_and_code(2026, "2T"),
         revision=snapshot.revision,
     )
-    raw = PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)
+    raw = PreviousFilingSourceResolver(
+        registry_snapshot=snapshot,
+        repository=CalculationObservationRepository(),
+        iva_history_repository=IvaCompensationHistoryRepository(),
+        profile_read_ports=empty_profile_read_ports(),
+    ).resolve(context)
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID in raw.binding_values, (
         "test precondition: the raw resolver must surface the 303 compensation binding "
         "so the exclusion has something to strip"
@@ -558,6 +562,9 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
             modelo_id=str(snapshot.modelo.id),
             revision_id=str(snapshot.revision.id),
         ),
+        repository=CalculationObservationRepository(),
+        iva_history_repository=IvaCompensationHistoryRepository(),
+        profile_read_ports=empty_profile_read_ports(),
     ).resolve(context)
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in filtered.binding_values
     assert all(

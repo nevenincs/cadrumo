@@ -69,3 +69,63 @@ calculation refuses them rather than resolving a silent blank. NOT CLAIMED -- no
 per-donor detail rows are not modelled. NOT CLAIMED -- all 3 locales are complete for the 7 labels, \
 but the translated strings were not audited for accuracy."""
 reviewed_at = 2026-09-12
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2024"
+to_revision = "2025"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:202-204 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 5-8 Numérico EJERCICIO; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:202-204 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2024"
+to_revision = "2025"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:1-10 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), official Modelo 182 declaracion informativa identity; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:1-10 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same official declaration identity. This applicability-only header has no independent fixed-width slot."
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "donante-nif"
+from_revision = "2024"
+to_revision = "2025"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:208-218 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 18-26 Alfanumérico N.I.F. DEL DECLARADO; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:208-218 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "donante-nombre"
+from_revision = "2024"
+to_revision = "2025"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:271-280 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 36-75 Alfanumérico APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARADO; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:271-280 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-donativo"
+from_revision = "2024"
+to_revision = "2025"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:408-429 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 84-96 Numérico IMPORTE O VALORACIÓN DEL DONATIVO, APORTACIÓN O DISPOSICIÓN; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:408-429 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "porcentaje-deduccion"
+from_revision = "2024"
+to_revision = "2025"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:376-395 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 79-83 Numérico % DE DEDUCCIÓN; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:376-395 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
+legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]

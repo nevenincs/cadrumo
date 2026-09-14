@@ -15,7 +15,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
+from ...foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from ..foreign_assets import (
     ForeignAssetClassRollup,
     ForeignAssetIngestObservation,

@@ -13,7 +13,7 @@ legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.tipo-trigger"
-continuidad_id = "motivo-declaracion-no-periodica-309"
+continuidad_id = "motivo-declaracion-no-periodica"
 continuidad_origin = "grounded"
 continuidad_evidence = "Internal Modelo 309 authority preserves this virtual application concept across 2016-2017 and 2018-2022: the required text informational row retains id decl.tipo-trigger, semantic_role motivo_declaracion_no_periodica, section declarante, and the same modelo-309-iva-no-periodica construct enrollment; no formula, binding, or consumer contract addresses or changes this row."
 number = "tipo-trigger"

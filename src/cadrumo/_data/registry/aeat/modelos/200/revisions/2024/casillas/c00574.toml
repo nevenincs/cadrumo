@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00574"
+continuidad_id = "00574"
 number = "00574"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"

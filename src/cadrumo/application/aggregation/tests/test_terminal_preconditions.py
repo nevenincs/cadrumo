@@ -7,13 +7,11 @@ import inspect
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 from types import ModuleType
 from typing import override
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
@@ -39,7 +37,7 @@ from .._modelo_bindings_invoice_iva_refusal import _raise_if_screened_invoice_iv
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-from ..retencion_observations_repository import RetencionObservationRepository
+from ..retencion_observations_repository import RetencionObservationPorts
 from ..service import _supported_per_modelo_modelos, provider_for_modelo
 from ..source_mesh import CalculationSourceContext
 
@@ -52,6 +50,13 @@ class _CarrierContract:
     facts: tuple[tuple[str, str], ...]
     provenance: ActionEvidenceProvenance
     outcome: NoRecoveryOutcome
+
+
+class _EmptyRetencionObservationRepository:
+    """Application-port fake for the terminal empty-observation precondition."""
+
+    def load_observations(self, modelo: str, period: Period) -> tuple[object, ...]:
+        return ()
 
 
 def _contract(
@@ -394,9 +399,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
     )
 
 
-def test_missing_retenciones_observations_has_an_exact_application_state_operator_decision_verdict(
-    tmp_path: Path,
-) -> None:
+def test_missing_retenciones_observations_has_an_exact_application_state_operator_decision_verdict() -> None:
     context = CalculationSourceContext(
         bucket_id="operator",
         modelo="111",
@@ -427,8 +430,10 @@ def test_missing_retenciones_observations_has_an_exact_application_state_operato
         ),
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(AggregationValidationError) as raised:
-        RetencionesAggregationSourceResolver(retencion_repository=RetencionObservationRepository()).resolve(context)
+    with pytest.raises(AggregationValidationError) as raised:
+        RetencionesAggregationSourceResolver(
+            ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
+        ).resolve(context)
 
     _assert_terminal_contract(
         raised.value,

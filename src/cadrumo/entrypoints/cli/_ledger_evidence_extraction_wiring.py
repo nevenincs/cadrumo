@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import httpx
 
+from ...adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
 from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
+from ...adapters.inbound.einvoice.shape import probe_document_shape
 from ...adapters.inbound.einvoice.xml import EInvoiceXmlParseError
+from ...adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ...adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
 from ...adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
 from ...adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
@@ -25,6 +28,8 @@ from ...application.ledger.evidence_input import (
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
+from ...application.ledger.evidence_input_ports import EvidenceInputPorts
+from ...application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from ...application.ledger.evidence_reference import (
     EvidenceReferenceOutcome,
     classify_evidence_reference,
@@ -39,6 +44,8 @@ from ...application.ledger.invoice_draft_extraction_ports import (
     VisionImage,
 )
 from ...application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
+from ...application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from ...application.ledger.structured_invoice_ports import StructuredInvoiceRecord
 from ...core.config import Settings
 from ...core.config_support import LLMProvider
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -46,8 +53,35 @@ from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.iva.supply_nature import SupplyNature
 
 
+def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
+    """Bind the application text-layer capability to the PDF adapter."""
+
+    def extract_pages_text(data: bytes) -> tuple[str, ...]:
+        try:
+            return extract_pages_text_from_bytes(
+                data,
+                error_class=ValueError,
+                pdf_label="the invoice PDF",
+            )
+        except ValueError as exc:
+            raise PurchaseInvoiceEvidenceInputError(
+                "evidence text-layer extraction failed",
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.EVIDENCE_TEXT_LAYER_AVAILABLE,
+                    facts={
+                        "pdf_layer_present": False,
+                        "text_layer_extraction_succeeded": False,
+                    },
+                ),
+            ) from exc
+
+    return EvidenceTextLayerPorts(extract_pages_text=extract_pages_text)
+
+
 def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> InvoiceDraftExtractionPorts:
     """Bind the CLI evidence commands to their concrete adapters."""
+
+    evidence_input_ports = EvidenceInputPorts(document_shape_probe=probe_document_shape)
 
     def resolve_evidence_input(
         bucket_id: str, evidence_id: str | None, attachment_id: str | None, settings: Settings
@@ -64,14 +98,14 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
                 raise refuse_unresolved_evidence_reference(evidence_id)
             if reference.record is None:
                 raise refuse_reference_without_document_bytes(evidence_id)
-            return resolve_purchase_invoice_evidence_input(reference.record, store=store)
+            return resolve_purchase_invoice_evidence_input(reference.record, store=store, ports=evidence_input_ports)
         if attachment_id is None:
             raise PurchaseInvoiceEvidenceInputError(translated_message="errors.refused.refused_ledger_evidence_input")
-        return resolve_attachment_evidence_input(attachment_id, store=store)
+        return resolve_attachment_evidence_input(attachment_id, store=store, ports=evidence_input_ports)
 
-    def parse_structured_invoice(data: bytes) -> object:
+    def parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
         try:
-            return parse_einvoice_document(data)
+            return translate_parsed_einvoice(parse_einvoice_document(data))
         except EInvoiceXmlParseError as exc:
             raise StructuredInvoiceReadError() from exc
 
@@ -142,6 +176,8 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
 
     return InvoiceDraftExtractionPorts(
         resolve_evidence_input=resolve_evidence_input,
+        evidence_input_ports=evidence_input_ports,
+        text_layer_ports=evidence_text_layer_ports(),
         parse_structured_invoice=parse_structured_invoice,
         read_text=read_text,
         propose_supply_nature=propose_supply_nature,
@@ -151,4 +187,4 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
     )
 
 
-__all__ = ["invoice_draft_extraction_ports"]
+__all__ = ["evidence_text_layer_ports", "invoice_draft_extraction_ports"]

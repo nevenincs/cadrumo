@@ -36,7 +36,7 @@ the disposal is captured — the disposal figure itself is never withheld pendin
 that cap.
 
 See Also:
-    :mod:`~application.modelo._calculation_diagnostics`:
+    :mod:`~application.modelo.calculation_diagnostics`:
         Post-calculation coordinator that calls this collector with the owning
         bucket id.
     :mod:`~application.calculations._bienes_inversion_regularizacion`:
@@ -53,7 +53,6 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienInversionRecordError
@@ -64,6 +63,7 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.bienes_inversion_regularizacion import (
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
@@ -86,6 +86,7 @@ def collect_bienes_inversion_regularizacion_diagnostics(
     period_token: str,
     filing_year: int,
     bucket_id: str,
+    register_repository: BienesInversionIvaRegisterRepositoryProtocol,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return the bienes-de-inversión regularización advisories for one calculation.
 
@@ -111,7 +112,8 @@ def collect_bienes_inversion_regularizacion_diagnostics(
             calculated (e.g. ``"4T"``, ``"1T"``, ``"0A"``).
         filing_year: The filing year regularised (the year whose in-window
             goods are compared, and whose disposals are regularised).
-        bucket_id: Bucket identifier the register is loaded from.
+        bucket_id: Bucket identifier used for diagnostic context.
+        register_repository: Required bucket-bound register capability.
 
     Returns:
         A tuple carrying the annual advisory and/or the disposal advisory when
@@ -125,7 +127,7 @@ def collect_bienes_inversion_regularizacion_diagnostics(
         return ()
 
     try:
-        register = BienesInversionIvaRegisterRepository(bucket_id=bucket_id).load()
+        register = register_repository.load()
     except BienInversionRecordError as exc:
         return (
             CalculationSourceDiagnostic(

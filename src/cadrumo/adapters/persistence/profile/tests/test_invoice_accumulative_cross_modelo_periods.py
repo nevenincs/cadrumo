@@ -44,6 +44,7 @@ invoice/transaction link. No mocks, stubs, skips, or xfail.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -73,7 +74,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.invoices.transaction_linking import link_invoice_transaction_catalogues
@@ -401,6 +402,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
             workflow_profile=active_taxpayer_profile(work_unit),
             period=work_unit.period,
         ),
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
     )
     return revision
 
@@ -460,6 +462,7 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
         work_unit=work_unit,
         repository=CalculationObservationRepository(objects=secure_objects),
         captured_at=_FILE_AT,
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
     )
     return revision
 

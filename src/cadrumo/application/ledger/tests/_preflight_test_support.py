@@ -13,13 +13,9 @@ from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import seed_test_profile_record
-from ...user_profile.censo_sync import CensoSyncService
+
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
-_OTHER_BUCKET_ID = "23232323-2323-4323-8323-232323232323"
-_HOME_OFFICE_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
 def _period(year: int, code: str) -> Period:
@@ -99,52 +95,3 @@ def _transaction(
             "classified_by": "manual",
         },
     )
-
-
-def _home_office_censo_facts() -> dict[str, str]:
-    return {
-        "vivienda_office.total_m2": "100",
-        "vivienda_office.office_m2": "20",
-    }
-
-
-def _declare_home_office_m2(bucket_id: str) -> None:
-    """Persist only the operator-declared ``vivienda_office`` m² facts.
-
-    Mirrors ``config profile edit``: a real encrypted profile record
-    carrying the afectación m² so ``bound_raw_afectacion_ratio`` resolves
-    from the operator-declared facts, with no usage-ratio overrides.
-    """
-    m2_facts = tuple(
-        UserProfileFact(path=path, value=Decimal(value)) for path, value in _home_office_censo_facts().items()
-    )
-    seed_test_profile_record(
-        UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=m2_facts,
-        ),
-    )
-
-
-def _apply_home_office_censo(bucket_id: str) -> None:
-    """Declare the operator's ``vivienda_office`` m² facts and derived HOME_OFFICE ratios.
-
-    Reproduces what the retired ``censo apply`` verb did for the ledger
-    preflight tests: persist the operator-declared ``vivienda_office``
-    afectación m² onto the profile record (so ``bound_raw_afectacion_ratio``
-    resolves from the profile facts, as ``config profile edit`` would write
-    them) and persist the derived HOME_OFFICE ratios so the operator's
-    override agrees with the bound afectación ratio.
-    """
-    from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
-    from ....domain.usage_ratios.model import UsageRatioProfile
-    from ....domain.usage_ratios.service import derive_home_office_ratios_from_censo
-
-    _declare_home_office_m2(bucket_id)
-    raw = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
-    assert raw is not None
-    derived = derive_home_office_ratios_from_censo(raw, year=2025)
-    merged = dict(load_usage_ratios(bucket_id=bucket_id).ratios)
-    merged.update(derived.ratios)
-    save_usage_ratios(UsageRatioProfile(ratios=merged), bucket_id=bucket_id)

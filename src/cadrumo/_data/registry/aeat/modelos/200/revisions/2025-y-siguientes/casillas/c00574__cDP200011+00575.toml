@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00574"
+continuidad_id = "00574"
+continuidad_origin = "seeded"
 number = "00574"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from collections.abc import MutableMapping
 from datetime import date
 from decimal import Decimal
@@ -12,14 +13,17 @@ from typing import cast
 import pytest
 
 from .....core.hashing import canonical_json_bytes, sha256_hex
+from ..authority import bundled_authority_artifact_path
 from ..authority_artifact import (
     AuthorityArtifact,
     AuthorityArtifactFormatError,
     AuthorityArtifactIntegrityError,
     AuthorityArtifactUnavailableError,
     read_authority_artifact,
+    read_facts_authority_merge_base,
     read_shared_authority_artifact,
     write_authority_artifact,
+    write_facts_authority_artifact,
 )
 from ..errors import RegistryValidationError
 from ..revision_contracts import NoPredecessor
@@ -102,7 +106,14 @@ def _publish(path: Path) -> None:
 def _write_frame(path: Path, payload: object, **extra: object) -> None:
     """Write a frame whose digest is consistent with its content, as a correct publisher would."""
     path.write_bytes(
-        canonical_json_bytes({"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload)), **extra})
+        canonical_json_bytes(
+            {
+                "format": "cadrumo-authority-artifact-v4",
+                "payload": payload,
+                "payload_sha256": sha256_hex(canonical_json_bytes(payload)),
+                **extra,
+            }
+        )
     )
 
 
@@ -136,7 +147,8 @@ def test_current_frame_omits_schema_defaults_and_restores_the_same_typed_model(t
 
     frame = json.loads(artifact_path.read_bytes())
     wire_modelo = frame["payload"]["modelos"][0]
-    assert set(frame) == {"payload", "payload_sha256"}
+    assert set(frame) == {"format", "payload", "payload_sha256"}
+    assert frame["format"] == "cadrumo-authority-artifact-v4"
     assert "capabilities" not in wire_modelo
     assert "calculation_class" not in wire_modelo
     assert "output_sensitivity" not in wire_modelo
@@ -273,6 +285,44 @@ def test_a_current_frame_with_an_extra_member_is_refused(tmp_path: Path) -> None
 
     with pytest.raises(AuthorityArtifactFormatError, match="unexpected members \\['unrecognized_member'\\]"):
         read_authority_artifact(artifact_path)
+
+
+@pytest.mark.parametrize(
+    ("format_name", "message"),
+    (
+        pytest.param("cadrumo-authority-artifact-v3", "superseded format", id="superseded"),
+        pytest.param("cadrumo-authority-artifact-v5", "unsupported format", id="unknown-future"),
+    ),
+)
+def test_a_noncurrent_explicit_format_is_refused(tmp_path: Path, format_name: str, message: str) -> None:
+    artifact_path = tmp_path / "authority.json"
+    _publish(artifact_path)
+    frame = json.loads(artifact_path.read_bytes())
+    _write_frame(artifact_path, frame["payload"], format=format_name)
+
+    with pytest.raises(AuthorityArtifactFormatError, match=message):
+        read_authority_artifact(artifact_path)
+
+
+def test_facts_only_publication_validates_the_complete_graph_before_cutover(tmp_path: Path) -> None:
+    """A fact removal that invalidates Modelo vocabulary preserves the known-good artifact."""
+    artifact_path = tmp_path / "authority.json"
+    shutil.copyfile(bundled_authority_artifact_path(), artifact_path)
+    merge_base = read_facts_authority_merge_base(artifact_path)
+    facts = dict(merge_base.facts.facts)
+    facts.pop("iva-statutory-schema-vocabulary")
+    invalid_facts = merge_base.facts.model_copy(update={"facts": facts})
+    previous_bytes = artifact_path.read_bytes()
+
+    with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
+        write_facts_authority_artifact(
+            artifact_path,
+            merge_base,
+            invalid_facts,
+            identity_digest="0" * 64,
+        )
+
+    assert artifact_path.read_bytes() == previous_bytes
 
 
 @pytest.mark.parametrize("artifact_bytes", [b"not-json", b'{"payload":{}}'])

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03286"
+continuidad_id = "is-correccion-cooperativas-fondo-reserva-obligatorio-permanente-disminucion"
 number = "03286"
 section = ["cooperativas_fondo_de_reserva_obligatorio_ley_20_1", "disminucion"]
 data_type = "money"

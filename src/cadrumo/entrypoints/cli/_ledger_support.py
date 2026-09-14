@@ -32,7 +32,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, OutputSchema
 from ...core.unit_proportion import is_unit_proportion
-from ...domain.categories.spending_category import SpendingCategory
+from ...domain.categories.spending_category_catalogue import require_spending_category, spending_category_tokens
 from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines.models import IrpfSpecialRegime
 from ...domain.invoices.errors import InvoiceValidationError
@@ -233,13 +233,13 @@ def validate_category_id(category_id: str | None) -> str | None:
     if not trimmed:
         return None
     try:
-        return SpendingCategory(trimmed).value
+        return require_spending_category(trimmed).value
     except ValueError as exc:
         # Show one concrete valid id inline: operators repeatedly
         # guessed compound keys (`office:material_oficina`,
         # `office_material_oficina`); only the bare enum value is
         # accepted, so the refusal must demonstrate the exact shape.
-        example = next(iter(SpendingCategory)).value
+        example = spending_category_tokens()[0].value
         raise bad(
             tr(
                 "cli.ledger.errors.unknown_category",
@@ -322,7 +322,7 @@ def resolve_business_pct_with_censo(
     from ...application.ledger.ratios import resolve_business_share_pct
     from ...application.user_profile.censo_sync import CensoSyncService
 
-    category = None if category_id is None else SpendingCategory(category_id)
+    category = None if category_id is None else require_spending_category(category_id)
     ratio: Decimal | None = None
     if category is not None and active_profile is not None:
         ratio = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=active_profile)

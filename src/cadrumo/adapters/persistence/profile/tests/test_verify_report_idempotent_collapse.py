@@ -19,7 +19,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
-from cadrumo.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import list_verification_reports
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from cadrumo.domain.calculations.registry.convenio import (
     CONVENIO_OVERRIDE_FACT_ID,
     ConvenioAuthority,
@@ -17,6 +16,8 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     GovernedFactFamily,
     OverrideFactPayload,
 )
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
+from cadrumo.domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
@@ -38,6 +39,9 @@ def convenio_authority_from_facts(
         raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} is not registered")
     if fact.family is not GovernedFactFamily.OVERRIDE:
         raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} must be an override family")
+    # The tokens belong to the catalogue being compiled, never to the published
+    # bundle: this runs inside the compile path, which must not read the artifact.
+    candidate = CandidateFactAuthority(facts)
 
     rows_by_country: dict[str, list[ConvenioOverrideRow]] = {}
     document_by_country: dict[str, str] = {}
@@ -87,8 +91,8 @@ def convenio_authority_from_facts(
             )
         rows_by_country.setdefault(country_code, []).append(
             ConvenioOverrideRow(
-                tipo_renta=TipoRentaIrnr(tipo_renta_value),
-                kind=ConvenioOverrideKind(variant.payload.override_code),
+                tipo_renta=require_tipo_renta_irnr(tipo_renta_value, authority=candidate),
+                kind=variant.payload.override_code,
                 rate=str(variant.payload.value) if variant.payload.value is not None else None,
                 legal_ref_anchor=legal_ref_anchor,
                 legal_refs=variant.legal_refs,

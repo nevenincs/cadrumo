@@ -88,7 +88,7 @@ seed rule is reported INCOMPLETE with a rationale that says so.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated
@@ -115,14 +115,18 @@ from ...deadlines.models import (
     IVARegime,
     TaxpayerProfile,
 )
-from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS
-from .applicability_payer_facts import PayerFact, payer_fact_holds
+from ._applicability_labels import payer_fact_incomplete_label
+from .applicability_payer_facts import PayerFactValue, payer_fact_holds, resolve_payer_fact
 from .applicability_routes import TaxRoute, tax_route_for_entity_type
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .ids import LegalRefId, ModeloId
-from .iva_schema_vocabulary import iva_regime_self_assessment_tokens, require_iva_regime
+from .irpf_income_categories import (
+    irpf_income_category_actividad_economica_token,
+    require_irpf_income_category,
+)
 from .irpf_regimes import irpf_estimation_regime_directa_normal_token, require_irpf_estimation_regime
+from .iva_schema_vocabulary import iva_regime_self_assessment_tokens, require_iva_regime
 from .schema_base import DateAxis
 from .schema_revision_members import ApplicabilityRuleDefinition
 
@@ -250,13 +254,13 @@ class ModeloApplicabilityRule(BaseModel):
             the declared IVA obligation instead of borrowing the natural
             person's IRPF income-category axis for legal and attribution
             entities.
-        required_payer_fact: The :class:`PayerFact` the modelo's
+        required_payer_fact: The :class:`PayerFactValue` the modelo's
             applicability depends on, or ``None`` when the modelo does
             not gate on a payer fact. When set, a profile that
             positively declares the fact gets ``APPLICABLE``; a profile
             that does not gets ``INCOMPLETE`` — the underlying boolean
             has no tri-state, so the engine cannot positively justify a
-            ``NOT_APPLICABLE`` (see :class:`PayerFact`).
+            ``NOT_APPLICABLE`` (see :class:`PayerFactValue`).
         applicable_reason: Operator-facing prose for the
             ``APPLICABLE`` verdict.
         not_applicable_reason: Operator-facing prose for the
@@ -284,7 +288,7 @@ class ModeloApplicabilityRule(BaseModel):
     required_estimation_regimes: frozenset[IrpfEstimationRegime] = frozenset()
     applicable_fiscal_residencies: frozenset[FiscalResidency] = frozenset()
     applicable_iva_regimes: frozenset[IVARegime] = frozenset()
-    required_payer_fact: PayerFact | None = None
+    required_payer_fact: PayerFactValue | None = None
     applicable_reason: _OperatorReason
     not_applicable_reason: _OperatorReason
     cuota_bearing: bool = False
@@ -393,7 +397,7 @@ def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefini
 
     The loader boundary for the ``applicability`` schema family: every
     free-form TOML string on ``fragment`` is resolved
-    here to its typed registry token (or :class:`PayerFact`),
+    here to its typed registry token (or :class:`PayerFactValue`),
     never left as a raw string for a downstream branch to compare against.
     An unknown token raises :class:`RegistryValidationError` naming the
     offending rule and the underlying enum-coercion error, mirroring the
@@ -418,7 +422,7 @@ def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefini
             modelo=modelo.value,
             applicable_entity_types=frozenset(require_entity_type(value) for value in fragment.applicable_entity_types),
             required_income_categories=frozenset(
-                IrpfIncomeCategory(value) for value in fragment.required_income_categories
+                require_irpf_income_category(value) for value in fragment.required_income_categories
             ),
             required_estimation_regimes=frozenset(
                 require_irpf_estimation_regime(value) for value in fragment.required_estimation_regimes
@@ -427,7 +431,7 @@ def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefini
                 FiscalResidency._from_registry(value) for value in fragment.applicable_fiscal_residencies
             ),
             applicable_iva_regimes=frozenset(require_iva_regime(value) for value in fragment.applicable_iva_regimes),
-            required_payer_fact=PayerFact(fragment.required_payer_fact)
+            required_payer_fact=resolve_payer_fact(fragment.required_payer_fact)
             if fragment.required_payer_fact is not None
             else None,
             applicable_reason=fragment.applicable_reason,
@@ -633,12 +637,12 @@ def _incomplete_applicability(
 def _undetermined_applicability(
     modelo: str,
     *,
-    payer_fact: PayerFact,
+    payer_fact: PayerFactValue,
     legal_refs: tuple[LegalRefId, ...],
 ) -> ModeloApplicability:
     """Return the ``INCOMPLETE`` applicability for a fact only the taxpayer can supply.
 
-    Used when a modelo gates on a :class:`PayerFact` (Modelo
+    Used when a modelo gates on a :class:`PayerFactValue` (Modelo
     111 / 115 / 349 / 347 / 720 / 721) and the profile does not positively declare
     the fact. The taxpayer model itself may be fully declared — the
     entity type and regime are known — but the payer fact has no
@@ -663,7 +667,7 @@ def _undetermined_applicability(
         verdict=ApplicabilityVerdict.INCOMPLETE,
         reason=(
             f"{_INCOMPLETE_UNDETERMINED_REASON} "
-            f"Hecho requerido para este modelo: {_PAYER_FACT_INCOMPLETE_LABELS[payer_fact]}."
+            f"Hecho requerido para este modelo: {payer_fact_incomplete_label(payer_fact)}."
         ),
         legal_refs=legal_refs,
     )
@@ -680,69 +684,72 @@ def _undetermined_applicability(
 # invented slugs. Full per-entity / per-regime coverage of every
 # registered modelo is a deferred expansion.
 
-_IVA_OBLIGED_ENTITY_TYPES: frozenset[EntityType] = frozenset(entity_type_tokens())
-_IVA_SELF_ASSESSMENT_REGIMES: frozenset[IVARegime] = iva_regime_self_assessment_tokens()
 
-MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
-    # Modelo 390 — declaración-resumen anual del IVA. The annual companion
-    # to Modelo 303: a taxpayer in a periodic IVA self-assessment regime
-    # files it. A natural person must also declare actividad económica;
-    # legal and attribution entities do not carry the IRPF income-category
-    # axis, so their gate is entity type plus IVA regime. Same
-    # applicability gate as Modelo 303. (SII filers are exempt from Modelo
-    # 390; that suppression is not yet modelled and would gate on the SII
-    # enrolment axis.)
-    Modelo("390"): ModeloApplicabilityRule(
-        modelo=Modelo("390"),
-        applicable_entity_types=_IVA_OBLIGED_ENTITY_TYPES,
-        required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        applicable_iva_regimes=_IVA_SELF_ASSESSMENT_REGIMES,
-        applicable_reason=(
-            "Modelo 390 (resumen anual del IVA): el contribuyente realiza "
-            "una actividad económica sujeta al IVA y presenta la "
-            "declaración-resumen anual del impuesto."
-        ),
-        not_applicable_reason=(
-            "Modelo 390 no aplica: sin una actividad económica sujeta al "
-            "IVA no hay declaración-resumen anual del impuesto."
-        ),
-        # RD 1624/1992 art. 71 — declaraciones-liquidaciones del IVA y la
-        # declaración-resumen anual; Orden EHA/3111/2009 art. 1 —
-        # aprobación del Modelo 390.
-        legal_refs=(
-            "rd-1624-1992:art-71",
-            "orden-eha-3111-2009:art-1",
-        ),
-    ),
-    # Modelo 303 — autoliquidación periódica del IVA. Triggered by carrying
-    # on an actividad económica subject to IVA: a natural person with
-    # rendimientos de actividades económicas, or a legal / attribution
-    # entity in a periodic IVA self-assessment regime. A pure landlord of
-    # residential property, a salaried-only taxpayer, and a pensioner carry
-    # on no IVA-subject activity. (Commercial rental can be IVA-subject;
-    # the seed gates natural persons on the actividad-económica category,
-    # which a pure landlord does not declare. Finer rental-IVA nuance is a
-    # deferred expansion.)
-    Modelo("303"): ModeloApplicabilityRule(
-        modelo=Modelo("303"),
-        applicable_entity_types=_IVA_OBLIGED_ENTITY_TYPES,
-        required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        applicable_iva_regimes=_IVA_SELF_ASSESSMENT_REGIMES,
-        applicable_reason=(
-            "Modelo 303 (autoliquidación del IVA): el contribuyente "
-            "realiza una actividad económica sujeta al IVA y presenta la "
-            "autoliquidación periódica."
-        ),
-        not_applicable_reason=(
-            "Modelo 303 no aplica: sin una actividad económica sujeta al "
-            "IVA no hay autoliquidación periódica del impuesto."
-        ),
-        # LIVA art. 99 — ejercicio del derecho a la deducción mediante
-        # las declaraciones-liquidaciones periódicas del IVA que liquida
-        # el Modelo 303.
-        legal_refs=("ley-37-1992:art-99",),
-    ),
-}
+def _iva_seed_applicability_rule(modelo: str) -> ModeloApplicabilityRule:
+    """Build an IVA seed rule from the governed facts in the active scope.
+
+    These rules remain Python-authored until their export fragments migrate to
+    the registry, but none of their governed vocabulary may be captured at
+    module import. Development validation can compile several candidates in
+    one process; resolving here makes each lookup observe that candidate's
+    fact scope instead of the first candidate that happened to import this
+    module.
+    """
+    common = {
+        "modelo": Modelo(modelo),
+        "applicable_entity_types": frozenset(entity_type_tokens()),
+        "required_income_categories": frozenset({irpf_income_category_actividad_economica_token()}),
+        "applicable_iva_regimes": iva_regime_self_assessment_tokens(),
+    }
+    if modelo == "390":
+        return ModeloApplicabilityRule(
+            **common,
+            applicable_reason=(
+                "Modelo 390 (resumen anual del IVA): el contribuyente realiza "
+                "una actividad económica sujeta al IVA y presenta la "
+                "declaración-resumen anual del impuesto."
+            ),
+            not_applicable_reason=(
+                "Modelo 390 no aplica: sin una actividad económica sujeta al "
+                "IVA no hay declaración-resumen anual del impuesto."
+            ),
+            legal_refs=("rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"),
+        )
+    if modelo == "303":
+        return ModeloApplicabilityRule(
+            **common,
+            applicable_reason=(
+                "Modelo 303 (autoliquidación del IVA): el contribuyente "
+                "realiza una actividad económica sujeta al IVA y presenta la "
+                "autoliquidación periódica."
+            ),
+            not_applicable_reason=(
+                "Modelo 303 no aplica: sin una actividad económica sujeta al "
+                "IVA no hay autoliquidación periódica del impuesto."
+            ),
+            legal_refs=("ley-37-1992:art-99",),
+        )
+    raise KeyError(modelo)
+
+
+class _SeedApplicabilityRules(Mapping[str, ModeloApplicabilityRule]):
+    """Read-only seed-rule mapping whose values follow the active fact scope."""
+
+    _MODELOS = ("303", "390")
+
+    def __getitem__(self, modelo: str) -> ModeloApplicabilityRule:
+        if modelo not in self._MODELOS:
+            raise KeyError(modelo)
+        return _iva_seed_applicability_rule(modelo)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._MODELOS)
+
+    def __len__(self) -> int:
+        return len(self._MODELOS)
+
+
+MODELO_APPLICABILITY_RULES: Mapping[str, ModeloApplicabilityRule] = _SeedApplicabilityRules()
 
 """Seed modelo-applicability rules — core persona coverage.
 
@@ -1079,7 +1086,7 @@ def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | 
     """
     if not profile.irpf_income_categories:
         return None
-    return IrpfIncomeCategory.ACTIVIDAD_ECONOMICA in profile.irpf_income_categories
+    return irpf_income_category_actividad_economica_token() in profile.irpf_income_categories
 
 
 def derive_not_applicable_source_modelos(profile: TaxpayerProfile, modelos: Iterable[str]) -> frozenset[str] | None:

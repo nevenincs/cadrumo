@@ -105,11 +105,12 @@ def censo_pull(
     """Preview the censal consulta, refusing legacy direct apply before acquisition."""
     import asyncio
 
+    from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
     from ....application.live.censo import pull_censal_datos
     from ....application.user_profile.projections import record_to_effective_facts
     from ....entrypoints.censal_review import run_censal_review
     from ._censo_review_cli import confirm_censal_review
-    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
+    from ..state_projection_support import censal_fetch_port, certificate_secret_backend_factory, operator_scope_ports
 
     # Refuse an absent active profile before the read, not after: the live
     # navigation can trigger a Cl@ve push, and asking the operator to
@@ -135,7 +136,9 @@ def censo_pull(
         read = asyncio.run(
             pull_censal_datos(
                 certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+                browser_session_factory=default_browser_session_factory,
                 operator_scope_ports=operator_scope_ports(ctx),
+                censal_fetch_port=censal_fetch_port(ctx),
             )
         )
         adopted, unchanged, divergences, source_url = _preview_pull_outcomes(

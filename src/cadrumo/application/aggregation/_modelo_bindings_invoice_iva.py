@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.i18n.translatable import Translatable as t
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
@@ -23,13 +22,15 @@ from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
+from ...domain.iva.flow import (
+    derive_flow_for_classification,
+    is_inversion_sujeto_pasivo_flow,
+)
 from ...domain.iva.invoice_classification import invoice_line_to_iva_observation
 from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
 from ...domain.transactions.models import OutOfWindowTransactionSummary
-from ._modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     invoice_devengo_in_period,
@@ -278,12 +279,11 @@ def _reverse_charge_cuota_not_derivable(invoice: Invoice) -> bool:
         return False
     if invoice.iva_category is None:
         return False
-    if (
+    if not is_inversion_sujeto_pasivo_flow(
         derive_flow_for_classification(
             category=invoice.iva_category,
             invoice_direction=invoice.kind,
-        )
-        is not IvaFlowDirection.INVERSION_SUJETO_PASIVO
+        ),
     ):
         return False
     # A rate-bearing line supplies its own evidence. No local tier catalogue is
@@ -589,12 +589,11 @@ def screened_invoice_iva_observations(
     context: CalculationSourceContext,
     period: Period,
     ledger_observations: Sequence[IvaLedgerObservation] = (),
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    ports: InvoiceCatalogueReadPorts,
 ) -> ScreenedInvoiceIva:
     try:
-        repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
-        catalogue = repository.load()
-    except STORAGE_DEGRADATION_ERRORS:
+        catalogue = ports.invoice_reader.load()
+    except InvoiceCatalogueReadPersistenceError:
         # Degrading is right: a bucket whose invoice catalogue is temporarily
         # unreadable should not hard-fail every calculation, and the five
         # sibling catches in this module degrade too. What they also do, and

@@ -250,6 +250,7 @@ semantic_role = "m322_identificacion_destinatario_criterio_caja"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024-2025".casillas]]
@@ -298,6 +299,7 @@ semantic_role = "m322_identificacion_grupo_rol"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["D", "P"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
 
 [[revisions."2024-2025".casillas]]
@@ -322,6 +324,7 @@ semantic_role = "m322_identificacion_redeme_inscrito"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024-2025".casillas]]
@@ -334,6 +337,7 @@ semantic_role = "m322_identificacion_regimen_163_sexies_cinco"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
 
 [[revisions."2024-2025".casillas]]
@@ -346,6 +350,7 @@ semantic_role = "m322_identificacion_tributacion_exclusivamente_foral"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["X"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024-2025".casillas]]

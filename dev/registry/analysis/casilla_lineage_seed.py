@@ -99,7 +99,7 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     judging_predecessor,
     unresolved_successor_rows,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -122,7 +122,6 @@ __all__ = [
     "LongEvidence",
     "ModeloLoadFailure",
     "PartialStamping",
-    "PartialStampingError",
     "PreviousLedger",
     "admit_bare_chain",
     "carried_refusals",
@@ -196,18 +195,11 @@ _M100_REASON = (
     "no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid "
     "column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically"
 )
-_M200_REASON = "export bindings are being repaired in the same tree; lineage waits for the repaired declarations"
-
 EXCLUDED_MODELOS: Mapping[str, ExcludedModelo] = {
     "100": ExcludedModelo(
         reason=_M100_REASON,
         residual_category=LineageRefusalCategory.NOT_EXAMINED,
         residual_reason=f"not examined; its lineage is its own campaign: {_M100_REASON}",
-    ),
-    "200": ExcludedModelo(
-        reason=_M200_REASON,
-        residual_category=LineageRefusalCategory.NOT_EXAMINED,
-        residual_reason=f"not examined: {_M200_REASON}",
     ),
     "309": ExcludedModelo(
         reason=(
@@ -243,7 +235,7 @@ _OPERATOR_GAP = re.compile(r"^\s*[-+x*/=]\s*$")
 # ("# Pag. 3", "# Pág. 6"); every campo row below it belongs to that record.
 _RECORD_HEADING = re.compile(r"^#+\s+(\S.*)$")
 _CASILLA_HEADER = re.compile(r'^\[\[revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))\.casillas\]\]\s*$')
-_ID_LINE = re.compile(r'^id\s*=\s*"([^"]+)"\s*$')
+_ID_LINE = re.compile(r'''^id\s*=\s*(?:"([^"]+)"|'([^']+)')\s*$''')
 _CONTINUIDAD_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*[a-z0-9]$|^[a-z0-9]$")
 _EVIDENCE_ADVISORY = 512
 _RECORDED_REASON_LIMIT = 512
@@ -1573,7 +1565,7 @@ def insert_lineage_keys(text: str, revision: str, edits: Mapping[str, Mapping[st
         while index < len(lines) and not lines[index].lstrip().startswith("["):
             block.append(lines[index])
             index += 1
-        casilla_id = next((m.group(1) for entry in block if (m := _ID_LINE.match(entry))), None)
+        casilla_id = next(((m.group(1) or m.group(2)) for entry in block if (m := _ID_LINE.match(entry))), None)
         if casilla_id is None or casilla_id not in edits:
             output.extend(block)
             continue
@@ -1724,19 +1716,12 @@ class PartialStamping:
         )
 
 
-class PartialStampingError(Exception):
-    """Raised by :func:`plan_modelo` when a modelo's identifiers stay partly stamped.
-
-    The boundary type :func:`plan_corpus` catches, so one modelo's half-finished
-    stamping skips that modelo alone. It carries the records rather than only a
-    message, so the caller can render them without reparsing prose.
-    """
-
-    def __init__(self, modelo_id: str, records: tuple[PartialStamping, ...]) -> None:
-        """Carry the modelo and one record per identifier it left partly stamped."""
-        self.modelo_id = modelo_id
-        self.records = records
-        super().__init__(f"modelo {modelo_id}: identifiers stay partly stamped: {[r.casilla for r in records][:5]}")
+def _partial_stamping_error(modelo_id: str, records: tuple[PartialStamping, ...]) -> RegistryError:
+    """Build the registered registry refusal carrying the structured records."""
+    return RegistryError(
+        f"modelo {modelo_id}: identifiers stay partly stamped: {[record.casilla for record in records][:5]}",
+        context={"modelo_id": modelo_id, "partial_stamping_records": records},
+    )
 
 
 def plan_modelo(
@@ -1751,7 +1736,7 @@ def plan_modelo(
     forbids chains on the identifiers the previous pass could not settle. An
     identifier still partly stamped once its chains are forbidden is the
     corpus's own half-finished state, not this plan's doing, and raises
-    :class:`PartialStampingError` rather than being seeded on weaker evidence.
+    :class:`RegistryError` rather than being seeded on weaker evidence.
     """
     forbidden: frozenset[str] = frozenset[str]()
     while True:
@@ -1761,7 +1746,7 @@ def plan_modelo(
         if not unsettled:
             return plan
         if unsettled <= forbidden:
-            raise PartialStampingError(modelo_id, planner.partial_stamp_records(unsettled))
+            raise _partial_stamping_error(modelo_id, planner.partial_stamp_records(unsettled))
         forbidden |= unsettled
 
 
@@ -1774,7 +1759,7 @@ def plan_corpus(
     """Plan each modelo on its own, so one left partly stamped stops only itself.
 
     Mirrors :func:`load_corpus` at the next stage: the blast radius of a defect
-    stays at the modelo that carries it. Only :class:`PartialStampingError` is
+    stays at the modelo that carries it. Only :class:`RegistryError` is
     caught -- it is this planner's own boundary type for a corpus state it
     refuses to write into. Anything else is a defect in this tooling and must
     not be recorded as a data state.
@@ -1784,8 +1769,11 @@ def plan_corpus(
     for modelo_id in modelo_ids:
         try:
             plans.append(plan_modelo(modelo_id, loaded[modelo_id], oracle, rulings))
-        except PartialStampingError as error:
-            partial.extend(error.records)
+        except RegistryError as error:
+            records = error.context.get("partial_stamping_records", ())
+            if not isinstance(records, tuple) or not all(isinstance(record, PartialStamping) for record in records):
+                raise
+            partial.extend(records)
     return plans, tuple(partial)
 
 

@@ -857,12 +857,16 @@ modelo:
               label: Identification. Country code of the State of residence
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
               label: Identification. Internet domain or address
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Identification. Internet domain or address (second)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
               label: Identification. Registration or deregistration as a limited-liability
                 entrepreneur
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
               label: Identification. Date of registration or deregistration as a limited-liability
                 entrepreneur
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identification. Effective date of tax residence
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
               label: Identification. Nationality of the non-resident
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
@@ -874,6 +878,9 @@ modelo:
               label: Identification. Forename
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
               label: Identification. Trade name
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Identification. Whether the natural person is resident or non-resident
+                in Spain
             x-e1l2sobmd5pmubb5dlgmir0:
               label: Legal person or entity. Alerts. E-mail
             x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
@@ -1070,6 +1077,9 @@ modelo:
                 of wills
             x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
               label: Legal person or entity. Identification. Date of incorporation
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Legal person or entity. Identification. Effective date of tax
+                residence
             x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
               label: Legal person or entity. Identification. Date of entry in the
                 register
@@ -1360,36 +1370,90 @@ modelo:
             x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
               label: Partners, members or participants. Surnames and forename, or
                 legal name
+            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13a)
             x-edqm6bb15pn6ipg:
               help: Tax information about tax information in casilla 920 of Modelo
                 036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13a)
+            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13a)
+            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13a)
+            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13b)
             x-edqm6bb25pn6ipg:
               help: Tax information about tax information in casilla 924 of Modelo
                 036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13b)
+            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13b)
+            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13b)
+            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13c)
             x-edqm6bb35pn6ipg:
               help: Tax information about tax information in casilla 928 of Modelo
                 036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13c)
+            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13c)
+            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13c)
+            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13d)
             x-edqm6bb45pn6ipg:
               help: Tax information about tax information in casilla 932 of Modelo
                 036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13d)
+            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13d)
+            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13d)
+            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13e)
             x-edqm6bb55pn6ipg:
               help: Tax information about tax information in casilla 936 of Modelo
                 036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13e)
+            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13e)
+            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13e)
+            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13f)
             x-edqm6bb65pn6ipg:
               help: Tax information about tax information in casilla 940 of Modelo
                 036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13f)
+            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13f)
+            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13f)
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:

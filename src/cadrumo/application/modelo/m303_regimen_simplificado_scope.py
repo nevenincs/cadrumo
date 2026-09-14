@@ -6,7 +6,11 @@ from collections.abc import Mapping
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.deadlines.models import M303RegimeComposition, TaxpayerProfile
-from ...domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.iva_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
+from ...domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import ProfileSetupState
@@ -69,18 +73,16 @@ def m303_regimen_simplificado_scope_for_profile(
 def m303_regimen_simplificado_scope_for_composition(
     composition: M303RegimeComposition | str,
 ) -> M303RegimenSimplificadoScopeDecision:
-    """Map one canonical or serialized IVA composition to the closed scope."""
-    if composition is M303RegimeComposition.GENERAL:
-        scope = M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED
-    elif composition in {M303RegimeComposition.SIMPLIFIED, M303RegimeComposition.MIXED}:
-        scope = M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED
-    else:
+    """Map one registry-projected IVA composition to its registry-projected scope."""
+    try:
+        scope = m303_regime_composition_simplified_scope(composition)
+    except RegistryValidationError as exc:
         raise ModeloProfileReadinessError(
             precondition_failure=m303_profile_readiness_failure(
                 "iva_composition_unknown",
                 {"iva_profile_present": True, "regime_composition": str(composition)},
             ),
-        )
+        ) from exc
     return M303RegimenSimplificadoScopeDecision(
         scope=scope,
     )

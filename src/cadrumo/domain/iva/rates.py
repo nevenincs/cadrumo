@@ -15,7 +15,7 @@ from ..calculations.registry.facts.resolution import ResolvedMappingFact
 from ..calculations.registry.facts.schema import MappingFactPayload
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from .errors import IvaCatalogueError
-from .schema import EUMemberState, IvaRateRecord
+from .schema import EUMemberState, IvaRateRecord, require_eu_member_state
 
 IVA_RATE_FACT_ID = "iva-rate-schedule"
 """Jurisdictions that must carry rate rows.
@@ -42,7 +42,7 @@ def load_iva_rate_table() -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
         if not isinstance(variant.payload, MappingFactPayload):
             raise IvaCatalogueError("IVA rate fact contains a non-mapping variant")
         selectors = {selector.name: selector.value for selector in variant.selectors}
-        member_state = EUMemberState(str(selectors["member_state"]))
+        member_state = require_eu_member_state(str(selectors["member_state"]), effective_date=variant.valid_from)
         payload = {str(entry.key): entry.value for entry in variant.payload.entries}
         table.setdefault(member_state, []).append(
             IvaRateRecord(
@@ -64,7 +64,7 @@ def iva_rate_record_from_fact(resolved: ResolvedMappingFact) -> IvaRateRecord:
     selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
     payload = {str(entry.key): entry.value for entry in resolved.payload.entries}
     return IvaRateRecord(
-        member_state=EUMemberState(str(selectors["member_state"])),
+        member_state=require_eu_member_state(str(selectors["member_state"]), effective_date=resolved.valid_from),
         kind=require_iva_rate_kind(str(selectors["kind"]), effective_date=resolved.valid_from),
         pct=Decimal(str(payload["pct"])),
         effective_from=resolved.valid_from,

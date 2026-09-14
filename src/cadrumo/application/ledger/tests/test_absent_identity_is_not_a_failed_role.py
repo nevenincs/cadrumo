@@ -11,20 +11,15 @@ clear unread. They then clear it on the checksum-failure case too, which is the
 one the resolver was built for.
 
 Both directions are gated. Narrowing only the absent side would be worth
-nothing if the unverifiable side stopped blocking with it, and the two collapse
-one stage upstream unless the reading stage records its own rejections: it drops
-an identifier that fails its control character to ``None``, which reaches the
-resolver as an absence indistinguishable from a document that printed nothing.
-Only the stage that performs the rejection still holds that fact.
+nothing if the unverifiable side stopped blocking with it. The reading-stage
+recording of rejected identifiers is covered at the outbound LLM adapter seam;
+this suite owns the application resolver's role decision.
 """
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
-from ....adapters.outbound.llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -159,66 +154,3 @@ def test_role_evidence_still_resolves_an_evidenced_counterparty() -> None:
 
     assert resolution.resolved == _COUNTERPARTY_CIF
     assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
-
-
-# ---------------------------------------------------------------------------
-# The distinction has to survive the stage that performs the rejection
-# ---------------------------------------------------------------------------
-
-
-def _grounded(payload: dict[str, str]):
-    return ground_extracted_fields(
-        parse_invoice_extraction_response(json.dumps(payload)),
-        raw_text_length=256,
-        origin=FieldOrigin.TEXT_LAYER,
-    )
-
-
-def test_the_reading_stage_records_an_identifier_it_rejected() -> None:
-    """Dropping the VALUE is right; dropping the FACT is not.
-
-    The grounder drops a checksum-failing identifier to ``None`` and builds no
-    envelope for it, so by the time the resolver reads the draft the document
-    looks like it printed nothing. This is the only stage that still knows
-    otherwise.
-    """
-    draft = _grounded(
-        {
-            "supplier_tax_id": _BAD_CHECKSUM_CIF,
-            "supplier_tax_id_anchor": _BAD_CHECKSUM_CIF,
-            "supplier_tax_id_role_evidence": "Proveedor:",
-        },
-    )
-
-    assert draft.supplier_tax_id is None, "the unverifiable value must still be dropped"
-    assert [f.kind for f in draft.discrepancies] == [DraftDiscrepancyKind.IDENTITY_UNVERIFIED]
-    assert _BAD_CHECKSUM_CIF in draft.discrepancies[0].detail, (
-        "the operator must be told which printed identifier failed, not merely that one did"
-    )
-
-
-def test_the_reading_stage_records_nothing_when_the_document_printed_nothing() -> None:
-    """The bound on the case above: silence must not become a rejection.
-
-    Without this, "record a rejection" could be implemented as "record one
-    whenever the slot is empty", which re-creates the blocker across the
-    legitimate population from the other side.
-    """
-    draft = _grounded({"invoice_number": "2026-0142", "invoice_number_anchor": "2026-0142"})
-
-    assert draft.discrepancies == ()
-
-
-def test_the_reading_stage_records_nothing_for_an_identifier_that_verifies() -> None:
-    """A good identifier is not a rejection, on either party's slot."""
-    draft = _grounded(
-        {
-            "supplier_tax_id": _COUNTERPARTY_CIF,
-            "supplier_tax_id_anchor": _COUNTERPARTY_CIF,
-            "customer_tax_id": _FILER_CIF,
-            "customer_tax_id_anchor": _FILER_CIF,
-        },
-    )
-
-    assert draft.supplier_tax_id == _COUNTERPARTY_CIF
-    assert draft.discrepancies == ()

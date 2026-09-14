@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import decimal
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from typing import NoReturn
 
 import pytest
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -125,6 +127,24 @@ class TestResultSummaryNarrowing:
         result = calculation_result_summary(self._revision(), work_unit_resolver=_raising)
 
         assert result is None
+
+    def test_summary_requests_calculation_grade_snapshot(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Displaying a calculation must not strengthen authority to filing grade."""
+        from .. import result_summary
+
+        observed: list[RegistryAuthorityGrade] = []
+
+        def _capture_grade(_work_unit: object, *, grade: RegistryAuthorityGrade) -> NoReturn:
+            observed.append(grade)
+            raise CadrumoError("stop after observing the requested grade")
+
+        monkeypatch.setattr(result_summary, "_resolve_registry_snapshot_for_work_unit", _capture_grade)
+
+        assert result_summary.calculation_result_summary(
+            self._revision(),
+            work_unit_resolver=lambda _work_unit_id: SimpleNamespace(work_unit_id="observed"),  # type: ignore[arg-type,return-value]
+        ) is None
+        assert observed == [RegistryAuthorityGrade.CALCULATION]
 
     def test_runtime_error_from_get_work_unit_propagates(self) -> None:
         """A RuntimeError from get_work_unit propagates — not swallowed."""

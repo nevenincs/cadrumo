@@ -18,7 +18,6 @@ import pytest
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
 from ._published_authority import artifact_components
 from .scenarios import (
     RegistryCalculationScenario,
@@ -28,8 +27,6 @@ from .scenarios import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 _C0003 = validated_casilla_id("0003", surface="test_renta_chain_behaviour casilla id")
@@ -275,7 +272,7 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
             _expected_output(target_casilla_id=_C0522, value=Decimal("0.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -310,7 +307,7 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
             ),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -370,7 +367,7 @@ def test_base_liquidable_general_applies_reductions() -> None:
             _expected_output(target_casilla_id=_C0500, value=Decimal("35600.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -400,7 +397,7 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
             _expected_output(target_casilla_id=_C0500, value=Decimal("52300.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -441,7 +438,7 @@ def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
             _expected_output(target_casilla_id=_C0500, value=Decimal("28800.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -476,7 +473,7 @@ def test_plan_de_empleo_employer_contribution_reduces_base_general() -> None:
             _expected_output(target_casilla_id=_C0500, value=Decimal("34000.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -504,7 +501,7 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
             _expected_output(target_casilla_id=_C0500, value=Decimal("70000.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -548,7 +545,7 @@ def test_art52_tiered_purely_individual_aportacion_capped_at_1500() -> None:
             _expected_output(target_casilla_id=_C0500, value=Decimal("56500.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -585,7 +582,7 @@ def test_art52_tiered_employer_backed_aportacion_unlocks_8500_increment() -> Non
             _expected_output(target_casilla_id=_C0500, value=Decimal("78800.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -630,7 +627,7 @@ def test_art52_tiered_dependencia_uses_separate_5000_ceiling() -> None:
             _expected_output(target_casilla_id=_C0500, value=Decimal("34000.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -676,7 +673,7 @@ def test_art52_tiered_autonomo_only_aportacion_capped_at_1500_plus_4250() -> Non
             _expected_output(target_casilla_id=_C0500, value=Decimal("32250.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -721,5 +718,5 @@ def test_art52_tiered_employer_and_autonomo_increments_jointly_recapped_at_8500(
             _expected_output(target_casilla_id=_C0500, value=Decimal("108000.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)

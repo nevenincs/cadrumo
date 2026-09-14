@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ....tests.profile_storage_root_fixture import isolated_profile_storage_fixture
+from ....adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 
 __all__ = ["_isolated_backend"]
 

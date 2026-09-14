@@ -24,12 +24,13 @@
 # @12+8 Num. 3.1.- Causa de la presentación. Alta, Baja o Modificación del representante. Día [ONE casilla over 3 printed components: @12+2, @14+2, @16+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "rep1.fecha-causa"
+continuidad_id = "rep1-fecha-causa"
 number = "303"
 section = ["declaracion", "representantes", "representante_1"]
 data_type = "date"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @20+9 An. 3.1.- Identificación del representante. NIF
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -40,7 +41,7 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "nif"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @29+125 An. 3.1.- Identificación del representante. Apellidos y nombre o razón social
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -51,7 +52,7 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @154+1 An. 3.1.- Identificación del representante. Residente: sí/no | S, N o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -62,17 +63,18 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @156+8 Num. 3.1.- Identificacion persona fisica designada- Causa de la presentación. Alta, Baja  Día [ONE casilla over 3 printed components: @156+2, @158+2, @160+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "rep1.designada-fecha-causa"
+continuidad_id = "rep1-designada-fecha-causa"
 number = "313"
 section = ["declaracion", "representantes", "representante_1"]
 data_type = "date"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @164+9 An. 3.1.  Identificacion persona fisica designada. NIF
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -83,7 +85,7 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "nif"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @173+40 An. 3.1.  Identificacion persona fisica designada. Apellido 1
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -94,7 +96,7 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @213+40 An. 3.1.  Identificacion persona fisica designada. Apellido 2
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -105,7 +107,7 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @253+45 An. 3.1.  Identificacion persona fisica designada. Nombre
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -116,7 +118,7 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @481+2 Num. 3.1.- Causa de la representación. Legal. Clave
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -127,7 +129,7 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @483+2 Num. 3.1.- Tipo de representación. Clave
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -138,7 +140,7 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @485+2 Num. 3.1.- Título de representación. Clave
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -149,17 +151,18 @@ section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @488+8 Num. 3.2.- Causa de la presentación. Alta, Baja o Modificación del representante. Día [ONE casilla over 3 printed components: @488+2, @490+2, @492+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "rep2.fecha-causa"
+continuidad_id = "rep2-fecha-causa"
 number = "353"
 section = ["declaracion", "representantes", "representante_2"]
 data_type = "date"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @496+9 An. 3.2.- Identificación del representante. NIF
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -170,7 +173,7 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "nif"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @505+125 An. 3.2.- Identificación del representante. Apellidos y nombre o razón social
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -181,7 +184,7 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @630+1 An. 3.2.- Identificación del representante. Residente: sí/no | S, N o blanco
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -192,17 +195,18 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @632+8 Num. 3.2.- Identificacion persona fisica designada- Causa de la presentación. Alta, Baja  Día [ONE casilla over 3 printed components: @632+2, @634+2, @636+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "rep2.designada-fecha-causa"
+continuidad_id = "rep2-designada-fecha-causa"
 number = "363"
 section = ["declaracion", "representantes", "representante_2"]
 data_type = "date"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @640+9 An. 3.2.  Identificacion persona fisica designada. NIF
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -213,7 +217,7 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "nif"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @649+40 An. 3.2.  Identificacion persona fisica designada. Apellido 1
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -224,7 +228,7 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @689+40 An. 3.2.  Identificacion persona fisica designada. Apellido 2
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -235,7 +239,7 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @729+45 An. 3.2..  Identificacion persona fisica designada. Nombre
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -246,7 +250,7 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @957+2 Num. 3.2.- Causa de la representación. Legal. Clave
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -257,7 +261,7 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @959+2 Num. 3.2.- Tipo de representación. Clave
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -268,7 +272,7 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]
 
 # @961+2 Num. 3.2.- Título de representación. Clave
 [[revisions."2023-hasta-2025-02-02".casillas]]
@@ -279,4 +283,4 @@ section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = ["rd-1065-2007:art-10", "orden-eha-1274-2007:art-1"]

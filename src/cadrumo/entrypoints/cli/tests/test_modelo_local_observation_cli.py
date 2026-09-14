@@ -1,6 +1,7 @@
 """CLI path for operator-supplied local prior filing observations."""
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 import json
 from collections.abc import Iterator
@@ -20,7 +21,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation, Regist
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
-from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, seed_test_profile_record
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
 
@@ -145,11 +146,11 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         assert observed.observation.casilla_values["1391"] == Decimal("0")
 
         m100_snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
-        m100_prefill = resolve_bindings_from_local_store(m100_snapshot, repository=repository)
+        m100_prefill = resolve_bindings_from_local_store(m100_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
         assert m100_prefill.binding_values["renta-base-liquidable-negativa-general-anterior"] == Decimal("0")
 
         m130_snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T")
-        m130_prefill = resolve_bindings_from_local_store(m130_snapshot, repository=repository)
+        m130_prefill = resolve_bindings_from_local_store(m130_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
         assert m130_prefill.binding_values["irpf.previous_year_economic_activity_net_income"] == Decimal("0")
 
     _seed_natural_person_profile(runtime_profile)

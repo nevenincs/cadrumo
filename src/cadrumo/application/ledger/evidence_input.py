@@ -27,6 +27,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from .evidence import PurchaseInvoiceEvidence
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
+from .evidence_input_ports import EvidenceInputPorts
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 __all__ = [
@@ -55,6 +56,8 @@ class EvidenceInput(BaseModel):
             reader, which needs a concrete image MIME. It is the producer's
             LABEL and decides nothing about how the bytes are read; that is
             :attr:`document_shape`, which is probed from the bytes themselves.
+        document_shape: Content-derived document shape, computed by the required
+            evidence-input capability before this DTO is created.
         data: The decrypted evidence bytes, in memory only. Excluded from ``repr``.
         content_sha256: 64-character lowercase hex SHA-256 of :attr:`data`; the
             content address the bytes were read under. Enforced to match ``data``.
@@ -67,6 +70,7 @@ class EvidenceInput(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     mime_type: str = Field(min_length=1)
+    document_shape: DocumentShape
     data: bytes = Field(repr=False)
     content_sha256: ContentDigest
     evidence_id: str | None = None
@@ -99,27 +103,6 @@ class EvidenceInput(BaseModel):
         """Refuse serialization -- decrypted FINANCIAL bytes must never be persisted."""
         raise NotImplementedError(_REFUSAL_MESSAGE)
 
-    @property
-    def document_shape(self) -> DocumentShape:
-        """What this evidence actually IS, derived from its own bytes.
-
-        The sole reading decision. It replaced a ``media_kind`` field derived
-        from the STORED MIME TYPE, which is a label the producer attached and
-        which cannot see inside the document -- so a ZUGFeRD invoice, a PDF
-        carrying a complete machine-readable EN16931 record, answered ``PDF``
-        and was routed to prose extraction exactly like a photograph of a
-        receipt. The most exactly readable document in the corpus took the
-        least exact path, decided by a label.
-
-        Derived rather than stored, so it costs no constructor change and
-        cannot drift from the bytes it describes: there is no second field to
-        forget to update. The probe reads magic bytes and, for a PDF, walks the
-        embedded-file table -- it never consults ``mime_type``.
-        """
-        from ...adapters.inbound.einvoice.shape import probe_document_shape
-
-        return probe_document_shape(self.data)
-
     @override
     def model_dump_json(self, *args: object, **kwargs: object) -> Never:  # reason: deliberate persistence tripwire
         """Refuse JSON serialization -- decrypted FINANCIAL bytes must never be persisted."""
@@ -136,7 +119,7 @@ class EvidenceInput(BaseModel):
         raise NotImplementedError(_REFUSAL_MESSAGE)
 
 
-def _reject_unreadable_bytes(data: bytes, *, mime_type: str) -> None:
+def _reject_unreadable_bytes(data: bytes, *, mime_type: str, ports: EvidenceInputPorts) -> DocumentShape:
     """Refuse evidence whose BYTES match no readable document shape.
 
     The read path's admission question used to be asked of the stored MIME type
@@ -152,9 +135,8 @@ def _reject_unreadable_bytes(data: bytes, *, mime_type: str) -> None:
     ``mime_type`` appears in the message only as the operator-visible breadcrumb
     identifying the record they are looking at; it decides nothing.
     """
-    from ...adapters.inbound.einvoice.shape import probe_document_shape
-
-    if probe_document_shape(data) is DocumentShape.UNKNOWN:
+    document_shape = ports.document_shape_probe(data)
+    if document_shape is DocumentShape.UNKNOWN:
         raise PurchaseInvoiceEvidenceInputError(
             f"evidence bytes (stored as {mime_type!r}) match no readable document shape; "
             "only PDF, structured XML and image evidence can be read",
@@ -163,12 +145,14 @@ def _reject_unreadable_bytes(data: bytes, *, mime_type: str) -> None:
                 facts={"document_shape_recognized": False},
             ),
         )
+    return document_shape
 
 
 def resolve_attachment_evidence_input(
     attachment_id: str,
     *,
     store: AttachmentStoreProtocol,
+    ports: EvidenceInputPorts,
     evidence_id: str | None = None,
 ) -> EvidenceInput:
     """Read stored evidence bytes from secure storage into an ``EvidenceInput``.
@@ -183,6 +167,8 @@ def resolve_attachment_evidence_input(
     Args:
         attachment_id: Content-addressed id of the stored bytes.
         store: Attachment store bound to the operation's secure-storage bucket.
+        ports: Required application capability for deriving the document shape
+            from the resolved bytes.
         evidence_id: Originating :class:`PurchaseInvoiceEvidence` record id when
             the caller reached these bytes through an evidence record, else
             ``None`` for a bare linked attachment. Recorded on the result purely
@@ -198,9 +184,10 @@ def resolve_attachment_evidence_input(
     """
     manifest = store.load_manifest(attachment_id)
     data = store.read_bytes(manifest.sha256)
-    _reject_unreadable_bytes(data, mime_type=manifest.mime_type)
+    document_shape = _reject_unreadable_bytes(data, mime_type=manifest.mime_type, ports=ports)
     return EvidenceInput(
         mime_type=manifest.mime_type,
+        document_shape=document_shape,
         data=data,
         content_sha256=manifest.sha256,
         evidence_id=evidence_id,
@@ -212,6 +199,7 @@ def resolve_purchase_invoice_evidence_input(
     evidence: PurchaseInvoiceEvidence,
     *,
     store: AttachmentStoreProtocol,
+    ports: EvidenceInputPorts,
 ) -> EvidenceInput:
     """Read a purchase-invoice evidence record's bytes from secure storage.
 
@@ -232,6 +220,8 @@ def resolve_purchase_invoice_evidence_input(
     Args:
         evidence: The purchase-invoice evidence record.
         store: Attachment store bound to the operation's secure-storage bucket.
+        ports: Required application capability for deriving the document shape
+            from the resolved bytes.
 
     Returns:
         :class:`EvidenceInput`: In-memory bytes plus provenance, for an on-host read.
@@ -239,5 +229,6 @@ def resolve_purchase_invoice_evidence_input(
     return resolve_attachment_evidence_input(
         evidence.attachment_id,
         store=store,
+        ports=ports,
         evidence_id=evidence.evidence_id,
     )

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02656"
+continuidad_id = "is-correccion-deterioro-art13-1-no-afectado-permanente-disminucion"
 number = "02656"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02657"
+continuidad_id = "is-correccion-deterioro-art13-1-no-afectado-temporaria-ejercicio-disminucion"
 number = "02657"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02658"
+continuidad_id = "is-correccion-deterioro-art13-1-no-afectado-temporaria-anteriores-disminucion"
 number = "02658"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02659"
+continuidad_id = "02659"
 number = "02659"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02660"
+continuidad_id = "02660"
 number = "02660"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
 data_type = "money"

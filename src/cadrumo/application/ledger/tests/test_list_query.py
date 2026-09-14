@@ -10,26 +10,23 @@ frontend rely on it rather than reimplementing it.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, TypedDict, Unpack
+from typing import TypedDict, Unpack
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.models import LedgerDatePartition, OutOfWindowTransactionIndexEntry, OutOfWindowTransactionSummary
+from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...review.filter import LedgerReviewFilterSpec
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,20 +87,70 @@ def _query(**overrides: Unpack[_QueryOverrides]) -> LedgerTransactionListQuery:
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueRepository]:
-    """Persist rows through the real encrypted repository the query requires.
-
-    The manual-ledger resolver refuses a protocol stand-in on purpose -- the
-    write path uses methods the Protocol does not declare -- so a double here
-    would be testing the refusal, not the query.
-    """
-    with TemporaryDirectory() as tmp, isolated_runtime_profile(tmp_path=Path(tmp), bucket_id=_BUCKET) as profile:
-        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        repository.save(TransactionCatalogue.from_transactions(transactions))
-        yield TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueRepositoryProtocol]:
+    """Build a deterministic transaction catalogue through the read protocol."""
+    yield _InMemoryTransactionRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions(transactions),
+    )
 
 
-def _page(repository: TransactionCatalogueRepository, query: LedgerTransactionListQuery):
+class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
+    """Deterministic inward fake for the application transaction read port."""
+
+    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
+        self._bucket_id = bucket_id
+        self._catalogue = catalogue
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    def exists(self) -> bool:
+        return bool(self._catalogue.transactions)
+
+    def load(self) -> TransactionCatalogue:
+        return self._catalogue
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        return TransactionCatalogue.from_transactions(
+            transaction
+            for transaction in self._catalogue
+            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
+        )
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        requested = frozenset(transaction_ids)
+        return TransactionCatalogue.from_transactions(
+            transaction for transaction in self._catalogue if transaction.transaction_id in requested
+        )
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        in_window: list[Transaction] = []
+        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+        for transaction in self._catalogue:
+            filing_date = transaction.raw.value_date or transaction.raw.booked_date
+            if start <= filing_date <= end:
+                in_window.append(transaction)
+            else:
+                out_of_window.append(
+                    OutOfWindowTransactionIndexEntry(
+                        transaction_id=transaction.transaction_id,
+                        filing_date=filing_date,
+                    ),
+                )
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue.from_transactions(in_window),
+            out_of_window=tuple(out_of_window),
+            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
+            index_complete=True,
+        )
+
+    def save(self, catalogue: TransactionCatalogue) -> None:
+        self._catalogue = catalogue
+
+
+def _page(repository: TransactionCatalogueRepositoryProtocol, query: LedgerTransactionListQuery):
     return query_ledger_transaction_list(query, bucket_id=_BUCKET, transaction_repository=repository)
 
 

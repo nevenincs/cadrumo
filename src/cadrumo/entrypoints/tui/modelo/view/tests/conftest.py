@@ -24,7 +24,7 @@ from ......core.external_constants import OutputLanguage
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ......tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
 _REVISION = "2019-y-siguientes"

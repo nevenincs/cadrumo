@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02810"
+continuidad_id = "02810"
 number = "02810"
 section = ["reversion_por_deterioro_de_valores_representativos", "dotaciones_integradas_en_esta_liquidacion_dt_16a_1"]
 data_type = "money"

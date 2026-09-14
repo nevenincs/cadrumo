@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "DP200014:00558"
+continuidad_id = "is-liquidacion-iii-tipo-de-gravamen"
+continuidad_origin = "seeded"
 number = "00558"
 segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]

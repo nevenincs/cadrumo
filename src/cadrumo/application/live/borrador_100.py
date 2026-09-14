@@ -1,19 +1,9 @@
-"""Application-live persistence for captured Modelo 100 borrador snapshots.
+"""Application-owned Modelo 100 borrador snapshot lifecycle.
 
-Borrador100 is the proof-of-concept consumer of the shared
-``_snapshot_base`` lifecycle abstraction. The public exception class names
-(``BorradorSnapshotNotFoundError`` on lookup miss,
-``LiveApplicationInputError`` on input-validation failures),
-``Borrador100SnapshotService`` class identity, storage namespace,
-object-key layout, and method signatures are preserved exactly; only
-the inline state-machine, supersession, and content-id helpers have
-been routed through the shared base.
-
-Snapshot records are wrapped in an
-:class:`~cadrumo.adapters.persistence.storage.Envelope` and persisted through a
-:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~cadrumo.adapters.persistence.storage.SensitivityClass`
-under the borrador namespace.
+Borrador100 is the proof-of-concept consumer of the shared snapshot lifecycle
+abstraction. The application owns the payload, identity, state machine, and
+repository capability; executable composition supplies the encrypted persistence
+implementation through :class:`Borrador100SnapshotRepository`.
 """
 
 from __future__ import annotations
@@ -21,15 +11,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, override
+from typing import Annotated, Protocol, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage.secure_object_namespaces import (
-    LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
-)
-from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
@@ -46,6 +31,7 @@ from .errors import LiveApplicationInputError
 from .snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
+    SnapshotRepository,
     SnapshotService,
     enforce_snapshot_state_invariants,
 )
@@ -177,68 +163,21 @@ def derive_borrador_100_snapshot_id(
     )
 
 
-class Borrador100SnapshotRepository:
-    """Secure-DB repository for captured Modelo 100 borrador snapshots.
+class Borrador100SnapshotRepository(SnapshotRepository[Borrador100Snapshot], Protocol):
+    """Application persistence capability for bucket-scoped borrador snapshots.
 
-    Composes the shared :class:`SecureSnapshotRepository` (one canonical
-    encrypted secure-object snapshot store) rather than re-implementing the
-    load / resolve / list / save boilerplate; the public class identity,
-    method signatures, and ``BorradorSnapshotNotFoundError`` messages are
-    preserved, and ``list_snapshots`` keeps the borrador ``captured_at``
-    ordering.
+    Encrypted secure-object storage, namespaces, object keys, and persistence
+    errors belong to the outer adapter. Implementations satisfy this structural
+    contract without inheriting application code.
     """
 
-    def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
-        """Initialize this public contract."""
-        trimmed = bucket_id.strip()
-        if not trimmed:
-            raise LiveApplicationInputError(
-                translated_message="application.live.borrador.errors.bucket_id_blank",
-            )
-        self._delegate: SecureSnapshotRepository[Borrador100Snapshot] = SecureSnapshotRepository(
-            bucket_id=trimmed,
-            payload_model=Borrador100Snapshot,
-            namespace_definition=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
-            object_key=borrador_100_snapshot_object_key,
-            not_found_factory=lambda snapshot_id: BorradorSnapshotNotFoundError(
-                translated_message="application.live.borrador.errors.snapshot_not_found",
-                context={"snapshot_id": snapshot_id},
-            ),
-            ambiguous_prefix_factory=lambda snapshot_id, full_ids: BorradorSnapshotNotFoundError(
-                translated_message="application.live.borrador.errors.snapshot_prefix_ambiguous",
-                context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
-            ),
-            domain_label="borrador",
-            input_error_cls=LiveApplicationInputError,
-            objects=objects,
-        )
 
-    @property
-    def bucket_id(self) -> str:
-        """Execute this public contract operation."""
-        return self._delegate.bucket_id
+class Borrador100SnapshotRepositoryFactory(Protocol):
+    """Construct the required borrador repository for one profile bucket."""
 
-    def exists(self, snapshot_id: str) -> bool:
-        """Execute this public contract operation."""
-        return self._delegate.exists(snapshot_id)
-
-    def load(self, snapshot_id: str) -> Borrador100Snapshot:
-        """Execute this public contract operation."""
-        return self._delegate.load(snapshot_id)
-
-    def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
-        """Execute this public contract operation."""
-        return tuple(
-            sorted(self._delegate.list_snapshots(), key=lambda item: (item.captured_at, item.snapshot_id)),
-        )
-
-    def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
-        """Execute this public contract operation."""
-        return self._delegate.resolve(snapshot_id)
-
-    def save(self, snapshot: Borrador100Snapshot) -> None:
-        """Execute this public contract operation."""
-        self._delegate.save(snapshot)
+    def __call__(self, *, bucket_id: str) -> Borrador100SnapshotRepository:
+        """Return the application repository capability for ``bucket_id``."""
+        ...
 
 
 class _Borrador100CaptureRequest(BaseModel):
@@ -259,11 +198,10 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         self,
         *,
         bucket_id: str,
-        repository: Borrador100SnapshotRepository | None = None,
+        repository: Borrador100SnapshotRepository,
     ) -> None:
         """Initialize this public contract."""
-        resolved_repository = repository or Borrador100SnapshotRepository(bucket_id=bucket_id)
-        super().__init__(bucket_id=bucket_id, repository=resolved_repository)
+        super().__init__(bucket_id=bucket_id, repository=repository)
 
     def capture(
         self,
@@ -384,6 +322,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
 __all__ = [
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
+    "Borrador100SnapshotRepositoryFactory",
     "Borrador100SnapshotService",
     "BorradorSnapshotNotFoundError",
     "borrador_100_snapshot_object_key",

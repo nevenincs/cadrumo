@@ -29,7 +29,7 @@ INVOICE_KIND_INPUT: Final = OperatorInputContract(
     required=True,
 )
 INVOICE_CLASS_INPUT: Final = OperatorInputContract(
-    "invoice_class", ("--invoice-class",), "cadrumo.domain.invoices.enums", "InvoiceClass"
+    "invoice_class", ("--invoice-class",), "builtins", "str"
 )
 IVA_AMOUNT_INPUT: Final = OperatorInputContract("iva_amount", ("--iva-amount",), "builtins", "str")
 IVA_CATEGORY_INPUT: Final = OperatorInputContract(

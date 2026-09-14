@@ -1,8 +1,9 @@
 """Workflow-gate support for modelo calculation revisions.
 
-This module owns the adapter objects that let immutable calculation revisions
-participate in the filing workflow engine. The public application facade
-continues to export the operator-facing services from
+This module owns the application orchestration that lets immutable calculation
+revisions participate in the filing workflow engine. Persistence capabilities
+arrive through :class:`WorkflowGatePorts`; their concrete adapters are composed
+outside the application layer. The public application facade continues to export the operator-facing services from
 :mod:`~cadrumo.application.modelo`.
 
 The gate adapts one persisted
@@ -33,6 +34,8 @@ See Also:
         configured here.
     :class:`~cadrumo.domain.submission.DeadlineWindowChecker`:
         Protocol satisfied by the revision deadline-window adapter below.
+    :class:`~cadrumo.application.modelo.workflow_gate_ports.WorkflowGatePorts`:
+        Required application-owned persistence capabilities for this gate.
     :mod:`~cadrumo.application.modelo.verification_actions`:
         Owns verification finding/report persistence around this gate.
     :mod:`~cadrumo.application.modelo.filing_actions`:
@@ -47,8 +50,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...application.auth.providers import select_provider
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...core.auth_provider import AuthProviderKind
@@ -63,9 +64,9 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.submission.engine import SubmissionEngine
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.submission.protocols import DeadlineWindowChecker
-from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..filing.draft_construction import build_draft
 from ..filing.draft_review import approve_draft
+from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.runtime import build_runtime_schema_provider, filing_profile_from_taxpayer
 from ..workflow.adapters import DeadlineEngineAdapter
 from ..workflow.engine import WorkflowEngine
@@ -73,9 +74,10 @@ from ..workflow.errors import WorkflowInputMismatchError
 from ..workflow.persistence import WorkflowRunRepository
 from ..workflow.protocols import RegistryModeloDraftProtocol
 from ..workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
-from ._revision_replay_inputs import revision_filing_replay_inputs
+from .revision_replay_inputs import revision_filing_replay_inputs
 from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import ModeloWorkflowGateError
+from .workflow_gate_ports import WorkflowGateDraftRepositoryProtocol, WorkflowGatePorts
 
 if TYPE_CHECKING:
     from ..auth.operator_scope_ports import OperatorScopePorts
@@ -171,14 +173,14 @@ class _RevisionDraftBuilder:
         work_unit: WorkUnit,
         actor: str,
         clock: datetime,
-        observation_repository: CalculationObservationRepositoryProtocol,
-        draft_repository: ModeloDraftRepository | None = None,
+        draft_review_ports: DraftReviewPorts,
+        draft_repository: WorkflowGateDraftRepositoryProtocol,
     ) -> None:
         self._revision = revision
         self._work_unit = work_unit
         self._actor = actor
         self._clock = clock
-        self._observation_repository = observation_repository
+        self._draft_review_ports = draft_review_ports
         self._draft_repository = draft_repository
         self._schema_provider = build_runtime_schema_provider(
             filing_year=work_unit.filing_year,
@@ -186,10 +188,8 @@ class _RevisionDraftBuilder:
             modelos=(work_unit.modelo,),
         )
 
-    def _drafts(self) -> ModeloDraftRepository:
-        """Return the encrypted filing-draft store for this work unit's bucket."""
-        if self._draft_repository is None:
-            self._draft_repository = ModeloDraftRepository(bucket_id=self._work_unit.bucket_id)
+    def _drafts(self) -> WorkflowGateDraftRepositoryProtocol:
+        """Return the composed filing-draft capability for this work unit."""
         return self._draft_repository
 
     def build(
@@ -245,7 +245,7 @@ class _RevisionDraftBuilder:
             bucket_id=self._work_unit.bucket_id,
             approved_by=self._actor,
             schema_provider=self._schema_provider,
-            observation_repository=self._observation_repository,
+            ports=self._draft_review_ports,
             approved_at=self._clock,
         )
         self._drafts().save(approved)
@@ -310,7 +310,8 @@ def build_revision_workflow_engine(
     actor: str,
     clock: datetime,
     settings: Settings | None,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    draft_review_ports: DraftReviewPorts,
+    workflow_gate_ports: WorkflowGatePorts,
 ) -> WorkflowEngine:
     """Build and return a :class:`WorkflowEngine` configured for one calculation revision.
 
@@ -336,6 +337,10 @@ def build_revision_workflow_engine(
         clock: Timestamp used for local draft approval metadata.
         settings: Optional runtime :class:`~cadrumo.core.config.Settings`; defaults
             to :func:`~cadrumo.core.config.load_settings`.
+        draft_review_ports: Required application-owned capabilities used to approve
+            the transient filing draft.
+        workflow_gate_ports: Required application-owned draft persistence and
+            submission-history capabilities.
     """
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
@@ -349,7 +354,7 @@ def build_revision_workflow_engine(
         ),
         deadline_checker=build_revision_deadline_window_checker(profile=profile, engine=deadline_engine),
         settings=cfg,
-        repository=SubmissionRepository(),
+        repository=workflow_gate_ports.submission_repository,
     )
     return WorkflowEngine(
         deadline_engine=DeadlineEngineAdapter(deadline_engine),
@@ -358,7 +363,8 @@ def build_revision_workflow_engine(
             work_unit=work_unit,
             actor=actor,
             clock=clock,
-            observation_repository=observation_repository,
+            draft_review_ports=draft_review_ports,
+            draft_repository=workflow_gate_ports.draft_repository,
         ),
         submission_engine=submission_engine,
         session=None,

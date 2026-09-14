@@ -21,7 +21,6 @@ import pytest
 
 from ....domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.profile_capsule import open_test_profile_session
 from ...filing.draft_review import ModeloApprovalStaleReason, describe_stale_reason
 from ..enums import ReviewSeverity, ReviewState
 from ..operator import _to_row
@@ -30,9 +29,8 @@ from .test_adapters import (
     _PROFILE_ID,
     _build_settings,
     _draft,
-    _seed_active_profile,
-    _write_draft,
 )
+from ._fakes import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -73,11 +71,12 @@ def _approved(*, review_checksum: str | None) -> ModeloDraft:
 def test_an_approval_whose_basis_no_longer_holds_surfaces_as_stale(tmp_path: Path) -> None:
     """A checksum that does not describe the stored basis ages the approval out."""
     settings = _build_settings(tmp_path)
-    with open_test_profile_session(_PROFILE_ID):
-        _seed_active_profile()
-        draft = _approved(review_checksum=_B)
-        _write_draft(settings, draft)
-        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
+    draft = _approved(review_checksum=_B)
+    items = drafts_pending(
+        settings,
+        bucket_id=_PROFILE_ID,
+        ports=draft_review_ports(drafts=(draft,)),
+    )
 
     assert len(items) == 1
     assert items[0].severity is ReviewSeverity.HIGH
@@ -93,10 +92,12 @@ def test_an_approval_with_no_metadata_is_not_reported_stale(tmp_path: Path) -> N
     shape falls into.
     """
     settings = _build_settings(tmp_path)
-    with open_test_profile_session(_PROFILE_ID):
-        _seed_active_profile()
-        _write_draft(settings, _draft(status=ModeloDraftStatus.APROBADO))
-        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
+    draft = _draft(status=ModeloDraftStatus.APROBADO)
+    items = drafts_pending(
+        settings,
+        bucket_id=_PROFILE_ID,
+        ports=draft_review_ports(drafts=(draft,)),
+    )
 
     assert all(item.summary != "review.filing.stale_approval_summary" for item in items)
 
@@ -104,10 +105,12 @@ def test_an_approval_with_no_metadata_is_not_reported_stale(tmp_path: Path) -> N
 def test_the_adapter_records_which_axis_moved(tmp_path: Path) -> None:
     """The reasons ride on the item as stable enum tokens."""
     settings = _build_settings(tmp_path)
-    with open_test_profile_session(_PROFILE_ID):
-        _seed_active_profile()
-        _write_draft(settings, _approved(review_checksum=_B))
-        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
+    draft = _approved(review_checksum=_B)
+    items = drafts_pending(
+        settings,
+        bucket_id=_PROFILE_ID,
+        ports=draft_review_ports(drafts=(draft,)),
+    )
 
     assert items[0].stale_reasons == (ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH,)
 

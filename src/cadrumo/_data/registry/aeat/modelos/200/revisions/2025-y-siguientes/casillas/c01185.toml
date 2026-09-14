@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01185"
+continuidad_id = "01185"
+continuidad_origin = "seeded"
 number = "01185"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "total"]
 data_type = "money"

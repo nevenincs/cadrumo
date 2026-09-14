@@ -32,7 +32,7 @@ from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import mint_test_profile_recovery_envelope
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 
 PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")
 DEK = bytes(range(100, 132))

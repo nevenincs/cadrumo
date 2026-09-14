@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01168"
+continuidad_id = "01168"
+continuidad_origin = "seeded"
 number = "01168"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2021"]
 data_type = "money"

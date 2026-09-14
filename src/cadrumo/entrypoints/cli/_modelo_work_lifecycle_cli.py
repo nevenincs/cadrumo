@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import typer
 
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...application.modelo.action_errors import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
@@ -64,6 +63,7 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
+from .state_projection_support import work_lifecycle_ports_factory
 
 
 def _validate_filing_year(year: int) -> None:
@@ -218,6 +218,7 @@ def work_create(
     _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
     resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
     resolved_actor = actor or resolve_default_actor()
+    lifecycle_ports = work_lifecycle_ports_factory(ctx)(bucket_id=resolved_bucket)
     require_existing_profile_baseline_ready_for_modelo_work(
         bucket_id=resolved_bucket,
         modelo=modelo,
@@ -247,7 +248,8 @@ def work_create(
             actor=resolved_actor,
             causante_ccaa=causante_ccaa,
             enforce_applicability=not allow_not_applicable,
-            catalogue=WorkUnitCatalogueRepository(bucket_id=resolved_bucket).load(),
+            catalogue=lifecycle_ports.work_unit_repository.load(),
+            ports=lifecycle_ports,
         )
     except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -278,7 +280,12 @@ def work_list(
     """List modelo work units. Discarded units are excluded unless asked."""
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
-    units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
+    resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
+    units = list_work_units(
+        bucket_id=bucket_id,
+        include_discarded=include_discarded,
+        ports=work_lifecycle_ports_factory(ctx)(bucket_id=resolved_bucket),
+    )
     result = WorkListResult.model_validate(
         {
             "bucket_id_filter": bucket_id,
@@ -340,7 +347,12 @@ def work_rename(
         work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
     try:
-        unit = rename_work_unit(unit.work_unit_id, name, actor=actor or resolve_default_actor())
+        unit = rename_work_unit(
+            unit.work_unit_id,
+            name,
+            actor=actor or resolve_default_actor(),
+            ports=work_lifecycle_ports_factory(ctx)(bucket_id=unit.bucket_id),
+        )
     except WorkUnitMutationRefusedError:
         raise
     except WorkUnitNotFoundError as exc:
@@ -371,7 +383,12 @@ def work_discard(
         work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
     try:
-        unit = discard_work_unit(unit.work_unit_id, actor=actor or resolve_default_actor(), reason=reason)
+        unit = discard_work_unit(
+            unit.work_unit_id,
+            actor=actor or resolve_default_actor(),
+            reason=reason,
+            ports=work_lifecycle_ports_factory(ctx)(bucket_id=unit.bucket_id),
+        )
     except WorkUnitAlreadyDiscardedError:
         raise
     except WorkUnitNotFoundError as exc:

@@ -6,12 +6,11 @@ import hashlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
+from pathlib import Path
 from typing import Literal
 
-from pydantic import AnyHttpUrl, TypeAdapter
+from pydantic import AnyHttpUrl, BaseModel, TypeAdapter
 
-from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
-from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
@@ -48,6 +47,28 @@ BUCKET_ID = "7390a6bb-5577-4e08-8518-16e6292f690f"
 PERIOD_2025_1T = Period.from_year_and_code(2025, "1T")
 FILED_JUSTIFICANTE_STORAGE_REF = "secure-object:financial:" + "d" * 64
 OBSERVED_CASILLA: CasillaId = validated_casilla_id("01", surface="overview calendar observed casilla")
+
+
+class _CalendarFiledArtefact(BaseModel):
+    """Application-test fake for the artefact fields the calendar reads."""
+
+    kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
+    sha256: str | None = None
+    storage_ref: str | None = None
+
+
+class _CalendarFiledObservation(BaseModel):
+    """Application-test fake implementing the overview filed-observation port."""
+
+    modelo: str
+    ejercicio: int
+    period: Period
+    expediente_id: str
+    status: str
+    presented_at: datetime
+    authenticated_identity: str
+    artefacts: tuple[_CalendarFiledArtefact, ...]
+    casillas: tuple[object, ...] = ()
 
 
 @cache
@@ -130,10 +151,10 @@ def modelo_record(
 
 def filed_declaration_observation(
     *,
-    artefacts: tuple[FiledDeclaracionArtefact, ...],
+    artefacts: tuple[_CalendarFiledArtefact, ...],
     expediente_id: str = "12345678901234567890",
-) -> FiledDeclaracionObservation:
-    return FiledDeclaracionObservation(
+) -> _CalendarFiledObservation:
+    return _CalendarFiledObservation(
         modelo="303",
         ejercicio=2025,
         period=PERIOD_2025_1T,
@@ -142,13 +163,6 @@ def filed_declaration_observation(
         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
         authenticated_identity="X1234567L",
         artefacts=artefacts,
-        registry_snapshot_ref=bundled_authority()
-        .snapshot(
-            "303",
-            filing_year=2025,
-            period=PERIOD_2025_1T.registry_token,
-        )
-        .snapshot_ref,
     )
 
 
@@ -157,14 +171,11 @@ def filed_declaration_artefact(
     kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"] = "justificante_pdf",
     storage_ref: str | None = FILED_JUSTIFICANTE_STORAGE_REF,
     byte_count: int = 128,
-) -> FiledDeclaracionArtefact:
-    return FiledDeclaracionArtefact(
+) -> _CalendarFiledArtefact:
+    del byte_count
+    return _CalendarFiledArtefact(
         kind=kind,
-        source_url=AnyHttpUrl(SOURCE_URL),
-        content_type="application/pdf",
-        byte_count=byte_count,
         sha256="d" * 64,
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         storage_ref=storage_ref,
     )
 
@@ -190,7 +201,7 @@ def justificante_metadata(
         total_a_ingresar=None,
         total_a_devolver=None,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-        source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+        source_pdf_path=Path("calendar-test-source.pdf"),
         source_pdf_sha256=source_pdf_sha256,
         parsed_at=datetime(filing_year, 4, 16, 12, 0, tzinfo=UTC),
     )

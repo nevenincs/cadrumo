@@ -35,7 +35,7 @@ from ....domain.calculations.registry.tests.snapshot_support import build_snapsh
 from ...filing.draft_construction import filing_binding_values
 from .._calculation_helpers import build_typed_observations
 from .._calculation_modelo_adjustments import suppress_m349_row_field_template_outputs
-from .._revision_replay_inputs import _m349_detail_row_replay_inputs
+from ..revision_replay_inputs import _m349_detail_row_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

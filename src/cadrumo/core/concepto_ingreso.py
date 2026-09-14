@@ -9,7 +9,7 @@ Modelo 131 instrucciones say the same thing from the other side, naming what sta
     realiza el pago fraccionado, incluidas las subvenciones corrientes y excluidas las
     subvenciones de capital y las indemnizaciones.
 
-That sentence is the whole reason this enum exists. The distinction it draws is not
+That sentence is the whole reason this typed axis exists. The distinction it draws is not
 between subsidies and other income — it is *inside* subsidies: a subvención corriente
 counts and a subvención de capital does not. No amount, category, counterparty or date
 on a ledger row can tell those two apart, so the concept has to be declared, and
@@ -32,32 +32,61 @@ See Also:
 
 from __future__ import annotations
 
-from enum import StrEnum
+from typing import Self
 
-__all__ = [
-    "ConceptoIngreso",
-]
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+
+from .errors.hierarchy import CoreValidationError
+
+__all__ = ["ConceptoIngreso"]
 
 
-class ConceptoIngreso(StrEnum):
-    """What kind of receipt a ledger row records, for base-inclusion purposes.
+class ConceptoIngreso(str):
+    """Opaque receipt-concept token projected from the governed facts registry.
 
-    The value byte-equals the stored token, so a member compares, hashes, and
-    JSON-serialises identically to its string.
-
-    Attributes:
-        ORDINARIO: Ordinary trading income — the contraprestación of the activity.
-            Counts toward the volumen de ingresos.
-        SUBVENCION_CORRIENTE: A current (operating) subsidy. Counts, and the Modelo
-            131 instrucciones say so explicitly rather than by omission, which is why
-            it is a member of its own instead of collapsing into ``ORDINARIO``: the
-            operator who marks a receipt as a subsidy needs the answer to come out
-            right, not to be told the field did not matter.
-        SUBVENCION_CAPITAL: A capital subsidy. Excluded by art. 110.1.c).
-        INDEMNIZACION: An indemnity. Excluded by art. 110.1.c).
+    The dated facts catalogue owns the income-concept vocabulary and the
+    provision-specific exclusion sets. This core type carries only the typed
+    wire token; callers must obtain instances through the registry projection.
     """
 
-    ORDINARIO = "ordinario"
-    SUBVENCION_CORRIENTE = "subvencion_corriente"
-    SUBVENCION_CAPITAL = "subvencion_capital"
-    INDEMNIZACION = "indemnizacion"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("ConceptoIngreso tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("ConceptoIngreso token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("ConceptoIngreso must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical registry token for diagnostics."""
+        return str(self)

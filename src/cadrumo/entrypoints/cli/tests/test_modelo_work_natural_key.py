@@ -13,7 +13,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _seed_m111_retencion_observation
 from .cli_runner import invoke_cached_cli

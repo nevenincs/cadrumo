@@ -13,8 +13,8 @@ prefix, and pattern records live in the non-Modelo facts registry; this module
 keeps only the opaque projected token, compiled-pattern value object, and
 normalisation mechanics. Consumers (the ledger invoice counterparty boundary
 today; the Modelo 349 manual-entry row in future) resolve a Member State's
-expected shape through :func:`nif_iva_format_for_country` and refuse a malformed
-number with an instructive, format-naming diagnostic.
+expected shape through the domain registry and refuse a malformed number with
+an instructive, format-naming diagnostic.
 
 Authority: the European Commission VIES national IVA-number structure rules
 (``https://ec.europa.eu/taxation_customs/vies/``), grounded in Council Directive
@@ -39,9 +39,7 @@ from ..errors.hierarchy import CoreValidationError
 __all__ = [
     "NifIvaFormatSpec",
     "NifIvaPrefix",
-    "iso_country_for_nif_iva_prefix",
-    "nif_iva_format_for_country",
-    "nif_iva_prefix_for_country",
+    "is_nif_iva_structurally_shaped",
     "normalise_nif_iva",
 ]
 
@@ -115,27 +113,6 @@ class NifIvaFormatSpec:
     example: str
 
 
-def iso_country_for_nif_iva_prefix(prefix: NifIvaPrefix) -> str:
-    """Return the ISO 3166-1 alpha-2 code the IVA *prefix* names.
-
-    Identity for every Member State except Greece, whose IVA numbers lead with
-    ``EL`` while its ISO code is ``GR``. That one divergence is the whole reason
-    this exists: a caller reading a country off a printed IVA number and handing
-    ``EL`` to an ISO-keyed catalogue gets no match, and a catalogue that answers
-    "not a Member State" for Greece places a Greek party outside the EU.
-
-    Northern Ireland's ``XI`` is returned unchanged. It is not an ISO country
-    code, and it is deliberately not translated to ``GB``: the two are not
-    interchangeable for IVA, and the catalogues that consume this carry ``XI``
-    as its own member.
-    """
-    from ...domain.calculations.registry.nif_iva_catalogue import (
-        resolve_nif_iva_catalogue,
-    )
-
-    return resolve_nif_iva_catalogue().iso_country_for_prefix(prefix)
-
-
 def normalise_nif_iva(value: str) -> str:
     """Return the uppercased IVA number with whitespace and separators stripped.
 
@@ -146,28 +123,20 @@ def normalise_nif_iva(value: str) -> str:
     return value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
 
 
-def nif_iva_prefix_for_country(iso_country: str) -> NifIvaPrefix | None:
-    """Resolve an ISO-3166 alpha-2 country code (or IVA prefix) to its :class:`NifIvaPrefix`.
+def is_nif_iva_structurally_shaped(value: str) -> bool:
+    """Return whether *value* has a generic prefixed tax-identifier shape.
 
-    Returns ``None`` for a country that has no NIF-IVA pattern (a non-EU
-    counterparty, or Spain which uses the checksum validator).
+    This is deliberately only lexical structure. Country membership and dated
+    per-country patterns are domain-registry policy and are resolved by
+    :mod:`cadrumo.domain.calculations.registry.nif_iva_catalogue`.
     """
-    from ...domain.calculations.registry.nif_iva_catalogue import (
-        resolve_nif_iva_catalogue,
-    )
-
-    return resolve_nif_iva_catalogue().prefix_for_country(iso_country)
-
-
-def nif_iva_format_for_country(iso_country: str) -> NifIvaFormatSpec | None:
-    """Return the :class:`NifIvaFormatSpec` for a country, or ``None`` if unknown.
-
-    A ``None`` result means the country is not an EU Member State carrying a
-    structural NIF-IVA pattern; the caller applies its generic prefix/body check
-    instead of refusing the counterparty outright.
-    """
-    from ...domain.calculations.registry.nif_iva_catalogue import (
-        resolve_nif_iva_catalogue,
-    )
-
-    return resolve_nif_iva_catalogue().format_for_country(iso_country)
+    normalised = normalise_nif_iva(value)
+    if len(normalised) < 9 or len(normalised) > 15:
+        return False
+    prefix, body = normalised[:2], normalised[2:]
+    if not prefix.isalpha() or not body.isalnum():
+        return False
+    if prefix in {"AA", "XX", "ZZ"}:
+        return False
+    digits = sum(character.isdigit() for character in body)
+    return digits * 2 >= len(body)

@@ -18,12 +18,18 @@ from cadrumo.domain.calculations.registry.applicability import (
 )
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
-from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category
+from cadrumo.domain.calculations.registry.irpf_regimes import (
+    irpf_estimation_regime_directa_normal_token,
+    irpf_estimation_regime_directa_simplificada_token,
+    irpf_estimation_regime_objetiva_token,
+    irpf_special_regime_general_token,
+    irpf_special_regime_impatriado_token,
+)
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+from cadrumo.domain.calculations.registry.renta_codes_catalogue import require_fiscal_residency
+from cadrumo.domain.contribuyente.entity_type import require_entity_type, require_legal_entity_form
 from cadrumo.domain.deadlines.models import (
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IrpfSpecialRegime,
     IVARegime,
     TaxpayerProfile,
 )
@@ -40,14 +46,28 @@ class _FactUpdateParams(TypedDict, total=False):
 
 
 _PERIODIC_IVA_MODELOS = ("303", "390")
-_NON_PERIODIC_IVA_REGIMES = (IVARegime.EXENTO, IVARegime.RECARGO_EQUIVALENCIA)
+_NATURAL_PERSON = require_entity_type("natural_person")
+_LEGAL_ENTITY = require_entity_type("legal_entity")
+_ATTRIBUTION_ENTITY = require_entity_type("attribution_entity")
+_LEGAL_FORM_SL = require_legal_entity_form("sl")
+_ACTIVIDAD_ECONOMICA = require_irpf_income_category("actividad_economica")
+_CAPITAL_INMOBILIARIO = require_irpf_income_category("capital_inmobiliario")
+_TRABAJO = require_irpf_income_category("trabajo")
+_IVA_GENERAL = require_iva_regime("GENERAL")
+_DIRECTA_NORMAL = irpf_estimation_regime_directa_normal_token()
+_DIRECTA_SIMPLIFICADA = irpf_estimation_regime_directa_simplificada_token()
+_OBJETIVA = irpf_estimation_regime_objetiva_token()
+_SPECIAL_GENERAL = irpf_special_regime_general_token()
+_IMPATRIADO = irpf_special_regime_impatriado_token()
+_NON_RESIDENT_IRNR = require_fiscal_residency("non_resident_irnr")
+_NON_PERIODIC_IVA_REGIMES = (require_iva_regime("EXENTO"), require_iva_regime("RECARGO_EQUIVALENCIA"))
 _FACT_GATED_MODELO_CASES: tuple[tuple[str, _FactUpdateParams], ...] = (
     ("115", {"pays_rent_with_retencion": True}),
     ("180", {"pays_rent_with_retencion": True}),
     ("349", {"does_intracomunitario": True}),
     ("347", {"third_party_transactions_above_347_threshold": True}),
 )
-_NON_IMPATRIADO_SPECIAL_REGIMES = (None, IrpfSpecialRegime.GENERAL)
+_NON_IMPATRIADO_SPECIAL_REGIMES = (None, _SPECIAL_GENERAL)
 
 
 def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
@@ -119,7 +139,7 @@ def test_applicability_models_reject_blank_reasons_and_legal_refs() -> None:
     for field_name in ("applicable_reason", "not_applicable_reason"):
         payload = {
             "modelo": "130",
-            "applicable_entity_types": frozenset({EntityType.NATURAL_PERSON}),
+            "applicable_entity_types": frozenset({_NATURAL_PERSON}),
             "applicable_reason": "Modelo 130 aplica.",
             "not_applicable_reason": "Modelo 130 no aplica.",
             "legal_refs": ("ley-35-2006:art-99",),
@@ -130,7 +150,7 @@ def test_applicability_models_reject_blank_reasons_and_legal_refs() -> None:
     with pytest.raises(ValidationError, match="legal_refs"):
         ModeloApplicabilityRule(
             modelo="130",
-            applicable_entity_types=frozenset({EntityType.NATURAL_PERSON}),
+            applicable_entity_types=frozenset({_NATURAL_PERSON}),
             applicable_reason="Modelo 130 aplica.",
             not_applicable_reason="Modelo 130 no aplica.",
             legal_refs=(" ",),
@@ -158,17 +178,17 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
 
     direct_autonomo = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=_DIRECTA_SIMPLIFICADA,
+        iva_regime=_IVA_GENERAL,
     )
-    objetiva_autonomo = direct_autonomo.model_copy(update={"irpf_estimation_regime": IrpfEstimationRegime.OBJETIVA})
+    objetiva_autonomo = direct_autonomo.model_copy(update={"irpf_estimation_regime": _OBJETIVA})
     sociedad_limitada = TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=_LEGAL_ENTITY,
+        legal_entity_form=_LEGAL_FORM_SL,
+        iva_regime=_IVA_GENERAL,
     )
 
     assert derive_modelo_applicability(direct_autonomo, "130").verdict is (ApplicabilityVerdict.APPLICABLE)
@@ -180,7 +200,7 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
 
 def _attribution_entity_profile(
     *,
-    iva_regime: IVARegime = IVARegime.GENERAL,
+    iva_regime: IVARegime = _IVA_GENERAL,
     has_employees: bool = False,
     pays_professionals_with_retencion: bool = False,
     pays_rent_with_retencion: bool = False,
@@ -189,7 +209,7 @@ def _attribution_entity_profile(
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="E12345674",
-        entity_type=EntityType.ATTRIBUTION_ENTITY,
+        entity_type=_ATTRIBUTION_ENTITY,
         iva_regime=iva_regime,
         has_employees=has_employees,
         pays_professionals_with_retencion=pays_professionals_with_retencion,
@@ -277,9 +297,9 @@ def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() 
 
     autonomo_no_regime = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
+        iva_regime=_IVA_GENERAL,
     )
     # The undeclared regime defaults to directa (the LIRPF default method).
     assert autonomo_no_regime.irpf_estimation_regime is None
@@ -293,11 +313,11 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_130() -> None:
 
     non_resident_autonomo = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=_DIRECTA_NORMAL,
+        iva_regime=_IVA_GENERAL,
+        fiscal_residency=_NON_RESIDENT_IRNR,
         country_of_fiscal_residence="FR",
     )
 
@@ -314,11 +334,11 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_100() -> None:
 
     non_resident_autonomo = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=_DIRECTA_NORMAL,
+        iva_regime=_IVA_GENERAL,
+        fiscal_residency=_NON_RESIDENT_IRNR,
         country_of_fiscal_residence="FR",
     )
 
@@ -335,16 +355,16 @@ def test_non_resident_irnr_legal_entity_without_pe_does_not_owe_modelo_200() -> 
 
     resident_company = TaxpayerProfile(
         tax_id="B66012345",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=_LEGAL_ENTITY,
+        legal_entity_form=_LEGAL_FORM_SL,
+        iva_regime=_IVA_GENERAL,
     )
     non_resident_company = TaxpayerProfile(
         tax_id="B66012345",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        entity_type=_LEGAL_ENTITY,
+        legal_entity_form=_LEGAL_FORM_SL,
+        iva_regime=_IVA_GENERAL,
+        fiscal_residency=_NON_RESIDENT_IRNR,
         country_of_fiscal_residence="DE",
     )
 
@@ -365,12 +385,12 @@ def test_objective_estimation_regime_routes_to_m131() -> None:
 
     autonomo_modulos = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        iva_regime=IVARegime.GENERAL,
-        irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
+        iva_regime=_IVA_GENERAL,
+        irpf_estimation_regime=_OBJETIVA,
     )
-    assert autonomo_modulos.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+    assert autonomo_modulos.irpf_estimation_regime == _OBJETIVA
     assert derive_modelo_applicability(autonomo_modulos, "131").verdict is ApplicabilityVerdict.APPLICABLE
     assert derive_modelo_applicability(autonomo_modulos, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
@@ -387,9 +407,9 @@ def test_pure_landlord_without_actividad_economica_owes_no_m130() -> None:
 
     landlord = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.CAPITAL_INMOBILIARIO}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_CAPITAL_INMOBILIARIO}),
+        iva_regime=_IVA_GENERAL,
     )
     assert derive_modelo_applicability(landlord, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert derive_modelo_applicability(landlord, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
@@ -402,10 +422,10 @@ def _beckham_profile(
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
-        irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_TRABAJO}),
+        iva_regime=_IVA_GENERAL,
+        irpf_special_regime=_IMPATRIADO,
         special_regime_start_date=start_date,
         bienes_extranjero_above_threshold=bienes_extranjero_above_threshold,
     )
@@ -440,9 +460,9 @@ def test_general_regime_profile_with_bienes_declared_modelo_720_applicable() -> 
 
     general_profile = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_TRABAJO}),
+        iva_regime=_IVA_GENERAL,
         irpf_special_regime=None,
         bienes_extranjero_above_threshold=True,
     )
@@ -460,9 +480,9 @@ def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() ->
 
     base_profile = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=_NATURAL_PERSON,
+        irpf_income_categories=frozenset({_TRABAJO}),
+        iva_regime=_IVA_GENERAL,
         bienes_extranjero_above_threshold=False,
         monedas_virtuales_extranjero_above_threshold=False,
     )
@@ -530,9 +550,9 @@ def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
     for special_regime in _NON_IMPATRIADO_SPECIAL_REGIMES:
         general_profile = TaxpayerProfile(
             tax_id="X1234567L",
-            entity_type=EntityType.NATURAL_PERSON,
-            irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-            iva_regime=IVARegime.GENERAL,
+            entity_type=_NATURAL_PERSON,
+            irpf_income_categories=frozenset({_TRABAJO}),
+            iva_regime=_IVA_GENERAL,
             irpf_special_regime=special_regime,
         )
 

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00081"
+continuidad_id = "00081"
 number = "00081"
 section = ["filial_grupo_multinacional_o_grupo_nacional_de_gra"]
 data_type = "decimal"

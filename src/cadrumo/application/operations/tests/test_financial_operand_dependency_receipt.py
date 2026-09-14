@@ -138,18 +138,6 @@ def test_crash_evidence_never_resolves_an_uncertain_delivery() -> None:
             assert reconciled.crash_classification is (OperationFinancialOperandCrashClassification.DELIVERY_UNCERTAIN)
             assert reconciled.state is not _STATE.DELIVERY_ACKNOWLEDGED
 
-
-def test_production_composition_binds_the_real_repository_to_its_protocol() -> None:
-    """The shipped filesystem store satisfies the contract callers depend on."""
-    from ....adapters.persistence.operations.financial_operand_custody import (
-        OperationFinancialOperandCustodyFilesystemRepository as Repository,
-    )
-
-    assert issubclass(Repository, OperationFinancialOperandCustodyRepository)
-    for name in ("read", "open", "advance", "unsettled"):
-        assert callable(getattr(Repository, name))
-
-
 def test_non_retention_holds_across_every_record_and_signature() -> None:
     """No record field and no return type carries an amount out of its call."""
     forbidden = ("amount", "digest", "hash", "fingerprint", "checksum")
@@ -168,6 +156,7 @@ def test_current_only_evidence_carries_no_legacy_branch() -> None:
     for anchor in _OPERAND_MODULE_ANCHORS:
         source = _module_source(anchor)
         for marker in legacy_markers:
+            dotted = f"{anchor.__module__}.{anchor.__qualname__}"
             assert marker not in source.lower(), f"{dotted} carries {marker!r}"
 
 

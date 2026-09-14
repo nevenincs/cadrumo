@@ -1,0 +1,104 @@
+[fact]
+fact_id = "deadline-calendar-territory-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "deadline-calendar-territory-catalogue:2000-01-01"
+date_axis = "filing_period"
+valid_from = 2000-01-01
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "calendar_ccaa.order", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
+  { key = "calendar_ccaa.relation.tax_residence_fact_id", value = "renta-ccaa-tax-residence-catalogue" },
+  { key = "calendar_ccaa.relation.tax_residence_common_regime_count", value = "15" },
+  { key = "calendar_ccaa.relation.calendar_territory_count", value = "19" },
+  { key = "calendar_ccaa.relation.includes_foral_territories", value = "true" },
+  { key = "calendar_ccaa.relation.includes_autonomous_cities", value = "true" },
+
+  { key = "calendar_ccaa.ES-AN.value", value = "ES-AN" },
+  { key = "calendar_ccaa.ES-AN.member_name", value = "ANDALUCIA" },
+  { key = "calendar_ccaa.ES-AN.description", value = "Andalucía" },
+  { key = "calendar_ccaa.ES-AN.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-AR.value", value = "ES-AR" },
+  { key = "calendar_ccaa.ES-AR.member_name", value = "ARAGON" },
+  { key = "calendar_ccaa.ES-AR.description", value = "Aragón" },
+  { key = "calendar_ccaa.ES-AR.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-AS.value", value = "ES-AS" },
+  { key = "calendar_ccaa.ES-AS.member_name", value = "ASTURIAS" },
+  { key = "calendar_ccaa.ES-AS.description", value = "Principado de Asturias" },
+  { key = "calendar_ccaa.ES-AS.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-IB.value", value = "ES-IB" },
+  { key = "calendar_ccaa.ES-IB.member_name", value = "ILLES_BALEARS" },
+  { key = "calendar_ccaa.ES-IB.description", value = "Illes Balears" },
+  { key = "calendar_ccaa.ES-IB.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-CN.value", value = "ES-CN" },
+  { key = "calendar_ccaa.ES-CN.member_name", value = "CANARIAS" },
+  { key = "calendar_ccaa.ES-CN.description", value = "Canarias" },
+  { key = "calendar_ccaa.ES-CN.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-CB.value", value = "ES-CB" },
+  { key = "calendar_ccaa.ES-CB.member_name", value = "CANTABRIA" },
+  { key = "calendar_ccaa.ES-CB.description", value = "Cantabria" },
+  { key = "calendar_ccaa.ES-CB.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-CM.value", value = "ES-CM" },
+  { key = "calendar_ccaa.ES-CM.member_name", value = "CASTILLA_LA_MANCHA" },
+  { key = "calendar_ccaa.ES-CM.description", value = "Castilla-La Mancha" },
+  { key = "calendar_ccaa.ES-CM.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-CL.value", value = "ES-CL" },
+  { key = "calendar_ccaa.ES-CL.member_name", value = "CASTILLA_Y_LEON" },
+  { key = "calendar_ccaa.ES-CL.description", value = "Castilla y León" },
+  { key = "calendar_ccaa.ES-CL.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-CT.value", value = "ES-CT" },
+  { key = "calendar_ccaa.ES-CT.member_name", value = "CATALUNA" },
+  { key = "calendar_ccaa.ES-CT.description", value = "Cataluña" },
+  { key = "calendar_ccaa.ES-CT.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-EX.value", value = "ES-EX" },
+  { key = "calendar_ccaa.ES-EX.member_name", value = "EXTREMADURA" },
+  { key = "calendar_ccaa.ES-EX.description", value = "Extremadura" },
+  { key = "calendar_ccaa.ES-EX.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-GA.value", value = "ES-GA" },
+  { key = "calendar_ccaa.ES-GA.member_name", value = "GALICIA" },
+  { key = "calendar_ccaa.ES-GA.description", value = "Galicia" },
+  { key = "calendar_ccaa.ES-GA.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-RI.value", value = "ES-RI" },
+  { key = "calendar_ccaa.ES-RI.member_name", value = "LA_RIOJA" },
+  { key = "calendar_ccaa.ES-RI.description", value = "La Rioja" },
+  { key = "calendar_ccaa.ES-RI.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-MD.value", value = "ES-MD" },
+  { key = "calendar_ccaa.ES-MD.member_name", value = "MADRID" },
+  { key = "calendar_ccaa.ES-MD.description", value = "Comunidad de Madrid" },
+  { key = "calendar_ccaa.ES-MD.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-MC.value", value = "ES-MC" },
+  { key = "calendar_ccaa.ES-MC.member_name", value = "MURCIA" },
+  { key = "calendar_ccaa.ES-MC.description", value = "Región de Murcia" },
+  { key = "calendar_ccaa.ES-MC.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-NC.value", value = "ES-NC" },
+  { key = "calendar_ccaa.ES-NC.member_name", value = "NAVARRA" },
+  { key = "calendar_ccaa.ES-NC.description", value = "Comunidad Foral de Navarra" },
+  { key = "calendar_ccaa.ES-NC.territory_kind", value = "foral_territory" },
+  { key = "calendar_ccaa.ES-PV.value", value = "ES-PV" },
+  { key = "calendar_ccaa.ES-PV.member_name", value = "PAIS_VASCO" },
+  { key = "calendar_ccaa.ES-PV.description", value = "País Vasco" },
+  { key = "calendar_ccaa.ES-PV.territory_kind", value = "foral_territory" },
+  { key = "calendar_ccaa.ES-VC.value", value = "ES-VC" },
+  { key = "calendar_ccaa.ES-VC.member_name", value = "VALENCIA" },
+  { key = "calendar_ccaa.ES-VC.description", value = "Comunitat Valenciana" },
+  { key = "calendar_ccaa.ES-VC.territory_kind", value = "autonomous_community" },
+  { key = "calendar_ccaa.ES-CE.value", value = "ES-CE" },
+  { key = "calendar_ccaa.ES-CE.member_name", value = "CEUTA" },
+  { key = "calendar_ccaa.ES-CE.description", value = "Ceuta" },
+  { key = "calendar_ccaa.ES-CE.territory_kind", value = "autonomous_city" },
+  { key = "calendar_ccaa.ES-ML.value", value = "ES-ML" },
+  { key = "calendar_ccaa.ES-ML.member_name", value = "MELILLA" },
+  { key = "calendar_ccaa.ES-ML.description", value = "Melilla" },
+  { key = "calendar_ccaa.ES-ML.territory_kind", value = "autonomous_city" },
+]

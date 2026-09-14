@@ -44,6 +44,7 @@ from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.protocols import BrowserSessionFactoryPort
 from .errors import LiveApplicationInputError
 from .notification_documents import NotificationDocumentService
 from .notification_ports import (
@@ -223,11 +224,13 @@ async def capture_notifications(
     bucket_id: str,
     ports: NotificationsPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ) -> PersistedNotificationsSnapshot:
     """Capture the authenticated taxpayer's notifications as encrypted local evidence."""
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
     )
     snapshot = await ports.snapshot_query.fetch(session, settings=settings)
@@ -268,6 +271,7 @@ async def pull_notification_document(
     ports: NotificationsPorts,
     service: NotificationDocumentService,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ):
     """Fetch encrypted custody for a notification that AEAT already records as read."""
@@ -278,6 +282,7 @@ async def pull_notification_document(
     )
     session, _settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
     )
     return await service.pull_document(bucket_id=bucket_id, session=session, row=row)

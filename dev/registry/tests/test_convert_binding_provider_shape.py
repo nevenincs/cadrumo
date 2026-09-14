@@ -1,14 +1,15 @@
 """Behaviour of the authored-binding provider-shape converter.
 
-Every case builds an isolated temporary registry tree seeded from one small
+Every case builds an isolated temporary registry tree holding one synthetic
 authored modelo, so the contributor's working tree is never mutated and the
 detector teeth (a refused row, a dry run) are proven on real files rather than
-on a patched module.
+on a patched module. The tree carries exactly the shapes the converter is asked
+about -- one edition, one bindings fragment, and one typed consumer casilla --
+so no case's meaning moves when the shipped corpus is reauthored.
 """
 
 from __future__ import annotations
 
-import shutil
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,6 @@ from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 
 from ..convert_binding_provider_shape import (
     BINDING_DATA_TYPE_FOR_CASILLA_DATA_TYPE,
-    REGISTRY_MODELOS_ROOT,
     CasillaTypeEvidence,
     ConsumerIndex,
     ConversionRefusalError,
@@ -33,20 +33,17 @@ from ..convert_binding_provider_shape import (
     _as_tuples,
     convert_modelo,
 )
+from ._synthetic_binding_modelo import BASE_TAIL, CONSUMED_BINDING, MODELO, REVISION, write_seed_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-SEED_MODELO = "151"
-REVISION = "2025-y-siguientes"
+SEED_MODELO = MODELO
 
 
 def _seed_tree(tmp_path: Path) -> Path:
-    """Copy one small authored modelo into an isolated registry root."""
-    modelos_root = tmp_path / "modelos"
-    modelos_root.mkdir()
-    shutil.copytree(REGISTRY_MODELOS_ROOT / SEED_MODELO, modelos_root / SEED_MODELO)
-    return modelos_root
+    """Build the synthetic authored modelo in an isolated registry root."""
+    return write_seed_tree(tmp_path)
 
 
 def _bindings_file(modelos_root: Path) -> Path:
@@ -94,10 +91,8 @@ def _row(fields: str) -> str:
     return f'[[revisions."{REVISION}".bindings]]\n{fields}\n'
 
 
-SEEDED_CONSUMED_BINDING = "modelo-151-impatriado-base-liquidable-general"
+SEEDED_CONSUMED_BINDING = CONSUMED_BINDING
 """The binding id the seeded revision's casilla already names, declared ``money``."""
-
-BASE_TAIL = 'legal_refs = ["ley-35-2006:art-93"]\nsource_refs = ["aeat-modelo-151-procedure"]\n'
 
 
 def _legacy_row() -> str:

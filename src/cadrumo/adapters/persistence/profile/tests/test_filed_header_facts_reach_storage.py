@@ -2,7 +2,7 @@
 
 The header facts AEAT states in a filed fichero were reaching the raw
 observation and then vanishing, because the persisted provenance is assembled by
-:func:`_filed_observation_source_metadata` from a FIXED key set that copies
+:func:`filed_observation_source_metadata` from a FIXED key set that copies
 exactly one key off the observation. Anything else on the observation was simply
 not named there, so it never reached the repository -- the capture succeeded, the
 parse succeeded, and the evidence was gone one layer later.
@@ -27,10 +27,10 @@ import pytest
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.live.filed_observation_persistence import _filed_observation_source_metadata
-from cadrumo.application.live.tests._filed_capture_history_support import _prior_303_observation, _secure_backend
+from cadrumo.application.live.filed_observation_persistence import filed_observation_source_metadata
+from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import _prior_303_observation, _secure_backend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -116,7 +116,7 @@ def test_the_metadata_projection_still_does_not_carry_headers(tmp_path: Path) ->
         update={"headers": _FACTS},
     )
 
-    metadata = _filed_observation_source_metadata(observation)
+    metadata = filed_observation_source_metadata(observation)
 
     assert metadata, "the projection returned nothing, so the absence below is meaningless"
 

@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0706"
+continuidad_id = "irpf-aeip-barcelona-music-lab-el-futuro-de-la-musica-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT Diseño de Registros sources aeat-dr-100-2024-dictionary, aeat-dr-100-2024-input-dictionary, aeat-dr-100-2024-xsd, aeat-dr-100-2025-dictionary, aeat-dr-100-2025-input-dictionary, aeat-dr-100-2025-xsd, aeat-renta-2025-manual-parte1, aeat-renta-2025-manual-deducciones-autonomicas, boe-modelo-100-2025-form, aeat-modelo-100-procedure, aeat-renta-web-open: Modelo 100 2024/1627 and 2025/0706 resolve the adjudicated AEIP programme 'Barcelona Music Lab. El Futuro de la Música'; transition classified legal_refs_evolved from the official Spanish labels."
 number = "0706"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03354"
+continuidad_id = "03354"
 number = "03354"
 section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2024"]
 data_type = "money"

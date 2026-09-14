@@ -1,12 +1,12 @@
 {
   "schema_version": "m303-annual-orden-censuses-v1",
-  "extractor_version": "m303-annual-orden-html-v5",
+  "extractor_version": "m303-annual-orden-html-v6",
   "censuses": [
     {
       "ejercicio": 2025,
       "source_ref": "boe-orden-hac-1347-2024-iva-authority",
       "source_content_digest": "9c8bfa02d05288e78311ceacf58832ec707f645a60bc752b88c6d0f97f70eeb4",
-      "extractor_version": "m303-annual-orden-html-v5",
+      "extractor_version": "m303-annual-orden-html-v6",
       "activities": [
         {
           "annex_heading": "ANEXO II",
@@ -2465,7 +2465,7 @@
       "ejercicio": 2026,
       "source_ref": "boe-orden-hac-1425-2025-iva-authority",
       "source_content_digest": "95d03306df28554c50a96b84b68aeac91c6be14a106d533af1860c8e35f9c368",
-      "extractor_version": "m303-annual-orden-html-v5",
+      "extractor_version": "m303-annual-orden-html-v6",
       "activities": [
         {
           "annex_heading": "ANEXO II",
@@ -4924,7 +4924,7 @@
       "ejercicio": 2023,
       "source_ref": "boe-orden-hfp-1172-2022-iva-authority",
       "source_content_digest": "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb",
-      "extractor_version": "m303-annual-orden-html-v5",
+      "extractor_version": "m303-annual-orden-html-v6",
       "activities": [
         {
           "annex_heading": "ANEXO II",
@@ -7364,7 +7364,7 @@
       "ejercicio": 2022,
       "source_ref": "boe-orden-hfp-1335-2021-iva-authority",
       "source_content_digest": "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46",
-      "extractor_version": "m303-annual-orden-html-v5",
+      "extractor_version": "m303-annual-orden-html-v6",
       "activities": [
         {
           "annex_heading": "ANEXO II",
@@ -9799,8 +9799,14 @@
         "non_agricultural_required_text": "De la cuota devengada por operaciones corrientes podrán deducirse las cuotas soportadas o satisfechas por la adquisición o importación de bienes y servicios, distintos de los activos fijos, destinados al desarrollo de la actividad, en los términos establecidos en el Capítulo I del Título VIII de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido y en el Reglamento del tributo, considerándose a estos efectos activos fijos los elementos del inmovilizado. También podrán ser deducidas las compensaciones agrícolas a que se refiere el artículo 130 de la Ley 37/1992, satisfechas por los sujetos pasivos por la adquisición de bienes o servicios a empresarios acogidos al régimen especial de la agricultura, ganadería y pesca. No obstante, será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación."
       },
       "lorca_2022_reduction": {
+        "ejercicio": 2022,
         "municipality": "Lorca",
+        "annex_scope": "ANEXO II",
         "percentage": "20",
+        "calculation_periods": [
+          "trimestral",
+          "anual"
+        ],
         "required_text": [
           "Disposición adicional cuarta. Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva del Impuesto sobre la Renta de las Personas Físicas y de la cuota devengada por operaciones corrientes del régimen especial simplificado del Impuesto sobre el Valor Añadido para actividades económicas desarrolladas en el término municipal de Lorca.",
           "2. Los sujetos pasivos del Impuesto sobre el Valor Añadido que desarrollen actividades empresariales o profesionales incluidas en el anexo II de esta Orden en el término municipal de Lorca y estén acogidos al régimen especial simplificado, podrán reducir en un 20 por ciento el importe de las cuotas devengadas por operaciones corrientes correspondiente a tales actividades en el año 2022.",
@@ -9812,7 +9818,7 @@
       "ejercicio": 2024,
       "source_ref": "boe-orden-hfp-1359-2023-iva-authority",
       "source_content_digest": "faecb5b5c83d4191e213ff2bc1b47fc1b3d39f882793de296196ccdd3dd540ed",
-      "extractor_version": "m303-annual-orden-html-v5",
+      "extractor_version": "m303-annual-orden-html-v6",
       "activities": [
         {
           "annex_heading": "ANEXO II",

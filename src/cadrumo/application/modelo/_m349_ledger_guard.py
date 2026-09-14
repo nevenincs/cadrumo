@@ -8,6 +8,7 @@ declarations.
 
 from __future__ import annotations
 
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
@@ -20,7 +21,10 @@ def _selected_registry_ledger_declarations(work_unit: WorkUnit) -> tuple[object,
     """Read selected verification/detail declarations through the registry boundary."""
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
 
-    snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
+    snapshot = resolve_registry_snapshot_for_work_unit(
+        work_unit,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     revision = snapshot.revision
     query_service = RegistryQueryService(bundled_authority())
     model_report = query_service.describe_modelo_for_scope(

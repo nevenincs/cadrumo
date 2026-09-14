@@ -3,7 +3,7 @@
 This module prepares calculation input channels against the registry
 :class:`ModeloRevision` for a :class:`WorkUnit`, resolves the law-determined
 :class:`RegistrySnapshot`, applies the Modelo 303 IVA wallet gate, and runs
-ledger preflight through a :class:`TransactionCatalogueRepository` before
+ledger preflight through the application-facing transaction port before
 calculation proceeds.
 
 See Also:
@@ -24,7 +24,6 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
@@ -52,6 +51,7 @@ from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
+from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
@@ -109,7 +109,8 @@ def prepare_calculation(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     casilla_inputs: Mapping[CasillaId, Decimal],
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
     iva_compensation_decision: object | None,
     observation_repository: CalculationObservationRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
@@ -126,7 +127,7 @@ def prepare_calculation(
 
     The resolved registry :class:`ModeloRevision` supplies binding and casilla
     requirements. ``ledger_preflight_transaction_repository`` may provide a
-    :class:`TransactionCatalogueRepository` for the ledger-tax readiness check.
+    :class:`TransactionCatalogueRepositoryProtocol` for the ledger-tax readiness check.
     ``iva_compensation_decision_repository`` may provide the matching
     :class:`~application.calculations.IvaWalletDecisionRepositoryProtocol` for the
     Modelo 303 wallet authority, while
@@ -160,6 +161,7 @@ def prepare_calculation(
         work_unit=work_unit,
         revision=snapshot.revision,
         transaction_repository=ledger_preflight_transaction_repository,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
     )
     _raise_if_m200_ledger_requires_accounting_result_input(
         work_unit=work_unit,
@@ -301,7 +303,8 @@ def _raise_if_ledger_preflight_blocks_calculation(
     *,
     work_unit: WorkUnit,
     revision: ModeloRevision,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
 ) -> None:
     """Refuse ledger-backed calculations whose period ledger readiness blocks."""
     ledger_preflight_sources = frozenset(
@@ -318,6 +321,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
         bucket_id=work_unit.bucket_id,
         period=work_unit.period,
         transaction_repository=transaction_repository,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
     )
     if report.ready:
         return
@@ -383,7 +387,7 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
     work_unit: WorkUnit,
     casilla_inputs: Mapping[CasillaId, Decimal],
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> None:
     """Refuse Modelo 200 ledger-backed calculation without accounting-result input."""
     if str(work_unit.modelo) != Modelo("200").value:
@@ -428,9 +432,9 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
 def _m200_accounting_ledger_transaction_count(
     *,
     work_unit: WorkUnit,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> int:
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    repository = transaction_repository
     period = work_unit.period
     count = 0
     for transaction in repository.load():

@@ -32,7 +32,7 @@ computed value, never a hand-summed Decimal — aeat-quality-gates).
 
 from __future__ import annotations
 
-from cadrumo.application.modelo.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
@@ -63,7 +63,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,

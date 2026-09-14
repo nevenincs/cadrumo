@@ -35,6 +35,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @71+5 An. Actividad. Sección I.A.E.   * [ONE casilla over 2 printed components: @71+1, @72+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.actividad-iae-seccion-grupo"
+continuidad_id = "act-actividad-iae-seccion-grupo"
 number = "402"
 section = ["declaracion", "actividades", "actividad"]
 data_type = "text"
@@ -67,6 +68,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @80+8 Num. La actividad se desarrolla fuera de un local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @80+2, @82+2, @84+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.sin-local-alta-fecha"
+continuidad_id = "act-sin-local-alta-fecha"
 number = "406"
 section = ["declaracion", "actividades", "sin_local"]
 data_type = "date"
@@ -88,6 +90,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @89+8 Num. La actividad se desarrolla fuera de un local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @89+2, @91+2, @93+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.sin-local-baja-fecha"
+continuidad_id = "act-sin-local-baja-fecha"
 number = "409"
 section = ["declaracion", "actividades", "sin_local"]
 data_type = "date"
@@ -252,6 +255,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @263+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @263+2, @265+2, @267+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-directo-1-alta-fecha"
+continuidad_id = "act-local-directo-1-alta-fecha"
 number = "425"
 section = ["declaracion", "actividades", "local_directo_1"]
 data_type = "date"
@@ -273,6 +277,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @272+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @272+2, @274+2, @276+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-directo-1-baja-fecha"
+continuidad_id = "act-local-directo-1-baja-fecha"
 number = "428"
 section = ["declaracion", "actividades", "local_directo_1"]
 data_type = "date"
@@ -305,6 +310,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @294+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @294+2, @296+2, @298+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-directo-1-variacion-fecha"
+continuidad_id = "act-local-directo-1-variacion-fecha"
 number = "431"
 section = ["declaracion", "actividades", "local_directo_1"]
 data_type = "date"
@@ -458,6 +464,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @435+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia. [ONE casilla over 3 printed components: @435+2, @437+2, @439+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-directo-2-alta-fecha"
+continuidad_id = "act-local-directo-2-alta-fecha"
 number = "446"
 section = ["declaracion", "actividades", "local_directo_2"]
 data_type = "date"
@@ -479,6 +486,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @444+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia. [ONE casilla over 3 printed components: @444+2, @446+2, @448+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-directo-2-baja-fecha"
+continuidad_id = "act-local-directo-2-baja-fecha"
 number = "449"
 section = ["declaracion", "actividades", "local_directo_2"]
 data_type = "date"
@@ -511,6 +519,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @466+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia. [ONE casilla over 3 printed components: @466+2, @468+2, @470+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-directo-2-variacion-fecha"
+continuidad_id = "act-local-directo-2-variacion-fecha"
 number = "452"
 section = ["declaracion", "actividades", "local_directo_2"]
 data_type = "date"
@@ -675,6 +684,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @609+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia.   * [ONE casilla over 3 printed components: @609+2, @611+2, @613+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-indirecto-1-alta-fecha"
+continuidad_id = "act-local-indirecto-1-alta-fecha"
 number = "469"
 section = ["declaracion", "actividades", "local_indirecto_1"]
 data_type = "date"
@@ -696,6 +706,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @618+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia.   * [ONE casilla over 3 printed components: @618+2, @620+2, @622+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-indirecto-1-baja-fecha"
+continuidad_id = "act-local-indirecto-1-baja-fecha"
 number = "472"
 section = ["declaracion", "actividades", "local_indirecto_1"]
 data_type = "date"
@@ -728,6 +739,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @640+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia.   * [ONE casilla over 3 printed components: @640+2, @642+2, @644+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-indirecto-1-variacion-fecha"
+continuidad_id = "act-local-indirecto-1-variacion-fecha"
 number = "475"
 section = ["declaracion", "actividades", "local_indirecto_1"]
 data_type = "date"
@@ -892,6 +904,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @783+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia. [ONE casilla over 3 printed components: @783+2, @785+2, @787+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-indirecto-2-alta-fecha"
+continuidad_id = "act-local-indirecto-2-alta-fecha"
 number = "492"
 section = ["declaracion", "actividades", "local_indirecto_2"]
 data_type = "date"
@@ -913,6 +926,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @792+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia. [ONE casilla over 3 printed components: @792+2, @794+2, @796+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-indirecto-2-baja-fecha"
+continuidad_id = "act-local-indirecto-2-baja-fecha"
 number = "495"
 section = ["declaracion", "actividades", "local_indirecto_2"]
 data_type = "date"
@@ -945,6 +959,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @814+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia. [ONE casilla over 3 printed components: @814+2, @816+2, @818+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "act.local-indirecto-2-variacion-fecha"
+continuidad_id = "act-local-indirecto-2-variacion-fecha"
 number = "498"
 section = ["declaracion", "actividades", "local_indirecto_2"]
 data_type = "date"

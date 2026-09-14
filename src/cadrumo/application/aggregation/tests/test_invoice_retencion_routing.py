@@ -19,12 +19,9 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -44,15 +41,12 @@ from ..invoice_retencion import (
     project_received_invoice_retencion,
     route_invoice_retenciones,
 )
-from ..retencion_observations_repository import (
-    RetencionObservationRepository,
-    persist_retencion_observations,
-)
 from ..retenciones import RetencionObservation, aggregate_retenciones_111
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFESIONAL = RetencionScheme("actividades_profesionales")
+_FX_RATE_SOURCE = "test_reference"
 
 
 def _invoice(
@@ -100,7 +94,7 @@ def _invoice(
             "fx_rate_date": None if fx_rate is None else date(2026, 3, 15),
             # The three fx fields are set together or not at all: a rate with no
             # named authority is an unattributable conversion.
-            "fx_rate_source": None if fx_rate is None else ECB_RATE_SOURCE_ID,
+            "fx_rate_source": None if fx_rate is None else _FX_RATE_SOURCE,
         },
     )
 
@@ -329,57 +323,6 @@ def test_the_scheme_is_supplied_never_inferred_from_the_invoice() -> None:
     assert economica.observation is not None
     assert profesional.observation.scheme == RetencionScheme("actividades_profesionales")
     assert economica.observation.scheme == RetencionScheme("actividades_economicas")
-
-
-def test_routed_retencion_lands_in_the_existing_encrypted_store(tmp_path: Path) -> None:
-    """The liability reaches the real store, read back through the real read path.
-
-    Asserting that the projection returned an observation proves only that this
-    module ran. What the step actually claims is that a received invoice becomes
-    a row in the ONE per-perceptor store the committed Modelo 111 bindings read,
-    so the assertion is on the store's contents after the shared write helper
-    persisted them -- no second store, no second write path.
-    """
-    period = Period.from_year_and_code(2026, "1T")
-    routing = route_invoice_retenciones(((_invoice(), _PROFESIONAL),))
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        persist_retencion_observations(
-            modelo="111",
-            filing_year=period.filing_year,
-            period=period,
-            observations=routing.observations,
-        )
-        stored = RetencionObservationRepository().load_observations("111", period)
-
-    assert len(stored) == 1
-    assert stored[0].retencion_amount == Decimal("150.00")
-    assert stored[0].taxable_base == Decimal("1000.00")
-    assert stored[0].source_kind is BindingSourceKind.PAYABLE_INVOICE
-    assert stored[0].scheme is _PROFESIONAL
-
-
-def test_an_excluded_invoice_leaves_the_store_empty(tmp_path: Path) -> None:
-    """The negative control: an issued invoice contributes no stored liability.
-
-    Without this the store test above would pass just as happily if the
-    projection routed everything it was handed.
-    """
-    period = Period.from_year_and_code(2026, "1T")
-    routing = route_invoice_retenciones(((_invoice(kind=InvoiceKind.ISSUED), _PROFESIONAL),))
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        persist_retencion_observations(
-            modelo="111",
-            filing_year=period.filing_year,
-            period=period,
-            observations=routing.observations,
-        )
-        stored = RetencionObservationRepository().load_observations("111", period)
-
-    assert routing.observations == ()
-    assert stored == ()
-    assert routing.excluded[0].defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
 
 
 def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> None:

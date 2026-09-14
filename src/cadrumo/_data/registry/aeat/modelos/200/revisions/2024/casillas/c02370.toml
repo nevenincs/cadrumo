@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02370"
+continuidad_id = "02370"
 number = "02370"
 section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2024"]
 data_type = "money"

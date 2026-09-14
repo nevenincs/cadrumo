@@ -41,7 +41,7 @@ from ....domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines.plazo import resolve_filing_closes_on
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _result
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .._modelo_rendering import _work_unit_deadline_output_from_posture
 from ._m130_source_support import seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli

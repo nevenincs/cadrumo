@@ -26,11 +26,17 @@ from typing import Annotated, Final
 
 from pydantic import BeforeValidator, Field, field_validator
 
+from .keyed_families import (
+    CASILLAS_FAMILY,
+    INHERITED_FAMILIES as CANONICAL_INHERITED_FAMILIES,
+    RESTATABLE_FAMILIES as CANONICAL_RESTATABLE_FAMILIES,
+)
 from .errors import RegistryValidationError
 from .schema_base import RegistryModel, coerce_enum_member
 
 __all__ = (
     "INHERITED_FAMILIES",
+    "RESTATABLE_FAMILIES",
     "RestatedFamilyCause",
     "RestatedFamilyCauseField",
     "RestatedFamilyDeclaration",
@@ -42,41 +48,21 @@ __all__ = (
 #:
 #: ``casillas`` inherit through the loader's own casilla pass; the rest are the
 #: loader's keyed families, which inherit by member identity. The set is
-#: declared here, in the schema package that owns the declaration validating
-#: against it, so the authored claim and the merge are closed on one vocabulary:
-#: the loader reads this constant rather than keeping a second list, and a
-#: family enrolled for inheritance becomes restatable in the same edit.
+#: projected from the domain-owned policy table so the authored claim and the
+#: merge are closed on one vocabulary.
 #:
-#: A family absent here is not inherited at all today -- ``bindings``,
-#: ``export_layouts`` and the rest are full copy in every edition -- so it has
-#: nothing to decline, and adding it here is the inheritance judgement itself,
-#: not a consequence of wanting to restate it.
-INHERITED_FAMILIES: Final[frozenset[str]] = frozenset(
-    {
-        "casillas",
-        "formulas",
-        "applicability",
-        "filing_schedules",
-        "live_cross_references",
-        "extraction_profiles",
-        "dependency_classifications",
-        "constructs",
-        "application_links",
-        "parameters",
-        "deadline_windows",
-        "projection_endpoints",
-        "verification_predicates",
-    }
-)
+#: A family absent here is not inherited today -- ``bindings``,
+#: ``export_layouts`` and the other per-edition claims are full copy -- so it
+#: has nothing to decline. Adding one is an inheritance judgement, not a
+#: consequence of wanting to restate it.
+INHERITED_FAMILIES: Final[frozenset[str]] = CANONICAL_INHERITED_FAMILIES
+RESTATABLE_FAMILIES: Final[frozenset[str]] = CANONICAL_RESTATABLE_FAMILIES
 
 
 #: Inherited, but through the loader's casilla pass rather than the keyed merge,
 #: which is the only pass that consults ``restated_families``. A restatement of
 #: this family would validate and withdraw nothing, so it is refused until the
 #: casilla pass honours the declaration.
-CASILLAS_FAMILY: Final[str] = "casillas"
-
-
 class RestatedFamilyCause(StrEnum):
     """Why an edition states a family in full instead of inheriting it.
 
@@ -117,11 +103,15 @@ class RestatedFamilyDeclaration(RegistryModel):
                 f"restated family {value!r} is not inherited along a predecessor chain, so this edition "
                 f"declines nothing by restating it; inherited families are {sorted(INHERITED_FAMILIES)!r}",
             )
-        if value == CASILLAS_FAMILY:
+        if value not in RESTATABLE_FAMILIES:
+            if value == CASILLAS_FAMILY:
+                raise RegistryValidationError(
+                    "restated family 'casillas' is not honoured: casillas inherit through the loader's own casilla "
+                    "pass, which does not read restated_families, so the declaration would validate while the merge "
+                    "still inherits and reorders the rows; keep casillas out of restated_families until the casilla "
+                    "pass honours it",
+                )
             raise RegistryValidationError(
-                "restated family 'casillas' is not honoured: casillas inherit through the loader's own casilla "
-                "pass, which does not read restated_families, so the declaration would validate while the merge "
-                "still inherits and reorders the rows; keep casillas out of restated_families until the casilla "
-                "pass honours it",
+                f"restated family {value!r} is not eligible for a keyed restatement declaration",
             )
         return value

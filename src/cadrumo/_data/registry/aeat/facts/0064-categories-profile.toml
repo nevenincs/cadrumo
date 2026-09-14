@@ -749,6 +749,49 @@ entries = [
 ]
 
 [[fact.variants]]
+variant_id = "categories.profile:spending-category-catalogue:2022-2026"
+selectors = [
+  { name = "scope", value = "spending_category_catalogue" },
+]
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "spending_category.order", value = "cuotas_colegiales,cuotas_autonomos_ss,mutualidad_alternativa,arrendamiento_local,arrendamiento_vivienda_afecto,ibi_local_afecto,suministros_local_afecto,suministros_home_office_luz,suministros_home_office_agua,suministros_home_office_gas,suministros_home_office_internet,amortizacion_vivienda_afecto,ibi_vivienda_afecto,comunidad_vivienda_afecto,telefonia_movil,telefonia_fija,material_oficina,software_suscripcion,hardware_amortizable,mobiliario_amortizable,reparaciones_conservacion,vehiculo_combustible,vehiculo_mantenimiento,vehiculo_seguro,vehiculo_peaje,vehiculo_parking,manutencion_dietas_nacional,manutencion_dietas_extranjero,asesoria_fiscal,asesoria_juridica,asesoria_contable,publicidad_marketing,formacion_profesional,viajes_transporte,viajes_alojamiento,seguros_responsabilidad_civil,seguros_salud_autonomo,gastos_bancarios,gastos_financieros,suministros_cliente_directos,subcontratacion,tributos_fiscalmente_deducibles" },
+  { key = "spending_category.family.social_security", value = "cuotas_colegiales,cuotas_autonomos_ss,mutualidad_alternativa" },
+  { key = "spending_category.family.premises", value = "arrendamiento_local,ibi_local_afecto,suministros_local_afecto" },
+  { key = "spending_category.family.home_office_suministros", value = "suministros_home_office_luz,suministros_home_office_agua,suministros_home_office_gas,suministros_home_office_internet,telefonia_fija" },
+  { key = "spending_category.family.home_office_ownership", value = "amortizacion_vivienda_afecto,ibi_vivienda_afecto,comunidad_vivienda_afecto,arrendamiento_vivienda_afecto" },
+  { key = "spending_category.family.telecoms", value = "telefonia_movil" },
+  { key = "spending_category.family.office", value = "material_oficina,software_suscripcion,hardware_amortizable,mobiliario_amortizable,reparaciones_conservacion,publicidad_marketing,formacion_profesional" },
+  { key = "spending_category.family.vehicle", value = "vehiculo_combustible,vehiculo_mantenimiento,vehiculo_seguro,vehiculo_peaje,vehiculo_parking" },
+  { key = "spending_category.family.meals", value = "manutencion_dietas_nacional,manutencion_dietas_extranjero" },
+  { key = "spending_category.family.professional_services", value = "asesoria_fiscal,asesoria_juridica,asesoria_contable" },
+  { key = "spending_category.family.travel", value = "viajes_transporte,viajes_alojamiento" },
+  { key = "spending_category.family.insurance", value = "seguros_responsabilidad_civil,seguros_salud_autonomo" },
+  { key = "spending_category.family.financial", value = "gastos_bancarios,gastos_financieros" },
+  { key = "spending_category.family.direct_costs", value = "suministros_cliente_directos,subcontratacion" },
+  { key = "spending_category.family.taxes", value = "tributos_fiscalmente_deducibles" },
+]
+
+# The RIRPF grounds these spending categories as recognised deductible concepts:
+# art 10 names the colegios-profesionales cuota and art 22 the afectacion test that
+# the *_local_afecto members rest on. It does NOT ground the ORDER of the catalogue,
+# which is a presentation choice of this registry and is not claimed here.
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = [
+    "Gastos deducibles por cuotas satisfechas a sindicatos y Colegios profesionales",
+    "cuotas satisfechas a Colegios profesionales, cuando la colegiación tenga carácter obligatorio",
+    "Se considerarán elementos patrimoniales afectos a una actividad económica",
+]
+
+[[fact.variants]]
 variant_id = "categories.profile:iva-deductibility-hint:2022-2026"
 selectors = [
   { name = "scope", value = "iva_deductibility_hint" },
@@ -756,7 +799,29 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2022-01-01
 valid_to = 2026-12-31
-source_refs = ["boe-rirpf-category-profile-authority"]
+# Withdrawn 2026-09-13: this variant declared "boe-rirpf-category-profile-authority"
+# (RD 439/2007, the IRPF reglamento) as documentary authority for an IVA vocabulary, and
+# could not cite it because the document does not carry the claim. Measured over its
+# 482,043 extracted characters (0 U+FFFD): "no deducible" 0, "deducibilidad" 0,
+# "cuotas soportadas" 0. All 16 occurrences of "Impuesto sobre el Valor Añadido" are
+# régimen-especial-simplificado / estimación-objetiva coordination, cross-references to
+# the Reglamento del IVA (RD 1624/1992, a different decree), or the exclusion of IVA from
+# a rental withholding base -- none is about input-IVA deductibility.
+#
+# No replacement source is declared, because the payload is not a legal claim: it is a
+# local ordering of three presentation tokens whose own semantics entry states it is
+# "kept decoupled from the IVA taxonomy branch". 26 of the 566 variants in this corpus
+# likewise declare no source_refs. Citing a document that does not state the claim would
+# have satisfied the coverage gate while making the corpus assert something false.
+#
+# Replaced by the law that does govern these tokens. Ley 37/1992 art. 94 ("Operaciones
+# cuya realización origina el derecho a la deducción") distinguishes entregas "sujetas y
+# no exentas" from exempt operations, which is the general / exempt_or_non_subject split;
+# art. 95 ("Limitaciones del derecho a deducir") states that cuotas soportadas on goods
+# "que no se afecten, directa y exclusivamente, a su actividad" are not deductible, which
+# is non_deductible_input. Both are legal_refs rather than source_refs, the same shape the
+# iva-rate variants use, so the ordering is grounded in LIVA instead of the IRPF reglamento.
+legal_refs = ["ley-37-1992:art-94", "ley-37-1992:art-95"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [fact.variants.payload]
@@ -7396,6 +7461,92 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-29" },
+]
+
+[[fact.variants]]
+variant_id = "categories.profile:proportionality-vocabulary:2022-2026"
+selectors = [
+  { name = "scope", value = "proportionality_vocabulary" },
+]
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "rd-439-2007:art-9"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "proportionality_kind.order", value = "full_deductible,fixed_percentage,usage_ratio_personal,usage_ratio_home_area,statutory_cap,non_deductible,requires_exclusive_use" },
+  { key = "proportionality_kind.full_deductible.value", value = "full_deductible" },
+  { key = "proportionality_kind.full_deductible.is_full_deductible", value = "true" },
+  { key = "proportionality_kind.full_deductible.is_usage_ratio", value = "false" },
+  { key = "proportionality_kind.full_deductible.is_statutory_cap", value = "false" },
+  { key = "proportionality_kind.full_deductible.requires_fixed_pct", value = "false" },
+  { key = "proportionality_kind.full_deductible.is_non_deductible", value = "false" },
+  { key = "proportionality_kind.full_deductible.requires_exclusive_use", value = "false" },
+  { key = "proportionality_kind.fixed_percentage.value", value = "fixed_percentage" },
+  { key = "proportionality_kind.fixed_percentage.is_full_deductible", value = "false" },
+  { key = "proportionality_kind.fixed_percentage.is_usage_ratio", value = "false" },
+  { key = "proportionality_kind.fixed_percentage.is_statutory_cap", value = "false" },
+  { key = "proportionality_kind.fixed_percentage.requires_fixed_pct", value = "true" },
+  { key = "proportionality_kind.fixed_percentage.is_non_deductible", value = "false" },
+  { key = "proportionality_kind.fixed_percentage.requires_exclusive_use", value = "false" },
+  { key = "proportionality_kind.usage_ratio_personal.value", value = "usage_ratio_personal" },
+  { key = "proportionality_kind.usage_ratio_personal.is_full_deductible", value = "false" },
+  { key = "proportionality_kind.usage_ratio_personal.is_usage_ratio", value = "true" },
+  { key = "proportionality_kind.usage_ratio_personal.is_statutory_cap", value = "false" },
+  { key = "proportionality_kind.usage_ratio_personal.requires_fixed_pct", value = "false" },
+  { key = "proportionality_kind.usage_ratio_personal.is_non_deductible", value = "false" },
+  { key = "proportionality_kind.usage_ratio_personal.requires_exclusive_use", value = "false" },
+  { key = "proportionality_kind.usage_ratio_home_area.value", value = "usage_ratio_home_area" },
+  { key = "proportionality_kind.usage_ratio_home_area.is_full_deductible", value = "false" },
+  { key = "proportionality_kind.usage_ratio_home_area.is_usage_ratio", value = "true" },
+  { key = "proportionality_kind.usage_ratio_home_area.is_statutory_cap", value = "false" },
+  { key = "proportionality_kind.usage_ratio_home_area.requires_fixed_pct", value = "false" },
+  { key = "proportionality_kind.usage_ratio_home_area.is_non_deductible", value = "false" },
+  { key = "proportionality_kind.usage_ratio_home_area.requires_exclusive_use", value = "false" },
+  { key = "proportionality_kind.statutory_cap.value", value = "statutory_cap" },
+  { key = "proportionality_kind.statutory_cap.is_full_deductible", value = "false" },
+  { key = "proportionality_kind.statutory_cap.is_usage_ratio", value = "false" },
+  { key = "proportionality_kind.statutory_cap.is_statutory_cap", value = "true" },
+  { key = "proportionality_kind.statutory_cap.requires_fixed_pct", value = "false" },
+  { key = "proportionality_kind.statutory_cap.is_non_deductible", value = "false" },
+  { key = "proportionality_kind.statutory_cap.requires_exclusive_use", value = "false" },
+  { key = "proportionality_kind.non_deductible.value", value = "non_deductible" },
+  { key = "proportionality_kind.non_deductible.is_full_deductible", value = "false" },
+  { key = "proportionality_kind.non_deductible.is_usage_ratio", value = "false" },
+  { key = "proportionality_kind.non_deductible.is_statutory_cap", value = "false" },
+  { key = "proportionality_kind.non_deductible.requires_fixed_pct", value = "false" },
+  { key = "proportionality_kind.non_deductible.is_non_deductible", value = "true" },
+  { key = "proportionality_kind.non_deductible.requires_exclusive_use", value = "false" },
+  { key = "proportionality_kind.requires_exclusive_use.value", value = "requires_exclusive_use" },
+  { key = "proportionality_kind.requires_exclusive_use.is_full_deductible", value = "false" },
+  { key = "proportionality_kind.requires_exclusive_use.is_usage_ratio", value = "false" },
+  { key = "proportionality_kind.requires_exclusive_use.is_statutory_cap", value = "false" },
+  { key = "proportionality_kind.requires_exclusive_use.requires_fixed_pct", value = "false" },
+  { key = "proportionality_kind.requires_exclusive_use.is_non_deductible", value = "false" },
+  { key = "proportionality_kind.requires_exclusive_use.requires_exclusive_use", value = "true" },
+  { key = "statutory_cap_period.order", value = "day,year_per_person" },
+  { key = "statutory_cap_period.day.value", value = "day" },
+  { key = "statutory_cap_period.day.is_per_person", value = "false" },
+  { key = "statutory_cap_period.year_per_person.value", value = "year_per_person" },
+  { key = "statutory_cap_period.year_per_person.is_per_person", value = "true" },
+]
+
+# RIRPF art 22.3 is what the proportionality kinds rest on: partial affectation is
+# limited to the part actually used in the activity, only separately-exploitable parts
+# count, and indivisible elements admit no partial affectation at all -- which is the
+# full_deductible / fixed_percentage / usage_ratio_* distinction this vocabulary names.
+# The RATIO VALUES themselves are not grounded here and are not claimed: the 30%
+# suministros rule lives in LIRPF art 30.2.5.b, not in the reglamento.
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = [
+    "la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad",
+    "sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto",
+    "En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles",
 ]
 
 [[fact.variants]]

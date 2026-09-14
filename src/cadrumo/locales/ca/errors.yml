@@ -993,7 +993,7 @@ errors:
       no esta disponible.
     refused_modelo_payment_election_incompatible: L opcio de pagament escollida requereix
       un resultat positiu.
-    refused_modelo_prior_domiciliation_election: S'ha rebutjat la baixa o modificació
+    refused_modeloprior_domiciliation_election: S'ha rebutjat la baixa o modificació
       de la domiciliació prèvia perquè manca o no és vàlida la rectificativa del model
       303 o la prova oficial de la presentació base U.
     refused_modelo_refund_account_missing: S'ha sol·licitat una devolució però no

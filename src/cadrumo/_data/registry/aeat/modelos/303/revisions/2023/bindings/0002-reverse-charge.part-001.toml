@@ -13,6 +13,7 @@ id = "modelo-303-iva-autorepercutido-interior-devengado-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -20,7 +21,6 @@ required_text = ["modelo 303"]
 
 [revisions.2023.bindings.aggregation]
 op = "sum"
-
 # Intra-community-acquisition official-box parity (adquisición intracomunitaria,
 # inversión del sujeto pasivo). The recipient self-assesses the cuota on BOTH the
 # devengado side (official box 11, "Adquisiciones intracomunitarias de bienes y
@@ -84,11 +84,14 @@ required_text = ["modelo 303"]
 [revisions.2023.bindings.aggregation]
 op = "sum"
 
+
+
 [[revisions.2023.bindings]]
 id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

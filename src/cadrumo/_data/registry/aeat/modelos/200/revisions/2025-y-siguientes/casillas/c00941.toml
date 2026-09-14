@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00941"
+continuidad_id = "is-correccion-reversion-deterioro-valores-saldo-inicial"
+continuidad_origin = "seeded"
 number = "00941"
 section = ["reversion_por_deterioro_de_valores_representativos", "dotaciones_pendientes_de_integracion_a_principio_d"]
 data_type = "money"

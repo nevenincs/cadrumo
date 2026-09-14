@@ -91,6 +91,7 @@ from .amendment_action_ports import AmendmentActionPortsFactory
 from .calculation_action_ports import CalculationActionPortsFactory
 from .amendment_actions import amend_modelo_revision
 from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
+from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
@@ -118,6 +119,7 @@ from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
 from .verification_actions import verify_modelo_revision
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
+from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
@@ -230,6 +232,10 @@ class ModeloWorkRenamePublicResultV1(BaseModel):
 class ModeloWorkRenameExecutor:
     """Run the existing rename writer under one recorded operation identity."""
 
+    def __init__(self, *, work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory) -> None:
+        """Bind the active-profile lifecycle authorities at the composition root."""
+        self._work_lifecycle_ports_factory = work_lifecycle_ports_factory
+
     async def execute(
         self,
         request: OperationRequest[ModeloWorkRenameRequest],
@@ -253,6 +259,7 @@ class ModeloWorkRenameExecutor:
             request.payload.work_unit_id,
             request.payload.new_name,
             actor=request.payload.actor,
+            ports=self._work_lifecycle_ports_factory(),
         )
         await context.events.effect(OperationEffect.UPDATED)
         return renamed.work_unit_id
@@ -306,6 +313,10 @@ class ModeloWorkDiscardApprovalStaleError(CadrumoError, RuntimeError):
 class ModeloWorkDiscardExecutor:
     """Run the existing discard writer against an exactly approved unit."""
 
+    def __init__(self, *, work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory) -> None:
+        """Bind the active-profile lifecycle authorities at the composition root."""
+        self._work_lifecycle_ports_factory = work_lifecycle_ports_factory
+
     async def execute(
         self,
         request: OperationRequest[ModeloWorkDiscardRequest],
@@ -329,7 +340,8 @@ class ModeloWorkDiscardExecutor:
         # the write would tell an observer a discard landed that never did.
         await context.events.effect(OperationEffect.UNKNOWN)
         baseline = request.payload.baseline
-        current = get_work_unit(baseline.work_unit_id)
+        ports = self._work_lifecycle_ports_factory()
+        current = get_work_unit(baseline.work_unit_id, ports=ports)
         if current.updated_at != baseline.observed_updated_at or current.name != baseline.name:
             raise ModeloWorkDiscardApprovalStaleError(
                 translated_message="errors.refused.modelo_work_discard_approval_stale",
@@ -339,16 +351,20 @@ class ModeloWorkDiscardExecutor:
             baseline.work_unit_id,
             actor=request.payload.actor,
             reason=request.payload.reason,
+            ports=ports,
         )
         await context.events.effect(OperationEffect.UPDATED)
         return discarded.work_unit_id
 
 
-def build_modelo_work_discard_definition() -> OperationDefinition:
+def build_modelo_work_discard_definition(
+    *,
+    work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
+) -> OperationDefinition:
     """Bind the discard writer to its registered operation contract."""
 
     def build() -> ModeloWorkDiscardExecutor:
-        return ModeloWorkDiscardExecutor()
+        return ModeloWorkDiscardExecutor(work_lifecycle_ports_factory=work_lifecycle_ports_factory)
 
     return OperationDefinition(
         definition_id=MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
@@ -1831,7 +1847,7 @@ class ModeloEditApplyPublicResultV1(BaseModel):
     """The settled receipt id a caller outside this package may see.
 
     Only the id: the full receipt is the domain record of truth, addressable
-    through ModeloEditReceiptRepository, and this result exists to confirm
+    through the ModeloEditReceiptRepositoryPort capability, and this result exists to confirm
     which one a submission produced.
     """
 
@@ -1852,9 +1868,15 @@ class ModeloEditApplyExecutor:
     no lifecycle policy.
     """
 
-    def __init__(self, *, calculation_action_ports_factory: CalculationActionPortsFactory) -> None:
+    def __init__(
+        self,
+        *,
+        calculation_action_ports_factory: CalculationActionPortsFactory,
+        receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
+    ) -> None:
         """Bind the calculation authorities supplied by the composition root."""
         self._calculation_action_ports_factory = calculation_action_ports_factory
+        self._receipt_repository_factory = receipt_repository_factory
 
     async def execute(
         self,
@@ -1885,6 +1907,7 @@ class ModeloEditApplyExecutor:
         outcome = apply_modelo_edit(
             apply_request,
             ports=self._calculation_action_ports_factory(bucket_id=baseline.bucket_id),
+            receipt_repository=self._receipt_repository_factory(bucket_id=baseline.bucket_id),
             now=datetime.now(UTC),
             result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
         )
@@ -1901,11 +1924,15 @@ class ModeloEditApplyExecutor:
 def build_modelo_edit_apply_definition(
     *,
     calculation_action_ports_factory: CalculationActionPortsFactory,
+    receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
 ) -> OperationDefinition:
     """Bind the Edit Contract's guarded apply path to its registered operation contract."""
 
     def build() -> ModeloEditApplyExecutor:
-        return ModeloEditApplyExecutor(calculation_action_ports_factory=calculation_action_ports_factory)
+        return ModeloEditApplyExecutor(
+            calculation_action_ports_factory=calculation_action_ports_factory,
+            receipt_repository_factory=receipt_repository_factory,
+        )
 
     return OperationDefinition(
         definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
@@ -1958,11 +1985,14 @@ def build_modelo_edit_apply_registration(
     )
 
 
-def build_modelo_work_rename_definition() -> OperationDefinition:
+def build_modelo_work_rename_definition(
+    *,
+    work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
+) -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
     def build() -> ModeloWorkRenameExecutor:
-        return ModeloWorkRenameExecutor()
+        return ModeloWorkRenameExecutor(work_lifecycle_ports_factory=work_lifecycle_ports_factory)
 
     return OperationDefinition(
         definition_id=MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
@@ -2075,6 +2105,8 @@ def build_modelo_lifecycle_operation_definitions(
     calculation_action_ports_factory: CalculationActionPortsFactory,
     amendment_action_ports_factory: AmendmentActionPortsFactory,
     filing_action_ports_factory: FilingActionPortsFactory,
+    work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
+    receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
 ) -> tuple[OperationDefinition, ...]:
     """Return the one canonical modelo lifecycle operation population.
 
@@ -2083,16 +2115,19 @@ def build_modelo_lifecycle_operation_definitions(
     shape this population exists to make impossible to ship.
     """
     return (
-        build_modelo_edit_apply_definition(calculation_action_ports_factory=calculation_action_ports_factory),
+        build_modelo_edit_apply_definition(
+            calculation_action_ports_factory=calculation_action_ports_factory,
+            receipt_repository_factory=receipt_repository_factory,
+        ),
         build_modelo_export_definition(export_ports_factory=export_ports_factory),
         build_modelo_work_amend_definition(amendment_action_ports_factory=amendment_action_ports_factory),
-        build_modelo_work_discard_definition(),
+        build_modelo_work_discard_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
         build_modelo_work_file_definition(
             operator_scope_ports=operator_scope_ports,
             filing_action_ports_factory=filing_action_ports_factory,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
         ),
-        build_modelo_work_rename_definition(),
+        build_modelo_work_rename_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
         build_modelo_work_verify_definition(operator_scope_ports=operator_scope_ports),
     )
 

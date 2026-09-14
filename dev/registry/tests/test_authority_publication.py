@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import os
+import shutil
+import sys
 from decimal import Decimal
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     read_authority_artifact,
@@ -25,7 +30,6 @@ from cadrumo.domain.calculations.registry.runtime_catalogues import (
     TerritoryCarveOut,
 )
 
-from ..compiler import authority as compiler_authority
 from ..compiler import fact_providers
 from ..conformance.loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
@@ -198,9 +202,16 @@ def _previous_publication() -> AuthorityArtifact:
             )
         },
     ).require_complete()
+    published_facts = bundled_authority().catalogues.facts
+    tax_id_fact = published_facts.facts["spanish-tax-identifier-format"]
     return AuthorityArtifact(
         modelos=(minimal_modelo(minimal_revision()),),
-        catalogues=minimal_catalogues().model_copy(update={"runtime": runtime}),
+        catalogues=minimal_catalogues().model_copy(
+            update={
+                "runtime": runtime,
+                "facts": published_facts.model_copy(update={"facts": {tax_id_fact.fact_id: tax_id_fact}}),
+            },
+        ),
         identity_digest="e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f",
     )
 
@@ -215,9 +226,15 @@ def _stage_valid_candidate(root: Path) -> None:
     """Materialize a minimal but real compiler candidate, including its evidence."""
     registry_root = root / "registry" / "aeat"
     legal_dir = registry_root / "legal"
+    facts_dir = registry_root / "facts"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
     legal_dir.mkdir()
+    facts_dir.mkdir()
+    shutil.copy2(
+        bundled_path("registry", "aeat", "facts", "0102-spanish-tax-identifier-format.toml"),
+        facts_dir / "0102-spanish-tax-identifier-format.toml",
+    )
     corpus_dir = root / "corpus" / "test"
     corpus_dir.mkdir(parents=True)
     record_design_dir = root / "corpus" / "aeat_official" / "disenos_registro" / "modelo_999"
@@ -306,10 +323,8 @@ def test_structural_publication_does_not_run_registry_conformance(
     candidate_root = tmp_path / "candidate"
     _stage_valid_candidate(candidate_root)
 
-    def refuse_conformance(*_args: object, **_kwargs: object) -> None:
-        raise RegistryValidationError("unrelated semantic conformance failure")
-
-    monkeypatch.setattr(compiler_authority.RegistryValidator, "validate_registry", refuse_conformance)
+    validator_module = ModuleType("dev.registry.compiler.validator")
+    monkeypatch.setitem(sys.modules, "dev.registry.compiler.validator", validator_module)
 
     candidate = validate_authority_candidate(
         registry_root=candidate_root / "registry" / "aeat",

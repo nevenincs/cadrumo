@@ -5,82 +5,66 @@ Every auth operator surface routes its storage access through
 no longer opens a session for whichever bucket the caller named: it requires the
 target profile's custody session to already be open, and refuses otherwise.
 
-These tests exercise the refusal against real storage roots, real master-key
-providers, and real bucket sessions -- the refusal is worth nothing if it only
-holds for a fabricated session object.
+These tests exercise the refusal against the application-owned scope ports.
+The fake carries translated session identity facts, so the policy stays
+inward without importing a storage root or a concrete bucket session.
 """
 
 from __future__ import annotations
 
-from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.auth_provider import AuthProviderKind
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_minimal_profile
 from ..operator import build_live_auth_preflight_report
 from ..operator import test_operator_auth as run_operator_auth_test
 from ..operator_probes import probe_local_session
 from ..operator_results import AuthOperationRequiresCustodySessionError
 from ..operator_scope import active_profile_storage_span
+from ..operator_scope_ports import OperatorScopeSession
+from ._operator_scope_fakes import build_inward_operator_scope_ports
 from ._operator_probe_fakes import fake_operator_probe_ports
-
-_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_A = "6a6a6a6a-6a6a-4a6a-8a6a-6a6a6a6a6a6a"
 _BUCKET_B = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=False)
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports(
+    session=OperatorScopeSession(
+        bucket_id=_BUCKET_A,
+        storage_root=load_settings().cadrumo_local_storage_root,
+    ),
+)
+_NO_SESSION_PORTS = build_inward_operator_scope_ports(session=None)
 
 
-@pytest.fixture
-def bucket_a_session(tmp_path: Path) -> Iterator[Path]:
-    """Yield one isolated storage root with bucket A's custody session open."""
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
-        open_test_profile_session(_BUCKET_A),
-    ):
-        # Seeded before any workflow-state read: the capsule is published by an
-        # atomic no-replace rename onto ``buckets/<profile-id>``, which the
-        # workflow repository materialises on first access.
-        register_minimal_profile(
-            profile_id=_BUCKET_A,
-            display_name="custody-guard-a",
-        )
-        yield storage_root
-
-
-def test_span_yields_the_target_when_its_custody_session_is_open(bucket_a_session: Path) -> None:
+def test_span_yields_the_target_when_its_custody_session_is_open() -> None:
     """The guard is conditional: an open session for the target still resolves.
 
     Without this positive control the refusal tests below would pass against a
     span that refused unconditionally, which is a different (and broken)
     behaviour from the one under test.
     """
-    with active_profile_storage_span(load_settings(), operator_scope_ports=_OPERATOR_SCOPE_PORTS) as bucket_id:
-        assert bucket_id == _BUCKET_A
+    with override_settings(cadrumo_active_profile=_BUCKET_A) as settings:
+        with active_profile_storage_span(settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS) as bucket_id:
+            assert bucket_id == _BUCKET_A
 
 
 def test_span_yields_none_when_no_target_bucket_resolves(tmp_path: Path) -> None:
     """A cold root with no pointer and no override has no target to guard."""
     with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_active_profile=None) as settings,
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings,
         active_profile_storage_span(settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS) as bucket_id,
     ):
         assert bucket_id is None
 
 
-def test_span_refuses_a_bucket_the_open_session_does_not_serve(bucket_a_session: Path) -> None:
+def test_span_refuses_a_bucket_the_open_session_does_not_serve() -> None:
     """Bucket A's session cannot be borrowed to reach bucket B."""
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
@@ -93,7 +77,7 @@ def test_span_refuses_a_bucket_the_open_session_does_not_serve(bucket_a_session:
     assert context["bucket_id"] == _BUCKET_B
 
 
-def test_span_refuses_an_explicit_target_bucket_argument_it_cannot_serve(bucket_a_session: Path) -> None:
+def test_span_refuses_an_explicit_target_bucket_argument_it_cannot_serve() -> None:
     """The ``target_bucket_id`` argument is guarded on the same terms as the route."""
     with (
         pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
@@ -107,7 +91,6 @@ def test_span_refuses_an_explicit_target_bucket_argument_it_cannot_serve(bucket_
 
 
 def test_span_refuses_the_same_bucket_id_on_a_different_storage_root(
-    bucket_a_session: Path,
     tmp_path: Path,
 ) -> None:
     """A matching UUID on another root is a different profile's key material.
@@ -141,7 +124,7 @@ def test_span_refuses_the_same_bucket_id_on_a_different_storage_root(
 
 
 def test_span_refuses_a_pointer_target_whose_session_was_never_opened(
-    bucket_a_session: Path,
+    tmp_path: Path,
 ) -> None:
     """Pointer-driven resolution is guarded too, not only the settings override.
 
@@ -149,25 +132,24 @@ def test_span_refuses_a_pointer_target_whose_session_was_never_opened(
     this test writes it explicitly: the guard must fire on the bucket the
     pointer names, which is the route a real operator command follows.
     """
-    settings = load_settings()
-    write_pointer(
-        settings.cadrumo_local_storage_root,
-        BucketPointer.selected(bucket_id=_BUCKET_B, transition_revision=1),
-    )
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
+        write_pointer(
+            settings.cadrumo_local_storage_root,
+            BucketPointer.selected(bucket_id=_BUCKET_B, transition_revision=1),
+        )
 
-    with (
-        override_settings(cadrumo_active_profile=None) as pointer_settings,
-        pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
-        active_profile_storage_span(pointer_settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS),
-    ):
-        pytest.fail("a pointer to an unopened profile must not resolve a session")
+        with (
+            pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
+            active_profile_storage_span(settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS),
+        ):
+            pytest.fail("a pointer to an unopened profile must not resolve a session")
 
     context = raised.value.context
     assert context is not None
     assert context["bucket_id"] == _BUCKET_B
 
 
-def test_refusal_carries_its_own_code_and_an_actionable_remedy(bucket_a_session: Path) -> None:
+def test_refusal_carries_its_own_code_and_an_actionable_remedy() -> None:
     """The operator is told to authenticate, not to pick between two flags.
 
     The refusal previously reused ``AuthOperationScopeConflictError``, whose
@@ -191,7 +173,6 @@ def test_refusal_carries_its_own_code_and_an_actionable_remedy(bucket_a_session:
 
 
 def test_operator_auth_test_surfaces_the_refusal_for_an_unbound_explicit_target(
-    bucket_a_session: Path,
 ) -> None:
     """``auth test`` on an explicit unbound profile refuses rather than reporting on A.
 
@@ -211,9 +192,7 @@ def test_operator_auth_test_surfaces_the_refusal_for_an_unbound_explicit_target(
         )
 
 
-def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all(
-    tmp_path: Path,
-) -> None:
+def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all() -> None:
     """The locked workstation: nothing is unlocked, so the report answers rather than refuses.
 
     This is the other arm of the same narrowing, and it is pinned here beside
@@ -224,16 +203,12 @@ def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all(
     last broke. Every field of the report defaults to empty or false because
     the type exists to carry exactly this degraded answer.
     """
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_active_profile=_BUCKET_A),
-    ):
-        assert _OPERATOR_SCOPE_PORTS.session.current() is None
-
+    with override_settings(cadrumo_active_profile=_BUCKET_A):
+        assert _NO_SESSION_PORTS.session.current() is None
         report = build_live_auth_preflight_report(
             AuthProviderKind.CERTIFICATE.value,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=_NO_SESSION_PORTS,
         )
 
         assert report.provider == AuthProviderKind.CERTIFICATE.value
@@ -242,7 +217,6 @@ def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all(
 
 
 def test_live_auth_preflight_surfaces_the_refusal_for_an_unbound_explicit_target(
-    bucket_a_session: Path,
 ) -> None:
     """The live-read preflight refuses when a session is open for ANOTHER profile.
 
@@ -262,7 +236,7 @@ def test_live_auth_preflight_surfaces_the_refusal_for_an_unbound_explicit_target
         )
 
 
-def test_local_session_probe_degrades_to_absent_instead_of_raising(bucket_a_session: Path) -> None:
+def test_local_session_probe_degrades_to_absent_instead_of_raising() -> None:
     """The persisted-session probe reports "no session", never a crash.
 
     The probe is a diagnostic on a status surface, so the refusal must arrive

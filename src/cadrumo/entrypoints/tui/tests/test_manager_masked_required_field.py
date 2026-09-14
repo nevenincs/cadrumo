@@ -37,7 +37,7 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.classification.policies import SensitivityClass
 from ....domain.user_profile.loader import load_user_profile_schema
-from ....tests.profile_capsule import load_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import FieldEditScreen, ProfileManagerScreen

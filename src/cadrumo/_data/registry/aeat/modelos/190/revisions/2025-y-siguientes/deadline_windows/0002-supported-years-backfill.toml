@@ -1,0 +1,17 @@
+# Supported filing years this edition left without a deadline window.
+#
+# GROUNDING. Art 5 states the plazo: "el plazo de presentacion sera el comprendido entre el 1 de enero y el 31 de enero".
+# rd-439-2007:art-108 is deliberately NOT carried: its apartado 2 says twenty days, which
+# contradicts this window. The edition's own 2025 row already dropped it; this follows that.
+#
+# Dates are NOMINAL; weekend and festivo movement happens at read time.
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-190-2026-0a"
+filing_year = 2026
+period = "2026 0A"
+period_kind = "annual"
+opens_on = 2027-01-01
+closes_on = 2027-01-31
+legal_refs = ["orden-eha-3127-2009:art-5"]
+source_refs = ["aeat-modelo-190-procedure", "boe-modelo-190-2025-form"]

@@ -4,23 +4,17 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
-from ...adapters.persistence.storage.errors import (
-    StorageValidationError,
-)
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.invoices.errors import InvoicePersistenceError
 from ...domain.transactions.errors import TransactionPersistenceError
 from ...domain.usage_ratios.errors import UsageRatioPersistenceError
+from ..persistence_errors import PersistenceDegradationError
 from .source_mesh import CalculationSourceResolution
 
 STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
-    *_STORAGE_DEGRADATION_ERRORS,
+    PersistenceDegradationError,
     InvoicePersistenceError,
-    StorageValidationError,
     TransactionPersistenceError,
     UsageRatioPersistenceError,
 )

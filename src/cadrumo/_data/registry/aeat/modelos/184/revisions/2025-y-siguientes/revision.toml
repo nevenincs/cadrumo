@@ -72,3 +72,777 @@ Modelo 184 is a pure declaracion INFORMATIVA. Under the regimen de atribucion de
 zero formulas, and no cuota-bearing casilla. A verification predicate guards a calculated result -- characteristically that a positive economic input did not produce a zero base or cuota. With no base and no cuota computed here, there is no such implication to assert. The under-declaration risk this family exists to catch lives on each member's own return, where the attributed renta is actually taxed."""
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "aeat-modelo-184-procedure"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-renta-atribuida-clave"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-renta-atribuida-subclave"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "renta-atribuible-importe"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-soporte"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "persona-relacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "numero-justificante"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-complementaria-sustitutiva"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "total-registros-socios"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-entidad-espanola"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "actividad-principal-espanola"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-entidad-extranjera"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "objeto-entidad-extranjera"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "clave-pais-entidad-extranjera"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "porcentaje-renta-atribuible-residentes"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tributacion-impuesto-sociedades"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-neto-cifra-negocios"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "representante-nif"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "representante-nombre"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-hoja"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "clave-pais-renta"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "regimen-determinacion-rendimientos"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-actividad"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "epigrafe-iae"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "cesionario-nif"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "cesionario-denominacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "fecha-adquisicion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "valor-liquidativo-o-ajustes-aumentos"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "valor-adquisicion-o-ajustes-disminuciones"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "ingresos-integros-atribuibles"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gastos-deducibles-atribuibles"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "porcentaje-reduccion-renta-atribuible"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "renta-atribuible-con-derecho-reduccion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "ganancias-perdidas-patrimoniales-atribuibles"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "base-deduccion-o-importe"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresos-a-cuenta-atribuibles"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "situacion-inmueble"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "referencia-catastral"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "criterio-cobros-y-pagos"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "numero-dias-arrendamiento"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-gastos-personal"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-consumos-explotacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-tributos-deducibles"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-arrendamientos-canones"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-reparaciones-conservacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-servicios-profesionales"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-suministros"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-gastos-financieros"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-amortizaciones"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-provisiones"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-actividad-otros-gastos-deducibles"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-intereses-financiacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-conservacion-reparacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-intereses-gastos-reparacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-tributos-recargos"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-saldos-dudoso-cobro"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-cantidades-devengadas-terceros"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-primas-seguros"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-amortizacion-inmueble"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-amortizacion-bienes-muebles"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-inmobiliario-otros-gastos-deducibles"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "miembro-nif"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "miembro-representante-fiscal-nif"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "miembro-nombre-razon-social"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo3-tipo-hoja"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "miembro-codigo-provincia"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "miembro-clave-pais"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "clave-tipo-participe"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "miembro-a-31-diciembre"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "numero-dias-miembro"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "porcentaje-participacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo3-clave"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo3-subclave"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-atribuido-miembro"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "reduccion-atribuida-miembro"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "miembro-domicilio-fiscal"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "provisiones-y-gastos-dificil-justificacion"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "naturaleza-inmueble"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo3-situacion-inmueble"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo3-referencia-catastral"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "clave-declarado"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "porcentaje-titularidad-inmueble"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo3-dias-arrendamiento"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "rendimiento-neto-previo-estimacion-objetiva"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "rendimiento-neto-minorado-agricola-estimacion-objetiva"
+from_revision = "2023-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]

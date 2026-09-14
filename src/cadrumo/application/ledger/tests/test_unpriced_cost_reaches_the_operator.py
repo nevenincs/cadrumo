@@ -18,31 +18,28 @@ any assertion made about the estimator alone.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
-from ....adapters.outbound.llm.models import UsageRecord
 from ....core.config_support import LLMProvider
 from ..llm_diagnostics import _aggregate_usage
+from ..llm_diagnostics_ports import LlmUsageDiagnosticRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _record(cost: Decimal | None, *, provider: LLMProvider = LLMProvider.ANTHROPIC) -> UsageRecord:
-    return UsageRecord(
-        prompt_id="p",
-        caller="test",
-        text="",
-        provider=provider,
-        model="claude-haiku-4-5" if cost is None else "claude-sonnet-4-6",
+def _record(
+    cost: Decimal | None,
+    *,
+    provider: LLMProvider = LLMProvider.ANTHROPIC,
+) -> LlmUsageDiagnosticRecord:
+    return LlmUsageDiagnosticRecord(
+        provider=provider.value,
         input_tokens=1000,
         output_tokens=1000,
         cost_estimate_usd=cost,
         cache_hit=False,
-        created_at=datetime(2026, 8, 8, tzinfo=UTC),
-        request_id="r" * 8,
     )
 
 

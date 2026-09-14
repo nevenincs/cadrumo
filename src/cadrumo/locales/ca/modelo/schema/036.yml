@@ -868,12 +868,16 @@ modelo:
               label: Identificacio. Codi de pais de l'Estat de residencia
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
               label: Identificacio. Domini o adreca d'internet
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Identificacio. Domini o adreca d'internet (segon)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
               label: Identificacio. Alta o baixa com a Empresari de Responsabilitat
                 Limitada
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
               label: Identificacio. Data d'alta o baixa com a Empresari de Responsabilitat
                 Limitada
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identificacio. Data d'efectes de la residencia fiscal
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
               label: Identificacio. Nacionalitat del no resident
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
@@ -885,6 +889,8 @@ modelo:
               label: Identificacio. Nom
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
               label: Identificacio. Nom comercial
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Identificacio. Persona fisica resident o no resident a Espanya
             x-e1l2sobmd5pmubb5dlgmir0:
               label: Persona juridica o entitat. Avisos. Correu electronic
             x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
@@ -1094,6 +1100,9 @@ modelo:
                 voluntats
             x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
               label: Persona juridica o entitat. Identificacio. Data de constitucio
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Persona juridica o entitat. Identificacio. Data d'efectes de
+                la residencia fiscal
             x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
               label: Persona juridica o entitat. Identificacio. Data d'inscripcio
                 registral
@@ -1374,30 +1383,84 @@ modelo:
             x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
               label: Socis, membres o particips. Cognoms i nom, rao o denominacio
                 social
+            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13a)
             x-edqm6bb15pn6ipg:
               help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
                 (sucesor 13a).'
               label: NIF del successor o beneficiari (successor 13a)
+            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13a)
+            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13a)
+            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13b)
             x-edqm6bb25pn6ipg:
               help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
                 (sucesor 13b).'
               label: NIF del successor o beneficiari (successor 13b)
+            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13b)
+            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13b)
+            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13c)
             x-edqm6bb35pn6ipg:
               help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
                 (sucesor 13c).'
               label: NIF del successor o beneficiari (successor 13c)
+            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13c)
+            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13c)
+            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13d)
             x-edqm6bb45pn6ipg:
               help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
                 (sucesor 13d).'
               label: NIF del successor o beneficiari (successor 13d)
+            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13d)
+            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13d)
+            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13e)
             x-edqm6bb55pn6ipg:
               help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
                 (sucesor 13e).'
               label: NIF del successor o beneficiari (successor 13e)
+            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13e)
+            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13e)
+            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidacio, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13f)
             x-edqm6bb65pn6ipg:
               help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
                 (sucesor 13f).'
               label: NIF del successor o beneficiari (successor 13f)
+            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, rao o denominacio social del successor o beneficiari
+                (successor 13f)
+            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidacio, participacio o herencia del successor
+                o beneficiari (successor 13f)
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:

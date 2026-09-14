@@ -55,7 +55,7 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import ready_clave_settings
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from cadrumo.application.calculations.cross_period_models import (    CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenanceKind,
@@ -70,7 +70,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

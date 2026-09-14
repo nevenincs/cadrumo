@@ -68,6 +68,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @12+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Fecha de la obligacion de pagos fraccionados por actividades economicas. ONE casilla over @12+2 dia, @14+2 mes and @16+4 ano, all printed under the single number 602.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.irpf-pagos-fraccionados-actividad-fecha"
+continuidad_id = "obl-irpf-pagos-fraccionados-actividad-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:739 (sha256 3ecea6c06e3d) box [602] over 3 printed components @12+8 (4 12 2 Num 7.A) IRPF. Obligación de realizar pagos frac. derivados ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:799 (sha256 791479fbf9e9) box [602] over 3 printed components @12+8 (4 12 2 Num 7.A) IRPF. Obligación de realizar pagos frac. derivados ...)."
 number = "602"
 section = ["declaracion", "obligaciones", "irpf"]
 data_type = "date"
@@ -101,6 +104,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @21+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Fecha de la obligacion de pagos fraccionados por condicion de miembro de entidad en atribucion. ONE casilla over @21+2 dia, @23+2 mes and @25+4 ano, all printed under the single number 603.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.irpf-pagos-fraccionados-atribucion-fecha"
+continuidad_id = "obl-irpf-pagos-fraccionados-atribucion-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:743 (sha256 3ecea6c06e3d) box [603] over 3 printed components @21+8 (8 21 2 Num 7.A) IRPF. Oblig. de realizar pagos fr. deriv. de cond. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:803 (sha256 791479fbf9e9) box [603] over 3 printed components @21+8 (8 21 2 Num 7.A) IRPF. Oblig. de realizar pagos fr. deriv. de cond. ...)."
 number = "603"
 section = ["declaracion", "obligaciones", "irpf"]
 data_type = "date"
@@ -133,6 +139,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @30+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion objetiva. Fecha. ONE casilla over @30+2 dia, @32+2 mes and @34+4 ano, all printed under the single number 616.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.irpf-estimacion-objetiva-fecha"
+continuidad_id = "obl-irpf-estimacion-objetiva-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:747 (sha256 3ecea6c06e3d) box [616] over 3 printed components @30+8 (12 30 2 Num 7.A) IRPF. Estimación objetiva. Fecha. Día [616] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:807 (sha256 791479fbf9e9) box [616] over 3 printed components @30+8 (12 30 2 Num 7.A) IRPF. Estimación objetiva. Fecha. Día [616])."
 number = "616"
 section = ["declaracion", "obligaciones", "irpf"]
 data_type = "date"
@@ -165,6 +174,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @39+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion directa normal. Fecha. ONE casilla over @39+2 dia, @41+2 mes and @43+4 ano, all printed under the single number 618.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.irpf-estimacion-directa-normal-fecha"
+continuidad_id = "obl-irpf-estimacion-directa-normal-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:751 (sha256 3ecea6c06e3d) box [618] over 3 printed components @39+8 (16 39 2 Num 7.A) IRPF. Estimación directa normal. Fecha. Día [618] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:811 (sha256 791479fbf9e9) box [618] over 3 printed components @39+8 (16 39 2 Num 7.A) IRPF. Estimación directa normal. Fecha. Día [618])."
 number = "618"
 section = ["declaracion", "obligaciones", "irpf"]
 data_type = "date"
@@ -197,6 +209,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @48+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion directa simplificada. Fecha. ONE casilla over @48+2 dia, @50+2 mes and @52+4 ano, all printed under the single number 650.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.irpf-estimacion-directa-simplificada-fecha"
+continuidad_id = "obl-irpf-estimacion-directa-simplificada-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:755 (sha256 3ecea6c06e3d) box [650] over 3 printed components @48+8 (20 48 2 Num 7.A) IRPF. Estimación directa simplificada. Fecha. Día ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:815 (sha256 791479fbf9e9) box [650] over 3 printed components @48+8 (20 48 2 Num 7.A) IRPF. Estimación directa simplificada. Fecha. Día ...)."
 number = "650"
 section = ["declaracion", "obligaciones", "irpf"]
 data_type = "date"
@@ -502,6 +517,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @121+8. Impuesto sobre Sociedades. Fecha de la obligacion de presentar declaracion por el Impuesto sobre Sociedades. ONE casilla over @121+2 dia, @123+2 mes and @125+4 ano, all printed under the single number 641.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.sociedades-obligacion-declarar-fecha"
+continuidad_id = "obl-sociedades-obligacion-declarar-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:783 (sha256 3ecea6c06e3d) box [641] over 3 printed components @121+8 (48 121 2 Num 7.B) I.S. Obligación de presentar declaración por el I...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:843 (sha256 791479fbf9e9) box [641] over 3 printed components @121+8 (48 121 2 Num 7.B) I.S. Obligación de presentar declaración por el I...)."
 number = "641"
 section = ["declaracion", "obligaciones", "sociedades"]
 data_type = "date"
@@ -517,6 +535,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @129+4. Impuesto sobre Sociedades. Fecha de cierre del ejercicio economico. ONE casilla over @129+2 dia and @131+2 mes ONLY -- the design declares NO ano component, an annual closing date being a day and month, and both are printed under the single number 640.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.sociedades-cierre-ejercicio"
+continuidad_id = "obl-sociedades-cierre-ejercicio"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:786 (sha256 3ecea6c06e3d) box [640] over 2 printed components @129+4 (51 129 2 Num 7.B) I.S. Fecha de cierre del ejercicio económico. Día...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:846 (sha256 791479fbf9e9) box [640] over 2 printed components @129+4 (51 129 2 Num 7.B) I.S. Fecha de cierre del ejercicio económico. Día...)."
 number = "640"
 section = ["declaracion", "obligaciones", "sociedades"]
 data_type = "date"
@@ -550,6 +571,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @134+8. Impuesto sobre Sociedades. Fecha de la opcion por el sistema del art. 40.3. ONE casilla over @134+2 dia, @136+2 mes and @138+4 ano, all printed under the single number 642.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.sociedades-opcion-art-40-3-fecha"
+continuidad_id = "obl-sociedades-opcion-art-40-3-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:789 (sha256 3ecea6c06e3d) box [642] over 3 printed components @134+8 (54 134 2 Num 7.B) I.S. Opción por el sistema de cálculo del art. 40...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:849 (sha256 791479fbf9e9) box [642] over 3 printed components @134+8 (54 134 2 Num 7.B) I.S. Opción por el sistema de cálculo del art. 40...)."
 number = "642"
 section = ["declaracion", "obligaciones", "sociedades"]
 data_type = "date"
@@ -635,6 +659,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @153+8. Impuesto sobre Sociedades. Fecha de la renuncia al regimen de consolidacion fiscal. ONE casilla over @153+2 dia, @155+2 mes and @157+4 ano, all printed under the single number 646.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.sociedades-renuncia-consolidacion-fecha"
+continuidad_id = "obl-sociedades-renuncia-consolidacion-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:798 (sha256 3ecea6c06e3d) box [646] over 3 printed components @153+8 (63 153 2 Num 7.B) I.S. Ejercitada la opción por el régimen de conso...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:858 (sha256 791479fbf9e9) box [646] over 3 printed components @153+8 (63 153 2 Num 7.B) I.S. Ejercitada la opción por el régimen de conso...)."
 number = "646"
 section = ["declaracion", "obligaciones", "sociedades"]
 data_type = "date"
@@ -685,6 +712,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @163+8. IRNR. Modalidad de establecimiento permanente. Fecha de la opcion por el regimen general. ONE casilla over @163+2 dia, @165+2 mes and @167+4 ano, all printed under the single number 636.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.irnr-opcion-regimen-general-fecha"
+continuidad_id = "obl-irnr-opcion-regimen-general-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:803 (sha256 3ecea6c06e3d) box [636] over 3 printed components @163+8 (68 163 2 Num 7.C) IRNR. Modalidad de establ. perm. Fecha. Día [636]) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:863 (sha256 791479fbf9e9) box [636] over 3 printed components @163+8 (68 163 2 Num 7.C) IRNR. Modalidad de establ. perm. Fecha. Día [636])."
 number = "636"
 section = ["declaracion", "obligaciones", "irnr"]
 data_type = "date"
@@ -718,6 +748,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @172+8. IRNR. Modalidad de establecimiento permanente. Fecha de la obligacion de presentar declaracion por el I.R.N.R. ONE casilla over @172+2 dia, @174+2 mes and @176+4 ano, all printed under the single number 637.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.irnr-obligacion-declarar-fecha"
+continuidad_id = "obl-irnr-obligacion-declarar-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:807 (sha256 3ecea6c06e3d) box [637] over 3 printed components @172+8 (72 172 2 Num 7.C) IRNR. Modalidad de establ. perm. Obligación de pr...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:867 (sha256 791479fbf9e9) box [637] over 3 printed components @172+8 (72 172 2 Num 7.C) IRNR. Modalidad de establ. perm. Obligación de pr...)."
 number = "637"
 section = ["declaracion", "obligaciones", "irnr"]
 data_type = "date"
@@ -751,6 +784,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @181+8. IRNR. Modalidad de establecimiento permanente. Fecha de la opcion por el sistema del art. 40.3. ONE casilla over @181+2 dia, @183+2 mes and @185+4 ano, all printed under the single number 638.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.irnr-opcion-art-40-3-fecha"
+continuidad_id = "obl-irnr-opcion-art-40-3-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:811 (sha256 3ecea6c06e3d) box [638] over 3 printed components @181+8 (76 181 2 Num 7.C) IRNR. Modalidad de establ. perm. Opción por el si...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:871 (sha256 791479fbf9e9) box [638] over 3 printed components @181+8 (76 181 2 Num 7.C) IRNR. Modalidad de establ. perm. Opción por el si...)."
 number = "638"
 section = ["declaracion", "obligaciones", "irnr"]
 data_type = "date"
@@ -784,6 +820,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @190+8. Regimen fiscal especial del Titulo II de la Ley 49/2002. Fecha del ejercicio de la opcion. ONE casilla over @190+2 dia, @192+2 mes and @194+4 ano, all printed under the single number 653.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.regimen-ley-49-2002-ejerce-opcion-fecha"
+continuidad_id = "obl-regimen-ley-49-2002-ejerce-opcion-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:815 (sha256 3ecea6c06e3d) box [653] over 3 printed components @190+8 (80 190 2 Num 8. Ejerce la opción por el Régimen fiscal especial del...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:875 (sha256 791479fbf9e9) box [653] over 3 printed components @190+8 (80 190 2 Num 8. Ejerce la opción por el Régimen fiscal especial del...)."
 number = "653"
 section = ["declaracion", "obligaciones", "regimen_ley_49_2002"]
 data_type = "date"
@@ -817,6 +856,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @199+8. Regimen fiscal especial del Titulo II de la Ley 49/2002. Fecha de la renuncia. ONE casilla over @199+2 dia, @201+2 mes and @203+4 ano, all printed under the single number 654.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "obl.regimen-ley-49-2002-renuncia-fecha"
+continuidad_id = "obl-regimen-ley-49-2002-renuncia-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:819 (sha256 3ecea6c06e3d) box [654] over 3 printed components @199+8 (84 199 2 Num 8. Ejercitada la opción por el Rég. fiscal esp. del Ti...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:879 (sha256 791479fbf9e9) box [654] over 3 printed components @199+8 (84 199 2 Num 8. Ejercitada la opción por el Rég. fiscal esp. del Ti...)."
 number = "654"
 section = ["declaracion", "obligaciones", "regimen_ley_49_2002"]
 data_type = "date"

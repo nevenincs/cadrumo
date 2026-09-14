@@ -987,7 +987,7 @@ errors:
       disponible.
     refused_modelo_payment_election_incompatible: La opcion de pago elegida requiere
       un resultado positivo.
-    refused_modelo_prior_domiciliation_election: Se ha rechazado la baja o modificacion
+    refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificacion
       de la domiciliacion previa porque falta o no es valida la rectificativa del
       modelo 303 o la prueba oficial de la presentacion base U.
     refused_modelo_refund_account_missing: Se solicitó una devolución pero no hay

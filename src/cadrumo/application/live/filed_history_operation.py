@@ -45,6 +45,7 @@ from ..operations.registry import (
 from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
+from ..auth.protocols import BrowserSessionFactoryPort
 from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_DECLARATION_REFUSAL_CODE,
@@ -136,6 +137,11 @@ class FiledHistoryComposition(Protocol):
         ...
 
     @property
+    def browser_session_factory(self) -> BrowserSessionFactoryPort:
+        """Return the composed browser-session capability factory."""
+        ...
+
+    @property
     def operator_scope_ports(self) -> OperatorScopePorts:
         """Return the composed operator-auth storage-scope capability."""
         ...
@@ -152,6 +158,7 @@ type FiledHistoryPull = Callable[
         IvaRemoteStatePort,
         NotificationsPorts,
         CertificateSecretBackendFactory,
+        BrowserSessionFactoryPort,
         OperatorScopePorts,
     ],
     Awaitable[FiledHistoryOnboardingRun],
@@ -184,11 +191,13 @@ async def _pull_recorded_filed_history(
     iva_remote_state_port: IvaRemoteStatePort,
     notifications_ports: NotificationsPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ) -> FiledHistoryOnboardingRun:
     """Delegate every domain stage and write to the existing composition."""
     return await pull_filed_history(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
         filed_data_port=filed_data_port,
         iva_remote_state_port=iva_remote_state_port,
@@ -400,6 +409,7 @@ class FiledHistoryOperationExecutor:
             composition.iva_remote_state_port,
             composition.notifications_ports,
             composition.certificate_secret_backend_factory,
+            composition.browser_session_factory,
             composition.operator_scope_ports,
         )
         await context.events.phase(FILED_HISTORY_PHASE_RESULT)

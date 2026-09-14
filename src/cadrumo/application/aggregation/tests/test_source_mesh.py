@@ -9,7 +9,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.errors import DecryptionError
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
@@ -18,6 +17,7 @@ from ....domain.calculations.row_casilla import DirectRowMaterializationProvenan
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
 from ..errors import AggregationValidationError
+from ...persistence_errors import PersistenceDegradationError
 from ..source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -1066,7 +1066,7 @@ def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> N
 def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    error = DecryptionError("ciphertext authentication failed")
+    error = PersistenceDegradationError("secure-object read")
 
     with caplog.at_level("DEBUG", logger="cadrumo.application.aggregation.source_resolution_operations"):
         resolution = storage_degradation_resolution(
