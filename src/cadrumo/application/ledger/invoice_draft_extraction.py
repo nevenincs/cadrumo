@@ -73,7 +73,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import NoReturn
+from typing import TYPE_CHECKING, NoReturn
 
 from ...core.capabilities import ServiceCapability
 from ...core.config import Settings
@@ -106,6 +106,11 @@ from .invoice_draft_records import (
     facturae_invoice_class_findings,
 )
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+
+if TYPE_CHECKING:
+    from ...core.period import Period
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.iva.regime_legend import RegimeLegend
 
 __all__ = ["extract_invoice_draft_from_evidence"]
 
@@ -151,7 +156,7 @@ def _require_consent_token_binds_these_bytes(
         return
     if consent_token.evidence_content_address == evidence_input.content_sha256:
         return
-    facts = {
+    facts: dict[str, object] = {
         "consent_token_binding_valid": False,
         "evidence_content_address": evidence_input.content_sha256,
     }
@@ -167,6 +172,8 @@ def extract_invoice_draft_from_evidence(
     off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentProof | None = None,
     ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
 ) -> InvoiceDraft:
     """Resolve one stored evidence reference to bytes and extract its :class:`InvoiceDraft`.
 
@@ -199,6 +206,14 @@ def extract_invoice_draft_from_evidence(
         consent_token: Per-invocation off-host consent proof, minted through
             :func:`~llm.mint_evidence_consent_token`. ``None`` is correct for
             every on-host read.
+        operation: Caller-owned pinned authority operation used to resolve the
+            invoice extraction authority values.
+            The lease must remain open for the complete extraction operation.
+        legends: The dated regime declarations resolved from ``operation`` by
+            the enclosing composition boundary. The same tuple is used by the
+            structured and grounded deterministic checks.
+        ports: Application-owned evidence and reader capabilities supplied by
+            the enclosing composition root.
 
     Returns:
         :class:`InvoiceDraft`: The best-effort extracted fields, for operator
@@ -235,6 +250,10 @@ def extract_invoice_draft_from_evidence(
 
     _require_consent_token_binds_these_bytes(consent_token, evidence_input, ports)
 
+    from .invoice_extraction_authority import default_invoice_extraction_period
+
+    authority_period = default_invoice_extraction_period()
+
     # Routing order, and the order is itself a control rather than an
     # optimisation: a document carrying a STRUCTURED record is read exactly and
     # reaches no model at all, which makes prompt injection categorically
@@ -245,7 +264,11 @@ def extract_invoice_draft_from_evidence(
     # exact path.
     if evidence_input.document_shape in STRUCTURED_DOCUMENT_SHAPES:
         try:
-            return _extract_invoice_fields_from_structured_record(evidence_input, ports=ports)
+            return _extract_invoice_fields_from_structured_record(
+                evidence_input,
+                ports=ports,
+                legends=legends,
+            )
         except StructuredInvoiceReadError:
             # A malformed structured record refuses rather than yielding a
             # partial one; fall through so a document whose embedded payload is
@@ -278,6 +301,9 @@ def extract_invoice_draft_from_evidence(
                 off_host_provider=off_host_provider,
                 consent_token=consent_token,
                 taxpayer_tax_id=filer_tax_id,
+                authority_period=authority_period,
+                operation=operation,
+                legends=legends,
                 ports=ports,
             )
     return _extract_invoice_fields_via_vision(
@@ -286,6 +312,9 @@ def extract_invoice_draft_from_evidence(
         off_host_provider=off_host_provider,
         consent_token=consent_token,
         taxpayer_tax_id=filer_tax_id,
+        authority_period=authority_period,
+        operation=operation,
+        legends=legends,
         ports=ports,
     )
 
@@ -401,6 +430,9 @@ def _read_transcription_semantically(
     consent_token: EvidenceConsentProof | None = None,
     taxpayer_tax_id: str | None = None,
     propose_supply_nature: bool = False,
+    authority_period: Period,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
     ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
     """Read a text-native PDF through the transcribe-extract-ground chain.
@@ -446,6 +478,14 @@ def _read_transcription_semantically(
             from this transcription. Off by default and never consulted by the
             classifier: the proposal reaches a person, and the value that reaches
             the classifier is the one they state at confirm.
+        authority_period: The period coordinate selected once by the enclosing
+            extraction operation for all prompt authority values.
+        operation: The caller-owned pinned authority operation retained for the
+            complete extraction operation.
+        legends: The dated regime declarations selected from ``operation`` and
+            shared by the deterministic checks.
+        ports: Application-owned reader capabilities supplied by the enclosing
+            composition root.
 
     Returns:
         The grounded draft.
@@ -456,10 +496,7 @@ def _read_transcription_semantically(
             :func:`_refuse_a_text_read_with_no_reader`.
     """
     from .grounded_reading import ground_draft_against_transcription
-    from .invoice_extraction_authority import (
-        default_invoice_extraction_period,
-        resolve_invoice_extraction_authority_values,
-    )
+    from .invoice_extraction_authority import resolve_invoice_extraction_authority_values
 
     # Resolved HERE, once, and handed down. The rates, the statutory retención
     # figures and the no-printed-tax category set are regulatory values, so this
@@ -467,7 +504,7 @@ def _read_transcription_semantically(
     # holds no authority of its own and cannot print a rate this call did not
     # produce. Resolving once per document also means both branches below read
     # under the same values, which a per-prompt resolution does not guarantee.
-    authority_values = resolve_invoice_extraction_authority_values(period=default_invoice_extraction_period())
+    authority_values = resolve_invoice_extraction_authority_values(period=authority_period, operation=operation)
 
     try:
         read = ports.read_text(transcription, settings, off_host_provider, consent_token, authority_values)
@@ -494,6 +531,7 @@ def _read_transcription_semantically(
     return ground_draft_against_transcription(
         draft=grounded_input,
         transcription=transcription,
+        legends=legends,
         taxpayer_tax_id=taxpayer_tax_id,
     )
 
@@ -538,7 +576,10 @@ def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
 
 
 def _extract_invoice_fields_from_structured_record(
-    evidence: EvidenceInput, *, ports: InvoiceDraftExtractionPorts
+    evidence: EvidenceInput,
+    *,
+    legends: tuple[RegimeLegend, ...],
+    ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
     """Read a structured e-invoice exactly into the line-carrying draft.
 
@@ -654,7 +695,7 @@ def _extract_invoice_fields_from_structured_record(
     return draft.model_copy(
         update={
             "discrepancies": (
-                *deterministic_findings(draft),
+                *deterministic_findings(draft, legends=legends),
                 *facturae_invoice_class_findings(
                     declared=parsed.invoice_classification,
                     rectifies_invoice_number=parsed.rectifies_invoice_number,
@@ -671,6 +712,9 @@ def _extract_invoice_fields_via_vision(
     off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentProof | None = None,
     taxpayer_tax_id: str | None = None,
+    authority_period: Period,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
     ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
     """Rasterise/encode *evidence*, TRANSCRIBE it with the on-host vision model, then read it.
@@ -768,5 +812,8 @@ def _extract_invoice_fields_via_vision(
         off_host_provider=off_host_provider,
         consent_token=consent_token,
         taxpayer_tax_id=taxpayer_tax_id,
+        authority_period=authority_period,
+        operation=operation,
+        legends=legends,
         ports=ports,
     )

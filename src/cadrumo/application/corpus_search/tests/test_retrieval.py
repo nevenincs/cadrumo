@@ -9,11 +9,25 @@ distinguish from the shipped one.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
 
+from ....core.hashing import sha256_hex
+from ....domain.calculations.registry import authority as authority_module
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority_artifact import (
+    AuthorityComponentKind,
+    AuthorityComponentQuery,
+    EvidenceComponentQuery,
+    PublishedLegalEvidence,
+    ReferenceComponentQuery,
+)
+from ....domain.calculations.registry.authority_store import SQLiteAuthorityReader
+from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from .._retrieval import run_retrieval
+from ..citation_lookup import bundled_citation_lookup
 from ..errors import CorpusSearchInputError
 from ..lexical_index import build_lexical_index, iter_corpus_chunks
 from ..models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
@@ -58,13 +72,31 @@ def test_limit_caps_the_returned_page(tmp_path: Path) -> None:
 
 
 def test_citation_short_circuit(tmp_path: Path) -> None:
-    from ..citation_lookup import bundled_citation_lookup
-
     database_path, _ids = _index_and_chunks(tmp_path)
+    citation_id = "ley-58-2003:art-27.2"
+    authority = authority_module.bundled_authority()
+    reference = authority.catalogues.legal[citation_id]
+    anchored_text = authority.legal_evidence_text(reference.id)
+    reference_query = ReferenceComponentQuery(citation_id, AuthorityComponentKind.LEGAL_REFERENCE)
+    evidence_query = EvidenceComponentQuery(citation_id, AuthorityComponentKind.LEGAL_EVIDENCE)
+    components: dict[AuthorityComponentQuery, object] = {
+        reference_query: reference,
+    }
+    reader = FakeAuthorityComponentReader(
+        {
+            **components,
+            evidence_query: PublishedLegalEvidence(
+                legal_reference_id=citation_id,
+                anchored_text=anchored_text,
+                text_sha256=sha256_hex(anchored_text.encode("utf-8")),
+            ),
+        }
+    )
+    operation = PinnedAuthorityOperation(cast(SQLiteAuthorityReader, reader), reader.pin())
     response = run_retrieval(
-        "ley-58-2003:art-27.2",
+        citation_id,
         database_path=database_path,
-        citation_lookup=bundled_citation_lookup(),
+        citation_lookup=bundled_citation_lookup((citation_id,), operation=operation),
         limit=5,
     )
     assert response.mode is RetrievalMode.CITATION

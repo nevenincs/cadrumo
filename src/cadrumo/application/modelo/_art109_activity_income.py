@@ -25,16 +25,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -43,6 +43,9 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ...domain.transactions.volumen_ingresos import counts_toward_art_109_activity_income
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # Registry-owned ratio, activity entity sets, category applicability, and source
 # references remain in canonical versioned registry/facts TOML.  The selected
@@ -63,26 +66,25 @@ def _art109_registry_declarations(
     *,
     filing_year: int,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[object, str, str]:
     """Resolve the selected Art. 109 ratio and activity selectors."""
-    authority = bundled_authority()
-    query_service = RegistryQueryService(authority)
-    context = query_service._resolve_revision_for_scope(
+    revision = operation.revision_for_context(
         str(Modelo("130")),
         filing_year=filing_year,
         period=period.registry_token,
     )
     ratio_parameters = tuple(
         parameter
-        for parameter in context.revision.parameters
+        for parameter in revision.parameters
         if parameter.data_type == "ratio" and any("109" in str(legal_ref) for legal_ref in parameter.legal_refs)
     )
     if len(ratio_parameters) != 1:
         raise RegistryValidationError(
-            f"selected Modelo 130 revision {context.revision.id} does not declare one Art. 109 ratio parameter",
+            f"selected Modelo 130 revision {revision.id} does not declare one Art. 109 ratio parameter",
         )
 
-    resolved_catalogue = authority.resolve_governed_fact(
+    resolved_catalogue = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m036-activity-selector-catalogue",
             date_axis=DateAxis.FILING_PERIOD,
@@ -152,6 +154,7 @@ def derive_art109_activity_income_coverage_for_work_unit(
     work_unit: WorkUnit,
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Art109ActivityIncomeCoverage:
     """Derive the Art. 109 current-payment-period coverage fact for an M130 work unit.
 
@@ -170,10 +173,22 @@ def derive_art109_activity_income_coverage_for_work_unit(
     repository = transaction_repository
     if repository.bucket_id != work_unit.bucket_id:
         return _insufficient("repository_bucket_mismatch")
-    return derive_art109_activity_income_coverage(repository.load(), period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return derive_art109_activity_income_coverage_for_work_unit(
+                work_unit,
+                transaction_repository=transaction_repository,
+                operation=indexed_operation,
+            )
+    return derive_art109_activity_income_coverage(repository.load(), period=period, operation=operation)
 
 
-def art_109_retained_income_threshold(*, filing_year: int, period: Period) -> Decimal:
+def art_109_retained_income_threshold(
+    *,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Decimal:
     """Return the Art. 109 retained-income ratio selected for this filing.
 
     The ratio is regulatory data, versioned by filing year plus revision, so it
@@ -194,9 +209,17 @@ def art_109_retained_income_threshold(*, filing_year: int, period: Period) -> De
             threshold parameter. Refusing is correct: answering from a default
             would apply an ungrounded ratio to a real filing decision.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return art_109_retained_income_threshold(
+                filing_year=filing_year,
+                period=period,
+                operation=indexed_operation,
+            )
     parameter, _exempt_selector, _net_selector = _art109_registry_declarations(
         filing_year=filing_year,
         period=period,
+        operation=operation,
     )
     return resolve_parameter(parameter, {"filing_period": period.end_date})
 
@@ -205,6 +228,7 @@ def derive_art109_activity_income_coverage(
     catalogue: TransactionCatalogue,
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Art109ActivityIncomeCoverage:
     """Derive Art. 109 current-period coverage from a transaction catalogue.
 
@@ -219,21 +243,28 @@ def derive_art109_activity_income_coverage(
     if not period.has_date_span():
         return _insufficient("period_without_date_span")
 
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return derive_art109_activity_income_coverage(
+                catalogue,
+                period=period,
+                operation=indexed_operation,
+            )
     parameter, exempt_selector, net_selector = _art109_registry_declarations(
         filing_year=period.filing_year,
         period=period,
+        operation=operation,
     )
     threshold = resolve_parameter(parameter, {"filing_period": period.end_date})
-    authority = bundled_authority()
     exempt_activities = tipo_actividad_code_set(
         exempt_selector,
         effective_date=period.end_date,
-        authority=authority,
+        authority=operation,
     )
     net_of_subvenciones_activities = tipo_actividad_code_set(
         net_selector,
         effective_date=period.end_date,
-        authority=authority,
+        authority=operation,
     )
     numerator = ZERO
     denominator = ZERO

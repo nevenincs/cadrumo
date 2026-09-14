@@ -25,13 +25,11 @@ exactly the tail the lazy leaf exists to defer.
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import cache
 from typing import TYPE_CHECKING, cast
 
 import typer
 from typer._click.core import Context as _TyperClickContext
 
-from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from ..common import activate_subcommand_output_language
 from ..errors import command_error_boundary as _command_error_boundary
 
@@ -69,17 +67,19 @@ def with_profile_cli_projection(wizard_command: Callable[..., None], *, mode: Wi
     return _dispatch
 
 
-@cache
 def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
-    """Build the behavior-only wizard callable for one profile verb."""
+    """Build one wizard behavior from a leased indexed authority operation."""
+    from ....application.wizard.catalogue import build_setup_flow
     from ....application.wizard.commands import build_wizard_command
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
-    return _command_error_boundary(
-        with_profile_cli_projection(
-            build_wizard_command(_get_setup_flow(), mode=mode),
-            mode=mode,
-        ),
-    )
+    # The flow is a frozen projection of this generation.  Build it while the
+    # operation is leased, then retain only the descriptor in the command
+    # closure; no process-global catalogue or operation outlives its pin.
+    with bundled_indexed_authority().operation() as operation:
+        flow = build_setup_flow(operation)
+        wizard_command = build_wizard_command(flow, mode=mode)
+    return _command_error_boundary(with_profile_cli_projection(wizard_command, mode=mode))
 
 
 def profile_create(ctx: typer.Context, **parameters: object) -> None:

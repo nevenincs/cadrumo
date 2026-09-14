@@ -11,7 +11,11 @@ from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    ValidatedRegistryAuthority,
+    bundled_indexed_authority,
+)
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
@@ -47,8 +51,19 @@ def calculate_m303_regimen_simplificado_result(
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
     dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
     authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> M303RegimenSimplificadoCalculationResult:
     """Calculate one immutable, source-pinned annual result from filing rows."""
+    if authority is None and operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return calculate_m303_regimen_simplificado_result(
+                period=period,
+                scope_decision=scope_decision,
+                rows=rows,
+                regimen_snapshot=regimen_snapshot,
+                dana_2024_eligibility=dana_2024_eligibility,
+                operation=indexed_operation,
+            )
     _validate_coordinate(
         period=period,
         scope_decision=scope_decision,
@@ -56,15 +71,20 @@ def calculate_m303_regimen_simplificado_result(
         regimen_snapshot=regimen_snapshot,
         dana_2024_eligibility=dana_2024_eligibility,
         authority=authority,
+        operation=operation,
     )
     _validate_rows_against_annual_orden(rows=rows, regimen_snapshot=regimen_snapshot, scope_decision=scope_decision)
     dana_authority = None
     if dana_2024_eligibility is not None:
-        if authority is None:
+        if authority is None and operation is None:
             raise M303RegimenSimplificadoCalculationError(
-                "DANA eligibility requires a validated registry authority",
+                "DANA eligibility requires a pinned registry operation or explicit authority",
             )
-        dana_authority = _resolve_dana_2024_authority(authority=authority, effective_date=period.end_date)
+        dana_authority = _resolve_dana_2024_authority(
+            authority=authority,
+            operation=operation,
+            effective_date=period.end_date,
+        )
     annual_by_id = {activity.orden_id: activity for activity in regimen_snapshot.orden.activities}
     activities = tuple(
         _calculate_no_agricultural_activity(
@@ -104,25 +124,28 @@ def _validate_coordinate(
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
     dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
     authority: ValidatedRegistryAuthority | None,
+    operation: PinnedAuthorityOperation | None,
 ) -> None:
     if rows.ejercicio != period.filing_year or regimen_snapshot.orden.ejercicio != period.filing_year:
         raise M303RegimenSimplificadoCalculationError("M303 simplified rows and annual Orden must use the filing year")
     if regimen_snapshot.scope_decision != scope_decision:
         raise M303RegimenSimplificadoCalculationError("M303 simplified scope must match the annual Orden snapshot")
     requires_dana_eligibility = (
-        _dana_reduction_is_available(authority=authority, effective_date=period.end_date)
+        _dana_reduction_is_available(authority=authority, operation=operation, effective_date=period.end_date)
         and is_last_filing_period_of_year(period)
         and not scope_decision.is_not_claimed
     )
     if requires_dana_eligibility != (dana_2024_eligibility is not None):
         raise M303RegimenSimplificadoCalculationError(
-            "M303 DANA eligibility evidence is required only when the selected registry reduction applies to the annual simplified result",
+            "M303 DANA eligibility evidence is required only when the selected "
+            "registry reduction applies to the annual simplified result",
         )
 
 
 def _dana_reduction_is_available(
     *,
     authority: ValidatedRegistryAuthority | None,
+    operation: PinnedAuthorityOperation | None,
     effective_date: date,
 ) -> bool:
     """Return whether the selected authority publishes the DANA reduction now.
@@ -131,12 +154,13 @@ def _dana_reduction_is_available(
     coordinate check therefore asks the same authority used to resolve the
     reduction instead of encoding a filing year in the calculation module.
     """
-    if authority is None:
-        from ...domain.calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+    resolver = operation if operation is not None else authority
+    if resolver is None:
+        raise M303RegimenSimplificadoCalculationError(
+            "DANA applicability requires a pinned registry operation or explicit authority",
+        )
     try:
-        authority.resolve_governed_fact(
+        resolver.resolve_governed_fact(
             ScalarFactQuery(
                 fact_id=_DANA_2024_REDUCTION_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
@@ -302,9 +326,19 @@ class _DANA2024Authority:
         self.source_refs = source_refs
 
 
-def _resolve_dana_2024_authority(*, authority: ValidatedRegistryAuthority, effective_date: date) -> _DANA2024Authority:
+def _resolve_dana_2024_authority(
+    *,
+    authority: ValidatedRegistryAuthority | None,
+    operation: PinnedAuthorityOperation | None,
+    effective_date: date,
+) -> _DANA2024Authority:
+    resolver = operation if operation is not None else authority
+    if resolver is None:
+        raise M303RegimenSimplificadoCalculationError(
+            "DANA authority requires a pinned registry operation or explicit authority",
+        )
     try:
-        resolved = authority.resolve_governed_fact(
+        resolved = resolver.resolve_governed_fact(
             ScalarFactQuery(
                 fact_id=_DANA_2024_REDUCTION_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,

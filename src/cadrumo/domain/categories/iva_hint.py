@@ -6,17 +6,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.facts.schema import FactSelector
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .profile import IvaDeductibilityHint
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "categories.profile"
 _SCOPE_SELECTOR = FactSelector(name="scope", value="iva_deductibility_hint")
@@ -80,14 +76,15 @@ def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
 def resolve_iva_deductibility_hint_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaDeductibilityHintCatalogue:
     """Resolve the dated IVA hint vocabulary through the facts authority."""
-    if authority is None:
-        from ..calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
-    resolved = authority.resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError(
+            "IVA deductibility hint catalogue requires an explicit authority operation or scope"
+        )
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -106,7 +103,7 @@ def require_iva_deductibility_hint(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaDeductibilityHint:
     """Return one registry-declared IVA hint token or refuse it."""
     return resolve_iva_deductibility_hint_catalogue(

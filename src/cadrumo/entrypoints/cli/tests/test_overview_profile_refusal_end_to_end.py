@@ -19,9 +19,9 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....application.user_profile.preflight import build_profile_preflight_requirement
-from ....domain.user_profile.loader import load_user_profile_schema
 from ._overview_calendar_support import calendar_backend_omitting_gating_facts
 from .cli_runner import invoke_cached_cli
 

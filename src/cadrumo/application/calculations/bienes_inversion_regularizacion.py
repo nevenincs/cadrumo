@@ -46,7 +46,7 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
     resolve_bienes_inversion_regularizacion_parameters,
 )
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.queries import RegistryQueryService
@@ -85,14 +85,23 @@ def bienes_inversion_registry_declarations(
 
 
 def _selected_registry_reports(
-    *, modelo: str, filing_year: int, period: str
-) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
-    return bienes_inversion_registry_declarations(
-        RegistryQueryService(bundled_authority()),
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-    )
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    operation: PinnedAuthorityOperation | None = None,
+) -> None:
+    """Confirm one registry point without reopening an eager authority graph."""
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            _selected_registry_reports(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                operation=indexed_operation,
+            )
+        return
+    operation.revision_for_context(modelo, filing_year=filing_year, period=period)
 
 
 @dataclass(frozen=True, slots=True)

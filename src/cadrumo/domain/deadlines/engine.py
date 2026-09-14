@@ -9,6 +9,8 @@ read from validated calculation registry data supplied by
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from datetime import date
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
@@ -21,6 +23,7 @@ from ...core.time.clock import now, today_madrid
 # this module does not trigger the ~870ms ValidatedRegistryAuthority
 # parse — load it only when a deadline computation actually runs.
 if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.schema import ModeloRevision
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ..calculations.registry.schema_verification import ProfilePredicateDefinition
@@ -37,7 +40,7 @@ from .models import (
     Schedule,
     TaxpayerProfile,
 )
-from .recargo import build_recovery_for_overdue
+from .recargo import build_recovery_for_overdue, load_recargo_bands
 
 _logger = get_logger(__name__)
 
@@ -109,6 +112,57 @@ def _window_outside_activity_period(
     return activity_end_date is not None and opens_on > activity_end_date
 
 
+def _indexed_deadline_windows(
+    operation: PinnedAuthorityOperation,
+    year: int,
+) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+    """Project one filing year's deadline windows from a pinned operation.
+
+    The directory carries the metadata needed to select the owning revision;
+    only revisions that canonically own a matching window are then hydrated.
+    This mirrors the eager authority's ownership rule without reconstructing a
+    whole model graph.
+    """
+    projected: list[tuple[str, ModeloRevision, DeadlineWindowDefinition]] = []
+    for modelo_id in operation.modelo_ids():
+        directory = operation.modelo_directory(modelo_id)
+        for metadata in directory.revisions:
+            for metadata_window in metadata.deadline_windows:
+                if metadata_window.filing_year != year:
+                    continue
+                selected = operation.revision_for_context(
+                    modelo_id,
+                    filing_year=metadata_window.filing_year,
+                    period=metadata_window.period.registry_token,
+                )
+                if selected.id != metadata.id:
+                    continue
+                revision = operation.revision(modelo_id, str(metadata.id))
+                matching = tuple(window for window in revision.deadline_windows if window == metadata_window)
+                if len(matching) != 1:
+                    raise ScheduleComputationError(
+                        translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                        context={
+                            "registry_stage": "deadline_window_projection",
+                            "modelo": modelo_id,
+                            "revision": str(metadata.id),
+                            "filing_year": year,
+                        },
+                    )
+                projected.append((modelo_id, revision, matching[0]))
+    projected.sort(
+        key=lambda item: (
+            item[2].closes_on,
+            item[0],
+            item[2].filing_year,
+            item[2].period.registry_token,
+            "" if item[2].resultado_scope is None else item[2].resultado_scope.value,
+            () if item[2].tipo_renta_scope is None else tuple(sorted(item[2].tipo_renta_scope)),
+        ),
+    )
+    return tuple(projected)
+
+
 class DeadlineEngine:
     """Engine that computes typed filing schedules from registry data.
 
@@ -123,12 +177,15 @@ class DeadlineEngine:
         self,
         *,
         due_soon_days: int = _DEFAULT_DUE_SOON_DAYS,
+        authority: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Construct an engine.
 
         Args:
             due_soon_days: Days before ``closes_on`` that flag
                 ``DUE_SOON``. Must be ``>= 0``.
+            authority: Optional generation-pinned authority operation. When
+                omitted, one indexed operation is opened per public query.
 
         Raises:
             DeadlineValidationError: If ``due_soon_days`` is negative.
@@ -137,9 +194,7 @@ class DeadlineEngine:
         if due_soon_days < 0:
             raise DeadlineValidationError(f"due_soon_days must be >= 0, got {due_soon_days}")
         self.due_soon_days = due_soon_days
-        from ..calculations.registry.authority import bundled_authority
-
-        self._registry = bundled_authority()
+        self._authority = authority
 
     def compute(
         self,
@@ -173,18 +228,21 @@ class DeadlineEngine:
         reference_today = today or today_madrid()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
         obligations: list[ModeloDeadline] = []
-        for modelo, revision, window in self._deadline_windows(year):
-            obligation = self._obligation_for_window(
-                profile=profile,
-                modelo=modelo,
-                revision=revision,
-                window=window,
-                reference_today=reference_today,
-            )
-            if obligation is not None:
-                obligations.append(obligation)
+        with self._operation_context() as operation:
+            windows = self._deadline_windows(year, operation=operation)
+            for modelo, revision, window in windows:
+                obligation = self._obligation_for_window(
+                    profile=profile,
+                    modelo=modelo,
+                    revision=revision,
+                    window=window,
+                    reference_today=reference_today,
+                    operation=operation,
+                )
+                if obligation is not None:
+                    obligations.append(obligation)
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period.filing_year, o.period.registry_token))
-        if not obligations and not self._has_deadline_windows(year):
+        if not obligations and not windows:
             raise NoDeadlineWindowsError(
                 translated_message=_MISSING_WINDOWS_MESSAGE_KEY,
                 context={"filing_year": year},
@@ -208,6 +266,7 @@ class DeadlineEngine:
         revision: ModeloRevision,
         window: DeadlineWindowDefinition,
         reference_today: date,
+        operation: PinnedAuthorityOperation,
     ) -> ModeloDeadline | None:
         """Project one (modelo, revision, window) tuple into a :class:`ModeloDeadline`, or ``None``.
 
@@ -263,6 +322,7 @@ class DeadlineEngine:
                 reference_today=reference_today,
                 window=window,
                 modelo=modelo,
+                operation=operation,
             ),
         )
 
@@ -275,11 +335,12 @@ class DeadlineEngine:
             year: Optional fiscal year; defaults to the current year.
         """
         selected_year = year or today_madrid().year
-        windows = [
-            window
-            for code, revision, window in self._deadline_windows(selected_year)
-            if code == modelo and self._schedule_applies(profile, revision, window)
-        ]
+        with self._operation_context() as operation:
+            windows = [
+                window
+                for code, revision, window in self._deadline_windows(selected_year, operation=operation)
+                if code == modelo and self._schedule_applies(profile, revision, window)
+            ]
         if not windows:
             raise NoDeadlineWindowsError(
                 translated_message=_MISSING_WINDOWS_MESSAGE_KEY,
@@ -303,23 +364,43 @@ class DeadlineEngine:
             year: Optional fiscal year; defaults to the current year.
         """
         selected_year = year or today_madrid().year
-        return any(
-            code == modelo
-            and self._schedule_applies(profile, revision, window)
-            and self._evaluate_conditions(
-                profile,
-                window.applicability_conditions,
-                mode=window.applicability_condition_mode,
+        with self._operation_context() as operation:
+            return any(
+                code == modelo
+                and self._schedule_applies(profile, revision, window)
+                and self._evaluate_conditions(
+                    profile,
+                    window.applicability_conditions,
+                    mode=window.applicability_condition_mode,
+                )
+                is not None
+                for code, revision, window in self._deadline_windows(selected_year, operation=operation)
             )
-            is not None
-            for code, revision, window in self._deadline_windows(selected_year)
-        )
 
-    def _deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+    @contextmanager
+    def _operation_context(self) -> Generator[PinnedAuthorityOperation]:
+        """Yield one pinned operation for a complete deadline query."""
+        if self._authority is not None:
+            yield self._authority
+            return
+        from ..calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            yield operation
+
+    def _deadline_windows(
+        self,
+        year: int,
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
         from ..calculations.registry.errors import RegistryError
 
         try:
-            return self._registry.deadline_windows(year)
+            if operation is not None:
+                return _indexed_deadline_windows(operation, year)
+            with self._operation_context() as selected_operation:
+                return _indexed_deadline_windows(selected_operation, year)
         except RegistryError as exc:
             raise ScheduleComputationError(
                 translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
@@ -330,9 +411,6 @@ class DeadlineEngine:
                 },
             ) from exc
 
-    def _has_deadline_windows(self, year: int) -> bool:
-        return bool(self._deadline_windows(year))
-
     def deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
         """Return validated registry deadline windows for ``year``.
 
@@ -340,7 +418,8 @@ class DeadlineEngine:
         registry surface used by :meth:`compute` without reaching into engine
         implementation details.
         """
-        return self._deadline_windows(year)
+        with self._operation_context() as operation:
+            return self._deadline_windows(year, operation=operation)
 
     @staticmethod
     def _schedule_applies(profile: TaxpayerProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
@@ -419,6 +498,7 @@ def _overdue_recovery_or_none(
     reference_today: date,
     window: DeadlineWindowDefinition,
     modelo: str,
+    operation: PinnedAuthorityOperation,
 ) -> Recovery | None:
     """Build a registry-backed recovery payload for ≥1-day-late OVERDUE obligations, or ``None``.
 
@@ -440,6 +520,7 @@ def _overdue_recovery_or_none(
             reference_today=reference_today,
             modelo=modelo,
             period=window.period,
+            bands=load_recargo_bands(operation=operation),
         )
     except (FileNotFoundError, ValueError) as exc:
         _logger.debug(

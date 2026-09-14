@@ -27,23 +27,26 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
 from .action_errors import ModeloRequiredBindingsMissingError
 from .preconditions import build_modelo_precondition_failure
 from .profile_binding import resolve_profile_binding_value
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 
 def require_modelo_required_bindings_resolved(
@@ -89,11 +92,8 @@ def require_persisted_revision_required_bindings_resolved(
     """
     if str(work_unit.modelo) != Modelo("202").value:
         return
-    modelo_definition = next(
-        candidate for candidate in bundled_authority().modelos if candidate.id == str(work_unit.modelo)
-    )
-    registry_revision = select_revision(
-        modelo_definition,
+    registry_revision = RegistryQueryService(bundled_authority()).revision_for_scope(
+        str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )
@@ -133,6 +133,7 @@ def resolved_required_profile_binding_values(
     *,
     work_unit: WorkUnit,
     registry_revision: ModeloRevision,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> dict[BindingId, Decimal]:
     """Return M202 required profile bindings even when they are not formula-consumed.
 
@@ -141,22 +142,35 @@ def resolved_required_profile_binding_values(
             required-binding profile lift applies.
         registry_revision: Registry :class:`ModeloRevision` whose required
             profile-sourced binding declarations are inspected.
+        profile_decode_context: Optional decode context from the caller-held
+            authority operation used to read the encrypted profile record.
     """
     if str(work_unit.modelo) != Modelo("202").value:
         return {}
-    facts = _profile_facts_for_bucket(work_unit.bucket_id)
+    facts = _profile_facts_for_bucket(
+        work_unit.bucket_id,
+        profile_decode_context=profile_decode_context,
+    )
     if facts is None:
         return {}
     return _resolved_profile_binding_values(registry_revision, facts)
 
 
-def _profile_facts_for_bucket(bucket_id: str) -> Mapping[str, UserProfileFactValue] | None:
+def _profile_facts_for_bucket(
+    bucket_id: str,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> Mapping[str, UserProfileFactValue] | None:
     """Load the canonical typed profile facts, or none when no profile exists."""
     try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        repository = ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=profile_decode_context,
+        )
+        record = repository.load(bucket_id)
     except ProfileNotFoundError:
         return None
-    return profile_fact_index(record, load_user_profile_schema())
+    return profile_fact_index(record, repository.session.profile_decode_context.schema)
 
 
 def _resolved_profile_binding_values(

@@ -15,8 +15,8 @@ See Also:
         Uses these helpers before registry-engine execution and persistence.
     :mod:`cadrumo.application.modelo.amendment_actions`:
         Reuses amendment observation projection for corrected filing records.
-    :func:`cadrumo.domain.calculations.registry.authority.bundled_authority`:
-        Supplies the packaged registry authority used for snapshot resolution.
+    :func:`cadrumo.domain.calculations.registry.authority.bundled_indexed_authority`:
+        Leases the packaged indexed registry generation for snapshot resolution.
     :class:`~cadrumo.domain.calculations.registry.RegistryCalculationResult`:
         Registry-engine result whose values and formula entries are projected
         into typed observations.
@@ -30,7 +30,11 @@ from decimal import Decimal
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
+from ...domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_authority_descriptor_path,
+    bundled_indexed_authority,
+)
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_runtime import (
@@ -123,6 +127,7 @@ def resolve_registry_snapshot_for_work_unit(
     work_unit: WorkUnit,
     *,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySnapshot:
     """Resolve and return the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`.
 
@@ -144,15 +149,21 @@ def resolve_registry_snapshot_for_work_unit(
     """
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
+    if operation is None:
+        try:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return resolve_registry_snapshot_for_work_unit(
+                    work_unit,
+                    grade=grade,
+                    operation=indexed_operation,
+                )
+        except FileNotFoundError as exc:
+            raise CalculationRegistryUnavailableError(
+                translated_message="application.modelo.errors.calculation_registry_root_missing",
+                context={"registry_root": bundled_authority_descriptor_path()},
+            ) from exc
     try:
-        authority = bundled_authority()
-    except FileNotFoundError as exc:
-        raise CalculationRegistryUnavailableError(
-            translated_message="application.modelo.errors.calculation_registry_root_missing",
-            context={"registry_root": bundled_authority_artifact_path()},
-        ) from exc
-    try:
-        snapshot = authority.snapshot(
+        snapshot = operation.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,

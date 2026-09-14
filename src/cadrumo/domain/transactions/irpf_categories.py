@@ -6,8 +6,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
 from .enums import TransactionDirection
 
@@ -23,9 +23,11 @@ class LedgerIrpfCategoryDescriptor:
     related_ids: tuple[str, ...]
 
 
-def _registry_taxonomy_declarations() -> Mapping[str, str]:
+def _registry_taxonomy_declarations(*, authority: GovernedFactSource | None = None) -> Mapping[str, str]:
     """Resolve the dated IRPF ledger category taxonomy."""
-    authority = bundled_authority()
+    authority = authority or governed_facts_in_scope()
+    if authority is None:
+        raise ValueError("IRPF ledger category taxonomy requires an explicit authority operation or scope")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="irpf-ledger-category-taxonomy",
@@ -70,9 +72,11 @@ def _descriptor_from_registry(category_id: str, declarations: Mapping[str, str])
     )
 
 
-def ledger_irpf_category_catalogue() -> tuple[LedgerIrpfCategoryDescriptor, ...]:
+def ledger_irpf_category_catalogue(
+    *, authority: GovernedFactSource | None = None
+) -> tuple[LedgerIrpfCategoryDescriptor, ...]:
     """Return the dated registry-projected IRPF category descriptors."""
-    declarations = _registry_taxonomy_declarations()
+    declarations = _registry_taxonomy_declarations(authority=authority)
     return tuple(
         _descriptor_from_registry(category_id, declarations)
         for category_id in _split_declaration(declarations, "catalogue.ids")
@@ -90,12 +94,13 @@ def ledger_irpf_category(
     value: str | None,
     *,
     direction: TransactionDirection | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> LedgerIrpfCategoryDescriptor | None:
     """Resolve a normalized token through the registry-owned taxonomy."""
     normalized = normalize_irpf_category(value)
     if normalized is None:
         return None
-    declarations = _registry_taxonomy_declarations()
+    declarations = _registry_taxonomy_declarations(authority=authority)
     descriptors = {
         descriptor.id: descriptor
         for descriptor in (
@@ -109,35 +114,44 @@ def ledger_irpf_category(
     return descriptor
 
 
-def has_non_work_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
+def has_non_work_irpf_category(
+    value: str | None, *, direction: TransactionDirection, authority: GovernedFactSource | None = None
+) -> bool:
     """Resolve the registry-owned non-employment predicate."""
-    descriptor = ledger_irpf_category(value, direction=direction)
+    descriptor = ledger_irpf_category(value, direction=direction, authority=authority)
     return descriptor is not None and not descriptor.purpose.endswith("_income")
 
 
-def has_activity_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
+def has_activity_irpf_category(
+    value: str | None, *, direction: TransactionDirection, authority: GovernedFactSource | None = None
+) -> bool:
     """Resolve the registry-owned activity-income predicate."""
-    descriptor = ledger_irpf_category(value, direction=direction)
+    descriptor = ledger_irpf_category(value, direction=direction, authority=authority)
     return descriptor is not None and descriptor.purpose.endswith("_income_withholding")
 
 
-def has_rent_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
+def has_rent_irpf_category(
+    value: str | None, *, direction: TransactionDirection, authority: GovernedFactSource | None = None
+) -> bool:
     """Resolve the registry-owned rental predicate."""
-    descriptor = ledger_irpf_category(value, direction=direction)
+    descriptor = ledger_irpf_category(value, direction=direction, authority=authority)
     return descriptor is not None and descriptor.purpose.endswith("_expense_withholding")
 
 
-def has_employment_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
+def has_employment_irpf_category(
+    value: str | None, *, direction: TransactionDirection, authority: GovernedFactSource | None = None
+) -> bool:
     """Resolve the registry-owned employment predicate."""
-    descriptor = ledger_irpf_category(value, direction=direction)
+    descriptor = ledger_irpf_category(value, direction=direction, authority=authority)
     return descriptor is not None and descriptor.purpose.endswith("_income")
 
 
-def is_net_paid_related_category(value: str | None) -> bool:
+def is_net_paid_related_category(value: str | None, *, authority: GovernedFactSource | None = None) -> bool:
     """Return whether a spending token is a registry-declared net-paid relation."""
     if value is None:
         return False
     token = value.strip().casefold()
     return any(
-        descriptor.net_paid and token in descriptor.related_ids for descriptor in ledger_irpf_category_catalogue()
+        descriptor.net_paid and token in descriptor.related_ids
+        for descriptor in ledger_irpf_category_catalogue(authority=authority)
     )

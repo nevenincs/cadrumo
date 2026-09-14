@@ -6,16 +6,24 @@ from collections.abc import Mapping
 from datetime import date
 
 from ....core.tax_domain import TaxDomain
-from .authority import bundled_authority
+from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _TAX_DOMAIN_FACT_ID = "tax-domain-catalogue"
 
 
-def tax_domain_registry_declarations(effective_date: date | None = None) -> Mapping[str, str]:
+def tax_domain_registry_declarations(
+    effective_date: date | None = None,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> Mapping[str, str]:
     """Resolve the selected tax-domain catalogue from published authority."""
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError("tax-domain catalogue requires an explicit authority operation or scope")
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_TAX_DOMAIN_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -31,18 +39,27 @@ def tax_domain_metadata(
     domain: TaxDomain | str,
     *,
     effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> Mapping[str, str]:
     """Return registry metadata for one tax-domain identifier."""
     normalized = TaxDomain(domain)
-    declarations = tax_domain_registry_declarations(effective_date)
+    declarations = tax_domain_registry_declarations(effective_date, authority=authority)
     prefix = f"tax_domain.{normalized.value}."
     return {key.removeprefix(prefix): value for key, value in declarations.items() if key.startswith(prefix)}
 
 
-def registered_tax_domain(value: str | TaxDomain, *, effective_date: date | None = None) -> TaxDomain:
+def registered_tax_domain(
+    value: str | TaxDomain,
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> TaxDomain:
     """Validate that an identifier is a currently registered tax domain."""
-    normalized = bundled_authority().tax_domain(value, effective_date=effective_date)
-    declarations = tax_domain_registry_declarations(effective_date)
+    normalized = TaxDomain(value)
+    declarations = tax_domain_registry_declarations(effective_date, authority=authority)
+    prefix = f"tax_domain.{normalized.value}."
+    if not any(key.startswith(prefix) for key in declarations):
+        raise RegistryValidationError(f"tax domain {normalized.value!r} is not declared by the selected catalogue")
     if f"tax_domain.{normalized.value}.description" not in declarations:
         raise ValueError(f"tax-domain metadata is missing for {normalized.value!r}")
     return normalized

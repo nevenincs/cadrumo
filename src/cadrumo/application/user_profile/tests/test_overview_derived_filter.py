@@ -27,9 +27,9 @@ cannot come from the row being absent for some unrelated reason.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.classification.policies import SensitivityClass
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import (
     ProfileDerivedSelectorDefinition,
     ProfileFieldDefinition,

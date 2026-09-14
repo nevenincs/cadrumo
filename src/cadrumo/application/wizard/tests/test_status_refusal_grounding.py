@@ -12,8 +12,8 @@ package, where the code it exercises lives.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.user_profile.loader import load_user_profile_schema
 from ...user_profile.preflight import build_profile_preflight_requirement
 from ..status import _TAX_ID_PATH, _grounded_tax_id_requirement
 

@@ -9,20 +9,16 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import date
-from typing import TYPE_CHECKING
 
-from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.facts.resolution import (
     EntitySetFactQuery,
     MappingFactQuery,
     ResolvedEntitySetFact,
     ResolvedMappingFact,
 )
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 __all__ = [
     "load_tipo_actividad_selectors",
@@ -34,7 +30,7 @@ __all__ = [
 def _registry_activity_selector_catalogue(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> tuple[str, ...]:
     """Resolve the dated M036 selector catalogue before an entity-set lookup."""
     resolved = authority.resolve_governed_fact(
@@ -57,14 +53,17 @@ def resolve_tipo_actividad_selector(
     fact_id: str,
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ResolvedEntitySetFact:
     """Resolve one registry-owned activity selector through fact authority."""
     normalized_fact_id = fact_id.strip()
     if not normalized_fact_id:
         raise TransactionValidationError("activity selector fact id must not be blank")
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        authority = bundled_authority()
+        raise TransactionValidationError(
+            "activity selector resolution requires an explicit authority operation or scope",
+        )
     if normalized_fact_id not in _registry_activity_selector_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -104,7 +103,7 @@ def tipo_actividad_code_set(
     fact_id: str,
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> frozenset[str]:
     """Return the registry-owned code set declared by one selector fact."""
     return _typed_code_set(
@@ -120,7 +119,7 @@ def load_tipo_actividad_selectors(
     selector_fact_ids: Iterable[str],
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> Mapping[str, frozenset[str]]:
     """Resolve a caller-supplied selector catalogue without embedding its facts."""
     fact_ids = tuple(dict.fromkeys(fact_id.strip() for fact_id in selector_fact_ids))

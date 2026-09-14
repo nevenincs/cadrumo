@@ -36,6 +36,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
@@ -53,7 +54,6 @@ from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
-from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

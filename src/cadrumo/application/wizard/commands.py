@@ -65,7 +65,6 @@ from ..flows.errors import FlowAnswerError, FlowSubmitError
 from ..flows.scripted import run_scripted_flow
 from ..flows.wizard_projection import flow_definition_from_wizard_flow
 from ._format_hints import attach_format_hints
-from .catalogue import SETUP_FLOW
 from .descendant_group import attach_descendant_group
 from .errors import (
     WizardEditUnsupportedConsoleError,
@@ -131,113 +130,21 @@ def _choice_metavar(values: list[str]) -> str:
     return "|".join(values)
 
 
-def _ccaa_choice_values() -> list[str]:
-    """Return the CCAA choice tokens accepted by ``--tax-residence-ccaa``.
-
-    The list includes all common-regime values from the governed CCAA catalogue
-    plus the operator-facing foral-regime redirects from the catalogue.  The
-    foral tokens are accepted by Click so the operator receives a
-    localised redirect rather than a generic "not one of" error, but they
-    are refused by the wizard persistence layer via ``ForalRegimeError``.
-    """
-    from ...domain.calculations.registry.ccaa_catalogue import ccaa_choices, foral_cli_choices
-
-    common = [member.value for member in ccaa_choices()]
-    foral = list(foral_cli_choices())
-    return common + foral
-
-
-_CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
-
-
-def _fiscal_residency_choice_values() -> list[str]:
-    """Return the registry-declared residency tokens accepted by the CLI."""
-    from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_choices
-
-    return [member.value for member in fiscal_residency_choices()]
-
-
-_FISCAL_RESIDENCY_CHOICE_VALUES: list[str] = _fiscal_residency_choice_values()
-
-
-def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], list[str]]:
-    """Return choice tokens for the taxpayer-type and IRPF-regime enums.
-
-    Derived from canonical domain and registry projections (``EntityType``,
-    ``LegalEntityForm``, the IRPF income-category catalogue, and
-    ``IrpfEstimationRegime``)
-    so the ``--entity-type``, ``--legal-entity-form``,
-    ``--irpf-income-categories``, and ``--irpf-estimation-regime``
-    flag choices never drift from the values the wizard catalogue and
-    the profile schema validate against.
-    """
-    from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_choices
-    from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_tokens
-    from ...domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
-
-    return (
-        [member.value for member in entity_type_tokens()],
-        [member.value for member in legal_entity_form_tokens()],
-        [member.value for member in irpf_income_category_choices()],
-        [member.value for member in irpf_estimation_regime_tokens()],
-    )
-
-
-(
-    _ENTITY_TYPE_CHOICE_VALUES,
-    _LEGAL_ENTITY_FORM_CHOICE_VALUES,
-    _IRPF_INCOME_CATEGORY_CHOICE_VALUES,
-    _IRPF_ESTIMATION_REGIME_CHOICE_VALUES,
-) = _taxpayer_type_choice_values()
-
-
-def _third_party_declaration_role_choice_values() -> list[str]:
-    """Return the current facts-registry declaring-role choices."""
-    from ...domain.calculations.registry.third_party_declaration_roles import (
-        third_party_declaration_role_choices,
-    )
-
-    return [member.value for member in third_party_declaration_role_choices()]
-
-
-_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES: list[str] = _third_party_declaration_role_choice_values()
-
-
-def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
-    """Return choice tokens for IRPF-personal enums.
-
-    Derived from the canonical registry catalogues so the
-    ``--irpf-special-regime`` and
-    ``--situacion-familiar`` flag choices never drift from the values
-    the wizard catalogue and the profile schema validate against.
-    """
-    from ...domain.calculations.registry.irpf_regimes import irpf_special_regime_tokens
-    from ...domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
-
-    return (
-        [member.value for member in irpf_special_regime_tokens()],
-        [member.value for member in situacion_familiar_choices()],
-    )
-
-
-(
-    _IRPF_SPECIAL_REGIME_CHOICE_VALUES,
-    _SITUACION_FAMILIAR_CHOICE_VALUES,
-) = _irpf_personal_choice_values()
-
-
-def _setup_choice_values(question_id: str) -> list[str]:
-    """Return the canonical choice tokens declared for one setup question."""
-    for section in SETUP_FLOW.sections:
-        for question in section.questions:
-            if question.id == question_id:
-                return [choice.value for choice in question.choices]
-    raise RuntimeError(f"SETUP_FLOW is missing the {question_id} question")
-
-
-IVA_REGIME_CHOICE_VALUES: list[str] = _setup_choice_values("iva-regime")
-_M303_REGIME_COMPOSITION_CHOICE_VALUES: list[str] = _setup_choice_values("iva-m303-regime-composition")
-_M303_TAX_TERRITORY_CHOICE_VALUES: list[str] = _setup_choice_values("tax-residence-jurisdiction-scope")
+# Choice values are materialized from the operation-scoped WizardFlow by
+# _python_parameter.  Keeping these placeholders empty makes importing the
+# command factory safe before any authority operation is leased.
+_CCAA_CHOICE_VALUES: list[str] = []
+_FISCAL_RESIDENCY_CHOICE_VALUES: list[str] = []
+_ENTITY_TYPE_CHOICE_VALUES: list[str] = []
+_LEGAL_ENTITY_FORM_CHOICE_VALUES: list[str] = []
+_IRPF_INCOME_CATEGORY_CHOICE_VALUES: list[str] = []
+_IRPF_ESTIMATION_REGIME_CHOICE_VALUES: list[str] = []
+_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES: list[str] = []
+_IRPF_SPECIAL_REGIME_CHOICE_VALUES: list[str] = []
+_SITUACION_FAMILIAR_CHOICE_VALUES: list[str] = []
+IVA_REGIME_CHOICE_VALUES: list[str] = []
+_M303_REGIME_COMPOSITION_CHOICE_VALUES: list[str] = []
+_M303_TAX_TERRITORY_CHOICE_VALUES: list[str] = []
 
 
 def _flag_name(question: WizardQuestion) -> str:
@@ -591,32 +498,8 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
 }
 
-# Registry-described questions without a bespoke option record are populated
-# as ``None`` placeholders.  The exact flag/help declaration is resolved from
-# the governed catalogue when the command is assembled, not during module
-# import before the authority is available.
-for _section in SETUP_FLOW.sections:
-    for _question in _section.questions:
-        SETUP_OPTION_INFOS.setdefault(_question.id, None)
-
 # This mapping is the operator-facing wizard vocabulary used by application
 # refusals to name flags the CLI can actually parse.
-
-# Guard against future catalogue / dict drift: every question id that
-# the SETUP_FLOW catalogue exposes must have a matching OptionInfo entry.
-# This assert fires at import time so a missing entry is discovered
-# immediately rather than as a runtime KeyError buried inside a Typer
-# command factory call.
-_SETUP_CATALOGUE_IDS: frozenset[str] = frozenset(
-    question.id for section in SETUP_FLOW.sections for question in section.questions
-)
-_missing_option_infos = _SETUP_CATALOGUE_IDS - frozenset(SETUP_OPTION_INFOS)
-if _missing_option_infos:  # pragma: no cover - option-coverage invariant
-    raise ValueError(
-        f"SETUP_OPTION_INFOS is missing entries for catalogue question ids: "
-        f"{sorted(_missing_option_infos)!r}. "
-        "Add a typer.Option entry for each missing id.",
-    )
 
 
 def _required_flag_questions(flow: WizardFlow) -> tuple[WizardQuestion, ...]:
@@ -922,19 +805,21 @@ def _python_parameter(
     undifferentiated wall of flags.
     """
     _flag_name(question)
-    try:
-        option = SETUP_OPTION_INFOS[question.id]
-    except KeyError as exc:
-        raise KeyError(_help_key(flow, question)) from exc
+    option = SETUP_OPTION_INFOS.get(question.id)
     if option is None:
-        from ...domain.calculations.registry.setup_profile_bindings import wizard_option_declarations
-
-        declaration = wizard_option_declarations().get(question.id)
-        if declaration is None:
-            raise KeyError(f"registry wizard option declaration is missing for {question.id!r}")
-        flag, _kind, help_key = declaration
-        option = typer.Option(flag, help=tr(help_key))
+        option = typer.Option(_flag_name(question), help=tr(_help_key(flow, question)))
         SETUP_OPTION_INFOS[question.id] = option
+    if question.widget is WizardWidget.SELECT:
+        values = [choice.value for choice in question.choices]
+        option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
+        option.metavar = _choice_metavar(values)
+        if question.id == "tax-residence-ccaa":
+            option.metavar = "CCAA"
+            option.show_choices = False
+            option.help = tr(
+                "wizard.setup.flags.tax-residence-ccaa.help",
+                choices=", ".join(values),
+            )
     if section_title is not None:
         # `OptionInfo` carries `rich_help_panel`; setting it groups the
         # flag under the section's panel in Typer's `--help` output.

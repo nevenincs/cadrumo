@@ -39,6 +39,7 @@ See Also:
 
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -52,6 +53,8 @@ from ...domain.iva.schema import IvaCategory
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "InvoiceExtractionAuthorityValues",
@@ -114,7 +117,11 @@ def default_invoice_extraction_period() -> Period:
     return Period.from_year_and_code(today_madrid().year, "0A")
 
 
-def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
+def _overlapping_iva_rate_pcts(
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[Decimal, ...]:
     """Return every registered Spanish IVA percentage overlapping ``period``.
 
     Every lookup goes through the retained typed IVA facade at the exact devengo
@@ -131,7 +138,7 @@ def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
     overlapping: set[Decimal] = set()
     on_date = period.start_date
     while on_date <= period.end_date:
-        catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date)
+        catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation)
         kinds = tuple(definition.token for definition in catalogue.definitions)
         for kind in kinds:
             if kind == catalogue.zero_token:
@@ -144,16 +151,24 @@ def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
                 if zero_fraction is not None:
                     overlapping.add(zero_fraction * HUNDRED)
                 continue
-            try:
+            with suppress(IvaRateNotFoundError):
                 overlapping.add(
-                    lookup_rate(spanish_eu_member_state(effective_date=on_date), kind, on_date).pct,
+                    lookup_rate(
+                        spanish_eu_member_state(effective_date=on_date, authority=operation),
+                        kind,
+                        on_date,
+                        operation=operation,
+                    ).pct,
                 )
-            except IvaRateNotFoundError:
-                continue
-                overlapping.update(
-                    rate.pct
-                    for rate in coexisting_tier_rates(spanish_eu_member_state(effective_date=on_date), kind, on_date)
+            overlapping.update(
+                rate.pct
+                for rate in coexisting_tier_rates(
+                    spanish_eu_member_state(effective_date=on_date, authority=operation),
+                    kind,
+                    on_date,
+                    operation=operation,
                 )
+            )
         on_date += timedelta(days=1)
     return tuple(sorted(overlapping))
 
@@ -168,13 +183,19 @@ def _as_pcts(fractions: Iterable[Decimal]) -> tuple[Decimal, ...]:
     return tuple(sorted(fraction * HUNDRED for fraction in fractions))
 
 
-def resolve_invoice_extraction_authority_values(*, period: Period) -> InvoiceExtractionAuthorityValues:
+def resolve_invoice_extraction_authority_values(
+    *,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> InvoiceExtractionAuthorityValues:
     """Resolve every regulatory value the reading prompt for ``period`` enumerates.
 
     Args:
         period: The filing period whose in-force values the prompt should
             enumerate. It is the caller's law-determined coordinate; nothing
             stored is fed back into the resolution.
+        operation: The caller-owned pinned authority operation used for every
+            IVA/category/legend component selected here.
 
     Returns:
         :class:`InvoiceExtractionAuthorityValues`: The resolved values, ready to
@@ -187,15 +208,24 @@ def resolve_invoice_extraction_authority_values(*, period: Period) -> InvoiceExt
         TransactionValidationError: When the retención parameters cannot be read.
     """
     from ...domain.iva.components import registry_category_projection
-    from ...domain.iva.regime_legend import regime_legend_phrases
+    from ...domain.iva.regime_legend import regime_legend_phrases, resolve_regime_legends
     from ...domain.transactions.retencion_facts import statutory_activity_retencion_rates
 
     return InvoiceExtractionAuthorityValues(
         period=period,
-        iva_rate_pcts=_overlapping_iva_rate_pcts(period),
+        iva_rate_pcts=_overlapping_iva_rate_pcts(period, operation=operation),
         retencion_rate_pcts=_as_pcts(statutory_activity_retencion_rates(effective_date=period.end_date)),
         no_printed_tax_categories=tuple(
-            sorted(registry_category_projection("no_printed_tax"), key=lambda member: member.value),
+            sorted(
+                registry_category_projection(
+                    "no_printed_tax",
+                    effective_date=period.end_date,
+                    authority=operation,
+                ),
+                key=lambda member: member.value,
+            ),
         ),
-        regime_legend_phrases=regime_legend_phrases(),
+        regime_legend_phrases=regime_legend_phrases(
+            resolve_regime_legends(operation=operation, effective_date=period.end_date),
+        ),
     )

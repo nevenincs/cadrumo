@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -19,7 +19,6 @@ from ...core.modelo_work_progress_state import ModeloWorkProgressState
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.handoffs import RelationConsumptionChannel
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -44,6 +43,9 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._row_source_identity_replay import ModeloRowSourceFingerprint
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class ModeloWorkOriginAnomaly(StrEnum):
@@ -208,12 +210,12 @@ def build_modelo_work_review(
     filing_year: int,
     period: Period,
     *,
-    authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
 ) -> ModeloWorkReview:
-    """Assemble the sole read record for a persisted modelo work target."""
+    """Assemble one work review from the caller's pinned authority operation."""
     from ._work_review_assembly import assemble_modelo_work_review
 
     return assemble_modelo_work_review(
@@ -221,7 +223,8 @@ def build_modelo_work_review(
         modelo,
         filing_year=filing_year,
         period=period,
-        authority=authority,
+        authority=None,
+        operation=operation,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,

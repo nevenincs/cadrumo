@@ -11,17 +11,12 @@ from __future__ import annotations
 from collections.abc import Callable, Collection
 from datetime import date
 from enum import Enum
-from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def resolve_first_slice_expense_routing[CategoryT](
@@ -31,8 +26,8 @@ def resolve_first_slice_expense_routing[CategoryT](
     model_code: str,
     fact_id: str,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
-    category_tokens: Callable[[ValidatedRegistryAuthority, date], Collection[CategoryT]] | None = None,
+    authority: GovernedFactSource | None = None,
+    category_tokens: Callable[[GovernedFactSource, date], Collection[CategoryT]] | None = None,
 ) -> dict[CategoryT, CasillaId]:
     """Resolve one dated routing map from the selected registry authority.
 
@@ -49,7 +44,11 @@ def resolve_first_slice_expense_routing[CategoryT](
         raise TypeError("first-slice routing requires a category token type")
 
     normalized_model_code = model_code.strip()
-    selected_authority = authority if authority is not None else bundled_authority()
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError(
+            "first-slice routing requires an explicit authority operation or scope",
+        )
     if issubclass(category_type, Enum):
         members_by_name = {member.name: member for member in category_type}
         expected = set(category_type)
@@ -61,17 +60,17 @@ def resolve_first_slice_expense_routing[CategoryT](
         if len(members_by_name) != len(projected):
             raise TypeError("first-slice routing category projection contains duplicate member names")
         expected = set(projected)
-    query_service = RegistryQueryService(selected_authority)
-    model_report = query_service.describe_modelo_for_scope(
+    revision_for_context = getattr(selected_authority, "revision_for_context", None)
+    if revision_for_context is None:
+        raise RegistryValidationError(
+            "first-slice routing requires a generation-pinned authority operation for model selection",
+        )
+    selected_revision = revision_for_context(
         normalized_model_code,
         filing_year=effective_date.year,
         period="0A",
-        as_of=effective_date,
+        on=effective_date,
     )
-    if model_report.code != normalized_model_code:
-        raise RegistryValidationError(
-            f"first-slice routing resolved modelo {model_report.code!r}, expected {normalized_model_code!r}",
-        )
 
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
@@ -115,13 +114,13 @@ def resolve_first_slice_expense_routing[CategoryT](
     missing_metadata = sorted(required_metadata - metadata.keys())
     if missing_metadata:
         raise RegistryValidationError(f"first-slice routing is missing metadata {missing_metadata!r}")
-    if metadata["modelo"] != model_report.code:
+    if metadata["modelo"] != normalized_model_code:
         raise RegistryValidationError(
-            f"first-slice routing declares modelo {metadata['modelo']!r}, expected {model_report.code!r}",
+            f"first-slice routing declares modelo {metadata['modelo']!r}, expected {normalized_model_code!r}",
         )
-    if metadata["revision"] != model_report.revision:
+    if metadata["revision"] != str(selected_revision.id):
         raise RegistryValidationError(
-            f"first-slice routing declares revision {metadata['revision']!r}, expected {model_report.revision!r}",
+            f"first-slice routing declares revision {metadata['revision']!r}, expected {selected_revision.id!r}",
         )
     if metadata["applicability.source"] != f"selected_modelo_{normalized_model_code}_revision":
         raise RegistryValidationError("first-slice routing declares an unsupported applicability source")

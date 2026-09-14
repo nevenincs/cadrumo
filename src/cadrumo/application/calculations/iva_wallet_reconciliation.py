@@ -43,6 +43,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import sha256_hex
 from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -84,7 +85,7 @@ class IvaCompensationReconciliationReport(BaseModel):
 
 # The report's annotation is deliberately resolved in its defining module so
 # importing this public service does not depend on a package initializer.
-from .binding_prefill import BindingPrefillReport as _BindingPrefillReport
+from .binding_prefill import BindingPrefillReport as _BindingPrefillReport  # noqa: E402
 
 IvaCompensationReconciliationReport.model_rebuild(
     _types_namespace={"BindingPrefillReport": _BindingPrefillReport},
@@ -206,11 +207,16 @@ def _binding_source_or_none(source_kind: str) -> BindingSourceKind | None:
         return None
 
 
-def _resolve_first_period_compensation_amount(*, filing_year: int) -> Decimal:
+def _resolve_first_period_compensation_amount(
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Decimal:
     """Resolve the governed first-period compensation amount."""
-    from ...domain.calculations.registry.authority import bundled_authority
-
-    resolved = bundled_authority().resolve_governed_fact(
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _resolve_first_period_compensation_amount(filing_year=filing_year, operation=indexed_operation)
+    resolved = operation.resolve_governed_fact(
         ScalarFactQuery(
             fact_id="liva-art-99:first-period-compensation-zero",
             date_axis=DateAxis.FILING_PERIOD,
@@ -261,6 +267,7 @@ def reconcile_modelo_303_iva_compensation(
     local_recurrence: LocalIvaCompensationRecurrence | None,
     prefill_report: BindingPrefillReport,
     persist: bool = True,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> IvaCompensationReconciliationReport:
     """Resolve, compare, and optionally persist the Modelo 303 IVA wallet decision.
 
@@ -311,6 +318,8 @@ def reconcile_modelo_303_iva_compensation(
         prefill_report: Required report from the same recurrence resolution.
             Reconciliation never performs a second repository fallback.
         persist: Whether to store the resulting decision for later calculation replay.
+        operation: Optional generation-pinned authority operation used to
+            resolve first-period governed facts.
 
     The local side is not recomputed here. It is read through the same
     previous-filing binding resolver used by the calculation chain.
@@ -360,7 +369,10 @@ def reconcile_modelo_303_iva_compensation(
     # false whenever it saw evidence it could not use.
     is_first_iva_period = treat_absent_recurrence_as_first_period and wallet is None and local_recurrence_amount is None
     if is_first_iva_period:
-        local_recurrence_amount = _resolve_first_period_compensation_amount(filing_year=int(snapshot.filing_year))
+        local_recurrence_amount = _resolve_first_period_compensation_amount(
+            filing_year=int(snapshot.filing_year),
+            operation=operation,
+        )
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=taxpayer_nif,
         target_year=snapshot.filing_year,

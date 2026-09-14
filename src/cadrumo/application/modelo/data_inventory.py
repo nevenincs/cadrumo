@@ -8,7 +8,7 @@ so an unset profile fact — e.g. the home-office usage ratio — surfaces as an
 actionable gap rather than a silent blank downstream).
 
 This module owns the read-only composition over
-:func:`~domain.calculations.registry.authority.bundled_authority`
+(the generation-pinned indexed registry operation)
 (the registry snapshot for the casilla/binding declarations) and
 :func:`~application.modelo.profile_resolvable_binding_ids`
 (the profile-fact resolution already used by the ``bindings list --missing``
@@ -34,7 +34,7 @@ from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n.render import output_language
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -43,7 +43,6 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.profile_grounding import binding_profile_keys
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -230,17 +229,19 @@ def data_inventory_checklist(
         A :class:`DataInventoryChecklist`.
     """
     if operation is None:
-        revision = RegistryQueryService(bundled_authority()).revision_for_scope(
-            modelo,
-            filing_year=filing_year,
-            period=period.registry_token,
-        )
-    else:
-        revision = operation.revision_for_context(
-            modelo,
-            filing_year=filing_year,
-            period=period.registry_token,
-        )
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return data_inventory_checklist(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                bucket_id=bucket_id,
+                operation=indexed_operation,
+            )
+    revision = operation.revision_for_context(
+        modelo,
+        filing_year=filing_year,
+        period=period.registry_token,
+    )
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     buckets = _collect_inventory_buckets(revision, bindings_by_id)
 

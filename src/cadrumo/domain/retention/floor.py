@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
+from typing import Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -28,11 +28,8 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
-
 
 _RETENTION_FLOOR_FACT_ID = "lgt-tax-record-retention-floor-years"
 
@@ -40,13 +37,14 @@ _RETENTION_FLOOR_FACT_ID = "lgt-tax-record-retention-floor-years"
 def retention_floor_years(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> int:
     """Resolve the dated retention scalar through the registry authority."""
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from ..calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError(
+            "retention-floor resolution requires an explicit authority operation or scope",
+        )
     resolved = cast(
         "ResolvedScalarFact",
         authority.resolve_governed_fact(
@@ -169,7 +167,7 @@ def assess_retention_floor(
     records: Iterable[RetainableFilingRecord],
     *,
     as_of: datetime,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> RetentionFloorAssessment:
     """Assess ``records`` against the registry-resolved retention floor.
 

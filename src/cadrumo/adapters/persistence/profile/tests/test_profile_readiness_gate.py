@@ -307,8 +307,9 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
                 clock=_NOW,
             )
 
+        from dev.registry.tests.profile_schema_support import load_user_profile_schema
+
         from cadrumo.domain.user_profile.labels import profile_field_label
-        from cadrumo.domain.user_profile.loader import load_user_profile_schema
 
         expected_label = profile_field_label(
             "activities",

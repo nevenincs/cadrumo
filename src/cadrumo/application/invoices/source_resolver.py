@@ -749,10 +749,11 @@ def _m347_filer_declaration_roles(bucket_id: BucketId) -> frozenset[ThirdPartyDe
     from ..user_profile.projections import projection_for_taxpayer
 
     try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        repository = ProfileRecordRepository.for_current_session(bucket_id)
+        record = repository.load(bucket_id)
     except ProfileNotFoundError:
         return frozenset[ThirdPartyDeclarationRole]()
-    return projection_for_taxpayer(record).declaration_roles
+    return projection_for_taxpayer(record, schema=repository.session.profile_decode_context.schema).declaration_roles
 
 
 def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:

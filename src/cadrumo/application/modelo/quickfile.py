@@ -74,6 +74,7 @@ from .work_addressing import (
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
     from ..state_projection import ProjectionModeloReadiness
@@ -228,6 +229,7 @@ def run_modelo_quickfile(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
+    operation: PinnedAuthorityOperation,
     verification_repositories: VerificationRepositoryBundle,
     calculation_action_ports: CalculationActionPorts,
     modelo_export_ports: ModeloExportPorts,
@@ -253,6 +255,10 @@ def run_modelo_quickfile(
         certificate_secret_backend_factory: Application-owned certificate-secret
             backend factory used by readiness.
         operator_probe_ports: Required inward operator-auth probe capabilities.
+        operator_scope_ports: Required operator-scope capabilities used by
+            verification.
+        operation: Caller-owned generation-pinned authority operation shared by
+            the verification stage.
         verification_repositories: The required application-owned repository
             bundle used by the verify stage.
         calculation_action_ports: The required calculation capabilities bound
@@ -380,6 +386,7 @@ def run_modelo_quickfile(
             verification_repositories=verification_repositories,
             actor=command.actor,
             workflow_profile=workflow_profile,
+            operation=operation,
         )
     except CadrumoError as exc:
         return _halted(

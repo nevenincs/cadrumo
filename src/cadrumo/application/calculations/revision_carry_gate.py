@@ -31,7 +31,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    ValidatedRegistryAuthority,
+    bundled_indexed_authority,
+)
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 
@@ -49,12 +53,13 @@ def revision_carry_outcome(
     snapshot_ref: RegistrySnapshotRef,
     *,
     authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RevisionCarryOutcome:
     """Return the single law-determined decision for a carried revision stamp.
 
-    Resolves through the supplied validated registry authority, or the
-    process-wide bundled authority used by modelo application services when no
-    explicit authority is in scope. Both routes retain this one comparison gate.
+    Resolves through the supplied pinned operation or validated registry
+    authority. When neither is supplied, one indexed operation is opened at
+    this composition boundary; no eager authority graph is consulted.
 
     - Indeterminate (source context fails to resolve) → carry refused. Current
       observations must be re-confirmable against the law-determined revision;
@@ -67,25 +72,41 @@ def revision_carry_outcome(
         snapshot_ref: Required complete registry coordinate persisted with the
             source value.
         authority: Existing validated authority for callers evaluating an
-            explicit registry root; defaults to the bundled authority.
+            explicit registry root.
+        operation: Existing generation-pinned indexed operation. It takes
+            precedence over ``authority`` when supplied.
 
     Returns:
         A typed outcome containing the selected revision when resolution succeeds,
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
+    if operation is None and authority is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return revision_carry_outcome(snapshot_ref, operation=indexed_operation)
     try:
-        inspection = (authority or bundled_authority()).inspect_revision(
-            str(snapshot_ref.modelo),
-            filing_year=int(snapshot_ref.modelo_year),
-            period=str(snapshot_ref.period),
-        )
+        if operation is not None:
+            selected_revision_id = str(
+                operation.revision_for_context(
+                    str(snapshot_ref.modelo),
+                    filing_year=int(snapshot_ref.modelo_year),
+                    period=str(snapshot_ref.period),
+                ).id
+            )
+        elif authority is not None:
+            inspection = authority.inspect_revision(
+                str(snapshot_ref.modelo),
+                filing_year=int(snapshot_ref.modelo_year),
+                period=str(snapshot_ref.period),
+            )
+            selected_revision_id = inspection.revision_id
+        else:
+            raise RuntimeError("revision carry selection requires an authority operation")
     except Exception as exc:
         return RevisionCarryOutcome(
             refused=True,
             selected_revision_id=None,
             detail=f"revision selection failed: {type(exc).__name__}",
         )
-    selected_revision_id = inspection.revision_id
     if snapshot_ref.revision_id != selected_revision_id:
         return RevisionCarryOutcome(
             refused=True,

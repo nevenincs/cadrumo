@@ -31,6 +31,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
@@ -47,7 +48,6 @@ from cadrumo.application.user_profile.validation import (
     REQUIRED_FIELD_MISSING_CODE,
 )
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
-from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

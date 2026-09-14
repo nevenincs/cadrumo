@@ -33,9 +33,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.errors.severity import BaseSeverity
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import DERIVED_FIELD_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE, ProfileValidationService
 

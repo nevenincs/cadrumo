@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Final, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Final, Protocol, TypedDict, cast
 
 import typer
 from pydantic import ValidationError
@@ -26,15 +26,18 @@ from ...application.ledger.invoice_confirmation import InvoiceConfirmationResult
 from ...application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ...application.ledger.invoice_draft_payloads import EvidenceExtractResult
 from ...application.ledger.invoice_draft_records import InvoiceDraft
+from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ...application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 from ...core.aggregation import IntracomOperationType
 from ...core.config import load_settings
 from ...core.config_support import LLMProvider
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.invoices.enums import InvoiceClass, require_invoice_class
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.regime_legend import resolve_regime_legends
 from ...domain.iva.supply_nature import SupplyNature
 from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
@@ -61,6 +64,10 @@ from .state_projection_support import (
     invoice_confirmation_ports_factory,
     ledger_evidence_ports_factory,
 )
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.iva.regime_legend import RegimeLegend
 
 
 class _InvoiceClassKwarg(TypedDict, total=False):
@@ -359,6 +366,8 @@ def _extract_evidence_draft(
     off_host_provider: LLMProvider | None,
     consent_token: EvidenceConsentToken | None,
     evidence_ports: LedgerEvidencePorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
 ) -> InvoiceDraft:
     """Run the application-owned evidence reader for one secure reference."""
     return extract_invoice_draft_from_evidence(
@@ -368,6 +377,8 @@ def _extract_evidence_draft(
         off_host_provider=off_host_provider,
         consent_token=consent_token,
         ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+        operation=operation,
+        legends=legends,
     )
 
 
@@ -481,14 +492,19 @@ def evidence_extract(
         acknowledged=acknowledge_off_host,
         evidence_ports=evidence_ports,
     )
-    draft = _extract_evidence_draft(
-        bucket_id=transaction_repository.bucket_id,
-        evidence_id=evidence_id,
-        attachment_id=attachment_id,
-        off_host_provider=off_host_provider,
-        consent_token=consent_token,
-        evidence_ports=evidence_ports,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        period = default_invoice_extraction_period()
+        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
+        draft = _extract_evidence_draft(
+            bucket_id=transaction_repository.bucket_id,
+            evidence_id=evidence_id,
+            attachment_id=attachment_id,
+            off_host_provider=off_host_provider,
+            consent_token=consent_token,
+            evidence_ports=evidence_ports,
+            operation=operation,
+            legends=legends,
+        )
     reviewed_reference = evidence_id or attachment_id or ""
     emit_envelope(
         ctx,
@@ -710,33 +726,38 @@ def _run_evidence_confirm(
     )
     resolutions: list[FindingResolution] = [parse_finding_resolution(raw) for raw in resolve]
     try:
-        result = confirm_invoice_draft_from_evidence(
-            bucket_id=bucket_id,
-            kind=kind,
-            counterparty_country=country_code,
-            evidence_id=evidence_id,
-            attachment_id=attachment_id,
-            counterparty_tax_id=counterparty_nif,
-            counterparty_name=counterparty_name,
-            invoice_number=invoice_number,
-            invoice_date=_parse_iso_date(invoice_date, label="invoice-date") if invoice_date else None,
-            taxable_base=parse_decimal_amount(taxable_base, label="taxable-base") if taxable_base else None,
-            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
-            currency=currency,
-            operation_type=operation_type,
-            supply_nature=supply_nature,
-            # Leave an omitted class omitted so document-derived defaults survive.
-            **_invoice_class_kwarg(invoice_class),
-            rectifies_invoice_number=rectifies,
-            series=series,
-            notes=notes,
-            resolutions=resolutions,
-            catalogue_creation_ports=catalogue_ports,
-            invoice_confirmation_ports=invoice_confirmation_ports,
-            counterparty_establishment_repository=counterparty_establishment_repository,
-            evidence_ports=evidence_ports,
-            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
-        )
+        with bundled_indexed_authority().operation() as operation:
+            period = default_invoice_extraction_period()
+            legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
+            result = confirm_invoice_draft_from_evidence(
+                bucket_id=bucket_id,
+                kind=kind,
+                counterparty_country=country_code,
+                evidence_id=evidence_id,
+                attachment_id=attachment_id,
+                counterparty_tax_id=counterparty_nif,
+                counterparty_name=counterparty_name,
+                invoice_number=invoice_number,
+                invoice_date=_parse_iso_date(invoice_date, label="invoice-date") if invoice_date else None,
+                taxable_base=parse_decimal_amount(taxable_base, label="taxable-base") if taxable_base else None,
+                iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
+                currency=currency,
+                operation_type=operation_type,
+                supply_nature=supply_nature,
+                # Leave an omitted class omitted so document-derived defaults survive.
+                **_invoice_class_kwarg(invoice_class),
+                rectifies_invoice_number=rectifies,
+                series=series,
+                notes=notes,
+                resolutions=resolutions,
+                catalogue_creation_ports=catalogue_ports,
+                invoice_confirmation_ports=invoice_confirmation_ports,
+                counterparty_establishment_repository=counterparty_establishment_repository,
+                evidence_ports=evidence_ports,
+                extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+                operation=operation,
+                legends=legends,
+            )
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None

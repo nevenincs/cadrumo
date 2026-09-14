@@ -41,14 +41,23 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.core.irnr import M210GrossIncomeSourceMode, M210PayerMode
+from cadrumo.core.irnr import M210GrossIncomeSourceMode
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.m210_income_classification import M210IncomeClassification
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.transactions.m210_income_classification import (
+    M210IncomeClassification,
+    required_m210_payer_mode_for_code,
+    resolve_m210_payer_mode,
+)
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    create_user_profile_record,
+)
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -58,11 +67,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "d210d210-d210-4210-8210-d210d210d210"
 _CLOCK = datetime(2026, 7, 10, 10, 0, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "0A")
+_DEVENGO_DATE = date(2025, 12, 31)
+_IVA_REGIME = default_iva_regime(effective_date=_DEVENGO_DATE)
 __all__ = ["register_wizard_catalogue"]
 
 
 def _classification(code: str, gross_income_amount: Decimal) -> M210IncomeClassification:
-    payer_mode = M210PayerMode.MULTIPLE_PAYERS_CODE_35 if code == "35" else M210PayerMode.SINGLE_PAYER
+    effective_date = _DEVENGO_DATE
+    payer_mode = required_m210_payer_mode_for_code(code, effective_date=effective_date) or resolve_m210_payer_mode(
+        effective_date=effective_date,
+    )
     return M210IncomeClassification(
         official_tipo_renta_code=code,
         gross_income_amount=gross_income_amount,
@@ -113,7 +127,7 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
         tipo_renta_code="01",
         importe=Decimal("900.00"),
         tipo_gravamen=Decimal("0.24"),
-        pagador_mode=M210PayerMode.SINGLE_PAYER,
+        pagador_mode=resolve_m210_payer_mode(effective_date=_DEVENGO_DATE),
         pagador_id="ES-PAGADOR-210",
         deriva_de_bien_derecho=True,
         bien_derecho_id="ES-ACTIVO-210",
@@ -121,14 +135,16 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
 
 
 def _seed_m210_profile() -> None:
+    authority = bundled_authority()
     seed_test_profile_record(
-        UserProfileRecord(
+        create_user_profile_record(
+            context=authority.profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="activities.description", value="Spanish-source income"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.regime", value=_IVA_REGIME.value),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.m303_regime_composition", value="general"),
                 UserProfileFact(path="iva.redeme_enrolled", value=False),
@@ -535,7 +551,10 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
     derived_code_35_row = ledger_code_35.detail_rows[0]
     assert isinstance(derived_code_35_row, Modelo210AgrupacionRentaRow)
     assert derived_code_35_row.tipo_renta_code == "35"
-    assert derived_code_35_row.pagador_mode is M210PayerMode.MULTIPLE_PAYERS_CODE_35
+    assert derived_code_35_row.pagador_mode == required_m210_payer_mode_for_code(
+        "35",
+        effective_date=_DEVENGO_DATE,
+    )
     assert derived_code_35_row.pagador_id is None
     evidence_row = ledger_evidence.rows[0]
     assert evidence_row.source_jurisdiction == "ES"
@@ -604,7 +623,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
             actor="operator",
-            workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL),
+            workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=_IVA_REGIME),
             settings=ready_clave_settings("12345678Z"),
             clock=_CLOCK,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,

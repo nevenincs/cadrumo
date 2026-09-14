@@ -56,6 +56,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple
 
+from ...domain.iva.regime_legend import RegimeLegend
 from .closure_findings import closure_findings
 from .postal_shape_finding import postal_shape_findings
 from .regime_contradiction import regime_contradiction_finding
@@ -83,20 +84,29 @@ class DeterministicCheck(NamedTuple):
     """
 
     name: str
-    run: Callable[[InvoiceDraft], tuple[DraftDiscrepancyFinding, ...]]
+    run: Callable[[InvoiceDraft, tuple[RegimeLegend, ...]], tuple[DraftDiscrepancyFinding, ...]]
 
 
-def _closure_identities(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
+def _closure_identities(
+    draft: InvoiceDraft,
+    _legends: tuple[RegimeLegend, ...],
+) -> tuple[DraftDiscrepancyFinding, ...]:
     return closure_findings(draft)
 
 
-def _regime_contradiction(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
+def _regime_contradiction(
+    draft: InvoiceDraft,
+    legends: tuple[RegimeLegend, ...],
+) -> tuple[DraftDiscrepancyFinding, ...]:
     """Adapt the single-or-nothing check onto the uniform check signature."""
-    finding = regime_contradiction_finding(draft)
+    finding = regime_contradiction_finding(draft, legends=legends)
     return () if finding is None else (finding,)
 
 
-def _postal_code_shape(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
+def _postal_code_shape(
+    draft: InvoiceDraft,
+    _legends: tuple[RegimeLegend, ...],
+) -> tuple[DraftDiscrepancyFinding, ...]:
     return postal_shape_findings(draft)
 
 
@@ -127,7 +137,11 @@ def deterministic_check_names() -> tuple[str, ...]:
     return tuple(check.name for check in DETERMINISTIC_CHECKS)
 
 
-def deterministic_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
+def deterministic_findings(
+    draft: InvoiceDraft,
+    *,
+    legends: tuple[RegimeLegend, ...],
+) -> tuple[DraftDiscrepancyFinding, ...]:
     """Return every finding the draft's own contents raise, whatever read it.
 
     Deterministic and total: the same draft always yields the same findings, and
@@ -138,6 +152,10 @@ def deterministic_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding
     Args:
         draft: The draft to check, carrying the figures and the mention the
             document stated.
+        legends: The dated registry declarations selected by the enclosing
+            pinned authority operation. The same tuple is passed to the
+            regime contradiction check rather than resolving an ambient
+            vocabulary at check time.
 
     Returns:
         The arithmetic findings in their established order, then the regime
@@ -146,5 +164,5 @@ def deterministic_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding
     """
     findings: list[DraftDiscrepancyFinding] = []
     for check in DETERMINISTIC_CHECKS:
-        findings.extend(check.run(draft))
+        findings.extend(check.run(draft, legends))
     return tuple(findings)

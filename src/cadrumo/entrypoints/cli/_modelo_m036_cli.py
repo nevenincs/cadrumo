@@ -6,7 +6,9 @@ from __future__ import annotations
 import typer
 
 from ...application.modelo.m036_lifecycle import (
+    M036DeclarationAmbiguousError,
     M036DeclarationCommand,
+    M036DeclarationNotFoundError,
     M036DeclarationResult,
     list_m036_declarations,
     read_m036_declaration,
@@ -189,7 +191,7 @@ def m036_view(ctx: typer.Context, declaration_id: str) -> None:
             bucket_id=bucket_id,
             ports=m036_lifecycle_ports_factory(ctx)(bucket_id=bucket_id),
         )
-    except KeyError as exc:
+    except (M036DeclarationNotFoundError, M036DeclarationAmbiguousError) as exc:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.m036.errors.declaration_not_found",

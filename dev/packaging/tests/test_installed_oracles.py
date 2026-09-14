@@ -524,6 +524,9 @@ def _stage_authority_candidate(clean_repo: Path) -> None:
     assert selected["database_size"] == database.stat().st_size
     destination = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "authority"
     destination.mkdir(parents=True, exist_ok=True)
+    for stale_database in destination.glob("authority-*.sqlite3"):
+        if re.fullmatch(r"authority-[0-9a-f]{64}\.sqlite3", stale_database.name):
+            stale_database.unlink()
     shutil.copy2(descriptor, destination / descriptor.name)
     shutil.copy2(database, destination / database.name)
 

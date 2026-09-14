@@ -177,7 +177,8 @@ def test_sections_keep_their_schema_declaration_order() -> None:
 
 def _shipped_decisions() -> dict[str, bool]:
     """Masking decision for every field the real shipped schema declares."""
-    from ....domain.user_profile.loader import load_user_profile_schema
+    from dev.registry.tests.profile_schema_support import load_user_profile_schema
+
     from ..overview import mask_profile_field
 
     return {
@@ -204,7 +205,8 @@ def test_a_shipped_field_masks_exactly_when_the_schema_says_secret() -> None:
     keyword arm reading its own description. It fails again the day that
     arm is widened back over classified fields.
     """
-    from ....domain.user_profile.loader import load_user_profile_schema
+    from dev.registry.tests.profile_schema_support import load_user_profile_schema
+
     from ..overview import mask_profile_field
 
     schema = load_user_profile_schema()

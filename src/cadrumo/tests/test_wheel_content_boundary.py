@@ -29,6 +29,10 @@ fails loudly.
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
+import re
 import shutil
 import subprocess
 import tarfile
@@ -38,6 +42,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from dev.source_tree import repository_files, snapshot
 
 from ..core.directory_scan import scan_directory
 from .inventory import REPO_ROOT
@@ -47,10 +52,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _WHEEL_PREFIX = "cadrumo"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
 _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
-_WHEEL_AUTHORITY_ARTIFACT = f"{_WHEEL_DATA_PREFIX}/registry/authority/authority.json"
+_AUTHORITY_CANDIDATE_ENV = "CADRUMO_AUTHORITY_CANDIDATE_DIR"
+_WHEEL_AUTHORITY_PREFIX = f"{_WHEEL_DATA_PREFIX}/registry/authority/"
+_WHEEL_AUTHORITY_DESCRIPTOR = f"{_WHEEL_AUTHORITY_PREFIX}authority.current.json"
 _WHEEL_AUTHORED_REGISTRY_PREFIX = f"{_WHEEL_DATA_PREFIX}/registry/aeat/"
-_SDIST_AUTHORITY_ARTIFACT = "src/cadrumo/_data/registry/authority/authority.json"
+_WHEEL_PROFILE_SCHEMA = f"{_WHEEL_DATA_PREFIX}/registry/cadrumo/user_profile/schema.toml"
+_SDIST_AUTHORITY_PREFIX = "src/cadrumo/_data/registry/authority/"
+_SDIST_AUTHORITY_DESCRIPTOR = f"{_SDIST_AUTHORITY_PREFIX}authority.current.json"
 _SDIST_AUTHORED_REGISTRY_PREFIX = "src/cadrumo/_data/registry/aeat/"
+_SDIST_PROFILE_SCHEMA = "src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml"
+_DATABASE_NAME = re.compile(r"authority-[0-9a-f]{64}\.sqlite3")
+_DESCRIPTOR_MEMBERS = frozenset({"format", "database", "database_size", "database_sha256", "logical_generation"})
 _PROJECT_VERSION = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
 _ALLOWED_WHEEL_ROOTS = frozenset({"cadrumo", "cadrumo_harness", f"cadrumo-{_PROJECT_VERSION}.dist-info"})
 _ALLOWED_SDIST_FILES = frozenset(
@@ -116,8 +128,56 @@ _REQUIRED_MEMBERS = (
 
 
 @pytest.fixture(scope="module")
-def wheel_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
-    """Build the project wheel and return the set of archive member paths."""
+def candidate_source(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Snapshot the repository and stage the one release-selected authority candidate."""
+
+    raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
+    if raw_candidate:
+        candidate = Path(raw_candidate).resolve(strict=True)
+        source_root: Path | None = None
+    else:
+        # After the accepted bytes are promoted, the ordinary archive gate may
+        # read the promoted pair directly.  Before promotion, C supplies an
+        # isolated candidate directory and this branch must never fall back to
+        # the retired JSON frame.
+        candidate = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "authority"
+        source_root = REPO_ROOT
+        if not candidate.is_dir():
+            raise AssertionError(f"{_AUTHORITY_CANDIDATE_ENV} must name the validated candidate directory")
+    descriptor = candidate / "authority.current.json"
+    if not descriptor.is_file():
+        raise AssertionError(f"authority candidate has no descriptor: {descriptor}")
+    document = json.loads(descriptor.read_text(encoding="utf-8"))
+    database_name = document.get("database")
+    if not isinstance(database_name, str) or _DATABASE_NAME.fullmatch(database_name) is None:
+        raise AssertionError(f"authority candidate has an invalid database name: {database_name!r}")
+    database = candidate / database_name
+    if database.resolve().parent != candidate:
+        raise AssertionError("authority candidate database escapes its directory")
+    if not database.is_file():
+        raise AssertionError(f"authority candidate has no selected database: {database}")
+    database_bytes = database.read_bytes()
+    database_digest = hashlib.sha256(database_bytes).hexdigest()
+    if database_digest != document.get("database_sha256"):
+        raise AssertionError("authority candidate descriptor does not match selected database bytes")
+    if len(database_bytes) != document.get("database_size"):
+        raise AssertionError("authority candidate descriptor does not match selected database size")
+    if source_root is not None:
+        return source_root
+
+    parent = tmp_path_factory.mktemp("authority-candidate-source")
+    source = parent / "repository"
+    snapshot(REPO_ROOT, repository_files(REPO_ROOT), source)
+    destination = source / "src" / "cadrumo" / "_data" / "registry" / "authority"
+    destination.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(descriptor, destination / descriptor.name)
+    shutil.copy2(database, destination / database.name)
+    return source
+
+
+@pytest.fixture(scope="module")
+def wheel_archive(candidate_source: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Build the candidate source snapshot and return its sole wheel."""
 
     if shutil.which("uv") is None:
         raise AssertionError(
@@ -127,7 +187,7 @@ def wheel_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
     out_dir = tmp_path_factory.mktemp("wheel-out")
     subprocess.run(
         ["uv", "build", "--wheel", "--out-dir", str(out_dir)],
-        cwd=REPO_ROOT,
+        cwd=candidate_source,
         capture_output=True,
         text=True,
         check=True,
@@ -135,13 +195,20 @@ def wheel_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
     wheels = scan_directory(out_dir, pattern="cadrumo-*.whl")
     if len(wheels) != 1:
         raise AssertionError(f"expected exactly one cadrumo-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
-    with zipfile.ZipFile(wheels[0]) as archive:
+    return wheels[0]
+
+
+@pytest.fixture(scope="module")
+def wheel_members(wheel_archive: Path) -> frozenset[str]:
+    """Return the set of candidate wheel archive member paths."""
+
+    with zipfile.ZipFile(wheel_archive) as archive:
         return frozenset(info.filename for info in archive.infolist())
 
 
 @pytest.fixture(scope="module")
-def sdist_archive(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Build and return the sole project source distribution."""
+def sdist_archive(candidate_source: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Build the candidate source snapshot and return its sole source distribution."""
 
     if shutil.which("uv") is None:
         raise AssertionError(
@@ -151,7 +218,7 @@ def sdist_archive(tmp_path_factory: pytest.TempPathFactory) -> Path:
     out_dir = tmp_path_factory.mktemp("sdist-out")
     subprocess.run(
         ["uv", "build", "--sdist", "--out-dir", str(out_dir)],
-        cwd=REPO_ROOT,
+        cwd=candidate_source,
         capture_output=True,
         text=True,
         check=True,
@@ -171,13 +238,15 @@ def sdist_members(sdist_archive: Path) -> frozenset[str]:
 
 
 @pytest.fixture(scope="module")
-def rebuilt_wheel_members(sdist_archive: Path, tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
-    """Build a wheel from the isolated sdist and return its archive members."""
+def rebuilt_wheel_archive(
+    sdist_archive: Path, candidate_source: Path, tmp_path_factory: pytest.TempPathFactory
+) -> Path:
+    """Build a wheel from the isolated sdist and return its archive path."""
 
     out_dir = tmp_path_factory.mktemp("sdist-wheel-out")
     subprocess.run(
         ["uv", "build", "--wheel", "--out-dir", str(out_dir), str(sdist_archive)],
-        cwd=REPO_ROOT,
+        cwd=candidate_source,
         capture_output=True,
         text=True,
         check=True,
@@ -187,8 +256,43 @@ def rebuilt_wheel_members(sdist_archive: Path, tmp_path_factory: pytest.TempPath
         raise AssertionError(
             f"expected exactly one rebuilt cadrumo-*.whl in {out_dir}; got {[p.name for p in wheels]!r}"
         )
-    with zipfile.ZipFile(wheels[0]) as archive:
+    return wheels[0]
+
+
+@pytest.fixture(scope="module")
+def rebuilt_wheel_members(rebuilt_wheel_archive: Path) -> frozenset[str]:
+    """Return archive members for the wheel rebuilt from the candidate sdist."""
+
+    with zipfile.ZipFile(rebuilt_wheel_archive) as archive:
         return frozenset(info.filename for info in archive.infolist())
+
+
+def _assert_authority_archive(
+    members: frozenset[str],
+    *,
+    prefix: str,
+    descriptor_name: str,
+    descriptor: bytes,
+    database: bytes,
+) -> str:
+    """Require one descriptor and its exact content-addressed database member."""
+
+    document = json.loads(descriptor)
+    assert isinstance(document, dict)
+    assert set(document) == _DESCRIPTOR_MEMBERS
+    assert document["format"] == "cadrumo-authority-descriptor-v1"
+    database_name = document["database"]
+    assert isinstance(database_name, str)
+    assert _DATABASE_NAME.fullmatch(database_name)
+    database_digest = hashlib.sha256(database).hexdigest()
+    assert database_name == f"authority-{database_digest}.sqlite3"
+    assert document["database_sha256"] == database_digest
+    assert document["database_size"] == len(database)
+    assert {member for member in members if member.startswith(prefix) and not member.endswith("/")} == {
+        descriptor_name,
+        prefix + database_name,
+    }
+    return database_name
 
 
 def _test_members(members: frozenset[str]) -> list[str]:
@@ -306,8 +410,8 @@ def test_wheel_keeps_corpus_derived_surfaces(wheel_members: frozenset[str]) -> N
     )
 
 
-def test_wheel_keeps_registry_payload(wheel_members: frozenset[str]) -> None:
-    """The built wheel carries only the published authority, never its authoring tree.
+def test_wheel_keeps_registry_payload(wheel_members: frozenset[str], wheel_archive: Path) -> None:
+    """The built wheel carries exactly the selected authority pair, never authoring input.
 
     This is deliberately an archive-level release gate: it exercises Hatch's
     actual selection rules and detects both ways the boundary can regress.  A
@@ -315,39 +419,81 @@ def test_wheel_keeps_registry_payload(wheel_members: frozenset[str]) -> None:
     tree would make a future compiler fallback shippable again.
     """
 
-    assert _WHEEL_AUTHORITY_ARTIFACT in wheel_members, (
-        "the built wheel has no digest-verified runtime authority artifact; publication must complete before release"
+    with zipfile.ZipFile(wheel_archive) as archive:
+        descriptor = archive.read(_WHEEL_AUTHORITY_DESCRIPTOR)
+        document = json.loads(descriptor)
+        database_name = document["database"]
+        database = archive.read(_WHEEL_AUTHORITY_PREFIX + database_name)
+    _assert_authority_archive(
+        wheel_members,
+        prefix=_WHEEL_AUTHORITY_PREFIX,
+        descriptor_name=_WHEEL_AUTHORITY_DESCRIPTOR,
+        descriptor=descriptor,
+        database=database,
     )
+    assert _WHEEL_AUTHORITY_PREFIX + "authority.json" not in wheel_members
     authored_members = sorted(member for member in wheel_members if member.startswith(_WHEEL_AUTHORED_REGISTRY_PREFIX))
     assert not authored_members, (
         "the built wheel retains registry authoring input(s), which must stay development-only; "
         f"first ten: {authored_members[:10]!r}"
     )
+    assert _WHEEL_PROFILE_SCHEMA not in wheel_members
 
 
 def test_sdist_keeps_only_published_registry_payload(
     sdist_members: frozenset[str],
+    sdist_archive: Path,
+    rebuilt_wheel_archive: Path,
     rebuilt_wheel_members: frozenset[str],
 ) -> None:
-    """The source archive can rebuild the artifact-only wheel without authored inputs.
+    """The source archive can rebuild the selected SQLite authority without authored inputs.
 
     A wheel-only assertion is insufficient: downstream builders start from the
     sdist, so admitting the authored tree there would preserve the exact source
     material needed to recreate a compiler fallback in a rebuilt distribution.
     """
 
-    assert _SDIST_AUTHORITY_ARTIFACT in sdist_members, (
-        "the built sdist has no digest-verified runtime authority artifact; downstream "
-        "wheel builds would produce an unusable artifact-only runtime"
+    with tarfile.open(sdist_archive, mode="r:gz") as archive:
+        descriptor_member = next(
+            member for member in archive.getmembers() if member.name.endswith("/" + _SDIST_AUTHORITY_DESCRIPTOR)
+        )
+        descriptor_file = archive.extractfile(descriptor_member)
+        assert descriptor_file is not None
+        descriptor = descriptor_file.read()
+        selected = json.loads(descriptor)
+        database_member = next(
+            member
+            for member in archive.getmembers()
+            if member.name.endswith("/" + _SDIST_AUTHORITY_PREFIX + selected["database"])
+        )
+        database_file = archive.extractfile(database_member)
+        assert database_file is not None
+        database = database_file.read()
+    database_name = _assert_authority_archive(
+        sdist_members,
+        prefix=_SDIST_AUTHORITY_PREFIX,
+        descriptor_name=_SDIST_AUTHORITY_DESCRIPTOR,
+        descriptor=descriptor,
+        database=database,
     )
+    assert database_name == selected["database"]
+    assert _SDIST_AUTHORITY_PREFIX + "authority.json" not in sdist_members
     authored_members = sorted(member for member in sdist_members if member.startswith(_SDIST_AUTHORED_REGISTRY_PREFIX))
     assert not authored_members, (
         "the built sdist retains registry authoring input(s), which must stay development-only; "
         f"first ten: {authored_members[:10]!r}"
     )
-    assert _WHEEL_AUTHORITY_ARTIFACT in rebuilt_wheel_members, (
-        "the wheel rebuilt from the sdist has no digest-verified runtime authority artifact"
+    _assert_authority_archive(
+        rebuilt_wheel_members,
+        prefix=_WHEEL_AUTHORITY_PREFIX,
+        descriptor_name=_WHEEL_AUTHORITY_DESCRIPTOR,
+        descriptor=descriptor,
+        database=database,
     )
+    with zipfile.ZipFile(rebuilt_wheel_archive) as archive:
+        assert archive.read(_WHEEL_AUTHORITY_DESCRIPTOR) == descriptor
+        assert archive.read(_WHEEL_AUTHORITY_PREFIX + database_name) == database
+    assert _WHEEL_AUTHORITY_PREFIX + "authority.json" not in rebuilt_wheel_members
     rebuilt_authored_members = sorted(
         member for member in rebuilt_wheel_members if member.startswith(_WHEEL_AUTHORED_REGISTRY_PREFIX)
     )
@@ -355,6 +501,8 @@ def test_sdist_keeps_only_published_registry_payload(
         "the wheel rebuilt from the sdist retains registry authoring input(s); "
         f"first ten: {rebuilt_authored_members[:10]!r}"
     )
+    assert _SDIST_PROFILE_SCHEMA not in sdist_members
+    assert _WHEEL_PROFILE_SCHEMA not in rebuilt_wheel_members
     missing_roots = [
         root
         for root in _REQUIRED_DATA_ROOTS

@@ -73,6 +73,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ...domain.iva.establishment import record_country_code_status
+from ...domain.iva.regime_legend import RegimeLegend
 from ...domain.iva.schema import IvaCategory, IvaRateKind
 from ...domain.iva.supply_nature import (
     SupplyNature,
@@ -331,6 +332,7 @@ def _contradiction_item(resolution: IvaCategoryResolution) -> tuple[Confirmation
 def resolve_confirmed_establishment(
     *,
     bucket_id: str,
+    legends: tuple[RegimeLegend, ...],
     draft: InvoiceDraft,
     kind: InvoiceKind,
     invoice_date: date | None = None,
@@ -348,6 +350,10 @@ def resolve_confirmed_establishment(
 
     Args:
         bucket_id: Active profile bucket, for the ladder's confirmed-fact rung.
+        legends: The dated registry declarations selected by the enclosing
+            pinned authority operation. The same tuple is used by the ladder
+            and the regime contradiction check; this function does not resolve
+            a second vocabulary.
         draft: The pre-direction reading of the document being confirmed.
         kind: Which side of the invoice the filer is on, as the operator settled
             it at confirm. Never the reader's suggestion, and never inferred
@@ -387,6 +393,7 @@ def resolve_confirmed_establishment(
 
     counterparty = resolve_draft_counterparty_establishment(
         bucket_id=bucket_id,
+        legends=legends,
         draft=draft,
         kind=kind,
         repository=repository,

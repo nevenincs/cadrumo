@@ -69,6 +69,7 @@ from .session_types import AeatLoginAssertion, AeatSession
 
 if TYPE_CHECKING:
     from ...core.config import Settings
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _logger = get_logger(__name__)
 _JSON_OBJECT = TypeAdapter(dict[str, object])
@@ -346,6 +347,7 @@ async def ensure_authenticated_aeat_session(
     browser_session_factory: BrowserSessionFactoryPort,
     certificate_credentials: ActiveCertificateCredentials | None = None,
     operator_scope_ports: OperatorScopePorts,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> AuthenticatedAeatSessionResult:
     """Serialize and fail-close the central live-session writer."""
     with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports) as bucket_id:
@@ -370,6 +372,7 @@ async def ensure_authenticated_aeat_session(
                 browser_session_factory=browser_session_factory,
                 certificate_credentials=certificate_credentials,
                 operator_scope_ports=operator_scope_ports,
+                profile_decode_context=profile_decode_context,
             )
 
 
@@ -385,6 +388,7 @@ async def _ensure_authenticated_aeat_session_locked(
     browser_session_factory: BrowserSessionFactoryPort,
     certificate_credentials: ActiveCertificateCredentials | None = None,
     operator_scope_ports: OperatorScopePorts,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> AuthenticatedAeatSessionResult:
     """Return a verified AEAT session, authenticating only when required.
 
@@ -412,6 +416,7 @@ async def _ensure_authenticated_aeat_session_locked(
         settings,
         provider_kind,
         operator_scope_ports=operator_scope_ports,
+        profile_decode_context=profile_decode_context,
     )
     reset_status = (
         clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-before-ensure")
@@ -642,6 +647,7 @@ def _prepare_clave_auth(
     provider_kind: AuthProviderKind,
     *,
     operator_scope_ports: OperatorScopePorts,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> tuple[Settings, str | None]:
     """Bind profile-borne Cl@ve credentials and refuse an incomplete mode.
 
@@ -663,7 +669,14 @@ def _prepare_clave_auth(
     meaningless, and a provider that returned no expectation would leave
     the session check silently no-opping.
     """
-    facts = _active_profile_auth_facts(operator_scope_ports=operator_scope_ports)
+    facts = (
+        _active_profile_auth_facts(operator_scope_ports=operator_scope_ports)
+        if profile_decode_context is None
+        else _active_profile_auth_facts(
+            operator_scope_ports=operator_scope_ports,
+            profile_decode_context=profile_decode_context,
+        )
+    )
     credentials = _resolve_clave_credentials(
         settings,
         provider_kind,
@@ -671,14 +684,20 @@ def _prepare_clave_auth(
         operator_scope_ports=operator_scope_ports,
     )
     if credentials is None:
-        _assert_profile_identity_available_for_deferred_check(facts)
+        _assert_profile_identity_available_for_deferred_check(
+            facts,
+            profile_decode_context=profile_decode_context,
+        )
         return settings, facts.tax_id or None
     if provider_kind is AuthProviderKind.CLAVE_MOVIL and facts.clave_movil_route is None:
         raise ClaveCredentialsIncompleteError(
             translated_message="application.auth.sessions.errors.clave_route_missing",
             context={
                 "provider": provider_kind.value,
-                "route_field": _profile_field_label(_CLAVE_MOVIL_ROUTE_PATH),
+                "route_field": _profile_field_label(
+                    _CLAVE_MOVIL_ROUTE_PATH,
+                    profile_decode_context=profile_decode_context,
+                ),
             },
         )
     bound_settings = bind_clave_credentials_to_settings(
@@ -686,8 +705,15 @@ def _prepare_clave_auth(
         credentials,
         route=facts.clave_movil_route,
     )
-    _require_clave_credentials(bound_settings, credentials)
-    expected_identity = _assert_active_profile_identity_matches_provider(credentials)
+    _require_clave_credentials(
+        bound_settings,
+        credentials,
+        profile_decode_context=profile_decode_context,
+    )
+    expected_identity = _assert_active_profile_identity_matches_provider(
+        credentials,
+        profile_decode_context=profile_decode_context,
+    )
     return bound_settings, expected_identity
 
 
@@ -759,7 +785,11 @@ _CLAVE_NUMERO_SOPORTE_PATH = "auth.numero_soporte"
 _CLAVE_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
 
 
-def _profile_field_label(path: str) -> str:
+def _profile_field_label(
+    path: str,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> str:
     """Return one profile field's operator label, as the profile editor shows it.
 
     These refusals tell the operator to record a specific fact, so they name
@@ -768,16 +798,22 @@ def _profile_field_label(path: str) -> str:
     mid-sentence, where a trailing citation would read as part of the
     instruction.
     """
-    from ...domain.user_profile.loader import load_user_profile_schema
     from ..user_profile.preflight import build_profile_preflight_requirement
 
+    if profile_decode_context is None:
+        return path
     return build_profile_preflight_requirement(
         path,
-        schema=load_user_profile_schema(),
+        schema=profile_decode_context.schema,
     ).label
 
 
-def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials) -> None:
+def _require_clave_credentials(
+    settings: Settings,
+    credentials: ClaveCredentials,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> None:
     """Refuse a Cl@ve mode whose flow lacks a credential it needs.
 
     Every Cl@ve mode needs the DNI/NIE that identifies the person. The
@@ -791,7 +827,10 @@ def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials
             translated_message="application.auth.sessions.errors.clave_identity_missing",
             context={
                 "provider": credentials.provider_kind.value,
-                "identity_field": _profile_field_label(_CLAVE_DNI_NIE_PATH),
+                "identity_field": _profile_field_label(
+                    _CLAVE_DNI_NIE_PATH,
+                    profile_decode_context=profile_decode_context,
+                ),
             },
         )
     if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
@@ -803,13 +842,23 @@ def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials
             translated_message="application.auth.sessions.errors.clave_contraste_missing",
             context={
                 "provider": credentials.provider_kind.value,
-                "nie_field": _profile_field_label(_CLAVE_NUMERO_SOPORTE_PATH),
-                "dni_field": _profile_field_label(_CLAVE_FECHA_VALIDEZ_PATH),
+                "nie_field": _profile_field_label(
+                    _CLAVE_NUMERO_SOPORTE_PATH,
+                    profile_decode_context=profile_decode_context,
+                ),
+                "dni_field": _profile_field_label(
+                    _CLAVE_FECHA_VALIDEZ_PATH,
+                    profile_decode_context=profile_decode_context,
+                ),
             },
         )
 
 
-def _assert_profile_identity_available_for_deferred_check(facts: ClaveAuthFacts) -> None:
+def _assert_profile_identity_available_for_deferred_check(
+    facts: ClaveAuthFacts,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> None:
     """Refuse a provider whose only identity check is deferred when there is nothing to defer to.
 
     A provider with no operator-configured credential - the certificate
@@ -835,14 +884,21 @@ def _assert_profile_identity_available_for_deferred_check(facts: ClaveAuthFacts)
         return
     raise AuthProfileIdentityMismatchError(
         translated_message="application.auth.sessions.errors.profile_identity_cleared",
-        context={"requirements": _grounded_profile_identity_requirement()},
+        context={
+            "requirements": _grounded_profile_identity_requirement(
+                profile_decode_context=profile_decode_context,
+            ),
+        },
     )
 
 
 _PROFILE_TAX_ID_PATH = "identity.tax_id"
 
 
-def _grounded_profile_identity_requirement() -> str:
+def _grounded_profile_identity_requirement(
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> str:
     """Render the profile tax-identifier field as its operator label.
 
     Both refusals below name a field the operator has to go and fill in, and a
@@ -851,19 +907,22 @@ def _grounded_profile_identity_requirement() -> str:
     profile editor shows, and a name held in the locale catalogues cannot be
     kept in step with a schema rename.
     """
-    from ...domain.user_profile.loader import load_user_profile_schema
     from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 
+    if profile_decode_context is None:
+        return _PROFILE_TAX_ID_PATH
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
             _PROFILE_TAX_ID_PATH,
-            schema=load_user_profile_schema(),
+            schema=profile_decode_context.schema,
         ),
     )
 
 
 def _assert_active_profile_identity_matches_provider(
     credentials: ClaveCredentials | None,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> str | None:
     """Fail closed before live auth can bind one taxpayer's session to another profile.
 
@@ -899,7 +958,11 @@ def _assert_active_profile_identity_matches_provider(
     if not credentials.profile_tax_id:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.profile_tax_id_missing",
-            context={"requirements": _grounded_profile_identity_requirement()},
+            context={
+                "requirements": _grounded_profile_identity_requirement(
+                    profile_decode_context=profile_decode_context,
+                ),
+            },
         )
     try:
         profile_identity = validate_runtime_spanish_tax_id(credentials.profile_tax_id)
@@ -1009,7 +1072,11 @@ def clave_auth_facts_from_profile_values(
     )
 
 
-def _active_profile_auth_facts(*, operator_scope_ports: OperatorScopePorts) -> ClaveAuthFacts:
+def _active_profile_auth_facts(
+    *,
+    operator_scope_ports: OperatorScopePorts,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> ClaveAuthFacts:
     """Read the active profile's identity and Cl@ve credentials in one pass.
 
     Returns empty facts when no profile is active, when no authenticated
@@ -1037,7 +1104,11 @@ def _active_profile_auth_facts(*, operator_scope_ports: OperatorScopePorts) -> C
     if bucket_id is None or not operator_scope_ports.session.serves_bucket(current_session, bucket_id):
         return ClaveAuthFacts()
     try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        repository = ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=profile_decode_context,
+        )
+        record = repository.load(bucket_id)
     except ProfileNotFoundError:
         return ClaveAuthFacts()
 
@@ -1046,7 +1117,7 @@ def _active_profile_auth_facts(*, operator_scope_ports: OperatorScopePorts) -> C
         # A record whose tax id reached the projection only through its
         # model selector still owns that identity; fold it onto the
         # canonical path so the shared reader sees one shape.
-        selector_values = record_to_values(record)
+        selector_values = record_to_values(record, schema=repository.session.profile_decode_context.schema)
         path_values[_PROFILE_TAX_ID_PATH] = str(selector_values.get("tax.id") or "")
     return clave_auth_facts_from_profile_values(path_values, profile_setup_state=record.setup_state)
 

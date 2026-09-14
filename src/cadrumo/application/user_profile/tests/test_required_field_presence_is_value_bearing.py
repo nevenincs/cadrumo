@@ -15,8 +15,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import build_profile_overview
 from ..validation import ProfileValidationService

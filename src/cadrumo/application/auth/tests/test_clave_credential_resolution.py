@@ -18,14 +18,15 @@ and refusal contract.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import SecretStr
 
 from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
-from ....domain.user_profile.loader import load_user_profile_schema
 from ...user_profile.preflight import build_profile_preflight_requirement
 from .. import sessions as _sessions
 from ..sessions import (
@@ -43,6 +44,10 @@ _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
 _SOPORTE = "E12345678"
 _FECHA_VALIDEZ = "2030-01-01"
+_PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
+    schema=load_user_profile_schema(),
+    generation=AuthorityGenerationPin(logical_generation="test-profile", reader_incarnation="test-reader"),
+)
 
 _ACTIVE_PROFILE_FACTS = ClaveAuthFacts()
 
@@ -67,7 +72,7 @@ def _bind_profile_facts(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         _sessions,
         "_active_profile_auth_facts",
-        lambda *, operator_scope_ports: _ACTIVE_PROFILE_FACTS,
+        lambda **_: _ACTIVE_PROFILE_FACTS,
     )
 
 
@@ -122,7 +127,12 @@ def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> Non
         ) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+        )
 
     expected_label = build_profile_preflight_requirement(
         "auth.clave_movil_route",
@@ -198,7 +208,12 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
         override_settings(cadrumo_clave_movil_dni_nie=None) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+        )
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_missing"
     # The refusal names the absent credential by the label the profile editor

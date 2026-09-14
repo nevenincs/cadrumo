@@ -11,10 +11,16 @@ from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Final, cast
 
-from cadrumo.core.corpus_annotation import CORPUS_PAGE_ANNOTATION_SUFFIX, CorpusPageAnnotation
+from cadrumo.core.corpus_annotation import (
+    CORPUS_PAGE_ANNOTATION_SUFFIX,
+    CorpusPageAnnotation,
+    resolve_annotated_pdf_pages,
+)
+from cadrumo.core.corpus_text import CorpusAnchorResolutionError
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
+from cadrumo.core.text_fold import ascii_slug
 from cadrumo.core.type_guards import is_object_dict
 from cadrumo.domain.calculations.registry.artifact_catalogue import (
     ArtifactCatalogue,
@@ -122,6 +128,25 @@ def verify_manual_annotation_catalogue(root: Path, sources: Mapping[str, SourceR
                 raise RegistryValidationError(
                     f"semantic annotation {relative.as_posix()!r} target disagrees with registry source {source.id!r}"
                 )
+        source_path = verify_source_file(root, declared_sources[0])
+        extraction_path = annotation_file.with_name(target.name + ".extracted.json")
+        for selection in annotation.selections:
+            if selection.anchor != ascii_slug(selection.anchor):
+                raise RegistryValidationError(
+                    f"semantic annotation {relative.as_posix()!r} has non-canonical anchor {selection.anchor!r}"
+                )
+            try:
+                resolve_annotated_pdf_pages(
+                    source_path,
+                    anchor=selection.anchor,
+                    annotation_path=annotation_file,
+                    extracted_path=extraction_path,
+                )
+            except CorpusAnchorResolutionError as error:
+                raise RegistryValidationError(
+                    f"semantic annotation {relative.as_posix()!r} cannot resolve anchor "
+                    f"{selection.anchor!r} against its sibling extraction: {error}"
+                ) from error
         known_paths.extend((target, relative))
         identities.append(identity)
         annotations.append(SemanticAnnotation(path=relative, target_path=target))

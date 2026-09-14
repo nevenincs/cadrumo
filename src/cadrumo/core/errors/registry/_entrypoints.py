@@ -5,6 +5,7 @@ Rows map CLI boundary exception qualnames to stable
 """
 
 from ..error_codes import ErrorCategory, ErrorCode
+from ._entrypoints_part2 import DECLARED_ERROR_CODES as _ENTRYPOINTS_PART2_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
@@ -97,4 +98,5 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    *_ENTRYPOINTS_PART2_CODES,
 )

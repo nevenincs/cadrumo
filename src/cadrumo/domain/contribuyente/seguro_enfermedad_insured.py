@@ -16,14 +16,13 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
     ResolvedScalarFact,
     ScalarFactQuery,
 )
-from ..calculations.registry.queries import RegistryQueryService
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 
 if TYPE_CHECKING:
@@ -58,14 +57,14 @@ class _SeguroEnfermedadRegistryDeclarations:
 
 def _resolve_seguro_enfermedad_registry_declarations(
     filing_year: int,
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> _SeguroEnfermedadRegistryDeclarations:
     """Resolve the selected Modelo 100 and dated insurance fact declarations."""
     effective_date = date(filing_year, 12, 31)
-    authority = bundled_authority()
-    query_service = RegistryQueryService(authority)
-    selected_model = query_service.describe_modelo("100", as_of=effective_date)
-    if not selected_model.revision:
-        raise ValueError("selected Modelo 100 registry revision is unavailable")
+    authority = authority or governed_facts_in_scope()
+    if authority is None:
+        raise ValueError("insurance declarations require an explicit authority operation or scope")
 
     resolved_grade = authority.resolve_governed_fact(
         ScalarFactQuery(
@@ -94,11 +93,10 @@ def _resolve_seguro_enfermedad_registry_declarations(
         raise TypeError("insurance child age boundary must resolve as a scalar fact")
     if not isinstance(resolved_applicability, ResolvedMappingFact):
         raise TypeError("insurance applicability must resolve as a mapping fact")
-    try:
-        disability_minimum_grade = int(resolved_grade.payload.value)
-        insured_child_maximum_age = int(resolved_age.payload.value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("insurance scalar declarations must be integral") from exc
+    if type(resolved_grade.payload.value) is not int or type(resolved_age.payload.value) is not int:
+        raise ValueError("insurance scalar declarations must be integral")
+    disability_minimum_grade = resolved_grade.payload.value
+    insured_child_maximum_age = resolved_age.payload.value
     applicability: dict[str, str] = {}
     for entry in resolved_applicability.payload.entries:
         if not isinstance(entry.key, str) or not isinstance(entry.value, str):
@@ -173,6 +171,7 @@ def count_seguro_enfermedad_insured(
     taxpayer_discapacidad_grado: int | None = None,
     spouse_discapacidad_grado: int | None = None,
     has_spouse: bool = False,
+    authority: GovernedFactSource | None = None,
 ) -> SeguroEnfermedadInsuredCounts:
     """Count the Art. 30.2.5.a insured persons, split by the limit each carries.
 
@@ -182,11 +181,12 @@ def count_seguro_enfermedad_insured(
         taxpayer_discapacidad_grado: The contribuyente's declared grado, if any.
         spouse_discapacidad_grado: The conyuge's declared grado, if any.
         has_spouse: The relationship-presence fact supplied to the resolver.
+        authority: Generation-pinned facts authority, or the enclosing scope.
 
     Returns:
         The per-limb counts.
     """
-    declarations = _resolve_seguro_enfermedad_registry_declarations(filing_year)
+    declarations = _resolve_seguro_enfermedad_registry_declarations(filing_year, authority=authority)
     counts = {limb: 0 for limb in SeguroEnfermedadInsuredCounts.model_fields}
 
     def add_insured(grade: int | None) -> None:
@@ -210,6 +210,7 @@ def seguro_enfermedad_insured_counts_from_facts(
     fact_index: Mapping[str, object],
     *,
     filing_year: int,
+    authority: GovernedFactSource | None = None,
 ) -> SeguroEnfermedadInsuredCounts:
     """Count the Art. 30.2.5.a insured persons straight from stored profile facts.
 
@@ -224,6 +225,7 @@ def seguro_enfermedad_insured_counts_from_facts(
     Args:
         fact_index: The stored profile facts.
         filing_year: Ejercicio whose year-end settles each child's age.
+        authority: Generation-pinned facts authority, or the enclosing scope.
 
     Returns:
         The per-limb counts.
@@ -231,7 +233,10 @@ def seguro_enfermedad_insured_counts_from_facts(
     from .descendant_facts import descendant_list_from_facts
 
     stored_facts = {str(path): str(value) for path, value in fact_index.items() if value is not None}
-    descendientes = descendant_list_from_facts(stored_facts)
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise ValueError("insurance fact projection requires an explicit authority operation or scope")
+    descendientes = descendant_list_from_facts(stored_facts, authority=selected_authority)
     return count_seguro_enfermedad_insured(
         descendientes,
         filing_year=filing_year,
@@ -244,6 +249,7 @@ def seguro_enfermedad_insured_counts_from_facts(
             "renta_spouse.disability_grade",
         ),
         has_spouse=any(str(path).startswith("renta_spouse.") for path in fact_index),
+        authority=selected_authority,
     )
 
 

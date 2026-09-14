@@ -5,27 +5,30 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.verification_report import ModeloVerificationFinding
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = ["dt12_antiquity_advisory_finding"]
 
 
-# fact-relocation: selected DT12 antiquity declarations are consumed through RegistryQueryService and the dated mapping fact
+# fact-relocation: selected DT12 antiquity declarations are consumed through the pinned operation and dated mapping fact
 def _registry_dt12_antiquity_declaration(
     revision: object,
     *,
+    operation: PinnedAuthorityOperation,
     modelo: str,
     effective_date: date,
 ) -> ResolvedMappingFact:
     """Resolve the selected model declaration and the dated DT12 mapping fact."""
-    model_report = RegistryQueryService(bundled_authority()).describe_modelo(modelo)
-    resolved = bundled_authority().resolve_governed_fact(
+    del modelo
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="lirpf-dt12-antiquity-verification-mapping",
             date_axis=DateAxis.FILING_PERIOD,
@@ -34,7 +37,7 @@ def _registry_dt12_antiquity_declaration(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise TypeError("selected DT12 declaration must resolve as a mapping fact")
-    del revision, model_report
+    del revision
     return resolved
 
 
@@ -42,10 +45,16 @@ def dt12_antiquity_advisory_finding(
     revision: object,
     casilla_values: Mapping[CasillaId, Decimal],
     *,
+    operation: PinnedAuthorityOperation,
     modelo: str,
 ) -> ModeloVerificationFinding | None:
     """Delegate DT12 antiquity verification declarations to the registry."""
     del casilla_values
     effective_date = getattr(revision, "valid_to", None) or date.today()
-    _registry_dt12_antiquity_declaration(revision, modelo=modelo, effective_date=effective_date)
+    _registry_dt12_antiquity_declaration(
+        revision,
+        operation=operation,
+        modelo=modelo,
+        effective_date=effective_date,
+    )
     raise NotImplementedError("registry-selected DT12 verification consumer is not yet implemented")

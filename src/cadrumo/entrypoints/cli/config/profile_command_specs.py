@@ -5,8 +5,6 @@ from __future__ import annotations
 from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ....domain.calculations.registry.irpf_regimes import irpf_estimation_regime_tokens, irpf_special_regime_tokens
-from ....domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
 from ..command_spec import (
     FLAG_VALUE,
     PATH_VALUE,
@@ -55,10 +53,14 @@ _TOGGLE = ValueContract(
     DeferredTarget("builtins", "str"),
     choices=("on", "off"),
 )
-_ENTITY_TYPE_CHOICES = tuple(token.value for token in entity_type_tokens())
-_LEGAL_ENTITY_FORM_CHOICES = tuple(token.value for token in legal_entity_form_tokens())
-_IRPF_ESTIMATION_REGIME_CHOICES = tuple(token.value for token in irpf_estimation_regime_tokens())
-_IRPF_SPECIAL_REGIME_CHOICES = tuple(token.value for token in irpf_special_regime_tokens())
+# Registry-backed choices are supplied by the operation-scoped wizard command
+# builder.  Metadata construction must stay import-pure so ``--help`` and
+# ``--version`` do not acquire an authority generation merely to describe the
+# command graph.
+_ENTITY_TYPE_CHOICES: tuple[str, ...] = ()
+_LEGAL_ENTITY_FORM_CHOICES: tuple[str, ...] = ()
+_IRPF_ESTIMATION_REGIME_CHOICES: tuple[str, ...] = ()
+_IRPF_SPECIAL_REGIME_CHOICES: tuple[str, ...] = ()
 
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.

@@ -34,10 +34,10 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
     from ..calculations.registry.facts.resolution import ResolvedScalarFact
 
 
@@ -104,17 +104,18 @@ def _resolved_scalar_fact(
     *,
     effective_date: date,
     expected_unit: str,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ResolvedScalarFact:
     """Resolve one rate fact with the authority evidence required by its consumer."""
     from ..calculations.registry.errors import RegistryError
     from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
     from ..calculations.registry.schema_base import DateAxis
 
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from ..calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+        raise TransactionValidationError(
+            "retención fact resolution requires an explicit authority operation or scope",
+        )
     try:
         resolved = authority.resolve_governed_fact(
             ScalarFactQuery(
@@ -142,7 +143,7 @@ def _legal_refs_of(
     fact_id: str,
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[str, ...]:
     """Return one resolved fact's legal references, refusing an ungrounded result."""
     return tuple(
@@ -158,7 +159,7 @@ def _legal_refs_of(
 def load_retencion_actividades_rates(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> RirpfArt95RetencionRates:
     """Return the authority-selected activity withholding rates.
 
@@ -184,7 +185,7 @@ def load_retencion_actividades_rates(
 def rirpf_art95_retencion_legal_refs(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[str, ...]:
     """Return legal references grounding the selected activity-rate set.
 
@@ -205,7 +206,9 @@ def rirpf_art95_retencion_legal_refs(
     return tuple(seen)
 
 
-def statutory_activity_retencion_rates(*, effective_date: date) -> frozenset[Decimal]:
+def statutory_activity_retencion_rates(
+    *, effective_date: date, authority: GovernedFactSource | None = None
+) -> frozenset[Decimal]:
     """Return every distinct authority-declared activity withholding rate.
 
     Distinct values are returned because callers use this surface only for
@@ -216,7 +219,7 @@ def statutory_activity_retencion_rates(*, effective_date: date) -> frozenset[Dec
     Returns:
         The distinct rates selected by the registry for the date.
     """
-    rates = load_retencion_actividades_rates(effective_date=effective_date)
+    rates = load_retencion_actividades_rates(effective_date=effective_date, authority=authority)
     return frozenset(
         {
             rates.general_rate,
@@ -229,7 +232,9 @@ def statutory_activity_retencion_rates(*, effective_date: date) -> frozenset[Dec
     )
 
 
-def professional_activity_retencion_rates(*, effective_date: date) -> frozenset[Decimal]:
+def professional_activity_retencion_rates(
+    *, effective_date: date, authority: GovernedFactSource | None = None
+) -> frozenset[Decimal]:
     """Return the authority-declared professional-classified rates.
 
     This projection is separate because consumers assign different confidence
@@ -239,11 +244,13 @@ def professional_activity_retencion_rates(*, effective_date: date) -> frozenset[
     Returns:
         The registry-declared professional rate subset.
     """
-    rates = load_retencion_actividades_rates(effective_date=effective_date)
+    rates = load_retencion_actividades_rates(effective_date=effective_date, authority=authority)
     return frozenset({rates.general_rate, rates.inicio_actividad_rate})
 
 
-def maximum_supported_activity_retencion_rate(*, effective_date: date) -> Decimal:
+def maximum_supported_activity_retencion_rate(
+    *, effective_date: date, authority: GovernedFactSource | None = None
+) -> Decimal:
     """Return the authority-selected upper bound for amount inference.
 
     The inference refuses a result above the selected authority bound rather
@@ -252,7 +259,7 @@ def maximum_supported_activity_retencion_rate(*, effective_date: date) -> Decima
     Returns:
         The maximum retención rate the activity inference will accept.
     """
-    return load_retencion_actividades_rates(effective_date=effective_date).general_rate
+    return load_retencion_actividades_rates(effective_date=effective_date, authority=authority).general_rate
 
 
 class AdministradorRetencionRates(BaseModel):
@@ -289,7 +296,7 @@ _ADMINISTRADOR_FACT_IDS: Final[tuple[str, ...]] = (
 def load_administrador_retencion_rates(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> AdministradorRetencionRates:
     """Return authority-selected administrator withholding data.
 
@@ -317,7 +324,7 @@ def load_administrador_retencion_rates(
 def administrador_retencion_legal_refs(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[str, ...]:
     """Return legal references grounding the administrator-rate set.
 
@@ -342,7 +349,7 @@ def administrador_retencion_legal_refs(
 def _decimal_fact(
     fact_id: str,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
     *,
     expected_unit: str = "fraction",
 ) -> Decimal:

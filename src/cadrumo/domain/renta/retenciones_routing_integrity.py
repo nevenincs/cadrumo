@@ -15,18 +15,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import BindingId
-from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,11 +36,12 @@ class M130RetencionesRoute:
 # fact-relocation: selected Renta binding routing is consumed through the governed mapping fact
 def _registry_m130_retenciones_route(
     *,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> M130RetencionesRoute:
     """Resolve the selected route declaration without a Python fallback."""
-    selected_authority = authority or bundled_authority()
-    RegistryQueryService(selected_authority).describe_modelo("130")
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise ValueError("Renta route requires an explicit authority operation or scope")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m130-retenciones-output-routing",
@@ -79,9 +75,9 @@ def _registry_m130_retenciones_route(
     )
 
 
-def resolve_m130_retenciones_route() -> M130RetencionesRoute:
+def resolve_m130_retenciones_route(*, authority: GovernedFactSource | None = None) -> M130RetencionesRoute:
     """Return the selected route for application-layer binding projection."""
-    return _registry_m130_retenciones_route()
+    return _registry_m130_retenciones_route(authority=authority)
 
 
 def check_m130_retenciones_output_casilla(

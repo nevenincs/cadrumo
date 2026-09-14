@@ -12,6 +12,7 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...application.modelo.work_review import build_modelo_work_review
 from ...core.external_constants import OutputLanguage
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
@@ -74,15 +75,17 @@ def work_review(
     )
     work_repository = WorkUnitCatalogueRepository()
     calculation_repository = CalculationRevisionCatalogueRepository()
-    review = build_modelo_work_review(
-        unit.bucket_id,
-        unit.modelo,
-        unit.filing_year,
-        unit.period,
-        work_unit_repository=work_repository,
-        calculation_repository=calculation_repository,
-        verification_repository=VerificationReportCatalogueRepository(),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_repository,
+            calculation_repository=calculation_repository,
+            verification_repository=VerificationReportCatalogueRepository(),
+        )
     result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
     emit_envelope(
         ctx,

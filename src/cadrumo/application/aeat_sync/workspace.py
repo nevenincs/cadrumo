@@ -10,10 +10,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Any, ClassVar, Final, NotRequired, Self, TypedDict, Unpack, override
+from typing import Annotated, Any, Final, NotRequired, Self, TypedDict, Unpack, override
 
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.hex import HEX_PATTERN_64
 from ...core.identifier_grammar import NamespacedId
@@ -53,13 +54,8 @@ retaining the private notification identity.
 """
 
 
-class AeatSyncWorkspaceProjectionError(ValueError):
+class AeatSyncWorkspaceProjectionError(CadrumoError):
     """Already-loaded authorities cannot form one safe snapshot."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal AEAT Sync projector-integrity carrier; SecureProfileWorkbenchGenerationReadDoorV1._read_aeat_sync "
-        "converts it into the unavailable AEAT Sync source result"
-    )
 
 
 class AeatSyncWorkspaceZone(StrEnum):

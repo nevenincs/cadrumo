@@ -39,7 +39,7 @@ _REPO_ROOT = REPO_ROOT
 
 
 def test_xlsm_record_design_is_a_corpus_and_diseno_source() -> None:
-    path = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/DR220e23.xlsm"
+    path = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm"
     assert _classify(path) == {GoldenSurface.ANY_CORPUS_SOURCE, GoldenSurface.DISENO_SOURCE}
 
 

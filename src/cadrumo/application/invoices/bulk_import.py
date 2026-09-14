@@ -38,13 +38,14 @@ from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any
 
 from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separators
 from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try_parse_canonical_decimal
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
@@ -245,12 +246,8 @@ def _parse_row_decimal(raw: object, *, row_number: int, field: str) -> Decimal:
     return numeric
 
 
-class _RowParseError(Exception):
+class _RowParseError(CadrumoError):
     """Internal control-flow exception carrying one row's failure detail."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "private row parser control-flow carrier; converted to BulkInvoiceImportRowFailure before leaving the module"
-    )
 
     def __init__(self, *, row_number: int, field: str, reason: str) -> None:
         super().__init__(reason)

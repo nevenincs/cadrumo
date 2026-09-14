@@ -9,8 +9,10 @@ the record probe, rather than surfacing as a raw dotted path.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ...domain.user_profile.loader import load_user_profile_schema
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
+
 from ..diagnostics import _grounded_profile_key_summary
 from ..user_profile.preflight import build_profile_preflight_requirement
 
@@ -18,6 +20,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: A schema-declared path the wizard report can carry in its missing tuples.
 _KNOWN_PATH = "identity.tax_id"
+_PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
+    schema=load_user_profile_schema(),
+    generation=AuthorityGenerationPin(logical_generation="test-profile", reader_incarnation="test-reader"),
+)
 
 
 def test_the_known_path_has_a_label_that_differs_from_the_path() -> None:
@@ -32,7 +38,7 @@ def test_the_known_path_has_a_label_that_differs_from_the_path() -> None:
 
 def test_a_known_profile_path_is_rendered_with_its_operator_label() -> None:
     """The fallback branch names the field, not only its dotted path."""
-    rendered = _grounded_profile_key_summary(_KNOWN_PATH)
+    rendered = _grounded_profile_key_summary(_KNOWN_PATH, profile_decode_context=_PROFILE_DECODE_CONTEXT)
 
     expected_label = build_profile_preflight_requirement(
         _KNOWN_PATH,
@@ -48,7 +54,7 @@ def test_the_rendered_form_keeps_the_path_first_so_deduplication_still_works() -
     Were the label placed first, an enrolment key already named by a required
     finding would stop matching and would be reported twice.
     """
-    rendered = _grounded_profile_key_summary(_KNOWN_PATH)
+    rendered = _grounded_profile_key_summary(_KNOWN_PATH, profile_decode_context=_PROFILE_DECODE_CONTEXT)
 
     assert rendered.split(" — ", 1)[0] == _KNOWN_PATH
 

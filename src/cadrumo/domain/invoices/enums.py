@@ -16,15 +16,15 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
 from ...core.errors.hierarchy import CoreValidationError
-from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
@@ -34,9 +34,6 @@ from ..iva.errors import IvaRateNotFoundError
 from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, resolve_iva_rate
 from ..iva.rates import iva_rate_record_from_fact
 from ..iva.schema import IvaRateKind, spanish_eu_member_state
-
-if TYPE_CHECKING:
-    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 
 class IvaRate(str):
@@ -339,10 +336,12 @@ def invoice_legal_mention_declarations(
 ) -> tuple[InvoiceLegalMentionDeclaration, ...]:
     """Project the dated legal-mention vocabulary and semantics from the registry."""
     if authority is None:
-        from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
-
         authority = governed_facts_in_scope()
-    selected = authority or bundled_authority()
+    if authority is None:
+        raise RegistryValidationError(
+            "invoice legal-mention catalogue requires an explicit authority operation or scope"
+        )
+    selected = authority
     resolved = selected.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_INVOICE_LEGAL_MENTION_FACT_ID,
@@ -414,10 +413,10 @@ def _iva_rate_slot_registry_values(
 ) -> Mapping[str, str]:
     """Resolve the dated slot membership and declarations from the registry."""
     if authority is None:
-        from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
-
         authority = governed_facts_in_scope()
-    selected = authority or bundled_authority()
+    if authority is None:
+        raise RegistryValidationError("IVA rate-slot catalogue requires an explicit authority operation or scope")
+    selected = authority
     resolved = selected.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_IVA_RATE_SLOT_FACT_ID,

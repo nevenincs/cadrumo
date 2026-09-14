@@ -12,10 +12,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.decimal.constants import ZERO
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr, tipo_renta_pension_token
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -57,22 +55,20 @@ def _selected_rate_parameters(
     year: int,
 ) -> tuple[ParameterDefinition, ParameterDefinition]:
     """Read rate-parameter identities from the selected formula declaration."""
-    report = RegistryQueryService(bundled_authority()).formulas_for_scope(
-        snapshot.modelo.id,
-        filing_year=year,
-        period=snapshot.period,
-    )
     formula = next(
-        (row for row in report.rows if row.expression.get("op") == "irnr_resolve_tipo_gravamen"),
+        (formula for formula in snapshot.revision.formulas if formula.expression.op == "irnr_resolve_tipo_gravamen"),
         None,
     )
     if formula is None:
         raise LookupError("selected M210 registry has no complete rate formula declaration")
 
     try:
-        baseline_id, tariff_id = formula.input_parameters
-    except ValueError as exc:
+        baseline_id = formula.expression.args[2].parameter
+        tariff_id = formula.expression.args[3].parameter
+    except (IndexError, TypeError) as exc:
         raise LookupError("selected M210 registry has no complete rate formula declaration") from exc
+    if baseline_id is None or tariff_id is None:
+        raise LookupError("selected M210 registry has no complete rate formula declaration")
 
     parameters = {parameter.id: parameter for parameter in snapshot.revision.parameters}
     baseline = parameters.get(baseline_id)

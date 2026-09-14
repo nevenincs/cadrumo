@@ -21,8 +21,7 @@ from typing import TYPE_CHECKING
 
 from ...core.modelo import Modelo
 from ...core.period import StandardPeriodCode
-from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import (
@@ -124,6 +123,13 @@ def m210_agrupacion_renta_verification_findings(
     """
     if str(work_unit.modelo) != str(Modelo("210")) or work_unit.period.standard_code is not StandardPeriodCode.ANNUAL:
         return ()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return m210_agrupacion_renta_verification_findings(
+                work_unit=work_unit,
+                revision=revision,
+                operation=indexed_operation,
+            )
     try:
         validate_m210_agrupacion_renta_rows_for_calculation(
             work_unit=work_unit,
@@ -131,18 +137,11 @@ def m210_agrupacion_renta_verification_findings(
             m210_official_tipo_renta_code=revision.m210_official_tipo_renta_code,
         )
     except ModeloError as exc:
-        if operation is None:
-            selected_revision = RegistryQueryService(bundled_authority()).revision_for_scope(
-                Modelo("210").value,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period.registry_token,
-            )
-        else:
-            selected_revision = operation.revision_for_context(
-                Modelo("210").value,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period.registry_token,
-            )
+        selected_revision = operation.revision_for_context(
+            Modelo("210").value,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        )
         return (
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,

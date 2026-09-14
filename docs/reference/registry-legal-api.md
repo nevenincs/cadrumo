@@ -47,6 +47,13 @@ the complete component directory. The physical database digest is both the
 descriptor's admission check and the content-addressed filename, so a changed
 or colliding payload is refused before runtime work begins.
 
+The development publication command is
+`python -m dev.registry.pipeline publish-authority`. Its `--destination`
+option selects an isolated authority directory; custom `--registry-root` or
+`--source-root` values must be paired with an explicit `--profile-schema`.
+The command-bearing product package has no command that compiles or repairs
+this publication.
+
 The source receipt folds each registry and source-evidence file's root-relative
 path and content digest. Registry files fold CRLF to LF; source evidence is
 byte-exact. The compiler receipt also changes with relevant source code,
@@ -98,6 +105,11 @@ error. A descriptor/database or component digest mismatch raises an integrity
 error. These failures occur before authority-dependent calculation or filing
 proceeds. Components are loaded only when a pinned operation asks for them;
 successful values remain in a bounded generation-scoped cache.
+
+The runtime contract is for ordinary filesystem-installed wheels, where the
+descriptor and SQLite database have stable physical paths. Direct zip-import
+execution is not supported: SQLite cannot open an archive member as its
+read-only database.
 
 `python -m dev.registry.conformance integrity` refuses a descriptor/database
 publication whose recorded identity digest differs from the identity of the

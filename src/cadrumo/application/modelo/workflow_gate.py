@@ -71,12 +71,12 @@ from ..filing.runtime import build_runtime_schema_provider, filing_profile_from_
 from ..workflow.adapters import DeadlineEngineAdapter
 from ..workflow.engine import WorkflowEngine
 from ..workflow.errors import WorkflowInputMismatchError
-from ..workflow.persistence import WorkflowRunRepository
 from ..workflow.protocols import RegistryModeloDraftProtocol
 from ..workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
 from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import ModeloWorkflowGateError
 from .revision_replay_inputs import revision_filing_replay_inputs
+from .verification_repository_ports import WorkflowRunRepositoryProtocol
 from .workflow_gate_ports import WorkflowGateDraftRepositoryProtocol, WorkflowGatePorts
 
 if TYPE_CHECKING:
@@ -327,6 +327,10 @@ def build_revision_workflow_engine(
     after :func:`run_revision_workflow_gate` returns successfully.
 
     Args:
+        certificate_secret_backend_factory: Factory for the certificate-secret
+            capability used by the selected authentication provider.
+        operator_scope_ports: Operator-scope capabilities supplied to the
+            authentication provider.
         revision: The immutable :class:`CalculationRevision` whose persisted
             values are replayed into the workflow draft.
         work_unit: The :class:`WorkUnit` that
@@ -384,7 +388,7 @@ def run_revision_workflow_gate(
     work_unit: WorkUnit,
     today: date,
     runs_dir: Path | None,
-    run_repository: WorkflowRunRepository,
+    run_repository: WorkflowRunRepositoryProtocol,
     resumed_from: str | None = None,
     purpose: WorkflowPurpose = WorkflowPurpose.FILE,
 ) -> WorkflowResult:

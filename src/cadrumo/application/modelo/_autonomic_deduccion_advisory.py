@@ -44,6 +44,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import bundled_authority
@@ -59,7 +60,6 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
@@ -70,6 +70,9 @@ from .profile_binding import (
     madrid_nacimiento_adopcion_candidate_weighted_count,
 )
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"
 
@@ -107,6 +110,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     bucket_id: str,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm Madrid nacimiento/adopción eligibility for an indeterminate unit.
 
@@ -145,7 +149,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
         # The auto-trigger already populated the casilla; nothing to advise.
         return None
 
-    fact_index = _load_fact_index(bucket_id)
+    fact_index = _load_fact_index(bucket_id, profile_decode_context=profile_decode_context)
     if fact_index is None:
         return None
 
@@ -179,14 +183,21 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     )
 
 
-def _load_fact_index(bucket_id: str) -> dict[str, UserProfileFactValue] | None:
+def _load_fact_index(
+    bucket_id: str,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> dict[str, UserProfileFactValue] | None:
     """Return the bucket's profile fact index, or ``None`` when no profile exists."""
     try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        repository = ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=profile_decode_context,
+        )
+        record = repository.load(bucket_id)
     except ProfileNotFoundError:
         return None
-    schema = load_user_profile_schema()
-    return profile_fact_index(record, schema)
+    return profile_fact_index(record, repository.session.profile_decode_context.schema)
 
 
 def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
@@ -194,12 +205,14 @@ def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     work_unit: WorkUnit,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> ModeloVerificationFinding | None:
     """Convenience wrapper reading ``bucket_id`` off a :class:`WorkUnit`."""
     return madrid_nacimiento_adopcion_eligibility_advisory_finding(
         snapshot,
         casilla_values,
         bucket_id=work_unit.bucket_id,
+        profile_decode_context=profile_decode_context,
     )
 
 

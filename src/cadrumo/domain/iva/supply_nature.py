@@ -118,9 +118,11 @@ def registry_citation_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> CitationCatalogue:
     """Project the dated citation mapping fact into generic parser inputs."""
-    from ..calculations.registry.authority import bundled_authority
-
-    selected_authority = authority or governed_facts_in_scope() or bundled_authority()
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise IvaValidationError(
+            "IVA statutory citation catalogue requires an explicit authority operation or scope",
+        )
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-supply-nature-citation-catalogue",
@@ -168,7 +170,11 @@ def registry_citation_catalogue(
         if not key.startswith("category."):
             continue
         try:
-            category = require_iva_category(key.removeprefix("category."))
+            category = require_iva_category(
+                key.removeprefix("category."),
+                effective_date=effective_date,
+                authority=selected_authority,
+            )
         except ValueError as exc:
             raise IvaValidationError(f"unknown IVA category {key!r} in statutory citation mapping") from exc
         category_citations[category] = tuple(reference.strip() for reference in value.split(",") if reference.strip())

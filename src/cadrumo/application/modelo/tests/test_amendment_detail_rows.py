@@ -17,6 +17,7 @@ the caller states the rows and the code refuses to guess.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -28,6 +29,9 @@ from ..action_errors import AmendmentDetailRowsRequiredError
 from ..amendment_actions import _require_amendment_detail_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FILING_YEAR = 2025
+_EFFECTIVE_DATE = date(_FILING_YEAR, 12, 31)
 
 
 def _revision_id(*, detail_rows: Sequence[ModeloDetailRow] | None = None) -> str:
@@ -65,17 +69,17 @@ def _counterparty() -> Modelo347ContraparteRow:
     )
 
 
-@pytest.mark.parametrize("modelo", sorted(detail_row_declaration_modelos()))
+@pytest.mark.parametrize("modelo", sorted(detail_row_declaration_modelos(effective_date=_EFFECTIVE_DATE)))
 def test_a_row_bearing_modelo_refuses_an_amendment_that_omits_its_rows(modelo: str) -> None:
     """Silence is not a nil declaration; the two amendment kinds read it apart."""
     with pytest.raises(AmendmentDetailRowsRequiredError):
-        _require_amendment_detail_rows(modelo=modelo, supplied=None)
+        _require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=None)
 
 
-@pytest.mark.parametrize("modelo", sorted(detail_row_declaration_modelos()))
+@pytest.mark.parametrize("modelo", sorted(detail_row_declaration_modelos(effective_date=_EFFECTIVE_DATE)))
 def test_an_explicitly_empty_set_is_an_answer_and_is_accepted(modelo: str) -> None:
     """Declaring that the period had no counterparts is a statement, not silence."""
-    assert _require_amendment_detail_rows(modelo=modelo, supplied=[]) == ()
+    assert _require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=[]) == ()
 
 
 @pytest.mark.parametrize("modelo", ["303", "130", "210"])
@@ -87,13 +91,13 @@ def test_a_modelo_whose_rows_are_not_the_declaration_needs_no_answer(modelo: str
     return rather than a nil declaration. Requiring rows there would refuse a
     perfectly complete amendment.
     """
-    assert _require_amendment_detail_rows(modelo=modelo, supplied=None) == ()
+    assert _require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=None) == ()
 
 
 def test_supplied_rows_are_carried_through_unchanged() -> None:
     """The guard resolves, it does not filter."""
     row = _counterparty()
-    assert _require_amendment_detail_rows(modelo="347", supplied=[row]) == (row,)
+    assert _require_amendment_detail_rows(modelo="347", filing_year=_FILING_YEAR, supplied=[row]) == (row,)
 
 
 def test_detail_rows_move_the_revision_content_address() -> None:

@@ -39,6 +39,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date
 
 from pydantic import BaseModel, NonNegativeInt
@@ -58,6 +59,7 @@ __all__ = [
     "ModeloRenameRecord",
     "RevisionCapabilityProbe",
     "build_support_matrix",
+    "build_support_matrix_from_modelos",
     "revision_capability_probe",
 ]
 
@@ -291,4 +293,10 @@ def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloE
     from .queries import RegistryQueryService
 
     entries = (_entry_for_modelo(modelo) for modelo in RegistryQueryService(authority).iter_modelo_definitions())
+    return tuple(sorted(entries, key=lambda entry: entry.modelo_id))
+
+
+def build_support_matrix_from_modelos(modelos: Iterable[ModeloDefinition]) -> tuple[ModeloEntry, ...]:
+    """Build the explicit bulk support inventory from point-loaded modelo views."""
+    entries = (_entry_for_modelo(modelo) for modelo in modelos)
     return tuple(sorted(entries, key=lambda entry: entry.modelo_id))

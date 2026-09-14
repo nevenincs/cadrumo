@@ -17,10 +17,10 @@ stubbed.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileFieldType,

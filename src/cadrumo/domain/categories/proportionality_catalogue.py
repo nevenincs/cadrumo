@@ -6,7 +6,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -14,10 +13,6 @@ from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .proportionality import ProportionalityKind, StatutoryCapPeriod
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "categories.profile"
 _SCOPE_SELECTOR = FactSelector(name="scope", value="proportionality_vocabulary")
@@ -131,9 +126,7 @@ def resolve_proportionality_catalogue(
     coordinate = effective_date or date.today()
     selected = authority or governed_facts_in_scope()
     if selected is None:
-        from ..calculations.registry.authority import bundled_authority
-
-        selected = bundled_authority()
+        raise RegistryValidationError("proportionality catalogue requires an explicit authority operation or scope")
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
 
     kinds: list[ProportionalityKind] = []
@@ -172,7 +165,7 @@ def require_proportionality_kind(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ProportionalityKind:
     """Return one registry-declared proportionality kind or refuse it."""
     return resolve_proportionality_catalogue(
@@ -185,7 +178,7 @@ def require_statutory_cap_period(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> StatutoryCapPeriod:
     """Return one registry-declared cap period or refuse it."""
     return resolve_proportionality_catalogue(

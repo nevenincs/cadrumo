@@ -11,10 +11,10 @@ These tests pin the distinction itself rather than either renderer alone.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys
-from ....domain.user_profile.loader import load_user_profile_schema
 from ..preflight import format_profile_path_requirements, format_profile_selector_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

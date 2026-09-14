@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.errors.severity import BaseSeverity
@@ -11,7 +12,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import ProfileKeyGrounding
 from ....domain.user_profile.labels import profile_field_label
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import ProfileSchemaDefinition
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..commands import ProfilePreflightRequirement

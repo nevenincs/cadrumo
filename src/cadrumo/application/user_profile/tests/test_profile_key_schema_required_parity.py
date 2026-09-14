@@ -26,8 +26,8 @@ from __future__ import annotations
 from enum import StrEnum
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.user_profile.loader import load_user_profile_schema
 from ..profile_keys import profile_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

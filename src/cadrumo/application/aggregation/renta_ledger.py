@@ -25,7 +25,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import overload
+from typing import TYPE_CHECKING, overload
 
 from pydantic import BaseModel, Field
 
@@ -71,7 +71,6 @@ from ...domain.resources.registry import resources
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileRecord
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
@@ -91,10 +90,14 @@ from .currency_predicates import (
 )
 from .errors import AggregationPeriodError
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+
 _LEDGER_CATALOGUE_ID = "ledger"
 
 
-# fact-relocation: selected renta-ledger insurance variants, category-profile routing, issue/applicability, and binding declarations are consumed through the dated mapping
+# fact-relocation: selected renta-ledger insurance variants, category-profile
+# routing, issue/applicability, and binding declarations are consumed through the dated mapping
 def _registry_renta_ledger_declarations(*, modelo: str, filing_year: int) -> dict[str, str]:
     """Resolve the selected renta-ledger declaration mapping without fallbacks."""
     authority = bundled_authority()
@@ -244,6 +247,7 @@ def _seguro_enfermedad_person_counts(
     profile_record: UserProfileRecord | None,
     filing_year: int,
     modelo: str,
+    profile_decode_context: ProfileDecodeContext | None,
 ) -> dict[str, int]:
     """Resolve insured-person variant counts using selected registry declarations."""
     declarations = _registry_renta_ledger_declarations(modelo=modelo, filing_year=filing_year)
@@ -252,13 +256,21 @@ def _seguro_enfermedad_person_counts(
     general_field = _required_renta_ledger_declaration(declarations, "insurance.count_field.general")
     disability_field = _required_renta_ledger_declaration(declarations, "insurance.count_field.discapacidad")
     record = profile_record
+    profile_schema = profile_decode_context.schema if profile_decode_context is not None else None
     if record is None:
         try:
-            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+            repository = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=profile_decode_context,
+            )
+            record = repository.load(bucket_id)
+            profile_schema = repository.session.profile_decode_context.schema
         except ProfileNotFoundError:
             return {}
+    if profile_schema is None:
+        raise TypeError("renta profile overrides require a ProfileDecodeContext")
     counts = seguro_enfermedad_insured_counts_from_facts(
-        profile_fact_index(record, load_user_profile_schema()),
+        profile_fact_index(record, profile_schema),
         filing_year=filing_year,
     )
     return {
@@ -271,6 +283,7 @@ def _resolve_residence_ccaa(
     *,
     bucket_id: str,
     profile_record: UserProfileRecord | None = None,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> CCAA | None:
     """Derive the ordinary-residence comunidad autonoma from the bucket's profile.
 
@@ -288,11 +301,16 @@ def _resolve_residence_ccaa(
         bucket_id: Stable bucket identifier used to load the user profile.
         profile_record: Optional :class:`UserProfileRecord` override for testing;
             when ``None`` the record is loaded from the bucket.
+        profile_decode_context: Optional decode context from the caller-held
+            authority operation used when the record is loaded.
     """
     record = profile_record
     if record is None:
         try:
-            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=profile_decode_context,
+            ).load(bucket_id)
         except ProfileNotFoundError:
             return None
 
@@ -311,6 +329,7 @@ def resolve_iva_deduction_ratio(
     ejercicio: int,
     profile_record: UserProfileRecord | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> Decimal | None:
     """Resolve the activity's IVA-deduction fraction for :attr:`RentaDeductibilityContext.iva_deduction_ratio`.
 
@@ -328,6 +347,8 @@ def resolve_iva_deduction_ratio(
         ejercicio: Filing year to resolve the register entry for.
         profile_record: Optional :class:`UserProfileRecord` override for testing;
             when ``None`` the record is loaded from the bucket.
+        profile_decode_context: Optional decode context from the caller-held
+            authority operation used when the record is loaded.
         prorrata_register_repository: Canonical repository for the bucket's
             prorrata register. The caller owns its store selection so a
             non-active bucket cannot be shadowed by a process-global default.
@@ -343,7 +364,10 @@ def resolve_iva_deduction_ratio(
     record = profile_record
     if record is None:
         try:
-            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=profile_decode_context,
+            ).load(bucket_id)
         except ProfileNotFoundError:
             record = None
     if record is not None:
@@ -375,6 +399,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     profile_record: UserProfileRecord | None = None,
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
 
@@ -411,13 +436,18 @@ def aggregate_renta_ledger_expenses_from_repositories(
     # ``_impatriado_income_ledger`` for the identical reason.
     transactions = ports.transaction_reader.load()
     invoices = ports.invoice_reader.load()
-    residence_ccaa = _resolve_residence_ccaa(bucket_id=bucket_id, profile_record=profile_record)
+    residence_ccaa = _resolve_residence_ccaa(
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+    )
     resolved_ejercicio = profile_year if profile_year is not None else period.filing_year
     iva_deduction_ratio = resolve_iva_deduction_ratio(
         bucket_id=bucket_id,
         ejercicio=resolved_ejercicio,
         profile_record=profile_record,
         prorrata_register_repository=prorrata_register_repository,
+        profile_decode_context=profile_decode_context,
     )
     return aggregate_renta_ledger_expenses(
         transactions,
@@ -432,6 +462,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         region_category_overrides=region_category_overrides,
         iva_deduction_ratio=iva_deduction_ratio,
         profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
     )
 
 
@@ -449,6 +480,7 @@ def aggregate_renta_ledger_expenses(
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
     iva_deduction_ratio: Decimal | None = None,
     profile_record: UserProfileRecord | None = None,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -480,6 +512,8 @@ def aggregate_renta_ledger_expenses(
             the record is loaded from the bucket. Supplies the LIRPF art. 30.2.5.a
             insured-person counts that split the seguro de enfermedad cap across
             its 500 and 1.500 euro limbs.
+        profile_decode_context: Optional decode context from the caller-held
+            authority operation when ``profile_record`` is supplied directly.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
@@ -502,6 +536,7 @@ def aggregate_renta_ledger_expenses(
             profile_record=profile_record,
             filing_year=resolved_profile_year,
             modelo=modelo,
+            profile_decode_context=profile_decode_context,
         ),
     )
     observations: list[RentaDeductibleExpenseObservation] = []

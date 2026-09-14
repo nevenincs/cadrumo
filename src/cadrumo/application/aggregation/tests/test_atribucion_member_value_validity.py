@@ -23,6 +23,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..atribucion_member import (
     _decimal,
@@ -32,6 +33,7 @@ from ..atribucion_member import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_PROFILE_SCHEMA = load_user_profile_schema()
 
 
 def _socio(share_pct: object, *, index: int = 0) -> _SocioFacts:
@@ -58,12 +60,12 @@ def test_an_out_of_range_share_is_refused_though_every_field_is_present() -> Non
     socio = _socio(Decimal("999"))
 
     assert _missing_fields(socio) == frozenset()
-    assert _invalid_value_refusals(socio)
+    assert _invalid_value_refusals(socio, schema=_PROFILE_SCHEMA)
 
 
 def test_a_malformed_share_is_refused_before_it_can_crash_a_calculation() -> None:
     """The loud one, moved from mid-calculation to the reader's own gate."""
-    assert _invalid_value_refusals(_socio("abc"))
+    assert _invalid_value_refusals(_socio("abc"), schema=_PROFILE_SCHEMA)
 
 
 @pytest.mark.parametrize("share_pct", [Decimal("0"), Decimal("100")])
@@ -74,17 +76,17 @@ def test_a_share_exactly_on_a_bound_stays_usable(share_pct: Decimal) -> None:
     guard that refuses them trades a silent wrong number for a silent
     missing member, which is no better.
     """
-    assert _invalid_value_refusals(_socio(share_pct)) == ()
+    assert _invalid_value_refusals(_socio(share_pct), schema=_PROFILE_SCHEMA) == ()
 
 
 def test_a_valid_row_is_not_refused() -> None:
     """The control: without it, a rule that refused everything would pass."""
-    assert _invalid_value_refusals(_socio(Decimal("40"))) == ()
+    assert _invalid_value_refusals(_socio(Decimal("40")), schema=_PROFILE_SCHEMA) == ()
 
 
 def test_the_refusal_names_the_field_and_the_range() -> None:
     """A diagnostic that does not say what is wrong cannot be acted on."""
-    refusals = _invalid_value_refusals(_socio(Decimal("999")))
+    refusals = _invalid_value_refusals(_socio(Decimal("999")), schema=_PROFILE_SCHEMA)
 
     assert any("share_pct" in refusal and "100" in refusal for refusal in refusals)
 

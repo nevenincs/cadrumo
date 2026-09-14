@@ -11,7 +11,6 @@ from __future__ import annotations
 from collections.abc import Container
 from datetime import date
 
-from ..calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
@@ -19,6 +18,7 @@ from ..calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 
 _MATERNIDAD_FORMULA_SPEC_ID = "lirpf-art-81-maternity-formula-spec"
@@ -34,10 +34,16 @@ _REQUIRED_FORMULA_SPEC_KEYS = frozenset(
 
 def _resolve_maternidad_formula_spec(
     filing_year: int,
-) -> tuple[ValidatedRegistryAuthority, date, dict[str, str]]:
+    *,
+    authority: GovernedFactSource | None = None,
+) -> tuple[GovernedFactSource, date, dict[str, str]]:
     """Resolve and validate the dated mapping that names maternity operands."""
     effective_date = date(filing_year, 12, 31)
-    authority = bundled_authority()
+    authority = authority or governed_facts_in_scope()
+    if authority is None:
+        raise RegistryValidationError(
+            "maternity formula specification requires an explicit authority operation or scope",
+        )
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_MATERNIDAD_FORMULA_SPEC_ID,
@@ -67,7 +73,7 @@ def _resolve_maternidad_formula_spec(
 
 
 def _resolve_maternidad_scalar(
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
     fact_id: str,
     effective_date: date,
 ) -> int:
@@ -87,7 +93,12 @@ def _resolve_maternidad_scalar(
     return value
 
 
-def _resolve_maternidad_figure(filing_year: int, slug: str) -> int:
+def _resolve_maternidad_figure(
+    filing_year: int,
+    slug: str,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> int:
     """Read one Art. 81.1 figure from the published authority.
 
     The mapping specification names the typed governed facts. Consume that
@@ -107,11 +118,18 @@ def _resolve_maternidad_figure(filing_year: int, slug: str) -> int:
         mapping_key = key_by_slug[slug]
     except KeyError as exc:
         raise RegistryValidationError(f"unknown maternity figure {slug!r}") from exc
-    authority, effective_date, declarations = _resolve_maternidad_formula_spec(filing_year)
+    authority, effective_date, declarations = _resolve_maternidad_formula_spec(
+        filing_year,
+        authority=authority,
+    )
     return _resolve_maternidad_scalar(authority, declarations[mapping_key], effective_date)
 
 
-def _resolve_alta_posterior_increment(filing_year: int) -> int | None:
+def _resolve_alta_posterior_increment(
+    filing_year: int,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> int | None:
     """Return the increment, or ``None`` only when its dated declaration excludes it.
 
     The effective-year scalar is resolved through the mapping specification.
@@ -120,7 +138,10 @@ def _resolve_alta_posterior_increment(filing_year: int) -> int | None:
     Returns:
         The increment for ``filing_year``, or ``None`` when none applies.
     """
-    authority, effective_date, declarations = _resolve_maternidad_formula_spec(filing_year)
+    authority, effective_date, declarations = _resolve_maternidad_formula_spec(
+        filing_year,
+        authority=authority,
+    )
     effective_year = _resolve_maternidad_scalar(
         authority,
         declarations["formula.increment_effective_year_fact_id"],
@@ -136,6 +157,7 @@ def compute_deduccion_maternidad_0611(
     *,
     filing_year: int,
     alta_posterior_hijos: Container[str] = frozenset(),
+    authority: GovernedFactSource | None = None,
 ) -> int:
     """Compute Art. 81 LIRPF deducción maternidad from per-hijo meses pairs.
 
@@ -155,9 +177,9 @@ def compute_deduccion_maternidad_0611(
 
     Returns an integer euros amount.
     """
-    mensual = _resolve_maternidad_figure(filing_year, "mensual")
-    cap_anual = _resolve_maternidad_figure(filing_year, "cap-anual")
-    increment = _resolve_alta_posterior_increment(filing_year)
+    mensual = _resolve_maternidad_figure(filing_year, "mensual", authority=authority)
+    cap_anual = _resolve_maternidad_figure(filing_year, "cap-anual", authority=authority)
+    increment = _resolve_alta_posterior_increment(filing_year, authority=authority)
     total = 0
     for hijo_id, meses in meses_por_hijo:
         importe = meses * mensual

@@ -10,8 +10,8 @@ calculation observations, and attempt to stamp matching current
 :class:`~ExternalEvidence`.
 
 Source capture resolves a law-determined
-:class:`~cadrumo.domain.calculations.registry.ModeloRevision` through the bundled
-validated registry authority before
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision` through a
+generation-pinned registry operation before
 asking the Sede adapter which prior declarations a target filing needs, so
 cross-period inputs remain registry-authored rather than adapter-inferred. The
 module never creates a remote submission or mutates AEAT state; filing-record
@@ -38,7 +38,7 @@ from collections.abc import Awaitable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, TypedDict
+from typing import TYPE_CHECKING, Protocol, TypedDict, cast
 
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -60,16 +60,16 @@ from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...core.sync_surface import SyncSurface
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
 )
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..calculations.observations_repository import require_observation_envelope_coordinates_current
+from ..calculations.ports import ObservedCasillaValueProtocol
 from ..operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
 from ..storage.sync_runs.persist import record_sync_run
@@ -113,8 +113,9 @@ from .remote_state_outcomes import bounded_context_text
 if TYPE_CHECKING:
     from datetime import date
 
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.deadlines.models import TaxpayerProfile
-    from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+    from ..calculations.observations_repository import ObservationEnvelopePayload
 
 
 FILED_HISTORY_PHASE_DISCOVERY = "filed-history.discovery"
@@ -211,22 +212,33 @@ def _declares_filed_declarations_read_surface(revisions: Sequence[ModeloRevision
     )
 
 
-def _registered_modelo_revisions(modelo: str) -> tuple[ModeloRevision, ...] | None:
+def _registered_modelo_revisions(
+    modelo: str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[ModeloRevision, ...] | None:
     """Load the explicitly enumerated revisions for one registry modelo."""
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _registered_modelo_revisions(modelo, operation=indexed_operation)
     try:
-        revisions = tuple(
-            revision
-            for _modelo_id, revision in RegistryQueryService(bundled_authority()).iter_modelo_revisions(
-                modelo_codes=(modelo,),
-            )
-        )
+        directory = operation.modelo_directory(modelo)
+        revisions = tuple(operation.revision(modelo, str(metadata.id)) for metadata in directory.revisions)
     except (RegistrySnapshotError, ValueError):
         return None
     return revisions or None
 
 
-def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
-    revisions = _registered_modelo_revisions(modelo)
+def _filed_capture_unsupported_reason(
+    *,
+    modelo: str,
+    year: int,
+    operation: PinnedAuthorityOperation | None = None,
+) -> str | None:
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _filed_capture_unsupported_reason(modelo=modelo, year=year, operation=indexed_operation)
+    revisions = _registered_modelo_revisions(modelo, operation=operation)
     if revisions is None:
         return f"registry has no modelo definition for {modelo!r}"
     revisions = _filed_capture_revisions_for_year(revisions, year=year)
@@ -252,6 +264,7 @@ def _plan_filed_capture_queries(
     *,
     year_from: int,
     year_to: int,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[list[tuple[str, int]], list[FiledDataCaptureFailureRow]]:
     """Plan the ``(modelo, year)`` pairs a bulk filed-data walk should query.
 
@@ -265,11 +278,19 @@ def _plan_filed_capture_queries(
         The queryable ``(modelo, year)`` pairs and the unsupported failure rows,
         each in walk order.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _plan_filed_capture_queries(
+                resolved_modelos,
+                year_from=year_from,
+                year_to=year_to,
+                operation=indexed_operation,
+            )
     query_pairs: list[tuple[str, int]] = []
     failures: list[FiledDataCaptureFailureRow] = []
     for code in resolved_modelos:
         for year in range(year_to, year_from - 1, -1):
-            unsupported_reason = _filed_capture_unsupported_reason(modelo=code, year=year)
+            unsupported_reason = _filed_capture_unsupported_reason(modelo=code, year=year, operation=operation)
             if unsupported_reason is not None:
                 failures.append(
                     _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason),
@@ -397,6 +418,14 @@ class _CaptureReportFields(TypedDict):
     casilla_count: int
 
 
+class _RecaptureObservationRepository(Protocol):
+    """Minimal persisted-observation read surface for divergence checks."""
+
+    def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
+        """Load the prior envelope for one modelo and period."""
+        ...
+
+
 @dataclass(slots=True)
 class FiledCaptureAccumulator:
     """Mutable accumulator for one filed-declaration capture run.
@@ -409,6 +438,7 @@ class FiledCaptureAccumulator:
     ordering is preserved verbatim so report values stay byte-identical.
     """
 
+    operation: PinnedAuthorityOperation | None = None
     observation_paths: list[str] = field(default_factory=list)
     artefact_refs: list[str] = field(default_factory=list)
     justificante_csvs: list[str] = field(default_factory=list)
@@ -473,6 +503,7 @@ class FiledCaptureAccumulator:
             recapture_divergence_notices(
                 (observation,),
                 repository=ports.calculation_repository,
+                operation=self.operation,
             )
         )
         # The Sede capture deliberately preserves a submitted-file layout
@@ -575,6 +606,7 @@ async def list_filed_data_bulk(
     year_from: int,
     year_to: int,
     modelos: tuple[str, ...] | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> BulkFiledDataListingReport:
     """List filed declarations across modelos with one authenticated register session.
 
@@ -582,6 +614,8 @@ async def list_filed_data_bulk(
         year_from: First filing year to query.
         year_to: Last filing year to query.
         modelos: Modelo codes to walk; every registry modelo when omitted.
+        operation: Caller-held generation-pinned authority operation; opened from
+            the indexed bundled authority when omitted.
         filed_data_port: Composed register acquisition capability. Its outer
             implementation owns session and browser lifecycles.
 
@@ -593,9 +627,23 @@ async def list_filed_data_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = modelos if modelos is not None else RegistryQueryService(bundled_authority()).modelo_codes()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return await list_filed_data_bulk(
+                filed_data_port=filed_data_port,
+                year_from=year_from,
+                year_to=year_to,
+                modelos=modelos,
+                operation=indexed_operation,
+            )
+    resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
     rows: list[FiledDataListingRow] = []
-    query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
+    query_pairs, failures = _plan_filed_capture_queries(
+        resolved_modelos,
+        year_from=year_from,
+        year_to=year_to,
+        operation=operation,
+    )
 
     if not query_pairs:
         return BulkFiledDataListingReport(
@@ -642,6 +690,7 @@ async def capture_filed_data(
     period: Period | None = None,
     expediente_id: str | None = None,
     limit: int | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> FiledDataCaptureReport:
     """Capture filed-declaration artefacts and return a :class:`FiledDataCaptureReport`.
 
@@ -650,7 +699,20 @@ async def capture_filed_data(
     :class:`~ModeloRecord` ids, conflicts, and calculation
     observation keys produced from the captured AEAT rows.
     """
-    accumulator = FiledCaptureAccumulator()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return await capture_filed_data(
+                filed_data_port=filed_data_port,
+                modelo=modelo,
+                year=year,
+                output_root=output_root,
+                ports=ports,
+                period=period,
+                expediente_id=expediente_id,
+                limit=limit,
+                operation=indexed_operation,
+            )
+    accumulator = FiledCaptureAccumulator(operation=operation)
     bucket_id = require_active_bucket_id()
 
     async with filed_data_port.open_register(operation="live-filed-read") as register:
@@ -1068,6 +1130,7 @@ async def capture_filed_data_bulk(
     dry_run: bool = False,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
     events: OperationEventEmitter | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
 
@@ -1093,6 +1156,8 @@ async def capture_filed_data_bulk(
         sync_run_repository: Persistence port for the completed-run provenance
             record. Required for a non-preview capture that reaches a supported
             query pair; the outer entrypoint composes the concrete adapter.
+        operation: Caller-held generation-pinned authority operation; opened from
+            the indexed bundled authority when omitted.
         events: Optional operation event emitter. The composed filed-history
             pull supplies it to publish phase, safe unit-count, and refusal-scope
             facts at the canonical workflow boundaries.
@@ -1102,9 +1167,29 @@ async def capture_filed_data_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = modelos if modelos is not None else RegistryQueryService(bundled_authority()).modelo_codes()
-    accumulator = FiledCaptureAccumulator()
-    query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return await capture_filed_data_bulk(
+                filed_data_port=filed_data_port,
+                year_from=year_from,
+                year_to=year_to,
+                output_root=output_root,
+                ports=ports,
+                modelos=modelos,
+                limit=limit,
+                dry_run=dry_run,
+                sync_run_repository=sync_run_repository,
+                events=events,
+                operation=indexed_operation,
+            )
+    resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
+    accumulator = FiledCaptureAccumulator(operation=operation)
+    query_pairs, failures = _plan_filed_capture_queries(
+        resolved_modelos,
+        year_from=year_from,
+        year_to=year_to,
+        operation=operation,
+    )
     pair_total = await _announce_bulk_capture_plan(
         query_pairs=query_pairs,
         failures=failures,
@@ -1177,6 +1262,7 @@ async def capture_source_filed_data(
     period: Period,
     output_root: Path,
     ports: FiledObservationPersistencePorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> SourceFiledDataCaptureReport:
     """Capture source observations and return a :class:`SourceFiledDataCaptureReport`.
 
@@ -1184,16 +1270,23 @@ async def capture_source_filed_data(
     Caller-controlled registry and source roots are deliberately not accepted:
     live evidence capture must use the same validated legal snapshot as filing.
     """
-    revision = (
-        bundled_authority()
-        .snapshot(
-            modelo,
-            filing_year=year,
-            period=period.registry_token,
-        )
-        .revision
-    )
-    accumulator = FiledCaptureAccumulator()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return await capture_source_filed_data(
+                filed_data_port=filed_data_port,
+                modelo=modelo,
+                year=year,
+                period=period,
+                output_root=output_root,
+                ports=ports,
+                operation=indexed_operation,
+            )
+    revision = operation.snapshot(
+        modelo,
+        filing_year=year,
+        period=period.registry_token,
+    ).revision
+    accumulator = FiledCaptureAccumulator(operation=operation)
     seen: set[tuple[str, int, str, str]] = set()
     bucket_id = require_active_bucket_id()
 
@@ -1557,7 +1650,7 @@ def casillas_a_recapture_would_change(
         if observed.value_kind is not CasillaValueKind.NUMERIC:
             continue
         try:
-            fresh_value = observed.decimal_value()
+            fresh_value = cast(ObservedCasillaValueProtocol, observed).decimal_value()
         except InvalidOperation:
             # An unreadable fresh token is not evidence of a CHANGED value, and
             # claiming one would put a false amendment in front of the operator.
@@ -1813,7 +1906,8 @@ def expected_but_not_found_notice(run: FiledHistoryOnboardingRun) -> Notice | No
 def recapture_divergence_notices(
     captured: tuple[FiledObservationProtocol, ...],
     *,
-    repository: CalculationObservationRepositoryProtocol,
+    repository: _RecaptureObservationRepository,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[Notice, ...]:
     """Warn for every re-captured filing whose casilla values changed.
 
@@ -1825,6 +1919,13 @@ def recapture_divergence_notices(
 
     Read BEFORE the capture is persisted; afterwards the prior values are gone.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return recapture_divergence_notices(
+                captured,
+                repository=repository,
+                operation=indexed_operation,
+            )
     notices: list[Notice] = []
     for observation in captured:
         stored = repository.load_observation(observation.modelo, observation.period)
@@ -1832,7 +1933,7 @@ def recapture_divergence_notices(
             continue
         require_observation_envelope_coordinates_current(stored)
         try:
-            snapshot = bundled_authority().snapshot(
+            snapshot = operation.snapshot(
                 observation.modelo,
                 filing_year=observation.ejercicio,
                 period=observation.period.registry_token,
