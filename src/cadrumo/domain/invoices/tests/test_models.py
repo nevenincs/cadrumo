@@ -8,6 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.identity.documents import IdentityError
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
@@ -327,23 +329,26 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
     numeric slot is resolved against :func:`cadrumo.domain.iva.lookup_rate`
     for Spain at a given date.
     """
-    from ...iva.lookup import lookup_rate
-    from ...iva.schema import EUMemberState, IvaRateKind
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ...iva.lookup import lookup_rate
+        from ...iva.schema import EUMemberState, IvaRateKind
 
-    sample_date = date(2025, 6, 15)
+        sample_date = date(2025, 6, 15)
 
-    assert iva_rate_percentage(IvaRate._from_registry("RATE_0"), on_date=sample_date) == Decimal("0")
-    assert iva_rate_percentage(IvaRate._from_registry("EXEMPT"), on_date=sample_date) is None
-    assert iva_rate_percentage(IvaRate._from_registry("NOT_SUBJECT"), on_date=sample_date) is None
+        assert iva_rate_percentage(IvaRate._from_registry("RATE_0"), on_date=sample_date) == Decimal("0")
+        assert iva_rate_percentage(IvaRate._from_registry("EXEMPT"), on_date=sample_date) is None
+        assert iva_rate_percentage(IvaRate._from_registry("NOT_SUBJECT"), on_date=sample_date) is None
 
-    for slot, kind in [
-        (IvaRate._from_registry("RATE_4"), IvaRateKind("super_reduced")),
-        (IvaRate._from_registry("RATE_10"), IvaRateKind("reduced")),
-        (IvaRate._from_registry("RATE_21"), IvaRateKind("general")),
-    ]:
-        substrate_rate = lookup_rate(EUMemberState._from_registry("es"), kind, sample_date)
-        expected = substrate_rate.pct / Decimal("100")
-        assert iva_rate_percentage(slot, on_date=sample_date) == expected
+        for slot, kind in [
+            (IvaRate._from_registry("RATE_4"), IvaRateKind("super_reduced")),
+            (IvaRate._from_registry("RATE_10"), IvaRateKind("reduced")),
+            (IvaRate._from_registry("RATE_21"), IvaRateKind("general")),
+        ]:
+            substrate_rate = lookup_rate(
+                EUMemberState._from_registry("es"), kind, sample_date, operation=_authority_operation_for_test
+            )
+            expected = substrate_rate.pct / Decimal("100")
+            assert iva_rate_percentage(slot, on_date=sample_date) == expected
 
 
 def test_invoice_exempt_lines_require_zero_iva() -> None:

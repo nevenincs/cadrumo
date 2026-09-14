@@ -91,6 +91,10 @@ class KeyedFamilySpec:
     holdback_reason: str | None = None
     #: Whether the family is a ``ModeloRevision`` ``SCHEMA_FAMILY`` field.
     schema_family: bool = True
+    #: Whether each edition must explicitly assert that an edition-local claim applies.
+    scoped: bool = False
+    #: Whether the raw family is one table rather than an array of tables.
+    singleton: bool = False
 
     def __post_init__(self) -> None:
         """Reject an internally contradictory policy at import time."""
@@ -227,10 +231,7 @@ CANONICAL_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = (
         section="deadline_windows",
         identity="id",
         period_scoped=True,
-        holdback_reason=(
-            "enrolled, but inheritance is conditional on the successor's period_selector covering the member's "
-            "filing_year and period; the migration will not guess at a selector"
-        ),
+        drop_eligible=True,
     ),
     # These two families are live keyed unions.  They were previously held
     # back only while their member ids were absent; their schema now supplies
@@ -262,32 +263,29 @@ CANONICAL_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = (
     KeyedFamilySpec(
         section="export_layouts",
         identity="id",
-        inheritance=FamilyInheritanceMode.PER_EDITION,
-        restatable=False,
-        holdback_reason="a per-edition claim about that edition's own record design",
+        drop_eligible=True,
+        scoped=True,
     ),
     KeyedFamilySpec(
         section="workbook_parity_refs",
         identity="id",
-        inheritance=FamilyInheritanceMode.PER_EDITION,
-        restatable=False,
-        holdback_reason="a per-edition claim about that edition's own workbook",
+        drop_eligible=True,
+        scoped=True,
     ),
     KeyedFamilySpec(
         section="verification_expectations",
         identity="id",
-        inheritance=FamilyInheritanceMode.PER_EDITION,
-        restatable=False,
-        holdback_reason="a per-edition verification claim about that edition",
+        drop_eligible=True,
+        scoped=True,
     ),
     # This is not a SCHEMA_FAMILY collection, but it is a deliberate
     # per-edition holdback in migration policy and belongs in the same census.
     KeyedFamilySpec(
         section="completeness_manifest",
-        identity=None,
-        inheritance=FamilyInheritanceMode.PER_EDITION,
-        restatable=False,
-        holdback_reason="a per-edition graded closure claim; it must not attest for a successor",
+        identity="source_ref",
+        drop_eligible=True,
+        scoped=True,
+        singleton=True,
         schema_family=False,
     ),
 )

@@ -17,11 +17,12 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 from pydantic import ValidationError
 
 from ....domain.user_profile.values import ProfileSetupState
 from ..portable_export import UserProfilePortableExport
-from ..values import UserProfileFact, UserProfileRecord
+from ..values import UserProfileFact, UserProfileRecord, create_user_profile_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -30,42 +31,51 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: this layer cannot see; this claims nothing about what production stamps.
 _SHAPE_UNDER_TEST = 3
 _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
+_CREATE_CONTEXT = profile_creation_context_for_test()
 _UTC_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
 _NAIVE_INSTANT = datetime(2026, 1, 1, 10, 0, 0)
 _OFFSET_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 
 
 def _profile() -> UserProfileRecord:
-    return UserProfileRecord(
+    return create_user_profile_record(
+        context=_CREATE_CONTEXT,
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
 
 
+def _export(*, exported_at: datetime) -> UserProfilePortableExport:
+    return UserProfilePortableExport.model_validate(
+        {
+            "bundle_schema_version": _SHAPE_UNDER_TEST,
+            "exported_at": exported_at,
+            "profile": _profile(),
+        },
+        context=_CREATE_CONTEXT,
+    )
+
+
 @pytest.mark.parametrize("instant", (_NAIVE_INSTANT, _OFFSET_INSTANT), ids=("naive", "offset"))
 def test_export_refuses_a_non_utc_outer_stamp(instant: datetime) -> None:
     with pytest.raises(ValidationError):
-        UserProfilePortableExport(bundle_schema_version=_SHAPE_UNDER_TEST, exported_at=instant, profile=_profile())
+        _export(exported_at=instant)
 
 
 def test_export_refuses_a_non_utc_outer_stamp_from_serialized_text() -> None:
     """The refusal has to hold on the import path, which is where a bundle arrives."""
-    payload = UserProfilePortableExport(
-        bundle_schema_version=_SHAPE_UNDER_TEST, exported_at=_UTC_INSTANT, profile=_profile()
-    ).model_dump(mode="json")
+    payload = _export(exported_at=_UTC_INSTANT).model_dump(mode="json")
     payload["exported_at"] = "2026-01-01T10:00:00"
 
     with pytest.raises(ValidationError):
-        UserProfilePortableExport.model_validate(payload)
+        UserProfilePortableExport.model_validate(payload, context=_CREATE_CONTEXT)
 
 
 def test_a_utc_export_round_trips_canonically() -> None:
-    export = UserProfilePortableExport(
-        bundle_schema_version=_SHAPE_UNDER_TEST, exported_at=_UTC_INSTANT, profile=_profile()
-    )
+    export = _export(exported_at=_UTC_INSTANT)
 
-    restored = UserProfilePortableExport.model_validate_json(export.model_dump_json())
+    restored = UserProfilePortableExport.model_validate_json(export.model_dump_json(), context=_CREATE_CONTEXT)
 
     assert restored.exported_at == _UTC_INSTANT
     assert restored.exported_at.utcoffset() == timedelta(0)
@@ -85,6 +95,4 @@ def test_the_outer_stamp_and_the_carried_rows_share_one_policy() -> None:
             payload_b64="eyJhIjogMX0=",
         )
     with pytest.raises(ValidationError):
-        UserProfilePortableExport(
-            bundle_schema_version=_SHAPE_UNDER_TEST, exported_at=_NAIVE_INSTANT, profile=_profile()
-        )
+        _export(exported_at=_NAIVE_INSTANT)

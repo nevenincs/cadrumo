@@ -26,6 +26,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.schema import require_eu_member_state
 
@@ -74,12 +75,13 @@ def test_a_third_country_establishment_is_recordable_at_all() -> None:
     it is that the stored value RESOLVES to a third country, which is what a
     gate downstream has to be able to ask.
     """
-    transaction = _transaction(counterparty_country="US")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        transaction = _transaction(counterparty_country="US")
 
-    assert transaction.counterparty_country == "US"
-    assert territorial_scope_for_country(transaction.counterparty_country) == require_iva_territorial_scope(
-        "third_country"
-    )
+        assert transaction.counterparty_country == "US"
+        assert territorial_scope_for_country(
+            transaction.counterparty_country, operation=_authority_operation_for_test
+        ) == require_iva_territorial_scope("third_country", operation=_authority_operation_for_test)
 
 
 def test_the_member_state_is_derived_and_never_stored_twice() -> None:
@@ -127,11 +129,18 @@ def test_the_four_ways_a_row_can_fail_to_name_a_third_country_stay_distinct(
     test.
     ``None`` is an unrecorded fact. Only ``US`` may license export treatment.
     """
-    transaction = _transaction(counterparty_country=country)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        transaction = _transaction(counterparty_country=country)
 
-    assert transaction.counterparty_country == country
-    assert territorial_scope_for_country(transaction.counterparty_country) is scope
-    assert stated_country_code_status(transaction.counterparty_country) is status
+        assert transaction.counterparty_country == country
+        assert (
+            territorial_scope_for_country(transaction.counterparty_country, operation=_authority_operation_for_test)
+            is scope
+        )
+        assert (
+            stated_country_code_status(transaction.counterparty_country, operation=_authority_operation_for_test)
+            is status
+        )
 
 
 @pytest.mark.parametrize("malformed", ("USA", "us", "1E", "U", ""))
@@ -152,12 +161,13 @@ def test_the_stored_country_survives_a_strict_json_round_trip() -> None:
     A field that validates and then does not persist would leave the gate
     reading ``None`` again on every reload -- the same blank, one layer down.
     """
-    original = _transaction(counterparty_country="US")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        original = _transaction(counterparty_country="US")
 
-    restored = Transaction.model_validate_json(original.model_dump_json())
+        restored = Transaction.model_validate_json(original.model_dump_json())
 
-    assert restored == original
-    assert restored.counterparty_country == "US"
-    assert territorial_scope_for_country(restored.counterparty_country) == require_iva_territorial_scope(
-        "third_country"
-    )
+        assert restored == original
+        assert restored.counterparty_country == "US"
+        assert territorial_scope_for_country(
+            restored.counterparty_country, operation=_authority_operation_for_test
+        ) == require_iva_territorial_scope("third_country", operation=_authority_operation_for_test)
