@@ -56,7 +56,7 @@ from .compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
-from .fact_providers import compile_authored_fact_catalogue
+from .fact_providers import compile_authored_fact_catalogue, compile_registered_fact_providers
 from .identity import (
     RegistryIdentity,
     resolve_registry_identity,
@@ -470,13 +470,16 @@ def load_registry_tree_cached(
     )
     if use_disk_cache and (cached := load_compiled_registry_cache(resolved, fingerprints)) is not None:
         return cached
-    result = (
-        tuple(
-            load_modelo_source(source, tax_id_format=tax_id_format)
-            for source in discover_modelo_sources(resolved / "modelos")
-        ),
-        load_shared_catalogues(resolved),
+    modelos = tuple(
+        load_modelo_source(source, tax_id_format=tax_id_format)
+        for source in discover_modelo_sources(resolved / "modelos")
     )
+    catalogues = load_shared_catalogues(resolved)
+    if (resolved / "facts").is_dir():
+        catalogues = catalogues.model_copy(
+            update={"facts": compile_registered_fact_providers(resolved, modelos=modelos)},
+        )
+    result = (modelos, catalogues)
     if use_disk_cache:
         store_compiled_registry_cache(resolved, fingerprints, result)
     return result

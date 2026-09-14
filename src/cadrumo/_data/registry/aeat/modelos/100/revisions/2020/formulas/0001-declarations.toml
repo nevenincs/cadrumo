@@ -1582,10 +1582,10 @@ required_text = ["ganancias patrimoniales", "juegos"]
 [[revisions."2020".formulas]]
 id = "renta-juegos-ganancias-suma"
 target_casilla_id = "0288"
+# aeat-dr-100-2020-dictionary:512 (SUMGAN): suma oficial del ejercicio; excluye posiciones reutilizadas en ediciones posteriores.
 expression = { op = "sum", args = [
     { casilla_id = "0282" },
     { casilla_id = "0286" },
-    { casilla_id = "0360" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
@@ -1639,10 +1639,10 @@ required_text = ["ganancias patrimoniales", "premios"]
 [[revisions."2020".formulas]]
 id = "renta-premios-ganancias-suma"
 target_casilla_id = "0297"
+# aeat-dr-100-2020-dictionary:521 (G1RT10): suma oficial del ejercicio; excluye posiciones reutilizadas en ediciones posteriores.
 expression = { op = "sum", args = [
     { casilla_id = "0292" },
     { casilla_id = "0296" },
-    { casilla_id = "0361" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
@@ -1654,6 +1654,7 @@ required_text = ["ganancias patrimoniales", "premios"]
 [[revisions."2020".formulas]]
 id = "renta-otras-ganancias-no-transmision-suma"
 target_casilla_id = "0306"
+# aeat-dr-100-2020-dictionary:530 (SUM1G1): suma oficial del ejercicio; excluye posiciones reutilizadas en ediciones posteriores.
 expression = { op = "sum", args = [
     { casilla_id = "0299" },
     { casilla_id = "0300" },
@@ -1661,8 +1662,6 @@ expression = { op = "sum", args = [
     { casilla_id = "0302" },
     { casilla_id = "0303" },
     { casilla_id = "0304" },
-    { casilla_id = "0356" },
-    { casilla_id = "0362" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

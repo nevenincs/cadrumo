@@ -4581,10 +4581,8 @@ modelo:
               label: 'Amount of the deductions to the that is ha perdido the right
                 in 2020. Parte autonómica (*): Parte autonómica'
             0578:
-              help: 'Enter or review “Intereses of demora corresponding to the deductions
-                previous (*): Parte estatal” for this self-assessment.'
-              label: 'Intereses of demora corresponding to the deductions previous
-                (*): Parte estatal'
+              help: "Late-payment interest on previous deductions: Regional share"
+              label: "Late-payment interest on previous deductions: Regional share"
             0579:
               help: 'Enter or review “Amount of the deductions autonómicas to the
                 that is ha perdido the right in 2020: Parte autonómica” for this self-assessment.'
@@ -4598,10 +4596,8 @@ modelo:
                 Additional Provision 45.2.a) or 45.3 of the Tax Law, mark this box
                 with an "X": State portion'
             0581:
-              help: 'Enter or review “Intereses of demora corresponding to the deductions
-                previous (*): Parte estatal” for this self-assessment.'
-              label: 'Intereses of demora corresponding to the deductions previous
-                (*): Parte estatal'
+              help: "Late-payment interest on previous deductions: Regional share"
+              label: "Late-payment interest on previous deductions: Regional share"
             0585:
               help: 'Enter or review “Tax liability net estatal incrementada: Parte
                 estatal” for this self-assessment.'
@@ -11250,10 +11246,8 @@ modelo:
               label: 'Amount of the deductions to the that is ha perdido the right
                 in 2021. Parte autonómica (*): Parte autonómica'
             0578:
-              help: 'Enter or review “Late-payment interest corresponding to the above
-                deductions: State portion” for this self-assessment.'
-              label: 'Late-payment interest corresponding to the above deductions:
-                State portion'
+              help: "Late-payment interest on previous deductions: Regional share"
+              label: "Late-payment interest on previous deductions: Regional share"
             0579:
               help: 'Enter or review “Amount of the deductions autonómicas to the
                 that is ha perdido the right in 2021: Parte autonómica” for this self-assessment.'
@@ -11267,10 +11261,8 @@ modelo:
                 Additional Provision 45.2.a) or 45.3 of the Tax Law, mark this box
                 with an "X": State portion'
             0581:
-              help: 'Enter or review “Late-payment interest corresponding to the above
-                deductions: State portion” for this self-assessment.'
-              label: 'Late-payment interest corresponding to the above deductions:
-                State portion'
+              help: "Late-payment interest on previous deductions: Regional share"
+              label: "Late-payment interest on previous deductions: Regional share"
             0585:
               help: 'Enter or review “Tax liability net estatal incrementada: Parte
                 estatal” for this self-assessment.'
@@ -47409,16 +47401,14 @@ modelo:
               help: Enter or review “Base product income” for this self-assessment.
               label: Base product income
             '1530':
-              help: Enter or review “Tax information for this field” for this self-assessment.
-              label: 'Other ancillary work and services carried out by farmers, livestock
-                breeders, or forestry-activity holders, except breeding, custody,
-                and fattening services for livestock (including poultry): Gross...'
+              help: "Product 15 covers other ancillary work and services by farmers, livestock keepers or forestry operators, excluding livestock breeding, keeping and fattening (including poultry), and raft-grown mussel production. Its scope expands from 2025."
+              label: "Gross income from other ancillary work and services and raft-grown mussel production"
             '1531':
-              help: Enter or review “Index” for this self-assessment.
-              label: Index
+              help: "Product 15 covers other ancillary work and services by farmers, livestock keepers or forestry operators, excluding livestock breeding, keeping and fattening (including poultry), and raft-grown mussel production. Its scope expands from 2025."
+              label: "Product 15 index: ancillary services and raft-grown mussels"
             '1532':
-              help: Enter or review “Base product income” for this self-assessment.
-              label: Base product income
+              help: "Product 15 covers other ancillary work and services by farmers, livestock keepers or forestry operators, excluding livestock breeding, keeping and fattening (including poultry), and raft-grown mussel production. Its scope expands from 2025."
+              label: "Product 15 base income: ancillary services and raft-grown mussels"
             '1533':
               help: 'Enter or review “Breeding, custody, and fattening services for
                 livestock (including poultry): Gross income” for this self-assessment.'

@@ -11,6 +11,7 @@ are not in scope for this gate — the existing specimen gate handles that case.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from functools import cache
 from pathlib import Path
 
@@ -18,12 +19,13 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
 
+from ..compiler.profile_schema import capture_profile_schema_source
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from ._gate_support import catalogues_for_m130_gate_tests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,8 +38,18 @@ _JUSTIFICANTE_CORPUS_ROOT = _DATA_ROOT.parent / "tests" / "fixtures" / "justific
 
 @cache
 def _committed_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelo, catalogues = _committed_modelo("130")
-    return modelo, catalogues_for_m130_gate_tests(catalogues)
+    # The validator also checks compiled facts/runtime catalogues. Their exact
+    # legal/source closure must travel with them; filtering only modelo refs
+    # creates an invalid candidate before the corpus-profile gate can run.
+    return _committed_modelo("130")
+
+
+@pytest.fixture(autouse=True)
+def candidate_fact_scope() -> Iterator[None]:
+    """Validate mutated profiles against the same candidate facts as their validator."""
+    _modelo, catalogues = _committed_130()
+    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+        yield
 
 
 def _committed_profile(
@@ -64,6 +76,9 @@ def _validator_with_corpus(corpus_root: Path, catalogues: RegistryCatalogues) ->
         catalogues,
         source_root=bundled_path(),
         justificante_corpus_root=corpus_root,
+        user_profile_schema=capture_profile_schema_source(
+            bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
+        ).schema,
     )
 
 
@@ -80,6 +95,9 @@ def _validator_from_data_root(catalogues: RegistryCatalogues) -> RegistryValidat
         catalogues,
         source_root=_DATA_ROOT,
         justificante_corpus_root=_JUSTIFICANTE_CORPUS_ROOT,
+        user_profile_schema=capture_profile_schema_source(
+            bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
+        ).schema,
     )
 
 

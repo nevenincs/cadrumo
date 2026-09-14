@@ -136,7 +136,7 @@ def _citation_failures(
 ) -> list[str]:
     """Return one message per citation of ``row`` that fails, memoising the ids that pass."""
     from ...core.corpus_text import normalise_corpus_text
-    from ..calculations.registry.authority_artifact import AuthorityArtifactFormatError
+    from ..calculations.registry.authority_artifact import AuthorityComponentCodecError
 
     failures: list[str] = []
     for ref_id in reference_ids:
@@ -159,7 +159,7 @@ def _citation_failures(
                     if evidence is not None
                     else operation.legal_evidence(ref_id).anchored_text
                 )
-            except AuthorityArtifactFormatError as exc:
+            except AuthorityComponentCodecError as exc:
                 failures.append(f"{row}: legal_ref {ref_id!r} has no published evidence: {exc}")
                 continue
             broken = [

@@ -104,7 +104,8 @@ class M210PayerMode(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct a token at an authority-backed projection boundary."""
         return cls(value, _registry_validated=True)
 
     @classmethod

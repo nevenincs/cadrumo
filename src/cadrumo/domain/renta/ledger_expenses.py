@@ -30,7 +30,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
-from ..calculations.registry.authority_artifact import AuthorityArtifactError
+from ..calculations.registry.authority_artifact import AuthorityComponentCodecError
 from ..calculations.registry.renta_expense_policy import renta_expense_policy_declarations
 from ..categories.profile import CategoryProfile
 from ..categories.proportionality import (
@@ -280,7 +280,7 @@ def _resolve_first_slice_expense_routing(
             fact_id="modelo-100-first-slice-expense-routing-mapping",
             effective_date=effective_date,
         )
-    except (AuthorityArtifactError, TypeError, ValueError) as exc:
+    except (AuthorityComponentCodecError, TypeError, ValueError) as exc:
         raise RentaValidationError(
             "first-slice expense routing declaration is absent or malformed",
         ) from exc

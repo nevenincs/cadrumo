@@ -10,6 +10,7 @@ from collections.abc import Iterable
 from datetime import date
 
 from ....core.resources.errors import ResourceNotFoundError
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistrySnapshotError
 
 
@@ -20,16 +21,16 @@ class IvaCatalogueRepository:
     A year the catalogue does not ground raises :class:`ResourceNotFoundError`.
     """
 
-    def get(self, key: int) -> object:
+    def get(self, key: int, *, operation: PinnedAuthorityOperation) -> object:
         """Resolve through the current published authority without a second cache."""
-        return self._load(key)
+        return self._load(key, operation=operation)
 
-    def _load(self, key: int) -> object:
+    def _load(self, key: int, *, operation: PinnedAuthorityOperation) -> object:
         from ...iva.catalogue import resolve_catalogue
         from ...iva.errors import IvaCatalogueError
 
         try:
-            return resolve_catalogue(on=date(key, 1, 1))
+            return resolve_catalogue(on=date(key, 1, 1), projected_year=key, operation=operation)
         except (IvaCatalogueError, RegistrySnapshotError) as exc:
             raise ResourceNotFoundError(f"no IVA catalogue grounded for year {key}") from exc
 

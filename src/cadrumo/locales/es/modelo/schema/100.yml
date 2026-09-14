@@ -5085,10 +5085,8 @@ modelo:
               label: 'Importe de las deducciones a las que se ha perdido el derecho
                 en 2020. Parte autonómica (*): Parte autonómica'
             0578:
-              help: 'Indique o revise «Intereses de demora correspondientes a las
-                deducciones anteriores (*): Parte estatal» para completar esta autoliquidación.'
-              label: 'Intereses de demora correspondientes a las deducciones anteriores
-                (*): Parte estatal'
+              help: "Intereses de demora correspondientes a las deducciones anteriores: Parte autonómica"
+              label: "Intereses de demora correspondientes a las deducciones anteriores: Parte autonómica"
             0579:
               help: 'Indique o revise «Importe de las deducciones autonómicas a las
                 que se ha perdido el derecho en 2020: Parte autonómica» para completar
@@ -5104,10 +5102,8 @@ modelo:
                 circunstancias previstas en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Ley del Impuesto, marque con una ''X'' esta casilla: Parte estatal'
             0581:
-              help: 'Indique o revise «Intereses de demora correspondientes a las
-                deducciones anteriores (*): Parte estatal» para completar esta autoliquidación.'
-              label: 'Intereses de demora correspondientes a las deducciones anteriores
-                (*): Parte estatal'
+              help: "Intereses de demora correspondientes a las deducciones anteriores: Parte autonómica"
+              label: "Intereses de demora correspondientes a las deducciones anteriores: Parte autonómica"
             0585:
               help: 'Indique o revise «Cuota líquida estatal incrementada: Parte estatal»
                 para completar esta autoliquidación.'
@@ -12369,10 +12365,8 @@ modelo:
               label: 'Importe de las deducciones a las que se ha perdido el derecho
                 en 2021. Parte autonómica (*): Parte autonómica'
             0578:
-              help: 'Indique o revise «Intereses de demora correspondientes a las
-                deducciones anteriores: Parte estatal» para completar esta autoliquidación.'
-              label: 'Intereses de demora correspondientes a las deducciones anteriores:
-                Parte estatal'
+              help: "Intereses de demora correspondientes a las deducciones anteriores: Parte autonómica"
+              label: "Intereses de demora correspondientes a las deducciones anteriores: Parte autonómica"
             0579:
               help: 'Indique o revise «Importe de las deducciones autonómicas a las
                 que se ha perdido el derecho en 2021: Parte autonómica» para completar
@@ -12388,10 +12382,8 @@ modelo:
                 circunstancias previstas en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Ley del Impuesto, marque con una ''X'' esta casilla: Parte estatal'
             0581:
-              help: 'Indique o revise «Intereses de demora correspondientes a las
-                deducciones anteriores: Parte estatal» para completar esta autoliquidación.'
-              label: 'Intereses de demora correspondientes a las deducciones anteriores:
-                Parte estatal'
+              help: "Intereses de demora correspondientes a las deducciones anteriores: Parte autonómica"
+              label: "Intereses de demora correspondientes a las deducciones anteriores: Parte autonómica"
             0585:
               help: 'Indique o revise «Cuota líquida estatal incrementada: Parte estatal»
                 para completar esta autoliquidación.'
@@ -52015,18 +52007,14 @@ modelo:
                 autoliquidación.
               label: Rendimiento base producto
             '1530':
-              help: Indique o revise «Información fiscal de la casilla» para completar
-                esta autoliquidación.
-              label: 'Otros trabajos y servicios accesorios realizados por agricultores,
-                ganaderos o titulares de actividades forestales, excepto servicios
-                de cría, guarda y engorde de ganado (aves incluidas): Ingresos ...'
+              help: "Producto 15: otros trabajos y servicios accesorios de agricultores, ganaderos o titulares forestales, excepto cría, guarda y engorde de ganado (aves incluidas), y producción de mejillón en batea. Incluye el ámbito ampliado desde 2025."
+              label: "Ingresos íntegros de otros trabajos y servicios accesorios y de producción de mejillón en batea"
             '1531':
-              help: Indique o revise «Índice» para completar esta autoliquidación.
-              label: Índice
+              help: "Producto 15: otros trabajos y servicios accesorios de agricultores, ganaderos o titulares forestales, excepto cría, guarda y engorde de ganado (aves incluidas), y producción de mejillón en batea. Incluye el ámbito ampliado desde 2025."
+              label: "Índice del producto 15: servicios accesorios y mejillón en batea"
             '1532':
-              help: Indique o revise «Rendimiento base producto» para completar esta
-                autoliquidación.
-              label: Rendimiento base producto
+              help: "Producto 15: otros trabajos y servicios accesorios de agricultores, ganaderos o titulares forestales, excepto cría, guarda y engorde de ganado (aves incluidas), y producción de mejillón en batea. Incluye el ámbito ampliado desde 2025."
+              label: "Rendimiento base del producto 15: servicios accesorios y mejillón en batea"
             '1533':
               help: 'Indique o revise «Servicios de cría, guarda y engorde de ganado
                 (aves incluidas): Ingresos íntegros» para completar esta autoliquidación.'

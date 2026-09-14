@@ -57,6 +57,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.revision_contracts import validate_predecessor_forest
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_GOVERNANCE_FIELDS as _REVISION_GOVERNANCE_FIELDS,
 )
@@ -70,6 +71,7 @@ from cadrumo.domain.calculations.registry.schema import (
     SociedadesAnnualManualCoverageCatalogue,
     SupportedFilingYearsCatalogue,
 )
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, CasillaEvolutionKind
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
@@ -189,6 +191,8 @@ def _inherit_keyed_family(
     revision_id: str,
     family: _KeyedFamily,
     inherited: tuple[object, ...],
+    inherited_casillas: tuple[object, ...],
+    successor_casillas: tuple[object, ...],
     successor: Mapping[str, object],
 ) -> tuple[object, ...]:
     """Merge a predecessor's materialised members of one keyed family with the successor's stated ones.
@@ -252,10 +256,30 @@ def _inherit_keyed_family(
         if family.period_scoped and not _selector_covers(successor.get("period_selector"), member):
             continue
         if identity in superseders:
-            _refuse_undeclared_repurpose(context, family, identity, member, superseders[identity])
+            _refuse_undeclared_repurpose(
+                context,
+                family,
+                identity,
+                member,
+                superseders[identity],
+                inherited_casillas=inherited_casillas,
+                successor_casillas=successor_casillas,
+            )
             members.append(superseders[identity])
             superseded.add(identity)
             continue
+        # Even an omitted declaration is interpreted against the successor's
+        # casillas. An unchanged target token can now identify a split child,
+        # so inheritance needs the same identity guard as a supersession.
+        _refuse_undeclared_repurpose(
+            context,
+            family,
+            identity,
+            member,
+            member,
+            inherited_casillas=inherited_casillas,
+            successor_casillas=successor_casillas,
+        )
         members.append(member)
     for member in stated:
         identity = _member_identity(member, family)
@@ -282,6 +306,9 @@ def _refuse_undeclared_repurpose(
     identity: str,
     inherited: object,
     stated: object,
+    *,
+    inherited_casillas: tuple[object, ...],
+    successor_casillas: tuple[object, ...],
 ) -> None:
     """Refuse a supersession that changes what the member IS rather than what it declares.
 
@@ -299,12 +326,74 @@ def _refuse_undeclared_repurpose(
     for path in family.identity_fields:
         before = _field_at(inherited, path)
         after = _field_at(stated, path)
-        if before != after:
+        unchanged = (
+            _same_casilla_identity(before, after, inherited_casillas, successor_casillas)
+            if path in family.casilla_identity_fields
+            else before == after
+        )
+        if not unchanged:
             raise RegistryLoadError(
                 f"{context}: states {family.section} {identity!r} with {path} {after!r}, but the inherited member "
                 f"carries {before!r}; a change to a field carrying the member's identity is a repurpose, not a "
                 f"supersession, so declare it as a replaced evolution naming a new {family.identity}",
             )
+    if family.section == "formulas":
+        _refuse_reinterpreted_formula_operands(
+            context, identity, inherited, stated, inherited_casillas, successor_casillas
+        )
+
+
+def _refuse_reinterpreted_formula_operands(
+    context: str,
+    identity: str,
+    inherited: object,
+    stated: object,
+    inherited_casillas: tuple[object, ...],
+    successor_casillas: tuple[object, ...],
+) -> None:
+    """An unchanged expression cannot silently read different fiscal concepts.
+
+    Expressions are declarations, not immutable formula identity axes: an
+    explicitly changed successor expression remains allowed. For an unchanged
+    expression, walk the canonical typed tree so nested references receive the
+    same protection as direct operands, without rewriting any reference.
+    """
+    before = FormulaExpression.model_validate(_field_at(inherited, "expression"))
+    after = FormulaExpression.model_validate(_field_at(stated, "expression"))
+    if before != after:
+        return
+    for reference in expression_casilla_refs(before):
+        if not _same_casilla_identity(reference, reference, inherited_casillas, successor_casillas):
+            raise RegistryLoadError(
+                f"{context}: formulas {identity!r} inherits an unchanged expression whose casilla operand "
+                f"{reference!r} no longer identifies the predecessor's concept; state the successor's "
+                "expression explicitly with its intended references instead of silently carrying values",
+            )
+
+
+def _same_casilla_identity(
+    before: object,
+    after: object,
+    inherited: tuple[object, ...],
+    successor: tuple[object, ...],
+) -> bool:
+    """Compare unique declared concepts, retaining exact ids only for unchained rows.
+
+    Equal box numbers do not override contradictory continuity. A renumbering
+    requires a unique, shared chain on both ends; absent or ambiguous targets
+    cannot establish identity.
+    """
+    before_rows = tuple(row for row in inherited if _row_id(row) == before)
+    after_rows = tuple(row for row in successor if _row_id(row) == after)
+    if before == after and not before_rows and not after_rows:
+        return True
+    if len(before_rows) != 1 or len(after_rows) != 1:
+        return False
+    before_lineage = _row_lineage(before_rows[0])
+    after_lineage = _row_lineage(after_rows[0])
+    if before_lineage is not None or after_lineage is not None:
+        return before_lineage is not None and before_lineage == after_lineage
+    return before == after
 
 
 def _field_at(member: object, path: str) -> object:
@@ -841,6 +930,8 @@ def _materialise_revision(
                 revision_id=revision_id,
                 family=family,
                 inherited=_raw_keyed_members(source_path, predecessor_id, predecessor.table, family),
+                inherited_casillas=_raw_casilla_rows(source_path, predecessor_id, predecessor.table),
+                successor_casillas=rows,
                 successor=table,
             )
         result = _MaterialisedRevision(table=merged, label_origins=label_origins)
@@ -966,6 +1057,12 @@ def _retired_lineages(successor: Mapping[str, object], revision_id: str) -> froz
         lineage = evolution.get("continuidad_id")
         if evolution.get("evolution_kind") == CasillaEvolutionKind.RETIRED and isinstance(lineage, str):
             retired.add(lineage)
+    from cadrumo.domain.calculations.registry.casilla_structural_succession import CasillaStructuralSuccession
+
+    for raw_relation in as_toml_array(successor.get("casilla_structural_successions", ())) or ():
+        relation = CasillaStructuralSuccession.model_validate(raw_relation)
+        if relation.to_revision == revision_id:
+            retired.update(relation.source_lineages)
     return frozenset(retired)
 
 

@@ -46,6 +46,9 @@ from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.filing.errors import FilingExportValidationError
@@ -54,7 +57,6 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -273,7 +275,7 @@ def _m303_2026_6919_regimen_evidence(snapshot):
     """Build two official 691.9 rows so the real f022 field carries their wire identity."""
     period = Period.from_year_and_code(snapshot.filing_year, "1T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=snapshot,

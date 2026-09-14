@@ -13,7 +13,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.irnr import M210PayerMode
@@ -88,14 +88,14 @@ def resolve_m210_payer_mode(
     """Project an operator or stored payer-mode token from the detail fact."""
     modes, default_mode, _ = _registry_m210_payer_mode_declarations(effective_date, operation=operation)
     if value is None:
-        return M210PayerMode._from_registry(default_mode)
+        return M210PayerMode.from_registry(default_mode)
     if isinstance(value, M210PayerMode):
         if value.value not in modes:
             raise TransactionValidationError("payer-mode token is not declared by the selected registry")
         return value
     if not isinstance(value, str) or value not in modes:
         raise TransactionValidationError("payer-mode token is not declared by the selected registry")
-    return M210PayerMode._from_registry(value)
+    return M210PayerMode.from_registry(value)
 
 
 def required_m210_payer_mode_for_code(
@@ -112,7 +112,7 @@ def required_m210_payer_mode_for_code(
         return None
     if required_mode not in modes:
         raise TransactionValidationError("detail M349/M210 catalogue declares an unknown required payer mode")
-    return M210PayerMode._from_registry(required_mode)
+    return M210PayerMode.from_registry(required_mode)
 
 
 def _registry_m210_declarations(
@@ -173,7 +173,7 @@ class M210IncomeClassification(BaseModel):
     def _project_payer_mode(cls, data: object) -> object:
         if not isinstance(data, Mapping):
             return data
-        payload = dict(data)
+        payload = TypeAdapter(dict[str, object]).validate_python(data)
         payload["payer_mode"] = resolve_m210_payer_mode(payload.get("payer_mode"))
         return payload
 
