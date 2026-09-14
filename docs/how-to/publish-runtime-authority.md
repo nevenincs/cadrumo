@@ -79,11 +79,35 @@ silently admitted.
 Verify the descriptor-selected SQLite generation directly. The publication
 must admit every component through the indexed reader, match the current
 compiler receipt, and pass the packaging boundary checks. There is no eager
-JSON comparison backend or runtime fallback.
+JSON runtime backend or runtime fallback.
 
 The packaging checks stage only the descriptor and its selected database into
 their private cohort. Superseded content-addressed files retained by a source
 checkout are not members of the candidate package.
+
+The development-only paired benchmark accepts that same isolated descriptor
+and an explicit JSON baseline produced from the same validated
+`AuthorityArtifact` that produced the candidate database. The development
+baseline helper is
+`dev.registry.eager_authority_baseline.write_eager_authority_baseline`; invoke
+it from the checkpoint driver with that exact artifact and keep the resulting
+file outside shipped package resources. Run the paired measurement with:
+
+```powershell
+uv run --no-sync python -m dev.registry.indexed_authority_benchmark `
+  --descriptor <candidate>\authority.current.json `
+  --json-baseline <work>\authority-eager-baseline.json `
+  --backend both --runs 10
+```
+
+The baseline is development evidence only: it is generated from the exact
+validated in-memory authority, eagerly decodes the complete graph, and carries
+the candidate's logical identity. The runner verifies the descriptor's exact
+database bytes before either side is measured; it does not read the shipped
+package, discover a default JSON file, or become a runtime fallback. Each
+M100, M200, and M303 workload is reported independently; the ADR admission,
+incremental-memory, and warm-context thresholds remain pending until
+checkpoint C runs on one stable candidate cohort.
 
 ## Check that the publication is current
 

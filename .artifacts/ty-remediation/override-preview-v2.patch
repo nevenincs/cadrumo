@@ -1,0 +1,2407 @@
+--- a/dev/quality/import_checker.py
++++ b/dev/quality/import_checker.py
+@@ -22,7 +22,7 @@
+ from collections.abc import Iterable, Mapping, Sequence
+ from dataclasses import dataclass, field
+ from pathlib import Path
+-from typing import Final
++from typing import override, Final
+ 
+ from cadrumo.tests.module_target_inventory import MetadataTargetSetError, load_all_target_sets, load_target_set
+ from dev._paths import REPO_ROOT, UTF_8
+@@ -610,6 +610,7 @@
+         self.scopes: list[str] = []
+         self.type_checking_depth = 0
+ 
++    @override
+     def visit_If(self, node: ast.If) -> None:
+         is_type_checking = _is_type_checking_guard(node.test)
+         self.visit(node.test)
+@@ -622,12 +623,15 @@
+         for statement in node.orelse:
+             self.visit(statement)
+ 
++    @override
+     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+         self._visit_scope(node)
+ 
++    @override
+     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+         self._visit_scope(node)
+ 
++    @override
+     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+         self._visit_scope(node)
+ 
+@@ -637,11 +641,13 @@
+             self.visit(statement)
+         self.scopes.pop()
+ 
++    @override
+     def visit_Import(self, node: ast.Import) -> None:
+         for alias in node.names:
+             if _is_first_party(alias.name, self.authority.root_names):
+                 self._record(alias.name, (), node.lineno, self._static_form())
+ 
++    @override
+     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+         target = _resolve_from(self.module.name, self.module.is_package, node.level, node.module)
+         if target is None or not _is_first_party(target, self.authority.root_names):
+@@ -657,6 +663,7 @@
+             else:
+                 self._record(target, (alias.name,), node.lineno, self._static_form())
+ 
++    @override
+     def visit_Call(self, node: ast.Call) -> None:
+         qualified = _qualified_name(node.func)
+         is_import_module = qualified in self.import_module_names or (
+--- a/dev/registry/bindings.py
++++ b/dev/registry/bindings.py
+@@ -24,6 +24,7 @@
+ from dataclasses import asdict, dataclass
+ from datetime import UTC, datetime
+ from pathlib import Path
++from typing import override
+ 
+ SCHEMA_VERSION = "binding-signal.v2"
+ BINDING_REF_KEYS = frozenset(
+@@ -289,11 +290,13 @@
+         self.scope: list[str] = []
+         self.rows: list[dict[str, object]] = []
+ 
++    @override
+     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+         self.scope.append(node.name)
+         self.generic_visit(node)
+         self.scope.pop()
+ 
++    @override
+     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+         self.scope.append(node.name)
+         self.generic_visit(node)
+@@ -301,6 +304,7 @@
+ 
+     visit_AsyncFunctionDef = visit_FunctionDef
+ 
++    @override
+     def visit_Constant(self, node: ast.Constant) -> None:
+         if isinstance(node.value, str) and node.value in self.binding_ids:
+             self.rows.append(
+--- a/dev/registry/facts.py
++++ b/dev/registry/facts.py
+@@ -28,7 +28,7 @@
+ from collections import Counter
+ from collections.abc import Mapping, Sequence
+ from pathlib import Path, PurePosixPath
+-from typing import Any
++from typing import override, Any
+ 
+ from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+ from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+@@ -1316,49 +1316,62 @@
+         self.counts: Counter[str] = Counter()
+         self.assignments: list[ast.Assign | ast.AnnAssign] = []
+ 
++    @override
+     def visit_Name(self, node: ast.Name) -> None:
+         if isinstance(node.ctx, ast.Store):
+             self.counts[node.id] += 1
+ 
++    @override
+     def visit_Assign(self, node: ast.Assign) -> None:
+         self.assignments.append(node)
+         self.generic_visit(node)
+ 
++    @override
+     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+         self.assignments.append(node)
+         self.generic_visit(node)
+ 
++    @override
+     def visit_arg(self, node: ast.arg) -> None:
+         self.counts[node.arg] += 1
+ 
++    @override
+     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+         self.counts[node.name] += 1
+ 
++    @override
+     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+         self.counts[node.name] += 1
+ 
++    @override
+     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+         self.counts[node.name] += 1
+ 
++    @override
+     def visit_Lambda(self, node: ast.Lambda) -> None:
+         # Lambda arguments/body belong to a nested scope.  A named expression
+         # in a lambda is intentionally not used as a static binding here.
+         return
+ 
++    @override
+     def visit_comprehension(self, node: ast.comprehension) -> None:
+         # Comprehension targets have their own Python 3 scope.  The consumer
+         # visitor handles them separately as finite loop domains.
+         return
+ 
++    @override
+     def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+         return
+ 
++    @override
+     def visit_ListComp(self, node: ast.ListComp) -> None:
+         return
+ 
++    @override
+     def visit_SetComp(self, node: ast.SetComp) -> None:
+         return
+ 
++    @override
+     def visit_DictComp(self, node: ast.DictComp) -> None:
+         return
+ 
+@@ -1785,6 +1798,7 @@
+             values[keyword.arg] = self._expression_values(keyword.value)
+         return values
+ 
++    @override
+     def visit_Call(self, node: ast.Call) -> None:
+         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
+             callee = self.functions[node.func.id]
+@@ -1807,12 +1821,15 @@
+             self.visit(statement)
+         self.environment = saved
+ 
++    @override
+     def visit_For(self, node: ast.For) -> None:
+         self._visit_loop(node)
+ 
++    @override
+     def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
+         self._visit_loop(node)
+ 
++    @override
+     def visit_Assign(self, node: ast.Assign) -> None:
+         values = self._expression_values(node.value)
+         target_names = _target_names(node.targets[0]) if node.targets else []
+@@ -1822,6 +1839,7 @@
+             self._assign(name, values)
+         self.visit(node.value)
+ 
++    @override
+     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+         values = self._expression_values(node.value)
+         for name in _target_names(node.target):
+@@ -1829,20 +1847,25 @@
+         if node.value is not None:
+             self.visit(node.value)
+ 
++    @override
+     def visit_AugAssign(self, node: ast.AugAssign) -> None:
+         for name in _target_names(node.target):
+             self._assign(name, None)
+         self.visit(node.value)
+ 
++    @override
+     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+         return
+ 
++    @override
+     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+         return
+ 
++    @override
+     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+         return
+ 
++    @override
+     def visit_Lambda(self, node: ast.Lambda) -> None:
+         return
+ 
+@@ -3162,6 +3185,7 @@
+     def _resolve_fact_ids(self, node: ast.AST | None) -> tuple[str, ...] | None:
+         return self._fact_id_resolution(node).get("ids")
+ 
++    @override
+     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+         """Recognize aliases of every governed-fact query family."""
+         for imported in node.names:
+@@ -3171,6 +3195,7 @@
+                 self.query_family_by_symbol[symbol] = QUERY_FAMILY_BY_SYMBOL[imported.name]
+         self.generic_visit(node)
+ 
++    @override
+     def visit_Import(self, node: ast.Import) -> None:
+         """Retain module imports for attribute-shaped query calls."""
+         self.generic_visit(node)
+@@ -3201,15 +3226,19 @@
+             self.function_node_stack.pop()
+             self.symbol_stack.pop()
+ 
++    @override
+     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+         self._visit_symbol(node, node.name, body=node.body, arguments=node.args)
+ 
++    @override
+     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+         self._visit_symbol(node, node.name, body=node.body, arguments=node.args)
+ 
++    @override
+     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+         self._visit_symbol(node, node.name, body=node.body)
+ 
++    @override
+     def visit_Lambda(self, node: ast.Lambda) -> None:
+         self._visit_symbol(node, "<lambda>", body=[], arguments=node.args)
+ 
+@@ -3238,15 +3267,19 @@
+         finally:
+             self.loop_bindings.pop()
+ 
++    @override
+     def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+         self._visit_comprehension_expression(node)
+ 
++    @override
+     def visit_ListComp(self, node: ast.ListComp) -> None:
+         self._visit_comprehension_expression(node)
+ 
++    @override
+     def visit_SetComp(self, node: ast.SetComp) -> None:
+         self._visit_comprehension_expression(node)
+ 
++    @override
+     def visit_DictComp(self, node: ast.DictComp) -> None:
+         self._visit_comprehension_expression(node)
+ 
+@@ -3267,12 +3300,15 @@
+         finally:
+             self.loop_bindings.pop()
+ 
++    @override
+     def visit_For(self, node: ast.For) -> None:
+         self._visit_loop(node)
+ 
++    @override
+     def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
+         self._visit_loop(node)
+ 
++    @override
+     def visit_Call(self, node: ast.Call) -> None:
+         query_kind = _call_symbol(node.func)
+         if query_kind in self.query_symbols:
+--- a/dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py
++++ b/dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py
+@@ -30,7 +30,7 @@
+ 
+ import ast
+ from pathlib import Path
+-from typing import Final, NamedTuple
++from typing import override, Final, NamedTuple
+ 
+ import pytest
+ 
+@@ -66,6 +66,7 @@
+     path: Path
+     line: int
+ 
++    @override
+     def __str__(self) -> str:
+         return f"{self.path.relative_to(_REPO_ROOT).as_posix()}:{self.line}"
+ 
+--- a/src/cadrumo/adapters/inbound/financial/ledger_import.py
++++ b/src/cadrumo/adapters/inbound/financial/ledger_import.py
+@@ -27,6 +27,7 @@
+ from .providers.ofx import OfxProvider
+ from .providers.pdf_n26 import PdfN26Provider
+ from .providers.xlsx import XlsxProvider
++from typing import override
+ 
+ 
+ class _FinancialProviderBoundary(FinancialProviderProtocol):
+@@ -35,6 +36,7 @@
+     def __init__(self, provider: FinancialProvider) -> None:
+         self._provider = provider
+ 
++    @override
+     def ingest(self, path: Path) -> Iterator[LedgerParsedRow]:
+         """Yield application rows while translating provider failures."""
+         try:
+@@ -43,6 +45,7 @@
+         except FinancialProviderError as exc:
+             raise _translate_provider_error(exc, operation="ingest", path=path) from exc
+ 
++    @override
+     def validate_source(self, path: Path) -> LedgerProviderValidation:
+         """Return application validation facts while translating failures."""
+         try:
+@@ -93,6 +96,7 @@
+ class SecureTransactionCatalogueLocationAdapter(TransactionCatalogueLocationProtocol):
+     """Translate the transaction catalogue namespace to its public URI form."""
+ 
++    @override
+     def path_for(self, *, bucket_id: str) -> str:
+         """Return the stable URI used in application import summaries."""
+         return f"db://secure_objects/{TRANSACTION_CATALOGUE_NAMESPACE.namespace}/transaction-catalogue:{bucket_id}"
+--- a/src/cadrumo/adapters/outbound/aeat/auth/certificate.py
++++ b/src/cadrumo/adapters/outbound/aeat/auth/certificate.py
+@@ -605,6 +605,7 @@
+ class CertificateHealthProbeAdapter(CertificateHealthProbePort):
+     """Translate certificate adapter health records for the application probe."""
+ 
++    @override
+     def evaluate(self, request: CertificateHealthProbeRequest) -> CertificateHealthProbeResult:
+         """Return application-owned health facts, translating load failures."""
+         try:
+--- a/src/cadrumo/adapters/outbound/aeat/auth/clave_movil_support.py
++++ b/src/cadrumo/adapters/outbound/aeat/auth/clave_movil_support.py
+@@ -11,7 +11,7 @@
+ import re
+ from datetime import datetime
+ from enum import StrEnum
+-from typing import TYPE_CHECKING, Final
++from typing import override, TYPE_CHECKING, Final
+ from urllib.parse import urlsplit
+ from uuid import uuid4
+ 
+@@ -223,6 +223,7 @@
+ class ClaveIdentityProbeAdapter(ClaveIdentityProbePort):
+     """Translate the concrete Cl@ve classifier for application probes."""
+ 
++    @override
+     def classify(self, raw: str) -> ClaveIdentityProbeResult:
+         """Return an application DTO instead of leaking provider exceptions."""
+         try:
+--- a/src/cadrumo/adapters/outbound/aeat/sede/filed_data_capture_port.py
++++ b/src/cadrumo/adapters/outbound/aeat/sede/filed_data_capture_port.py
+@@ -4,7 +4,7 @@
+ 
+ from collections.abc import AsyncIterator, Awaitable, Callable
+ from contextlib import asynccontextmanager
+-from typing import TypeVar
++from typing import override, TypeVar
+ 
+ from .....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+ from .....application.auth.operator_scope_ports import OperatorScopePorts
+@@ -63,10 +63,12 @@
+         self._walk_timeout_ms = walk_timeout_ms
+ 
+     @property
++    @override
+     def walk_timeout_ms(self) -> int:
+         """Return the timeout resolved by the outer Sede composition."""
+         return self._walk_timeout_ms
+ 
++    @override
+     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[FiledRegisterDeclarationProtocol, ...]:
+         """Read one register pair and expose its structural application view."""
+         return await _call_adapter(
+@@ -74,6 +76,7 @@
+             lambda: self._register.walk(modelo=modelo, ejercicio=ejercicio),
+         )
+ 
++    @override
+     async def capture_observation(
+         self,
+         declaration: FiledRegisterDeclarationProtocol,
+@@ -103,6 +106,7 @@
+         self._operator_scope_ports = operator_scope_ports
+ 
+     @asynccontextmanager
++    @override
+     async def open_register(self, *, operation: str) -> AsyncIterator[FiledDataRegisterPort]:
+         """Open one browser-backed register for the complete operation scope."""
+         try:
+@@ -128,6 +132,7 @@
+         except Exception as exc:
+             raise _translate_adapter_error("filed_register_open", exc) from exc
+ 
++    @override
+     async def discover_availability(
+         self,
+         *,
+@@ -158,6 +163,7 @@
+         except Exception as exc:
+             raise _translate_adapter_error("filed_register_discovery", exc) from exc
+ 
++    @override
+     async def capture_source_observations(
+         self,
+         revision: ModeloRevision,
+--- a/src/cadrumo/adapters/outbound/aeat/sede/filed_observation_persistence.py
++++ b/src/cadrumo/adapters/outbound/aeat/sede/filed_observation_persistence.py
+@@ -12,7 +12,7 @@
+ from collections.abc import Callable, Iterator, Mapping, Sequence
+ from datetime import datetime
+ from pathlib import Path
+-from typing import TYPE_CHECKING, TypeVar
++from typing import override, TYPE_CHECKING, TypeVar
+ 
+ from .....adapters.persistence.profile.calculation_observations import (
+     CalculationObservationRepository,
+@@ -95,10 +95,12 @@
+ class FiledObservationParserAdapter(FiledObservationParserPort):
+     """Adapt receipt parsing and Sede CSV extraction to application types."""
+ 
++    @override
+     def parse_justificante(self, body: bytes) -> Justificante:
+         """Parse receipt bytes without creating a plaintext temporary file."""
+         return _call_adapter("parse_justificante", lambda: parse_justificante_bytes(body))
+ 
++    @override
+     def csv_from_source_url(self, source_url: str) -> str:
+         """Extract the independent AEAT CSV witness from a source URL."""
+         return _call_adapter("csv_from_source_url", lambda: str(extract_csv_from_url(source_url)))
+@@ -107,6 +109,7 @@
+ class FiledDeclarationTransformationAdapter(FiledDeclarationTransformationPort):
+     """Adapt Sede observation projections to registry-grounded application ports."""
+ 
++    @override
+     def registry_observation(self, observation: FiledObservationProtocol) -> RegistryModeloObservation:
+         """Build the registry-grounded numeric projection."""
+         return _call_adapter(
+@@ -114,6 +117,7 @@
+             lambda: registry_observation_from_filed_declaration(observation),
+         )
+ 
++    @override
+     def non_numeric_casillas(
+         self,
+         observation: FiledObservationProtocol,
+@@ -132,10 +136,12 @@
+         """Bind one logical output root and one secure-object backend."""
+         self._store = FiledDeclaracionObservationStore(Path(root), objects=objects)
+ 
++    @override
+     def persist_observation(self, observation: FiledObservationProtocol) -> Path:
+         """Persist one encrypted observation manifest."""
+         return _call_adapter("persist_observation", lambda: self._store.persist_observation(observation))
+ 
++    @override
+     def persist_artefact(
+         self,
+         observation_key: tuple[str, int, Period, str],
+@@ -148,6 +154,7 @@
+             lambda: self._store.persist_artefact(observation_key, artefact, body),
+         )
+ 
++    @override
+     def load_artefact(self, storage_ref: str) -> bytes:
+         """Load and verify one encrypted artefact by its content address."""
+         return _call_adapter("load_artefact", lambda: self._store.load_artefact(storage_ref))
+@@ -160,10 +167,12 @@
+         """Bind one already-composed repository instance."""
+         self._repository = repository
+ 
++    @override
+     def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
+         """Load one existing calculation-observation envelope."""
+         return _call_adapter("load_calculation_observation", lambda: self._repository.load_observation(modelo, period))
+ 
++    @override
+     def prepare_observation_envelope(
+         self,
+         observation: RegistryModeloObservation,
+@@ -187,6 +196,7 @@
+             ),
+         )
+ 
++    @override
+     def save(self, payload: ObservationEnvelopePayload) -> None:
+         """Persist one prepared calculation-observation envelope."""
+         _call_adapter("save_calculation_observation", lambda: self._repository.save(payload))
+@@ -199,6 +209,7 @@
+         """Bind one already-composed repository instance."""
+         self._repository = repository
+ 
++    @override
+     def load_period(self, period: Period) -> IvaCompensationPeriodState | None:
+         """Reload one persisted IVA history period."""
+         return _call_adapter("load_iva_history_period", lambda: self._repository.load_period(period))
+@@ -227,6 +238,7 @@
+ class IvaObservationPersistenceAdapter(FiledIvaObservationPersistencePort):
+     """Adapt the canonical atomic Modelo 303/history co-commit operation."""
+ 
++    @override
+     def persist(
+         self,
+         *,
+@@ -264,14 +276,17 @@
+         """Bind one already-composed repository instance."""
+         self._repository = repository
+ 
++    @override
+     def load(self, csv: str, /) -> Justificante | None:
+         """Load one receipt by CSV."""
+         return _call_adapter("load_justificante", lambda: self._repository.load(csv))
+ 
++    @override
+     def save(self, justificante: Justificante, /) -> None:
+         """Persist one parsed receipt."""
+         _call_adapter("save_justificante", lambda: self._repository.save(justificante))
+ 
++    @override
+     def iter_justificantes(self) -> Iterator[Justificante]:
+         """Yield all receipts after translating scan failures."""
+         records = _call_adapter("iter_justificantes", lambda: tuple(self._repository.iter_justificantes()))
+@@ -286,30 +301,37 @@
+         self._repository = repository
+ 
+     @property
++    @override
+     def bucket_id(self) -> str | None:
+         """Return the repository's bucket binding."""
+         return self._repository.bucket_id
+ 
++    @override
+     def exists(self) -> bool:
+         """Return whether the filing catalogue exists."""
+         return _call_adapter("filing_exists", self._repository.exists)
+ 
++    @override
+     def load(self) -> ModeloRecordCatalogue:
+         """Load the filing catalogue."""
+         return _call_adapter("filing_load", self._repository.load)
+ 
++    @override
+     def load_revisioned(self) -> tuple[ModeloRecordCatalogue, str]:
+         """Load the filing catalogue and its revision marker."""
+         return _call_adapter("filing_load_revisioned", self._repository.load_revisioned)
+ 
++    @override
+     def save(self, catalogue: ModeloRecordCatalogue) -> None:
+         """Persist the filing catalogue."""
+         _call_adapter("filing_save", lambda: self._repository.save(catalogue))
+ 
++    @override
+     def mutate(self, mutation: Callable[[ModeloRecordCatalogue], ModeloRecordCatalogue]) -> ModeloRecordCatalogue:
+         """Apply one guarded filing-catalogue mutation."""
+         return _call_adapter("filing_mutate", lambda: self._repository.mutate(mutation))
+ 
++    @override
+     def to_secure_object_write(
+         self,
+         catalogue: ModeloRecordCatalogue,
+@@ -325,6 +347,7 @@
+             ),
+         )
+ 
++    @override
+     def save_with_secure_object_writes(
+         self,
+         catalogue: ModeloRecordCatalogue,
+@@ -350,18 +373,22 @@
+         """Bind one already-composed repository instance."""
+         self._repository = repository
+ 
++    @override
+     def exists(self) -> bool:
+         """Return whether the event catalogue exists."""
+         return _call_adapter("bucket_events_exists", self._repository.exists)
+ 
++    @override
+     def load(self) -> BucketEventHistoryCatalogue:
+         """Load the event catalogue."""
+         return _call_adapter("bucket_events_load", self._repository.load)
+ 
++    @override
+     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
+         """Persist the event catalogue."""
+         _call_adapter("bucket_events_save", lambda: self._repository.save(catalogue))
+ 
++    @override
+     def to_secure_object_write(
+         self,
+         catalogue: BucketEventHistoryCatalogue,
+@@ -397,6 +424,7 @@
+         self._justificante_repository = justificante_repository
+         self._observation_repository = observation_repository
+ 
++    @override
+     def import_source(
+         self,
+         source: ExternalFilingBaselineSource,
+--- a/src/cadrumo/adapters/outbound/llm/run_telemetry.py
++++ b/src/cadrumo/adapters/outbound/llm/run_telemetry.py
+@@ -67,6 +67,7 @@
+ from ...persistence.storage.secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE
+ from .errors import LLMCacheError
+ from .retention import select_retention_removal_keys
++from typing import override
+ 
+ __all__ = [
+     "LLMRunRecord",
+@@ -381,6 +382,7 @@
+     def __init__(self, recorder: LLMRunTelemetryRecorder) -> None:
+         self._recorder = recorder
+ 
++    @override
+     def load_records(
+         self,
+         *,
+--- a/src/cadrumo/adapters/outbound/llm/tests/test_diagnostics_run_health.py
++++ b/src/cadrumo/adapters/outbound/llm/tests/test_diagnostics_run_health.py
+@@ -28,6 +28,7 @@
+ from .....core.directory_scan import scan_directory
+ from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+ from ..run_telemetry import LLMRunRecord, LLMRunTelemetryDiagnosticsAdapter, LLMRunTelemetryRecorder
++from typing import override
+ 
+ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+ 
+@@ -77,6 +78,7 @@
+ class _FakeAuthProbe(DiagnosticAuthProbePort):
+     """Return a fixed, redacted auth verdict for run-health projections."""
+ 
++    @override
+     def probe(self) -> DiagnosticAuthProbeResult:
+         return DiagnosticAuthProbeResult()
+ 
+--- a/src/cadrumo/adapters/persistence/profile/catalogue_creation.py
++++ b/src/cadrumo/adapters/persistence/profile/catalogue_creation.py
+@@ -33,6 +33,7 @@
+ from .buckets import BucketEventHistoryRepository
+ from .catalogue_reads import build_invoice_catalogue_read_ports
+ from .invoices import InvoiceCatalogueRepository
++from typing import override
+ 
+ 
+ class CatalogueCreationInvoiceRepositoryAdapter(CatalogueInvoiceRepositoryPort):
+@@ -41,6 +42,7 @@
+     def __init__(self, *, repository: InvoiceCatalogueRepository) -> None:
+         self._repository = repository
+ 
++    @override
+     def load(self) -> InvoiceCatalogue:
+         """Load one catalogue, hiding storage-specific failure types."""
+         try:
+@@ -48,6 +50,7 @@
+         except (InvoicePersistenceError, StorageError, OSError) as exc:
+             raise CatalogueInvoicePersistenceError("invoice_catalogue_load") from exc
+ 
++    @override
+     def mutate(self, mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue]) -> InvoiceCatalogue:
+         """Apply one guarded mutation, preserving domain validation refusals."""
+         try:
+@@ -64,6 +67,7 @@
+     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
+         self._repository = repository
+ 
++    @override
+     def exists(self) -> bool:
+         """Report event-history presence through the application contract."""
+         try:
+@@ -71,6 +75,7 @@
+         except (BucketEventHistoryPersistenceError, StorageError, OSError) as exc:
+             raise CatalogueInvoicePersistenceError("bucket_event_history_exists") from exc
+ 
++    @override
+     def load(self) -> BucketEventHistoryCatalogue:
+         """Load event history, hiding storage-specific failure types."""
+         try:
+@@ -78,6 +83,7 @@
+         except (BucketEventHistoryPersistenceError, StorageError, OSError) as exc:
+             raise CatalogueInvoicePersistenceError("bucket_event_history_load") from exc
+ 
++    @override
+     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
+         """Persist event history through the existing encrypted repository."""
+         try:
+@@ -85,6 +91,7 @@
+         except (BucketEventHistoryPersistenceError, StorageError, OSError) as exc:
+             raise CatalogueInvoicePersistenceError("bucket_event_history_save") from exc
+ 
++    @override
+     def to_secure_object_write(
+         self,
+         catalogue: BucketEventHistoryCatalogue,
+@@ -100,6 +107,7 @@
+         except (BucketEventHistoryPersistenceError, StorageError, OSError) as exc:
+             raise CatalogueInvoicePersistenceError("bucket_event_history_prepare_write") from exc
+ 
++    @override
+     def append_guarded(
+         self,
+         appender: Callable[[BucketEventHistoryCatalogue], BucketEventHistoryCatalogue],
+@@ -124,10 +132,12 @@
+         self._provider = provider
+ 
+     @property
++    @override
+     def rate_source_id(self) -> str:
+         """Return the provider's stable authority identifier."""
+         return self._provider.rate_source_id
+ 
++    @override
+     def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+         """Fetch a rate while hiding outbound-provider failure types."""
+         try:
+--- a/src/cadrumo/adapters/persistence/profile/catalogue_reads.py
++++ b/src/cadrumo/adapters/persistence/profile/catalogue_reads.py
+@@ -18,6 +18,7 @@
+ from ..storage.runtime_repository import secure_object_repository_for_bucket
+ from .invoices import InvoiceCatalogueRepository
+ from .transactions import TransactionCatalogueRepository
++from typing import override
+ 
+ 
+ class InvoiceCatalogueReadAdapter(InvoiceCatalogueReader):
+@@ -27,6 +28,7 @@
+         """Bind an already-composed invoice repository."""
+         self._repository = repository
+ 
++    @override
+     def load(self) -> InvoiceCatalogue:
+         """Load the catalogue while hiding persistence implementation errors."""
+         try:
+@@ -42,6 +44,7 @@
+         """Bind an already-composed transaction repository."""
+         self._repository = repository
+ 
++    @override
+     def load(self) -> TransactionCatalogue:
+         """Load the catalogue while hiding persistence implementation errors."""
+         try:
+@@ -49,6 +52,7 @@
+         except (TransactionPersistenceError, StorageError, OSError) as exc:
+             raise InvoiceCatalogueReadPersistenceError("transaction_catalogue_load") from exc
+ 
++    @override
+     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+         """Partition the catalogue while hiding persistence implementation errors."""
+         try:
+--- a/src/cadrumo/adapters/persistence/profile/evidence_bundles.py
++++ b/src/cadrumo/adapters/persistence/profile/evidence_bundles.py
+@@ -41,6 +41,7 @@
+         """Translate storage-specific failures before they cross the port."""
+         return EvidenceBundlePersistenceError(operation)
+ 
++    @override
+     def load(self, identifier: str) -> EvidenceBundle | None:
+         """Load one encrypted bundle and translate storage failures."""
+         try:
+@@ -48,6 +49,7 @@
+         except StorageError as error:
+             raise self._translate("load", error) from error
+ 
++    @override
+     def save(self, payload: EvidenceBundle) -> None:
+         """Save one encrypted bundle and translate storage failures."""
+         try:
+@@ -55,6 +57,7 @@
+         except StorageError as error:
+             raise self._translate("save", error) from error
+ 
++    @override
+     def iter_records(self) -> Iterator[EvidenceBundle]:
+         """Iterate encrypted bundles and translate scan failures."""
+         try:
+@@ -70,6 +73,7 @@
+         """Bind the work-unit lookup to the same bucket-scoped store."""
+         self._repository = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
+ 
++    @override
+     def exists(self, work_unit_id: str) -> bool:
+         """Return whether the bucket's catalogue contains ``work_unit_id``."""
+         try:
+--- a/src/cadrumo/adapters/persistence/profile/filing_history.py
++++ b/src/cadrumo/adapters/persistence/profile/filing_history.py
+@@ -46,6 +46,7 @@
+             context={"operation": operation, "adapter_error": type(error).__name__},
+         )
+ 
++    @override
+     def load(self, identifier: str) -> ModeloHistory | None:
+         """Load one encrypted history and translate storage failures."""
+         try:
+@@ -53,6 +54,7 @@
+         except StorageError as error:
+             raise self._translate("load", error) from error
+ 
++    @override
+     def save(self, payload: ModeloHistory) -> None:
+         """Save one encrypted history and translate storage failures."""
+         try:
+@@ -60,6 +62,7 @@
+         except StorageError as error:
+             raise self._translate("save", error) from error
+ 
++    @override
+     def delete(self, identifier: str) -> bool:
+         """Delete one encrypted history and translate storage failures."""
+         try:
+@@ -67,6 +70,7 @@
+         except StorageError as error:
+             raise self._translate("delete", error) from error
+ 
++    @override
+     def iter_records(self) -> Iterator[ModeloHistory]:
+         """Iterate encrypted histories and translate scan failures."""
+         try:
+--- a/src/cadrumo/adapters/persistence/profile/invoice_confirmation.py
++++ b/src/cadrumo/adapters/persistence/profile/invoice_confirmation.py
+@@ -10,7 +10,7 @@
+ 
+ from collections.abc import Callable, Iterator
+ from pathlib import Path
+-from typing import TypeVar
++from typing import override, TypeVar
+ 
+ from ....application.ledger.invoice_confirmation_ports import (
+     InvoiceConfirmationPersistenceError,
+@@ -47,28 +47,34 @@
+     def __init__(self, *, store: AttachmentStore) -> None:
+         self._store = store
+ 
++    @override
+     def put_bytes(self, data: bytes) -> str:
+         """Store bytes while translating persistence failures."""
+         return _translate_attachment_failure("attachment_put_bytes", lambda: self._store.put_bytes(data))
+ 
++    @override
+     def put_file(self, source: Path) -> tuple[str, int]:
+         """Store a file while translating persistence failures."""
+         return _translate_attachment_failure("attachment_put_file", lambda: self._store.put_file(source))
+ 
++    @override
+     def read_bytes(self, sha256: str) -> bytes:
+         """Read bytes while translating persistence failures."""
+         return _translate_attachment_failure("attachment_read_bytes", lambda: self._store.read_bytes(sha256))
+ 
++    @override
+     def write_manifest(self, attachment: Attachment) -> None:
+         """Write a manifest while translating persistence failures."""
+         _translate_attachment_failure("attachment_write_manifest", lambda: self._store.write_manifest(attachment))
+ 
++    @override
+     def load_manifest(self, attachment_id: str) -> Attachment:
+         """Load a manifest while preserving an ordinary domain miss."""
+         return _translate_attachment_failure(
+             "attachment_load_manifest", lambda: self._store.load_manifest(attachment_id)
+         )
+ 
++    @override
+     def iter_manifests(self) -> Iterator[Attachment]:
+         """Iterate manifests while translating failures raised during iteration."""
+         try:
+@@ -78,6 +84,7 @@
+         except (AttachmentPersistenceError, StorageError, OSError, TypeError, ValueError, KeyError) as exc:
+             raise InvoiceConfirmationPersistenceError("attachment_iter_manifests") from exc
+ 
++    @override
+     def verify_blob(self, attachment_id: str) -> None:
+         """Verify one blob while translating persistence failures."""
+         _translate_attachment_failure("attachment_verify_blob", lambda: self._store.verify_blob(attachment_id))
+--- a/src/cadrumo/adapters/persistence/profile/invoice_source_resolver.py
++++ b/src/cadrumo/adapters/persistence/profile/invoice_source_resolver.py
+@@ -9,6 +9,7 @@
+ from ....domain.invoices.models import InvoiceCatalogue
+ from ..storage.errors import STORAGE_DEGRADATION_ERRORS
+ from .invoices import InvoiceCatalogueRepository
++from typing import override
+ 
+ 
+ class InvoiceCatalogueSourceResolverAdapter(InvoiceSourceCatalogueReader):
+@@ -18,6 +19,7 @@
+         """Bind an already-composed invoice repository."""
+         self._repository = repository
+ 
++    @override
+     def load(self) -> InvoiceCatalogue:
+         """Load the catalogue while translating degradation failures."""
+         try:
+--- a/src/cadrumo/adapters/persistence/profile/iva_compensation_history.py
++++ b/src/cadrumo/adapters/persistence/profile/iva_compensation_history.py
+@@ -54,10 +54,12 @@
+         return iva_compensation_period_key(payload.period)
+ 
+     @property
++    @override
+     def secure_object_repository(self) -> CalculationObservationStorageProtocol:
+         """Expose the storage capability required for atomic co-commit."""
+         return self._objects
+ 
++    @override
+     def load_period(self, period: Period) -> IvaCompensationPeriodState | None:
+         """Load one period and re-confirm its registry coordinate."""
+         return _call_storage("load", lambda: self._load_period(period))
+@@ -68,10 +70,12 @@
+             require_iva_compensation_period_coordinates_current(state)
+         return state
+ 
++    @override
+     def save_period(self, state: IvaCompensationPeriodState) -> None:
+         """Persist one validated period state."""
+         _call_storage("save", lambda: self.save(state))
+ 
++    @override
+     def list_periods(self) -> tuple[IvaCompensationPeriodState, ...]:
+         """Load and sort all persisted period states."""
+ 
+@@ -88,6 +92,7 @@
+ 
+         return _call_storage("list", _list)
+ 
++    @override
+     def to_secure_object_write(self, state: IvaCompensationPeriodState) -> SecureObjectWrite:
+         """Prepare one encrypted history write without committing it."""
+ 
+--- a/src/cadrumo/adapters/persistence/profile/m036_lifecycle.py
++++ b/src/cadrumo/adapters/persistence/profile/m036_lifecycle.py
+@@ -9,7 +9,7 @@
+ from __future__ import annotations
+ 
+ from collections.abc import Callable
+-from typing import TypeVar
++from typing import override, TypeVar
+ 
+ from ....application.modelo.m036_lifecycle import (
+     M036DeclarationAmbiguousError,
+@@ -76,6 +76,7 @@
+     def __init__(self, *, repository: SecureSnapshotRepository[M036DeclarationResult]) -> None:
+         self._repository = repository
+ 
++    @override
+     def exists(self, declaration_id: str) -> bool:
+         """Report declaration presence without exposing storage failures."""
+         return _translate_adapter_failure(
+@@ -83,6 +84,7 @@
+             lambda: self._repository.exists(declaration_id),
+         )
+ 
++    @override
+     def load(self, declaration_id: str) -> M036DeclarationResult:
+         """Load one declaration by full id while preserving lookup errors."""
+         return _translate_adapter_failure(
+@@ -90,10 +92,12 @@
+             lambda: self._repository.load(declaration_id),
+         )
+ 
++    @override
+     def list_snapshots(self) -> tuple[M036DeclarationResult, ...]:
+         """List declarations while translating malformed storage failures."""
+         return _translate_adapter_failure("m036_declaration_list", self._repository.list_snapshots)
+ 
++    @override
+     def resolve(self, declaration_id: str) -> M036DeclarationResult:
+         """Resolve one full id or unique prefix while hiding adapter errors."""
+         return _translate_adapter_failure(
+@@ -101,6 +105,7 @@
+             lambda: self._repository.resolve(declaration_id),
+         )
+ 
++    @override
+     def save(self, declaration: M036DeclarationResult) -> None:
+         """Persist one declaration through the secure-object repository."""
+         _translate_adapter_failure(
+@@ -108,6 +113,7 @@
+             lambda: self._repository.save(declaration),
+         )
+ 
++    @override
+     def save_with_secure_object_writes(
+         self,
+         declaration: M036DeclarationResult,
+@@ -126,10 +132,12 @@
+     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
+         self._repository = repository
+ 
++    @override
+     def exists(self) -> bool:
+         """Report event-history presence without exposing storage failures."""
+         return _translate_adapter_failure("bucket_event_history_exists", self._repository.exists)
+ 
++    @override
+     def load(self) -> BucketEventHistoryCatalogue:
+         """Load event history through the application-facing port."""
+         return _translate_adapter_failure("bucket_event_history_load", self._repository.load)
+@@ -138,10 +146,12 @@
+         """Load event history together with its optimistic-concurrency revision."""
+         return _translate_adapter_failure("bucket_event_history_load_revisioned", self._repository.load_revisioned)
+ 
++    @override
+     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
+         """Persist event history while translating storage failures."""
+         _translate_adapter_failure("bucket_event_history_save", lambda: self._repository.save(catalogue))
+ 
++    @override
+     def to_secure_object_write(
+         self,
+         catalogue: BucketEventHistoryCatalogue,
+--- a/src/cadrumo/adapters/persistence/profile/m145_communication_records.py
++++ b/src/cadrumo/adapters/persistence/profile/m145_communication_records.py
+@@ -9,7 +9,7 @@
+ from __future__ import annotations
+ 
+ from collections.abc import Callable
+-from typing import TypeVar
++from typing import override, TypeVar
+ 
+ from ....application.modelo.m145_communication_records import (
+     M145CommunicationRecord,
+@@ -80,6 +80,7 @@
+     def __init__(self, *, repository: SecureSnapshotRepository[M145CommunicationRecord]) -> None:
+         self._repository = repository
+ 
++    @override
+     def exists(self, communication_record_id: str) -> bool:
+         """Report record presence without exposing storage failures."""
+         return _translate_adapter_failure(
+@@ -87,6 +88,7 @@
+             lambda: self._repository.exists(communication_record_id),
+         )
+ 
++    @override
+     def load(self, communication_record_id: str) -> M145CommunicationRecord:
+         """Load one record by full id while preserving application lookup errors."""
+         return _translate_adapter_failure(
+@@ -94,6 +96,7 @@
+             lambda: self._repository.load(communication_record_id),
+         )
+ 
++    @override
+     def resolve(self, communication_record_id: str) -> M145CommunicationRecord:
+         """Resolve one full id or unique prefix while hiding adapter errors."""
+         return _translate_adapter_failure(
+@@ -101,6 +104,7 @@
+             lambda: self._repository.resolve(communication_record_id),
+         )
+ 
++    @override
+     def save_with_secure_object_writes(
+         self,
+         record: M145CommunicationRecord,
+@@ -119,10 +123,12 @@
+     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
+         self._repository = repository
+ 
++    @override
+     def exists(self) -> bool:
+         """Report event-history presence without exposing storage failures."""
+         return _translate_adapter_failure("bucket_event_history_exists", self._repository.exists)
+ 
++    @override
+     def load(self) -> BucketEventHistoryCatalogue:
+         """Load event history through the application-facing port."""
+         return _translate_adapter_failure("bucket_event_history_load", self._repository.load)
+@@ -131,10 +137,12 @@
+         """Load event history together with its optimistic-concurrency revision."""
+         return _translate_adapter_failure("bucket_event_history_load_revisioned", self._repository.load_revisioned)
+ 
++    @override
+     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
+         """Persist event history while translating storage failures."""
+         _translate_adapter_failure("bucket_event_history_save", lambda: self._repository.save(catalogue))
+ 
++    @override
+     def to_secure_object_write(
+         self,
+         catalogue: BucketEventHistoryCatalogue,
+--- a/src/cadrumo/adapters/persistence/profile/profile_path_values.py
++++ b/src/cadrumo/adapters/persistence/profile/profile_path_values.py
+@@ -12,6 +12,7 @@
+ from ....application.user_profile.projections import record_to_path_values
+ from ....domain.user_profile.errors import ProfileNotFoundError, UserProfileError
+ from ..storage.errors import StorageError
++from typing import override
+ 
+ 
+ class ProfilePathValuesPersistenceAdapter(ProfilePathValuesReadPort):
+@@ -21,6 +22,7 @@
+         """Bind the already composed, session-bound profile record authority."""
+         self._repository = repository
+ 
++    @override
+     def load_path_values(self, *, bucket_id: str) -> Mapping[str, str] | None:
+         """Read one profile projection and translate persistence failures inward."""
+         try:
+--- a/src/cadrumo/adapters/persistence/profile/review_package_recipient_registry.py
++++ b/src/cadrumo/adapters/persistence/profile/review_package_recipient_registry.py
+@@ -9,7 +9,7 @@
+ from __future__ import annotations
+ 
+ from collections.abc import Callable
+-from typing import TypeVar
++from typing import override, TypeVar
+ 
+ from ....application.modelo.review_package_recipient_registry import (
+     RecipientFingerprintRegister,
+@@ -52,6 +52,7 @@
+     def __init__(self, *, repository: SecureObjectRepository) -> None:
+         self._repository = repository
+ 
++    @override
+     def load(self) -> RecipientFingerprintRegister:
+         """Load the register, preserving an absent row as an empty register."""
+ 
+@@ -68,6 +69,7 @@
+ 
+         return _translate_registry_failure("load", _load)
+ 
++    @override
+     def save(self, register: RecipientFingerprintRegister) -> None:
+         """Persist one validated register as the bucket's encrypted singleton."""
+ 
+--- a/src/cadrumo/adapters/persistence/profile/taxation_comparison.py
++++ b/src/cadrumo/adapters/persistence/profile/taxation_comparison.py
+@@ -12,6 +12,7 @@
+ from ..storage.errors import StorageError
+ from ..storage.runtime_repository import secure_object_repository_for_bucket
+ from .modelos_work_units import WorkUnitCatalogueRepository
++from typing import override
+ 
+ 
+ class TaxationComparisonWorkUnitReaderAdapter(TaxationComparisonWorkUnitReader):
+@@ -21,6 +22,7 @@
+         """Bind an already-composed work-unit repository."""
+         self._repository = repository
+ 
++    @override
+     def load(self) -> WorkUnitCatalogue:
+         """Load work units while hiding persistence implementation errors."""
+         try:
+--- a/src/cadrumo/adapters/persistence/profile/tests/_evidence_test_support.py
++++ b/src/cadrumo/adapters/persistence/profile/tests/_evidence_test_support.py
+@@ -23,6 +23,7 @@
+ from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
+ from cadrumo.core.config import Settings
+ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
++from typing import override
+ 
+ _BUCKET_ID = "29292929-2929-4929-8929-292929292929"
+ 
+@@ -35,12 +36,15 @@
+     def __init__(self) -> None:
+         self._records: dict[str, ConfirmedCounterpartyFacts] = {}
+ 
++    @override
+     def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
+         return self._records.get(identifier)
+ 
++    @override
+     def save(self, payload: ConfirmedCounterpartyFacts) -> None:
+         self._records[payload.counterparty_key] = payload
+ 
++    @override
+     def delete(self, identifier: str) -> bool:
+         return self._records.pop(identifier, None) is not None
+ 
+--- a/src/cadrumo/adapters/persistence/profile/tests/_operator_probe_fakes.py
++++ b/src/cadrumo/adapters/persistence/profile/tests/_operator_probe_fakes.py
+@@ -18,12 +18,14 @@
+     ClaveIdentityProbeResult,
+     OperatorProbePorts,
+ )
++from typing import override
+ 
+ 
+ @dataclass
+ class _ActiveProfileSession(ActiveProfileSessionPresencePort):
+     bound: bool = True
+ 
++    @override
+     def is_bound(self) -> bool:
+         return self.bound
+ 
+@@ -38,6 +40,7 @@
+     )
+     evaluator: Callable[[CertificateHealthProbeRequest], CertificateHealthProbeResult] | None = None
+ 
++    @override
+     def evaluate(self, request: CertificateHealthProbeRequest) -> CertificateHealthProbeResult:
+         if self.evaluator is not None:
+             return self.evaluator(request)
+@@ -49,6 +52,7 @@
+     result_by_raw: dict[str, ClaveIdentityProbeResult] = field(default_factory=dict)
+     default_kind: str = "DNI"
+ 
++    @override
+     def classify(self, raw: str) -> ClaveIdentityProbeResult:
+         if raw in self.result_by_raw:
+             return self.result_by_raw[raw]
+--- a/src/cadrumo/adapters/persistence/profile/verify_observations.py
++++ b/src/cadrumo/adapters/persistence/profile/verify_observations.py
+@@ -13,7 +13,7 @@
+ from __future__ import annotations
+ 
+ from hmac import compare_digest
+-from typing import TYPE_CHECKING, NoReturn
++from typing import override, TYPE_CHECKING, NoReturn
+ 
+ from pydantic import ValidationError
+ 
+@@ -206,6 +206,7 @@
+             )
+         return envelope.payload
+ 
++    @override
+     def load(self, *, bucket_id: str, observation_id: str) -> VerifyObservation | None:
+         """Load one observation by its full content id, or return ``None``."""
+         bucket = self._require_bound_bucket(bucket_id)
+@@ -252,6 +253,7 @@
+         self._assert_addressed_by_its_own_key(record, observation, bucket=bucket)
+         return observation
+ 
++    @override
+     def list_observations(self, *, bucket_id: str) -> tuple[VerifyObservation, ...]:
+         """List all observations in deterministic capture order."""
+         bucket = self._require_bound_bucket(bucket_id)
+@@ -310,6 +312,7 @@
+                 context={"observation_id": observation.observation_id},
+             )
+ 
++    @override
+     def save(self, observation: VerifyObservation) -> None:
+         """Encrypt and persist one application-level verify observation."""
+         if observation.bucket_id != self._bucket_id:
+--- a/src/cadrumo/adapters/persistence/profile/workflow_gate.py
++++ b/src/cadrumo/adapters/persistence/profile/workflow_gate.py
+@@ -16,6 +16,7 @@
+ from ..storage.runtime_repository import secure_object_repository_for_bucket
+ from .filing_drafts import ModeloDraftRepository
+ from .submission import SubmissionRepository
++from typing import override
+ 
+ 
+ class WorkflowGateDraftRepositoryAdapter(WorkflowGateDraftRepositoryProtocol):
+@@ -25,6 +26,7 @@
+         """Bind an already-composed draft repository."""
+         self._repository = repository
+ 
++    @override
+     def save(self, payload: ModeloDraft, /) -> None:
+         """Persist an approved draft and translate storage failures."""
+         try:
+@@ -40,6 +42,7 @@
+         """Bind an already-composed submission repository."""
+         self._repository = repository
+ 
++    @override
+     def load(self, record_id: str, /) -> ModeloPresentado | None:
+         """Load one historical submission and translate storage failures."""
+         try:
+@@ -47,6 +50,7 @@
+         except (StorageError, OSError) as exc:
+             raise WorkflowGatePersistenceError("submission_load") from exc
+ 
++    @override
+     def iter_submissions(self) -> Iterator[ModeloPresentado]:
+         """Yield historical submissions while translating iteration failures."""
+         try:
+@@ -54,6 +58,7 @@
+         except (StorageError, OSError) as exc:
+             raise WorkflowGatePersistenceError("submission_iter") from exc
+ 
++    @override
+     def list_submission_ids(self) -> tuple[str, ...]:
+         """List historical submission ids and translate storage failures."""
+         try:
+--- a/src/cadrumo/adapters/persistence/storage/master_key/active_session.py
++++ b/src/cadrumo/adapters/persistence/storage/master_key/active_session.py
+@@ -35,7 +35,7 @@
+ from collections.abc import Generator
+ from contextlib import contextmanager
+ from contextvars import ContextVar
+-from typing import TypeGuard
++from typing import override, TypeGuard
+ 
+ from .....application.auth.operator_probe_ports import ActiveProfileSessionPresencePort
+ from .....core.logging import get_logger
+@@ -189,6 +189,7 @@
+ class ActiveProfileSessionPresenceAdapter(ActiveProfileSessionPresencePort):
+     """Expose active-session presence through the application probe contract."""
+ 
++    @override
+     def is_bound(self) -> bool:
+         """Return the current active bucket-session presence."""
+         return has_active_bucket_session()
+--- a/src/cadrumo/application/auth/tests/_operator_probe_fakes.py
++++ b/src/cadrumo/application/auth/tests/_operator_probe_fakes.py
+@@ -18,6 +18,7 @@
+     ClaveIdentityProbeResult,
+     OperatorProbePorts,
+ )
++from typing import override
+ 
+ 
+ @dataclass
+@@ -26,6 +27,7 @@
+ 
+     bound: bool = True
+ 
++    @override
+     def is_bound(self) -> bool:
+         return self.bound
+ 
+@@ -42,6 +44,7 @@
+     )
+     evaluator: Callable[[CertificateHealthProbeRequest], CertificateHealthProbeResult] | None = None
+ 
++    @override
+     def evaluate(self, request: CertificateHealthProbeRequest) -> CertificateHealthProbeResult:
+         if self.evaluator is not None:
+             return self.evaluator(request)
+@@ -55,6 +58,7 @@
+     result_by_raw: dict[str, ClaveIdentityProbeResult] = field(default_factory=dict)
+     default_kind: str = "DNI"
+ 
++    @override
+     def classify(self, raw: str) -> ClaveIdentityProbeResult:
+         if raw in self.result_by_raw:
+             return self.result_by_raw[raw]
+--- a/src/cadrumo/application/auth/tests/apoderado_fakes.py
++++ b/src/cadrumo/application/auth/tests/apoderado_fakes.py
+@@ -6,6 +6,7 @@
+ from ....core.identity.bucket import canonical_bucket_id
+ from ..apoderado_repository import ApoderadoConfigurationRepository
+ from ..apoderado_service import ApoderadoConfiguration
++from typing import override
+ 
+ 
+ class InMemoryApoderadoConfigurationRepository(ApoderadoConfigurationRepository):
+@@ -15,12 +16,15 @@
+         self._bucket_id = canonical_bucket_id(bucket_id)
+         self._records = records
+ 
++    @override
+     def load(self) -> ApoderadoConfiguration | None:
+         return self._records.get(self._bucket_id)
+ 
++    @override
+     def save(self, configuration: ApoderadoConfiguration) -> None:
+         self._records[self._bucket_id] = configuration
+ 
++    @override
+     def delete(self) -> bool:
+         return self._records.pop(self._bucket_id, None) is not None
+ 
+--- a/src/cadrumo/application/corpus_search/citation_lookup.py
++++ b/src/cadrumo/application/corpus_search/citation_lookup.py
+@@ -28,7 +28,7 @@
+ 
+ from abc import ABC, abstractmethod
+ from collections.abc import Collection, Mapping
+-from typing import TYPE_CHECKING
++from typing import override, TYPE_CHECKING
+ 
+ from ...domain.calculations.registry.authority_artifact import (
+     AuthorityComponentCodecError,
+@@ -170,6 +170,7 @@
+         self._reader = reader
+         self._pin = pin
+ 
++    @override
+     def _verbatim_text(self, reference: LegalReference) -> str:
+         try:
+             evidence = self._reader.load(
+--- a/src/cadrumo/application/evidence/tests/test_evidence.py
++++ b/src/cadrumo/application/evidence/tests/test_evidence.py
+@@ -22,6 +22,7 @@
+ )
+ from ..ports import EvidenceBundlePorts, EvidenceBundleRepositoryPort, EvidenceBundleWorkUnitPort
+ from ..service import EvidenceBundleService
++from typing import override
+ 
+ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+ 
+@@ -48,12 +49,15 @@
+ 
+     bundles: dict[str, EvidenceBundle] = field(default_factory=dict)
+ 
++    @override
+     def load(self, identifier: str) -> EvidenceBundle | None:
+         return self.bundles.get(identifier)
+ 
++    @override
+     def save(self, payload: EvidenceBundle) -> None:
+         self.bundles[payload.bundle_id] = payload
+ 
++    @override
+     def iter_records(self) -> Iterator[EvidenceBundle]:
+         return iter(tuple(self.bundles.values()))
+ 
+@@ -64,6 +68,7 @@
+ 
+     work_unit_ids: set[str] = field(default_factory=set)
+ 
++    @override
+     def exists(self, work_unit_id: str) -> bool:
+         return work_unit_id in self.work_unit_ids
+ 
+--- a/src/cadrumo/application/ledger/tests/_ledger_value_fixtures.py
++++ b/src/cadrumo/application/ledger/tests/_ledger_value_fixtures.py
+@@ -6,6 +6,7 @@
+ 
+ from ..counterparty_establishment import ConfirmedCounterpartyFacts
+ from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
++from typing import override
+ 
+ 
+ class _InMemoryCounterpartyEstablishmentRepository(CounterpartyEstablishmentRepositoryProtocol):
+@@ -14,12 +15,15 @@
+     def __init__(self) -> None:
+         self._records: dict[str, ConfirmedCounterpartyFacts] = {}
+ 
++    @override
+     def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
+         return self._records.get(identifier)
+ 
++    @override
+     def save(self, payload: ConfirmedCounterpartyFacts) -> None:
+         self._records[payload.counterparty_key] = payload
+ 
++    @override
+     def delete(self, identifier: str) -> bool:
+         return self._records.pop(identifier, None) is not None
+ 
+--- a/src/cadrumo/application/ledger/tests/test_classification_rule_plan.py
++++ b/src/cadrumo/application/ledger/tests/test_classification_rule_plan.py
+@@ -39,6 +39,7 @@
+     plan_classification_rules,
+ )
+ from ..rule_repository import LedgerClassificationRuleRepositoryProtocol
++from typing import override
+ 
+ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+ 
+@@ -51,9 +52,11 @@
+     def __init__(self) -> None:
+         self._rules: dict[str, LedgerClassificationRule] = {}
+ 
++    @override
+     def save(self, payload: LedgerClassificationRule) -> None:
+         self._rules[payload.rule_id] = payload
+ 
++    @override
+     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
+         return tuple(sorted(self._rules.values(), key=lambda rule: (rule.priority, rule.rule_id)))
+ 
+--- a/src/cadrumo/application/ledger/tests/test_counterparty_identification_fact.py
++++ b/src/cadrumo/application/ledger/tests/test_counterparty_identification_fact.py
+@@ -34,6 +34,7 @@
+     resolve_confirmed_counterparty_facts,
+ )
+ from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
++from typing import override
+ 
+ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+ 
+@@ -48,12 +49,15 @@
+     def __init__(self) -> None:
+         self._records: dict[str, ConfirmedCounterpartyFacts] = {}
+ 
++    @override
+     def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
+         return self._records.get(identifier)
+ 
++    @override
+     def save(self, payload: ConfirmedCounterpartyFacts) -> None:
+         self._records[payload.counterparty_key] = payload
+ 
++    @override
+     def delete(self, identifier: str) -> bool:
+         return self._records.pop(identifier, None) is not None
+ 
+--- a/src/cadrumo/application/ledger/tests/test_establishment_ladder.py
++++ b/src/cadrumo/application/ledger/tests/test_establishment_ladder.py
+@@ -66,6 +66,7 @@
+ from ..evidence_draft import counterparty_draft_side
+ from ..invoice_draft_records import InvoiceDraft, InvoiceDraftLine, InvoiceDraftRateBreakdown
+ from ..regime_contradiction import draft_prints_a_repercutido_line
++from typing import override
+ 
+ #: The defining module itself, for the attribute scoping below. Named through
+ #: `import_module` rather than `from .. import`: the ledger package facade is
+@@ -93,12 +94,15 @@
+     def __init__(self) -> None:
+         self._records: dict[str, ConfirmedCounterpartyFacts] = {}
+ 
++    @override
+     def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
+         return self._records.get(identifier)
+ 
++    @override
+     def save(self, payload: ConfirmedCounterpartyFacts) -> None:
+         self._records[payload.counterparty_key] = payload
+ 
++    @override
+     def delete(self, identifier: str) -> bool:
+         return self._records.pop(identifier, None) is not None
+ 
+--- a/src/cadrumo/application/ledger/tests/test_history_query.py
++++ b/src/cadrumo/application/ledger/tests/test_history_query.py
+@@ -36,6 +36,7 @@
+     ledger_history_object_ids,
+     read_ledger_history,
+ )
++from typing import override
+ 
+ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+ 
+@@ -59,15 +60,19 @@
+         self._catalogue = catalogue
+ 
+     @property
++    @override
+     def bucket_id(self) -> str:
+         return self._bucket_id
+ 
++    @override
+     def exists(self) -> bool:
+         return bool(self._catalogue.transactions)
+ 
++    @override
+     def load(self) -> TransactionCatalogue:
+         return self._catalogue
+ 
++    @override
+     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+         return TransactionCatalogue.from_transactions(
+             transaction
+@@ -75,12 +80,14 @@
+             if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
+         )
+ 
++    @override
+     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+         requested = frozenset(transaction_ids)
+         return TransactionCatalogue.from_transactions(
+             transaction for transaction in self._catalogue if transaction.transaction_id in requested
+         )
+ 
++    @override
+     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+         in_window: list[Transaction] = []
+         out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+@@ -102,6 +109,7 @@
+             index_complete=True,
+         )
+ 
++    @override
+     def save(self, catalogue: TransactionCatalogue) -> None:
+         self._catalogue = catalogue
+ 
+--- a/src/cadrumo/application/ledger/tests/test_list_query.py
++++ b/src/cadrumo/application/ledger/tests/test_list_query.py
+@@ -15,7 +15,7 @@
+ from datetime import UTC, date, datetime
+ from decimal import Decimal
+ from pathlib import Path
+-from typing import TypedDict, Unpack
++from typing import override, TypedDict, Unpack
+ 
+ import pytest
+ 
+@@ -108,15 +108,19 @@
+         self._catalogue = catalogue
+ 
+     @property
++    @override
+     def bucket_id(self) -> str:
+         return self._bucket_id
+ 
++    @override
+     def exists(self) -> bool:
+         return bool(self._catalogue.transactions)
+ 
++    @override
+     def load(self) -> TransactionCatalogue:
+         return self._catalogue
+ 
++    @override
+     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+         return TransactionCatalogue.from_transactions(
+             transaction
+@@ -124,12 +128,14 @@
+             if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
+         )
+ 
++    @override
+     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+         requested = frozenset(transaction_ids)
+         return TransactionCatalogue.from_transactions(
+             transaction for transaction in self._catalogue if transaction.transaction_id in requested
+         )
+ 
++    @override
+     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+         in_window: list[Transaction] = []
+         out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+@@ -151,6 +157,7 @@
+             index_complete=True,
+         )
+ 
++    @override
+     def save(self, catalogue: TransactionCatalogue) -> None:
+         self._catalogue = catalogue
+ 
+--- a/src/cadrumo/application/ledger/tests/test_m210_classification.py
++++ b/src/cadrumo/application/ledger/tests/test_m210_classification.py
+@@ -19,7 +19,7 @@
+ from datetime import UTC, date, datetime
+ from decimal import Decimal
+ from pathlib import Path
+-from typing import TypedDict
++from typing import override, TypedDict
+ 
+ import pytest
+ 
+@@ -95,15 +95,19 @@
+         self._catalogue = catalogue
+ 
+     @property
++    @override
+     def bucket_id(self) -> str:
+         return self._bucket_id
+ 
++    @override
+     def exists(self) -> bool:
+         return bool(self._catalogue.transactions)
+ 
++    @override
+     def load(self) -> TransactionCatalogue:
+         return self._catalogue
+ 
++    @override
+     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+         return TransactionCatalogue.from_transactions(
+             transaction
+@@ -111,12 +115,14 @@
+             if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
+         )
+ 
++    @override
+     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+         requested = frozenset(transaction_ids)
+         return TransactionCatalogue.from_transactions(
+             transaction for transaction in self._catalogue if transaction.transaction_id in requested
+         )
+ 
++    @override
+     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+         in_window: list[Transaction] = []
+         out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+@@ -138,6 +144,7 @@
+             index_complete=True,
+         )
+ 
++    @override
+     def save(self, catalogue: TransactionCatalogue) -> None:
+         self._catalogue = catalogue
+ 
+--- a/src/cadrumo/application/ledger/tests/test_readiness_query.py
++++ b/src/cadrumo/application/ledger/tests/test_readiness_query.py
+@@ -36,6 +36,7 @@
+ from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+ from ....domain.usage_ratios.model import UsageRatioProfile
+ from ..readiness_query import LedgerReadinessIssueV1, read_ledger_readiness
++from typing import override
+ 
+ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+ 
+@@ -58,15 +59,19 @@
+         self._catalogue = catalogue
+ 
+     @property
++    @override
+     def bucket_id(self) -> str:
+         return self._bucket_id
+ 
++    @override
+     def exists(self) -> bool:
+         return bool(self._catalogue.transactions)
+ 
++    @override
+     def load(self) -> TransactionCatalogue:
+         return self._catalogue
+ 
++    @override
+     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+         return TransactionCatalogue.from_transactions(
+             transaction
+@@ -74,12 +79,14 @@
+             if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
+         )
+ 
++    @override
+     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+         requested = frozenset(transaction_ids)
+         return TransactionCatalogue.from_transactions(
+             transaction for transaction in self._catalogue if transaction.transaction_id in requested
+         )
+ 
++    @override
+     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+         in_window: list[Transaction] = []
+         out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+@@ -101,6 +108,7 @@
+             index_complete=True,
+         )
+ 
++    @override
+     def save(self, catalogue: TransactionCatalogue) -> None:
+         self._catalogue = catalogue
+ 
+--- a/src/cadrumo/application/live/tests/verify_test_support.py
++++ b/src/cadrumo/application/live/tests/verify_test_support.py
+@@ -6,6 +6,7 @@
+ 
+ from ..verify import VerifyObservation
+ from ..verify_ports import VerifyObservationPersistencePort
++from typing import override
+ 
+ 
+ @dataclass
+@@ -19,10 +20,12 @@
+ 
+     _observations: dict[tuple[str, str], VerifyObservation] = field(default_factory=dict)
+ 
++    @override
+     def load(self, *, bucket_id: str, observation_id: str) -> VerifyObservation | None:
+         """Return the observation addressed by its bucket and content id."""
+         return self._observations.get((bucket_id, observation_id))
+ 
++    @override
+     def list_observations(self, *, bucket_id: str) -> tuple[VerifyObservation, ...]:
+         """Return bucket observations in deterministic capture order."""
+         observations = [
+@@ -32,6 +35,7 @@
+         ]
+         return tuple(sorted(observations, key=lambda item: (item.checked_at, item.observation_id)))
+ 
++    @override
+     def save(self, observation: VerifyObservation) -> None:
+         """Store one application observation under its bucket and content id."""
+         self._observations[(observation.bucket_id, observation.observation_id)] = observation
+--- a/src/cadrumo/application/modelo/tests/test_memoized_transaction_catalogue_repository.py
++++ b/src/cadrumo/application/modelo/tests/test_memoized_transaction_catalogue_repository.py
+@@ -26,6 +26,7 @@
+ from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+ from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+ from .._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
++from typing import override
+ 
+ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+ 
+@@ -39,20 +40,25 @@
+         self._catalogue = TransactionCatalogue()
+ 
+     @property
++    @override
+     def bucket_id(self) -> str:
+         return _BUCKET_ID
+ 
++    @override
+     def exists(self) -> bool:
+         return bool(self._catalogue.transactions)
+ 
++    @override
+     def load(self) -> TransactionCatalogue:
+         return self._catalogue
+ 
++    @override
+     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+         return TransactionCatalogue.from_transactions(
+             transaction for transaction in self._catalogue if start <= transaction.raw.booked_date <= end
+         )
+ 
++    @override
+     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+         requested = tuple(sorted(set(transaction_ids)))
+         return TransactionCatalogue.from_transactions(
+@@ -61,6 +67,7 @@
+             if (transaction := self._catalogue.get(transaction_id)) is not None
+         )
+ 
++    @override
+     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+         in_window = tuple(transaction for transaction in self._catalogue if start <= transaction.raw.booked_date <= end)
+         out_of_window = tuple(
+@@ -77,6 +84,7 @@
+             index_complete=True,
+         )
+ 
++    @override
+     def save(self, catalogue: TransactionCatalogue) -> None:
+         self._catalogue = catalogue
+ 
+--- a/src/cadrumo/application/tests/_operator_probe_fakes.py
++++ b/src/cadrumo/application/tests/_operator_probe_fakes.py
+@@ -18,12 +18,14 @@
+     ClaveIdentityProbeResult,
+     OperatorProbePorts,
+ )
++from typing import override
+ 
+ 
+ @dataclass
+ class _ActiveProfileSession(ActiveProfileSessionPresencePort):
+     bound: bool = True
+ 
++    @override
+     def is_bound(self) -> bool:
+         return self.bound
+ 
+@@ -38,6 +40,7 @@
+     )
+     evaluator: Callable[[CertificateHealthProbeRequest], CertificateHealthProbeResult] | None = None
+ 
++    @override
+     def evaluate(self, request: CertificateHealthProbeRequest) -> CertificateHealthProbeResult:
+         if self.evaluator is not None:
+             return self.evaluator(request)
+@@ -49,6 +52,7 @@
+     result_by_raw: dict[str, ClaveIdentityProbeResult] = field(default_factory=dict)
+     default_kind: str = "DNI"
+ 
++    @override
+     def classify(self, raw: str) -> ClaveIdentityProbeResult:
+         if raw in self.result_by_raw:
+             return self.result_by_raw[raw]
+--- a/src/cadrumo/application/tests/test_diagnostics_telemetry.py
++++ b/src/cadrumo/application/tests/test_diagnostics_telemetry.py
+@@ -58,6 +58,7 @@
+     def __init__(self, *, records: tuple[DiagnosticRunRecord, ...]) -> None:
+         self._records = records
+ 
++    @override
+     def load_records(
+         self,
+         *,
+@@ -75,6 +76,7 @@
+ class _FakeAuthProbePort(DiagnosticAuthProbePort):
+     """Supply the redacted auth verdict required by the telemetry aggregate."""
+ 
++    @override
+     def probe(self) -> DiagnosticAuthProbeResult:
+         return DiagnosticAuthProbeResult()
+ 
+--- a/src/cadrumo/application/wizard/tests/_operator_probe_fakes.py
++++ b/src/cadrumo/application/wizard/tests/_operator_probe_fakes.py
+@@ -18,12 +18,14 @@
+     ClaveIdentityProbeResult,
+     OperatorProbePorts,
+ )
++from typing import override
+ 
+ 
+ @dataclass
+ class _ActiveProfileSession(ActiveProfileSessionPresencePort):
+     bound: bool = True
+ 
++    @override
+     def is_bound(self) -> bool:
+         return self.bound
+ 
+@@ -38,6 +40,7 @@
+     )
+     evaluator: Callable[[CertificateHealthProbeRequest], CertificateHealthProbeResult] | None = None
+ 
++    @override
+     def evaluate(self, request: CertificateHealthProbeRequest) -> CertificateHealthProbeResult:
+         if self.evaluator is not None:
+             return self.evaluator(request)
+@@ -49,6 +52,7 @@
+     result_by_raw: dict[str, ClaveIdentityProbeResult] = field(default_factory=dict)
+     default_kind: str = "DNI"
+ 
++    @override
+     def classify(self, raw: str) -> ClaveIdentityProbeResult:
+         if raw in self.result_by_raw:
+             return self.result_by_raw[raw]
+--- a/src/cadrumo/domain/calculations/registry/applicability.py
++++ b/src/cadrumo/domain/calculations/registry/applicability.py
+@@ -91,7 +91,7 @@
+ from collections.abc import Iterable, Iterator, Mapping
+ from datetime import date
+ from enum import StrEnum
+-from typing import TYPE_CHECKING, Annotated
++from typing import override, TYPE_CHECKING, Annotated
+ 
+ from pydantic import BaseModel, Field, StringConstraints
+ 
+@@ -741,14 +741,17 @@
+ 
+     _MODELOS = ("303", "390")
+ 
++    @override
+     def __getitem__(self, modelo: str) -> ModeloApplicabilityRule:
+         if modelo not in self._MODELOS:
+             raise KeyError(modelo)
+         return _iva_seed_applicability_rule(modelo)
+ 
++    @override
+     def __iter__(self) -> Iterator[str]:
+         return iter(self._MODELOS)
+ 
++    @override
+     def __len__(self) -> int:
+         return len(self._MODELOS)
+ 
+--- a/src/cadrumo/domain/calculations/registry/applicability_routes.py
++++ b/src/cadrumo/domain/calculations/registry/applicability_routes.py
+@@ -12,6 +12,7 @@
+     entity_type_natural_person_token,
+     entity_type_tokens,
+ )
++from typing import override
+ 
+ __all__ = ["TAX_ROUTE_FOR_ENTITY_TYPE", "TaxRoute", "tax_route_for_entity_type"]
+ 
+@@ -39,12 +40,15 @@
+ class _TaxRouteByEntityType(Mapping[EntityType, TaxRoute]):
+     """Lazy compatibility mapping backed by the typed registry projection."""
+ 
++    @override
+     def __getitem__(self, entity_type: EntityType) -> TaxRoute:
+         return tax_route_for_entity_type(entity_type)
+ 
++    @override
+     def __iter__(self) -> Iterator[EntityType]:
+         return iter(entity_type_tokens())
+ 
++    @override
+     def __len__(self) -> int:
+         return len(entity_type_tokens())
+ 
+--- a/src/cadrumo/domain/calculations/registry/facts/schema.py
++++ b/src/cadrumo/domain/calculations/registry/facts/schema.py
+@@ -7,7 +7,7 @@
+ from decimal import Decimal, InvalidOperation
+ from enum import StrEnum
+ from itertools import pairwise
+-from typing import Annotated, Final, Literal
++from typing import override, Annotated, Final, Literal
+ 
+ from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, model_validator
+ 
+@@ -445,6 +445,7 @@
+             raise RegistryValidationError("authored governed fact variant cannot claim generated source revisions")
+         return self
+ 
++    @override
+     def revision_identity(self) -> str:
+         """Return the stable fact revision identity used by shared predecessor mechanics."""
+         return self.variant_id
+--- a/src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py
++++ b/src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py
+@@ -18,6 +18,7 @@
+ from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+ from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+ from .schema_base import DateAxis
++from typing import override
+ 
+ __all__ = [
+     "NON_REGISTRY_MODELOS",
+@@ -86,23 +87,29 @@
+ 
+ 
+ class _ScopeMapping(Mapping[Modelo, str]):
++    @override
+     def __iter__(self) -> Iterator[Modelo]:
+         return iter(resolve_modelo_obligation_scope()[0])
+ 
++    @override
+     def __len__(self) -> int:
+         return len(resolve_modelo_obligation_scope()[0])
+ 
++    @override
+     def __getitem__(self, key: Modelo) -> str:
+         return resolve_modelo_obligation_scope()[0][key]
+ 
+ 
+ class _NonRegistryModelos(Set[Modelo]):
++    @override
+     def __contains__(self, value: object) -> bool:
+         return value in resolve_modelo_obligation_scope()[1]
+ 
++    @override
+     def __iter__(self) -> Iterator[Modelo]:
+         return iter(resolve_modelo_obligation_scope()[1])
+ 
++    @override
+     def __len__(self) -> int:
+         return len(resolve_modelo_obligation_scope()[1])
+ 
+--- a/src/cadrumo/domain/calculations/registry/revision_contracts.py
++++ b/src/cadrumo/domain/calculations/registry/revision_contracts.py
+@@ -14,7 +14,7 @@
+ from dataclasses import dataclass
+ from datetime import date
+ from enum import StrEnum
+-from typing import Annotated, Final
++from typing import override, Annotated, Final
+ 
+ from pydantic import (
+     BeforeValidator,
+@@ -187,6 +187,7 @@
+     id: RevisionId
+     valid_to: Annotated[date | None, MANIFEST_ONLY] = None
+ 
++    @override
+     def revision_identity(self) -> str:
+         """Return the stable Modelo revision identity."""
+         return self.id
+--- a/src/cadrumo/domain/calculations/registry/schema_references.py
++++ b/src/cadrumo/domain/calculations/registry/schema_references.py
+@@ -6,7 +6,7 @@
+ from datetime import date, timedelta
+ from enum import StrEnum, auto
+ from types import MappingProxyType
+-from typing import Annotated, Final, Literal, Self
++from typing import override as typing_override, Annotated, Final, Literal, Self
+ 
+ from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
+ 
+@@ -461,10 +461,12 @@
+         """Enumerate the explicitly authored span, both bounds inclusive."""
+         return tuple(range(self.floor, self.horizon + 1))
+ 
++    @typing_override
+     def admits_coordinate(self, coordinate: int) -> bool:
+         """Return whether ``coordinate`` is inside the envelope's hard gates."""
+         return super().admits_coordinate(coordinate)
+ 
++    @typing_override
+     def projection_coordinate(self, coordinate: int) -> int | None:
+         """Map an admitted coordinate to its authored coordinate, carrying the horizon forward."""
+         projected = super().projection_coordinate(coordinate)
+--- a/src/cadrumo/domain/categories/proportionality.py
++++ b/src/cadrumo/domain/categories/proportionality.py
+@@ -15,7 +15,7 @@
+ from datetime import date
+ from decimal import Decimal
+ from enum import StrEnum
+-from typing import Self
++from typing import override, Self
+ from urllib.parse import urlsplit
+ 
+ from pydantic import AnyHttpUrl, BaseModel, Field, GetCoreSchemaHandler, field_validator, model_validator
+@@ -439,15 +439,19 @@
+     def requires_exclusive_use(self) -> bool:
+         return self._requires_exclusive_use
+ 
++    @override
+     def __str__(self) -> str:
+         return self._token
+ 
++    @override
+     def __repr__(self) -> str:
+         return f"{type(self).__name__}({self._token!r})"
+ 
++    @override
+     def __hash__(self) -> int:
+         return hash(self._token)
+ 
++    @override
+     def __eq__(self, other: object) -> bool:
+         return isinstance(other, ProportionalityKind) and self._token == other._token
+ 
+@@ -501,15 +505,19 @@
+     def is_per_person(self) -> bool:
+         return self._is_per_person
+ 
++    @override
+     def __str__(self) -> str:
+         return self._token
+ 
++    @override
+     def __repr__(self) -> str:
+         return f"{type(self).__name__}({self._token!r})"
+ 
++    @override
+     def __hash__(self) -> int:
+         return hash(self._token)
+ 
++    @override
+     def __eq__(self, other: object) -> bool:
+         return isinstance(other, StatutoryCapPeriod) and self._token == other._token
+ 
+--- a/src/cadrumo/domain/deadlines/setup_answer_projection.py
++++ b/src/cadrumo/domain/deadlines/setup_answer_projection.py
+@@ -13,6 +13,7 @@
+ from dataclasses import dataclass
+ 
+ from ..user_profile.setup_answers import SetupAnswers
++from typing import override
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+@@ -49,12 +50,15 @@
+             }
+         return self._resolved
+ 
++    @override
+     def __getitem__(self, key: str) -> SetupFieldSpec:
+         return self._values()[key]
+ 
++    @override
+     def __iter__(self):
+         return iter(self._values())
+ 
++    @override
+     def __len__(self) -> int:
+         return len(self._values())
+ 
+--- a/src/cadrumo/domain/iva/components.py
++++ b/src/cadrumo/domain/iva/components.py
+@@ -14,7 +14,7 @@
+ from datetime import date
+ from enum import StrEnum
+ from types import MappingProxyType
+-from typing import Any, Literal
++from typing import override, Any, Literal
+ 
+ from pydantic import Field, ValidationInfo, model_validator
+ 
+@@ -88,6 +88,7 @@
+     """Registry-projected component-presence token."""
+ 
+     @classmethod
++    @override
+     def _token_label(cls) -> str:
+         return "IVA component-presence token"
+ 
+@@ -96,6 +97,7 @@
+     """Registry-projected retención-expectation token."""
+ 
+     @classmethod
++    @override
+     def _token_label(cls) -> str:
+         return "IVA retención-expectation token"
+ 
+@@ -104,6 +106,7 @@
+     """Registry-projected retención-role token."""
+ 
+     @classmethod
++    @override
+     def _token_label(cls) -> str:
+         return "IVA retención-role token"
+ 
+@@ -112,6 +115,7 @@
+     """Registry-projected category/kind applicability token."""
+ 
+     @classmethod
++    @override
+     def _token_label(cls) -> str:
+         return "IVA kind-applicability token"
+ 
+--- a/src/cadrumo/entrypoints/adapter_composition.py
++++ b/src/cadrumo/entrypoints/adapter_composition.py
+@@ -16,7 +16,7 @@
+ from collections.abc import Generator, Mapping
+ from contextlib import ExitStack, asynccontextmanager, contextmanager
+ from dataclasses import dataclass
+-from typing import TYPE_CHECKING
++from typing import override, TYPE_CHECKING
+ 
+ if TYPE_CHECKING:
+     from google.auth.credentials import Credentials
+@@ -595,6 +595,7 @@
+     class Borrador100SnapshotAdapter(SecureSnapshotRepository[Borrador100Snapshot]):
+         """Bind the generic secure store while retaining borrador chronology."""
+ 
++        @override
+         def exists(self, snapshot_id: str) -> bool:
+             """Check snapshot presence while translating storage failures inward."""
+             try:
+@@ -602,6 +603,7 @@
+             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+                 raise PersistenceDegradationError("borrador_snapshot_exists") from exc
+ 
++        @override
+         def load(self, snapshot_id: str) -> Borrador100Snapshot:
+             """Load one snapshot while translating storage failures inward."""
+             try:
+@@ -609,6 +611,7 @@
+             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+                 raise PersistenceDegradationError("borrador_snapshot_load") from exc
+ 
++        @override
+         def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
+             """List snapshots while translating storage failures inward."""
+             try:
+@@ -618,6 +621,7 @@
+             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+                 raise PersistenceDegradationError("borrador_snapshot_list") from exc
+ 
++        @override
+         def save(self, snapshot: Borrador100Snapshot) -> None:
+             """Persist one snapshot while translating storage failures inward."""
+             try:
+@@ -994,6 +998,7 @@
+         def __init__(self, register: DeclaracionesRegisterSession) -> None:
+             self._register = register
+ 
++        @override
+         async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
+             try:
+                 rows = await self._register.walk(modelo=modelo, ejercicio=ejercicio)
+@@ -1010,6 +1015,7 @@
+         """Adapt the browser register lifecycle to the application port."""
+ 
+         @asynccontextmanager
++        @override
+         async def open_register(self, session: AeatSession, *, settings: Settings):
+             try:
+                 async with (
+--- a/src/cadrumo/entrypoints/cli/_command_runtime.py
++++ b/src/cadrumo/entrypoints/cli/_command_runtime.py
+@@ -13,7 +13,7 @@
+ from enum import Enum
+ from functools import cache
+ from types import GenericAlias
+-from typing import Any, cast
++from typing import override, Any, cast
+ 
+ import typer
+ from click import Choice, Context, Parameter, ParamType
+@@ -48,6 +48,7 @@
+         self._adapter = TypeAdapter(annotation)
+         self.name = annotation.__name__
+ 
++    @override
+     def convert(self, value: Any, param: Parameter | None, ctx: Context | None) -> object:
+         try:
+             return self._adapter.validate_python(value)
+--- a/src/cadrumo/entrypoints/cli/common.py
++++ b/src/cadrumo/entrypoints/cli/common.py
+@@ -29,7 +29,7 @@
+ from contextvars import ContextVar
+ from functools import cache, partial
+ from pathlib import Path
+-from typing import TYPE_CHECKING, Protocol, cast
++from typing import override, TYPE_CHECKING, Protocol, cast
+ 
+ import click
+ import typer
+@@ -77,6 +77,7 @@
+ 
+     name = "modelo"
+ 
++    @override
+     def convert(
+         self,
+         value: object,
+--- a/src/cadrumo/entrypoints/diagnostics_run_health_composition.py
++++ b/src/cadrumo/entrypoints/diagnostics_run_health_composition.py
+@@ -12,6 +12,7 @@
+ )
+ from ..application.state_projection_ports import StateProjectionReadPorts
+ from ..domain.calculations.registry.authority import PinnedAuthorityOperation
++from typing import override
+ 
+ 
+ class _DiagnosticsAuthProbeAdapter(DiagnosticAuthProbePort):
+@@ -31,6 +32,7 @@
+         self._operator_scope_ports = operator_scope_ports
+         self._operation = operation
+ 
++    @override
+     def probe(self) -> DiagnosticAuthProbeResult:
+         """Read auth readiness through the root-composed state projection ports."""
+         from ..application.auth.operator import test_operator_auth
+--- a/src/cadrumo/entrypoints/live_state_composition.py
++++ b/src/cadrumo/entrypoints/live_state_composition.py
+@@ -14,7 +14,7 @@
+ from dataclasses import dataclass
+ from datetime import datetime
+ from pathlib import Path
+-from typing import Any
++from typing import override, Any
+ 
+ from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
+ from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+@@ -117,6 +117,7 @@
+ class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):
+     """Translate Sede notification records into the application snapshot DTO."""
+ 
++    @override
+     async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
+         """Read the Sede query and translate adapter DTOs/errors at this boundary."""
+         try:
+--- a/src/cadrumo_harness/mcp/command_surface.py
++++ b/src/cadrumo_harness/mcp/command_surface.py
+@@ -16,7 +16,7 @@
+ from dataclasses import dataclass
+ from functools import cache
+ from types import MappingProxyType
+-from typing import Any, ClassVar
++from typing import override, Any, ClassVar
+ 
+ from pydantic import ConfigDict
+ 
+@@ -62,6 +62,7 @@
+     _wire_schema: ClassVar[dict[str, Any]] = {}
+ 
+     @classmethod
++    @override
+     def model_json_schema(cls, *args: Any, **kwargs: Any) -> dict[str, Any]:
+         """Return the exact result JSON Schema projected by the CLI process."""
+         return copy.deepcopy(cls._wire_schema)
+@@ -233,21 +234,26 @@
+     _exposable: frozenset[str]
+     _registration: CommandRegistrationProjection
+ 
++    @override
+     def command_schema_refs(self) -> tuple[CommandSchemaRef, ...]:
+         return self._schema_refs
+ 
++    @override
+     def command_schema_type(self, command: str) -> type[OutputSchema]:
+         try:
+             return self._schema_types[command]
+         except KeyError as error:
+             raise LookupError(f"unknown command schema identity: {command}") from error
+ 
++    @override
+     def command_schema_types(self) -> MappingProxyType[str, type[OutputSchema]]:
+         return self._schema_types
+ 
++    @override
+     def command_registration_projection(self) -> CommandRegistrationProjection:
+         return self._registration
+ 
++    @override
+     def build_verb_input_schemas(self, command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
+         missing = tuple(key for key in command_keys if key not in self._input_schemas)
+         if missing:
+@@ -263,24 +269,29 @@
+             )
+         return {key: self._input_schemas[key] for key in command_keys}
+ 
++    @override
+     def cli_path_for_command_key(self, command_key: str) -> tuple[str, ...]:
+         try:
+             return self._input_schemas[command_key].cli_path
+         except KeyError as error:
+             raise LookupError(f"unknown command schema identity: {command_key}") from error
+ 
++    @override
+     def is_exposable_command(self, command_key: str) -> bool:
+         return command_key in self._exposable
+ 
++    @override
+     def command_search_terms(self, command_key: str) -> tuple[str, ...]:
+         try:
+             return self._search_terms[command_key]
+         except KeyError as error:
+             raise LookupError(f"unknown command schema identity: {command_key}") from error
+ 
++    @override
+     def global_flags(self) -> frozenset[str]:
+         return self._global_flags
+ 
++    @override
+     def command_execution_policy_for_cli_path(self, cli_path: tuple[str, ...]) -> CommandExecutionPolicy:
+         for key, schema in self._input_schemas.items():
+             if schema.cli_path == cli_path:
+@@ -334,6 +345,7 @@
+     def __init__(self, surface: CommandSurfaceSnapshot) -> None:
+         self._surface = surface
+ 
++    @override
+     def resolve_action_reference(self, verdict: PreconditionVerdict) -> ResolvedActionReference | None:
+         if verdict.action is None:
+             return None

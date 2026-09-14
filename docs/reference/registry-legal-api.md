@@ -98,13 +98,24 @@ shared temporal support envelope—`floor`, `horizon`, and optional
 `hard_ceiling`—used to admit supported coordinates.
 
 The `IndexedRegistryAuthority.operation()` path has no source compilation, raw
-authored-tree loader, repair path, or JSON fallback. A missing descriptor or
-database raises an unavailable error. A malformed descriptor, unexpected
-database member, incomplete manifest, or invalid component raises a format
-error. A descriptor/database or component digest mismatch raises an integrity
-error. These failures occur before authority-dependent calculation or filing
-proceeds. Components are loaded only when a pinned operation asks for them;
-successful values remain in a bounded generation-scoped cache.
+authored-tree loader, repair path, eager JSON runtime backend, or JSON fallback.
+A missing descriptor or database raises an unavailable error. A malformed
+descriptor, unexpected database member, incomplete manifest, or invalid
+component raises a format error. A descriptor/database or component digest
+mismatch raises an integrity error. These failures occur before
+authority-dependent calculation or filing proceeds. Components are loaded only
+when a pinned operation asks for them; successful values remain in a bounded
+generation-scoped cache.
+
+Development checkpoint C may compare the indexed reader with an explicit
+`dev.registry.indexed_authority_benchmark` JSON baseline. The baseline is
+written from the same validated in-memory `AuthorityArtifact` as the exact
+candidate, retains its logical generation identity, and eagerly decodes the
+same complete public authority semantics. The benchmark verifies the
+descriptor's physical database bytes before measuring. The baseline is a
+measurement fixture, not a product module or a shipped fallback. Numeric
+latency and memory results are pending until checkpoint C is run against a
+stable candidate; no measured gain is implied by this API description.
 
 The runtime contract is for ordinary filesystem-installed wheels, where the
 descriptor and SQLite database have stable physical paths. Direct zip-import
