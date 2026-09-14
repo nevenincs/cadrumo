@@ -20,6 +20,12 @@ required_text = ["Modelo 210"]
 kind = "mapping"
 entries = [
   { key = "detail_bearing_modelos", value = "184,232,347,349" },
+  { key = "detail_row.miembro.owning_modelo", value = "184" },
+  { key = "detail_row.vinculada.owning_modelo", value = "232" },
+  { key = "detail_row.operador.owning_modelo", value = "349" },
+  { key = "detail_row.rectificacion.owning_modelo", value = "349" },
+  { key = "detail_row.contraparte.owning_modelo", value = "347" },
+  { key = "detail_row.agrupacion_renta.owning_modelo", value = "210" },
   { key = "m349.operation_keys", value = "E,M,H,A,T,S,I,R,D,C" },
   { key = "m349.country_prefixes", value = "registry_declared" },
   { key = "m349.service_keys", value = "S,I" },
@@ -190,6 +196,12 @@ required_text = ["Modelo 210"]
 kind = "mapping"
 entries = [
   { key = "detail_bearing_modelos", value = "184,232,347,349" },
+  { key = "detail_row.miembro.owning_modelo", value = "184" },
+  { key = "detail_row.vinculada.owning_modelo", value = "232" },
+  { key = "detail_row.operador.owning_modelo", value = "349" },
+  { key = "detail_row.rectificacion.owning_modelo", value = "349" },
+  { key = "detail_row.contraparte.owning_modelo", value = "347" },
+  { key = "detail_row.agrupacion_renta.owning_modelo", value = "210" },
   { key = "m349.operation_keys", value = "E,M,H,A,T,S,I,R,D,C" },
   { key = "m349.country_prefixes", value = "registry_declared" },
   { key = "m349.service_keys", value = "S,I" },
