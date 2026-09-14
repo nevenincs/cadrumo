@@ -140,7 +140,7 @@ import sys
 import tomllib
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import StrEnum
 from itertools import pairwise
 from pathlib import Path
@@ -152,9 +152,10 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.keyed_families import (
     CANONICAL_FAMILY_SPECS,
+    CASILLAS_FAMILY,
     DROPPABLE_FAMILY_SPECS,
-    FamilyInheritanceMode,
     HELD_BACK_FAMILY_REASONS,
+    FamilyInheritanceMode,
     family_identity_value,
 )
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
@@ -165,8 +166,7 @@ from dev.test_runs.paths import allocate_run_directory
 
 from .analysis.delta_minimality import restatement_differences
 from .compiler.edition_materialisation import materialise_edition
-from .compiler.loader import load_modelo_directory
-from .compiler.loader import load_modelo_declarations
+from .compiler.loader import load_modelo_declarations, load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
 from .edition_round_trip import (
     EditionExportScenario,
@@ -189,16 +189,16 @@ __all__ = [
     "FamilyDrop",
     "KeptReason",
     "LiftCounts",
+    "MigrationAssessment",
     "MigrationOutcome",
     "MigrationPlan",
     "MigrationRefusedError",
-    "MigrationAssessment",
     "MigrationStatus",
     "PredecessorBasis",
+    "assess_migration_state",
     "drop_restatement",
     "main",
     "migrate_modelo",
-    "assess_migration_state",
     "persist_migration_report",
     "plan_drop",
     "plan_migration",
@@ -427,6 +427,7 @@ class MigrationAssessment:
 
     @property
     def minimal(self) -> bool:
+        """Whether no eligible repeated payload or unassessed work remains."""
         return not self.unresolved_duplication and not self.blocked_work
 
 
@@ -526,9 +527,20 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                 payload, overhead = _field_count(member, structural=False)
                 row["authored_payload_fields"] += payload
                 row["structural_overhead"] += overhead
+            if spec.section == CASILLAS_FAMILY:
+                for override in _members(raw, "casilla_overrides"):
+                    fields = override.get("fields", {})
+                    payload, overhead = _field_count(fields, structural=False)
+                    row["authored_payload_fields"] += payload
+                    row["structural_overhead"] += overhead + 1
+                row["removals"] += len(_members(raw, "casilla_removals"))
+                row["structural_overhead"] += 2 * len(_members(raw, "casilla_positions"))
+            if spec.inheritance is FamilyInheritanceMode.PER_EDITION:
+                rows.append({"revision": revision_id, "family": spec.section, **dict(row)})
+                totals.update(row)
+                continue
             if candidate_id is not None:
                 predecessor = definition.revisions.get(candidate_id)
-                current = definition.revisions[revision_id]
                 if predecessor is None:
                     blocked.append({"revision": revision_id, "family": spec.section, "reason": "baseline_missing"})
                 else:
@@ -543,7 +555,20 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                             row["additions"] += 1
                             continue
                         left = dict(member)
-                        right = inherited.model_dump(mode="python", exclude={"inherited_from"})
+                        if hasattr(inherited, "model_dump"):
+                            right = inherited.model_dump(mode="python", exclude={"inherited_from"})
+                        elif isinstance(inherited, Mapping):
+                            right = dict(inherited)
+                        else:
+                            blocked.append(
+                                {
+                                    "revision": revision_id,
+                                    "family": spec.section,
+                                    "member": identity,
+                                    "reason": "typed_family_shape_unsupported",
+                                }
+                            )
+                            continue
                         different = [
                             key for key in left if key not in _STRUCTURAL_FIELDS and left[key] != right.get(key)
                         ]
@@ -576,9 +601,45 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                         blocked.append(
                             {"revision": revision_id, "family": spec.section, "reason": "delta_support_missing"}
                         )
-            row.update({"revision": revision_id, "family": spec.section})
-            rows.append(dict(row))
-            totals.update({key: value for key, value in row.items() if isinstance(value, int)})
+                    if spec.section == CASILLAS_FAMILY and baseline_id is not None:
+                        baseline_rows = {str(item.id): item for item in predecessor.casillas}
+                        for override in _members(raw, "casilla_overrides"):
+                            selector = override.get("selector", {})
+                            fields = override.get("fields", {})
+                            if not isinstance(selector, Mapping) or not isinstance(fields, Mapping):
+                                blocked.append(
+                                    {"revision": revision_id, "family": spec.section, "reason": "invalid_override"}
+                                )
+                                continue
+                            member_id = str(selector.get("id"))
+                            inherited = baseline_rows.get(member_id)
+                            if inherited is None:
+                                blocked.append(
+                                    {
+                                        "revision": revision_id,
+                                        "family": spec.section,
+                                        "member": member_id,
+                                        "reason": "override_baseline_member_missing",
+                                    }
+                                )
+                                continue
+                            baseline_value = inherited.model_dump(mode="python", exclude={"inherited_from"})
+                            for key, value in fields.items():
+                                if key in baseline_value and value == baseline_value[key]:
+                                    row["redundant_overrides"] += 1
+                                    unresolved.append(
+                                        {
+                                            "revision": revision_id,
+                                            "family": spec.section,
+                                            "member": member_id,
+                                            "fields": [str(key)],
+                                            "reason": "authored override equals hydrated baseline",
+                                        }
+                                    )
+                                else:
+                                    row["genuine_overrides"] += 1
+            rows.append({"revision": revision_id, "family": spec.section, **dict(row)})
+            totals.update(row)
         previous = revision_id
     return MigrationAssessment(
         fingerprint=_source_fingerprint(modelo_dir),
@@ -691,10 +752,12 @@ class MigrationOutcome:
 
     @property
     def equivalence_status(self) -> MigrationStatus:
+        """Return the candidate hydration-equivalence verdict."""
         return MigrationStatus.FAILED if self.source_findings else MigrationStatus.PASSED
 
     @property
     def compaction_status(self) -> MigrationStatus:
+        """Return whether physical or semantic authored storage decreased."""
         if self.before_assessment is None or self.after_assessment is None:
             return MigrationStatus.INCOMPLETE
         improved = (
@@ -705,12 +768,14 @@ class MigrationOutcome:
 
     @property
     def minimality_status(self) -> MigrationStatus:
+        """Return the independent redundant-payload and coverage verdict."""
         if self.after_assessment is None:
             return MigrationStatus.FAILED if self.blocked else MigrationStatus.INCOMPLETE
         return MigrationStatus.PASSED if self.after_assessment.minimal and not self.blocked else MigrationStatus.FAILED
 
     @property
     def application_status(self) -> MigrationStatus:
+        """Return whether the verified candidate is live, staged, or absent."""
         if self.applied:
             return MigrationStatus.APPLIED
         return MigrationStatus.STAGED if self.staged_registry is not None else MigrationStatus.NOT_APPLIED
@@ -2762,9 +2827,18 @@ def migrate_modelo(
     if not modelo_dir.is_dir() or not _inside(modelo_dir, registry_root):
         raise MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
     definition = _load(registry_root, modelo_id)
+    before_assessment = assess_migration_state(modelo_dir)
     plan, works = _plan(modelo_dir, definition)
     if not any(_edition_changes(work) for work in works):
-        return MigrationOutcome(plan=plan, staged_registry=None, report=None, applied=False, changed=False)
+        return MigrationOutcome(
+            plan=plan,
+            staged_registry=None,
+            report=None,
+            applied=False,
+            changed=False,
+            before_assessment=before_assessment,
+            after_assessment=before_assessment,
+        )
     reference = copy_registry_tree(
         registry_root,
         _scratch_path(work_dir, "reference", "registry", "aeat"),
@@ -2813,7 +2887,16 @@ def migrate_modelo(
             original=reference / _MODELOS / modelo_id,
         )
         applied = True
-    return MigrationOutcome(plan=plan, staged_registry=staged, report=report, applied=applied, changed=True)
+    assessed_dir = modelo_dir if applied else staged / _MODELOS / modelo_id
+    return MigrationOutcome(
+        plan=plan,
+        staged_registry=staged,
+        report=report,
+        applied=applied,
+        changed=True,
+        before_assessment=before_assessment,
+        after_assessment=assess_migration_state(assessed_dir),
+    )
 
 
 def migrate_modelo_100_field_deltas(
@@ -2831,6 +2914,7 @@ def migrate_modelo_100_field_deltas(
     modelo_dir = registry_root / _MODELOS / modelo_id
     before_files = fingerprint(modelo_dir)
     before = _load(registry_root, modelo_id)
+    before_assessment = assess_migration_state(modelo_dir)
     already_delta = [
         str(revision.id)
         for revision in ordered_revisions(before)[1:]
@@ -2842,11 +2926,20 @@ def migrate_modelo_100_field_deltas(
             raise MigrationRefusedError(
                 f"Modelo 100 has a partial casilla field-delta chain: {already_delta!r}; expected {expected!r}"
             )
+        complete = before_assessment.minimal
         return {
             "modelo": modelo_id,
             "already_delta_authored": True,
             "file_content_changes": 0,
             "hydration_differences": [],
+            "equivalence": MigrationStatus.PASSED,
+            "compaction": MigrationStatus.COMPLETE,
+            "minimality": MigrationStatus.PASSED if complete else MigrationStatus.FAILED,
+            "application": MigrationStatus.NOT_APPLIED,
+            "complete": complete,
+            "before": asdict(before_assessment),
+            "after": asdict(before_assessment),
+            "authority_publication": PublicationExecutionStatus.NOT_PERFORMED,
             "applied": False,
         }
     original = work_dir / "original" / modelo_id
@@ -2995,8 +3088,11 @@ def migrate_modelo_100_field_deltas(
     if differences:
         raise MigrationRefusedError(f"field-delta hydration differs in revisions {differences!r}")
     after_files = fingerprint(staged_modelo)
+    after_assessment = assess_migration_state(staged_modelo)
     result: dict[str, object] = {
         "modelo": modelo_id,
+        "before_fingerprint": before_assessment.fingerprint,
+        "after_fingerprint": after_assessment.fingerprint,
         "baseline_root": str(original),
         "before_physical_bytes": sum(path.stat().st_size for path in modelo_dir.rglob("*") if path.is_file()),
         "after_physical_bytes": sum(path.stat().st_size for path in staged_modelo.rglob("*") if path.is_file()),
@@ -3015,10 +3111,22 @@ def migrate_modelo_100_field_deltas(
         + counts["member_removals"]
         + counts["provenance_restatements"],
         "applied": False,
+        "equivalence": MigrationStatus.PASSED,
+        "compaction": MigrationStatus.COMPLETE
+        if after_assessment.physical_bytes < before_assessment.physical_bytes
+        or after_assessment.authored_payload_fields < before_assessment.authored_payload_fields
+        else MigrationStatus.INCOMPLETE,
+        "minimality": MigrationStatus.PASSED if after_assessment.minimal else MigrationStatus.FAILED,
+        "application": MigrationStatus.STAGED,
+        "complete": after_assessment.minimal,
+        "before": asdict(before_assessment),
+        "after": asdict(after_assessment),
+        "authority_publication": PublicationExecutionStatus.NOT_PERFORMED,
     }
-    if apply:
+    if apply and after_assessment.minimal:
         publish_staged_tree(modelo_dir, staged_modelo, original, before_files)
         result["applied"] = True
+        result["application"] = MigrationStatus.APPLIED
     report = work_dir / "field-delta-report.json"
     report.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8", newline="\n")
     return result
@@ -3030,6 +3138,17 @@ def migrate_modelo_100_field_deltas(
 def render_outcome(outcome: MigrationOutcome) -> str:
     """Return one greppable line per edition, one per gate finding, and a closing summary."""
     lines: list[str] = []
+    if outcome.before_assessment is not None and outcome.after_assessment is not None:
+        before, after = outcome.before_assessment, outcome.after_assessment
+        lines.append(
+            f"measurement before_fingerprint={before.fingerprint} after_fingerprint={after.fingerprint} "
+            f"physical_bytes={before.physical_bytes}->{after.physical_bytes} "
+            f"authored_payload_fields={before.authored_payload_fields}->{after.authored_payload_fields} "
+            f"inherited_payload_fields={before.inherited_payload_fields}->{after.inherited_payload_fields} "
+            f"genuine_overrides={after.genuine_overrides} redundant_overrides={after.redundant_overrides} "
+            f"additions={after.additions} removals={after.removals} structural_overhead={after.structural_overhead} "
+            f"unresolved_duplication={len(after.unresolved_duplication)} blocked_work={len(after.blocked_work)}"
+        )
     for edition in outcome.plan.editions:
         kept = " ".join(f"{reason}={count}" for reason, count in edition.kept.items())
         lines.append(
@@ -3054,6 +3173,8 @@ def render_outcome(outcome: MigrationOutcome) -> str:
         lines.append(
             f"summary changed={outcome.changed} gate_findings={len(outcome.report.findings)} "
             f"byte_compared={compared} applied={outcome.applied} complete={outcome.complete} "
+            f"equivalence_status={outcome.equivalence_status} compaction_status={outcome.compaction_status} "
+            f"minimality_status={outcome.minimality_status} application_status={outcome.application_status} "
             f"source_status={outcome.source_status} "
             f"publication_readiness_status={outcome.publication_readiness_status} "
             f"publication_execution_status={outcome.publication_execution_status} "
@@ -3063,6 +3184,8 @@ def render_outcome(outcome: MigrationOutcome) -> str:
     else:
         lines.append(
             f"summary changed={outcome.changed} applied={outcome.applied} complete={outcome.complete} "
+            f"equivalence_status={outcome.equivalence_status} compaction_status={outcome.compaction_status} "
+            f"minimality_status={outcome.minimality_status} application_status={outcome.application_status} "
             f"source_status={outcome.source_status} "
             f"publication_readiness_status={outcome.publication_readiness_status} "
             f"publication_execution_status={outcome.publication_execution_status} "
@@ -3114,6 +3237,14 @@ def persist_migration_report(
             "blocked": {revision: list(details) for revision, details in outcome.blocked.items()},
             "complete": outcome.complete,
             "applied": outcome.applied,
+            "equivalence": outcome.equivalence_status,
+            "compaction": outcome.compaction_status,
+            "minimality": outcome.minimality_status,
+            "application": outcome.application_status,
+        }
+        machine["measurements"] = {
+            "before": asdict(outcome.before_assessment) if outcome.before_assessment is not None else None,
+            "after": asdict(outcome.after_assessment) if outcome.after_assessment is not None else None,
         }
     (run_dir / "report.json").write_text(
         json.dumps(
