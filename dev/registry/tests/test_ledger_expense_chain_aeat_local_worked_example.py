@@ -61,12 +61,12 @@ from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 

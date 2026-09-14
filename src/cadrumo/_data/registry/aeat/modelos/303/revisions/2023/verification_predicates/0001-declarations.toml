@@ -1,0 +1,148 @@
+# Modelo 303 official-Diseño box consistency predicates (Stage 2).
+#
+# The M303 2023 revision carries TWO casilla layers: the semantic
+# aggregate cuota casillas (iva.repercutido.general, iva.soportado.interiores,
+# iva.autorepercutido.intracomunitaria, ...) which carry ledger bindings and
+# feed the resultado chain, AND the official Diseño-de-Registros numbered boxes
+# (ids "01".."77", semantic_role "dr303_NN") which carry the official export_refs
+# the operator transcribes to the AEAT sede.
+#
+# Stage 1 (commit 330ab6771) made the silent-under-declaration non-silent with
+# two ADVISORY implies_any_nonzero predicates (cuota-devengada-total implies at
+# least one of 03/06/09/11/13; cuota-deducible-total implies at least one of
+# 29/33/37). Those predicates fired because every official numbered cuota box was
+# input_kind = "manual" and stayed zero while the semantic total was positive.
+#
+# Stage 2 POPULATES every in-scope cuota box by a single-source projection
+# formula (input_kind = "computed"), so each box copies
+# its semantic source. EVERY constituent of BOTH Stage-1 implies_any_nonzero
+# predicates (03/06/09/11/13 devengado; 29/33/37 deducible) is now a computed
+# projection. The implication antecedent-positive -> consequent-positive
+# therefore holds by construction (the projection copies the same positive
+# value), so the Stage-1 advisories are satisfied-by-construction and have been
+# RETIRED rather than left as dead always-green predicates. The calculate-path
+# advisory in _official_box_advisory.py reads these same predicates as its single
+# source of truth, so retiring them narrows the calculate advisory in lock-step.
+# No manual cuota box remains in either constituent list (box 37 is wired to the
+# AIC-deducible leg, not deferred), so no narrowed-and-retained predicate is
+# warranted.
+#
+# In their place, one box-equals-source CONSISTENCY predicate per populated box
+# (the new equals DSL operator) asserts that the projection did not drift: the
+# numbered box value MUST equal its semantic source value. The projection cannot
+# drift from its source within one evaluation, so a live filing always satisfies
+# these; their value is catching a FUTURE mis-edit (a box re-flipped to manual,
+# or a projection pointed at the wrong source). They are BLOCKING_RULE so such a
+# broken filing is refused. Each is grounded in the populated box's own
+# legal_refs (devengado cuotas in LIVA art. 88; deducible cuotas in art. 92).
+# ── Devengado régimen-general cuota boxes (LIVA art. 88) ───────────────────
+# ── Devengado inversión del sujeto pasivo cuota boxes (LIVA art. 88) ────────
+# ── Devengado total (LIVA art. 88) ─────────────────────────────────────────
+# ── Deducible cuota boxes (LIVA art. 92) ───────────────────────────────────
+# ── Deducible total (LIVA art. 92) ─────────────────────────────────────────
+# Prorrata settlement silent-under-declaration ADVISORY.
+#
+# Casilla 44 is the annual settlement regularizacion for the definitive
+# prorrata percentage (LIVA art. 105.Cuatro). The governed
+# `PRORRATA_REGULARIZACION` binding row and its live resolver are BOTH in
+# service: the calculation-order seam materialises the four current-year source
+# casillas and the resolver feeds casilla 44 as a bound input on the calculate
+# path. Casilla 44 nonetheless stays `input_kind = "manual"` with no formula,
+# and that is deliberate rather than pending: art. 105.Cuatro derives it from
+# the PROVISIONAL percentage (art. 105.Uno, the PRIOR year's definitive, held in
+# the profile-scoped prorrata register) and from the year's cuotas soportadas
+# across the regularised quarters (art. 105.Seis). Neither is a casilla of this
+# revision, so the value is not expressible as a single-period registry formula,
+# and the cross-period carry is owned by the binding + resolver mechanism alone -
+# adding a formula would model one value twice. Whether the casilla should
+# therefore DECLARE `input_kind = "bound"` against
+# `modelo-303-prorrata-regularizacion-casilla-44`, so the registry states the
+# linkage that the resolver currently makes in application code, is an open
+# mechanism-ownership question and not a defect in this predicate.
+#
+# When annual prorrata volumes are declared, a zero/absent casilla 44 would
+# otherwise let the verify gate grant verified_complete with no finding even
+# though the provisional carry and annual regularizacion must be confirmed.
+#
+# ADVISORY (non-blocking): a zero regularizacion can be legitimate once the
+# operator has confirmed the provisional carry and definitive calculation, so
+# the verify gate prompts rather than refuses. The Art. 94 full-deduction
+# default stays untouched because fully-taxable filings leave the annual
+# prorrata volume antecedent absent/zero.
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-09-equals-iva-repercutido-general"
+predicate_id = "modelo-303-dr303-09-equals-iva-repercutido-general"
+expression = "equals([\"09\", \"iva.repercutido.general\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-06-equals-iva-repercutido-reducido"
+predicate_id = "modelo-303-dr303-06-equals-iva-repercutido-reducido"
+expression = "equals([\"06\", \"iva.repercutido.reducido\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-03-equals-iva-repercutido-super-reducido"
+predicate_id = "modelo-303-dr303-03-equals-iva-repercutido-super-reducido"
+expression = "equals([\"03\", \"iva.repercutido.super-reducido\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado"
+predicate_id = "modelo-303-dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado"
+expression = "equals([\"11\", \"iva.autorepercutido.intracomunitaria.devengado\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-13-equals-iva-autorepercutido-interior-devengado"
+predicate_id = "modelo-303-dr303-13-equals-iva-autorepercutido-interior-devengado"
+expression = "equals([\"13\", \"iva.autorepercutido.interior.devengado\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-27-equals-iva-cuota-devengada-total"
+predicate_id = "modelo-303-dr303-27-equals-iva-cuota-devengada-total"
+expression = "equals([\"27\", \"iva.cuota-devengada-total\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-29-equals-iva-soportado-interiores"
+predicate_id = "modelo-303-dr303-29-equals-iva-soportado-interiores"
+expression = "equals([\"29\", \"iva.soportado.interiores\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-33-equals-iva-soportado-importaciones"
+predicate_id = "modelo-303-dr303-33-equals-iva-soportado-importaciones"
+expression = "equals([\"33\", \"iva.soportado.importaciones\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-37-equals-iva-autorepercutido-intracomunitaria-deducible"
+predicate_id = "modelo-303-dr303-37-equals-iva-autorepercutido-intracomunitaria-deducible"
+expression = "equals([\"37\", \"iva.autorepercutido.intracomunitaria.deducible\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "equals:dr303-45-equals-iva-cuota-deducible-total"
+predicate_id = "modelo-303-dr303-45-equals-iva-cuota-deducible-total"
+expression = "equals([\"45\", \"iva.cuota-deducible-total\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.verification_predicates]]
+id = "implies-nonzero:prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
+predicate_id = "modelo-303-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
+expression = "implies_nonzero([\"iva.prorrata-volumen-total\", \"44\"])"
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105"]

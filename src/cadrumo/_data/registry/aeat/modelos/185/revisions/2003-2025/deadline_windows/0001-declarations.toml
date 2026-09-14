@@ -1,0 +1,514 @@
+# MOVED from the old (wrong) 2025-y-siguientes revision -- these 12 windows all
+# carry filing_year=2025, which orden-hac-1197-2025 does not govern (it enters
+# into force 2026-01-01, first applying to January 2026 declarations). The real
+# governing instrument for 2025 and earlier is orden-hac-96-2003, confirmed by BOE
+# search, by this order's own derogatoria clause, and by AEAT's bundled M185 design
+# corpus carrying no file at all for 2003-2025 (matching zero amendment intervals).
+# Modelo 185 monthly deadline windows, grounded in orden-hac-96-2003 disposición
+# Tercero -- the provision that ESTABLISHES this plazo for the years this
+# revision governs: "la información mensual, modelo 185 ... se presentará ...
+# en el plazo de los diez días naturales siguientes a la finalización del mes a
+# que se refiera la información". Each window opens the 1st and closes the 10th
+# of the month following the reference month.
+#
+# Previously this block cited orden-hac-1197-2025 art 4, which the note above
+# had already established does NOT govern filing_year 2025; and the windows
+# themselves cited disposición Primero, which approves the diseños físicos y
+# lógicos and states no timing at all.
+# THE 2022, 2023 AND 2024 WINDOWS WERE ADDED 2026-09-12, and they are not a new
+# rule. This revision's selector admits every month of 2003-2025, the supported
+# filing span opens at 2022, and only 2025 carried windows -- so thirty-six
+# coordinates inside the span this corpus promises had no plazo at all.
+#
+# They are authored from the SAME provision already quoted above, orden-hac-96-2003
+# disposicion Tercero, whose plazo is unconditional and names no year: the
+# informacion mensual is presented within the ten natural days following the end of
+# the month it refers to. The note at the head of this file establishes that this
+# orden governs 2025 and earlier, so it governs these three years directly. Each
+# window opens the 1st and closes the 10th of the month after its reference month,
+# December rolling into January, which is the pattern the twelve 2025 windows
+# already follow row for row. Nothing here is inferred from a neighbouring year;
+# the clause is arithmetic once its own text is read.
+#
+# Dates are NOMINAL per the storage rule; shift_deadline applies weekend and
+# holiday movement at read time.
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-01"
+filing_year = 2022
+period = "2022 01"
+period_kind = "monthly"
+opens_on = 2022-02-01
+closes_on = 2022-02-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-02"
+filing_year = 2022
+period = "2022 02"
+period_kind = "monthly"
+opens_on = 2022-03-01
+closes_on = 2022-03-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-03"
+filing_year = 2022
+period = "2022 03"
+period_kind = "monthly"
+opens_on = 2022-04-01
+closes_on = 2022-04-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-04"
+filing_year = 2022
+period = "2022 04"
+period_kind = "monthly"
+opens_on = 2022-05-01
+closes_on = 2022-05-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-05"
+filing_year = 2022
+period = "2022 05"
+period_kind = "monthly"
+opens_on = 2022-06-01
+closes_on = 2022-06-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-06"
+filing_year = 2022
+period = "2022 06"
+period_kind = "monthly"
+opens_on = 2022-07-01
+closes_on = 2022-07-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-07"
+filing_year = 2022
+period = "2022 07"
+period_kind = "monthly"
+opens_on = 2022-08-01
+closes_on = 2022-08-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-08"
+filing_year = 2022
+period = "2022 08"
+period_kind = "monthly"
+opens_on = 2022-09-01
+closes_on = 2022-09-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-09"
+filing_year = 2022
+period = "2022 09"
+period_kind = "monthly"
+opens_on = 2022-10-01
+closes_on = 2022-10-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-10"
+filing_year = 2022
+period = "2022 10"
+period_kind = "monthly"
+opens_on = 2022-11-01
+closes_on = 2022-11-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-11"
+filing_year = 2022
+period = "2022 11"
+period_kind = "monthly"
+opens_on = 2022-12-01
+closes_on = 2022-12-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2022-12"
+filing_year = 2022
+period = "2022 12"
+period_kind = "monthly"
+opens_on = 2023-01-01
+closes_on = 2023-01-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-01"
+filing_year = 2023
+period = "2023 01"
+period_kind = "monthly"
+opens_on = 2023-02-01
+closes_on = 2023-02-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-02"
+filing_year = 2023
+period = "2023 02"
+period_kind = "monthly"
+opens_on = 2023-03-01
+closes_on = 2023-03-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-03"
+filing_year = 2023
+period = "2023 03"
+period_kind = "monthly"
+opens_on = 2023-04-01
+closes_on = 2023-04-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-04"
+filing_year = 2023
+period = "2023 04"
+period_kind = "monthly"
+opens_on = 2023-05-01
+closes_on = 2023-05-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-05"
+filing_year = 2023
+period = "2023 05"
+period_kind = "monthly"
+opens_on = 2023-06-01
+closes_on = 2023-06-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-06"
+filing_year = 2023
+period = "2023 06"
+period_kind = "monthly"
+opens_on = 2023-07-01
+closes_on = 2023-07-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-07"
+filing_year = 2023
+period = "2023 07"
+period_kind = "monthly"
+opens_on = 2023-08-01
+closes_on = 2023-08-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-08"
+filing_year = 2023
+period = "2023 08"
+period_kind = "monthly"
+opens_on = 2023-09-01
+closes_on = 2023-09-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-09"
+filing_year = 2023
+period = "2023 09"
+period_kind = "monthly"
+opens_on = 2023-10-01
+closes_on = 2023-10-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-10"
+filing_year = 2023
+period = "2023 10"
+period_kind = "monthly"
+opens_on = 2023-11-01
+closes_on = 2023-11-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-11"
+filing_year = 2023
+period = "2023 11"
+period_kind = "monthly"
+opens_on = 2023-12-01
+closes_on = 2023-12-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2023-12"
+filing_year = 2023
+period = "2023 12"
+period_kind = "monthly"
+opens_on = 2024-01-01
+closes_on = 2024-01-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-01"
+filing_year = 2024
+period = "2024 01"
+period_kind = "monthly"
+opens_on = 2024-02-01
+closes_on = 2024-02-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-02"
+filing_year = 2024
+period = "2024 02"
+period_kind = "monthly"
+opens_on = 2024-03-01
+closes_on = 2024-03-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-03"
+filing_year = 2024
+period = "2024 03"
+period_kind = "monthly"
+opens_on = 2024-04-01
+closes_on = 2024-04-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-04"
+filing_year = 2024
+period = "2024 04"
+period_kind = "monthly"
+opens_on = 2024-05-01
+closes_on = 2024-05-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-05"
+filing_year = 2024
+period = "2024 05"
+period_kind = "monthly"
+opens_on = 2024-06-01
+closes_on = 2024-06-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-06"
+filing_year = 2024
+period = "2024 06"
+period_kind = "monthly"
+opens_on = 2024-07-01
+closes_on = 2024-07-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-07"
+filing_year = 2024
+period = "2024 07"
+period_kind = "monthly"
+opens_on = 2024-08-01
+closes_on = 2024-08-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-08"
+filing_year = 2024
+period = "2024 08"
+period_kind = "monthly"
+opens_on = 2024-09-01
+closes_on = 2024-09-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-09"
+filing_year = 2024
+period = "2024 09"
+period_kind = "monthly"
+opens_on = 2024-10-01
+closes_on = 2024-10-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-10"
+filing_year = 2024
+period = "2024 10"
+period_kind = "monthly"
+opens_on = 2024-11-01
+closes_on = 2024-11-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-11"
+filing_year = 2024
+period = "2024 11"
+period_kind = "monthly"
+opens_on = 2024-12-01
+closes_on = 2024-12-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2024-12"
+filing_year = 2024
+period = "2024 12"
+period_kind = "monthly"
+opens_on = 2025-01-01
+closes_on = 2025-01-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-01"
+filing_year = 2025
+period = "2025 01"
+period_kind = "monthly"
+opens_on = 2025-02-01
+closes_on = 2025-02-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-02"
+filing_year = 2025
+period = "2025 02"
+period_kind = "monthly"
+opens_on = 2025-03-01
+closes_on = 2025-03-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-03"
+filing_year = 2025
+period = "2025 03"
+period_kind = "monthly"
+opens_on = 2025-04-01
+closes_on = 2025-04-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-04"
+filing_year = 2025
+period = "2025 04"
+period_kind = "monthly"
+opens_on = 2025-05-01
+closes_on = 2025-05-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-05"
+filing_year = 2025
+period = "2025 05"
+period_kind = "monthly"
+opens_on = 2025-06-01
+closes_on = 2025-06-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-06"
+filing_year = 2025
+period = "2025 06"
+period_kind = "monthly"
+opens_on = 2025-07-01
+closes_on = 2025-07-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-07"
+filing_year = 2025
+period = "2025 07"
+period_kind = "monthly"
+opens_on = 2025-08-01
+closes_on = 2025-08-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-08"
+filing_year = 2025
+period = "2025 08"
+period_kind = "monthly"
+opens_on = 2025-09-01
+closes_on = 2025-09-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-09"
+filing_year = 2025
+period = "2025 09"
+period_kind = "monthly"
+opens_on = 2025-10-01
+closes_on = 2025-10-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-10"
+filing_year = 2025
+period = "2025 10"
+period_kind = "monthly"
+opens_on = 2025-11-01
+closes_on = 2025-11-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-11"
+filing_year = 2025
+period = "2025 11"
+period_kind = "monthly"
+opens_on = 2025-12-01
+closes_on = 2025-12-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]
+
+[[revisions.2003-2025.deadline_windows]]
+id = "modelo-185-2025-12"
+filing_year = 2025
+period = "2025 12"
+period_kind = "monthly"
+opens_on = 2026-01-01
+closes_on = 2026-01-10
+legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure-2003"]

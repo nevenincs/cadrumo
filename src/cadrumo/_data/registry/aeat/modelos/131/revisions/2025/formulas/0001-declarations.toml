@@ -1,0 +1,255 @@
+# M131 estimación-objetiva módulos engine formulas (tabled activities).
+#
+# Fase 1ª — rendimiento neto previo: dispatches the units×coefficient product
+# through the m131_resolve_modulos_previo op, which reads the epígrafe (text)
+# plus up to seven módulo unit-count casillas (the highest signo count among
+# the tabled activities, 644.1/644.2/644.3) and the registry-declared
+# keyed-bracket coefficient table (m131-modulos-coeficientes-2025). An
+# untabled epígrafe or a blank epígrafe resolves to zero (see the op's
+# docstring in _formula_runtime.py).
+# Fase 2ª — rendimiento neto minorado: previo minus the sum of the minoración
+# por incentivos al empleo (Orden HAC/1347/2024 Anexo II, instrucción 2.2.a)
+# and the minoración por incentivos a la inversión (instrucción 2.2.b). The
+# empleo minoración dispatches through the m131_resolve_modulos_minoracion_
+# empleo op (epígrafe, current/prior módulo 1 unit counts, coefficient table,
+# tramos bracket table, incremento constant). The inversión minoración is the
+# operator-declared "modulos-minoracion-inversion" casilla (a euro amount) —
+# this first slice does not model a per-element libro registro de bienes de
+# inversión, so the amortization figure is supplied by the operator rather
+# than derived from an asset register the engine does not have; a blank
+# input simply omits this legitimate additional reduction (never over-states
+# the minorado, since omission only under-claims a reduction, never
+# fabricates one). Both minoraciones feed an internal advisory-support
+# casilla that never substitutes for the operator's manual casilla 01.
+# Fase 3ª — rendimiento neto de módulos: minorado adjusted by the full
+# cascade of índices correctores generales (Orden HAC/1347/2024 Anexo II,
+# instrucción 2.3, letra b): b.1 pequeña dimensión, b.2 temporada / b.4
+# inicio de nuevas actividades (mutually exclusive), b.3 índice de exceso —
+# applied sequentially in the Orden's own enumeration order, respecting its
+# declared incompatibilidades (b.1 excludes b.3 outright; b.1 is itself
+# excluded from the two tabled epígrafes carrying an índice especial;
+# temporada excludes inicio de nuevas actividades). Dispatches through the
+# m131_resolve_modulos_indices_generales op. The índices correctores
+# especiales themselves (letra a) — autotaxis, transporte urbano, mercancías,
+# quioscos de prensa) remain out of scope: they are conditional on taxpayer
+# facts (población del municipio, número de vehículos) this engine does not
+# model as inputs, and the b.1/a.2/a.4 incompatibility they trigger is
+# already enforced structurally by the op via the epígrafe-especial
+# frozenset. Omitting the letra a) índices keeps this an internal
+# advisory-support figure, never a substitute for the operator's manual
+# casilla 01.
+# Advisory-support flag: the declared índice de pequeña dimensión (b.1) was
+# ignored because the activity carries a documented índice especial
+# (Orden HAC/1347/2024 Anexo II, instrucción 2.3).
+# Advisory-support flag: both índice de temporada (b.2) and índice de inicio
+# de nuevas actividades (b.4) were declared simultaneously (mutually
+# exclusive per Orden HAC/1347/2024 Anexo II, instrucción 2.3).
+# Fase 4ª — rendimiento neto de la actividad: módulos minus the 5 por 100
+# reducción general (Orden HAC/1347/2024 DA-1, apartados 1 y 3).
+
+[[revisions.2025.formulas]]
+id = "modelo-131-saldo-negativo-fin-periodo"
+target_casilla_id = "saldo-negativo-fin-periodo"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions.2025.formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[revisions.2025.formulas.expression]
+op = "max"
+
+[[revisions.2025.formulas.expression.args]]
+literal = "0"
+
+[[revisions.2025.formulas.expression.args]]
+op = "negate"
+
+[[revisions.2025.formulas.expression.args.args]]
+casilla_id = "10"
+
+[[revisions.2025.formulas]]
+id = "modelo-131-modulos-rendimiento-neto-previo"
+target_casilla_id = "modulos-rendimiento-neto-previo"
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions.2025.formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2025"]
+
+[revisions.2025.formulas.expression]
+op = "m131_resolve_modulos_previo"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-epigrafe"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-1-unidades"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-2-unidades"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-3-unidades"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-4-unidades"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-5-unidades"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-6-unidades"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-7-unidades"
+
+[[revisions.2025.formulas.expression.args]]
+parameter = "m131-modulos-coeficientes"
+
+[[revisions.2025.formulas]]
+id = "modelo-131-modulos-rendimiento-neto-minorado"
+target_casilla_id = "modulos-rendimiento-neto-minorado"
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions.2025.formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
+
+[revisions.2025.formulas.expression]
+op = "subtract"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-rendimiento-neto-previo"
+
+[[revisions.2025.formulas.expression.args]]
+op = "add"
+
+[[revisions.2025.formulas.expression.args.args]]
+op = "m131_resolve_modulos_minoracion_empleo"
+
+[[revisions.2025.formulas.expression.args.args.args]]
+casilla_id = "modulos-epigrafe"
+
+[[revisions.2025.formulas.expression.args.args.args]]
+casilla_id = "modulos-1-unidades"
+
+[[revisions.2025.formulas.expression.args.args.args]]
+casilla_id = "modulos-1-unidades-anterior"
+
+[[revisions.2025.formulas.expression.args.args.args]]
+parameter = "m131-modulos-coeficientes"
+
+[[revisions.2025.formulas.expression.args.args.args]]
+parameter = "m131-modulos-coeficiente-tramos-asalariados"
+
+[[revisions.2025.formulas.expression.args.args.args]]
+parameter = "m131-modulos-coeficiente-incremento-asalariados"
+
+[[revisions.2025.formulas.expression.args.args]]
+casilla_id = "modulos-minoracion-inversion"
+
+[[revisions.2025.formulas]]
+id = "modelo-131-modulos-rendimiento-neto-modulos"
+target_casilla_id = "modulos-rendimiento-neto-modulos"
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions.2025.formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Fase 3ª: Determinación del rendimiento neto de módulos"]
+
+[revisions.2025.formulas.expression]
+op = "m131_resolve_modulos_indices_generales"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-epigrafe"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-rendimiento-neto-minorado"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-indice-pequena-dimension"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-indice-temporada"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-indice-inicio-actividad"
+
+[[revisions.2025.formulas.expression.args]]
+parameter = "m131-modulos-cuantia-exceso"
+
+[[revisions.2025.formulas.expression.args]]
+parameter = "m131-modulos-indice-exceso"
+
+[[revisions.2025.formulas]]
+id = "modelo-131-modulos-pequena-dimension-ignorado-flag"
+target_casilla_id = "modulos-pequena-dimension-ignorado-flag"
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions.2025.formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["El índice corrector para empresas de pequeña dimensión no será aplicable a las"]
+
+[revisions.2025.formulas.expression]
+op = "m131_resolve_modulos_pequena_dimension_ignorado_flag"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-epigrafe"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-indice-pequena-dimension"
+
+[[revisions.2025.formulas]]
+id = "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"
+target_casilla_id = "modulos-temporada-inicio-actividad-conflicto-flag"
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions.2025.formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Cuando resulte aplicable el índice corrector de temporada no se aplicará el índice"]
+
+[revisions.2025.formulas.expression]
+op = "m131_resolve_modulos_temporada_inicio_conflicto_flag"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-indice-temporada"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-indice-inicio-actividad"
+
+[[revisions.2025.formulas]]
+id = "modelo-131-modulos-rendimiento-neto-actividad"
+target_casilla_id = "modulos-rendimiento-neto-actividad"
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:da-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions.2025.formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["reducción general del 5 por 100"]
+
+[revisions.2025.formulas.expression]
+op = "subtract"
+
+[[revisions.2025.formulas.expression.args]]
+casilla_id = "modulos-rendimiento-neto-modulos"
+
+[[revisions.2025.formulas.expression.args]]
+op = "percent"
+
+[[revisions.2025.formulas.expression.args.args]]
+casilla_id = "modulos-rendimiento-neto-modulos"
+
+[[revisions.2025.formulas.expression.args.args]]
+parameter = "m131-modulos-reduccion-general"

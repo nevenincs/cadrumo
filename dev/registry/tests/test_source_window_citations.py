@@ -30,10 +30,10 @@ from dev.registry.analysis.source_window_citations import (
     classify,
     family_stem,
     has_current_sibling,
-    trailing_year,
     scan,
     screen_line,
     tally,
+    trailing_year,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -88,9 +88,7 @@ def tree(tmp_path: Path) -> tuple[Path, Path]:
 class TestOneToothPerRole:
     """Each role is planted on its own and must classify as itself."""
 
-    def test_a_governing_citation_outside_its_window_is_flagged(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_governing_citation_outside_its_window_is_flagged(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"planted-base-order": ("2023-01-01", None)})
         build_revision(
@@ -107,9 +105,7 @@ class TestOneToothPerRole:
         assert [f["role"] for f in findings] == ["governing_non_overlap"]
         assert findings[0]["source"] == "planted-base-order"
 
-    def test_an_evolution_record_citing_the_prior_design_is_not_a_defect(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_an_evolution_record_citing_the_prior_design_is_not_a_defect(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"planted-dr-2022": ("2022-01-01", "2022-12-31")})
         build_revision(
@@ -123,9 +119,7 @@ class TestOneToothPerRole:
         findings, _, _ = scan(legal, modelos)
         assert [f["role"] for f in findings] == ["evolution_origin"]
 
-    def test_a_deadline_window_citing_the_filing_year_calendar_is_not_a_defect(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_deadline_window_citing_the_filing_year_calendar_is_not_a_defect(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"planted-calendario-2023": ("2023-01-01", "2023-12-31")})
         build_revision(
@@ -143,9 +137,7 @@ class TestOneToothPerRole:
 class TestGoverningWins:
     """A source cited in several roles is judged by the strictest one."""
 
-    def test_a_source_cited_both_in_an_evolution_and_in_a_casilla_is_governing(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_source_cited_both_in_an_evolution_and_in_a_casilla_is_governing(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"planted-dr": ("2024-01-01", "2024-12-31")})
         root = modelos / "999" / "revisions" / "2023"
@@ -158,16 +150,12 @@ class TestGoverningWins:
             citations={"planted-dr": "casilla_continuidad_evolutions/0001-carried.toml"},
         )
         (root / "casillas").mkdir(parents=True, exist_ok=True)
-        (root / "casillas" / "c01.toml").write_text(
-            'source_refs = ["planted-dr"]\n', encoding="utf-8"
-        )
+        (root / "casillas" / "c01.toml").write_text('source_refs = ["planted-dr"]\n', encoding="utf-8")
         findings, _, _ = scan(legal, modelos)
         assert [f["role"] for f in findings] == ["governing_non_overlap"]
 
     def test_classify_prefers_governing_over_either_by_design_role(self) -> None:
-        assert classify(["casilla_continuidad_evolutions/x.toml", "casillas/c01.toml"]) == (
-            "governing_non_overlap"
-        )
+        assert classify(["casilla_continuidad_evolutions/x.toml", "casillas/c01.toml"]) == ("governing_non_overlap")
         assert classify(["deadline_windows/x.toml", "revision.toml"]) == "governing_non_overlap"
 
 
@@ -189,9 +177,7 @@ class TestNoFalsePositives:
         assert citations == 1
         assert findings == []
 
-    def test_an_undeclared_window_makes_no_claim_to_contradict(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_an_undeclared_window_makes_no_claim_to_contradict(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"planted-unwindowed": (None, None)})
         build_revision(
@@ -206,9 +192,7 @@ class TestNoFalsePositives:
         assert citations == 0, "a source with no window must not be counted as checked"
         assert findings == []
 
-    def test_an_open_ended_revision_is_covered_by_an_open_ended_source(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_an_open_ended_revision_is_covered_by_an_open_ended_source(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"planted-open": ("2020-01-01", None)})
         build_revision(
@@ -274,9 +258,7 @@ class TestScreenLine:
 class TestSupersededAlongsideCurrent:
     """An earlier source cited beside the current one is a hand-off, not a defect."""
 
-    def test_an_earlier_design_cited_beside_a_covering_sibling_is_reclassified(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_an_earlier_design_cited_beside_a_covering_sibling_is_reclassified(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(
             legal,
@@ -299,9 +281,7 @@ class TestSupersededAlongsideCurrent:
         findings, _, _ = scan(legal, modelos)
         assert [f["role"] for f in findings] == ["superseded_alongside_current"]
 
-    def test_an_earlier_design_cited_ALONE_stays_a_governing_defect(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_an_earlier_design_cited_ALONE_stays_a_governing_defect(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"aeat-dr-190-2024": ("2024-01-01", "2024-12-31")})
         build_revision(
@@ -327,9 +307,7 @@ class TestSupersededAlongsideCurrent:
 class TestSupersessionHasADirection:
     """Only an EARLIER source beside a covering one is superseded."""
 
-    def test_a_later_sibling_beside_covering_earlier_ones_is_not_supersession(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_later_sibling_beside_covering_earlier_ones_is_not_supersession(self, tree: tuple[Path, Path]) -> None:
         # Modelo 280's deadline windows cite the calendario of each filing
         # year's PRESENTATION year, so the newest of the three sits outside the
         # revision's span on purpose. Reading that as a hand-off would hide a
@@ -382,23 +360,23 @@ def build_legal(legal: Path, entries: dict[str, dict[str, str]]) -> None:
 class TestLegalWindowRole:
     """Legal references carry a period window too, and it was never checked."""
 
-    def test_a_legal_ref_governing_other_periods_is_flagged(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_legal_ref_governing_other_periods_is_flagged(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
-        build_legal(legal, {"orden-planted:art-1": {
-            "governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}})
+        build_legal(
+            legal, {"orden-planted:art-1": {"governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}}
+        )
         build_revision(
-            modelos, modelo="200", revision="2025-y-siguientes",
-            valid_from="2025-01-01", valid_to=None,
+            modelos,
+            modelo="200",
+            revision="2025-y-siguientes",
+            valid_from="2025-01-01",
+            valid_to=None,
             citations={"orden-planted:art-1": "revision.toml"},
         )
         findings, _, _ = scan(legal, modelos)
         assert [f["role"] for f in findings] == ["legal_window_non_overlap"]
 
-    def test_an_entry_declaring_only_effectiveness_makes_no_period_claim(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_an_entry_declaring_only_effectiveness_makes_no_period_claim(self, tree: tuple[Path, Path]) -> None:
         # 719 of 724 legal entries are in this state. effective_from says when the
         # text came into force; an orden published after the ejercicio it governs
         # is effective LATER than the periods it reaches. Reading effectiveness as
@@ -406,39 +384,46 @@ class TestLegalWindowRole:
         legal, modelos = tree
         build_legal(legal, {"orden-planted:art-1": {"effective_from": "2025-07-01"}})
         build_revision(
-            modelos, modelo="200", revision="2024",
-            valid_from="2024-01-01", valid_to="2024-12-31",
+            modelos,
+            modelo="200",
+            revision="2024",
+            valid_from="2024-01-01",
+            valid_to="2024-12-31",
             citations={"orden-planted:art-1": "revision.toml"},
         )
         findings, _, citations = scan(legal, modelos)
         assert findings == []
         assert citations == 0, "an entry with no period claim is not even counted as checked"
 
-    def test_a_legal_ref_whose_periods_cover_the_revision_is_silent(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_legal_ref_whose_periods_cover_the_revision_is_silent(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
-        build_legal(legal, {"orden-planted:art-1": {
-            "governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}})
+        build_legal(
+            legal, {"orden-planted:art-1": {"governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}}
+        )
         build_revision(
-            modelos, modelo="200", revision="2024",
-            valid_from="2024-01-01", valid_to="2024-12-31",
+            modelos,
+            modelo="200",
+            revision="2024",
+            valid_from="2024-01-01",
+            valid_to="2024-12-31",
             citations={"orden-planted:art-1": "revision.toml"},
         )
         findings, _, _ = scan(legal, modelos)
         assert findings == []
 
-    def test_a_legal_role_is_never_reclassified_as_a_source_role(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_legal_role_is_never_reclassified_as_a_source_role(self, tree: tuple[Path, Path]) -> None:
         # The superseded/evolution/calendar roles describe SOURCE citations; a
         # legal reference outside its period window is its own finding.
         legal, modelos = tree
-        build_legal(legal, {"orden-planted:art-1": {
-            "governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}})
+        build_legal(
+            legal, {"orden-planted:art-1": {"governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}}
+        )
         build_revision(
-            modelos, modelo="200", revision="2025",
-            valid_from="2025-01-01", valid_to="2025-12-31",
+            modelos,
+            modelo="200",
+            revision="2025",
+            valid_from="2025-01-01",
+            valid_to="2025-12-31",
             citations={"orden-planted:art-1": "deadline_windows/0001-w.toml"},
         )
         findings, _, _ = scan(legal, modelos)
@@ -448,9 +433,7 @@ class TestLegalWindowRole:
 class TestConstructsNeedCalendarCorroboration:
     """A construct is an aggregate, not a filing calendar."""
 
-    def test_a_construct_citing_a_source_no_deadline_window_cites_is_governing(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_construct_citing_a_source_no_deadline_window_cites_is_governing(self, tree: tuple[Path, Path]) -> None:
         # Modelo 131's 2024 and 2025 editions name a Sede help page only from
         # constructs. Treating constructs as calendar evidence classified the SAME
         # source two different ways on two editions of one modelo, depending on
@@ -458,22 +441,26 @@ class TestConstructsNeedCalendarCorroboration:
         legal, modelos = tree
         build_catalogue(legal, {"planted-help-page": ("2026-01-01", None)})
         build_revision(
-            modelos, modelo="131", revision="2024",
-            valid_from="2024-01-01", valid_to="2024-12-31",
+            modelos,
+            modelo="131",
+            revision="2024",
+            valid_from="2024-01-01",
+            valid_to="2024-12-31",
             citations={"planted-help-page": "constructs/0001-constructs.toml"},
         )
         findings, _, _ = scan(legal, modelos)
         assert [f["role"] for f in findings] == ["governing_non_overlap"]
 
-    def test_a_construct_citing_what_a_deadline_window_also_cites_is_calendar(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_a_construct_citing_what_a_deadline_window_also_cites_is_calendar(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"planted-calendario-2023": ("2023-01-01", "2023-12-31")})
         root = modelos / "322" / "revisions" / "2022"
         build_revision(
-            modelos, modelo="322", revision="2022",
-            valid_from="2022-01-01", valid_to="2022-12-31",
+            modelos,
+            modelo="322",
+            revision="2022",
+            valid_from="2022-01-01",
+            valid_to="2022-12-31",
             citations={"planted-calendario-2023": "deadline_windows/0001-windows.toml"},
         )
         (root / "constructs").mkdir(parents=True, exist_ok=True)
@@ -485,20 +472,24 @@ class TestConstructsNeedCalendarCorroboration:
             "the construct references the deadline window's own evidence"
         )
 
-    def test_the_corroboration_is_per_source_not_per_revision(
-        self, tree: tuple[Path, Path]
-    ) -> None:
+    def test_the_corroboration_is_per_source_not_per_revision(self, tree: tuple[Path, Path]) -> None:
         # A revision having SOME deadline window must not launder an unrelated
         # source cited only from constructs.
         legal, modelos = tree
-        build_catalogue(legal, {
-            "planted-calendario-2023": ("2023-01-01", "2023-12-31"),
-            "planted-help-page": ("2026-01-01", None),
-        })
+        build_catalogue(
+            legal,
+            {
+                "planted-calendario-2023": ("2023-01-01", "2023-12-31"),
+                "planted-help-page": ("2026-01-01", None),
+            },
+        )
         root = modelos / "131" / "revisions" / "2022"
         build_revision(
-            modelos, modelo="131", revision="2022",
-            valid_from="2022-01-01", valid_to="2022-12-31",
+            modelos,
+            modelo="131",
+            revision="2022",
+            valid_from="2022-01-01",
+            valid_to="2022-12-31",
             citations={"planted-calendario-2023": "deadline_windows/0001-windows.toml"},
         )
         (root / "constructs").mkdir(parents=True, exist_ok=True)

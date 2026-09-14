@@ -22,7 +22,6 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import (
@@ -31,6 +30,7 @@ from cadrumo.domain.calculations.registry.bindings import (
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from cadrumo.domain.filing.schema import (
     ModeloBindingValue,
     ModeloDraft,

@@ -1,0 +1,130 @@
+# The 2024-late DP30302 design introduced temporary DANA and Lorca eligibility
+# and reduction fields. The 2025 design replaces their complete position spans
+# with fields f094, f121, and f148 marked reserved for the AEAT. No 2025 or 2026
+# projection carries these meanings, so the twelve inherited endpoint
+# identifiers retire at the 2025 boundary.
+# The 2024-late DP30302 design states the Modulo Superficie de horno "Dias - 4T"
+# measure once per actividad: one row at offset 1425 for Actividad 1 and one at
+# offset 1428 for Actividad 2. The 2025 design re-expresses the same measure as a
+# sub-indexed span, declaring four "Dias - 4T" rows per actividad -- Actividad 1 at
+# offsets 1542, 1552, 1562 and 1572, Actividad 2 at offsets 1582, 1592, 1602 and
+# 1612 -- which the 2025 corpus carries as sub_index 1 through 4.
+#
+# The single-valued identity therefore does not survive the 2025 boundary: it does
+# not move and it is not renamed, it fans out one-to-four, and a fan-out is not a
+# replacement any single successor could carry. Absent these rows the keyed
+# inherited merge carries the two sub_index-less members into 2025 and
+# 2026-y-siguientes still citing the 2024-late authority, which neither edition
+# declares. Retiring them here is what absence alone could not say.
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dana-elegible.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-lorca-elegible.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dana-elegible.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-lorca-elegible.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-agricola.fact-dana-elegible.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-agricola.fact-reduccion-dana.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-agricola.fact-dana-elegible.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-agricola.fact-reduccion-dana.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-lorca.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-dana.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-lorca.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-dana.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2025", "boe-orden-hac-1347-2024-iva-authority"]
+
+[[revisions.2025.identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2025", "boe-orden-hac-1347-2024-iva-authority"]

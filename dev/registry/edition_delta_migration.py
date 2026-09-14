@@ -1777,9 +1777,8 @@ def _plan_family_drop(
                 if not isinstance(source_refs, list | tuple) or not source_refs:
                     default_refs = manifest.get("casilla_source_refs")
                     additions = member.get(_ROW_SOURCE_ADDITIONS)
-                    source_refs = (
-                        tuple(default_refs if isinstance(default_refs, list | tuple) else ())
-                        + tuple(additions if isinstance(additions, list | tuple) else ())
+                    source_refs = tuple(default_refs if isinstance(default_refs, list | tuple) else ()) + tuple(
+                        additions if isinstance(additions, list | tuple) else ()
                     )
                 legal_refs = member.get(_ROW_LEGAL)
                 if not isinstance(legal_refs, list | tuple) or not legal_refs:
@@ -1910,18 +1909,18 @@ def _write_drop(modelo_dir: Path, edition: EditionDrop, families: Mapping[str, _
         for attestation in attestations:
             block = [
                 f'[[revisions."{edition.revision_id}".lineage_attestations]]',
-                f'family = {json.dumps(attestation.family, ensure_ascii=False)}',
-                f'continuidad_id = {json.dumps(attestation.identity, ensure_ascii=False)}',
-                f'from_revision = {json.dumps(str(attestation.from_revision), ensure_ascii=False)}',
-                f'to_revision = {json.dumps(str(attestation.to_revision), ensure_ascii=False)}',
-                f'origin = {json.dumps(attestation.origin.value, ensure_ascii=False)}',
+                f"family = {json.dumps(attestation.family, ensure_ascii=False)}",
+                f"continuidad_id = {json.dumps(attestation.identity, ensure_ascii=False)}",
+                f"from_revision = {json.dumps(str(attestation.from_revision), ensure_ascii=False)}",
+                f"to_revision = {json.dumps(str(attestation.to_revision), ensure_ascii=False)}",
+                f"origin = {json.dumps(attestation.origin.value, ensure_ascii=False)}",
             ]
             if attestation.evidence is not None:
-                block.append(f'evidence = {json.dumps(attestation.evidence, ensure_ascii=False)}')
+                block.append(f"evidence = {json.dumps(attestation.evidence, ensure_ascii=False)}")
             block.extend(
                 (
-                    f'legal_refs = {json.dumps(list(attestation.legal_refs), ensure_ascii=False)}',
-                    f'source_refs = {json.dumps(list(attestation.source_refs), ensure_ascii=False)}',
+                    f"legal_refs = {json.dumps(list(attestation.legal_refs), ensure_ascii=False)}",
+                    f"source_refs = {json.dumps(list(attestation.source_refs), ensure_ascii=False)}",
                 )
             )
             text = text.rstrip() + "\n\n" + "\n".join(block) + "\n"

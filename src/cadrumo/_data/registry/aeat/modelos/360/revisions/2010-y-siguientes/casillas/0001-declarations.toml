@@ -1,0 +1,2507 @@
+# Design operacion 1 bienes y servicios codigo row 10.
+# Design operacion 1 idioma row 10 ISO 639-1.
+# Design operacion 1 descripcion row 10.
+# Design operacion 1 base imponible.
+# Design operacion 1 cuota IVA.
+# Design operacion 1 prorrata %.
+# Design operacion 1 importe solicitado a devolver.
+# Design operacion 1 divisa ISO 4217.
+# Design operacion 1 indicador de simplificada 0/1.
+# Design operacion 1 proveedor pais emisor del NVAT ISO 3166-1.
+# Design operacion 1 proveedor NVAT.
+# Design operacion 1 proveedor pais emisor de la referencia fiscal.
+# Design operacion 1 proveedor referencia fiscal.
+# Design operacion 1 proveedor apellidos y nombre o denominacion social.
+# Design operacion 1 proveedor direccion.
+# Design operacion 1 proveedor telefono.
+# Design operacion 1 proveedor pais ISO 3166-1.
+# Design operacion 2 numero de operacion.
+# Design operacion 2 tipo "P".
+# Design operacion 2 numero factura.
+# Design operacion 2 fecha de emision.
+# Design operacion 2 bienes y servicios codigo row 1.
+# Design operacion 2 idioma row 1 ISO 639-1.
+# Design operacion 2 descripcion row 1.
+# Design operacion 2 bienes y servicios codigo row 2.
+# Design operacion 2 idioma row 2 ISO 639-1.
+# Design operacion 2 descripcion row 2.
+# Design operacion 2 bienes y servicios codigo row 3.
+# Design operacion 2 idioma row 3 ISO 639-1.
+# Design operacion 2 descripcion row 3.
+# Design operacion 2 bienes y servicios codigo row 4.
+# Design operacion 2 idioma row 4 ISO 639-1.
+# Design operacion 2 descripcion row 4.
+# Design operacion 2 bienes y servicios codigo row 5.
+# Design operacion 2 idioma row 5 ISO 639-1.
+# Design operacion 2 descripcion row 5.
+# Design operacion 2 bienes y servicios codigo row 6.
+# Design operacion 2 idioma row 6 ISO 639-1.
+# Design operacion 2 descripcion row 6.
+# Design operacion 2 bienes y servicios codigo row 7.
+# Design operacion 2 idioma row 7 ISO 639-1.
+# Design operacion 2 descripcion row 7.
+# Design operacion 2 bienes y servicios codigo row 8.
+# Design operacion 2 idioma row 8 ISO 639-1.
+# Design operacion 2 descripcion row 8.
+# Design operacion 2 bienes y servicios codigo row 9.
+# Design operacion 2 idioma row 9 ISO 639-1.
+# Design operacion 2 descripcion row 9.
+# Design operacion 2 bienes y servicios codigo row 10.
+# Design operacion 2 idioma row 10 ISO 639-1.
+# Design operacion 2 descripcion row 10.
+# Design operacion 2 base imponible.
+# Design operacion 2 cuota IVA.
+# Design operacion 2 prorrata %.
+# Design operacion 2 importe solicitado a devolver.
+# Design operacion 2 divisa ISO 4217.
+# Design operacion 2 indicador de simplificada 0/1.
+# Design operacion 2 proveedor pais emisor del NVAT ISO 3166-1.
+# Design operacion 2 proveedor NVAT.
+# Design operacion 2 proveedor pais emisor de la referencia fiscal.
+# Design operacion 2 proveedor referencia fiscal.
+# Design operacion 2 proveedor apellidos y nombre o denominacion social.
+# Design operacion 2 proveedor direccion.
+# Design operacion 2 proveedor telefono.
+# Design operacion 2 proveedor pais ISO 3166-1.
+# Modelo 360 casillas: the AD-HOC refund request's operator values. Every
+# value is the operator's own datum; the modelo computes nothing, which is
+# why the formula family stays empty.
+# Design presentacion en pruebas 0/1.
+# Design nivel de calidad de datos 1/2.
+# Design causa de presentacion " "/"0"/"1".
+# Design comunicacion de la prorrata definitiva 0/1.
+# Design numero de registro de la declaracion anterior.
+# Design solicitante email.
+# Design solicitante telefono.
+# Direccion en Espana Tipo de via.
+# Direccion en Espana Nombre de la via publica.
+# Direccion en Espana Tipo numero.
+# Direccion en Espana Numero de casa / KM.
+# Direccion en Espana Calificador del numero.
+# Direccion en Espana Bloque.
+# Direccion en Espana Portal.
+# Direccion en Espana Escalera.
+# Direccion en Espana Planta.
+# Direccion en Espana Puerta.
+# Direccion en Espana Complemento domicilio.
+# Direccion en Espana Localidad / Poblacion.
+# Direccion en Espana Codigo postal.
+# Direccion en Espana Nombre del municipio.
+# Direccion en Espana Provincia.
+# Direccion en el extranjero Domicilio.
+# Direccion en el extranjero Poblacion / Ciudad.
+# Direccion en el extranjero Codigo postal (ZIP).
+# Direccion en el extranjero Provincia / Region / Estado.
+# Direccion en el extranjero Pais ISO 3166-1.
+# Apartado de correos en Espana Numero del apartado de correos.
+# Apartado de correos en Espana Localidad / Poblacion.
+# Apartado de correos en Espana Codigo postal.
+# Apartado de correos en Espana Nombre del municipio.
+# Apartado de correos en Espana Provincia.
+# Design establecido en el territorio de aplicacion del IVA 0/1.
+# Design hacienda foral de establecimiento.
+# Design delegacion de solicitantes establecidos en Canarias, Ceuta o Melilla.
+# Design NACE 1 codigo.
+# Design NACE 1 idioma ISO 639-1.
+# Design NACE 1 descripcion.
+# Design NACE 2 codigo.
+# Design NACE 2 idioma ISO 639-1.
+# Design NACE 2 descripcion.
+# Design NACE 3 codigo.
+# Design NACE 3 idioma ISO 639-1.
+# Design NACE 3 descripcion.
+# Design NACE 4 codigo.
+# Design NACE 4 idioma ISO 639-1.
+# Design NACE 4 descripcion.
+# Design NACE 5 codigo.
+# Design NACE 5 idioma ISO 639-1.
+# Design NACE 5 descripcion.
+# Design NACE 6 codigo.
+# Design NACE 6 idioma ISO 639-1.
+# Design NACE 6 descripcion.
+# Design NACE 7 codigo.
+# Design NACE 7 idioma ISO 639-1.
+# Design NACE 7 descripcion.
+# Design NACE 8 codigo.
+# Design NACE 8 idioma ISO 639-1.
+# Design NACE 8 descripcion.
+# Design NACE 9 codigo.
+# Design NACE 9 idioma ISO 639-1.
+# Design NACE 9 descripcion.
+# Design NACE 10 codigo.
+# Design NACE 10 idioma ISO 639-1.
+# Design NACE 10 descripcion.
+# Design representante NIF.
+# Design representante apellidos y nombre o denominacion social.
+# Design representante email.
+# Design representante telefono.
+# Direccion en Espana Tipo de via.
+# Direccion en Espana Nombre de la via publica.
+# Direccion en Espana Tipo numero.
+# Direccion en Espana Numero de casa / KM.
+# Direccion en Espana Calificador del numero.
+# Direccion en Espana Bloque.
+# Direccion en Espana Portal.
+# Direccion en Espana Escalera.
+# Direccion en Espana Planta.
+# Direccion en Espana Puerta.
+# Direccion en Espana Complemento domicilio.
+# Direccion en Espana Localidad / Poblacion.
+# Direccion en Espana Codigo postal.
+# Direccion en Espana Nombre del municipio.
+# Direccion en Espana Provincia.
+# Direccion en el extranjero Domicilio.
+# Direccion en el extranjero Poblacion / Ciudad.
+# Direccion en el extranjero Codigo postal (ZIP).
+# Direccion en el extranjero Provincia / Region / Estado.
+# Direccion en el extranjero Pais ISO 3166-1.
+# Apartado de correos en Espana Numero del apartado de correos.
+# Apartado de correos en Espana Localidad / Poblacion.
+# Apartado de correos en Espana Codigo postal.
+# Apartado de correos en Espana Nombre del municipio.
+# Apartado de correos en Espana Provincia.
+# Design titular de la cuenta, nombre.
+# Design titular en calidad de "A" solicitante / representante.
+# Design IBAN.
+# Design banco BIC.
+# Design divisa ISO 4217, por defecto EUR.
+# Design anexo 1 numero de registro.
+# Design anexo 1 descripcion.
+# Design anexo 2 numero de registro.
+# Design anexo 2 descripcion.
+# Design anexo 3 numero de registro.
+# Design anexo 3 descripcion.
+# Design anexo 4 numero de registro.
+# Design anexo 4 descripcion.
+# Design anexo 5 numero de registro.
+# Design anexo 5 descripcion.
+# Design anexo 6 numero de registro.
+# Design anexo 6 descripcion.
+# Design anexo 7 numero de registro.
+# Design anexo 7 descripcion.
+# Design anexo 8 numero de registro.
+# Design anexo 8 descripcion.
+# Design anexo 9 numero de registro.
+# Design anexo 9 descripcion.
+# Design anexo 10 numero de registro.
+# Design anexo 10 descripcion.
+# Design operacion 1 numero de operacion.
+# Design operacion 1 tipo "P".
+# Design operacion 1 numero factura.
+# Design operacion 1 fecha de emision.
+# Design operacion 1 bienes y servicios codigo row 1.
+# Design operacion 1 idioma row 1 ISO 639-1.
+# Design operacion 1 descripcion row 1.
+# Design operacion 1 bienes y servicios codigo row 2.
+# Design operacion 1 idioma row 2 ISO 639-1.
+# Design operacion 1 descripcion row 2.
+# Design operacion 1 bienes y servicios codigo row 3.
+# Design operacion 1 idioma row 3 ISO 639-1.
+# Design operacion 1 descripcion row 3.
+# Design operacion 1 bienes y servicios codigo row 4.
+# Design operacion 1 idioma row 4 ISO 639-1.
+# Design operacion 1 descripcion row 4.
+# Design operacion 1 bienes y servicios codigo row 5.
+# Design operacion 1 idioma row 5 ISO 639-1.
+# Design operacion 1 descripcion row 5.
+# Design operacion 1 bienes y servicios codigo row 6.
+# Design operacion 1 idioma row 6 ISO 639-1.
+# Design operacion 1 descripcion row 6.
+# Design operacion 1 bienes y servicios codigo row 7.
+# Design operacion 1 idioma row 7 ISO 639-1.
+# Design operacion 1 descripcion row 7.
+# Design operacion 1 bienes y servicios codigo row 8.
+# Design operacion 1 idioma row 8 ISO 639-1.
+# Design operacion 1 descripcion row 8.
+# Design operacion 1 bienes y servicios codigo row 9.
+# Design operacion 1 idioma row 9 ISO 639-1.
+# Design operacion 1 descripcion row 9.
+# Modelo 360 declared content: the amount claimed and the prorrata communication.
+#
+# These are casillas rather than producer keys because they are values the
+# claimant DECLARES on the solicitud, grounded in Ley 37/1992 art. 117 bis and
+# the content the Orden fixes for the record. Byte ranges are the design's own.
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.estado-miembro"
+number = "estado-miembro"
+data_type = "text"
+semantic_role = "estado_miembro_devolucion"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-10"
+number = "2436-2445"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-10"
+number = "2446-2447"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-10"
+number = "2448-2697"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-base"
+number = "2698-2712"
+data_type = "money"
+semantic_role = "operacion_base"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[revisions.2010-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-cuota"
+number = "2713-2727"
+data_type = "money"
+semantic_role = "operacion_cuota"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[revisions.2010-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-prorrata"
+number = "2728-2732"
+data_type = "text"
+semantic_role = "operacion_prorrata"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-importe"
+number = "2733-2747"
+data_type = "money"
+semantic_role = "operacion_importe"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[revisions.2010-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-divisa"
+number = "2748-2750"
+data_type = "text"
+semantic_role = "operacion_divisa"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-simplificada"
+number = "2751-2751"
+data_type = "text"
+semantic_role = "operacion_simplificada"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-proveedor-pais-nvat"
+number = "2752-2753"
+data_type = "text"
+semantic_role = "proveedor_pais_nvat"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-proveedor-nvat"
+number = "2754-2768"
+data_type = "text"
+semantic_role = "proveedor_nvat"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-proveedor-pais-referencia"
+number = "2769-2770"
+data_type = "text"
+semantic_role = "proveedor_pais_referencia"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-proveedor-referencia-fiscal"
+number = "2771-2820"
+data_type = "text"
+semantic_role = "proveedor_referencia_fiscal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-proveedor-nombre"
+number = "2821-2945"
+data_type = "text"
+semantic_role = "proveedor_nombre"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-proveedor-direccion"
+number = "2946-3093"
+data_type = "text"
+semantic_role = "proveedor_direccion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-proveedor-telefono"
+number = "3094-3108"
+data_type = "text"
+semantic_role = "proveedor_telefono"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-proveedor-pais"
+number = "3109-3110"
+data_type = "text"
+semantic_role = "proveedor_pais"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-numero"
+number = "3111-3115"
+data_type = "text"
+semantic_role = "operacion_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-tipo"
+number = "3117-3119"
+data_type = "text"
+semantic_role = "operacion_tipo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-factura"
+number = "3120-3169"
+data_type = "text"
+semantic_role = "operacion_factura"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-fecha"
+number = "3170-3177"
+data_type = "text"
+semantic_role = "operacion_fecha"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-1"
+number = "3178-3187"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-1"
+number = "3188-3189"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-1"
+number = "3190-3439"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-2"
+number = "3440-3449"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-2"
+number = "3450-3451"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-2"
+number = "3452-3701"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-3"
+number = "3702-3711"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-3"
+number = "3712-3713"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-3"
+number = "3714-3963"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-4"
+number = "3964-3973"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-4"
+number = "3974-3975"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-4"
+number = "3976-4225"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-5"
+number = "4226-4235"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-5"
+number = "4236-4237"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-5"
+number = "4238-4487"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-6"
+number = "4488-4497"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-6"
+number = "4498-4499"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-6"
+number = "4500-4749"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-7"
+number = "4750-4759"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-7"
+number = "4760-4761"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-7"
+number = "4762-5011"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-8"
+number = "5012-5021"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-8"
+number = "5022-5023"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-8"
+number = "5024-5273"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-9"
+number = "5274-5283"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-9"
+number = "5284-5285"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-9"
+number = "5286-5535"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-codigo-10"
+number = "5536-5545"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-idioma-10"
+number = "5546-5547"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-descripcion-10"
+number = "5548-5797"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-base"
+number = "5798-5812"
+data_type = "money"
+semantic_role = "operacion_base"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[revisions.2010-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-cuota"
+number = "5813-5827"
+data_type = "money"
+semantic_role = "operacion_cuota"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[revisions.2010-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-prorrata"
+number = "5828-5832"
+data_type = "text"
+semantic_role = "operacion_prorrata"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-importe"
+number = "5833-5847"
+data_type = "money"
+semantic_role = "operacion_importe"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[revisions.2010-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-divisa"
+number = "5848-5850"
+data_type = "text"
+semantic_role = "operacion_divisa"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-simplificada"
+number = "5851-5851"
+data_type = "text"
+semantic_role = "operacion_simplificada"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-proveedor-pais-nvat"
+number = "5852-5853"
+data_type = "text"
+semantic_role = "proveedor_pais_nvat"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-proveedor-nvat"
+number = "5854-5868"
+data_type = "text"
+semantic_role = "proveedor_nvat"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-proveedor-pais-referencia"
+number = "5869-5870"
+data_type = "text"
+semantic_role = "proveedor_pais_referencia"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-proveedor-referencia-fiscal"
+number = "5871-5920"
+data_type = "text"
+semantic_role = "proveedor_referencia_fiscal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-proveedor-nombre"
+number = "5921-6045"
+data_type = "text"
+semantic_role = "proveedor_nombre"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-proveedor-direccion"
+number = "6046-6193"
+data_type = "text"
+semantic_role = "proveedor_direccion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-proveedor-telefono"
+number = "6194-6208"
+data_type = "text"
+semantic_role = "proveedor_telefono"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op2-proveedor-pais"
+number = "6209-6210"
+data_type = "text"
+semantic_role = "proveedor_pais"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.presentacion-pruebas"
+number = "17-17"
+data_type = "text"
+semantic_role = "presentacion_pruebas"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.calidad-datos"
+number = "18-18"
+data_type = "text"
+semantic_role = "calidad_datos"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.causa-presentacion"
+number = "25-25"
+data_type = "text"
+semantic_role = "causa_presentacion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.prorrata-anterior"
+number = "26-26"
+data_type = "text"
+semantic_role = "prorrata_anterior_comunicacion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.num-registro-anterior"
+number = "27-42"
+data_type = "text"
+semantic_role = "registro_anterior_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante-email"
+number = "194-293"
+data_type = "text"
+semantic_role = "solicitante_email"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante-telefono"
+number = "294-308"
+data_type = "text"
+semantic_role = "solicitante_telefono"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.tipo-via"
+number = "309-313"
+data_type = "text"
+semantic_role = "solicitante_direccion_tipo_via"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.nombre-via"
+number = "314-363"
+data_type = "text"
+semantic_role = "solicitante_direccion_nombre_via"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.tipo-numero"
+number = "364-366"
+data_type = "text"
+semantic_role = "solicitante_direccion_tipo_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.numero-casa"
+number = "367-371"
+data_type = "text"
+semantic_role = "solicitante_direccion_numero_casa"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.calificador-numero"
+number = "372-374"
+data_type = "text"
+semantic_role = "solicitante_direccion_calificador_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.bloque"
+number = "375-377"
+data_type = "text"
+semantic_role = "solicitante_direccion_bloque"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.portal"
+number = "378-380"
+data_type = "text"
+semantic_role = "solicitante_direccion_portal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.escalera"
+number = "381-383"
+data_type = "text"
+semantic_role = "solicitante_direccion_escalera"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.planta"
+number = "384-386"
+data_type = "text"
+semantic_role = "solicitante_direccion_planta"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.puerta"
+number = "387-389"
+data_type = "text"
+semantic_role = "solicitante_direccion_puerta"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.complemento"
+number = "390-429"
+data_type = "text"
+semantic_role = "solicitante_direccion_complemento"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.localidad"
+number = "430-459"
+data_type = "text"
+semantic_role = "solicitante_direccion_localidad"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.codigo-postal"
+number = "460-464"
+data_type = "text"
+semantic_role = "solicitante_direccion_codigo_postal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.municipio"
+number = "465-494"
+data_type = "text"
+semantic_role = "solicitante_direccion_municipio"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.direccion.provincia"
+number = "495-496"
+data_type = "text"
+semantic_role = "solicitante_direccion_provincia"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.extranjero.domicilio"
+number = "497-644"
+data_type = "text"
+semantic_role = "solicitante_extranjero_domicilio"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.extranjero.poblacion"
+number = "645-674"
+data_type = "text"
+semantic_role = "solicitante_extranjero_poblacion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.extranjero.codigo-postal"
+number = "675-684"
+data_type = "text"
+semantic_role = "solicitante_extranjero_codigo_postal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.extranjero.region"
+number = "685-714"
+data_type = "text"
+semantic_role = "solicitante_extranjero_region"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.extranjero.pais"
+number = "715-716"
+data_type = "text"
+semantic_role = "solicitante_extranjero_pais"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.apartado.numero"
+number = "717-726"
+data_type = "text"
+semantic_role = "solicitante_apartado_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.apartado.localidad"
+number = "727-756"
+data_type = "text"
+semantic_role = "solicitante_apartado_localidad"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.apartado.codigo-postal"
+number = "757-761"
+data_type = "text"
+semantic_role = "solicitante_apartado_codigo_postal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.apartado.municipio"
+number = "762-791"
+data_type = "text"
+semantic_role = "solicitante_apartado_municipio"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.apartado.provincia"
+number = "792-793"
+data_type = "text"
+semantic_role = "solicitante_apartado_provincia"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante-establecido"
+number = "794-794"
+data_type = "text"
+semantic_role = "solicitante_establecido_iva"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante-hacienda-foral"
+number = "795-796"
+data_type = "text"
+semantic_role = "solicitante_hacienda_foral"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante-delegacion"
+number = "797-798"
+data_type = "text"
+semantic_role = "solicitante_delegacion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-1"
+number = "799-803"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-1"
+number = "804-805"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-1"
+number = "806-830"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-2"
+number = "831-835"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-2"
+number = "836-837"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-2"
+number = "838-862"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-3"
+number = "863-867"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-3"
+number = "868-869"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-3"
+number = "870-894"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-4"
+number = "895-899"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-4"
+number = "900-901"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-4"
+number = "902-926"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-5"
+number = "927-931"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-5"
+number = "932-933"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-5"
+number = "934-958"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-6"
+number = "959-963"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-6"
+number = "964-965"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-6"
+number = "966-990"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-7"
+number = "991-995"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-7"
+number = "996-997"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-7"
+number = "998-1022"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-8"
+number = "1023-1027"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-8"
+number = "1028-1029"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-8"
+number = "1030-1054"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-9"
+number = "1055-1059"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-9"
+number = "1060-1061"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-9"
+number = "1062-1086"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-10"
+number = "1087-1091"
+data_type = "text"
+semantic_role = "nace_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-idioma-10"
+number = "1092-1093"
+data_type = "text"
+semantic_role = "nace_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.solicitante.nace-descripcion-10"
+number = "1094-1118"
+data_type = "text"
+semantic_role = "nace_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante-nif"
+number = "1119-1127"
+data_type = "nif"
+semantic_role = "representante_nif"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante-nombre"
+number = "1128-1252"
+data_type = "text"
+semantic_role = "representante_nombre"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante-email"
+number = "1253-1352"
+data_type = "text"
+semantic_role = "representante_email"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante-telefono"
+number = "1353-1367"
+data_type = "text"
+semantic_role = "representante_telefono"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.tipo-via"
+number = "1368-1372"
+data_type = "text"
+semantic_role = "representante_direccion_tipo_via"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.nombre-via"
+number = "1373-1422"
+data_type = "text"
+semantic_role = "representante_direccion_nombre_via"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.tipo-numero"
+number = "1423-1425"
+data_type = "text"
+semantic_role = "representante_direccion_tipo_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.numero-casa"
+number = "1426-1430"
+data_type = "text"
+semantic_role = "representante_direccion_numero_casa"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.calificador-numero"
+number = "1431-1433"
+data_type = "text"
+semantic_role = "representante_direccion_calificador_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.bloque"
+number = "1434-1436"
+data_type = "text"
+semantic_role = "representante_direccion_bloque"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.portal"
+number = "1437-1439"
+data_type = "text"
+semantic_role = "representante_direccion_portal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.escalera"
+number = "1440-1442"
+data_type = "text"
+semantic_role = "representante_direccion_escalera"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.planta"
+number = "1443-1445"
+data_type = "text"
+semantic_role = "representante_direccion_planta"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.puerta"
+number = "1446-1448"
+data_type = "text"
+semantic_role = "representante_direccion_puerta"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.complemento"
+number = "1449-1488"
+data_type = "text"
+semantic_role = "representante_direccion_complemento"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.localidad"
+number = "1489-1518"
+data_type = "text"
+semantic_role = "representante_direccion_localidad"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.codigo-postal"
+number = "1519-1523"
+data_type = "text"
+semantic_role = "representante_direccion_codigo_postal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.municipio"
+number = "1524-1553"
+data_type = "text"
+semantic_role = "representante_direccion_municipio"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.direccion.provincia"
+number = "1554-1555"
+data_type = "text"
+semantic_role = "representante_direccion_provincia"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.extranjero.domicilio"
+number = "1556-1703"
+data_type = "text"
+semantic_role = "representante_extranjero_domicilio"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.extranjero.poblacion"
+number = "1704-1733"
+data_type = "text"
+semantic_role = "representante_extranjero_poblacion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.extranjero.codigo-postal"
+number = "1734-1743"
+data_type = "text"
+semantic_role = "representante_extranjero_codigo_postal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.extranjero.region"
+number = "1744-1773"
+data_type = "text"
+semantic_role = "representante_extranjero_region"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.extranjero.pais"
+number = "1774-1775"
+data_type = "text"
+semantic_role = "representante_extranjero_pais"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.apartado.numero"
+number = "1776-1785"
+data_type = "text"
+semantic_role = "representante_apartado_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.apartado.localidad"
+number = "1786-1815"
+data_type = "text"
+semantic_role = "representante_apartado_localidad"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.apartado.codigo-postal"
+number = "1816-1820"
+data_type = "text"
+semantic_role = "representante_apartado_codigo_postal"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.apartado.municipio"
+number = "1821-1850"
+data_type = "text"
+semantic_role = "representante_apartado_municipio"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.representante.apartado.provincia"
+number = "1851-1852"
+data_type = "text"
+semantic_role = "representante_apartado_provincia"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.bancario-titular"
+number = "1912-1936"
+data_type = "text"
+semantic_role = "bancario_titular"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.bancario-calidad"
+number = "1937-1937"
+data_type = "text"
+semantic_role = "bancario_calidad"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.bancario-iban"
+number = "1938-1971"
+data_type = "text"
+semantic_role = "bancario_iban"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.bancario-bic"
+number = "1972-1982"
+data_type = "text"
+semantic_role = "bancario_bic"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.bancario-divisa"
+number = "1983-1985"
+data_type = "text"
+semantic_role = "bancario_divisa"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-1"
+number = "1986-2001"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-1"
+number = "2004-2043"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-2"
+number = "2104-2119"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-2"
+number = "2122-2161"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-3"
+number = "2222-2237"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-3"
+number = "2240-2279"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-4"
+number = "2340-2355"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-4"
+number = "2358-2397"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-5"
+number = "2458-2473"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-5"
+number = "2476-2515"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-6"
+number = "2576-2591"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-6"
+number = "2594-2633"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-7"
+number = "2694-2709"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-7"
+number = "2712-2751"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-8"
+number = "2812-2827"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-8"
+number = "2830-2869"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-9"
+number = "2930-2945"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-9"
+number = "2948-2987"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-registro-10"
+number = "3048-3063"
+data_type = "text"
+semantic_role = "anexo_registro"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.anexo-descripcion-10"
+number = "3066-3105"
+data_type = "text"
+semantic_role = "anexo_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-numero"
+number = "11-15"
+data_type = "text"
+semantic_role = "operacion_numero"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-tipo"
+number = "17-19"
+data_type = "text"
+semantic_role = "operacion_tipo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-factura"
+number = "20-69"
+data_type = "text"
+semantic_role = "operacion_factura"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-fecha"
+number = "70-77"
+data_type = "text"
+semantic_role = "operacion_fecha"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-1"
+number = "78-87"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-1"
+number = "88-89"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-1"
+number = "90-339"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-2"
+number = "340-349"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-2"
+number = "350-351"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-2"
+number = "352-601"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-3"
+number = "602-611"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-3"
+number = "612-613"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-3"
+number = "614-863"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-4"
+number = "864-873"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-4"
+number = "874-875"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-4"
+number = "876-1125"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-5"
+number = "1126-1135"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-5"
+number = "1136-1137"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-5"
+number = "1138-1387"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-6"
+number = "1388-1397"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-6"
+number = "1398-1399"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-6"
+number = "1400-1649"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-7"
+number = "1650-1659"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-7"
+number = "1660-1661"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-7"
+number = "1662-1911"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-8"
+number = "1912-1921"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-8"
+number = "1922-1923"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-8"
+number = "1924-2173"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-codigo-9"
+number = "2174-2183"
+data_type = "text"
+semantic_role = "operacion_codigo"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-idioma-9"
+number = "2184-2185"
+data_type = "text"
+semantic_role = "operacion_idioma"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "decl.op1-descripcion-9"
+number = "2186-2435"
+data_type = "text"
+semantic_role = "operacion_descripcion"
+required = false
+input_kind = "manual"
+section = ["devolucion", "solicitud"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "devolucion.importe-solicitado"
+number = "1853-1867"
+data_type = "money"
+semantic_role = "importe_devolucion_solicitado"
+required = true
+input_kind = "manual"
+section = ["devolucion"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "devolucion.divisa"
+number = "1868-1870"
+data_type = "text"
+semantic_role = "divisa_devolucion"
+required = true
+input_kind = "manual"
+section = ["devolucion"]
+legal_refs = ["orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "devolucion.numero-facturas"
+number = "1871-1875"
+data_type = "integer"
+semantic_role = "numero_facturas_relacionadas"
+required = false
+input_kind = "manual"
+section = ["devolucion"]
+legal_refs = ["orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "devolucion.numero-documentos-importacion"
+number = "1876-1880"
+data_type = "integer"
+semantic_role = "numero_documentos_importacion_relacionados"
+required = false
+input_kind = "manual"
+section = ["devolucion"]
+legal_refs = ["orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "devolucion.periodo-fecha-inicio"
+number = "1881-1888"
+data_type = "date"
+semantic_role = "periodo_devolucion_fecha_inicio"
+required = true
+input_kind = "manual"
+section = ["devolucion"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "devolucion.periodo-fecha-fin"
+number = "1889-1896"
+data_type = "date"
+semantic_role = "periodo_devolucion_fecha_fin"
+required = true
+input_kind = "manual"
+section = ["devolucion"]
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "devolucion.declaracion-no-entrega-bienes"
+number = "1902"
+data_type = "text"
+semantic_role = "declaracion_no_entrega_bienes_ni_servicios"
+required = false
+input_kind = "manual"
+section = ["devolucion"]
+legal_refs = ["ley-37-1992:art-117-bis"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "prorrata.ejercicio"
+number = "1903-1906"
+data_type = "year"
+semantic_role = "prorrata_ejercicio_modificado"
+required = false
+input_kind = "manual"
+section = ["prorrata"]
+legal_refs = ["orden-eha-789-2010:art-4"]
+
+[[revisions.2010-y-siguientes.casillas]]
+id = "prorrata.definitiva"
+number = "1907-1911"
+data_type = "ratio"
+semantic_role = "prorrata_definitiva"
+required = false
+input_kind = "manual"
+section = ["prorrata"]
+legal_refs = ["orden-eha-789-2010:art-4"]

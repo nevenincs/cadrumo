@@ -1,0 +1,599 @@
+# Modelo 193 Tipo 1 (registro de declarante) resumen casillas: the
+# declaration identity block and the resumen totals. This revision declares no
+# bindings or formulas, so every total here is operator-supplied rather than
+# row-derived.
+# Design positions 59-67: the contact person's nine-digit telephone.
+# Design positions 68-107: the contact person's apellidos y nombre.
+# Design positions 108-120: the declaration's identifying number, a sequence whose first three digits are 193.
+# Design position 121: 'C' for a complementary declaration including omitted percepciones.
+# Design position 122: 'S' for a substitute declaration annulling one prior declaration.
+# Design positions 123-135: the prior declaration's identifying number for a C/S declaration; the design's own ceros in every other case.
+# Design positions 175-189: the sum of the perceptor-record retenciones e ingresos a cuenta for rows whose clave de percepcion is C, plus the A/B/D rows whose pago is 1 or 3, per the design's own declaration.
+# Design positions 220-234: the sum of the gastos-relationship rows' importe de gastos.
+# Design position 235: 'S' when the declarante is outside the design's four categories; blank otherwise.
+# Modelo 193 Tipo 2 (relacion de gastos) detail-row casillas.
+# The gastos-relationship contribuyente's NIF.
+# Apellidos y nombre del contribuyente.
+# The minor contribuyente's legal representative NIF.
+# Design positions 195-207: the annual gastos de administracion y deposito.
+# Modelo 193 Tipo 2 (registro de perceptor) detail-row casillas: one slot per
+# row field, mirroring the modelo 190 contract. This epoch's perceptor record
+# ENDS at position 248 -- its diseño states "249-500 -------- BLANCOS." -- so
+# the foral retention split (249-313), the Ceuta/Melilla clave (314) and the
+# 2024 additions at 315-339 have no position here. This revision declares no
+# export layout; `number` records the design's coordinates only.
+# The perceptor's NIF, right-justified with the control character last.
+# The minor perceptor's legal representative NIF; the design's own spaces elsewhere.
+# Apellidos y nombre o razon social del perceptor.
+# Design position 76: 'X' when the perceptor is itself a mediator entity paying by proxy (claves A/B/D).
+# Design positions 77-78: the perceptor's domicilio province code.
+# Design position 79: what the codigo emisor/ISIN carry; clave 4 the general case.
+# Design positions 80-91: the issuer's NIF (clave codigo 1/4), empty (2), ZXX country code (3).
+# The clave de percepcion A-D of the capital-mobiliario rendimiento.
+# Design positions 93-94: the two-digit naturaleza subclave of the clave de percepcion.
+# Design position 95: who paid (1 emisor, 2/3/4 mediador, 5 other mediation).
+# Design position 96: what the codigo cuenta field holds (C/O/P).
+# Design positions 97-116: the codigo cuenta valores or numero de operacion del prestamo.
+# Design position 117: 'X' for percepciones devengadas but not yet paid.
+# Design positions 118-121: the devengo exercise for prior-year payments claimed this year.
+# Design position 122: 1 dinerarias, 2 en especie.
+# Design positions 123-135: the contraprestacion integra exigible o satisfecha.
+# Design positions 139-151: the art. 26.2 reductions applied for IRPF contribuyente perceptores.
+# Design positions 152-164: the base de la retencion o ingreso a cuenta.
+# Design positions 165-168: the retention percentage applied (generally 19, with the design's per-clave rates).
+# Design positions 169-181: the retenciones e ingresos a cuenta amount.
+# Design positions 182-192: the negative capital-mobiliario rendimientos from commercial-promotion breaches (claves B/D).
+# Design position 208: 'S' when the declarante is outside the design's categories; its cascade then zeroes the identification block.
+# Design positions 209-216 (AAAAMMDD), only for prestamo de valores (tipo codigo P).
+# Design positions 217-224 (AAAAMMDD), only for prestamo de valores.
+# Design positions 225-236, only for prestamo de valores.
+# Design positions 237-248, only for prestamo de valores.
+
+[[revisions.2022.casillas]]
+id = "decl.persona-contacto-telefono"
+continuidad_id = "declarante-contacto-telefono"
+number = "59-67"
+segmento = "declarante"
+data_type = "text"
+semantic_role = "declarante_contacto_telefono"
+required = false
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.persona-contacto-nombre"
+continuidad_id = "declarante-contacto-nombre"
+number = "68-107"
+segmento = "declarante"
+data_type = "name"
+semantic_role = "declarante_contacto_nombre"
+required = false
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.num-identificativo"
+continuidad_id = "declaracion-numero-identificativo"
+number = "108-120"
+segmento = "declarante"
+data_type = "text"
+semantic_role = "declaracion_numero_identificativo"
+required = false
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.complementaria"
+continuidad_id = "declaracion-complementaria"
+number = "121"
+segmento = "declarante"
+data_type = "text"
+semantic_role = "declaracion_complementaria"
+required = false
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.sustitutiva"
+continuidad_id = "declaracion-sustitutiva"
+number = "122"
+segmento = "declarante"
+data_type = "text"
+semantic_role = "declaracion_sustitutiva"
+required = false
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.num-identificativo-anterior"
+continuidad_id = "declaracion-anterior-numero"
+number = "123-135"
+segmento = "declarante"
+data_type = "text"
+semantic_role = "declaracion_anterior_numero"
+required = false
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.retenciones-ingresadas"
+continuidad_id = "retenciones-ingresadas-total"
+number = "175-189"
+segmento = "declarante"
+data_type = "money"
+semantic_role = "retenciones_ingresadas_total"
+required = true
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.gastos-total"
+continuidad_id = "gastos-total-declarante"
+number = "220-234"
+segmento = "declarante"
+data_type = "money"
+semantic_role = "gastos_total_declarante"
+required = true
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.naturaleza-declarante"
+continuidad_id = "declarante-naturaleza"
+number = "235"
+segmento = "declarante"
+data_type = "text"
+semantic_role = "declarante_naturaleza"
+required = false
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.total-perceptores"
+continuidad_id = "total-perceptores-count"
+number = "136-144"
+data_type = "integer"
+semantic_role = "total_perceptores_count"
+required = true
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.base-total"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+number = "145-159"
+data_type = "money"
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "decl.retenciones-total"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+number = "160-174"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "manual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "gasto.nif"
+continuidad_id = "gasto-contributor-nif"
+number = "18-26"
+segmento = "gastos"
+data_type = "nif"
+semantic_role = "gasto_contributor_nif"
+required = true
+input_kind = "manual"
+section = ["gastos", "contribuyente"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "gasto.nombre"
+continuidad_id = "gasto-contributor-nombre"
+number = "36-75"
+segmento = "gastos"
+data_type = "name"
+semantic_role = "gasto_contributor_nombre"
+required = true
+input_kind = "manual"
+section = ["gastos", "contribuyente"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "gasto.nif-representante"
+continuidad_id = "representante-legal-nif"
+number = "27-35"
+segmento = "gastos"
+data_type = "nif"
+semantic_role = "representante_legal_nif"
+required = true
+input_kind = "manual"
+section = ["gastos", "contribuyente"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "gasto.importe"
+continuidad_id = "gasto-importe-anual"
+number = "195-207"
+segmento = "gastos"
+data_type = "money"
+semantic_role = "gasto_importe_anual"
+required = true
+input_kind = "manual"
+section = ["gastos", "contribuyente"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.nif"
+continuidad_id = "payee-nif"
+number = "18-26"
+segmento = "perceptor"
+data_type = "nif"
+semantic_role = "payee_nif"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.nif-representante"
+continuidad_id = "perc-nif-representante"
+number = "27-35"
+segmento = "perceptor"
+data_type = "nif"
+semantic_role = "representante_legal_nif"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.nombre"
+continuidad_id = "payee-name"
+number = "36-75"
+segmento = "perceptor"
+data_type = "name"
+semantic_role = "payee_name"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.mediador"
+continuidad_id = "payee-mediador-flag"
+number = "76"
+segmento = "perceptor"
+data_type = "text"
+semantic_role = "payee_mediador_flag"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.provincia"
+continuidad_id = "payee-province"
+number = "77-78"
+segmento = "perceptor"
+data_type = "province_code"
+semantic_role = "payee_province"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.clave-codigo"
+continuidad_id = "payee-clave-codigo"
+number = "79"
+segmento = "perceptor"
+data_type = "integer"
+semantic_role = "payee_clave_codigo"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.codigo-emisor"
+continuidad_id = "payee-codigo-emisor"
+number = "80-91"
+segmento = "perceptor"
+data_type = "text"
+semantic_role = "payee_codigo_emisor"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.clave"
+continuidad_id = "payee-clave-percepcion"
+number = "92"
+segmento = "perceptor"
+data_type = "text"
+semantic_role = "payee_clave_percepcion"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.naturaleza"
+continuidad_id = "payee-naturaleza-percepcion"
+number = "93-94"
+segmento = "perceptor"
+data_type = "text"
+semantic_role = "payee_naturaleza_percepcion"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.pago"
+continuidad_id = "payee-pago"
+number = "95"
+segmento = "perceptor"
+data_type = "integer"
+semantic_role = "payee_pago"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.tipo-codigo"
+continuidad_id = "payee-tipo-codigo"
+number = "96"
+segmento = "perceptor"
+data_type = "text"
+semantic_role = "payee_tipo_codigo"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.codigo-cuenta"
+continuidad_id = "payee-codigo-cuenta"
+number = "97-116"
+segmento = "perceptor"
+data_type = "text"
+semantic_role = "payee_codigo_cuenta"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.pendiente"
+continuidad_id = "payee-pendiente-flag"
+number = "117"
+segmento = "perceptor"
+data_type = "text"
+semantic_role = "payee_pendiente_flag"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.ejercicio-devengo"
+continuidad_id = "devengo-year"
+number = "118-121"
+segmento = "perceptor"
+data_type = "year"
+semantic_role = "devengo_year"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.tipo-percepcion"
+continuidad_id = "payee-tipo-percepcion"
+number = "122"
+segmento = "perceptor"
+data_type = "integer"
+semantic_role = "payee_tipo_percepcion"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.percepciones"
+continuidad_id = "payee-percepciones-193"
+number = "123-135"
+segmento = "perceptor"
+data_type = "money"
+semantic_role = "payee_percepciones_193"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.reducciones"
+continuidad_id = "payee-reducciones-193"
+number = "139-151"
+segmento = "perceptor"
+data_type = "money"
+semantic_role = "payee_reducciones_193"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.base"
+continuidad_id = "payee-base-retenciones-193"
+number = "152-164"
+segmento = "perceptor"
+data_type = "money"
+semantic_role = "payee_base_retenciones_193"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.porcentaje"
+continuidad_id = "payee-porcentaje-retencion"
+number = "165-168"
+segmento = "perceptor"
+data_type = "ratio"
+semantic_role = "payee_porcentaje_retencion"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.retenciones"
+continuidad_id = "payee-retenciones-193"
+number = "169-181"
+segmento = "perceptor"
+data_type = "money"
+semantic_role = "payee_retenciones_193"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.penalizaciones"
+continuidad_id = "payee-penalizaciones"
+number = "182-192"
+segmento = "perceptor"
+data_type = "money"
+semantic_role = "payee_penalizaciones"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.naturaleza-declarante"
+continuidad_id = "payee-naturaleza-declarante"
+number = "208"
+segmento = "perceptor"
+data_type = "text"
+semantic_role = "payee_naturaleza_declarante"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.fecha-inicio-prestamo"
+continuidad_id = "payee-fecha-inicio-prestamo"
+number = "209-216"
+segmento = "perceptor"
+data_type = "date"
+semantic_role = "payee_fecha_inicio_prestamo"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.fecha-vencimiento-prestamo"
+continuidad_id = "payee-fecha-vencimiento-prestamo"
+number = "217-224"
+segmento = "perceptor"
+data_type = "date"
+semantic_role = "payee_fecha_vencimiento_prestamo"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.compensaciones"
+continuidad_id = "payee-compensaciones"
+number = "225-236"
+segmento = "perceptor"
+data_type = "money"
+semantic_role = "payee_compensaciones"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2022.casillas]]
+id = "perc.garantias"
+continuidad_id = "payee-garantias"
+number = "237-248"
+segmento = "perceptor"
+data_type = "money"
+semantic_role = "payee_garantias"
+required = true
+input_kind = "manual"
+section = ["perceptor", "percepcion"]
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[revisions.2022.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]

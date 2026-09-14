@@ -1,0 +1,428 @@
+# Modelo 280 RECORD Tipo 2 -- registro de declarado. One per PALP holder: the
+# holder and any representante legal, the plan's identification and apertura, the
+# clave de alta, the ejercicio amounts, the extincion block and the accumulated
+# amounts.
+#
+# 17 casillas.
+#
+# THE DESIGN DOES NOT TILE AS THE READER RETURNS IT, and this wave declares why
+# rather than working around it silently. AEAT writes "Este campo se subdivide en
+# dos" over positions 176-186, which is really THREE parts -- 176 SIGNO,
+# 177-184 ENTERO, 185-186 DECIMAL. The PDF reader's desglose nester has a count
+# clause that refuses to make three where AEAT says two, correctly, so 177-184
+# and 185-186 surface beside their own grandparent and the record sums 510
+# against a declared 500. This wave declares that one group; every other
+# containment in this or any record still refuses.
+#
+# POSITIONS 5 AND 9 ARE ECHOES OF TIPO 1 -- the design says of the ejercicio
+# "consignar lo contenido en estas mismas posiciones del registro de tipo 1", and
+# the NIF del declarante repeats likewise. The prior edition declares no casilla
+# for either while declaring both on Tipo 1, and that asymmetry is a judgement
+# this edition inherits rather than re-makes.
+#
+# POSITION 137 IS THE SPAN'S LOWER BOUND. Orden HFP/1192/2022 art. cuarto added
+# clave 3 (fallecimiento del tomador) and rewrote clave 2 around it. The position
+# and the caption are unchanged; the change is entirely in Contenido. That is why
+# this span starts at 2022 and must not be extended earlier.
+#
+# Tipo 2 tiles 1..500 exactly once with NO gap and NO overlap, asserted at
+# generation with the declared desglose group excluded from the sum.
+#
+# NOT MODELLED: the tipo-de-registro and modelo-declaracion constants and the
+# 314-byte BLANCOS filler.
+#
+# NOT CLAIMED: no formula, binding or construct is attached, and no clave
+# enumeration is modelled as a typed vocabulary -- the claves are transcribed as
+# AEAT printed them and nothing resolves against them.
+# @18+9 Alfanumérico. NIF DEL DECLARADO | Con carácter general, se consignará el número de identificación fiscal del declarado de acuerdo con las reglas previstas en el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por Real Decreto 1065/2007, de 27 de julio. Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones a la izquierda.
+# @27+9 Alfanumérico. NIF DEL REPRESENTANTE LEGAL | Si el declarado es menor de 14 años, se consignará en este campo el número de identificación fiscal de su representante legal (padre, madre o tutor), de conformidad con las reglas previstas en el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por Real Decreto 1065/2007, de 27 de julio. En cualquier otro caso el contenido de este campo se rellenará a espacios.
+# @36+40 Alfanumérico. APELLIDOS Y NOMBRE DEL DECLARADO | Se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este mismo orden.
+# @76+1 Numérico. TIPO DE PLAN DE AHORRO A LARGO PLAZO | Se consignará una de las claves siguientes: 1. SIALP: Seguro Individual de Ahorro a Largo Plazo. 2. CIALP: Cuenta Individual de Ahorro a Largo Plazo.
+# @77+1 Alfabético. TIPO DE IDENTIFICADOR | Se consignará una de las siguientes claves: I: Si el Plan de Ahorro a Largo Plazo se identifica mediante un código IBAN. O: Si se aporta otro identificador, por ejemplo, el número de referencia de un contrato de seguro.
+# @78+24 Alfanumérico. IDENTIFICADOR DEL PRODUCTO CONTRATADO | Se consignará el código identificativo del CIALP o SIALP cuya titularidad corresponda al declarado.
+# @102+8 Numérico. FECHA DE APERTURA | Este campo se subdivide en 3:
+# @110+1 Alfabético. CLAVE DE ALTA | Se consignará una de las claves siguientes: A. Plan de Ahorro a Largo Plazo constituido en el ejercicio al que se refiere la declaración o en un ejercicio anterior. B. Baja de un Plan de Ahorro a Largo plazo por movilización a otra entidad aseguradora o de crédito. C. Alta de un Plan de Ahorro a Largo Plazo por movilización desde otra Entidad Aseguradora o de Crédito. D. Alta de un Plan de Ahorro a Largo Plazo y movilización a otra entidad aseguradora o de crédito en el mismo ejercicio de la apertura.
+# @111+6 Numérico. APORTACIONES EFECTUADAS EN EL EJERCICIO | Importe de las aportaciones efectuadas durante el ejercicio al Plan de Ahorro a Largo Plazo. En caso de que en el campo “CLAVE DE ALTA”, posición 110 del registro de tipo 2, se haya consignado “B” o “D” se consignarán las aportaciones efectuadas hasta la movilización. En caso de que en el campo “CLAVE DE ALTA”, posición 110 del registro de tipo 2, se haya consignado “C”, se consignarán las aportaciones efectuadas desde la movilización. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos:
+# @117+10 Numérico. RENDIMIENTOS POSITIVOS OBTENIDOS DURANTE EL EJERCICIO | Se consignará el importe de los rendimientos de capital mobiliario positivos generados por el Plan de Ahorro a Largo Plazo en el ejercicio al que se refiera la declaración. En caso de que en el campo “CLAVE DE ALTA”, posición 110 del registro de tipo 2, se haya consignado “B” o “D”, se consignarán los rendimientos generados hasta la movilización, incluidos los que pudieran producirse con motivo de la misma. En caso de que en el campo “CLAVE DE ALTA”, posición 110 del registro de tipo 2, se haya consignado “C”, se consignarán los rendimientos generados desde la movilización. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos:
+# @127+10 Numérico. RENDIMIENTOS NEGATIVOS OBTENIDOS DURANTE EL EJERCICIO | Se consignará el importe de los rendimientos de capital mobiliario negativos generados por el Plan de Ahorro a Largo Plazo en el ejercicio al que se refiera la declaración. En caso de que en el campo “CLAVE DE ALTA”, posición 110 del registro de tipo 2, se haya consignado “B” o “D”, se consignarán los rendimientos negativos generados hasta la movilización, incluidos los que pudieran producirse con motivo de la misma. En caso de que en el campo “CLAVE DE ALTA”, posición 110 del registro de tipo 2, se haya consignado “C”, se consignarán los rendimientos negativos generados desde la movilización. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos:
+# @137+1 Numérico. EXTINCIÓN DEL PLAN DE AHORRO A LARGO PLAZO | En caso de extinción del Plan de Ahorro a Largo Plazo durante el ejercicio, deberá consignarse alguna de las siguientes claves: 1: Extinción del Plan de Ahorro a Largo Plazo por disposición de las cantidades integradas en el mismo antes de que hayan transcurrido 5 años desde su apertura o por incumplimiento del límite de aportaciones de la letra c) del apartado 1 de la Disposición adicional vigésima sexta de la Ley del IRPF. 2: Extinción del Plan de Ahorro a Largo Plazo en circunstancias distintas a las definidas a las definidas en las claves 1 y 3. 3: Extinción del Plan de Ahorro a Largo Plazo por fallecimiento del tomador. Si el Plan de Ahorro a Largo Plazo no se ha extinguido durante el ejercicio al que corresponda la declaración, este campo deberá dejarse vacío. No se entenderá producida la extinción del Plan de Ahorro a Largo Plazo en caso de movilización de los derechos económicos incorporados al mismo en los términos establecidos en la Disposición adicional octava del Reglamento del Impuesto sobre la Renta de las Personas Físicas, aprobado por Real Decreto 439/2007, de 30 de marzo. Por tanto, en caso de que en el campo “CLAVE DE ALTA”, que ocupa la posición 110 del registro de tipo 2, se hubiera consignado “B”, o “D”, este campo no tendrá contenido.
+# @138+8 Numérico. FECHA DE EXTINCIÓN | En caso de que el campo “EXTINCIÓN DEL PLAN DE AHORRO A LARGO PLAZO”, posición 137 del registro de tipo 2, tenga contenido, deberá consignarse la fecha de su extinción.
+# @146+10 Numérico. RENDIMIENTOS POSITIVOS ACUMULADOS | En caso de que el campo “EXTINCIÓN DEL PLAN DE AHORRO A LARGO PLAZO”, posición 137 del registro de tipo 2, tenga contenido, deberá consignarse el importe total de los rendimientos de capital mobiliario positivos obtenidos desde la fecha de su apertura. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos:
+# @156+10 Numérico. RENDIMIENTOS NEGATIVOS ACUMULADOS | En caso de que el campo “EXTINCIÓN DEL PLAN DE AHORRO A LARGO PLAZO”, posición 137 del registro de tipo 2, tenga contenido, deberá consignarse el importe total de los rendimientos de capital mobiliario negativos obtenidos desde la fecha de su apertura. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos:
+# @166+10 Numérico. BASE DE LA RETENCIÓN PRACTICADA | En caso de que en el campo “EXTINCIÓN DEL PLAN DE AHORRO A LARGO PLAZO”, posición 137 del registro de tipo 2, se hubiera declarado la clave 1, deberá consignarse la base de la retención practicada conforme a lo dispuesto en el apartado 6 de la Disposición adicional vigésima sexta de la Ley del IRPF. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos:
+# @176+11 Alfanumérico. RENDIMIENTOS NEGATIVOS IMPUTABLES | En caso de que en el campo «EXTINCIÓN DEL PLAN DE AHORRO A LARGO PLAZO», posición 137 del registro de tipo 2, se hubiera declarado la clave 2, deberá consignarse el importe de los rendimientos negativos del capital mobiliario que proceda imputar al ejercicio de la extinción conforme a lo dispuesto en el apartado 7 de la Disposición adicional vigésima sexta de la Ley del IRPF. En otro caso el campo se rellenará a ceros. Este campo se subdivide en dos: 176. SIGNO: Campo alfabético: se consignará siempre una “N” 177-186: RENDIMIENTO NEGATIVO: Campo numérico de diez posiciones. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos:
+# Modelo 280 RECORD Tipo 1 -- registro de declarante. One per declaration: the
+# declarante's identity and contact, the complementaria/sustitutiva mechanics,
+# and the two summary totals (importe total de aportaciones, base de
+# retenciones).
+#
+# 10 casillas. THIS MODELO PRINTS NO BOX NUMBERS AT ALL -- not one bracket token
+# appears anywhere in either record -- so every id is either a position range or
+# a name the authoring edition chose. The four named ones (ejercicio,
+# nif-declarante on this record; nif-declarado and apellidos-nombre-declarado on
+# Tipo 2) are declared aliases in this wave, because no positional rule can
+# produce a name and resemblance is not evidence.
+#
+# THE SEMANTIC PAYLOAD IS IN THE CONTENIDO COLUMN, not the caption. The
+# Descripcion cell is a bare uppercase title; the claves, the conditional rules
+# and the cross-references to positions 110 and 137 all live in Contenido. A
+# caption-only drift check is blind to a meaning change on this design by
+# construction, which is why Contenido is transcribed into the comment and
+# compared as its own channel.
+#
+# POSITION 58, TIPO DE SOPORTE, IS DELIBERATELY NOT DECLARED. It exists in the
+# design and in the export layout, and the prior edition declares no casilla for
+# it. This edition holds that line rather than widening scope inside a
+# carry-forward run.
+#
+# Tipo 1 tiles 1..500 exactly once with NO gap and NO overlap, asserted at
+# generation.
+#
+# NOT MODELLED: the tipo-de-registro and modelo-declaracion constants, and the
+# 316-byte BLANCOS filler -- which is 63% of the record.
+#
+# NOT CLAIMED: these casillas DECLARE the informativa; none of them computes it.
+# @5+4 Numérico. EJERCICIO. | Las cuatro cifras del ejercicio fiscal al que corresponde la declaración.
+# @9+9 Alfanumérico. NIF DEL DECLARANTE | Se consignará el NIF del declarante. Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones de la izquierda, de acuerdo con las reglas previstas en el Reglamento General de las actuaciones y los procedimientos de Gestión e Inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por Real Decreto 1065/2007, de 27 de julio.
+# @18+40 Alfanumérico. RAZÓN SOCIAL DEL DECLARANTE | Se consignará la denominación completa de la entidad declarante, sin anagrama. En ningún caso podrá figurar en este campo un nombre comercial. 58 TIPO DE SOPORTE Se cumplimentará la siguiente clave: 'T': Transmisión telemática.
+# @59+49 Alfanumérico. PERSONA CON QUIÉN RELACIONARSE | Datos de la persona con quién relacionarse. Este campo se subdivide en dos: 59-67 TELÉFONO: Campo numérico de 9 posiciones. 68-107 APELLIDOS Y NOMBRE: Se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este orden.
+# @108+13 Numérico. NUMERO IDENTIFICATIVO DE LA DECLARACION | Se consignará el número identificativo correspondiente a la declaración. El número identificativo que habrá de figurar en el modelo 280, será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 280.
+# @121+2 Alfabético. DECLARACION COMPLEMENTARIA O SUSTITUTIVA | En el caso de segunda o ulterior presentación de declaraciones, deberá cumplimentarse obligatoriamente uno de los siguientes campos: 121 DECLARACIÓN COMPLEMENTARIA: Se consignará una "C" si la presentación de esta declaración tiene por objeto incluir registros de declarados que, debiendo haber figurado en otra declaración del mismo ejercicio presentada anteriormente, hubieran sido completamente omitidos en la misma. La modificación del contenido de datos declarados en otra declaración del mismo ejercicio presentada anteriormente, se realizará desde el servicio de consulta y modificación de declaraciones informativas en la Sede Electrónica de la Agencia Estatal de Administración Tributaria (www.agenciatributaria.gob.es). 122 DECLARACIÓN SUSTITUTIVA: Se consignará una "S" si la presentación tiene como objeto anular y sustituir completamente a otra declaración anterior, del mismo ejercicio, en la cual se hubieran consignado datos inexactos o erróneos. Una declaración sustitutiva sólo puede anular a una única declaración anterior.
+# @123+13 Numérico. NUMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR | En caso de que se haya consignado una “C” en el campo “Declaración Complementaria” se consignará el número identificativo correspondiente a la declaración a la que complementa. En el caso de que se haya consignado una "S" en el campo "Declaración sustitutiva", se consignará el número identificativo correspondiente a la declaración que sustituye. En cualquier otro caso deberá rellenarse a ceros.
+# @136+9 Numérico. NUMERO TOTAL DE DECLARADOS | Se consignará el número total de registros de declarados, registros de detalle de tipo 2 que conforman la declaración.
+# @145+20 Numérico. IMPORTE TOTAL DE APORTACIONES | Se consignará la suma total de las cantidades reflejadas en el campo APORTACIONES EFECTUADAS EN EL EJERCICIO, posiciones 111 a 116 del registro de tipo 2. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos: 145-162: Numérico. ENTERO: Parte entera. Se consignará la parte entera de las aportaciones. 163-164: Numérico. DECIMAL: Parte decimal. Se consignará la parte decimal de las aportaciones.
+# @165+20 Numérico. BASE DE RETENCIONES | Se consignará la suma de los importes incluidos en el campo del registro de tipo 2, BASE DE LA RETENCIÓN PRACTICADA, posiciones 166 a 175. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos: 165-182: Numérico. ENTERO: Parte entera. Se consignará la parte entera de la base de retenciones. 183-184: Numérico. DECIMAL: Parte decimal. Se consignará la parte decimal de la base de retenciones.
+
+[[revisions.2022-2024.casillas]]
+id = "declarado-nif"
+continuidad_id = "m280-declarado-nif"
+number = "tipo2.nif-declarado"
+data_type = "nif"
+semantic_role = "m280_declarado_nif"
+required = false
+input_kind = "manual"
+section = ["declarado"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
+
+[[revisions.2022-2024.casillas]]
+id = "representante-legal-nif"
+continuidad_id = "m280-representante-legal-nif"
+number = "tipo2.27-35"
+data_type = "nif"
+semantic_role = "m280_representante_legal_nif"
+required = false
+input_kind = "manual"
+section = ["declarado"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
+
+[[revisions.2022-2024.casillas]]
+id = "declarado-nombre"
+continuidad_id = "m280-declarado-nombre"
+number = "tipo2.apellidos-nombre-declarado"
+data_type = "name"
+semantic_role = "m280_declarado_nombre"
+required = false
+input_kind = "manual"
+section = ["declarado"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
+
+[[revisions.2022-2024.casillas]]
+id = "tipo-plan-ahorro"
+continuidad_id = "m280-tipo-plan-ahorro"
+number = "tipo2.76"
+data_type = "text"
+semantic_role = "m280_tipo_plan_ahorro"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "estado"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[revisions.2022-2024.casillas.constraints]
+max_length = 1
+enum = ["1", "2"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+additional_source_refs = ["aeat-dr-280-2022"]
+
+[[revisions.2022-2024.casillas]]
+id = "tipo-identificador"
+continuidad_id = "m280-tipo-identificador"
+number = "tipo2.77"
+data_type = "text"
+semantic_role = "m280_tipo_identificador"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "estado"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[revisions.2022-2024.casillas.constraints]
+max_length = 1
+enum = ["I", "O"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+additional_source_refs = ["aeat-dr-280-2022"]
+
+[[revisions.2022-2024.casillas]]
+id = "identificador-producto"
+continuidad_id = "m280-identificador-producto"
+number = "tipo2.78-101"
+data_type = "text"
+semantic_role = "m280_identificador_producto"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "estado"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[revisions.2022-2024.casillas.constraints]
+max_length = 24
+legal_refs = ["orden-hap-2118-2015:art-1"]
+additional_source_refs = ["aeat-dr-280-2022"]
+
+[[revisions.2022-2024.casillas]]
+id = "fecha-apertura"
+continuidad_id = "m280-fecha-apertura"
+number = "tipo2.102-109"
+data_type = "text"
+semantic_role = "m280_fecha_apertura"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "estado"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[revisions.2022-2024.casillas.constraints]
+max_length = 8
+legal_refs = ["orden-hap-2118-2015:art-1"]
+additional_source_refs = ["aeat-dr-280-2022"]
+
+[[revisions.2022-2024.casillas]]
+id = "clave-alta"
+continuidad_id = "m280-clave-alta"
+number = "tipo2.110"
+data_type = "text"
+semantic_role = "m280_clave_alta"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "estado"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[[revisions.2022-2024.casillas]]
+id = "aportaciones-ejercicio"
+continuidad_id = "m280-aportaciones-ejercicio"
+number = "tipo2.111-116"
+data_type = "money"
+semantic_role = "m280_aportaciones_ejercicio"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "aportaciones"]
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+
+[[revisions.2022-2024.casillas]]
+id = "rendimientos-positivos-ejercicio"
+continuidad_id = "m280-rendimientos-positivos-ejercicio"
+number = "tipo2.117-126"
+data_type = "money"
+semantic_role = "m280_rendimientos_positivos_ejercicio"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "rendimientos"]
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+
+[[revisions.2022-2024.casillas]]
+id = "rendimientos-negativos-ejercicio"
+continuidad_id = "m280-rendimientos-negativos-ejercicio"
+number = "tipo2.127-136"
+data_type = "money"
+semantic_role = "m280_rendimientos_negativos_ejercicio"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "rendimientos"]
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+
+[[revisions.2022-2024.casillas]]
+id = "extincion-plan"
+continuidad_id = "m280-extincion-plan"
+number = "tipo2.137"
+data_type = "text"
+semantic_role = "m280_extincion_plan"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "extincion"]
+legal_refs = ["orden-hfp-1192-2022:art-cuarto"]
+
+[[revisions.2022-2024.casillas]]
+id = "fecha-extincion"
+continuidad_id = "m280-fecha-extincion"
+number = "tipo2.138-145"
+data_type = "text"
+semantic_role = "m280_fecha_extincion"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "extincion"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1192-2022:art-cuarto"]
+
+[[revisions.2022-2024.casillas]]
+id = "rendimientos-positivos-acumulados"
+continuidad_id = "m280-rendimientos-positivos-acumulados"
+number = "tipo2.146-155"
+data_type = "money"
+semantic_role = "m280_rendimientos_positivos_acumulados"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "rendimientos_acumulados"]
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+
+[[revisions.2022-2024.casillas]]
+id = "rendimientos-negativos-acumulados"
+continuidad_id = "m280-rendimientos-negativos-acumulados"
+number = "tipo2.156-165"
+data_type = "money"
+semantic_role = "m280_rendimientos_negativos_acumulados"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "rendimientos_acumulados"]
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+
+[[revisions.2022-2024.casillas]]
+id = "base-retencion-practicada"
+continuidad_id = "m280-base-retencion-practicada"
+number = "tipo2.166-175"
+data_type = "money"
+semantic_role = "m280_base_retencion_practicada"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "rendimientos"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+
+[revisions.2022-2024.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
+
+[[revisions.2022-2024.casillas]]
+id = "rendimientos-negativos-imputables"
+continuidad_id = "m280-rendimientos-negativos-imputables"
+number = "tipo2.176-186"
+data_type = "money"
+semantic_role = "m280_rendimientos_negativos_imputables"
+required = false
+input_kind = "manual"
+section = ["plan_ahorro_largo_plazo", "rendimientos"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+
+[[revisions.2022-2024.casillas]]
+id = "ejercicio-declaracion"
+continuidad_id = "filing-year"
+number = "tipo1.ejercicio"
+data_type = "year"
+semantic_role = "filing_year"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-4"]
+
+[[revisions.2022-2024.casillas]]
+id = "declarante-nif"
+continuidad_id = "irpf-declarante-nif"
+number = "tipo1.nif-declarante"
+data_type = "nif"
+semantic_role = "irpf_declarante_nif"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[[revisions.2022-2024.casillas]]
+id = "declarante-razon-social"
+continuidad_id = "m280-declarante-razon-social"
+number = "tipo1.18-57"
+data_type = "name"
+semantic_role = "m280_declarante_razon_social"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
+
+[[revisions.2022-2024.casillas]]
+id = "persona-relacion"
+continuidad_id = "m280-persona-relacion"
+number = "tipo1.59-107"
+data_type = "text"
+semantic_role = "m280_persona_relacion"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[[revisions.2022-2024.casillas]]
+id = "numero-identificativo-declaracion"
+continuidad_id = "m280-numero-identificativo-declaracion"
+number = "tipo1.108-120"
+data_type = "integer"
+semantic_role = "m280_numero_identificativo_declaracion"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[[revisions.2022-2024.casillas]]
+id = "declaracion-complementaria-sustitutiva"
+continuidad_id = "m280-declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+data_type = "text"
+semantic_role = "m280_declaracion_complementaria_sustitutiva"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[[revisions.2022-2024.casillas]]
+id = "numero-identificativo-anterior"
+continuidad_id = "m280-numero-identificativo-anterior"
+number = "tipo1.123-135"
+data_type = "integer"
+semantic_role = "m280_numero_identificativo_anterior"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[[revisions.2022-2024.casillas]]
+id = "numero-total-declarados"
+continuidad_id = "m280-numero-total-declarados"
+number = "tipo1.136-144"
+data_type = "integer"
+semantic_role = "m280_numero_total_declarados"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+
+[[revisions.2022-2024.casillas]]
+id = "importe-total-aportaciones"
+continuidad_id = "m280-importe-total-aportaciones"
+number = "tipo1.145-164"
+data_type = "money"
+semantic_role = "m280_importe_total_aportaciones"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+
+[revisions.2022-2024.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
+
+[[revisions.2022-2024.casillas]]
+id = "base-retenciones"
+continuidad_id = "m280-base-retenciones"
+number = "tipo1.165-184"
+data_type = "money"
+semantic_role = "m280_base_retenciones"
+required = false
+input_kind = "manual"
+section = ["identificacion_declaracion"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+
+[revisions.2022-2024.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]

@@ -1,0 +1,27 @@
+# Modelo 190 application links for filing year 2023.
+#
+# TWO LINKS, NOT THE TEN THE 2024 EDITION DECLARES. This is an
+# applicability-grade historical epoch: it schedules the obligation and
+# carries no filing layout, no formulas and no bindings. The surfaces the 2024
+# edition wires -- portal, calculation, extractor, review, approval,
+# reconciliation, workflow, export -- would each assert that a consumer
+# handles this era, which nothing here establishes. Only the two the schema
+# requires are declared: a filing link for the casillas and a deadline link
+# for the deadline windows.
+#
+# EVERY REF IS ONE THIS REVISION ALREADY CARRIES. legal_refs are the
+# revision.toml set verbatim, and the 2024 links deliberately are NOT copied:
+# theirs cite orden-hac-1431-2025:art-2 and boe-modelo-190-2025-form, both of
+# which open in 2025 and cover no day of this year. The layout authority is
+# this era own design, aeat-dr-190-2023, and aeat-modelo-190-procedure supplies
+# the official_source_guidance the schema requires -- it applies from
+# 2020-01-01 with no end, so it covers this span, and this revision already
+# names it in its own source_refs.
+
+[[revisions.2023.application_links]]
+id = "modelo-190-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]

@@ -115,8 +115,10 @@ def main(argv: Iterable[str] | None = None) -> int:
             continue
         retire.append(coordinate)
 
-    print(f"dispositions: {len(entries)} | served: {len(retire) + len(kept_held)} | "
-          f"retiring: {len(retire)} | held: {len(kept_held)}")
+    print(
+        f"dispositions: {len(entries)} | served: {len(retire) + len(kept_held)} | "
+        f"retiring: {len(retire)} | held: {len(kept_held)}"
+    )
     for coordinate in retire:
         print(f"  RETIRE {coordinate}")
     for coordinate in kept_held:
@@ -169,8 +171,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         raise SystemExit(
             f"REFUSE: expected {len(entries) - len(retire)} entries after the write, found {len(remaining)}"
         )
-    print(f"\nwrote {DISPOSITIONS.relative_to(_ROOT).as_posix()}: "
-          f"{len(entries)} -> {len(remaining)} entries")
+    print(f"\nwrote {DISPOSITIONS.relative_to(_ROOT).as_posix()}: {len(entries)} -> {len(remaining)} entries")
     print(f"  sha256 {pre[:16]}... -> {hashlib.sha256(back).hexdigest()[:16]}...")
     return 0
 

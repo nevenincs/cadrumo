@@ -1,7 +1,0 @@
-[[revisions."2020".casillas]]
-id = "0356"
-number = "0356"
-section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
-data_type = "integer"
-semantic_role = "irpf_gp_elemento_numero_orden"
-legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]

@@ -1,9 +1,0 @@
-[[revisions."2024".casillas]]
-id = "SEXO_D"
-number = "*07"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_declarante_sexo"
-input_kind = "bound"
-binding = "renta-profile-taxpayer-sex"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]

@@ -1,0 +1,1977 @@
+# LIRPF art. 23.2.c counts 'los dos anos anteriores a la fecha de la
+# celebracion del contrato' DE FECHA A FECHA, not in days. This parameter
+# declared 730 days, which is one day short whenever the two-year span
+# contains a 29 de febrero, and denied tier c) to a rehabilitation finished
+# exactly two calendar years before the contract. The figure was never the
+# defect; the unit was.
+# Modelo 100 Art. 85 imputed-real-estate coefficients.
+# Modelo 100 Art. 58.1 LIRPF rentas ceiling conditioning the mínimo por
+# descendientes. A descendant holding rentas anuales (excluidas las exentas)
+# above this figure generates no mínimo, so the ceiling is an eligibility
+# threshold rather than an amount paid.
+# Modelo 100 Art. 61 norma 2ª LIRPF own-return exclusion. When the descendant
+# who generates the entitlement files their own declaración for this Impuesto
+# with rentas above this figure, the mínimo por descendientes does not apply at
+# all. Distinct from the Art. 58.1 rentas ceiling: this one tests the
+# descendant's OWN filing, not their income alone.
+# Modelo 100 Art. 61 norma 4a LIRPF death-in-period flat minimo por descendientes.
+# A descendant who dies during the periodo impositivo and generates the minimo
+# takes THIS flat figure instead of the Art. 58.1 birth-order tranche that would
+# otherwise correspond to their rank.
+#
+# This figure COINCIDES with the Art. 58.1 first-child tranche
+# (renta-2024-minimo-descendientes-primer-hijo-2024) in every revision served
+# today, and is deliberately NOT bound to it. They are legally distinct: the
+# tranche is fixed by Art. 58.1 and moves with birth order, this one is fixed by
+# Art. 61 norma 4a and applies at ANY birth order. Binding them would silently
+# move the death amount if a future reform moved the first-child tranche, so the
+# coincidence of values must never become a shared authority.
+#
+# The second required_text below pins the ordering limb rather than this
+# parameter's value. It is carried here on purpose: Art. 61 norma 4a's statutory
+# text fixes only the amount, while the AEAT manual's "Cuantias aplicables"
+# section adds that the deceased is dropped from the age ordering that ranks the
+# survivors. That limb has no other registry home, and omitting it over-grants
+# every younger sibling by leaving them at a rank the deceased should have
+# vacated. Citing it here makes the whole rule fail loudly if the manual passage
+# this reading depends on ever moves.
+# Modelo 100 Art. 81.2 LIRPF annual cap on the guarderia increment (casilla 0613).
+#
+# The maximum the deduccion por maternidad may be increased for one child's
+# gastos de custodia in a full period: "se podra incrementar hasta en 1.000
+# euros adicionales". It is an ANNUAL ceiling, not a flat entitlement -- art.
+# 81.3 prorates it by the months the apartado 1 and apartado 2 requirements
+# hold simultaneously, and bounds the result at that child's own non-subsidised
+# spend. The registry formula must therefore never apply this figure directly
+# per child; it is the numerator of a proration.
+#
+# Authored as its own parameter because the figure previously existed ONLY as an
+# inline literal inside the 0613 formula expression. That is legitimate registry
+# data but is unreadable from the application layer, and the per-child proration
+# is computed there -- so the figure had no home the calculation could resolve.
+#
+# Declared for the 2024 revision alone, deliberately. It is the only revision
+# that declares casilla 0613, and the only one where the casilla is computed
+# rather than a manual form-native entry. Authoring it for revisions that
+# declare no consumer would add orphan parameters carrying a regulatory value
+# nothing resolves.
+# Modelo 100 Art. 81.1 LIRPF deduccion por maternidad figures.
+#
+# Authored because these existed ONLY as Python literals in
+# core.external_constants, while the Art. 81.2 guarderia cap of the SAME article
+# already had a resolvable parameter. One article was carried two ways in one
+# product: the money in the registry for apartado 2, and in code for apartado 1.
+#
+# The ordinary monthly accrual and the annual cap per hijo are the two figures
+# the ordinary formula needs; the post-birth alta increment is a third, distinct
+# figure that only ADDS to a hijo's total and raises that hijo's cap. The raised
+# cap is deliberately NOT authored as a fourth parameter: it is the sum of the
+# cap and the increment, and storing a derived total as an independent value is
+# how the two inputs drift apart from it.
+# Modelo 2024 LIRPF art. 58 / 61 QUALIFYING CONDITIONS for the minimo familiar.
+#
+# The minimo AMOUNTS of art. 58 are already registry parameters in this revision.
+# The conditions that SELECT which amount applies -- the ordinary age ceiling, the
+# menor-de-tres supplement ceiling, and the art. 61.4a shared-custody prorrata --
+# existed only as Python literals, so a consumer could resolve the money but not
+# the rule that awards it. The sibling age-band parameters carry their band in the
+# FILENAME rather than in a field, which is the same gap from the other side.
+# Modelo 2024 LIRPF art. 23.1.a) carry-forward window for gastos de reparacion y
+# conservacion.
+#
+# Existed only as a Python literal. It keys on the FILING PERIOD and modelo 100
+# declares a revision for every supported year, so it is authorable here without
+# the acquisition-year trap that blocks the LIVA bienes-de-inversion figures.
+#
+# The RIRPF grado-de-discapacidad threshold was authored alongside this and then
+# WITHDRAWN: it cites RIRPF art. 72, which is not present in the legal catalogue,
+# and the registry correctly refused it as an unknown legal id. Citing a
+# catalogued-but-wrong article to make it pass would be worse than leaving the
+# figure in Python, so it stays a Python constant until its provision is
+# catalogued.
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-andalucia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Andalucía", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "13000"
+upper_bound = "21100"
+fixed_addition = "1235"
+marginal_rate = "0.12"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "21100"
+upper_bound = "35200"
+fixed_addition = "2207"
+marginal_rate = "0.15"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4322"
+marginal_rate = "0.185"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000"
+fixed_addition = "8910"
+marginal_rate = "0.225"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-aragon-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Aragón", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13072.50"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "13072.50"
+upper_bound = "21210.00"
+fixed_addition = "1241.89"
+marginal_rate = "0.12"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "21210.00"
+upper_bound = "36960.00"
+fixed_addition = "2218.39"
+marginal_rate = "0.15"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "36960.00"
+upper_bound = "52500.00"
+fixed_addition = "4580.89"
+marginal_rate = "0.185"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "52500.00"
+upper_bound = "60000.00"
+fixed_addition = "7455.79"
+marginal_rate = "0.205"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000.00"
+upper_bound = "80000.00"
+fixed_addition = "8993.29"
+marginal_rate = "0.23"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "80000.00"
+upper_bound = "90000.00"
+fixed_addition = "13593.29"
+marginal_rate = "0.24"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "90000.00"
+upper_bound = "130000.00"
+fixed_addition = "15993.29"
+marginal_rate = "0.25"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "130000.00"
+fixed_addition = "25993.29"
+marginal_rate = "0.255"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-asturias-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Principado de Asturias", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "17707.20"
+fixed_addition = "1245.00"
+marginal_rate = "0.12"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "17707.20"
+upper_bound = "33007.20"
+fixed_addition = "1875.86"
+marginal_rate = "0.14"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "33007.20"
+upper_bound = "53407.20"
+fixed_addition = "4017.86"
+marginal_rate = "0.185"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "53407.20"
+upper_bound = "70000.00"
+fixed_addition = "7791.86"
+marginal_rate = "0.215"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "70000.00"
+upper_bound = "90000.00"
+fixed_addition = "11359.32"
+marginal_rate = "0.225"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "90000.00"
+upper_bound = "175000.00"
+fixed_addition = "15859.32"
+marginal_rate = "0.25"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "175000.00"
+fixed_addition = "37109.32"
+marginal_rate = "0.255"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-baleares-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Illes Balears", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "10000"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "10000"
+upper_bound = "18000"
+fixed_addition = "900"
+marginal_rate = "0.1125"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "18000"
+upper_bound = "30000"
+fixed_addition = "1800"
+marginal_rate = "0.1425"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "30000"
+upper_bound = "48000"
+fixed_addition = "3510"
+marginal_rate = "0.175"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "48000"
+upper_bound = "70000"
+fixed_addition = "6660"
+marginal_rate = "0.19"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "70000"
+upper_bound = "90000"
+fixed_addition = "10840"
+marginal_rate = "0.2175"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "120000"
+fixed_addition = "15190"
+marginal_rate = "0.2275"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "120000"
+upper_bound = "175000"
+fixed_addition = "22015"
+marginal_rate = "0.2375"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "175000"
+fixed_addition = "35077.50"
+marginal_rate = "0.2475"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-canarias-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Canarias", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13465"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "13465"
+upper_bound = "19022"
+fixed_addition = "1211.85"
+marginal_rate = "0.115"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "19022"
+upper_bound = "35185"
+fixed_addition = "1850.91"
+marginal_rate = "0.14"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35185"
+upper_bound = "56382"
+fixed_addition = "4113.73"
+marginal_rate = "0.185"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "56382"
+upper_bound = "91350"
+fixed_addition = "8035.17"
+marginal_rate = "0.235"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "91350"
+upper_bound = "121200"
+fixed_addition = "16252.65"
+marginal_rate = "0.25"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "121200"
+fixed_addition = "23715.15"
+marginal_rate = "0.26"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-cantabria-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Cantabria", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13000"
+fixed_addition = "0"
+marginal_rate = "0.085"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "13000"
+upper_bound = "21000"
+fixed_addition = "1105"
+marginal_rate = "0.11"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "21000"
+upper_bound = "35200"
+fixed_addition = "1985"
+marginal_rate = "0.145"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4044"
+marginal_rate = "0.18"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "90000"
+fixed_addition = "8508"
+marginal_rate = "0.225"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "90000"
+fixed_addition = "15258"
+marginal_rate = "0.245"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-castilla-la-mancha-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "35200.00"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "60000.00"
+fixed_addition = "4362.75"
+marginal_rate = "0.185"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000.00"
+fixed_addition = "8950.75"
+marginal_rate = "0.225"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-castilla-y-leon-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad de Castilla y León", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1120.50"
+marginal_rate = "0.12"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "35200.00"
+fixed_addition = "2050.50"
+marginal_rate = "0.14"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "53407.20"
+fixed_addition = "4150.50"
+marginal_rate = "0.185"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "53407.20"
+fixed_addition = "7518.83"
+marginal_rate = "0.215"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-cataluna-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Cataluña", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.105"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "17707.20"
+fixed_addition = "1307.25"
+marginal_rate = "0.12"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "17707.20"
+upper_bound = "21000.00"
+fixed_addition = "1938.11"
+marginal_rate = "0.14"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "21000.00"
+upper_bound = "33007.20"
+fixed_addition = "2399.10"
+marginal_rate = "0.15"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "33007.20"
+upper_bound = "53407.20"
+fixed_addition = "4200.18"
+marginal_rate = "0.188"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "53407.20"
+upper_bound = "90000.00"
+fixed_addition = "8035.38"
+marginal_rate = "0.215"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "90000.00"
+upper_bound = "120000.00"
+fixed_addition = "15902.83"
+marginal_rate = "0.235"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "120000.00"
+upper_bound = "175000.00"
+fixed_addition = "22952.83"
+marginal_rate = "0.245"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "175000.00"
+fixed_addition = "36427.83"
+marginal_rate = "0.255"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-comunidad-valenciana-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunitat Valenciana", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12000"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12000"
+upper_bound = "22000"
+fixed_addition = "1080"
+marginal_rate = "0.12"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "22000"
+upper_bound = "32000"
+fixed_addition = "2280"
+marginal_rate = "0.15"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "32000"
+upper_bound = "42000"
+fixed_addition = "3780"
+marginal_rate = "0.175"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "42000"
+upper_bound = "52000"
+fixed_addition = "5530"
+marginal_rate = "0.2"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "52000"
+upper_bound = "62000"
+fixed_addition = "7530"
+marginal_rate = "0.225"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "62000"
+upper_bound = "72000"
+fixed_addition = "9780"
+marginal_rate = "0.25"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "72000"
+upper_bound = "100000"
+fixed_addition = "12280"
+marginal_rate = "0.265"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "100000"
+upper_bound = "150000"
+fixed_addition = "19700"
+marginal_rate = "0.275"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "150000"
+upper_bound = "200000"
+fixed_addition = "33450"
+marginal_rate = "0.285"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "200000"
+fixed_addition = "47700"
+marginal_rate = "0.295"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-extremadura-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.08"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "996.00"
+marginal_rate = "0.10"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "24200.00"
+fixed_addition = "1771.00"
+marginal_rate = "0.16"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "24200.00"
+upper_bound = "35200.00"
+fixed_addition = "2411.00"
+marginal_rate = "0.175"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "60000.00"
+fixed_addition = "4336.00"
+marginal_rate = "0.21"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000.00"
+upper_bound = "80200.00"
+fixed_addition = "9544.00"
+marginal_rate = "0.235"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "80200.00"
+upper_bound = "99200.00"
+fixed_addition = "14291.00"
+marginal_rate = "0.24"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "99200.00"
+upper_bound = "120200.00"
+fixed_addition = "18851.00"
+marginal_rate = "0.245"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "120200.00"
+fixed_addition = "23996.00"
+marginal_rate = "0.25"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-galicia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Galicia", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12985.35"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12985.35"
+upper_bound = "21068.60"
+fixed_addition = "1168.68"
+marginal_rate = "0.1165"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "21068.60"
+upper_bound = "35200.00"
+fixed_addition = "2110.38"
+marginal_rate = "0.149"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "60000.00"
+fixed_addition = "4215.96"
+marginal_rate = "0.184"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000.00"
+fixed_addition = "8779.16"
+marginal_rate = "0.225"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-la-rioja-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de La Rioja", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.08"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "996.00"
+marginal_rate = "0.106"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "35200.00"
+fixed_addition = "1817.50"
+marginal_rate = "0.136"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "40000.00"
+fixed_addition = "3857.50"
+marginal_rate = "0.178"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "40000.00"
+upper_bound = "50000.00"
+fixed_addition = "4711.90"
+marginal_rate = "0.183"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "50000.00"
+upper_bound = "60000.00"
+fixed_addition = "6541.90"
+marginal_rate = "0.19"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000.00"
+upper_bound = "120000.00"
+fixed_addition = "8441.90"
+marginal_rate = "0.245"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "120000.00"
+fixed_addition = "23141.90"
+marginal_rate = "0.27"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-madrid-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad de Madrid", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13362.22"
+fixed_addition = "0"
+marginal_rate = "0.085"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "13362.22"
+upper_bound = "19004.63"
+fixed_addition = "1135.79"
+marginal_rate = "0.107"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "19004.63"
+upper_bound = "35425.68"
+fixed_addition = "1739.53"
+marginal_rate = "0.128"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35425.68"
+upper_bound = "57320.40"
+fixed_addition = "3841.42"
+marginal_rate = "0.174"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "57320.40"
+fixed_addition = "7651.10"
+marginal_rate = "0.205"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-murcia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Región de Murcia", "escala autonómica"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1182.75"
+marginal_rate = "0.112"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "34000.00"
+fixed_addition = "2050.75"
+marginal_rate = "0.133"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "34000.00"
+upper_bound = "60000.00"
+fixed_addition = "3886.15"
+marginal_rate = "0.179"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000.00"
+fixed_addition = "8540.15"
+marginal_rate = "0.225"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-estatal-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["escala general", "base liquidable general"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "35200"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4362.75"
+marginal_rate = "0.185"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "300000"
+fixed_addition = "8950.75"
+marginal_rate = "0.225"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "300000"
+fixed_addition = "62950.75"
+marginal_rate = "0.245"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-ejercicio-amendment-year"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "2024"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-rehab-lookback-years"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-joven-tenant-age-min"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "18"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-joven-tenant-age-max"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "35"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-reduccion-rate-tier-50"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "0.50"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-reduccion-rate-tier-60"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "0.60"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-reduccion-rate-tier-70"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "0.70"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-reduccion-rate-tier-90"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "0.90"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-prior-rent-rebaja-threshold"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions.2024.parameters.values]]
+value = "0.05"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "actividades económicas"]
+
+[[revisions.2024.parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-439-2007:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "actividades económicas"]
+
+[[revisions.2024.parameters.values]]
+value = "2000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-estatal-base-ahorro"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "6000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "6000"
+upper_bound = "50000"
+fixed_addition = "570"
+marginal_rate = "0.105"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "50000"
+upper_bound = "200000"
+fixed_addition = "5190"
+marginal_rate = "0.115"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "200000"
+upper_bound = "300000"
+fixed_addition = "22440"
+marginal_rate = "0.135"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "300000"
+fixed_addition = "35940"
+marginal_rate = "0.14"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-escala-autonomica-base-ahorro"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-76"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "6000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "6000"
+upper_bound = "50000"
+fixed_addition = "570"
+marginal_rate = "0.105"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "50000"
+upper_bound = "200000"
+fixed_addition = "5190"
+marginal_rate = "0.115"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "200000"
+upper_bound = "300000"
+fixed_addition = "22440"
+marginal_rate = "0.135"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "300000"
+fixed_addition = "35940"
+marginal_rate = "0.14"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-contribuyente-base"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-57"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo del contribuyente"]
+
+[[revisions.2024.parameters.values]]
+value = "5550"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-contribuyente-edad-65-74"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-57"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo del contribuyente", "65 años"]
+
+[[revisions.2024.parameters.values]]
+value = "1150"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-contribuyente-edad-75"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-57"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo del contribuyente", "75 años"]
+
+[[revisions.2024.parameters.values]]
+value = "1400"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-primer-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por descendientes", "primer"]
+
+[[revisions.2024.parameters.values]]
+value = "2400"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-segundo-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por descendientes", "segundo"]
+
+[[revisions.2024.parameters.values]]
+value = "2700"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-tercer-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por descendientes", "tercer"]
+
+[[revisions.2024.parameters.values]]
+value = "4000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-cuarto-y-siguientes"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por descendientes", "cuarto"]
+
+[[revisions.2024.parameters.values]]
+value = "4500"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-menor-tres-anos"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por descendientes", "tres años"]
+
+[[revisions.2024.parameters.values]]
+value = "2800"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-ascendientes-mayor-65"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-59"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por ascendientes", "65 años"]
+
+[[revisions.2024.parameters.values]]
+value = "1150"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-ascendientes-mayor-75"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-59"]
+additional_source_refs = ["boe-modelo-100-2024-form"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por ascendientes", "75 años"]
+
+[[revisions.2024.parameters.values]]
+value = "1400"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-rental-amortizacion-rate"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "amortización"]
+
+[[revisions.2024.parameters.values]]
+value = "0.03"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-discapacidad-grado-33"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-60"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por discapacidad"]
+
+[[revisions.2024.parameters.values]]
+value = "3000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-discapacidad-grado-65"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-60"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por discapacidad"]
+
+[[revisions.2024.parameters.values]]
+value = "9000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-discapacidad-gastos-asistencia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-60"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por discapacidad"]
+
+[[revisions.2024.parameters.values]]
+value = "3000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-imputacion-inmobiliaria-rate-recent-revision"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["ley-35-2006:art-85"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["1,1 por 100", "valor catastral", "2024"]
+
+[[revisions.2024.parameters.values]]
+value = "0.011"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-imputacion-inmobiliaria-rate-old-or-no-revision"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["ley-35-2006:art-85"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["2 por 100", "valor catastral"]
+
+[[revisions.2024.parameters.values]]
+value = "0.02"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-imputacion-inmobiliaria-year-days"
+data_type = "integer"
+unit = "days"
+legal_refs = ["ley-35-2006:art-85"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["62 ÷ 365", "valor catastral"]
+
+[[revisions.2024.parameters.values]]
+value = "365"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-madrid-primer-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Madrid", "2.575,85 euros anuales por el primer descendiente"]
+
+[[revisions.2024.parameters.values]]
+value = "2575.85"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-madrid-segundo-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Madrid", "2.897,83 euros anuales por el segundo"]
+
+[[revisions.2024.parameters.values]]
+value = "2897.83"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-madrid-tercer-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Madrid", "4.400 euros anuales por el tercero"]
+
+[[revisions.2024.parameters.values]]
+value = "4400"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-madrid-cuarto-y-siguientes"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Madrid", "4.950 euros anuales por el cuarto y siguientes"]
+
+[[revisions.2024.parameters.values]]
+value = "4950"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-madrid-menor-tres-anos"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Madrid", "se aumentará en 3.005,16 euros anuales"]
+
+[[revisions.2024.parameters.values]]
+value = "3005.16"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-rentas-anuales-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["que el descendiente no haya obtenido en el ejercicio 2024 rentas superiores a 8.000 euros anuales, excluidas las rentas exentas del impuesto"]
+
+[[revisions.2024.parameters.values]]
+value = "8000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-declaracion-propia-rentas-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["que el descendiente no presente declaración del IRPF con rentas superiores a 1.800", "si las rentas son superiores a 1.800 euros, ninguno de ellos puede aplicar el mínimo por descendientes"]
+
+[[revisions.2024.parameters.values]]
+value = "1800"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendientes-fallecimiento"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-4"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["En caso de fallecimiento de un descendiente que genere derecho al mínimo por este concepto, la cuantía aplicable es de 2.400 euros", "sin computar a estos efectos aquellos descendientes que, en su caso, hubieran fallecido en el ejercicio con anterioridad a la fecha de devengo del impuesto"]
+
+[[revisions.2024.parameters.values]]
+value = "2400"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-guarderia-incremento-cap-anual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+additional_source_refs = ["aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses", "1.000 euros ÷ 12 meses x 2 meses) = 166,67"]
+
+[[revisions.2024.parameters.values]]
+value = "1000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-maternidad-mensual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["100 euros por cada mes a partir de mayo"]
+
+[[revisions.2024.parameters.values]]
+value = "100"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-maternidad-cap-anual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["podrá superar 1.200 euros anuales, salvo en el supuesto en que resulte de aplicación"]
+
+[[revisions.2024.parameters.values]]
+value = "1200"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-maternidad-alta-posterior-incremento"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["el incremento de 150 euros, en cuyo caso, dicho límite se eleva en dicho ejercicio"]
+
+[[revisions.2024.parameters.values]]
+value = "150"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-descendiente-edad-maxima"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["a) Que el descendiente, en los términos anteriormente comentados, sea menor de 25 años"]
+
+[[revisions.2024.parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-menor-tres-edad-maxima"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Cuando el descendiente sea menor de tres años, el mínimo que corresponda de los"]
+
+[[revisions.2024.parameters.values]]
+value = "3"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-minimo-custodia-compartida-prorrata"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["ley-35-2006:art-61"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["prorrateado por partes iguales con el progenitor que tenga la guarda y custodia."]
+
+[[revisions.2024.parameters.values]]
+value = "0.5"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions.2024.parameters]]
+id = "renta-gastos-carry-forward-anos"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["reparación y conservación podrán ser deducidos en los cuatro años siguientes, respetando cada año el límite"]
+
+[[revisions.2024.parameters.values]]
+value = "4"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31

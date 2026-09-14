@@ -1,9 +1,0 @@
-[[revisions."2025".casillas]]
-id = "NORESIDENTE"
-number = "*62"
-section = ["datos_identificativos", "conyuge"]
-data_type = "boolean"
-semantic_role = "irpf_conyuge_no_residente_flag"
-input_kind = "bound"
-binding = "renta-profile-spouse-non-resident-irpf"
-additional_source_refs = ["aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

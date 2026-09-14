@@ -1,0 +1,29 @@
+[[revisions.2019-2022.bindings]]
+id = "modelo-202-pagos-fraccionados-anteriores"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022"]
+
+[[revisions.2019-2022.bindings.source_citations]]
+source_ref = "aeat-modelo-202-instructions-2018-2022"
+required_text = ["pagos fraccionados"]
+
+[revisions.2019-2022.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "202"
+source_casilla_id = "34"
+
+[revisions.2019-2022.bindings.provider.temporal]
+kind = "prior_quarter_expanding_span"
+
+[revisions.2019-2022.bindings.applicability]
+kind = "target_periods"
+periods = ["2P", "3P"]
+
+[revisions.2019-2022.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2019-2022.bindings.aggregation]
+op = "sum"

@@ -1,9 +1,3 @@
-[revisions."2024"]
-predecessor = "2023"
-reviewed_against = "2023"
-binding_source_refs = ["aeat-modelo-210-procedure"]
-formula_source_refs = ["aeat-modelo-210-procedure"]
-casilla_source_refs = ["aeat-modelo-210-procedure"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -19,70 +13,47 @@ casilla_source_refs = ["aeat-modelo-210-procedure"]
 # What it does NOT establish: that the figures a filing produces are correct
 # against AEAT. That is a tax review against official sources, and it is what an
 # operator re-stamping this to 'operator_reviewed' would be attesting.
+# valid_to is open: the TRLIRNR Art 24-25 tipo-de-gravamen schedule (24% general,
+# 19% ue_residente / ganancia_patrimonial / interest, plus the Art. 25.1.b
+# pension tariff) has no annual coefficient table. A separate revision is
+# authored only when a genuine statutory or form-structure change takes effect.
+# Both already-registered record designs. This revision opens 2025-01-01
+# and is open-ended, so it spans the boundary between them: AEAT governs
+# devengos up to 2025-12-31 with the first and "a partir del 01-01-2026"
+# with the second. Neither was cited.
+# Orden HAC/56/2024 approves the form from 2024-02-01; 2023 must not cite it.
+[revisions.2024]
+predecessor = "2023"
+reviewed_against = "2023"
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
 id = "2024"
-# valid_to is open: the TRLIRNR Art 24-25 tipo-de-gravamen schedule (24% general,
-# 19% ue_residente / ganancia_patrimonial / interest, plus the Art. 25.1.b
-# pension tariff) has no annual coefficient table. A separate revision is
-# authored only when a genuine statutory or form-structure change takes effect.
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-period_selector = { year_from = 2024, year_to = 2024, periods = ["EVENT-N", "0A"] }
+binding_source_refs = ["aeat-modelo-210-procedure"]
+formula_source_refs = ["aeat-modelo-210-procedure"]
+casilla_source_refs = ["aeat-modelo-210-procedure"]
 orden_aplicabilidad = ["orden-eha-3316-2010:art-1"]
-legal_refs = [
-    "orden-eha-3316-2010:art-1",
-    "orden-eha-3316-2010:art-2",
-    "trlirnr-rdleg-5-2004:art-13.1.h",
-    "trlirnr-rdleg-5-2004:art-24",
-    "trlirnr-rdleg-5-2004:art-25.1.a",
-    "trlirnr-rdleg-5-2004:art-25.1.b",
-    "trlirnr-rdleg-5-2004:art-25.1.f",
-    "ley-35-2006:art-85",
-]
-source_refs = [
-    "boe-modelo-210-base-order",
-    "aeat-modelo-210-procedure",
-    "aeat-irnr-renta-imputada-inmueble-urbano",
-    # Both already-registered record designs. This revision opens 2025-01-01
-    # and is open-ended, so it spans the boundary between them: AEAT governs
-    # devengos up to 2025-12-31 with the first and "a partir del 01-01-2026"
-    # with the second. Neither was cited.
-    "aeat-dr-210-2022",
-    # Orden HAC/56/2024 approves the form from 2024-02-01; 2023 must not cite it.
-    "boe-modelo-210-2024-form-layout",
-]
+legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-2", "trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f", "ley-35-2006:art-85"]
+source_refs = ["boe-modelo-210-base-order", "aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano", "aeat-dr-210-2022", "boe-modelo-210-2024-form-layout"]
 
-
-[revisions."2024".family_dispositions.live_cross_references]
-reason = """
-A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 210: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to \
-bound and no guard policy to declare. Should a Modelo 210 consulta reader ever be built, this disposition must be replaced by the real declaration rather than widened -- the family is empty because the capability is absent, and it will stop being empty the moment the capability exists."""
+[revisions.2024.period_selector]
+year_from = 2024
+year_to = 2024
+periods = ["EVENT-N", "0A"]
+[revisions.2024.family_dispositions.live_cross_references]
+reason = "A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 210: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to bound and no guard policy to declare. Should a Modelo 210 consulta reader ever be built, this disposition must be replaced by the real declaration rather than widened -- the family is empty because the capability is absent, and it will stop being empty the moment the capability exists."
 legal_refs = ["orden-eha-3316-2010:art-1"]
 source_refs = ["aeat-modelo-210-procedure"]
 
-[revisions."2024".family_dispositions.dependency_classifications]
-reason = """
-A dependency classification declares that this modelo's calculation depends on ANOTHER modelo the taxpayer files in an earlier or enclosing period, so the clean-state gate knows whether that source is present, suppressed or missing. Modelo 210 declares no such source. Its base and cuota are self-contained per renta (TRLIRNR arts. 24 and 25), and the one value arriving from outside -- casilla 29 retenciones e ingresos a cuenta -- is withholding SUFFERED by the non-resident and evidenced by the \
-payer's certificate. The payer, not this taxpayer, files the corresponding Modelo 216, so it is not a source in this taxpayer's own filing chain and there is no cross-period dependency for the gate to reason about. Verified against the revision itself: no casilla, construct or verification expectation references another modelo. The bindings this revision declares resolve profile and ledger sources, never another modelo's filed casilla, so the same absence holds from the fold-in side."""
+[revisions.2024.family_dispositions.dependency_classifications]
+reason = "A dependency classification declares that this modelo's calculation depends on ANOTHER modelo the taxpayer files in an earlier or enclosing period, so the clean-state gate knows whether that source is present, suppressed or missing. Modelo 210 declares no such source. Its base and cuota are self-contained per renta (TRLIRNR arts. 24 and 25), and the one value arriving from outside -- casilla 29 retenciones e ingresos a cuenta -- is withholding SUFFERED by the non-resident and evidenced by the payer's certificate. The payer, not this taxpayer, files the corresponding Modelo 216, so it is not a source in this taxpayer's own filing chain and there is no cross-period dependency for the gate to reason about. Verified against the revision itself: no casilla, construct or verification expectation references another modelo. The bindings this revision declares resolve profile and ledger sources, never another modelo's filed casilla, so the same absence holds from the fold-in side."
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "orden-eha-3316-2010:art-1"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 
-[revisions."2024".family_dispositions.projection_endpoints]
-reason = """
-A projection endpoint declares a typed coordinate inside a REPEATED row, so the family is empty only where the official design declares no repetition. Measured, not assumed, against the hash-pinned design aeat-dr-210-2022: both records are fixed (Pagina 01 at 2700 declared positions, Pagina 02 at 1400), neither declares a variable envelope or an auxiliary envelope header, neither carries a repeat axis, and the reviewed semantic map binds all 167 anchors as 10 literal, 18 filler, 108 header, 2 \
-draft and 29 casilla entries with zero projection entries. Modelo 210 declares one renta per autoliquidacion -- a taxpayer with several rentas files several 210s, and AEAT provides the agrupacion mechanism rather than repeated rows on one record -- so there is no repeated row for an endpoint to address."""
+[revisions.2024.family_dispositions.projection_endpoints]
+reason = "A projection endpoint declares a typed coordinate inside a REPEATED row, so the family is empty only where the official design declares no repetition. Measured, not assumed, against the hash-pinned design aeat-dr-210-2022: both records are fixed (Pagina 01 at 2700 declared positions, Pagina 02 at 1400), neither declares a variable envelope or an auxiliary envelope header, neither carries a repeat axis, and the reviewed semantic map binds all 167 anchors as 10 literal, 18 filler, 108 header, 2 draft and 29 casilla entries with zero projection entries. Modelo 210 declares one renta per autoliquidacion -- a taxpayer with several rentas files several 210s, and AEAT provides the agrupacion mechanism rather than repeated rows on one record -- so there is no repeated row for an endpoint to address."
 legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-2"]
 source_refs = ["aeat-dr-210-2022", "aeat-modelo-210-procedure"]
-
-[revisions."2024".source_default_dispositions.application_links]
-kind = "underivable"
-reason = """
-lift refuses: 1 source_refs statement(s) not textually rewritable: 0001-application-links.toml: source_refs = ["""
-
-[revisions."2024".source_default_dispositions.filing_schedules]
-kind = "underivable"
-reason = """
-lift refuses: 2 source_refs statement(s) not textually rewritable: 0001-filing-schedules.toml: source_refs = [; 0001-filing-schedules.toml: source_refs = ["""

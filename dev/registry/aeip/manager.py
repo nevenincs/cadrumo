@@ -58,25 +58,25 @@ from .adjudications import AdjudicationSet
 
 __all__ = [
     "AeipAmbiguity",
+    "AeipApplyPlan",
     "AeipError",
     "AeipEvent",
+    "AeipEvolutionWrite",
     "AeipInventory",
     "AeipOccurrence",
-    "AeipApplyPlan",
-    "AeipEvolutionWrite",
     "AeipStampWrite",
     "ChainPlan",
     "ChainPlanEntry",
     "EvolutionPair",
     "StaleAdjudication",
+    "apply_prepared_plan",
     "build_inventory",
     "chain_id_for",
     "derive_slug",
     "detect_stale_adjudications",
     "extract_occurrences",
-    "prepare_apply",
-    "apply_prepared_plan",
     "plan_chains",
+    "prepare_apply",
     "render_evolution_record",
 ]
 
@@ -1108,13 +1108,19 @@ def prepare_apply(
         if current is None:
             _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} is absent from canonical Modelo 100 load")
             continue
-        if ANEXO_A_SECTION_LEAF not in tuple(current.section or ()) or str(current.semantic_role or "") != EVENT_SEMANTIC_ROLE:
+        if (
+            ANEXO_A_SECTION_LEAF not in tuple(current.section or ())
+            or str(current.semantic_role or "") != EVENT_SEMANTIC_ROLE
+        ):
             _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} is no longer an AEIP event row")
         try:
             current_label = current.get_label(SOURCE_LOCALE)
         except MissingTranslationError:
             current_label = ""
-        if current_label != occurrence.label or tuple(str(item) for item in current.localization_keys) != occurrence.localization_keys:
+        if (
+            current_label != occurrence.label
+            or tuple(str(item) for item in current.localization_keys) != occurrence.localization_keys
+        ):
             _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} label/localization changed since adjudication")
         if tuple(str(item) for item in current.legal_refs) != occurrence.legal_refs:
             _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} legal refs changed since adjudication")
@@ -1175,12 +1181,12 @@ def prepare_apply(
         missing = {
             field: value
             for field, value in expected.items()
-            if field == "continuidad_id"
-            and current_id is None
-            or field == "continuidad_origin"
-            and current_origin is None
-            or field == "continuidad_evidence"
-            and current_evidence is None
+            if (field == "continuidad_id"
+            and current_id is None)
+            or (field == "continuidad_origin"
+            and current_origin is None)
+            or (field == "continuidad_evidence"
+            and current_evidence is None)
         }
         # The condition above is intentionally explicit about each field, but
         # use a second conflict check so an existing value can never be
@@ -1201,7 +1207,9 @@ def prepare_apply(
                     _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} lineage insertion refused: {error}")
                 else:
                     if done != {key[1]}:
-                        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} was not uniquely located by insertion helper")
+                        _add_refusal(
+                            refusals, seen_refusals, f"{key[0]}/{key[1]} was not uniquely located by insertion helper"
+                        )
                     else:
                         stamp_writes.append(
                             AeipStampWrite(
@@ -1230,7 +1238,11 @@ def prepare_apply(
         if key in planned_keys or ANEXO_A_SECTION_LEAF not in tuple(current.section or ()):
             continue
         category_chain = None if current.continuidad_id is None else str(current.continuidad_id)
-        if str(current.semantic_role or "") == CATEGORY_SEMANTIC_ROLE and category_chain and category_chain.startswith(CHAIN_PREFIX):
+        if (
+            str(current.semantic_role or "") == CATEGORY_SEMANTIC_ROLE
+            and category_chain
+            and category_chain.startswith(CHAIN_PREFIX)
+        ):
             _add_refusal(
                 refusals,
                 seen_refusals,
@@ -1311,9 +1323,15 @@ def prepare_apply(
             _add_refusal(refusals, seen_refusals, f"evolution {core!r} rendered invalid TOML: {error}")
             continue
         revision_table = parsed.get("revisions", {}).get(pair.to_revision, {})
-        records_rendered = revision_table.get("casilla_continuidad_evolutions", ()) if isinstance(revision_table, dict) else ()
-        record_rendered = records_rendered[0] if isinstance(records_rendered, list) and len(records_rendered) == 1 else None
-        if not isinstance(record_rendered, dict) or record_rendered.get("id") != _expected_evolution_id(modelo_id, casilla_id, pair):
+        records_rendered = (
+            revision_table.get("casilla_continuidad_evolutions", ()) if isinstance(revision_table, dict) else ()
+        )
+        record_rendered = (
+            records_rendered[0] if isinstance(records_rendered, list) and len(records_rendered) == 1 else None
+        )
+        if not isinstance(record_rendered, dict) or record_rendered.get("id") != _expected_evolution_id(
+            modelo_id, casilla_id, pair
+        ):
             _add_refusal(refusals, seen_refusals, f"evolution {core!r} rendered identity does not round-trip")
             continue
         if not record_rendered.get("source_refs"):
@@ -1326,7 +1344,9 @@ def prepare_apply(
                 _add_refusal(refusals, seen_refusals, f"evolution {core!r} cannot read colliding target: {error}")
             else:
                 if existing_text != content:
-                    _add_refusal(refusals, seen_refusals, f"evolution {core!r} collides with different existing file {path}")
+                    _add_refusal(
+                        refusals, seen_refusals, f"evolution {core!r} collides with different existing file {path}"
+                    )
                 # An exact pre-existing file is idempotent; the canonical load
                 # should normally have counted it above, but preserving it is
                 # safer than scheduling a duplicate write.
@@ -1371,7 +1391,9 @@ def apply_prepared_plan(plan: AeipApplyPlan) -> tuple[int, int]:
             raise AeipError(f"concurrent AEIP casilla change conflicts at {path}: {error}") from error
         expected = set(edits)
         if done != expected:
-            raise AeipError(f"concurrent AEIP casilla change moved rows at {path}: expected {sorted(expected)}, got {sorted(done)}")
+            raise AeipError(
+                f"concurrent AEIP casilla change moved rows at {path}: expected {sorted(expected)}, got {sorted(done)}"
+            )
         if new_text != current_text:
             atomic_write_text(path, new_text, encoding=UTF_8_ENCODING)
             stamp_rows += len(done)

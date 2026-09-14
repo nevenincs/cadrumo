@@ -1,0 +1,290 @@
+# Modelo 185 declaration-header casillas, grounded in orden-hac-1197-2025 art 1.
+# Both carry a symbolic `number` rather than an offset span, matching the modelo
+# 184 precedent for exactly these two header concepts; the record-detail casillas
+# authored from the diseño use offset spans and live in the sibling fragment.
+#
+# The bundled official diseño de registro `aeat-dr-185-2026` IS this revision's
+# source_ref and does carry the full record detail (2 records, 36 fields). An
+# earlier note here said no diseño was bundled and used that as the reason to
+# author no numbered casilla; that premise was false and the detail is now
+# authored from the design itself.
+# Modelo 185 record-detail casillas, authored from the bundled official diseno
+# de registro `aeat-dr-185-2026` -- 2 records, 36 fields, both exactly 500 bytes.
+# Every casilla names ONE design field by its offset span, and the design is the
+# sole source of its number, width and label; nothing here is inferred from a
+# sibling modelo. Grounded in orden-hac-1197-2025 art 1, which approves the
+# modelo and its anexo record designs, and art 4, which fixes the monthly plazo.
+#
+# The three month columns (mes, mes-1, mes-2) share one semantic_role per
+# concept: the role names WHAT the value is, and the month is a coordinate the
+# casilla id carries.
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
+number = "ejercicio"
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+continuidad_origin = "seeded"
+number = "tipo-declaracion"
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "decl.numero-justificante"
+number = "108-120"
+data_type = "text"
+semantic_role = "numero_justificante"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "Successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) TIPO DE REGISTRO 1 prints 'NUMERO IDENTIFICATIVO DE LA DECLARACION' at positions 108-120. Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3915 lists TIPO DE REGISTRO 1 as 1, 2-4, 5-13, 14-53 RAZON SOCIAL DEL DECLARANTE, 54-57 EJERCICIO, 58-59 MES, 60-69 NUMERO TOTAL DE REGISTROS, then '70-120 BLANCOS', and its anexo II fixes 'Longitud de registro, 120'. Positions 108-120 are explicitly BLANCOS there and neither 2003 record type declares any declaration-identifier field, so this field is new on the 2026 form."
+required = false
+input_kind = "manual"
+section = ["declarante"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "decl.periodo"
+number = "136-137"
+data_type = "period_code"
+semantic_role = "periodo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3915 prints 'MES. Los dos digitos que corresponden al mes objeto de la declaracion' at positions 58-59; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'PERIODO. Se hara constar el mes natural al que corresponde la declaracion' at positions 136-137. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarante"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "decl.total-registros"
+number = "138-146"
+data_type = "integer"
+semantic_role = "total_registros"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3915 prints 'NUMERO TOTAL DE REGISTROS. Se consignara el numero total de declarados en el soporte para este declarante (Numero de registros de tipo 2)' at positions 60-69; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'NUMERO TOTAL DE REGISTROS' at positions 138-146. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarante"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.nif"
+number = "18-26"
+segmento = "185-2-declarado"
+data_type = "nif"
+semantic_role = "declarado_nif"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3916 prints 'N.I.F. DEL DECLARADO' at positions 20-28; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'N.I.F. DEL DECLARADO' at positions 18-26. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.nombre"
+number = "36-75"
+segmento = "185-2-declarado"
+data_type = "name"
+semantic_role = "declarado_nombre"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3916 prints 'APELLIDOS Y NOMBRE DEL DECLARADO' at positions 29-68; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'APELLIDOS Y NOMBRE DEL DECLARADO' at positions 36-75. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.numero-afiliacion"
+number = "76-87"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "numero_afiliacion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3916 prints 'NUMERO DE AFILIACION' at positions 69-80; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'NUMERO DE AFILIACION' at positions 76-87. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.pluriactividad"
+number = "88"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "pluriactividad"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3916 prints 'PLURIACTIVIDAD' at positions 82; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'PLURIACTIVIDAD' at positions 88. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.situacion-mes"
+number = "89"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "situacion_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3916 prints 'SITUACION MES' at positions 83; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'SITUACION MES' at positions 89. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.regimen-cotizacion-mes"
+number = "90"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "regimen_cotizacion_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3916 prints 'REGIMEN DE COTIZACION DEL MES' at positions 84; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'REGIMEN DE COTIZACION DEL MES' at positions 90. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.dias-alta-mes"
+number = "91-92"
+segmento = "185-2-declarado"
+data_type = "integer"
+semantic_role = "dias_alta_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3916 prints 'NUMERO DE DIAS DE ALTA EN EL MES' at positions 85-86; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'NUMERO DE DIAS DE ALTA EN EL MES' at positions 91-92. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.tipo-jornada-mes"
+number = "93"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "tipo_jornada_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3916 prints 'TIPO JORNADA MES' at positions 87; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'TIPO JORNADA MES' at positions 93. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.situacion-mes-1"
+number = "94"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "situacion_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3917 prints 'SITUACION MES -1' at positions 88; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'SITUACION MES -1' at positions 94. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.regimen-cotizacion-mes-1"
+number = "95"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "regimen_cotizacion_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3917 prints 'REGIMEN DE COTIZACION DEL MES -1' at positions 89; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'REGIMEN DE COTIZACION DEL MES -1' at positions 95. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.dias-alta-mes-1"
+number = "96-97"
+segmento = "185-2-declarado"
+data_type = "integer"
+semantic_role = "dias_alta_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3917 prints 'NUMEROS DIAS DE ALTA MES -1' at positions 90-91; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'NUMEROS DIAS DE ALTA MES -1' at positions 96-97. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.tipo-jornada-mes-1"
+number = "98"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "tipo_jornada_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3917 prints 'TIPO JORNADA MES -1' at positions 92; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'TIPO JORNADA MES -1' at positions 98. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.situacion-mes-2"
+number = "99"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "situacion_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3917 prints 'SITUACION MES -2' at positions 93; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'SITUACION MES -2' at positions 99. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.regimen-cotizacion-mes-2"
+number = "100"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "regimen_cotizacion_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3917 prints 'REGIMEN DE COTIZACION DEL MES -2' at positions 94; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'REGIMEN DE COTIZACION DEL MES -2' at positions 100. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.dias-alta-mes-2"
+number = "101-102"
+segmento = "185-2-declarado"
+data_type = "integer"
+semantic_role = "dias_alta_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3917 prints 'NUMEROS DIAS DE ALTA MES -2' at positions 95-96; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'NUMEROS DIAS DE ALTA MES -2' at positions 101-102. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+
+[[revisions.2025-y-siguientes.casillas]]
+id = "declarado.tipo-jornada-mes-2"
+number = "103"
+segmento = "185-2-declarado"
+data_type = "text"
+semantic_role = "tipo_jornada_mes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "Predecessor design Orden HAC/96/2003 anexo I, corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf (sha256 5013b9b86d98), BOE num. 26 of 2003-01-30 p.3917 prints 'TIPO JORNADA MES-2' at positions 97; successor design corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf (sha256 102dc91b4e94) carries the same field as 'TIPO JORNADA MES -2' at positions 103. The predecessor design speaks to this field, so this is predecessor_edition_silent and not new_on_form. Edition 2003-2025 declares only decl.ejercicio and decl.tipo-declaracion and no row for this field, so the absence is a corpus declaration gap and not a change to the form."
+required = false
+input_kind = "manual"
+section = ["declarado", "afiliado"]
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]

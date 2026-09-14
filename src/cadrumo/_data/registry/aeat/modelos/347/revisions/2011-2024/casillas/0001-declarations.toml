@@ -1,0 +1,456 @@
+# The abstract declaration type has no box of its own on this design. AEAT
+# prints only the two flags that qualify it -- declaracion complementaria and
+# declaracion sustitutiva, at positions 121-122, carried by
+# 'decl.complementaria-sustitutiva' -- and an ordinaria declaration is the
+# unmarked case, expressed by leaving both blank rather than by a positive
+# value anywhere on the record.
+# --- Per-counterparty detail fields (Tipo 2 contraparte declarada) ---
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.representante-legal-nif"
+continuidad_id = "representante-legal-nif"
+number = "contraparte.representante-legal-nif"
+data_type = "nif"
+semantic_role = "representante_legal_nif"
+required = false
+input_kind = "manual"
+section = ["contraparte", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-anual"
+continuidad_id = "importe-anual-operaciones"
+number = "contraparte.importe-anual"
+data_type = "money"
+semantic_role = "importe_anual_operaciones"
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.operacion-seguro"
+continuidad_id = "operacion-seguro"
+number = "contraparte.operacion-seguro"
+data_type = "text"
+semantic_role = "operacion_seguro"
+required = false
+input_kind = "manual"
+section = ["contraparte", "operacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.arrendamiento-local-negocio"
+continuidad_id = "arrendamiento-local-negocio"
+number = "contraparte.arrendamiento-local-negocio"
+data_type = "text"
+semantic_role = "arrendamiento_local_negocio"
+required = false
+input_kind = "manual"
+section = ["contraparte", "operacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-metalico"
+continuidad_id = "importe-percibido-metalico"
+number = "contraparte.importe-metalico"
+data_type = "money"
+semantic_role = "importe_percibido_metalico"
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-transmisiones-inmuebles"
+continuidad_id = "importe-transmisiones-inmuebles"
+number = "contraparte.importe-transmisiones-inmuebles"
+data_type = "money"
+semantic_role = "importe_transmisiones_inmuebles"
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.ejercicio-operacion"
+continuidad_id = "ejercicio-operacion"
+number = "contraparte.ejercicio-operacion"
+data_type = "year"
+semantic_role = "ejercicio_operacion"
+required = false
+input_kind = "manual"
+section = ["contraparte", "operacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-transmisiones-Q1"
+continuidad_id = "importe-transmisiones-q1"
+number = "contraparte.importe-transmisiones-Q1"
+data_type = "money"
+semantic_role = "importe_transmisiones_q1"
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-transmisiones-Q2"
+continuidad_id = "importe-transmisiones-q2"
+number = "contraparte.importe-transmisiones-Q2"
+data_type = "money"
+semantic_role = "importe_transmisiones_q2"
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-transmisiones-Q3"
+continuidad_id = "importe-transmisiones-q3"
+number = "contraparte.importe-transmisiones-Q3"
+data_type = "money"
+semantic_role = "importe_transmisiones_q3"
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-transmisiones-Q4"
+continuidad_id = "importe-transmisiones-q4"
+number = "contraparte.importe-transmisiones-Q4"
+data_type = "money"
+semantic_role = "importe_transmisiones_q4"
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.nif-operador-comunitario"
+continuidad_id = "nif-operador-comunitario"
+number = "contraparte.nif-operador-comunitario"
+data_type = "text"
+semantic_role = "nif_operador_comunitario"
+required = false
+input_kind = "manual"
+section = ["contraparte", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.ejercicio"
+continuidad_id = "filing-year"
+number = "ejercicio"
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+number = "tipo-declaracion"
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+export_exemption_reason = "not_in_record_design"
+section = ["declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.nif"
+continuidad_id = "contraparte-nif"
+number = "contraparte.nif"
+data_type = "nif"
+semantic_role = "contraparte_nif"
+required = true
+input_kind = "manual"
+section = ["contraparte", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.nombre"
+continuidad_id = "contraparte-nombre"
+number = "contraparte.nombre"
+data_type = "text"
+semantic_role = "contraparte_nombre"
+required = false
+input_kind = "manual"
+section = ["contraparte", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.clave-operacion"
+continuidad_id = "contraparte-clave-operacion"
+number = "contraparte.clave-operacion"
+data_type = "text"
+semantic_role = "contraparte_clave_operacion"
+required = true
+input_kind = "manual"
+section = ["contraparte", "operacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-Q1"
+continuidad_id = "contraparte-importe-q1"
+number = "contraparte.importe-Q1"
+data_type = "money"
+semantic_role = "contraparte_importe_q1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaciones con la contraparte por trimestre (Q1-Q4) en casillas distintas (RD 1065/2007 art.31); el rol del primer trimestre aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-Q2"
+continuidad_id = "contraparte-importe-q2"
+number = "contraparte.importe-Q2"
+data_type = "money"
+semantic_role = "contraparte_importe_q2"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaciones con la contraparte por trimestre (Q1-Q4) en casillas distintas (RD 1065/2007 art.31); el rol del segundo trimestre aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-Q3"
+continuidad_id = "contraparte-importe-q3"
+number = "contraparte.importe-Q3"
+data_type = "money"
+semantic_role = "contraparte_importe_q3"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaciones con la contraparte por trimestre (Q1-Q4) en casillas distintas (RD 1065/2007 art.31); el rol del tercer trimestre aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.importe-Q4"
+continuidad_id = "contraparte-importe-q4"
+number = "contraparte.importe-Q4"
+data_type = "money"
+semantic_role = "contraparte_importe_q4"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaciones con la contraparte por trimestre (Q1-Q4) en casillas distintas (RD 1065/2007 art.31); el rol del cuarto trimestre aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+section = ["contraparte", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.provincia-codigo"
+continuidad_id = "contraparte-provincia-codigo"
+number = "contraparte.provincia-codigo"
+data_type = "text"
+semantic_role = "contraparte_provincia_codigo"
+required = false
+input_kind = "manual"
+section = ["contraparte", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "contraparte.pais-codigo"
+continuidad_id = "contraparte-pais-codigo"
+number = "contraparte.pais-codigo"
+data_type = "country_code"
+semantic_role = "contraparte_pais_codigo"
+required = false
+input_kind = "manual"
+section = ["contraparte", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "rd-1065-2007:art-33", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.numero-justificante"
+continuidad_id = "numero-justificante"
+number = "decl.numero-justificante"
+data_type = "text"
+semantic_role = "numero_justificante"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.complementaria-sustitutiva"
+continuidad_id = "complementaria-sustitutiva"
+number = "decl.complementaria-sustitutiva"
+data_type = "text"
+semantic_role = "complementaria_sustitutiva"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.total-personas-entidades"
+continuidad_id = "total-personas-entidades"
+number = "decl.total-personas-entidades"
+data_type = "integer"
+semantic_role = "total_personas_entidades"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.importe-total-anual"
+continuidad_id = "importe-total-anual-operaciones"
+number = "decl.importe-total-anual"
+data_type = "money"
+semantic_role = "importe_total_anual_operaciones"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.total-inmuebles"
+continuidad_id = "total-inmuebles"
+number = "decl.total-inmuebles"
+data_type = "integer"
+semantic_role = "total_inmuebles"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.importe-total-arrendamiento-locales"
+continuidad_id = "importe-total-arrendamiento-locales"
+number = "decl.importe-total-arrendamiento-locales"
+data_type = "money"
+semantic_role = "importe_total_arrendamiento_locales"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.persona-relacion"
+continuidad_id = "persona-con-quien-relacionarse"
+number = "decl.persona-relacion"
+data_type = "text"
+semantic_role = "persona_con_quien_relacionarse"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.persona-relacion-telefono"
+continuidad_id = "persona-con-quien-relacionarse-telefono"
+number = "decl.persona-relacion-telefono"
+data_type = "text"
+semantic_role = "persona_con_quien_relacionarse_telefono"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.representante-legal-nif"
+continuidad_id = "declarante-representante-legal-nif"
+number = "decl.representante-legal-nif"
+data_type = "nif"
+semantic_role = "declarante_representante_legal_nif"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "decl.tipo-soporte"
+continuidad_id = "tipo-soporte"
+number = "decl.tipo-soporte"
+data_type = "text"
+semantic_role = "tipo_soporte"
+required = false
+input_kind = "manual"
+section = ["declarante", "declarante"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "inmueble.arrendatario-nif"
+continuidad_id = "arrendatario-nif"
+number = "inmueble.arrendatario-nif"
+data_type = "nif"
+semantic_role = "arrendatario_nif"
+required = false
+input_kind = "manual"
+section = ["inmueble", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "inmueble.representante-legal-nif"
+continuidad_id = "arrendatario-representante-legal-nif"
+number = "inmueble.representante-legal-nif"
+data_type = "nif"
+semantic_role = "arrendatario_representante_legal_nif"
+required = false
+input_kind = "manual"
+section = ["inmueble", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "inmueble.arrendatario-nombre"
+continuidad_id = "arrendatario-nombre"
+number = "inmueble.arrendatario-nombre"
+data_type = "text"
+semantic_role = "arrendatario_nombre"
+required = false
+input_kind = "manual"
+section = ["inmueble", "identificacion"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "inmueble.importe-operacion"
+continuidad_id = "importe-operacion-arrendamiento"
+number = "inmueble.importe-operacion"
+data_type = "money"
+semantic_role = "importe_operacion_arrendamiento"
+required = false
+input_kind = "manual"
+section = ["inmueble", "importes"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "inmueble.situacion"
+continuidad_id = "situacion-inmueble"
+number = "inmueble.situacion"
+data_type = "integer"
+semantic_role = "situacion_inmueble"
+required = false
+input_kind = "manual"
+section = ["inmueble", "inmueble"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "inmueble.referencia-catastral"
+continuidad_id = "referencia-catastral"
+number = "inmueble.referencia-catastral"
+data_type = "text"
+semantic_role = "referencia_catastral"
+required = false
+input_kind = "manual"
+section = ["inmueble", "inmueble"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+
+[[revisions.2011-2024.casillas]]
+id = "inmueble.direccion"
+continuidad_id = "direccion-inmueble"
+number = "inmueble.direccion"
+data_type = "text"
+semantic_role = "direccion_inmueble"
+required = false
+input_kind = "manual"
+section = ["inmueble", "inmueble"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]

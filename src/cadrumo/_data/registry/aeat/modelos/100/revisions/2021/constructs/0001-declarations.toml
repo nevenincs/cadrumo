@@ -1,0 +1,63 @@
+[[revisions.2021.constructs]]
+id = "renta-cuota-chain"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-49", "ley-35-2006:art-50", "ley-35-2006:art-56", "ley-35-2006:art-58", "ley-35-2006:art-61", "ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64", "ley-35-2006:art-66-2021", "ley-35-2006:art-67", "ley-35-2006:art-68-2018", "ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75-2015", "ley-35-2006:art-76-2021", "ley-35-2006:art-77", "ley-35-2006:art-99", "madrid-dl-1-2010:art-2"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form", "lirpf-cuota-chain-authority"]
+formulas = ["renta-minimo-descendientes-estatal", "renta-minimo-descendientes-autonomico", "renta-minimo-personal-y-familiar-estatal", "renta-minimo-personal-y-familiar-autonomica", "renta-minimo-personal-base-liquidable-general-estatal", "renta-minimo-personal-base-liquidable-ahorro-estatal", "renta-minimo-personal-base-liquidable-general-autonomica", "renta-minimo-personal-base-liquidable-ahorro-autonomica", "renta-saldo-neto-rendimientos-base-imponible-general", "renta-base-imponible-general", "renta-base-imponible-del-ahorro", "renta-base-liquidable-general", "renta-base-liquidable-general-sometida-a-gravamen", "renta-base-liquidable-del-ahorro", "renta-cuota-escala-autonomica-sobre-base-liquidable-general", "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar", "renta-cuota-escala-estatal-sobre-base-liquidable-general", "renta-cuota-escala-estatal-sobre-minimo-personal-familiar", "renta-cuota-escala-estatal-sobre-base-liquidable-ahorro", "renta-cuota-escala-estatal-sobre-minimo-personal-familiar-base-ahorro", "renta-cuota-base-liquidable-ahorro-estatal", "renta-cuota-escala-autonomica-sobre-base-liquidable-ahorro", "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro", "renta-cuota-base-liquidable-ahorro-autonomica", "renta-cuota-base-liquidable-general-estatal", "renta-cuota-base-liquidable-general-autonomica", "renta-cuota-integra-estatal", "renta-cuota-integra-autonomica", "renta-cuota-liquida-estatal", "renta-cuota-liquida-autonomica", "renta-cuota-liquida-estatal-incrementada", "renta-cuota-liquida-autonomica-incrementada"]
+application_links = ["modelo-100-calculation", "modelo-100-review", "modelo-100-approval", "modelo-100-reconciliation", "modelo-100-workflow"]
+
+[[revisions.2021.constructs]]
+id = "renta-mini-model-actividades-economicas-directa"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32", "rd-439-2007:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+formulas = ["renta-estimacion-directa-diferencia-previa", "renta-estimacion-directa-gastos-dificil-justificacion", "renta-estimacion-directa-gastos-normal", "renta-estimacion-directa-gastos-previos", "renta-estimacion-directa-gastos-simplificada", "renta-estimacion-directa-ingresos-computables", "renta-estimacion-directa-rendimiento-neto", "renta-estimacion-directa-rendimiento-neto-reducido", "renta-estimacion-directa-rendimiento-neto-reducido-total", "renta-estimacion-directa-total-rendimiento-neto-reducido"]
+
+[[revisions.2021.constructs]]
+id = "renta-mini-model-actividades-economicas-objetiva"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-1155-2020:art-4"]
+source_refs = ["lirpf-cuota-chain-authority"]
+formulas = ["renta-estimacion-objetiva-agricola-rendimiento-neto-reducido-total", "renta-estimacion-objetiva-agricola-suma", "renta-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total", "renta-estimacion-objetiva-no-agricola-suma", "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido"]
+
+[[revisions.2021.constructs]]
+id = "renta-mini-model-base-y-cuota"
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66-2021", "ley-35-2006:art-67", "ley-35-2006:art-68-2018", "ley-35-2006:art-68.1", "ley-35-2006:art-68.2", "ley-35-2006:art-68.3", "ley-35-2006:art-68.4", "ley-35-2006:art-68.5", "ley-35-2006:da-50", "ley-35-2006:dt-15", "ley-35-2006:dt-18", "ley-35-2006:art-64", "ley-35-2006:art-74", "ley-35-2006:art-75-2015", "ley-35-2006:art-76-2021", "ley-35-2006:art-77", "ley-35-2006:art-80", "ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+formulas = ["renta-cuota-irpf-comunidad-autonoma", "renta-doble-imposicion-50-porciento", "renta-tipo-medio-gravamen-estatal-base-liquidable-general", "renta-tipo-medio-gravamen-autonomico-base-liquidable-general", "renta-tipo-medio-gravamen-estatal-base-liquidable-ahorro", "renta-tipo-medio-gravamen-autonomico-base-liquidable-ahorro", "renta-deduccion-unidad-familiar-clamp-positiva", "renta-resto-a-ingresar-positivo", "renta-deduccion-doble-imposicion-internacional-suma", "renta-importe-derecho-reduccion-pension-suma", "renta-cuota-liquida-autonomica-incrementada-passthrough", "renta-deduccion-economia-social-passthrough", "renta-deduccion-incentivos-inversion-empresarial-total", "renta-unidad-familiar-cuota-liquida-ue-formula", "renta-deduccion-donativos-autonomica-50-porciento", "renta-deduccion-donativos-estatal-50-porciento", "renta-deduccion-eficiencia-energetica-vivienda-suma", "renta-deducciones-actividades-economicas-autonomica-suma", "renta-deducciones-actividades-economicas-estatal-suma", "renta-deduccion-alquiler-vivienda-autonomica-50-porciento", "renta-deduccion-alquiler-vivienda-estatal-50-porciento", "renta-deduccion-ceuta-melilla-autonomica-50-porciento", "renta-deduccion-ceuta-melilla-estatal-50-porciento", "renta-deduccion-cultural-autonomica-50-porciento", "renta-deduccion-cultural-estatal-50-porciento"]
+
+[[revisions.2021.constructs]]
+id = "renta-mini-model-capital-inmobiliario"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+formulas = ["renta-atribucion-capital-inmobiliario-rendimiento-neto-computable", "renta-atribucion-capital-inmobiliario-suma", "renta-capital-inmobiliario-rendimiento-neto", "renta-capital-inmobiliario-rendimiento-neto-reducido", "renta-capital-inmobiliario-suma-rendimientos-reducidos", "renta-inmobiliario-suma-rentas-imputadas"]
+
+[[revisions.2021.constructs]]
+id = "renta-mini-model-capital-mobiliario"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-49", "ley-35-2006:art-50", "ley-35-2006:art-85"]
+source_refs = ["lirpf-cuota-chain-authority"]
+formulas = ["renta-atribucion-capital-mobiliario-ahorro-suma", "renta-atribucion-capital-mobiliario-general-suma", "renta-atribucion-capital-mobiliario-rendimiento-neto-computable", "renta-capital-mobiliario-ahorro-rendimiento-neto", "renta-capital-mobiliario-ahorro-rendimiento-neto-reducido", "renta-capital-mobiliario-ahorro-suma-rendimientos-reducidos", "renta-capital-mobiliario-ahorro-total-ingresos", "renta-capital-mobiliario-general-rendimiento-neto", "renta-capital-mobiliario-general-rendimiento-neto-reducido", "renta-capital-mobiliario-general-suma-rendimientos-reducidos", "renta-capital-mobiliario-general-total-ingresos", "renta-iic-ganancias-reducidas-no-exentas", "renta-iic-ganancias-reducidas-suma", "renta-iic-paraisos-fiscales-suma", "renta-iic-perdidas-reducidas-suma", "renta-capital-inmobiliario-intereses-gastos-passthrough", "renta-saldo-capital-mobiliario-cap-25-base-ahorro", "renta-capital-mobiliario-saldo-pendiente-base-ahorro"]
+
+[[revisions.2021.constructs]]
+id = "renta-mini-model-ganancias-patrimoniales"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-48", "ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+formulas = ["renta-acciones-negociadas-ganancias-reducidas", "renta-acciones-negociadas-ganancias-suma", "renta-acciones-negociadas-perdidas-suma", "renta-cambio-residencia-extranjero-suma", "renta-cambio-residencia-ganancias-reducidas", "renta-derechos-suscripcion-ganancias-reducidas", "renta-derechos-suscripcion-ganancias-suma", "renta-derechos-suscripcion-perdidas-suma", "renta-ganancia-no-exenta-base-general", "renta-ganancias-ejercicios-anteriores-suma", "renta-ganancias-patrimoniales-base-ahorro-saldo-negativo", "renta-ganancias-patrimoniales-base-ahorro-saldo-positivo", "renta-ganancias-patrimoniales-base-ahorro-suma", "renta-ganancias-patrimoniales-base-general-saldo-negativo", "renta-ganancias-patrimoniales-base-general-saldo-positivo", "renta-ganancias-patrimoniales-base-general-suma", "renta-juegos-ganancias-suma", "renta-juegos-importe-computable", "renta-juegos-perdidas-suma", "renta-juegos-saldo-neto", "renta-otras-ganancias-base-ahorro-suma", "renta-otras-ganancias-no-transmision-suma", "renta-otras-perdidas-no-transmision-suma", "renta-otros-elementos-afectos-ganancias-suma", "renta-otros-elementos-no-afectos-ganancias-suma", "renta-otros-elementos-perdidas-suma", "renta-perdidas-ejercicios-anteriores-suma", "renta-perdidas-patrimoniales-base-ahorro-suma", "renta-perdidas-patrimoniales-base-general-suma", "renta-premios-ganancias-suma", "renta-premios-importe-computable", "renta-ganancia-no-exenta-positiva-base-general", "renta-ganancia-reducida-base-general", "renta-ganancia-reducida-no-exenta-base-general", "renta-perdida-no-exenta-negativa-base-general", "renta-acciones-no-negociadas-ganancia-reducida-no-exenta", "renta-saldo-negativo-pendiente-base-ahorro", "renta-saldo-negativo-pendiente-base-general", "renta-saldo-gp-base-ahorro-cap-25", "renta-saldo-gp-base-general-cap-25"]
+
+[[revisions.2021.constructs]]
+id = "renta-mini-model-regimenes-especiales"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-49", "ley-35-2006:art-50", "ley-35-2006:art-85", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-2", "orden-hap-2250-2015:art-3", "orden-hap-2250-2015:art-4", "orden-hap-2250-2015:art-5"]
+source_refs = ["lirpf-cuota-chain-authority"]
+formulas = ["renta-atribucion-actividades-economicas-suma", "renta-atribucion-actividades-rendimiento-neto-computable", "renta-atribucion-deuda-subordinada-preferentes-suma", "renta-atribucion-ganancias-no-transmision-base-general", "renta-atribucion-ganancias-transmision-base-ahorro", "renta-atribucion-perdidas-no-transmision-base-general", "renta-atribucion-perdidas-transmision-base-ahorro", "renta-bases-imputadas-suma", "renta-diferimiento-reinversion-imputacion-suma", "renta-transparencia-fiscal-suma"]
+
+[[revisions.2021.constructs]]
+id = "renta-mini-model-trabajo"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+formulas = ["renta-trabajo-especie-importe-integro", "renta-trabajo-otros-gastos", "renta-trabajo-rendimiento-neto", "renta-trabajo-rendimiento-neto-previo", "renta-trabajo-rendimiento-neto-reducido", "renta-trabajo-suma-rendimientos-netos-previos", "renta-trabajo-total-ingresos-integros-computables"]
+
+[[revisions.2021.constructs]]
+id = "renta-dependent-modelos"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-3435-2007:anexo-ii", "orden-eha-672-2007:art-1", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+bindings = ["renta-modelo-111-retenciones-periodicas", "renta-modelo-123-retenciones-periodicas", "renta-modelo-130-pagos-fraccionados", "renta-modelo-131-pagos-fraccionados"]
+casilla_ids = ["0604"]
+formulas = ["renta-pagos-fraccionados-ingresados", "renta-total-pagos-a-cuenta"]
+dependency_classifications = ["renta-dep-111", "renta-dep-123", "renta-dep-130", "renta-dep-131"]

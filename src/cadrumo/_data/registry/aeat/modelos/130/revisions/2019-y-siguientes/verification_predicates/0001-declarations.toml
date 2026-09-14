@@ -1,0 +1,40 @@
+# AEAT M130 Casilla 15 cap rule: when C14 (cuota positiva del
+# trimestre) is strictly positive, C15 (resultados negativos de
+# trimestres anteriores) MUST NOT exceed C14.
+#
+# Source: AEAT M130 instructions, "En la casilla 15 ... solamente
+# si en la casilla 14 anterior se hubiera obtenido una cantidad
+# positiva, debemos hacer constar el importe ... teniendo en cuenta
+# que en ningún caso podrá figurar en la casilla 15 un importe
+# superior a la cantidad positiva consignada en la casilla 14".
+# Corpus path: corpus/aeat_official/instructions/modelo_130/files/.
+#
+# The calculation formula caps the trusted previous-filing carry at
+# current C14. This predicate remains the verification backstop for
+# externally supplied, imported, or tampered over-cap calculation data.
+# Art. 109 RIRPF: when the taxpayer profile says the 70% income-coverage
+# exception is met for covered professional, agricultural, livestock, or
+# forestry activity income, verifying an M130 draft should surface a
+# non-blocking warning.
+#
+# Casilla 06 is an amount of retenciones, not the amount of income subject
+# to retencion. This predicate therefore reads the profile/deadline fact and
+# must not infer Art. 109 from casilla 06 / casilla 01.
+#
+# The formula for casilla 17 remains the official form arithmetic
+# (casilla 14 - casilla 15 - casilla 16); Art. 109 belongs to
+# applicability/deadline/profile behavior.
+
+[[revisions.2019-y-siguientes.verification_predicates]]
+id = "cap-le-when-positive:c15-cap-by-c14"
+predicate_id = "modelo-130-c15-cap-by-c14"
+expression = "cap_le_when_positive([\"15\", \"14\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["rd-439-2007:art-110"]
+
+[[revisions.2019-y-siguientes.verification_predicates]]
+id = "profile-flag-enabled:art109-exencion-alta-retencion"
+predicate_id = "modelo-130-art109-exencion-alta-retencion"
+expression = "profile_flag_enabled(\"art109_activity_income_withholding_ge_70pct\")"
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-109"]

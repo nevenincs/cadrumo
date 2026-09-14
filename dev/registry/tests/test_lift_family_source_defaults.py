@@ -23,8 +23,8 @@ from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 
 from ..compiler.loader import load_modelo_directory
 from ..corpus_write import CRLF, LF, detect_newline, verify_written, write_preserving_newlines

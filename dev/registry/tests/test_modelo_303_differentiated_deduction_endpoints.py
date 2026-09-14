@@ -30,20 +30,20 @@ from cadrumo.domain.bienes_inversion.register import (
     RegistroRegularizacionResult,
     RegistroRegularizacionRow,
 )
-from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
+from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from cadrumo.domain.calculations.registry.m303_differentiated_deduction_projection import (
     project_m303_differentiated_deduction_rows,
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_catalogue_file

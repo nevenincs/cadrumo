@@ -10,8 +10,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
 
-from ..compiler.fact_loader import load_governed_facts
 from ..compiler import fact_providers
+from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     FactProviderCompiler,

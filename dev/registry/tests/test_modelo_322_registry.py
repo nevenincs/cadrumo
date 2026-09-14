@@ -12,8 +12,8 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_semantic_coordinate
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo

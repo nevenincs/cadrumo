@@ -1,0 +1,307 @@
+# M210 IRNR base-imponible formula.
+#
+# Per TRLIRNR Art 24.1: non-imputed branches start from gross rendimientos.
+# Art 24.6 permits directly linked expenses on the UE/EEE path. For
+# tipo_renta="inmobiliaria",
+# TRLIRNR Art 13.1.h identifies the Spanish-source imputed income
+# and Art 24.5 routes the base to the IRPF imputation mechanics now
+# in LIRPF Art 85.
+# M210 IRNR tipo-de-gravamen resolution formula.
+#
+# Dispatches through the modelo-neutral `irnr_resolve_tipo_gravamen` formula op:
+# - args[0]: text casilla `tipo_renta` (operator-supplied enum)
+# - args[1]: computed `base_imponible`
+# - args[2]: baseline TRLIRNR rate table `m210-tipo-gravamen-2025`
+# - args[3]: TRLIRNR Art 25.1.b pension tariff table
+# - args[4]: profile-bound `country_of_fiscal_residence`
+#
+# The Convenio doble imposicion treaty overrides are no longer a modelo-local
+# parameter: the op consults the cross-cutting `irnr.convenio.override` fact
+# projected onto the snapshot as the `ConvenioAuthority`, and branches on the
+# typed override kind (flat / ceiling / allocation_domestic_tariff / exempt).
+#
+# Returns the resolved Decimal rate, or one of the M210 rate-
+# sentinel constants when a deterministic rate cannot be produced
+# (deferred baseline or missing treaty override row).
+# For `tipo_renta="pension"` the returned Decimal is the effective
+# rate for the progressive Art 25.1.b tariff, so the downstream
+# `base_imponible * tipo_gravamen` formula lands on the statutory quota.
+# The application-layer verification sweep rewrites the sentinels
+# into BLOCKING findings post-engine.
+# M210 IRNR cuota-íntegra formula.
+#
+# `cuota_integra = base_imponible × tipo_gravamen` per TRLIRNR Art 24
+# combined with the resolved rate from Art 25.1.a / 25.1.f / Convenio
+# override, or the effective rate from the Art 25.1.b pension tariff
+# (see formula `m210-tipo-gravamen-2025-resolve`).
+# M210 IRNR resultado de la autoliquidación (official casilla [31]).
+#
+# Official diseño-de-registro rule (record T21001, field 117):
+#   [31] Resultado de la autoliquidación = [28] - [29] ± [30]
+# where [28] is the cuota íntegra reducida (post-convenio), [29] the
+# retenciones/ingresos a cuenta, and [30] the ingreso/devolución anterior
+# (signed, exclusively for autoliquidación complementaria). Grounded in
+# TRLIRNR Art 24. When no convenio, no donativos and no complementaria
+# prior-result apply, [28] collapses to [22] (cuota íntegra) and [30]=0, so
+# this reduces to the pre-slice-C `cuota_integra - retencion_practicada`
+# behaviour (see the completeness-preserving chain in casillas [24]/[27]/[28]).
+# M210 IRNR ganancias-patrimoniales base (official casilla [17]).
+#
+# Official diseño-de-registro rule (record T21001, field 100):
+#   [17] Base imponible (210 H) = [12] + [16]
+# i.e. the ganancia from the adquisición chain ([12]) plus the ganancia from
+# the mejora / 2ª adquisición chain ([16]). Grounded in TRLIRNR Art 24 (base)
+# and Art 25.1.f (ganancias patrimoniales). A ganancia box may be negative
+# (pérdida patrimonial), so no sign clamp is applied.
+# M210 IRNR cuota Ley IRNR (official casilla [24]).
+#
+# Official diseño-de-registro rule (record T21001, field 110):
+#   [24] Cuota Ley IRNR = [22] - [23]
+# i.e. the cuota íntegra ([22]) minus the deducción por donativos ([23]).
+# Grounded in TRLIRNR Art 24. When no donativos are declared, [23]=0 and
+# [24] collapses to [22].
+# M210 IRNR cuota íntegra reducida (official casilla [28]).
+#
+# Official diseño-de-registro rule (record T21001, field 114):
+#   [28] Cuota íntegra reducida = [24] - [27]   with   [27] = [24] - [26]
+# so when a convenio limit [26] applies, [28] = [26] (the treaty-capped cuota).
+# The registry models the convenio reduction conditionally on the presence of a
+# declared límite convenio [26], clamped so the reduced cuota never exceeds the
+# domestic cuota Ley IRNR [24]:
+#   [28] = if [26] > 0 then min([24], [26]) else [24]
+# This is faithful to the form's declared arithmetic in range ([26] <= [24] gives
+# [27] = [24] - [26] and [28] = [26]) and correct at the edge (a límite above the
+# cuota yields no reduction rather than a negative [27]). When no convenio limit
+# is declared, [28] collapses to [24], preserving the no-convenio liquidación
+# path. Grounded in TRLIRNR Art 24 (the convenio prevalence and cuota framework).
+# M210 IRNR reducción por convenio (official casilla [27]).
+#
+# Official diseño-de-registro rule (record T21001, field 113):
+#   [27] Reducción por Convenio = [24] - [26]
+# The registry derives it from the clamped reduced cuota so the identity
+# [28] = [24] - [27] holds by construction:
+#   [27] = [24] - [28]
+# where [28] is the (clamped) cuota íntegra reducida. When a convenio limit
+# [26] <= [24] applies, [28] = [26] and [27] = [24] - [26] (matching the form).
+# When no convenio limit is declared, [28] = [24] and [27] = 0. Grounded in
+# TRLIRNR Art 24.
+
+[[revisions.2024.formulas]]
+id = "m210-base-imponible"
+target_casilla_id = "base_imponible"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+additional_source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano", "boe-modelo-210-2026-deadline-update"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["rendimientos", "no residentes"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "boe-modelo-210-2026-deadline-update"
+required_text = ["desglose de gastos deducibles", "inmuebles arrendados"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-irnr-renta-imputada-inmueble-urbano"
+required_text = ["base imponible", "valor catastral", "1,1%", "2%"]
+
+[revisions.2024.formulas.expression]
+op = "m210_resolve_base_imponible"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "tipo_renta"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "rendimientos_integros"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "gastos_deducibles"
+
+[[revisions.2024.formulas.expression.args]]
+binding = "m210-profile-country-of-fiscal-residence"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "valor_catastral"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "coeficiente_imputacion_inmobiliaria"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "dias_imputacion"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "valor_adquisicion"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "valor_comprobado_administracion"
+
+[[revisions.2024.formulas.expression.args]]
+parameter = "m210-imputacion-rate-recent-revision"
+
+[[revisions.2024.formulas.expression.args]]
+parameter = "m210-imputacion-rate-old-or-no-revision"
+
+[[revisions.2024.formulas.expression.args]]
+parameter = "m210-imputacion-no-catastral-base-fraction"
+
+[[revisions.2024.formulas]]
+id = "m210-tipo-gravamen-resolve"
+target_casilla_id = "tipo_gravamen"
+legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]
+
+[revisions.2024.formulas.expression]
+op = "irnr_resolve_tipo_gravamen"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "tipo_renta"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "base_imponible"
+
+[[revisions.2024.formulas.expression.args]]
+parameter = "m210-tipo-gravamen"
+
+[[revisions.2024.formulas.expression.args]]
+parameter = "m210-pension-tarifa"
+
+[[revisions.2024.formulas.expression.args]]
+binding = "m210-profile-country-of-fiscal-residence"
+
+[[revisions.2024.formulas]]
+id = "m210-cuota-integra"
+target_casilla_id = "cuota_integra"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "rendimientos"]
+
+[revisions.2024.formulas.expression]
+op = "multiply"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "base_imponible"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "tipo_gravamen"
+
+[[revisions.2024.formulas]]
+id = "m210-cuota-diferencial"
+target_casilla_id = "cuota_diferencial"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["retención", "pagos a cuenta"]
+
+[revisions.2024.formulas.expression]
+op = "subtract"
+
+[[revisions.2024.formulas.expression.args]]
+op = "subtract"
+
+[[revisions.2024.formulas.expression.args.args]]
+casilla_id = "cuota_integra_reducida"
+
+[[revisions.2024.formulas.expression.args.args]]
+casilla_id = "retencion_practicada"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "ingreso_devolucion_anterior"
+
+[[revisions.2024.formulas]]
+id = "m210-base-ganancias-h"
+target_casilla_id = "base_imponible_ganancias_h"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["ganancias patrimoniales", "base imponible"]
+
+[revisions.2024.formulas.expression]
+op = "add"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "ganancia_importe"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "mejora_ganancia"
+
+[[revisions.2024.formulas]]
+id = "m210-cuota-ley-irnr"
+target_casilla_id = "cuota_ley_irnr"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["cuota", "donativos"]
+
+[revisions.2024.formulas.expression]
+op = "subtract"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "cuota_integra"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "deduccion_donativos"
+
+[[revisions.2024.formulas]]
+id = "m210-cuota-integra-reducida"
+target_casilla_id = "cuota_integra_reducida"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["convenio", "cuota"]
+
+[revisions.2024.formulas.expression]
+op = "if_then_else"
+
+[[revisions.2024.formulas.expression.args]]
+op = "greater_than"
+
+[[revisions.2024.formulas.expression.args.args]]
+casilla_id = "limite_convenio"
+
+[[revisions.2024.formulas.expression.args.args]]
+literal = "0"
+
+[[revisions.2024.formulas.expression.args]]
+op = "min"
+
+[[revisions.2024.formulas.expression.args.args]]
+casilla_id = "cuota_ley_irnr"
+
+[[revisions.2024.formulas.expression.args.args]]
+casilla_id = "limite_convenio"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "cuota_ley_irnr"
+
+[[revisions.2024.formulas]]
+id = "m210-reduccion-convenio"
+target_casilla_id = "reduccion_convenio"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+
+[[revisions.2024.formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["convenio"]
+
+[revisions.2024.formulas.expression]
+op = "subtract"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "cuota_ley_irnr"
+
+[[revisions.2024.formulas.expression.args]]
+casilla_id = "cuota_integra_reducida"

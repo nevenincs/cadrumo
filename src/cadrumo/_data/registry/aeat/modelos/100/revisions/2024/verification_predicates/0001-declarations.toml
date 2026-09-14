@@ -1,0 +1,129 @@
+# Settlement-completeness soundness gate (no-silent-under-declaration). The IRPF
+# liability must be determined when the taxpayer reports a positive general
+# taxable base. casilla 0595 (cuota resultante de la autoliquidacion) is the
+# tax liability BEFORE pagos a cuenta (retenciones / pagos fraccionados); it is
+# the box that feeds the cuota diferencial (0610 = 0595 - 0609). When base
+# liquidable general (0500) is strictly positive but 0595 resolves to zero, the
+# return computes no tax on positive taxable activity -- a silent
+# under-declaration the verify gate would otherwise grant with zero findings.
+#
+# ADVISORY (non-blocking WARNING), not BLOCKING: a positive base liquidable
+# general with a legitimately zero cuota is possible (general base at or below
+# the minimo personal y familiar, or fully offset by deducciones), so this
+# surfaces an operator-facing advisory rather than refusing the draft. The
+# consequent is 0595 (the liability), NOT the cuota diferencial (0610) or the
+# resultado (0670): those legitimately resolve to zero or negative for a filer
+# whose retenciones / pagos a cuenta cover the liability (the dominant employee
+# case), so guarding them would false-fire on the majority of returns and train
+# operators to ignore the alert. implies_nonzero holds trivially when the
+# antecedent <= 0, so loss / zero-general-base / savings-only filers never fire.
+# Mirrors the M200 base-determination and M131 pago-fraccionado advisories.
+# Vivienda-habitual deducción eligibility advisory (no-silent-under-declaration:
+# an inadmissible deducción over-declares the deducción and under-declares tax).
+# The deducción por inversión en vivienda habitual was ABOLISHED for
+# acquisitions after 31-12-2012; only the transitional régimen (LIRPF DT 18ª)
+# survives, and only for taxpayers who acquired their vivienda (or satisfied
+# construction/rehabilitation amounts) BEFORE 01-01-2013 and had already been
+# deducting. casilla 0547 is the deducción estatal total carried to the cuota
+# (sum of the anexo A.1 importes 0698/0702/0704); casilla 0708 is the acquisition
+# date the operator records for the dwelling ("salvo que se cumplimente la
+# casilla [0690]"); casilla 0690 is the post-2012 CONSTRUCTION transitional case
+# (a qualifying pre-2013-committed construction delivered later). When 0547 is
+# claimed (> 0) but neither a pre-01-01-2013 acquisition date (0708) nor a
+# construction-transitional date (0690) is recorded, the return claims the
+# abolished deducción without any eligibility signal — surfaced as a NON-BLOCKING
+# ADVISORY (a legitimately-eligible pre-2013 acquirer / construction case remains
+# permissible, so this alerts rather than refuses). Grounded in LIRPF DT 18ª.
+# Suffered-retencion completeness advisory (no-silent-under-declaration, in the
+# OVER-declaration direction this apparatus otherwise does not watch). casilla
+# 0596 is the retencion the taxpayer SUFFERED on rendimientos del trabajo, which
+# the payer declares on Modelo 111 and the taxpayer credits against the cuota. It
+# is a BOUND casilla, so when no observation resolves it the engine threads an
+# absent slot as a zero and emits nothing: an uncredited retencion is tax the
+# taxpayer already paid and pays again, arriving as a clean number.
+#
+# The antecedent is 0012 (total ingresos integros computables del trabajo), the
+# GROSS total, because retencion is computed on gross income. The neto reducido
+# total (0025) was rejected as the antecedent: it is post-deducciones and can be
+# zero for a filer who did suffer withholding, which would suppress the advisory
+# in exactly the cases it exists for.
+#
+# ADVISORY, not BLOCKING, and this is what distinguishes it from a signal keyed
+# on the declared income CATEGORY, which was measured and refused: withholding on
+# rendimientos del trabajo is scaled to the payer's projected annual rate and is
+# lawfully ZERO below the withholding thresholds, so a low-income employee or
+# pensioner declares trabajo income and correctly reports no retencion. A
+# category-keyed rule would fire on precisely those filers. implies_nonzero holds
+# trivially when the antecedent <= 0, so a filer with no trabajo income at all
+# never fires.
+#
+# The remedy is an income-certificate value, NOT a filing to capture: the taxpayer
+# never filed Modelo 111 and the pull cannot fetch a return somebody else filed
+# about them. Any surface rendering this must not tell them to pull anything.
+# Suffered-retencion completeness advisory for capital mobiliario ahorro
+# (no-silent-under-declaration, in the OVER-declaration direction this
+# apparatus otherwise does not watch). casilla 0597 is the retencion the
+# taxpayer SUFFERED on rendimientos del capital mobiliario sujetos a la base
+# del ahorro, which the payer declares on Modelo 123 (or annually on Modelo
+# 193) and the taxpayer credits against the cuota. It is a BOUND casilla, so
+# when no observation resolves it the engine threads an absent slot as a
+# zero and emits nothing: an uncredited retencion is tax the taxpayer
+# already paid and pays again, arriving as a clean number.
+#
+# The antecedent is 0036 (total ingresos integros del capital mobiliario
+# ahorro), the GROSS sum of the per-source components (dividendos,
+# intereses de cuentas, intereses bonificados, letras del Tesoro, otros
+# activos financieros, seguros de capitalizacion, rentas por imposicion de
+# capitales, deuda subordinada/preferentes, PALP), because retencion is
+# computed on gross income, mirroring the trabajo predicate's own choice of
+# 0012 over the post-deducciones 0025. The candidate net figures -- 0038
+# (rendimiento neto) and 0040 (rendimiento neto reducido) -- were rejected
+# for the exact same reason 0025 was rejected in the trabajo case: both are
+# post-gastos-deducibles and post-reduccion, and can be zero for a filer who
+# did suffer withholding, which would suppress the advisory in exactly the
+# cases it exists for. That objection is milder here (deductible gastos on
+# capital mobiliario are narrow) than for trabajo, but a milder objection is
+# still the objection, and choosing by analogy to the trabajo case rather
+# than by this revision's own casillas is the reasoning this campaign
+# forbids: 0036 was independently verified to exist as the GROSS total on
+# this revision's own casilla set through semantic_role
+# (irpf_rendimiento_capital_mobiliario_ahorro_total_ingresos_integros and
+# irpf_retencion_capital_mobiliario), not assumed from the trabajo shape.
+#
+# ADVISORY, not BLOCKING, for the same reason the trabajo predicate is:
+# withholding on capital mobiliario ahorro is scaled to the payer's own
+# rate and can be lawfully zero for some products, so a category-keyed rule
+# would false-fire. implies_nonzero holds trivially when the antecedent
+# <= 0, so a filer with no capital mobiliario ahorro income never fires.
+#
+# The remedy is an income-certificate value, NOT a filing to capture: the
+# taxpayer never filed Modelo 123 (the payer files it) and it cannot arrive
+# from AEAT on this taxpayer's behalf.
+
+[[revisions.2024.verification_predicates]]
+id = "implies-nonzero:cuota-resultante-determinada-cuando-base-liquidable-general-positiva"
+predicate_id = "modelo-100-2024-cuota-resultante-determinada-cuando-base-liquidable-general-positiva"
+expression = "implies_nonzero([\"0500\", \"0595\"])"
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-63", "ley-35-2006:art-79"]
+
+[[revisions.2024.verification_predicates]]
+id = "deduccion-requires-adquisicion-before:deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
+predicate_id = "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
+expression = "deduccion_requires_adquisicion_before([\"0547\", \"0708\", \"0690\", \"2013-01-01\"])"
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:dt-18"]
+
+[[revisions.2024.verification_predicates]]
+id = "implies-nonzero:retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
+predicate_id = "modelo-100-2024-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
+expression = "implies_nonzero([\"0012\", \"0596\"])"
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-80"]
+
+[[revisions.2024.verification_predicates]]
+id = "implies-nonzero:retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
+predicate_id = "modelo-100-2024-retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
+expression = "implies_nonzero([\"0036\", \"0597\"])"
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-90"]

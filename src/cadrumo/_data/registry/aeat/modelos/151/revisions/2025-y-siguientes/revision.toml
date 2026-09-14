@@ -1,10 +1,3 @@
-[revisions."2025-y-siguientes"]
-formula_source_refs = ["aeat-modelo-151-procedure"]
-predecessor = "2015-2022"
-reviewed_against = "2015-2022"
-casilla_source_refs = ["aeat-dr-151-2023"]
-parameter_source_refs = ["aeat-modelo-151-procedure"]
-application_link_source_refs = ["aeat-modelo-151-procedure"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -20,10 +13,6 @@ application_link_source_refs = ["aeat-modelo-151-procedure"]
 # What it does NOT establish: that the figures a filing produces are correct
 # against AEAT. That is a tax review against official sources, and it is what an
 # operator re-stamping this to 'operator_reviewed' would be attesting.
-review_status = "agent_reviewed"
-reviewed_by = "agent-prepared-pending-operator"
-reviewed_at = 2026-08-19
-authority_grade = "filing"
 # valid_from corrected from 2025 to 2023. The prior boundary was wrong on two
 # independent grounds: Orden HFP/1338/2023's own Disposicion Final Segunda(a)
 # states this model applies first for ejercicio 2023 (filed 2024), and AEAT's
@@ -32,55 +21,44 @@ authority_grade = "filing"
 # id (still literally "2025-y-siguientes") is now doubly stale against its
 # corrected data -- a rename is deferred per the standing ruling on locale-key
 # blast radius, matching the M151/M303 precedent from earlier this session.
+# Already-registered record design, declared 2023-01-01 open-ended, which
+# matches this revision's own valid_from exactly. AEAT titles it
+# "151 - Orden HAP/2783/2015 (Ejercicios 2023 y siguientes)".
+[revisions.2025-y-siguientes]
+predecessor = "2015-2022"
+reviewed_against = "2015-2022"
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
 valid_from = 2023-01-01
-period_selector = { year_from = 2023, periods = ["0A"] }
-legal_refs = [
-    "ley-35-2006:art-93",
-    "ley-35-2006:art-93-ahorro",
-    "ley-35-2006:art-93-ahorro-2023",
-    "rd-439-2007:art-113",
-    "orden-hfp-1338-2023:art-1",
-]
-orden_aplicabilidad = [
-    "orden-hfp-1338-2023:art-1",
-]
-source_refs = [
-    "aeat-modelo-151-procedure",
-    "boe-modelo-151-layout",
-    # Already-registered record design, declared 2023-01-01 open-ended, which
-    # matches this revision's own valid_from exactly. AEAT titles it
-    # "151 - Orden HAP/2783/2015 (Ejercicios 2023 y siguientes)".
-    "aeat-dr-151-2023",
-]
-[revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
-reason = """
-A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-151-2025-y-siguientes-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection': the design repeats its income blocks by printing each occurrence as its own positions within a fixed-width record, not by repeating a record, so there is no repeated endpoint for the family to admit and nothing an entry here could name. Authoring a \
-projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."""
+formula_source_refs = ["aeat-modelo-151-procedure"]
+casilla_source_refs = ["aeat-dr-151-2023"]
+parameter_source_refs = ["aeat-modelo-151-procedure"]
+application_link_source_refs = ["aeat-modelo-151-procedure"]
+legal_refs = ["ley-35-2006:art-93", "ley-35-2006:art-93-ahorro", "ley-35-2006:art-93-ahorro-2023", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+orden_aplicabilidad = ["orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout", "aeat-dr-151-2023"]
+
+[revisions.2025-y-siguientes.period_selector]
+year_from = 2023
+periods = ["0A"]
+[revisions.2025-y-siguientes.family_dispositions.projection_endpoints]
+reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-151-2025-y-siguientes-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection': the design repeats its income blocks by printing each occurrence as its own positions within a fixed-width record, not by repeating a record, so there is no repeated endpoint for the family to admit and nothing an entry here could name. Authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-modelo-151-procedure", "aeat-dr-151-2023"]
 
-[revisions."2025-y-siguientes".family_dispositions.dependency_classifications]
-reason = """
-A dependency classification names another modelo whose filed value is FOLDED IN here, and it does that by pointing at the relation-prefill bindings and target constructs that carry the fold-in. This revision declares no relation-prefill binding, so there is no fold-in to classify and an entry here could reference nothing. The retenciones and ingresos a cuenta an impatriado suffers are real and do reduce the resultado de la declaracion, but they reach this modelo as its \
-own declared casilla inputs rather than as a cross-modelo carry from the retenedor's return. Declaring a relation from the retenedor's modelo is what would make this family apply, and that change reaches this declaration through the same revision."""
+[revisions.2025-y-siguientes.family_dispositions.dependency_classifications]
+reason = "A dependency classification names another modelo whose filed value is FOLDED IN here, and it does that by pointing at the relation-prefill bindings and target constructs that carry the fold-in. This revision declares no relation-prefill binding, so there is no fold-in to classify and an entry here could reference nothing. The retenciones and ingresos a cuenta an impatriado suffers are real and do reduce the resultado de la declaracion, but they reach this modelo as its own declared casilla inputs rather than as a cross-modelo carry from the retenedor's return. Declaring a relation from the retenedor's modelo is what would make this family apply, and that change reaches this declaration through the same revision."
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-2"]
 source_refs = ["aeat-modelo-151-procedure", "aeat-dr-151-2023"]
 
-[revisions."2025-y-siguientes".family_dispositions.extraction_profiles]
-reason = """
-An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against this registry's own casilla labels, which would be self-reference. The bundled 151 artefacts are the diseno de registro, which describes the WIRE record and prints no form labels, and the orden, which approves the model in an anexo this repository does not carry as a rendered form. Authoring patterns anyway would \
-mean inventing the labels a real 151 declaracion prints. Bundling a filed or AEAT-published 151 specimen is the change that makes this family authorable."""
+[revisions.2025-y-siguientes.family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against this registry's own casilla labels, which would be self-reference. The bundled 151 artefacts are the diseno de registro, which describes the WIRE record and prints no form labels, and the orden, which approves the model in an anexo this repository does not carry as a rendered form. Authoring patterns anyway would mean inventing the labels a real 151 declaracion prints. Bundling a filed or AEAT-published 151 specimen is the change that makes this family authorable."
 legal_refs = ["ley-35-2006:art-93", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-modelo-151-procedure", "aeat-dr-151-2023"]
 
-[revisions."2025-y-siguientes".family_dispositions.live_cross_references]
-reason = """
-A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 151: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to \
-bound and no guard policy to declare. Should a Modelo 151 consulta reader ever be built, this disposition is what it replaces."""
+[revisions.2025-y-siguientes.family_dispositions.live_cross_references]
+reason = "A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 151: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to bound and no guard policy to declare. Should a Modelo 151 consulta reader ever be built, this disposition is what it replaces."
 legal_refs = ["ley-35-2006:art-93", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-modelo-151-procedure"]
-
-[revisions."2025-y-siguientes".source_default_dispositions.bindings]
-kind = "underivable"
-reason = """
-No leading source_refs run is shared by two rows of this edition's bindings family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""

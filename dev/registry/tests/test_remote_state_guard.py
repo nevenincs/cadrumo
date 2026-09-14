@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,
@@ -32,7 +33,6 @@ from cadrumo.tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment

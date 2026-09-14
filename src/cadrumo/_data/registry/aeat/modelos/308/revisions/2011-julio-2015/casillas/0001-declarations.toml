@@ -1,0 +1,27 @@
+# AEAT aeat-dr-308-2009 and aeat-dr-308-2011-july identify the same
+# declaration-header Ejercicio, distinct from the aircraft manufacture year.
+# Their selectors overlap in 2011, so this shared identity does not assert a
+# grounded predecessor link between the two alternative applicability windows.
+
+[[revisions.2011-julio-2015.casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+data_type = "year"
+semantic_role = "filing_year"
+continuidad_id = "filing-year"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["orden-eha-3786-2008:art-2"]
+
+[[revisions.2011-julio-2015.casillas]]
+id = "decl.periodo"
+number = "periodo"
+data_type = "period_code"
+semantic_role = "filing_period"
+continuidad_id = "filing-period"
+continuidad_origin = "seeded"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["orden-eha-3786-2008:art-2"]

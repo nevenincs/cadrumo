@@ -1,9 +1,0 @@
-[[revisions."2025".casillas]]
-id = "PH18"
-number = "###"
-section = ["datos_identificativos", "hijos"]
-data_type = "boolean"
-semantic_role = "irpf_hijos_menores_unidad_familiar_flag"
-input_kind = "bound"
-binding = "renta-profile-family-minor-children-in-unit"
-additional_source_refs = ["aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

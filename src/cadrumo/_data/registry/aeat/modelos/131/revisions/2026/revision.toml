@@ -1,9 +1,3 @@
-[revisions."2026"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (row order and a dropped application_links member both diverge from the 2025 edition). Materialising by inheritance takes the inherited rows in the predecessor's order, and 'saldo-negativo-fin-periodo' is the last of the 35 rows this edition states while it sits sixteenth in 2025, immediately after casilla '15', so every row from that position on would materialise in an order this edition does not state. The 2025 edition also states the application_links member 'modelo-131-declaracion-extractor', which this edition does not state and which no retirement declares withdrawn; omission in an inheriting family is inheritance rather than deletion, so materialising from 2025 would carry that member into this edition.", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-dr-131-2026"] } }
-casilla_source_refs = ["aeat-modelo-131-instructions"]
-parameter_source_refs = ["aeat-modelo-131-instructions"]
-binding_source_refs = ["aeat-dr-131-2026"]
-formula_source_refs = ["aeat-modelo-131-instructions"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -29,46 +23,29 @@ formula_source_refs = ["aeat-modelo-131-instructions"]
 # What it does NOT establish: that the figures a filing produces are correct
 # against AEAT. That is a tax review against official sources, and it is what an
 # operator re-stamping this to 'operator_reviewed' would be attesting.
+[revisions.2026]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
 id = "2026"
 valid_from = 2026-01-01
-period_selector = { years = [2026], periods = ["1T", "2T", "3T", "4T"] }
+casilla_source_refs = ["aeat-modelo-131-instructions"]
+parameter_source_refs = ["aeat-modelo-131-instructions"]
+binding_source_refs = ["aeat-dr-131-2026"]
+formula_source_refs = ["aeat-modelo-131-instructions"]
 orden_aplicabilidad = ["orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4"]
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "ley-35-2006:art-68.4", "rd-439-2007:art-95"]
-source_refs = [
-    "aeat-dr-131-2026",
-    "aeat-modelo-131-procedure",
-    "aeat-modelo-131-instructions",
-    "aeat-modelo-131-formulario-presentacion",
-    "aeat-modelo-131-recuperacion-declaraciones",
-    "boe-modelo-131-2007-form",
-]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-modelo-131-recuperacion-declaraciones", "boe-modelo-131-2007-form"]
+[revisions.2026.predecessor.none]
+reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (row order and a dropped application_links member both diverge from the 2025 edition). Materialising by inheritance takes the inherited rows in the predecessor's order, and 'saldo-negativo-fin-periodo' is the last of the 35 rows this edition states while it sits sixteenth in 2025, immediately after casilla '15', so every row from that position on would materialise in an order this edition does not state. The 2025 edition also states the application_links member 'modelo-131-declaracion-extractor', which this edition does not state and which no retirement declares withdrawn; omission in an inheriting family is inheritance rather than deletion, so materialising from 2025 would carry that member into this edition."
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
 
-
-[revisions."2026".family_dispositions.projection_endpoints]
-reason = """
-FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 131's own casillas can validate. Modelo 131 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism \
-that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."""
-legal_refs = [
-    "rd-439-2007:art-110",
-    "orden-eha-672-2007:art-3",
-    "orden-hac-1425-2025:art-4",
-    "ley-35-2006:art-68.4",
-    "rd-439-2007:art-95",
-]
-source_refs = [
-    "aeat-dr-131-2026",
-    "aeat-modelo-131-procedure",
-    "aeat-modelo-131-instructions",
-    "aeat-modelo-131-formulario-presentacion",
-    "aeat-modelo-131-recuperacion-declaraciones",
-    "boe-modelo-131-2007-form",
-]
-
-[revisions."2026".source_default_dispositions.application_links]
-kind = "underivable"
-reason = """
-lift refuses: 1 source_refs statement(s) not textually rewritable: 0001-application-links.toml: source_refs = ["""
+[revisions.2026.period_selector]
+years = [2026]
+periods = ["1T", "2T", "3T", "4T"]
+[revisions.2026.family_dispositions.projection_endpoints]
+reason = "FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 131's own casillas can validate. Modelo 131 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "ley-35-2006:art-68.4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-modelo-131-recuperacion-declaraciones", "boe-modelo-131-2007-form"]

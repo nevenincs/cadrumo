@@ -102,7 +102,19 @@ _REVISIONS = _ROOT / "src/cadrumo/_data/registry/aeat/modelos/036/revisions"
 #: From ``[sources."aeat-dr-036-2023"]``. The run refuses any other binary.
 DECLARED_SHA256 = "3ecea6c06e3d280d946c619f621efe64d5334ffd0da44568f0c85b2fc8923cf2"
 
-RECORDS = ('Pag. 1', 'Pag. 2A', 'Pag. 2B', 'Pag. 2C', 'Pag. 3', 'Pag. 4', 'Pag. 5', 'Pag. 6', 'Pag. 7', 'Pag. 8', 'Pag. 9')
+RECORDS = (
+    "Pag. 1",
+    "Pag. 2A",
+    "Pag. 2B",
+    "Pag. 2C",
+    "Pag. 3",
+    "Pag. 4",
+    "Pag. 5",
+    "Pag. 6",
+    "Pag. 7",
+    "Pag. 8",
+    "Pag. 9",
+)
 
 #: The nine box-number forms this design prints, enumerated from it rather than
 #: widened to fit. Under the record-oriented default every one of them fell
@@ -114,7 +126,7 @@ NUMBER_GRAMMAR = (
 )
 
 HEADERS = {
-    'Pag. 1': """# Modelo 036 RECORD Pag. 1 -- declaracion censal de alta, modificacion y baja.
+    "Pag. 1": """# Modelo 036 RECORD Pag. 1 -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -136,7 +148,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 2A': """# Modelo 036 RECORD Pag. 2A -- declaracion censal de alta, modificacion y baja.
+    "Pag. 2A": """# Modelo 036 RECORD Pag. 2A -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -158,7 +170,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 2B': """# Modelo 036 RECORD Pag. 2B -- declaracion censal de alta, modificacion y baja.
+    "Pag. 2B": """# Modelo 036 RECORD Pag. 2B -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -180,7 +192,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 2C': """# Modelo 036 RECORD Pag. 2C -- declaracion censal de alta, modificacion y baja.
+    "Pag. 2C": """# Modelo 036 RECORD Pag. 2C -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -202,7 +214,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 3': """# Modelo 036 RECORD Pag. 3 -- declaracion censal de alta, modificacion y baja.
+    "Pag. 3": """# Modelo 036 RECORD Pag. 3 -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -224,7 +236,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 4': """# Modelo 036 RECORD Pag. 4 -- declaracion censal de alta, modificacion y baja.
+    "Pag. 4": """# Modelo 036 RECORD Pag. 4 -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -246,7 +258,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 5': """# Modelo 036 RECORD Pag. 5 -- declaracion censal de alta, modificacion y baja.
+    "Pag. 5": """# Modelo 036 RECORD Pag. 5 -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -268,7 +280,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 6': """# Modelo 036 RECORD Pag. 6 -- declaracion censal de alta, modificacion y baja.
+    "Pag. 6": """# Modelo 036 RECORD Pag. 6 -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -290,7 +302,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 7': """# Modelo 036 RECORD Pag. 7 -- declaracion censal de alta, modificacion y baja.
+    "Pag. 7": """# Modelo 036 RECORD Pag. 7 -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -312,7 +324,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 8': """# Modelo 036 RECORD Pag. 8 -- declaracion censal de alta, modificacion y baja.
+    "Pag. 8": """# Modelo 036 RECORD Pag. 8 -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -334,7 +346,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
 # 036 carries no formula family at all.""",
-    'Pag. 9': """# Modelo 036 RECORD Pag. 9 -- declaracion censal de alta, modificacion y baja.
+    "Pag. 9": """# Modelo 036 RECORD Pag. 9 -- declaracion censal de alta, modificacion y baja.
 #
 # Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
 #
@@ -360,125 +372,147 @@ HEADERS = {
 
 #: Declared by no edition; declined at parity with the 2025 sibling.
 SCOPE_DECLINED = {
-        'Pag. 1': frozenset({
-            'pag. 1.11-18',
-            'pag. 1.207-246',
-            'pag. 1.247-248',
-            'pag. 1.249-250',
-            'pag. 1.251-254',
-            'pag. 1.255',
-            'pag. 1.256-380',
-            'pag. 1.491-500',
-        }),
-        'Pag. 2A': frozenset({
-            'pag. 2a.10',
-            'pag. 2a.1343-1347',
-            'pag. 2a.1499-1503',
-            'pag. 2a.178-182',
-            'pag. 2a.1844',
-            'pag. 2a.1845',
-            'pag. 2a.1991-2000',
-            'pag. 2a.334-338',
-            'pag. 2a.790-793',
-            'pag. 2a.840-844',
-            'pag. 2a.996-1000',
-        }),
-        'Pag. 2B': frozenset({
-            'B1,B2',
-            'pag. 2b.10',
-            'pag. 2b.1060-1064',
-            'pag. 2b.1407-1411',
-            'pag. 2b.1563-1567',
-            'pag. 2b.1942',
-            'pag. 2b.1943',
-            'pag. 2b.1944',
-            'pag. 2b.1945',
-            'pag. 2b.2091-2100',
-            'pag. 2b.242-246',
-            'pag. 2b.398-402',
-            'pag. 2b.904-908',
-        }),
-        'Pag. 2C': frozenset({
-            'pag. 2c.10',
-            'pag. 2c.1283',
-            'pag. 2c.1284',
-            'pag. 2c.1391-1400',
-            'pag. 2c.314-318',
-            'pag. 2c.470-474',
-            'pag. 2c.639-643',
-            'pag. 2c.795-799',
-        }),
-        'Pag. 3': frozenset({
-            '300,301,302',
-            '311,312',
-            '350,351,352',
-            '361,362',
-            'pag. 3.10',
-            'pag. 3.1191-1200',
-            'pag. 3.480',
-            'pag. 3.956',
-        }),
-        'Pag. 4': frozenset({
-            'pag. 4.10',
-            'pag. 4.135-136',
-            'pag. 4.137-142',
-            'pag. 4.246-251',
-            'pag. 4.418-423',
-            'pag. 4.590-595',
-            'pag. 4.764-769',
-            'pag. 4.891-900',
-        }),
-        'Pag. 5': frozenset({
-            '517,529,549,573,561',
-            '521,533,553,581,565',
-            '525,537,557,585,569',
-            '530,531',
-            '534,538,542,546,570',
-            '535,539,543,547,571',
-            '536,540,544,548,572',
-            '550,554,558,562,566',
-            '551,555,559,563,567',
-            '552,556,560,564,568',
-            '579, 580',
-            '582,583',
-            '741,742',
-            'pag. 5.10',
-            'pag. 5.273',
-            'pag. 5.371-380',
-        }),
-        'Pag. 6': frozenset({
-            '604,605,606,607,615',
-            '608,617',
-            '609,610,611,612,619',
-            '623,624,625,627',
-            '613',
-            '614',
-            '630,631,632',
-            '643,644,645,647',
-            'pag. 6.10',
-            'pag. 6.391-400',
-        }),
-        'Pag. 7': frozenset({
-            '750,751',
-            '755,756',
-            '910,911',
-            '912,913',
-            'pag. 7.10',
-            'pag. 7.391-400',
-        }),
-        'Pag. 8': frozenset({
-            '802,803,804',
-            '819,820',
-            '821,822',
-            '823,824',
-            '825,826',
-            'pag. 8.10',
-            'pag. 8.1791-1800',
-        }),
-        'Pag. 9': frozenset({
-            'pag. 9.10',
-            'pag. 9.1291-1300',
-        }),
+    "Pag. 1": frozenset(
+        {
+            "pag. 1.11-18",
+            "pag. 1.207-246",
+            "pag. 1.247-248",
+            "pag. 1.249-250",
+            "pag. 1.251-254",
+            "pag. 1.255",
+            "pag. 1.256-380",
+            "pag. 1.491-500",
+        }
+    ),
+    "Pag. 2A": frozenset(
+        {
+            "pag. 2a.10",
+            "pag. 2a.1343-1347",
+            "pag. 2a.1499-1503",
+            "pag. 2a.178-182",
+            "pag. 2a.1844",
+            "pag. 2a.1845",
+            "pag. 2a.1991-2000",
+            "pag. 2a.334-338",
+            "pag. 2a.790-793",
+            "pag. 2a.840-844",
+            "pag. 2a.996-1000",
+        }
+    ),
+    "Pag. 2B": frozenset(
+        {
+            "B1,B2",
+            "pag. 2b.10",
+            "pag. 2b.1060-1064",
+            "pag. 2b.1407-1411",
+            "pag. 2b.1563-1567",
+            "pag. 2b.1942",
+            "pag. 2b.1943",
+            "pag. 2b.1944",
+            "pag. 2b.1945",
+            "pag. 2b.2091-2100",
+            "pag. 2b.242-246",
+            "pag. 2b.398-402",
+            "pag. 2b.904-908",
+        }
+    ),
+    "Pag. 2C": frozenset(
+        {
+            "pag. 2c.10",
+            "pag. 2c.1283",
+            "pag. 2c.1284",
+            "pag. 2c.1391-1400",
+            "pag. 2c.314-318",
+            "pag. 2c.470-474",
+            "pag. 2c.639-643",
+            "pag. 2c.795-799",
+        }
+    ),
+    "Pag. 3": frozenset(
+        {
+            "300,301,302",
+            "311,312",
+            "350,351,352",
+            "361,362",
+            "pag. 3.10",
+            "pag. 3.1191-1200",
+            "pag. 3.480",
+            "pag. 3.956",
+        }
+    ),
+    "Pag. 4": frozenset(
+        {
+            "pag. 4.10",
+            "pag. 4.135-136",
+            "pag. 4.137-142",
+            "pag. 4.246-251",
+            "pag. 4.418-423",
+            "pag. 4.590-595",
+            "pag. 4.764-769",
+            "pag. 4.891-900",
+        }
+    ),
+    "Pag. 5": frozenset(
+        {
+            "517,529,549,573,561",
+            "521,533,553,581,565",
+            "525,537,557,585,569",
+            "530,531",
+            "534,538,542,546,570",
+            "535,539,543,547,571",
+            "536,540,544,548,572",
+            "550,554,558,562,566",
+            "551,555,559,563,567",
+            "552,556,560,564,568",
+            "579, 580",
+            "582,583",
+            "741,742",
+            "pag. 5.10",
+            "pag. 5.273",
+            "pag. 5.371-380",
+        }
+    ),
+    "Pag. 6": frozenset(
+        {
+            "604,605,606,607,615",
+            "608,617",
+            "609,610,611,612,619",
+            "623,624,625,627",
+            "613",
+            "614",
+            "630,631,632",
+            "643,644,645,647",
+            "pag. 6.10",
+            "pag. 6.391-400",
+        }
+    ),
+    "Pag. 7": frozenset(
+        {
+            "750,751",
+            "755,756",
+            "910,911",
+            "912,913",
+            "pag. 7.10",
+            "pag. 7.391-400",
+        }
+    ),
+    "Pag. 8": frozenset(
+        {
+            "802,803,804",
+            "819,820",
+            "821,822",
+            "823,824",
+            "825,826",
+            "pag. 8.10",
+            "pag. 8.1791-1800",
+        }
+    ),
+    "Pag. 9": frozenset(
+        {
+            "pag. 9.10",
+            "pag. 9.1291-1300",
+        }
+    ),
 }
 
 #: Withheld pending adjudication. NOT the same claim as declined.
@@ -497,24 +531,24 @@ DEFERRED: dict[str, frozenset[str]] = {}
 #: number PAIR, and the generator refused on it. The alias is per-row and
 #: asserts nothing about any other label.
 PAG9_LOST_BRACKETS = {
-    'pag. 9.20-144': '921',
-    'pag. 9.145-149': '922',
-    'pag. 9.150-163': '923',
-    'pag. 9.223-347': '925',
-    'pag. 9.348-352': '926',
-    'pag. 9.353-366': '927',
-    'pag. 9.426-550': '929',
-    'pag. 9.551-555': '930',
-    'pag. 9.556-569': '931',
-    'pag. 9.629-753': '933',
-    'pag. 9.754-758': '934',
-    'pag. 9.759-772': '935',
-    'pag. 9.832-956': '937',
-    'pag. 9.957-961': '938',
-    'pag. 9.962-975': '939',
-    'pag. 9.1035-1159': '941',
-    'pag. 9.1160-1164': '942',
-    'pag. 9.1165-1178': '943',
+    "pag. 9.20-144": "921",
+    "pag. 9.145-149": "922",
+    "pag. 9.150-163": "923",
+    "pag. 9.223-347": "925",
+    "pag. 9.348-352": "926",
+    "pag. 9.353-366": "927",
+    "pag. 9.426-550": "929",
+    "pag. 9.551-555": "930",
+    "pag. 9.556-569": "931",
+    "pag. 9.629-753": "933",
+    "pag. 9.754-758": "934",
+    "pag. 9.759-772": "935",
+    "pag. 9.832-956": "937",
+    "pag. 9.957-961": "938",
+    "pag. 9.962-975": "939",
+    "pag. 9.1035-1159": "941",
+    "pag. 9.1160-1164": "942",
+    "pag. 9.1165-1178": "943",
 }
 
 #: TWO MORE Pag. 2A SLOTS WHOSE BRACKET THE EXTRACT MALFORMED DIFFERENTLY.
@@ -571,8 +605,8 @@ MODELO_036_2023_SPAN = WaveSpec(
     number_grammar=NUMBER_GRAMMAR,
     carry_number_aliases=PAG2AB_RENUMBERED,
     number_aliases={
-        'Pag. 9': PAG9_LOST_BRACKETS,
-        'Pag. 2A': PAG2A_MALFORMED_BRACKETS,
+        "Pag. 9": PAG9_LOST_BRACKETS,
+        "Pag. 2A": PAG2A_MALFORMED_BRACKETS,
     },
     collapse_rows_by_number=True,
     scope_declined_numbers=SCOPE_DECLINED,

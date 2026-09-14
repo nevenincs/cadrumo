@@ -20,9 +20,9 @@ from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, filin
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
 from cadrumo.tests.inventory import REPO_ROOT
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ...compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ...compiler.corpus_catalogue import verify_source_file

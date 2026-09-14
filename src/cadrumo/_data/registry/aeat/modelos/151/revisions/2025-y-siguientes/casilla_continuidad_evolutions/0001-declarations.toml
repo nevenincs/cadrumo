@@ -1,0 +1,566 @@
+# Both declaration-control indicators retain their official roles and text.
+# The form-approval citation changes from Orden HAP/2783/2015 to its replacement.
+# M151DID00 keeps the same 34-byte IBAN value but broadens the successor
+# label from the return account to the ingreso/domiciliacion/devolucion account.
+# The official M15101000 successor changes both municipality fields from a
+# municipality code to a municipality name. Keep each predecessor lineage
+# distinct and retire them; the successor fields are independent new roots.
+# The predecessor M15101000 record keeps Representante. Apellidos and
+# Representante. Nombre as separate fields. The successor replaces that pair
+# with one 80-byte [19] field that also admits razón social/denominación. Keep
+# both predecessor concepts distinct and retire them; the successor is a new
+# representation with no many-to-one continuity claim.
+# The predecessor M15102000 record keeps Pagador. Apellidos o Razón social
+# and Pagador. Nombre as separate concepts. The successor replaces that pair
+# with one 80-byte [52] field. Retire the two old concepts independently and
+# keep the combined successor without either old continuidad_id.
+# The predecessor M15103000 record keeps Pagador. Apellidos o Razón social
+# and Pagador. Nombre as separate concepts. The successor replaces that pair
+# with one 80-byte [52] field. Retire the two old concepts independently and
+# keep the combined successor without either old continuidad_id.
+# The B-activity totals remain the same aggregates across the replacement
+# design. The positive-net total is made explicit and both fields move from
+# M15105000 to M15106000 with zero-padded printed numbers.
+# The first B-activity type and ordinary retention fields remain in the
+# replacement M15105000 record. Their printed numbers are zero-padded and the
+# retention field moves after the explicitly signed negative-net field. The
+# old negative-subsection retention slot is distinct and is retired rather than
+# falsely linked to the generalized successor field.
+# The 2023-and-later design moves the C/IIC block from M15105000 to
+# M15107000 and zero-pads its printed field numbers. The eight type selectors,
+# eight retention amounts, and the C/IIC retention total retain their roles.
+# The 2015 design has a separate retention slot under the negative-results
+# subsection. The 2023-and-later M15105000 design has one general activity
+# retention field [06] and no separate negative-subsection slot. Since the
+# general field is already the ordinary-retention lineage, the old negative
+# slot is explicitly retired rather than conflated with it.
+# M15105000 makes the sign of the net-result components explicit in the
+# 2023-and-later design. The positive component keeps its span; the negative
+# component moves before withholding. These are representation/label changes,
+# not new concepts inferred from the printed box numbers.
+# M15106000 carries surname/razón-social and given-name as separate concepts.
+# M15108000 replaces each pair with one 80-byte [61] field. Keep the old
+# concepts distinct and retire them; the combined fields are new in
+# representation and are intentionally not assigned either old lineage.
+# The tax-calculation fields [18], [20], and [43] retain their printed
+# concepts, byte spans, lengths, and AEAT field types across the revision.
+# The enclosing record changes from M15108000 (p08) to M15100000 (p10), so
+# these are explicit record-layout evolutions rather than label-only guesses.
+# AEAT's 2015 M15101000 design allocates fax slots to the taxpayer's
+# domestic and foreign addresses and the representative. In the replacement
+# design their captions have no field number, position or length. The allocated
+# fields are contiguous across each former slot: 393/394, 685/686 and 982/983.
+# These are withdrawn fax data fields, not continuations of telephone numbers.
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "tipo-de-declaracion-legal-refs-evolved"
+continuidad_id = "tipo-de-declaracion"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "cuota-cero-legal-refs-evolved"
+continuidad_id = "cuota-cero"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "did-numero-de-cuenta-iban-label-evolved"
+continuidad_id = "did-numero-de-cuenta-iban"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p01-contribuyente-57-codigo-de-municipio-retired"
+continuidad_id = "p01-contribuyente-57-codigo-de-municipio"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p01-representante-57-codigo-de-municipio-retired"
+continuidad_id = "p01-representante-57-codigo-de-municipio"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p01-representante-apellidos-retired"
+continuidad_id = "p01-representante-apellidos"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p01-representante-nombre-retired"
+continuidad_id = "p01-representante-nombre"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p02-pagador-apellidos-o-razon-social-01-retired"
+continuidad_id = "p02-pagador-apellidos-o-razon-social-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p02-pagador-apellidos-o-razon-social-02-retired"
+continuidad_id = "p02-pagador-apellidos-o-razon-social-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p02-pagador-nombre-02-retired"
+continuidad_id = "p02-pagador-nombre-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p02-pagador-apellidos-o-razon-social-03-retired"
+continuidad_id = "p02-pagador-apellidos-o-razon-social-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p02-pagador-nombre-03-retired"
+continuidad_id = "p02-pagador-nombre-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p02-pagador-apellidos-o-razon-social-04-retired"
+continuidad_id = "p02-pagador-apellidos-o-razon-social-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p02-pagador-nombre-04-retired"
+continuidad_id = "p02-pagador-nombre-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p02-pagador-nombre-01-retired"
+continuidad_id = "p02-pagador-nombre-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p03-pagador-apellidos-o-razon-social-01-retired"
+continuidad_id = "p03-pagador-apellidos-o-razon-social-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p03-pagador-nombre-01-retired"
+continuidad_id = "p03-pagador-nombre-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p03-pagador-apellidos-o-razon-social-02-retired"
+continuidad_id = "p03-pagador-apellidos-o-razon-social-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p03-pagador-nombre-02-retired"
+continuidad_id = "p03-pagador-nombre-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p03-pagador-apellidos-o-razon-social-03-retired"
+continuidad_id = "p03-pagador-apellidos-o-razon-social-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p03-pagador-nombre-03-retired"
+continuidad_id = "p03-pagador-nombre-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p03-pagador-apellidos-o-razon-social-04-retired"
+continuidad_id = "p03-pagador-apellidos-o-razon-social-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p03-pagador-nombre-04-retired"
+continuidad_id = "p03-pagador-nombre-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-total-rendimientos-netos-positivos-record-and-label-evolved"
+continuidad_id = "m151-p05-total-rendimientos-netos-positivos"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-total-retenciones-o-ingresos-a-cuenta-9-record-evolved"
+continuidad_id = "p05-total-retenciones-o-ingresos-a-cuenta-9"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-b-activity-type-label-evolved"
+continuidad_id = "p05-tipo-de-renta-1-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-b-activity-retention-label-and-position-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-6"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-01-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-02-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-03-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-04-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-05"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-05-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-06"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-06-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-07"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-07-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-08"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-08-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-09"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-01-label-and-record-evolved"
+continuidad_id = "m151-rentencion-o-ingreso-a-cuenta-3"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-02-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-03-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-04-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-05-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-05"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-06-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-06"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-07-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-07"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-08-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-08"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-c-iic-total-retention-label-and-record-evolved"
+continuidad_id = "p05-total-retenciones-o-ingresos-a-cuenta-5"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-negative-subsection-retention-retired"
+continuidad_id = "p05-rendimientos-negativos-rentencion-o-ingreso-a-cuenta-6"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-rendimiento-neto-positivo-label-evolved"
+continuidad_id = "m151-p05-rendimiento-neto-positivo"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p05-rendimiento-neto-negativo-label-and-position-evolved"
+continuidad_id = "m151-p05-rendimiento-neto-negativo"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p06-adquiriente-apellidos-o-razon-social-01-retired"
+continuidad_id = "p06-adquiriente-apellidos-o-razon-social-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p06-adquiriente-nombre-01-retired"
+continuidad_id = "p06-adquiriente-nombre-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p06-adquiriente-apellidos-o-razon-social-02-retired"
+continuidad_id = "p06-adquiriente-apellidos-o-razon-social-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p06-adquiriente-nombre-02-retired"
+continuidad_id = "p06-adquiriente-nombre-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p08-base-liquidable-del-ahorro-18-record-evolved"
+continuidad_id = "p08-base-liquidable-del-ahorro-18"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p08-cuota-correspondiente-e-general-del-ahorro-20-record-evolved"
+continuidad_id = "p08-cuota-correspondiente-e-general-del-ahorro-20"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "p08-resultado-de-la-declaracion-43-record-evolved"
+continuidad_id = "p08-resultado-de-la-declaracion-43"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "retired-contribuyente-fax-domicilio-espana"
+continuidad_id = "contribuyente-fax-domicilio-espana"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "retired-contribuyente-fax-domicilio-extranjero"
+continuidad_id = "contribuyente-fax-domicilio-extranjero"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "retired-representante-fax"
+continuidad_id = "representante-fax"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]

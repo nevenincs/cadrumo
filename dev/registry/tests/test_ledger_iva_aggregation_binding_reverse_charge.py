@@ -386,7 +386,7 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
             continue
         invoice_direction = InvoiceKind.RECEIVED if category in received_categories else InvoiceKind.ISSUED
         # Cuota-less-by-law is a (category, SIDE) fact, while
-    # registry cuota-less projection is keyed on the category alone, so the
+        # registry cuota-less projection is keyed on the category alone, so the
         # skip above cannot express it. Domestic reverse charge forces the
         # distinction: the recipient self-assesses a real cuota, while the
         # supplier repercutes nothing under LIVA art. 84.Uno.2. Synthesising a

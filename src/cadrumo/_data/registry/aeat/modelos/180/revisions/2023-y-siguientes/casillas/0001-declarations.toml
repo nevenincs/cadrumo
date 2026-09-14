@@ -1,0 +1,433 @@
+# "decimal", not "ratio": this codebase's "ratio" data_type carries an
+# established 0-1 fractional convention elsewhere in the registry (e.g. a
+# 50% reduction parameter stores 0.50), disambiguated for parameters by a
+# separate "unit" field casillas do not carry. AEAT's own diseño encodes
+# this field as a percentage NUMBER split into entero+decimal sub-parts
+# (93-94 / 95-96), i.e. 15.00 for 15%, not 0.15 -- "ratio" would silently
+# invite the wrong convention here with no field to catch it.
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "decl.base-total"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+continuidad_origin = "seeded"
+number = "145-160"
+form_number = "02"
+data_type = "money"
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "computed"
+formula = "modelo-180-base-total"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[revisions.2023-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "decl.complementaria-sustitutiva"
+continuidad_id = "declaracion-complementaria-sustitutiva"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-180-2014 y aeat-dr-180-2023, registro tipo 1, paginas 3-4, lineas 73-100 de sus extractos: C incorpora perceptores omitidos y S anula y sustituye una unica declaracion del mismo ejercicio; definiciones y condiciones identicas."
+number = "121-122"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["declarante", "identificacion"]
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "decl.numero-identificativo-anterior"
+continuidad_id = "numero-identificativo-declaracion-anterior"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-180-2014 y aeat-dr-180-2023, registro tipo 1, pagina 4, lineas 101-109 de sus extractos: identificador de la declaracion sustituida o complementada cuando se marca C o S, y ceros en otro caso; identidad y condicion conservadas."
+number = "123-135"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["declarante", "identificacion"]
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "decl.numero-identificativo"
+continuidad_id = "numero-identificativo-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-180-2014 y aeat-dr-180-2023, registro tipo 1, pagina 3, lineas 67-72 de sus extractos: identificador secuencial de la declaracion cuyos tres primeros digitos son 180; misma declaracion identificada y mismo mandato."
+number = "108-120"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["declarante", "identificacion"]
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "decl.retenciones-total"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+continuidad_origin = "seeded"
+number = "161-175"
+form_number = "03"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "computed"
+formula = "modelo-180-retenciones-total"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[revisions.2023-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "decl.total-perceptores"
+number = "136-144"
+form_number = "01"
+data_type = "integer"
+semantic_role = "total_perceptores_count"
+continuidad_id = "total-perceptores-count"
+required = true
+input_kind = "bound"
+binding = "modelo-180-115-perceptores-anual"
+section = ["declarante", "resumen"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.base"
+continuidad_id = "perc-base"
+continuidad_origin = "seeded"
+number = "79-92"
+data_type = "money"
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "manual"
+section = ["perceptor", "renta"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[revisions.2023-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.ejercicio-devengo"
+number = "110-113"
+data_type = "year"
+semantic_role = "devengo_year"
+continuidad_id = "devengo-year"
+required = false
+input_kind = "manual"
+section = ["perceptor", "renta"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-bloque"
+number = "201-203"
+data_type = "text"
+semantic_role = "payee_inmueble_bloque"
+continuidad_id = "payee-inmueble-bloque"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-calificador-numero"
+number = "198-200"
+data_type = "text"
+semantic_role = "payee_inmueble_calificador_numero"
+continuidad_id = "payee-inmueble-calificador-numero"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-codigo-municipio"
+number = "316-320"
+data_type = "municipality_code"
+semantic_role = "payee_inmueble_codigo_municipio"
+continuidad_id = "payee-inmueble-codigo-municipio"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-codigo-postal"
+number = "323-327"
+data_type = "postal_code"
+semantic_role = "payee_inmueble_codigo_postal"
+continuidad_id = "payee-inmueble-codigo-postal"
+required = true
+input_kind = "manual"
+section = ["perceptor", "inmueble"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-complemento"
+number = "216-255"
+data_type = "text"
+semantic_role = "payee_inmueble_complemento"
+continuidad_id = "payee-inmueble-complemento"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-escalera"
+number = "207-209"
+data_type = "text"
+semantic_role = "payee_inmueble_escalera"
+continuidad_id = "payee-inmueble-escalera"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-localidad"
+number = "256-285"
+data_type = "text"
+semantic_role = "payee_inmueble_localidad"
+continuidad_id = "payee-inmueble-localidad"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-municipio"
+number = "286-315"
+data_type = "text"
+semantic_role = "payee_inmueble_municipio"
+continuidad_id = "payee-inmueble-municipio"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-nombre-via"
+number = "140-189"
+data_type = "text"
+semantic_role = "payee_inmueble_nombre_via"
+continuidad_id = "payee-inmueble-nombre-via"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-numero-casa"
+number = "193-197"
+data_type = "text"
+semantic_role = "payee_inmueble_numero_casa"
+continuidad_id = "payee-inmueble-numero-casa"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-planta"
+number = "210-212"
+data_type = "text"
+semantic_role = "payee_inmueble_planta"
+continuidad_id = "payee-inmueble-planta"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-portal"
+number = "204-206"
+data_type = "text"
+semantic_role = "payee_inmueble_portal"
+continuidad_id = "payee-inmueble-portal"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-provincia"
+number = "321-322"
+data_type = "province_code"
+semantic_role = "payee_inmueble_provincia"
+continuidad_id = "payee-inmueble-provincia"
+required = true
+input_kind = "manual"
+section = ["perceptor", "inmueble"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-puerta"
+number = "213-215"
+data_type = "text"
+semantic_role = "payee_inmueble_puerta"
+continuidad_id = "payee-inmueble-puerta"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-tipo-numeracion"
+number = "190-192"
+data_type = "text"
+semantic_role = "payee_inmueble_tipo_numeracion"
+continuidad_id = "payee-inmueble-tipo-numeracion"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.inmueble-tipo-via"
+number = "135-139"
+data_type = "text"
+semantic_role = "payee_inmueble_tipo_via"
+continuidad_id = "payee-inmueble-tipo-via"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble", "direccion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.modalidad"
+number = "78"
+data_type = "text"
+semantic_role = "payee_modalidad_renta"
+continuidad_id = "payee-modalidad-renta"
+required = true
+input_kind = "manual"
+section = ["perceptor", "renta"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.nif-representante-legal"
+number = "27-35"
+data_type = "nif"
+semantic_role = "payee_representative_nif"
+continuidad_id = "payee-representative-nif"
+required = false
+input_kind = "manual"
+section = ["perceptor", "identificacion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.nif"
+number = "18-26"
+data_type = "nif"
+semantic_role = "payee_nif"
+continuidad_id = "payee-nif"
+required = true
+input_kind = "manual"
+section = ["perceptor", "identificacion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.nombre"
+number = "36-75"
+data_type = "name"
+semantic_role = "payee_name"
+continuidad_id = "payee-name"
+required = true
+input_kind = "manual"
+section = ["perceptor", "identificacion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.porcentaje-retencion"
+number = "93-96"
+data_type = "decimal"
+semantic_role = "porcentaje_retencion"
+continuidad_id = "porcentaje-retencion"
+required = true
+input_kind = "manual"
+section = ["perceptor", "renta"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.provincia"
+number = "76-77"
+data_type = "province_code"
+semantic_role = "payee_province"
+continuidad_id = "payee-province"
+required = true
+input_kind = "manual"
+section = ["perceptor", "identificacion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.referencia-catastral"
+number = "115-134"
+data_type = "text"
+semantic_role = "payee_inmueble_referencia_catastral"
+continuidad_id = "payee-inmueble-referencia-catastral"
+required = false
+input_kind = "manual"
+section = ["perceptor", "inmueble"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.retenciones"
+continuidad_id = "perc-retenciones"
+continuidad_origin = "seeded"
+number = "97-109"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "manual"
+section = ["perceptor", "renta"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[revisions.2023-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "perc.situacion-inmueble"
+number = "114"
+data_type = "text"
+semantic_role = "payee_inmueble_situacion"
+continuidad_id = "payee-inmueble-situacion"
+required = true
+input_kind = "manual"
+section = ["perceptor", "inmueble"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]

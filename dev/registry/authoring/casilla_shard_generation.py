@@ -39,9 +39,9 @@ every edition and are not meaning changes.
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
-import dataclasses
 import re
 import tomllib
 from collections.abc import Mapping, Sequence
@@ -107,20 +107,28 @@ _LETTERED = re.compile(r"\[([A-Z])\]\s*$")
 #: one of those silently became a position range -- a real box number replaced by
 #: a fabricated slot id, with nothing to show it happened.
 _IDENTIFIER_BRACKET = re.compile(r"\[([^\]\s|<>]{1,12})\]")
-_TYPE_CODES = frozenset({
-    "num", "n", "an", "a",
-    "numérico", "alfanumérico", "alfabético", "blancos",
-    "numerico", "alfanumerico", "alfabetico",
-})
+_TYPE_CODES = frozenset(
+    {
+        "num",
+        "n",
+        "an",
+        "a",
+        "numérico",
+        "alfanumérico",
+        "alfabético",
+        "blancos",
+        "numerico",
+        "alfanumerico",
+        "alfabetico",
+    }
+)
 #: Characters whose appearance means the extraction changed shape under us. A
 #: non-breaking space reads as a space and matches nothing, which is how a
 #: citation screen once reported twenty-three absent quotations that were all
 #: present.
 _FORBIDDEN = {" ": "NBSP", "\t": "TAB", "\r": "CR"}
 _YEAR = re.compile(r"20\d\d")
-_PAGE_POINTER = re.compile(
-    r"\(?p[aeiouáéíóú]*g\.?\s*[^)]*\)?", re.IGNORECASE
-)
+_PAGE_POINTER = re.compile(r"\(?p[aeiouáéíóú]*g\.?\s*[^)]*\)?", re.IGNORECASE)
 _BRACKET_TOKEN = re.compile(r"\[[0-9a-z]+\]", re.IGNORECASE)
 _NON_ALNUM = re.compile(r"[^a-z0-9]+")
 #: The ``# @off+len Type.`` head of a transcribed comment. The type is matched as
@@ -212,9 +220,7 @@ class WaveSpec:
     #: subdivide en dos" over 176-186, which is really three parts (176 SIGNO,
     #: 177-184 ENTERO, 185-186 DECIMAL), so the reader's count clause declines the
     #: repair and leaves the two grandchildren at the surface.
-    declared_desglose_parents: Mapping[str, Mapping[int, tuple[int, ...]]] = field(
-        default_factory=dict
-    )
+    declared_desglose_parents: Mapping[str, Mapping[int, tuple[int, ...]]] = field(default_factory=dict)
     #: How the prior edition's shards are found, as a glob with ``{segmento}``.
     #:
     #: The record-oriented default narrows by record because a box number is only
@@ -362,9 +368,7 @@ def verify_design_hash(path: Path, declared: str | None) -> str:
     """Refuse a design binary that is not the artifact the registry cites."""
     actual = hashlib.sha256(path.read_bytes()).hexdigest()
     if declared is not None and actual != declared:
-        raise GenerationRefused(
-            f"design sha256 {actual} does not match the declared {declared}"
-        )
+        raise GenerationRefused(f"design sha256 {actual} does not match the declared {declared}")
     return actual
 
 
@@ -382,9 +386,7 @@ def cross_check_sidecar(design_path: Path, sheets: Mapping[str, RecordDesignShee
     declared = payload.get("source_sha256")
     actual = hashlib.sha256(design_path.read_bytes()).hexdigest()
     if declared and declared != actual:
-        raise GenerationRefused(
-            f"the sidecar describes {declared} but the binary on disk is {actual}"
-        )
+        raise GenerationRefused(f"the sidecar describes {declared} but the binary on disk is {actual}")
     # The sheet-name comparison only means something when the sidecar's units ARE
     # sheets. A workbook sidecar splits by worksheet and its titles are the record
     # names; a PDF sidecar splits by PAGE and titles them "Pag. 1"..."Pag. N",
@@ -396,9 +398,7 @@ def cross_check_sidecar(design_path: Path, sheets: Mapping[str, RecordDesignShee
     titles = {unit["title"].strip() for unit in payload.get("units", ())}
     missing = set(sheets) - titles
     if missing:
-        raise GenerationRefused(
-            f"the workbook carries sheets the sidecar does not: {sorted(missing)}"
-        )
+        raise GenerationRefused(f"the workbook carries sheets the sidecar does not: {sorted(missing)}")
 
 
 def is_structural(description: str) -> bool:
@@ -509,8 +509,7 @@ def audit_sheet(
             )
         pattern = re.compile(grammar) if grammar else _NUMBERED
         recognised = {
-            match.group(1) if pattern.groups else match.group(0)
-            for match in pattern.finditer(row.description)
+            match.group(1) if pattern.groups else match.group(0) for match in pattern.finditer(row.description)
         } | {match.group(1) for match in _LETTERED.finditer(row.description)}
         for token in _IDENTIFIER_BRACKET.findall(row.description):
             if token not in recognised:
@@ -528,21 +527,14 @@ def audit_sheet(
     # their own grandparent at 176-186, making the record sum 510 against a
     # declared 500. Refusing names the real defect; excluding them would paper
     # over a reader limitation with a generator workaround.
-    hoisted = {
-        child
-        for children in (declared_desglose or {}).values()
-        for child in children
-    }
-    ordered = [row for row in sorted(sheet.fields, key=lambda item: item.offset)
-               if row.offset not in hoisted]
+    hoisted = {child for children in (declared_desglose or {}).values() for child in children}
+    ordered = [row for row in sorted(sheet.fields, key=lambda item: item.offset) if row.offset not in hoisted]
     for outer in ordered:
         outer_end = outer.offset + outer.length
         contained = [
             inner
             for inner in ordered
-            if inner is not outer
-            and inner.offset >= outer.offset
-            and inner.offset + inner.length <= outer_end
+            if inner is not outer and inner.offset >= outer.offset and inner.offset + inner.length <= outer_end
         ]
         if contained:
             spans = ", ".join(f"@{item.offset}+{item.length}" for item in contained)
@@ -556,17 +548,13 @@ def audit_sheet(
     cursor = 1
     for row in ordered:
         if row.offset != cursor:
-            problems.append(
-                f"{name}: tiling breaks at @{row.offset}, expected @{cursor}"
-            )
+            problems.append(f"{name}: tiling breaks at @{row.offset}, expected @{cursor}")
             break
         cursor = row.offset + row.length
     else:
         tiled = cursor - 1
         if sheet.total_positions is not None and tiled != sheet.total_positions:
-            problems.append(
-                f"{name}: tiles {tiled} but the design declares {sheet.total_positions}"
-            )
+            problems.append(f"{name}: tiles {tiled} but the design declares {sheet.total_positions}")
     return problems
 
 
@@ -587,18 +575,18 @@ def load_prior_attributes(
                 pending = line
             elif line.startswith("[[revisions."):
                 open_array = (
-                    "legal_refs" if collecting_legal_refs is not None
-                    else "section" if collecting_section is not None else None
+                    "legal_refs"
+                    if collecting_legal_refs is not None
+                    else "section"
+                    if collecting_section is not None
+                    else None
                 )
                 if open_array is not None:
                     # An array that never closed leaves the field unset and the row
                     # takes the wave default without a word -- the exact silence
                     # that cost modelo 036 all 530 of its legal_refs. Refuse on the
                     # malformed prior instead, naming the casilla it belongs to.
-                    raise GenerationRefused(
-                        f"{path.name}: {open_array} array for casilla "
-                        f"{number!r} is never closed"
-                    )
+                    raise GenerationRefused(f"{path.name}: {open_array} array for casilla {number!r} is never closed")
                 if number:
                     attributes[number] = current
                 current, number = {"_caption": pending}, None
@@ -716,22 +704,16 @@ def emit_records(
         sheet = sheets.get(segmento)
         if sheet is None:
             raise GenerationRefused(f"{segmento}: no such sheet in the design")
-        problems = audit_sheet(
-            sheet, spec.declared_desglose_parents.get(segmento), spec.number_grammar
-        )
+        problems = audit_sheet(sheet, spec.declared_desglose_parents.get(segmento), spec.number_grammar)
         if problems:
             raise GenerationRefused("; ".join(problems))
 
-        prior = load_prior_attributes(
-            spec.prior_casillas_dir, segmento, spec.prior_glob
-        )
+        prior = load_prior_attributes(spec.prior_casillas_dir, segmento, spec.prior_glob)
         emitted: list[str] = []
         carried = adjudicated = out_of_scope = 0
 
         hoisted = {
-            child
-            for children in spec.declared_desglose_parents.get(segmento, {}).values()
-            for child in children
+            child for children in spec.declared_desglose_parents.get(segmento, {}).values() for child in children
         }
         stem = spec.record_stems.get(segmento, segmento.lower())
         grouped: dict[str, list[RecordDesignField]] = {}
@@ -740,8 +722,12 @@ def emit_records(
             if candidate.offset in hoisted or is_structural(candidate.description):
                 continue
             derived, derived_caption = derive_number(
-                candidate.description, candidate.offset, candidate.length,
-                segmento, stem, spec.number_grammar,
+                candidate.description,
+                candidate.offset,
+                candidate.length,
+                segmento,
+                stem,
+                spec.number_grammar,
             )
             derived = spec.number_aliases.get(segmento, {}).get(derived, derived)
             if spec.collapse_rows_by_number:
@@ -768,14 +754,11 @@ def emit_records(
                 continue
             if number in spec.deferred_numbers.get(segmento, frozenset()):
                 report.deferred.append(
-                    f"{segmento}:{number} @{row.offset}+{row.length} "
-                    f"({len(members)} printed row(s)) {caption[:64]}"
+                    f"{segmento}:{number} @{row.offset}+{row.length} ({len(members)} printed row(s)) {caption[:64]}"
                 )
                 continue
 
-            carry_key = spec.carry_number_aliases.get(segmento, {}).get(
-                number, number
-            )
+            carry_key = spec.carry_number_aliases.get(segmento, {}).get(number, number)
             if carry_key in prior:
                 attributes = prior[carry_key]
                 section = attributes["section"]
@@ -811,9 +794,7 @@ def emit_records(
                     # payload lives in Contenido -- the clave enumerations and
                     # conditional rules -- a caption comparison is blind to a
                     # meaning change by construction.
-                    elif was_content and normalise_for_drift(was_content) != normalise_for_drift(
-                        now_content
-                    ):
+                    elif was_content and normalise_for_drift(was_content) != normalise_for_drift(now_content):
                         report.content_drift.append(
                             f"{segmento}:{number} @{row.offset}+{row.length}\n"
                             f"    prior contenido: {was_content.strip()[:96]}\n"
@@ -827,9 +808,7 @@ def emit_records(
                 row_segmento = segmento
                 adjudicated += 1
             else:
-                report.refusals.append(
-                    f"{segmento}:{number} @{row.offset}+{row.length} {caption[:70]}"
-                )
+                report.refusals.append(f"{segmento}:{number} @{row.offset}+{row.length} {caption[:70]}")
                 continue
 
             emitted.append(
@@ -903,18 +882,12 @@ def emit_records(
         )
         restored = 0
         for index, outcome in enumerate(report.outcomes):
-            body, carried = reattach_attestations(
-                outcome.body, harvested, spec.revision_id
-            )
+            body, carried = reattach_attestations(outcome.body, harvested, spec.revision_id)
             restored += carried
             report.outcomes[index] = dataclasses.replace(outcome, body=body)
         report.attestations_restored = restored
         produced = {outcome.filename for outcome in report.outcomes}
-        report.orphaned_shards = sorted(
-            path.name
-            for path in spec.out_dir.glob("*.toml")
-            if path.name not in produced
-        )
+        report.orphaned_shards = sorted(path.name for path in spec.out_dir.glob("*.toml") if path.name not in produced)
 
     if write:
         for outcome in report.outcomes:
@@ -923,34 +896,22 @@ def emit_records(
             target.write_text(outcome.body, encoding="utf-8")
             back = target.read_text(encoding="utf-8")
             if back != outcome.body:
-                raise GenerationRefused(
-                    f"{outcome.segmento}: read-back differs from the write"
-                )
+                raise GenerationRefused(f"{outcome.segmento}: read-back differs from the write")
             for number, line in enumerate(back.splitlines(), start=1):
-                if line and not (
-                    line.startswith(("#", "[")) or _KEY_LINE.match(line)
-                ):
+                if line and not (line.startswith(("#", "[")) or _KEY_LINE.match(line)):
                     raise GenerationRefused(
-                        f"{outcome.segmento}: line {number} is neither comment nor key: "
-                        f"{line[:60]!r}"
+                        f"{outcome.segmento}: line {number} is neither comment nor key: {line[:60]!r}"
                     )
             try:
                 tomllib.loads(back)
             except tomllib.TOMLDecodeError as error:
-                raise GenerationRefused(
-                    f"{outcome.segmento}: the emitted shard does not parse: {error}"
-                ) from error
+                raise GenerationRefused(f"{outcome.segmento}: the emitted shard does not parse: {error}") from error
             marker = f'[[revisions."{spec.revision_id}".casillas]]'
             if back.count(marker) != outcome.emitted:
-                raise GenerationRefused(
-                    f"{outcome.segmento}: read-back casilla count is wrong"
-                )
+                raise GenerationRefused(f"{outcome.segmento}: read-back casilla count is wrong")
 
     if report.refusals:
-        raise GenerationRefused(
-            f"{len(report.refusals)} row(s) need adjudication: "
-            + "; ".join(report.refusals[:5])
-        )
+        raise GenerationRefused(f"{len(report.refusals)} row(s) need adjudication: " + "; ".join(report.refusals[:5]))
     return report
 
 
@@ -959,9 +920,7 @@ def _source_lines(data: bytes) -> list[str]:
     return data.decode("utf-8").replace(chr(13) + _NL, _NL).split(_NL)
 
 
-def harvest_attestations(
-    out_dir: Path, revision_id: str
-) -> dict[str, tuple[str, list[str]]]:
+def harvest_attestations(out_dir: Path, revision_id: str) -> dict[str, tuple[str, list[str]]]:
     """Every key line a later pass added to rows this generator already wrote.
 
     The generator emits eight fields. Anything else on a row on disk was put there
@@ -1001,9 +960,7 @@ def harvest_attestations(
     return harvested
 
 
-def reattach_attestations(
-    body: str, harvested: dict[str, tuple[str, list[str]]], revision_id: str
-) -> tuple[str, int]:
+def reattach_attestations(body: str, harvested: dict[str, tuple[str, list[str]]], revision_id: str) -> tuple[str, int]:
     """Carry every attested field forward onto the row it was made about.
 
     A field the emission already produces is never overwritten: the generator is
@@ -1018,9 +975,7 @@ def reattach_attestations(
     def flush() -> None:
         nonlocal carried, block, casilla_id
         if casilla_id:
-            emitted = {
-                match.group(1) for line in block if (match := _KEY_LINE.match(line))
-            }
+            emitted = {match.group(1) for line in block if (match := _KEY_LINE.match(line))}
             for line in harvested.get(casilla_id, ("", []))[1]:
                 key = _KEY_LINE.match(line).group(1)
                 if key not in emitted:
@@ -1081,6 +1036,7 @@ def refuse_dropped_attestations(
         "scope, or move the attestations, before running again."
     )
 
+
 def emitted_ids(report: GenerationReport) -> list[str]:
     """Every casilla id this run would write, in emission order."""
     return [
@@ -1122,15 +1078,9 @@ def format_report(report: GenerationReport) -> str:
     lines.append(f"\nCAPTION DRIFT on position-stable rows: {len(report.drift)}")
     lines.extend(f"  {entry}" for entry in report.drift)
     if report.orphaned_shards:
-        lines.append(
-            f"\nSHARDS IN out_dir THIS RUN DOES NOT PRODUCE: "
-            f"{len(report.orphaned_shards)}"
-        )
+        lines.append(f"\nSHARDS IN out_dir THIS RUN DOES NOT PRODUCE: {len(report.orphaned_shards)}")
         lines.extend(f"  {name}" for name in report.orphaned_shards)
-    lines.append(
-        f"\nATTESTATIONS carried forward from disk: "
-        f"{report.attestations_restored}"
-    )
+    lines.append(f"\nATTESTATIONS carried forward from disk: {report.attestations_restored}")
     lines.append(f"\nTOTAL casillas: {report.total_emitted}")
     return "\n".join(lines)
 

@@ -1,9 +1,0 @@
-[[revisions."2025".casillas]]
-id = "APENOMDLG_ASC"
-number = "*91"
-section = ["datos_identificativos", "ascendientes", "ascendiente"]
-data_type = "text"
-semantic_role = "irpf_ascendiente_apellidos_nombre"
-input_kind = "bound"
-binding = "renta-family-ascendant-display-name"
-additional_source_refs = ["aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

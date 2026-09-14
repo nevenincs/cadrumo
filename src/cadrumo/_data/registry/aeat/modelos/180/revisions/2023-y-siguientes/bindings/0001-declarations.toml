@@ -1,0 +1,82 @@
+# RET-1: the "número total de perceptores" (número de registros de tipo 2) is a
+# DISTINCT perceptor-NIF count, not the sum of the quarterly Modelo 115 aggregate
+# counts (which double-counts a perceptor paid in more than one quarter). Sourced
+# from the dedicated per-perceptor retención store via the distinct-count primitive
+# (aggregate_retenciones_180.total_perceptors), replacing the op=sum relation.
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-115-perceptores-anual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-ayuda-resumen-datos"
+required_text = ["Casilla01 Número total de perceptores relacionados", "Consigne el número de los perceptores"]
+
+[revisions.2023-y-siguientes.bindings.provider]
+kind = "retenciones_aggregation"
+target_casilla_id = "decl.total-perceptores"
+fact = "perceptor_count_distinct"
+
+[revisions.2023-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-115-base-anual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-ayuda-resumen-datos"
+required_text = ["Casilla02 Base retenciones e ingresos a cuenta", "Consigne la suma de las cantidades reflejadas"]
+
+[revisions.2023-y-siguientes.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "115"
+source_casilla_id = "02"
+
+[revisions.2023-y-siguientes.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2023-y-siguientes.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2023-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-115-retenciones-anual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-ayuda-resumen-datos"
+required_text = ["Casilla03 Retenciones e ingresos a cuenta", "Consigne la suma total de las cantidades reflejadas"]
+
+[revisions.2023-y-siguientes.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "115"
+source_casilla_id = "03"
+
+[revisions.2023-y-siguientes.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2023-y-siguientes.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2023-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"

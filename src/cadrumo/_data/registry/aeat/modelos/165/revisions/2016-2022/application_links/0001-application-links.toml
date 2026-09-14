@@ -1,7 +1,0 @@
-[[revisions."2016-2022".application_links]]
-id = "modelo-165-export"
-surface = "export"
-consumer = "cadrumo.application.filing.export_draft"
-requires_snapshot = true
-legal_refs = ["orden-hap-2455-2013:art-1"]
-source_refs = ["aeat-dr-165-2016-2022"]

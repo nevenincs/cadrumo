@@ -1,0 +1,549 @@
+[[revisions.2023-2024.casillas]]
+id = "01"
+number = "01"
+data_type = "money"
+semantic_role = "is_pf_mod_40_2_base_pago_fraccionado"
+continuidad_id = "is-pf-mod-40-2-base-pago-fraccionado"
+required = true
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_2_lis"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "02"
+number = "02"
+data_type = "money"
+semantic_role = "is_pf_mod_40_2_resultado_declaracion_anterior"
+continuidad_id = "is-pf-mod-40-2-resultado-declaracion-anterior"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_2_lis"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "03"
+number = "03"
+data_type = "money"
+semantic_role = "is_pf_mod_40_2_a_ingresar"
+continuidad_id = "is-pf-mod-40-2-a-ingresar"
+required = false
+input_kind = "computed"
+formula = "modelo-202-modalidad-40-2-a-ingresar"
+section = ["liquidacion", "modalidad_40_2_lis"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "04"
+number = "04"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_resultado_contable"
+continuidad_id = "is-pf-mod-40-3-resultado-contable"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "05"
+number = "05"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_correcciones_is_aumentos"
+continuidad_id = "is-pf-mod-40-3-correcciones-is-aumentos"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "06"
+number = "06"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_correcciones_is_disminuciones"
+continuidad_id = "is-pf-mod-40-3-correcciones-is-disminuciones"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "07"
+number = "07"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_resto_correcciones_aumentos"
+continuidad_id = "is-pf-mod-40-3-resto-correcciones-aumentos"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "08"
+number = "08"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_resto_correcciones_disminuciones"
+continuidad_id = "is-pf-mod-40-3-resto-correcciones-disminuciones"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "13"
+number = "13"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_base_imponible_previa"
+continuidad_id = "is-pf-mod-40-3-base-imponible-previa"
+required = false
+input_kind = "computed"
+formula = "modelo-202-base-imponible-previa"
+section = ["liquidacion", "modalidad_40_3_lis", "base_imponible"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "14"
+number = "14"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_compensacion_bases_negativas"
+continuidad_id = "is-pf-mod-40-3-compensacion-bases-negativas"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "base_imponible"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "16"
+number = "16"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_base_pago_fraccionado"
+continuidad_id = "is-pf-mod-40-3-b1-base-pago-fraccionado"
+required = false
+input_kind = "computed"
+formula = "modelo-202-base-imponible-corregida"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "17"
+number = "17"
+data_type = "decimal"
+semantic_role = "is_pf_mod_40_3_b1_porcentaje"
+continuidad_id = "is-pf-mod-40-3-b1-porcentaje"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "18"
+number = "18"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_resultado_previo"
+continuidad_id = "is-pf-mod-40-3-b1-resultado-previo"
+required = false
+input_kind = "computed"
+formula = "modelo-202-resultado-previo-b1"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "19"
+number = "19"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_base_pago_fraccionado"
+continuidad_id = "is-pf-mod-40-3-b2-base-pago-fraccionado"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "20"
+number = "20"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_base_tipo_1"
+continuidad_id = "is-pf-mod-40-3-b2-base-tipo-1"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "21"
+number = "21"
+data_type = "decimal"
+semantic_role = "is_pf_mod_40_3_b2_porcentaje_1"
+continuidad_id = "is-pf-mod-40-3-b2-porcentaje-1"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "22"
+continuidad_id = "is-pf-mod-40-3-b2-importe-pago-fraccionado"
+continuidad_origin = "seeded"
+number = "22"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_importe_pago_fraccionado"
+required = false
+input_kind = "computed"
+formula = "modelo-202-importe-pago-fraccionado-b2-tipo-1"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[revisions.2023-2024.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "23"
+number = "23"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_base_tipo_2"
+continuidad_id = "is-pf-mod-40-3-b2-base-tipo-2"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "24"
+number = "24"
+data_type = "decimal"
+semantic_role = "is_pf_mod_40_3_b2_porcentaje_2"
+continuidad_id = "is-pf-mod-40-3-b2-porcentaje-2"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "25"
+continuidad_id = "25"
+continuidad_origin = "seeded"
+number = "25"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_importe_pago_fraccionado"
+required = false
+input_kind = "computed"
+formula = "modelo-202-importe-pago-fraccionado-b2-tipo-2"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[revisions.2023-2024.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "26"
+number = "26"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_resultado_previo"
+continuidad_id = "is-pf-mod-40-3-b2-resultado-previo"
+required = false
+input_kind = "computed"
+formula = "modelo-202-resultado-previo-b2"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "27"
+number = "27"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_bonificaciones"
+continuidad_id = "is-pf-mod-40-3-bonificaciones"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "28"
+number = "28"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[revisions.2023-2024.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "29"
+number = "29"
+data_type = "decimal"
+semantic_role = "is_pf_mod_40_3_volumen_territorio_comun_pct"
+continuidad_id = "is-pf-mod-40-3-volumen-territorio-comun-pct"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "30"
+number = "30"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_pagos_previos_territorio_comun"
+continuidad_id = "is-pf-mod-40-3-pagos-previos-territorio-comun"
+required = false
+input_kind = "bound"
+binding = "modelo-202-pagos-fraccionados-anteriores"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[revisions.2023-2024.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "31"
+number = "31"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_resultado_declaracion_anterior"
+continuidad_id = "is-pf-mod-40-3-resultado-declaracion-anterior"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "32"
+number = "32"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_resultado"
+continuidad_id = "is-pf-mod-40-3-resultado"
+required = false
+input_kind = "computed"
+formula = "modelo-202-modalidad-40-3-resultado"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "33"
+number = "33"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_minimo_a_ingresar"
+continuidad_id = "is-pf-mod-40-3-minimo-a-ingresar"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-40-3", "ley-27-2014:da-14", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "34"
+number = "34"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_cantidad_a_ingresar"
+continuidad_id = "is-pf-mod-40-3-cantidad-a-ingresar"
+required = false
+input_kind = "computed"
+formula = "modelo-202-cantidad-a-ingresar"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "37"
+number = "37"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_amortizacion_30pct_dism"
+continuidad_id = "is-pf-mod-40-3-amortizacion-30pct-dism"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "38"
+number = "38"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_total_correcciones_aumentos"
+continuidad_id = "is-pf-mod-40-3-total-correcciones-aumentos"
+required = false
+input_kind = "computed"
+formula = "modelo-202-total-correcciones-aumentos"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "39"
+number = "39"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_total_correcciones_disminuciones"
+continuidad_id = "is-pf-mod-40-3-total-correcciones-disminuciones"
+required = false
+input_kind = "computed"
+formula = "modelo-202-total-correcciones-disminuciones"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "40"
+number = "40"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_compensacion_cuotas_neg_coop"
+continuidad_id = "is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "42"
+number = "42"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_compensacion_cuotas_neg_coop"
+continuidad_id = "is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "44"
+number = "44"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_remanente_reserva_capitalizacion"
+continuidad_id = "is-pf-mod-40-3-remanente-reserva-capitalizacion"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "base_imponible"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-25", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "45"
+number = "45"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_reserva_nivelacion_aumentos"
+continuidad_id = "is-pf-mod-40-3-reserva-nivelacion-aumentos"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "reserva_nivelacion"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "46"
+number = "46"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_reserva_nivelacion_disminuciones"
+continuidad_id = "is-pf-mod-40-3-reserva-nivelacion-disminuciones"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "reserva_nivelacion"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "47"
+number = "47"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_dotaciones_art_11_12"
+continuidad_id = "is-pf-mod-40-3-b1-dotaciones-art-11-12"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "48"
+number = "48"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_reserva_nivelacion_convertida_aum"
+continuidad_id = "is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "49"
+number = "49"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_reserva_nivelacion_convertida_dis"
+continuidad_id = "is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "50"
+number = "50"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_dotaciones_art_11_12_coop"
+continuidad_id = "is-pf-mod-40-3-b2-dotaciones-art-11-12-coop"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "51"
+number = "51"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_reserva_nivelacion_aumentos"
+continuidad_id = "is-pf-mod-40-3-b2-reserva-nivelacion-aumentos"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2023-2024.casillas]]
+id = "52"
+number = "52"
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_reserva_nivelacion_disminuciones"
+continuidad_id = "is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"]

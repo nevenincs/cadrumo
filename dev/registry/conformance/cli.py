@@ -85,8 +85,8 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ..compiler.authority import compile_validated_authority
-from ..compiler.loader import load_registry_tree
 from ..compiler.legal_grounding import verify_legal_catalogue
+from ..compiler.loader import load_registry_tree
 from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_artifact_currency
 from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
 from .errors import RegistryApplicationInputError

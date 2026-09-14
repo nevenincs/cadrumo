@@ -1,0 +1,64 @@
+# Supported filing years this edition left without a deadline window.
+#
+# GROUNDING. Orden HAP/1608/2014 articulo 4 states the plazo verbatim: "El plazo de
+# presentacion del modelo 187 sera el comprendido entre el 1 y el 31 de enero de cada
+# ano, en relacion con las operaciones que correspondan al ano natural inmediato
+# anterior." Articulo 1, which this edition's 2025 row cited alone, approves the modelo
+# and states no timing; it is kept as the enrolling authority and art-4 added as the
+# timing one. The 2025 row is strengthened the same way so the edition is grounded
+# uniformly rather than half-grounded.
+#
+# NOT rd-439-2007:art-108 and NOT the 1999 ordenes: both say TWENTY days, which
+# contradicts the 1-31 January window this modelo actually files on.
+#
+# Dates are NOMINAL; weekend and festivo movement happens at read time.
+
+[[revisions.2022-y-siguientes.deadline_windows]]
+id = "modelo-187-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
+source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
+
+[[revisions.2022-y-siguientes.deadline_windows]]
+id = "modelo-187-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
+source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
+
+[[revisions.2022-y-siguientes.deadline_windows]]
+id = "modelo-187-2023-0a"
+filing_year = 2023
+period = "2023 0A"
+period_kind = "annual"
+opens_on = 2024-01-01
+closes_on = 2024-01-31
+legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
+source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
+
+[[revisions.2022-y-siguientes.deadline_windows]]
+id = "modelo-187-2024-0a"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-01-01
+closes_on = 2025-01-31
+legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
+source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
+
+[[revisions.2022-y-siguientes.deadline_windows]]
+id = "modelo-187-2026-0a"
+filing_year = 2026
+period = "2026 0A"
+period_kind = "annual"
+opens_on = 2027-01-01
+closes_on = 2027-01-31
+legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
+source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]

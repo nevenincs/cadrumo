@@ -1,49 +1,29 @@
-[revisions."2019-2022"]
+
+[revisions.2019-2022]
+authority_grade = "filing"
+valid_from = 2019-01-01
+valid_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
 formula_source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2018-2022"]
 casilla_source_refs = ["aeat-dr-202-2019"]
 live_cross_reference_source_refs = ["aeat-modelo-202-instructions-2018-2022"]
 application_link_source_refs = ["aeat-dr-202-2019"]
-authority_grade = "filing"
-valid_from = 2019-01-01
-valid_to = 2022-12-31
-period_selector = { year_from = 2019, year_to = 2022, periods = ["1P", "2P", "3P"] }
-legal_refs = [
-    "ley-27-2014:art-40",
-    "ley-27-2014:art-29",
-    "ley-27-2014:art-30",
-    "ley-27-2014:art-105",
-    "orden-hfp-227-2017:art-1",
-    "orden-hac-941-2018:art-primero-5-anexo-i",
-]
-orden_aplicabilidad = [
-    "orden-hfp-227-2017:art-1",
-    "orden-hac-941-2018:art-primero-5-anexo-i",
-]
-source_refs = [
-    "aeat-dr-202-2019",
-    "aeat-modelo-202-instructions-2018-2022",
-    "aeat-calendario-contribuyente-2022",
-    "boe-modelo-202-base-order",
-    "boe-modelo-202-2018-amendment",
-]
-review_status = "agent_reviewed"
-reviewed_by = "agent-prepared-pending-operator"
-reviewed_at = 2026-08-19
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105", "orden-hfp-227-2017:art-1", "orden-hac-941-2018:art-primero-5-anexo-i"]
+orden_aplicabilidad = ["orden-hfp-227-2017:art-1", "orden-hac-941-2018:art-primero-5-anexo-i"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2018-2022", "aeat-calendario-contribuyente-2022", "boe-modelo-202-base-order", "boe-modelo-202-2018-amendment"]
 
-[revisions."2019-2022".family_dispositions.projection_endpoints]
+[revisions.2019-2022.period_selector]
+year_from = 2019
+year_to = 2022
+periods = ["1P", "2P", "3P"]
+[revisions.2019-2022.family_dispositions.projection_endpoints]
 reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. A type-level exclusion, not missing work; it changes only if the union gains a 202 member, which is a code change in core, not a registry one."
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2019"]
 
-[revisions."2019-2022".family_dispositions.extraction_profiles]
-reason = """
-An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels \
-a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."""
+[revisions.2019-2022.family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2019"]
-
-
-[revisions."2019-2022".source_default_dispositions.bindings]
-kind = "underivable"
-reason = """
-No leading source_refs run is shared by two rows of this edition's bindings family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""

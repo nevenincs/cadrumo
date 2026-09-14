@@ -1,0 +1,119 @@
+[[revisions.2025.bindings]]
+id = "modelo-182-donor-row-nif"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+
+[[revisions.2025.bindings.source_citations]]
+source_ref = "enrolled-modelo-182-procedure"
+required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
+
+[revisions.2025.bindings.provider]
+kind = "donativo_donor"
+fact = "row_field"
+row_field = "donor_tax_id"
+grouping = "per_donativo_donor"
+record = "donante"
+data_type = "text"
+
+[revisions.2025.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "donativo"
+
+[revisions.2025.bindings.aggregation]
+op = "rows"
+
+[[revisions.2025.bindings]]
+id = "modelo-182-donor-row-name"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+
+[[revisions.2025.bindings.source_citations]]
+source_ref = "enrolled-modelo-182-procedure"
+required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
+
+[revisions.2025.bindings.provider]
+kind = "donativo_donor"
+fact = "row_field"
+row_field = "donor_legal_name"
+grouping = "per_donativo_donor"
+record = "donante"
+data_type = "text"
+
+[revisions.2025.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "donativo"
+
+[revisions.2025.bindings.aggregation]
+op = "rows"
+
+[[revisions.2025.bindings]]
+id = "modelo-182-donor-row-amount"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+
+[[revisions.2025.bindings.source_citations]]
+source_ref = "enrolled-modelo-182-procedure"
+required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
+
+[revisions.2025.bindings.provider]
+kind = "donativo_donor"
+fact = "row_field"
+row_field = "amount_donated"
+grouping = "per_donativo_donor"
+record = "donante"
+data_type = "money"
+
+[revisions.2025.bindings.value]
+data_type = "money"
+channel = "row_set"
+row_grouping = "donativo"
+
+[revisions.2025.bindings.aggregation]
+op = "rows"
+
+[[revisions.2025.bindings]]
+id = "modelo-182-donor-row-deduction-percentage"
+legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+
+[[revisions.2025.bindings.source_citations]]
+source_ref = "enrolled-modelo-182-procedure"
+required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
+
+[revisions.2025.bindings.provider]
+kind = "donativo_donor"
+fact = "row_field"
+row_field = "deduction_percentage"
+grouping = "per_donativo_donor"
+record = "donante"
+data_type = "decimal"
+
+[revisions.2025.bindings.value]
+data_type = "money"
+channel = "row_set"
+row_grouping = "donativo"
+
+[revisions.2025.bindings.aggregation]
+op = "rows"
+
+[[revisions.2025.bindings]]
+id = "modelo-182-donor-row-recurrencia"
+legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+
+[[revisions.2025.bindings.source_citations]]
+source_ref = "enrolled-modelo-182-procedure"
+required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
+
+[revisions.2025.bindings.provider]
+kind = "donativo_donor"
+fact = "row_field"
+row_field = "is_recurrent"
+grouping = "per_donativo_donor"
+record = "donante"
+data_type = "text"
+
+[revisions.2025.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "donativo"
+
+[revisions.2025.bindings.aggregation]
+op = "rows"

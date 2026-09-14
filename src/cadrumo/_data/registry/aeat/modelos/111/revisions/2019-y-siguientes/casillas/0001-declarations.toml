@@ -1,0 +1,363 @@
+[[revisions.2019-y-siguientes.casillas]]
+id = "01"
+number = "01"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "bound"
+binding = "modelo-111-trabajo-dinerario-perceptores"
+section = ["trabajo_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "02"
+number = "02"
+data_type = "money"
+semantic_role = "importe_percepciones_dinerario"
+required = false
+input_kind = "bound"
+binding = "modelo-111-trabajo-dinerario-base"
+section = ["trabajo_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "03"
+number = "03"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "bound"
+binding = "modelo-111-trabajo-dinerario-retenciones"
+section = ["trabajo_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "04"
+number = "04"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+section = ["trabajo_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "05"
+number = "05"
+data_type = "money"
+semantic_role = "valor_percepciones_especie"
+required = false
+input_kind = "manual"
+section = ["trabajo_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "06"
+number = "06"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "manual"
+section = ["trabajo_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "07"
+number = "07"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "bound"
+binding = "modelo-111-actividades-dinerario-perceptores"
+section = ["actividades_economicas_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "08"
+number = "08"
+data_type = "money"
+semantic_role = "importe_percepciones_dinerario"
+required = false
+input_kind = "bound"
+binding = "modelo-111-actividades-dinerario-base"
+section = ["actividades_economicas_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "09"
+number = "09"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "bound"
+binding = "modelo-111-actividades-dinerario-retenciones"
+section = ["actividades_economicas_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "10"
+number = "10"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+section = ["actividades_economicas_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "11"
+number = "11"
+data_type = "money"
+semantic_role = "valor_percepciones_especie"
+required = false
+input_kind = "manual"
+section = ["actividades_economicas_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "12"
+number = "12"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "manual"
+section = ["actividades_economicas_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "13"
+number = "13"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "bound"
+binding = "modelo-111-premios-dinerario-perceptores"
+section = ["premios_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "14"
+number = "14"
+data_type = "money"
+semantic_role = "importe_percepciones_dinerario"
+required = false
+input_kind = "bound"
+binding = "modelo-111-premios-dinerario-base"
+section = ["premios_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "15"
+number = "15"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "bound"
+binding = "modelo-111-premios-dinerario-retenciones"
+section = ["premios_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "16"
+number = "16"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+section = ["premios_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "17"
+number = "17"
+data_type = "money"
+semantic_role = "valor_percepciones_especie"
+required = false
+input_kind = "manual"
+section = ["premios_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "18"
+number = "18"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "manual"
+section = ["premios_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "19"
+number = "19"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+section = ["ganancias_forestales_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "20"
+number = "20"
+data_type = "money"
+semantic_role = "importe_percepciones_dinerario"
+required = false
+input_kind = "manual"
+section = ["ganancias_forestales_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "21"
+number = "21"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "manual"
+section = ["ganancias_forestales_dinerario"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "22"
+number = "22"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+section = ["ganancias_forestales_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "23"
+number = "23"
+data_type = "money"
+semantic_role = "valor_percepciones_especie"
+required = false
+input_kind = "manual"
+section = ["ganancias_forestales_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "24"
+number = "24"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "manual"
+section = ["ganancias_forestales_especie"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "25"
+number = "25"
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+section = ["cesion_derechos_imagen"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "26"
+number = "26"
+data_type = "money"
+semantic_role = "importe_percepciones_dinerario"
+required = false
+input_kind = "manual"
+section = ["cesion_derechos_imagen"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "27"
+number = "27"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "manual"
+section = ["cesion_derechos_imagen"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "28"
+number = "28"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = false
+input_kind = "computed"
+formula = "modelo-111-total-retenciones-ingresos"
+section = ["total_liquidacion"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "29"
+number = "29"
+data_type = "money"
+semantic_role = "resultado_anteriores_autoliquidaciones"
+required = false
+input_kind = "manual"
+section = ["total_liquidacion"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[[revisions.2019-y-siguientes.casillas]]
+id = "30"
+number = "30"
+data_type = "money"
+semantic_role = "cuota_a_ingresar"
+required = false
+input_kind = "computed"
+formula = "modelo-111-resultado-ingresar"
+section = ["total_liquidacion"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+
+[revisions.2019-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]

@@ -1,7 +1,0 @@
-[[revisions."2021".application_links]]
-id = "modelo-714-portal"
-surface = "portal"
-consumer = "portal_m714_patrimonio"
-requires_snapshot = true
-legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-31"]
-additional_source_refs = ["boe-modelo-714-layout"]
