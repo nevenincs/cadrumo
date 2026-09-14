@@ -317,7 +317,7 @@ class TestGroundingCensusCountsLinksNotRows:
             stream.write(
                 f'\n[[revisions."2024".lineage_attestations]]\n'
                 'family = "casillas"\n'
-                f'{identity}\n'
+                f"{identity}\n"
                 f'from_revision = "{start}"\n'
                 f'to_revision = "{end}"\n'
                 'origin = "grounded"\n'

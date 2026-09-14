@@ -501,9 +501,7 @@ def grounding_by_chain(
     compiler-validated.
     """
     per_chain: dict[str, tuple[int, int]] = {}
-    _RULING_LIMITATIONS[:] = [
-        text for text in _RULING_LIMITATIONS if not text.startswith(_UNREADABLE_ATTESTATIONS)
-    ]
+    _RULING_LIMITATIONS[:] = [text for text in _RULING_LIMITATIONS if not text.startswith(_UNREADABLE_ATTESTATIONS)]
     refused = sum(status.lineage_attestation_refusals for status in statuses)
     if refused:
         _note_ruling_limitation(
@@ -527,16 +525,13 @@ def grounding_by_chain(
         materialised = _materialised_chains(ordered, stated)
         by_edition = {status.edition: status for status in ordered}
         target_counts = Counter(
-            attestation.target_key()
-            for status in ordered
-            for attestation in status.lineage_attestations
+            attestation.target_key() for status in ordered for attestation in status.lineage_attestations
         )
         for status in ordered:
             for attestation in status.lineage_attestations:
                 chain = str(attestation.continuidad_id) if attestation.continuidad_id is not None else ""
                 row_owns_claim = any(
-                    row.get(_LINEAGE) == chain
-                    and ("continuidad_origin" in row or "continuidad_evidence" in row)
+                    row.get(_LINEAGE) == chain and ("continuidad_origin" in row or "continuidad_evidence" in row)
                     for row in status.rows_by_id.values()
                 )
                 if (
