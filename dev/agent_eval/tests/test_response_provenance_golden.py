@@ -41,7 +41,7 @@ from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
-from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, seed_test_profile_record
 
 from .._models import GoldenScenario
 from .._runner import load_scenario, run_golden_scenario

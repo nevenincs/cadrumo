@@ -8,6 +8,7 @@ the calculation response and the persisted public observation surface.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -43,7 +44,11 @@ REGISTRY_REVISION = "2024"
 TARGET_CASILLA = "DP200014:00562"
 EXPECTED_VALUE = Decimal("23000.00")
 EXPECTED_FORMULA = "modelo-200-cuota-integra"
-EXPECTED_LEGAL_REF = "ley-27-2014:art-29"
+# Public observations retain the provision locator but pseudonymize the
+# authority-document identity. Derive the expected public token from the legal
+# source identity instead of copying a compiler-produced digest literal.
+_EXPECTED_LEGAL_DOCUMENT = "ley-27-2014"
+EXPECTED_LEGAL_REF = f"sha256:{hashlib.sha256(_EXPECTED_LEGAL_DOCUMENT.encode('utf-8')).hexdigest()[:8]}:art-29"
 EXPECTED_SOURCE_REF = "aeat-modelo-200-manual-2024"
 EXPECTED_NOTICE_CODES = {"modelo.work.calculate.plazo_vencido_unassessed_preview"}
 #: The one warning this oracle's own execution posture guarantees.
@@ -68,17 +73,16 @@ CASILLAS = (
     "DP200014:01034=0.00",
 )
 BINDINGS = (
-    "modelo-200-2024-profile-legal-entity-form=sl",
-    "modelo-200-profile-new-entity-flag=0",
+    "modelo-200-profile-legal-entity-form=sl",
     "modelo-200-profile-incn-prior-12-months=500000",
     "modelo-200-profile-tributacion-estado-porcentaje=100",
+)
+RELATIONS = (
     "modelo-200-bin-pendiente-ejercicios-anteriores=0",
     "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
     "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-)
-RELATIONS = (
-    "modelo-200-2024-rel-202-pagos-fraccionados=0",
-    "modelo-200-2024-rel-202-pagos-fraccionados-40-2=0",
+    "modelo-200-pagos-fraccionados-anuales=0",
+    "modelo-200-pagos-fraccionados-anuales-40-2=0",
 )
 
 

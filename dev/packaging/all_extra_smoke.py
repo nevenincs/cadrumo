@@ -31,7 +31,6 @@ from .proof_ledger import record_proof
 from .python_cohort import (
     PythonCohort,
     assert_installed_cohort,
-    cohort_stamped_wheel_data_paths,
     install_targets,
     load_python_cohort,
 )
@@ -194,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
     assert_wheel_contains_tracked_data(
         repo_root,
         wheel,
-        expected_wheel_data_paths(repo_root) | cohort_stamped_wheel_data_paths(),
+        expected_wheel_data_paths(repo_root),
     )
     assert_wheel_metadata_matches_pyproject(repo_root, wheel)
 

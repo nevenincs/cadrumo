@@ -42,9 +42,10 @@ sys.path.append(os.environ["AEAT_DEPENDENCY_SITE"])
 site.addsitedir(os.environ["AEAT_INSTALL_SITE"])
 
 import cadrumo
-from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
-from cadrumo.entrypoints import cli
+from cadrumo.entrypoints.cli.main import app
 from cadrumo.entrypoints.cli.command_spec import DeferredTarget
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from typer._click.core import Context as TyContext
@@ -124,7 +125,7 @@ def validate_target(path, target):
 
 nodes = COMMAND_GRAPH.nodes()
 expected_paths = {node.path for node in nodes}
-live_paths = live_command_paths(cli.app)
+live_paths = live_command_paths(app)
 all_targets = tuple(target for node in nodes for target in targets(node.spec))
 resolved = tuple(validate_target(path, target) for path, target in all_targets)
 missing_locale_keys = [

@@ -12,14 +12,14 @@ import pytest
 
 from cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
 from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     dev_test_database_password,
     isolated_runtime_profile,
     read_db_at_rest_bytes,
 )
-from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.observations_repository import iva_wallet_decision_key
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from cadrumo.application.live.iva_remote_state import list_iva_compensation_history
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance

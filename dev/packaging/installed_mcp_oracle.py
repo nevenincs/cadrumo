@@ -40,6 +40,7 @@ from .installed_tax_oracle import (
     CASILLAS,
     EXPECTED_NOTICE_CODES,
     EXPECTED_VALUE,
+    ISOLATION_NOTICE_CODES,
     MODEL,
     PERIOD,
     PROFILE_LABEL,
@@ -188,8 +189,18 @@ def _assert_envelope(payload: dict[str, Any], *, command_key: str) -> dict[str, 
     return assert_envelope_contract(payload, command=command_key, error=InstalledMcpOracleError)
 
 
-def _assert_no_diagnostic_notices(payload: dict[str, Any], *, command_key: str) -> None:
-    assert_no_diagnostic_notices(payload, command=command_key, error=InstalledMcpOracleError)
+def _assert_no_diagnostic_notices(
+    payload: dict[str, Any],
+    *,
+    command_key: str,
+    authenticated: bool = False,
+) -> None:
+    assert_no_diagnostic_notices(
+        payload,
+        command=command_key,
+        error=InstalledMcpOracleError,
+        excused_codes=ISOLATION_NOTICE_CODES if authenticated else (),
+    )
 
 
 async def _call_tool(
@@ -232,6 +243,24 @@ async def _execute(
     )
 
 
+def _process_stderr() -> Any:
+    """Return the interpreter-owned stderr stream required by Windows Popen."""
+    process_stderr = sys.__stderr__
+    if process_stderr is None:
+        raise InstalledMcpOracleError("the MCP oracle requires an OS-backed process stderr stream")
+    return process_stderr
+
+
+def _protocol_environment_overrides(
+    sibling_cli: Path,
+    overrides: Mapping[str, str] | None,
+) -> dict[str, str]:
+    """Bind the harness command port to the attested sibling CLI executable."""
+    environment = dict(overrides or {})
+    environment["CADRUMO_CLI_EXECUTABLE"] = str(sibling_cli)
+    return environment
+
+
 async def _run_protocol(
     server: Path,
     *,
@@ -260,8 +289,14 @@ async def _run_protocol(
         encoding_error_handler="strict",
     )
     calls: list[McpCallEvidence] = []
+    # MCP's Windows launcher passes this stream directly to ``Popen`` and
+    # therefore requires a real OS-backed ``fileno``. Test runners replace
+    # ``sys.stderr`` with capture objects that deliberately lack one; the
+    # interpreter's original stderr preserves child diagnostics and the native
+    # handle contract in both captured and ordinary executions.
+    process_stderr = _process_stderr()
     async with (
-        stdio_client(params) as (read_stream, write_stream),
+        stdio_client(params, errlog=process_stderr) as (read_stream, write_stream),
         ClientSession(read_stream, write_stream) as session,
     ):
         async with asyncio.timeout(timeout_seconds):
@@ -313,6 +348,27 @@ async def _run_protocol(
                 f"whoami reported readiness {whoami_payload.get('readiness')!r}",
             )
 
+        complete_payload, call = await _execute(
+            session,
+            "config.profile.complete_setup",
+            {},
+            timeout_seconds=timeout_seconds,
+        )
+        calls.append(call)
+        complete_result = _assert_envelope(
+            complete_payload,
+            command_key="config.profile.complete_setup",
+        )
+        _assert_no_diagnostic_notices(
+            complete_payload,
+            command_key="config.profile.complete_setup",
+            authenticated=True,
+        )
+        if complete_result.get("setup_state") != "complete":
+            raise InstalledMcpOracleError(
+                f"profile completion returned setup state {complete_result.get('setup_state')!r}",
+            )
+
         create_payload, call = await _execute(
             session,
             "modelo.work.create",
@@ -321,7 +377,11 @@ async def _run_protocol(
         )
         calls.append(call)
         create_result = _assert_envelope(create_payload, command_key="modelo.work.create")
-        _assert_no_diagnostic_notices(create_payload, command_key="modelo.work.create")
+        _assert_no_diagnostic_notices(
+            create_payload,
+            command_key="modelo.work.create",
+            authenticated=True,
+        )
         work_unit_id = str(create_result.get("work_unit_id", ""))
         if not _REVISION_ID.fullmatch(work_unit_id):
             raise InstalledMcpOracleError(
@@ -354,7 +414,7 @@ async def _run_protocol(
             )
         notices = calculate_payload["notices"]
         notice_codes = {str(notice.get("code")) for notice in notices}
-        if notice_codes != EXPECTED_NOTICE_CODES:
+        if notice_codes - ISOLATION_NOTICE_CODES != EXPECTED_NOTICE_CODES:
             raise InstalledMcpOracleError(
                 f"calculation notices expected {sorted(EXPECTED_NOTICE_CODES)!r}, got {sorted(notice_codes)!r}",
             )
@@ -387,6 +447,7 @@ async def _run_protocol(
         _assert_no_diagnostic_notices(
             observations_payload,
             command_key="modelo.work.observations",
+            authenticated=True,
         )
         if observations_result.get("calculation_revision_id") != calculation_revision_id:
             raise InstalledMcpOracleError(
@@ -547,6 +608,7 @@ def run_installed_mcp_oracle(
         scripts = project / ".venv" / ("Scripts" if os.name == "nt" else "bin")
         runtime_server = (scripts / ("cadrumo-mcp.exe" if os.name == "nt" else "cadrumo-mcp")).resolve(strict=True)
     sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
+    protocol_environment_overrides = _protocol_environment_overrides(sibling_cli, environment_overrides)
 
     passphrase = secrets.token_urlsafe(32)
     # Creation refuses without a channel to hand the recovery phrase over and
@@ -588,7 +650,7 @@ def run_installed_mcp_oracle(
             _run_protocol(
                 resolved_server,
                 server_args=effective_server_args,
-                environment_overrides=environment_overrides or {},
+                environment_overrides=protocol_environment_overrides,
                 storage_root=storage_root,
                 work_dir=resolved_work_dir,
                 timeout_seconds=timeout_seconds,

@@ -126,7 +126,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aeat = "cadrumo.entrypoints._cli_main:main"
+aeat = "cadrumo.entrypoints.cli.bootstrap:main"
 cadrumo-mcp = "cadrumo_harness.mcp.main:main"
 
 [project.urls]

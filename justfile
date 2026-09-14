@@ -948,7 +948,7 @@ _test-registry-collect:
 
 [private]
 _test-registry-load:
-    @uv run --no-sync python -m dev.registry.conformance runtime-load
+    @uv run --no-sync python -m dev.registry.conformance source-load
 
 [private]
 _test-registry-calculations-parallel:

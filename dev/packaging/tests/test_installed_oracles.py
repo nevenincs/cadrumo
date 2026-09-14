@@ -20,6 +20,7 @@ import json
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import threading
@@ -34,8 +35,8 @@ from dev.source_tree import repository_files, snapshot
 
 from .._distribution_names import normalise_distribution_name
 from ..hashing import sha256_path
-from ..installed_mcp_oracle import run_installed_mcp_oracle
-from ..installed_tax_oracle import run_installed_tax_oracle
+from ..installed_mcp_oracle import InstalledMcpOracleError, run_installed_mcp_oracle
+from ..installed_tax_oracle import InstalledTaxOracleError, run_installed_tax_oracle
 from ..lane_verification_core import (
     create_pip_venv,
     installed_product_env,
@@ -87,6 +88,58 @@ print(json.dumps({
     }),
 }, sort_keys=True))
 """
+_AUTHORITY_RESOURCE_PROBE = """
+import hashlib
+import json
+from importlib.resources import files
+
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+registry = files("cadrumo").joinpath("_data", "registry")
+artifact = registry.joinpath("authority", "authority.json")
+raw = artifact.read_bytes()
+print(json.dumps({
+    "artifact": str(artifact),
+    "artifact_sha256": hashlib.sha256(raw).hexdigest(),
+    "authoring_exists": registry.joinpath("aeat").is_dir(),
+    "modelos": len(bundled_authority().modelos),
+}, sort_keys=True))
+"""
+_TYPED_AUTHORITY_PROBE = """
+import json
+from datetime import date
+
+from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.deadlines.recargo import load_recargo_bands
+from cadrumo.domain.iva.catalogue import bundled_iva_catalogue, resolve_catalogue
+
+authority = bundled_authority()
+runtime = authority.catalogues.runtime.require_complete()
+support = authority.catalogues.supported_filing_years
+assert support is not None
+refusals = []
+for operation in (
+    lambda: authority.project_filing_year(support.floor - 1),
+    lambda: resolve_catalogue(on=date(support.floor - 1, 1, 1)),
+):
+    try:
+        operation()
+    except RegistrySnapshotError:
+        refusals.append(True)
+print(json.dumps({
+    "apoderamientos": len(load_default_catalogue().scopes),
+    "authority_record_types": sorted({
+        type(next(iter(runtime.iva_regulations.values()))).__name__,
+        type(next(iter(runtime.recargo_bands.values()))).__name__,
+        type(next(iter(runtime.apoderamientos_scopes.values()))).__name__,
+    }),
+    "iva": len(tuple(bundled_iva_catalogue())),
+    "recargo": len(load_recargo_bands()),
+    "temporal_refusals": len(refusals),
+}, sort_keys=True))
+"""
 
 
 @dataclass(frozen=True)
@@ -107,9 +160,90 @@ class InstalledCohort:
     python_cohort: PythonCohort
 
 
+@dataclass(frozen=True)
+class DisposableInstallation:
+    """A fresh installation of an already-built cohort for one hostile case."""
+
+    root: Path
+    venv: Path
+    cli: Path
+    mcp_server: Path
+    artifact: Path
+    artifact_sha256: str
+
+
 def _installed_script(venv: Path, name: str) -> Path:
     suffix = ".exe" if sys.platform == "win32" else ""
     return (venv_bin_dir(venv) / f"{name}{suffix}").resolve()
+
+
+def _fresh_installation(cohort: InstalledCohort, root: Path) -> DisposableInstallation:
+    """Install the fixture's exact wheels into a new per-case environment."""
+    root.mkdir()
+    venv = create_pip_venv(root, f"{sys.version_info.major}.{sys.version_info.minor}")
+    run_checked(
+        [
+            str(venv_python_path(venv)),
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-cache-dir",
+            str(cohort.root_wheel.resolve()),
+            *(str(wheel.resolve()) for wheel in cohort.data_wheels),
+        ],
+        cwd=root,
+    )
+    execution_root = root / "outside-checkout"
+    execution_root.mkdir()
+    artifact, artifact_sha256 = _installed_authority_resource(
+        venv,
+        execution_root=execution_root,
+        state_root=root / "probe-state",
+    )
+    assert root.resolve() in artifact.parents
+    return DisposableInstallation(
+        root=root,
+        venv=venv,
+        cli=_installed_script(venv, "aeat"),
+        mcp_server=_installed_script(venv, "cadrumo-mcp"),
+        artifact=artifact,
+        artifact_sha256=artifact_sha256,
+    )
+
+
+def _installed_authority_resource(venv: Path, *, execution_root: Path, state_root: Path) -> tuple[Path, str]:
+    """Resolve and attest the installed authority through package resources."""
+    execution_root.mkdir(parents=True, exist_ok=True)
+    observed = json.loads(
+        run_checked(
+            [str(venv_python_path(venv)), "-I", "-c", _AUTHORITY_RESOURCE_PROBE],
+            cwd=execution_root,
+            env=installed_product_env(state_root, venv),
+        ).stdout
+    )
+    assert observed["authoring_exists"] is False
+    assert observed["modelos"] > 0
+    artifact = Path(observed["artifact"]).resolve(strict=True)
+    return artifact, str(observed["artifact_sha256"])
+
+
+def _assert_no_durable_calculation_work(storage_root: Path) -> None:
+    """Prove a refused workflow wrote no work/calculation secure object."""
+    forbidden = {
+        "cadrumo.calculations.observations",
+        "cadrumo.domain.modelos.calculation_revisions",
+        "cadrumo.domain.modelos.work_units",
+    }
+    observed: set[str] = set()
+    for database in storage_root.rglob("*.db"):
+        with sqlite3.connect(database) as connection:
+            has_secure_objects = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'secure_objects'"
+            ).fetchone()
+            if has_secure_objects:
+                observed.update(row[0] for row in connection.execute("SELECT DISTINCT namespace FROM secure_objects"))
+    assert observed.isdisjoint(forbidden), f"refused workflow persisted calculation state: {observed & forbidden}"
 
 
 def _requirement_name(requirement: str) -> str:
@@ -242,7 +376,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
         f"cadrumo-data-manuals=={version}",
         f"cadrumo-data-official=={version}",
     } <= requirements
-    assert metadata["console_scripts"]["aeat"] == "cadrumo.entrypoints._cli_main:main"
+    assert metadata["console_scripts"]["aeat"] == "cadrumo.entrypoints.cli.bootstrap:main"
     # The package split is internal to one distribution: the wheel target packs
     # both source packages, so the root distribution declares the server script
     # and installing the root wheel is what puts `cadrumo_harness` on disk.
@@ -305,8 +439,32 @@ print(json.dumps({
 
     observed = json.loads(result.stdout)
     assert observed["authoring_exists"] is False
-    assert observed["frame_keys"] == ["payload", "payload_sha256"]
+    assert observed["frame_keys"] == ["format", "payload", "payload_sha256"]
     assert observed["modelos"] > 0
+
+
+def test_installed_consumers_use_typed_catalogues_and_central_temporal_admission(
+    installed_cohort: InstalledCohort,
+) -> None:
+    """Regulated consumers resolve typed publication records and inherit its year refusal."""
+    execution_root = installed_cohort.work_dir / "typed-authority-consumers"
+    execution_root.mkdir()
+    result = run_checked(
+        [str(venv_python_path(installed_cohort.venv)), "-I", "-c", _TYPED_AUTHORITY_PROBE],
+        cwd=execution_root,
+        env=installed_product_env(execution_root / "state", installed_cohort.venv),
+    )
+
+    observed = json.loads(result.stdout)
+    assert observed["authority_record_types"] == [
+        "ApoderamientoScopeRecord",
+        "PublishedIvaRegulation",
+        "PublishedRecargoBand",
+    ]
+    assert observed["iva"] > 0
+    assert observed["recargo"] > 0
+    assert observed["apoderamientos"] > 0
+    assert observed["temporal_refusals"] == 2
 
 
 def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
@@ -376,6 +534,179 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
         "modelo.work.create": expected_cli_sha256,
         "modelo.work.observations": expected_cli_sha256,
     }
+
+
+@pytest.mark.parametrize("damage", ["missing", "corrupt"])
+def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
+    installed_cohort: InstalledCohort,
+    tmp_path: Path,
+    damage: str,
+) -> None:
+    """Real installed workflows fail closed when their sole authority is unusable."""
+    installation = _fresh_installation(installed_cohort, tmp_path / damage)
+    assert sha256_path(installation.artifact) == installation.artifact_sha256
+    baseline_cli = run_installed_tax_oracle(
+        installation.cli,
+        storage_root=installation.root / "cli-baseline-state",
+        work_dir=installation.root / "cli-baseline",
+        cohort_source_digest=installed_cohort.source_digest,
+        cohort_manifest_sha256=sha256_path(installed_cohort.evidence_path),
+        cohort_root_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
+        timeout_seconds=240.0,
+    )
+    baseline_mcp = run_installed_mcp_oracle(
+        installation.mcp_server,
+        storage_root=installation.root / "mcp-baseline-state",
+        work_dir=installation.root / "mcp-baseline",
+        cohort_source_digest=installed_cohort.source_digest,
+        cohort_manifest_sha256=sha256_path(installed_cohort.python_cohort.manifest),
+        cohort_root_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
+        cohort_harness_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
+        timeout_seconds=240.0,
+    )
+    assert baseline_cli.target_value == baseline_mcp.target_value == "23000.00"
+    if damage == "missing":
+        installation.artifact.unlink()
+        assert not installation.artifact.exists()
+    else:
+        corrupt_frame = json.loads(installation.artifact.read_text(encoding="utf-8"))
+        corrupt_frame["payload_sha256"] = "0" * 64
+        installation.artifact.write_text(json.dumps(corrupt_frame), encoding="utf-8")
+        assert sha256_path(installation.artifact) != installation.artifact_sha256
+
+    artifact_refusal = {
+        "missing": (
+            "AuthorityArtifactUnavailableError",
+            "published authority artifact is unavailable",
+        ),
+        "corrupt": (
+            "AuthorityArtifactIntegrityError",
+            "published authority artifact failed its content digest check",
+        ),
+    }[damage]
+    refusal_pattern = rf"(?s){artifact_refusal[0]}: {re.escape(artifact_refusal[1])}"
+
+    cli_storage = installation.root / "cli-refusal-state"
+    with pytest.raises(
+        InstalledTaxOracleError,
+        match=refusal_pattern,
+    ) as cli_refusal:
+        run_installed_tax_oracle(
+            installation.cli,
+            storage_root=cli_storage,
+            work_dir=installation.root / "cli-refusal",
+            cohort_source_digest=installed_cohort.source_digest,
+            cohort_manifest_sha256=sha256_path(installed_cohort.evidence_path),
+            cohort_root_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
+            timeout_seconds=240.0,
+        )
+    assert "23000.00" not in str(cli_refusal.value)
+    _assert_no_durable_calculation_work(cli_storage)
+
+    mcp_storage = installation.root / "mcp-refusal-state"
+    with pytest.raises(
+        InstalledMcpOracleError,
+        match=refusal_pattern,
+    ) as mcp_refusal:
+        run_installed_mcp_oracle(
+            installation.mcp_server,
+            storage_root=mcp_storage,
+            work_dir=installation.root / "mcp-refusal",
+            cohort_source_digest=installed_cohort.source_digest,
+            cohort_manifest_sha256=sha256_path(installed_cohort.python_cohort.manifest),
+            cohort_root_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
+            cohort_harness_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
+            timeout_seconds=240.0,
+        )
+    assert "23000.00" not in str(mcp_refusal.value)
+    _assert_no_durable_calculation_work(mcp_storage)
+
+
+def _operative_oracle_identity(evidence: Any) -> tuple[object, ...]:
+    return (
+        evidence.target_casilla,
+        evidence.target_value,
+        evidence.formula_id,
+        evidence.legal_refs,
+        evidence.source_refs,
+        evidence.notice_codes,
+        evidence.installed_wheel_payload_sha256
+        if hasattr(evidence, "installed_wheel_payload_sha256")
+        else evidence.installed_cli_payload_sha256,
+    )
+
+
+def test_post_build_source_mutation_cannot_change_an_existing_installation(
+    installed_cohort: InstalledCohort,
+) -> None:
+    """Only republishing and rebuilding can carry authoring changes into runtime."""
+    from dev.registry.pipeline.authority_publication import authority_candidate_identity
+
+    cohort = installed_cohort
+    clean_repo = cohort.work_dir / "clean-repository"
+    registry_root = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "aeat"
+    authored = registry_root / "modelos" / "200" / "manifest.toml"
+    artifact = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "authority" / "authority.json"
+    before_candidate = authority_candidate_identity(registry_root=registry_root, source_root=clean_repo)
+    installed_artifact, installed_digest = _installed_authority_resource(
+        cohort.venv,
+        execution_root=cohort.work_dir / "source-isolation-resource-probe",
+        state_root=cohort.work_dir / "source-isolation-resource-probe-state",
+    )
+
+    execution_root = cohort.work_dir / "source-isolation-outside-checkout"
+    cli_before = run_installed_tax_oracle(
+        cohort.cli,
+        storage_root=cohort.work_dir / "source-isolation-cli-before-state",
+        work_dir=execution_root / "cli-before",
+        cohort_source_digest=cohort.source_digest,
+        cohort_manifest_sha256=sha256_path(cohort.evidence_path),
+        cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
+        timeout_seconds=240.0,
+    )
+    mcp_before = run_installed_mcp_oracle(
+        cohort.mcp_server,
+        storage_root=cohort.work_dir / "source-isolation-mcp-before-state",
+        work_dir=execution_root / "mcp-before",
+        cohort_source_digest=cohort.source_digest,
+        cohort_manifest_sha256=sha256_path(cohort.python_cohort.manifest),
+        cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
+        cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo"],
+        timeout_seconds=240.0,
+    )
+
+    original = authored.read_bytes()
+    try:
+        authored.write_bytes(original + b"\n# post-build isolation probe\n")
+        after_candidate = authority_candidate_identity(registry_root=registry_root, source_root=clean_repo)
+        assert after_candidate != before_candidate
+        assert sha256_path(artifact) == installed_digest
+
+        cli_after = run_installed_tax_oracle(
+            cohort.cli,
+            storage_root=cohort.work_dir / "source-isolation-cli-after-state",
+            work_dir=execution_root / "cli-after",
+            cohort_source_digest=cohort.source_digest,
+            cohort_manifest_sha256=sha256_path(cohort.evidence_path),
+            cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
+            timeout_seconds=240.0,
+        )
+        mcp_after = run_installed_mcp_oracle(
+            cohort.mcp_server,
+            storage_root=cohort.work_dir / "source-isolation-mcp-after-state",
+            work_dir=execution_root / "mcp-after",
+            cohort_source_digest=cohort.source_digest,
+            cohort_manifest_sha256=sha256_path(cohort.python_cohort.manifest),
+            cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
+            cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo"],
+            timeout_seconds=240.0,
+        )
+    finally:
+        authored.write_bytes(original)
+
+    assert _operative_oracle_identity(cli_after) == _operative_oracle_identity(cli_before)
+    assert _operative_oracle_identity(mcp_after) == _operative_oracle_identity(mcp_before)
+    assert sha256_path(installed_artifact) == installed_digest
 
 
 def _as_plugin_cohort(cohort: PythonCohort) -> Any:
