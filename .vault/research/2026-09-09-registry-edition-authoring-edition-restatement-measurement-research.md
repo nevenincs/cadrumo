@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:918ec3f3c24cd525a0898957cb12432951e6a521b1c08cd9de2342d369d8257e'
+body_hash: 'sha256:dddbab87b92bc3a2d9549e5318db6ca2d4cfbea48681623cabd1d334dcf65012'
 related: []
 ---
 
@@ -111,6 +111,18 @@ Lineage sufficiency was not established: `continuidad_id` is declared on 20.5% o
 absent from 25 of 33 multi-edition modelos, so 71% of the chaining above fell back to the bare
 identifier. Only casilla declarations were measured; other sections were not. Whether lineage
 can be seeded mechanically for the 25 modelos lacking it was not tested.
+
+### Modelo 309 structural succession at the 2016 boundary
+
+The pinned official designs `aeat-dr-309-2004` and `aeat-dr-309-2016` were read directly on 2026-09-14. The former is a one-page PDF headed 02/02/2005, bundled as `02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf`; the latter is the bundled 2016--2017 XLS, sheet M30901. This establishes the following declaration-shape changes across corpus revisions `2004-2015` and `2016-2017`, not a general value-conversion algorithm.
+
+- The PDF campo 9, position 34, length 40, An, combines the transmitter's surnames, given name or corporate name. XLS campos 13 and 14 separate surnames/corporate name (position 118, length 60, An) from given name (position 178, length 20, An). The live source endpoints are `wire.transmitente-apellidos-nombre-razon-social` with lineage `transmitente-apellidos-nombre-razon-social`, and successor rows `decl.transmitente-apellidos` / `decl.transmitente-nombre` with their respective unprefixed lineages.
+- PDF campos 11--16, positions 88--93, are six distinct X-or-blank taxpayer-status fields. XLS campo 16, position 200, is one numeric selector listing the same six named categories as values 1--6. The successor row and lineage are `decl.situacion-tributaria` and `situacion-tributaria`.
+- PDF campos 17--22, positions 94--99, are six distinct X-or-blank taxable-event fields. XLS campo 17, position 201, is one numeric selector listing the same six named events as values 1--6. The successor row and lineage are `decl.hecho-imponible` and `hecho-imponible`.
+
+The paired descriptions support one-to-many and many-to-one surface succession. They do not establish that arbitrary historical flag combinations are valid or reversibly encodable, nor that a free-form combined name can be parsed without ambiguity. The country field is a different case: the same country concept changes from fourteen alphabetic characters to a two-character alphanumeric representation, not a split or merge.
+
+At inspection, `CasillaContinuidadEvolutionDefinition` names exactly one lineage on both revisions; its non-retired validator requires that lineage on both endpoints. A retired record proves only that its source lineage is absent from the target. Neither shape carries distinct source and target lineage sets. `CasillaLineageOrigin` separately distinguishes same-chain continuation from three absence claims, with no structural-successor relation. The existing Modelo 309 declarations contain retirement records for the combined-name and twelve historical flags, but those records alone cannot validate which successor surfaces replace them.
 
 ## Sources
 

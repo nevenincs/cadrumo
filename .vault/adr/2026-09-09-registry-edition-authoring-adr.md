@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fb0d56368c4cdb6e73f5c50500f37aafb0b0556586cb9789503b186cebd8aa7'
+body_hash: 'sha256:6486ddd04983cf8e28b12f2099d6493fad34ac85ff634d23c6cbd49f8dad1abc'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -172,14 +172,56 @@ A **declared** repurpose behaves differently, and the shipped code already decid
 repurposed casilla keeps its lineage and supersedes, with the evolution record waiving the field
 comparison. Only the undeclared case is a collision.
 
-**Removal reuses the shipped evolution vocabulary, unchanged.** A row withdrawn in a successor is
+**Ordinary removal reuses the shipped evolution vocabulary, unchanged.** A row withdrawn in a successor is
 declared through the existing casilla evolution retirement, whose `(lineage, to_revision)` pair is
 exactly the key and scope a materialiser needs, and which is already required to be authored under
 the edition doing the omitting. The existing validators are already self-consistent with this in
 both directions: one accepts a retired lineage absent from the successor, and another already
-*demands* a retirement whenever a strict chain disappears between adjacent editions. Nothing new
-is needed, and no list of removed identifiers exists anywhere in this design. A first edition
+*demands* a retirement whenever a strict chain disappears between adjacent editions. An ordinary withdrawal needs no new vocabulary or separate removed-identifier list.
+Structural succession between different identities follows the explicit relationship below. A first edition
 cannot express a removal and does not need to, because it inherits nothing.
+
+### Structural succession between different identities
+
+Structural succession is distinct from identity continuity. The paired-source findings in
+`2026-09-09-registry-edition-authoring-edition-restatement-measurement-research` require explicit
+split and merge relationships between different lineage identities. They do not authorize treating
+those identities as one chain.
+
+Use a separate typed, successor-owned boundary relationship carrying an identifier, source and
+target revisions, source and target lineage sets, a closed split/merge discriminator, legal
+references and official-source evidence for both endpoints. A split has exactly one source and at
+least two targets; a merge has at least two sources and exactly one target. Many-to-many
+transformations and one-to-one conversions are outside this amendment.
+
+Every endpoint must resolve to exactly one casilla in its named revision. Source and target lineage
+sets must be distinct and duplicate-free. Sources must end and targets must begin at that boundary.
+Reject unknown endpoints, reversed or unrelated boundaries, overlapping relationship ownership and
+conflicting lifecycle declarations. For delta editions the boundary must match the declared
+predecessor; a relationship does not itself declare inheritance.
+
+A relationship is authored only in its target edition and never inherited. Its source membership
+is the single declaration of withdrawal, consumed by the materializer and strict retirement
+validator; do not also author retirement records for those members. Ordinary unconnected withdrawal
+continues to use `retired`, unchanged.
+
+Validated target membership supplies the structural-successor classification to completeness and
+origin validation without asserting either one-chain continuation or legal novelty. Do not duplicate
+that claim in a row origin field. Reject conflicting `grounded`, `seeded` or `new_on_form` claims
+on those targets.
+
+Relationship edges confer no declaration, locale, formula, binding or taxpayer-value inheritance
+across different lineage identities. They are not conversion recipes. Existing same-chain evolution
+and repurpose semantics remain unchanged.
+
+The separate relationship is preferred over nullable endpoint arrays on the single-chain evolution
+record, which would weaken that record's one-chain contract. Retirement plus prose-only replacement
+claims is rejected because validators cannot establish the successor relationship.
+
+Implementation must include typed serialization, materialization, endpoint and lifecycle validation,
+origin totality, locale-barrier tests and refusal tests before any relationship is counted as covered.
+Existing whole-edition, order, export-byte and authority-conformance proof obligations remain binding.
+This amendment grants no historical export-layout authority.
 
 ### One format, declared explicitly
 
@@ -428,8 +470,8 @@ grounds and needs no accessor.
 
 ### What this changes for the validators
 
-No validator's code changes, but two validators' **inputs** do, and both move toward fewer
-findings. A contiguity check reads the edition's rows, so an inherited row fills a gap that was
+For ordinary same-identity inheritance, two validators' **inputs** change, and both move toward fewer
+findings. Structural succession additionally requires the endpoint and lifecycle validators defined above. A contiguity check reads the edition's rows, so an inherited row fills a gap that was
 previously visible as absence. A retirement check computes a difference between adjacent editions'
 rows, so it stops demanding a retirement for a lineage the successor merely failed to restate.
 
@@ -605,3 +647,4 @@ move in the same change.
 This decision reduces what is authored, not what is proven. Completeness coverage is unchanged —
 the modelo with the largest declared surface sits at under two percent manifest coverage before
 and after — and this must not be described as a correctness improvement.
+

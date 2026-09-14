@@ -137,3 +137,41 @@ the deliberately isolated gate run rather than the repository-default fixture pa
   in a focused regression test.
 - Re-run the documented focused gates and final core collection after these blockers
   are remediated. Do not mark the campaign complete on the current implementation.
+
+## Resolution
+
+### operational-builtin-raises-resolution | low | Owned RuntimeError construction was eliminated
+
+All production `RuntimeError` construction sites were migrated to the registered
+`InternalInvariantError`. The source hygiene gate now rejects every production
+`RuntimeError(...)` call rather than checking only direct raise syntax. Directly
+coupled catches, factories, and identity tests were updated.
+
+### dual-builtin-ancestry-resolution | low | Mixed built-in ancestry was eliminated
+
+No registered production exception retains a secondary built-in base. Pydantic
+callbacks translate registered failures to `ValueError` only at the validator
+boundary and retain the registered failure as `__cause__`.
+
+### envelope-message-redaction-resolution | low | Public messages are registry-owned
+
+Campaign registry entries select localized public messages even when exceptions
+carry positional diagnostic text. Path, identifier, and internal-invariant envelope
+tests confirm that diagnostics do not enter serialized public messages.
+
+### registry-source-closure-resolution | low | Registry closure is bidirectional
+
+The source scanner resolves relative aliases and rejects both missing registrations
+and orphan rows. Registry identities and codes are unique.
+
+### stale-builtin-contract-documentation-resolution | low | Documentation matches canonical ancestry
+
+Production documentation no longer promises built-in ancestry. Pydantic behavior is
+described as narrow boundary translation with the registered failure retained as the
+cause.
+
+### final-verdict | low | Canonical exception remediation accepted
+
+Formal re-review returned PASS with no unexplained built-in-root exception, mixed
+ancestry, production `RuntimeError(...)` construction, duplicate registration,
+unsafe migrated envelope message, or unresolved catch-site regression.

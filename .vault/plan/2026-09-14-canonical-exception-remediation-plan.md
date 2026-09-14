@@ -8,7 +8,7 @@ related:
   - '[[2026-09-14-canonical-exception-remediation-adr]]'
 modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:21db06fe4b6054df7d59303453e8ecd359255401bff3a37db21d605f27229ca2'
+body_hash: 'sha256:0d6995506423b2417d0e15d737dbe076e92a450d982921d2f43713f6cc7ed58f'
 ---
 
 <!-- LINK RULES:
@@ -77,4 +77,4 @@ Collect and execute only the authorized exception-related validation surfaces.
 
 - [x] `W04.P07.S14` - Run focused exception gates and envelope tests; `src/cadrumo/core/errors/tests`.
 - [x] `W04.P07.S15` - Collect the complete core test surface; `src/cadrumo/core`.
-- [ ] `W04.P07.S16` - Complete formal remediation review; `.vault/audit/2026-09-14-canonical-exception-remediation-final-review-audit.md`.
+- [x] `W04.P07.S16` - Complete formal remediation review; `.vault/audit/2026-09-14-canonical-exception-remediation-final-review-audit.md`.
