@@ -17,7 +17,10 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_indexed_authority,
+)
 from cadrumo.domain.calculations.registry.convenio import (
     ConvenioAuthority,
     ConvenioOverrideRow,
@@ -107,30 +110,31 @@ def test_allocation_and_exempt_rows_must_not_declare_a_rate() -> None:
 
 
 def test_resolved_override_predicates_cover_each_registry_semantic() -> None:
-    flat = resolve_convenio_override(
-        country_code="GB",
-        tipo_renta=_tipo_renta("general"),
-        devengo_date=_EFFECTIVE_DATE,
-        authority=_authority(),
-    )
-    ceiling = resolve_convenio_override(
-        country_code="MA",
-        tipo_renta=_tipo_renta("interest"),
-        devengo_date=_EFFECTIVE_DATE,
-        authority=_authority(),
-    )
-    allocation = resolve_convenio_override(
-        country_code="AR",
-        tipo_renta=_tipo_renta("pension"),
-        devengo_date=_EFFECTIVE_DATE,
-        authority=_authority(),
-    )
-    exempt = resolve_convenio_override(
-        country_code="DE",
-        tipo_renta=_tipo_renta("interest"),
-        devengo_date=_EFFECTIVE_DATE,
-        authority=_authority(),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        flat = resolve_convenio_override(
+            country_code="GB",
+            tipo_renta=_tipo_renta("general"),
+            devengo_date=_EFFECTIVE_DATE,
+            operation=operation,
+        )
+        ceiling = resolve_convenio_override(
+            country_code="MA",
+            tipo_renta=_tipo_renta("interest"),
+            devengo_date=_EFFECTIVE_DATE,
+            operation=operation,
+        )
+        allocation = resolve_convenio_override(
+            country_code="AR",
+            tipo_renta=_tipo_renta("pension"),
+            devengo_date=_EFFECTIVE_DATE,
+            operation=operation,
+        )
+        exempt = resolve_convenio_override(
+            country_code="DE",
+            tipo_renta=_tipo_renta("interest"),
+            devengo_date=_EFFECTIVE_DATE,
+            operation=operation,
+        )
 
     assert flat is not None and flat.has_flat_rate and flat.rate == Decimal("0.24")
     assert ceiling is not None and ceiling.has_ceiling_rate and ceiling.rate == Decimal("0.10")
