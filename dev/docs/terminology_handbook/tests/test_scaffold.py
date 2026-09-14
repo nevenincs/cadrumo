@@ -418,12 +418,14 @@ def test_real_enrolment_candidates_are_concept_grade_and_bounded() -> None:
     # The assertion this replaces was about GRANULARITY -- modelos are the
     # concept-grade axis, unlike casillas -- and that intent is unchanged here.
     # What is bounded is which modelos, not the concept-grade axis.
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-    expected_modelo_concepts = {f"modelo-{definition.id}" for definition in bundled_authority().modelos}
+    expected_modelo_concepts = {f"modelo-{definition.id}" for definition in compiled_bundled_authority().modelos}
     actual_modelo_concepts = {
         concept_id for concept_id, candidate in candidates.items() if candidate.domain is ConceptDomain.MODELO
     }
     assert actual_modelo_concepts == expected_modelo_concepts
     # No legal-provision concepts are scaffolded (projected at compile time).
     assert not any(c.domain is ConceptDomain.LEGAL for c in candidates.values())
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

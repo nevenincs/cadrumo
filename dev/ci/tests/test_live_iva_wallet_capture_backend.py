@@ -27,7 +27,6 @@ from cadrumo.application.live.iva_remote_state import list_iva_compensation_hist
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.iva_compensation.reconciliation import (
@@ -52,7 +51,7 @@ _OTHER_SESSION_BUCKET_ID = "39393939-3939-4393-8393-393939393939"
 
 
 def _snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
-    return bundled_authority().snapshot("303", filing_year=filing_year, period=period).snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period).snapshot_ref
 
 
 def _wallet_html(*, total: str, rows: str, target_year: int, target_period: str) -> str:
@@ -408,3 +407,6 @@ def _secure_object_namespace_count(database_path: Path, namespace: str) -> int:
             (namespace,),
         ).fetchone()
     return int(row[0])
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

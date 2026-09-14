@@ -127,9 +127,8 @@ def _walk_modelos() -> Iterator[EnrolmentCandidate]:
     member set. Walking that authority therefore enrolls exactly the concepts
     this product models, without maintaining a second closed catalogue here.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-    for modelo in sorted(bundled_authority().modelos, key=lambda definition: definition.id):
+    for modelo in sorted(compiled_bundled_authority().modelos, key=lambda definition: definition.id):
         yield EnrolmentCandidate(
             concept_id=f"modelo-{modelo.id}",
             domain=ConceptDomain.MODELO,
@@ -195,3 +194,6 @@ def _cli_leaf_command_paths() -> tuple[tuple[str, ...], ...]:
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     return tuple(node.path for node in COMMAND_GRAPH.nodes() if node.spec.kind == "leaf")
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

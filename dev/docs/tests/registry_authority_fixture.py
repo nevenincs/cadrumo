@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def bundled_registry_authority_fixture(*, name: str) -> Callable[..., ValidatedRegistryAuthority]:
@@ -27,7 +27,7 @@ def bundled_registry_authority_fixture(*, name: str) -> Callable[..., ValidatedR
 
     Sharing the body claims no saving in load time and none should be read
     into it. Every route to the bundled authority -- this one,
-    ``bundled_authority()``, and a direct ``bundled_authority()``
+    ``compiled_bundled_authority()``, and a direct ``compiled_bundled_authority()``
     call -- resolves through one memo keyed on the registry and
     source-evidence fingerprints, so the second and later calls in a process
     hand back the identical object (measured at 0.03s against 30s for the
@@ -44,7 +44,7 @@ def bundled_registry_authority_fixture(*, name: str) -> Callable[..., ValidatedR
 
     @pytest.fixture(name=name, scope="module")
     def _bundled_registry_authority() -> ValidatedRegistryAuthority:
-        return bundled_authority()
+        return compiled_bundled_authority()
 
     return _bundled_registry_authority
 
@@ -52,3 +52,5 @@ def bundled_registry_authority_fixture(*, name: str) -> Callable[..., ValidatedR
 authority = bundled_registry_authority_fixture(name="authority")
 
 __all__ = ["authority", "bundled_registry_authority_fixture"]
+
+from dev.registry.compiler.authority import compiled_bundled_authority

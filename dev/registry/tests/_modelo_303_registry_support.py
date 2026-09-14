@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
@@ -102,5 +101,8 @@ for _revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
 
 
 def load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority.modelo("303"), authority.catalogues
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

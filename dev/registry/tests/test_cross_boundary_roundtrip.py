@@ -23,7 +23,6 @@ from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -580,7 +579,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
     )
     work_unit_id = "b" * 64
     registry_snapshot_ref = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "303",
             filing_year=2025,
@@ -616,3 +615,6 @@ def test_calculation_revision_carries_typed_observations() -> None:
     assert roundtripped.observations[0].operand_refs == observation.operand_refs
     assert roundtripped.observations[0].operand_casilla_refs == observation.operand_casilla_refs
     assert roundtripped.observations[0].operand_values == observation.operand_values
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

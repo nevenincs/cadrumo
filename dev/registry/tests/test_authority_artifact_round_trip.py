@@ -20,64 +20,19 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityArtifactFormatError,
     AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
-    read_authority_artifact,
-    write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import MappingFactEntry, MappingFactPayload
 
+from ..authority_json import read_authority_artifact, write_authority_artifact
 from ..compiler.authority import compiled_bundled_authority
-from ..pipeline.authority_publication import authority_candidate_identity
-from ..pipeline.cli import publish_authority_candidate_workflow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_MAX_COMPACT_AUTHORITY_BYTES = 64 * 1024 * 1024
-
-
-def test_the_full_bundled_registry_round_trips_through_a_publication(tmp_path: Path) -> None:
-    registry_root = bundled_path("registry", "aeat")
-    artifact_path = tmp_path / "authority.json"
-
-    published = publish_authority_candidate_workflow(
-        registry_root=registry_root,
-        source_root=bundled_path(),
-        artifact_path=artifact_path,
-    )
-    consumed = read_authority_artifact(artifact_path)
-
-    bundled_modelos = {entry.name for entry in (registry_root / "modelos").iterdir() if entry.is_dir()}
-    assert {str(modelo.id) for modelo in published.modelos} == bundled_modelos, (
-        "the publication must carry every bundled modelo, or the round trip proves less than it claims"
-    )
-    published_by_id = {modelo.id: modelo for modelo in published.modelos}
-    consumed_by_id = {modelo.id: modelo for modelo in consumed.modelos}
-    assert consumed_by_id.keys() == published_by_id.keys()
-    differing = sorted(
-        str(modelo_id) for modelo_id, modelo in published_by_id.items() if consumed_by_id[modelo_id] != modelo
-    )
-    assert differing == [], f"modelos that do not round-trip as typed values: {differing}"
-    assert consumed.catalogues.facts.facts, "the publication must carry governed facts, or their atoms prove nothing"
-    assert consumed.catalogues == published.catalogues
-    assert consumed.evidence == published.evidence
-    assert consumed.profile_schema == published.profile_schema
-    assert consumed.profile_schema is not None
-    assert consumed.identity_digest == published.identity_digest
-    assert consumed == published
-    assert artifact_path.stat().st_size <= _MAX_COMPACT_AUTHORITY_BYTES, (
-        f"the compact authority artifact is {artifact_path.stat().st_size:,} bytes; "
-        f"the budget is {_MAX_COMPACT_AUTHORITY_BYTES:,} bytes"
-    )
-    assert published.identity_digest == authority_candidate_identity(
-        registry_root=registry_root, source_root=bundled_path()
-    ), "the publication must record the identity the currency gate derives for the same inputs"
-
 
 _ATOM_FACT_ID = "iva-rate-schedule"
 _ATOMS: dict[str, Decimal | date | str] = {"decimal": Decimal("0.40"), "date": date(2025, 1, 1), "text": "0.40"}

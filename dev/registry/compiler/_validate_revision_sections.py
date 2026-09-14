@@ -329,6 +329,7 @@ def validate_revision_definition(
     _validate_revision_reference_surfaces(
         failures,
         prefix=prefix,
+        modelo=modelo,
         revision=revision,
         legal_refs=legal_refs,
         source_refs=source_refs,

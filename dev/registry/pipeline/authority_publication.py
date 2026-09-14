@@ -5,8 +5,8 @@ complete compiler input receipt, validates that exact candidate, and holds one
 destination lock through the atomic artifact replacement. The artifact is
 generated output.
 
-The artifact records the candidate identity it was compiled from, and
-:func:`authority_artifact_currency` compares that record with the identity of
+The indexed generation records the candidate identity it was compiled from, and
+:func:`authority_database_currency` compares that record with the identity of
 the inputs as they stand now. The identity is content-addressed and
 checkout-independent: it folds every registry and source-evidence file's
 root-relative path and content digest, never an absolute path, a size, or a
@@ -40,7 +40,6 @@ from cadrumo.core.hashing import content_hash_hex, hash_file, sha256_hex
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
-    AuthorityArtifactError,
     AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
@@ -54,7 +53,6 @@ from cadrumo.domain.calculations.registry.authority_store import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
-from ..authority_json import read_authority_artifact, write_authority_artifact
 from ..compiler.authority_database import build_authority_database
 from ..compiler.authority_state import canonical_authoring_root_pair
 from ..compiler.build_identity import authority_compiler_identity
@@ -76,14 +74,11 @@ __all__ = [
     "AuthorityArtifactCurrencyStatus",
     "AuthorityPublicationReceipt",
     "ValidatedAuthorityCandidate",
-    "authority_artifact_currency",
     "authority_candidate_identity",
     "authority_database_currency",
     "install_validated_authority_database",
     "promote_accepted_authority_database",
-    "publish_authority_candidate",
     "publish_sqlite_authority_candidate",
-    "publish_validated_authority_candidate",
     "validate_authority_candidate",
 ]
 
@@ -152,33 +147,6 @@ class ValidatedAuthorityCandidate:
     profile_schema_path: Path
     receipt: AuthorityPublicationReceipt
     artifact: AuthorityArtifact
-
-
-def publish_authority_candidate(
-    *,
-    registry_root: Path,
-    source_root: Path,
-    artifact_path: Path,
-    profile_schema_path: Path | None = None,
-) -> AuthorityArtifact:
-    """Validate and atomically publish one development candidate.
-
-    A destination has exactly one publisher at a time: the artifact sidecar
-    lock is held from receipt capture through validation and replacement. The
-    caller supplies the destination explicitly; this module defines no runtime
-    artifact location.
-    """
-    with exclusive_file_lock(
-        artifact_path,
-        timeout=_PUBLICATION_LOCK_TIMEOUT,
-        retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
-    ):
-        candidate = validate_authority_candidate(
-            registry_root=registry_root,
-            source_root=source_root,
-            profile_schema_path=profile_schema_path,
-        )
-        return _publish_candidate(candidate, artifact_path=artifact_path)
 
 
 def validate_authority_candidate(
@@ -294,20 +262,6 @@ def _project_source_evidence(reference: SourceReference, *, source_root: Path) -
     )
 
 
-def publish_validated_authority_candidate(
-    candidate: ValidatedAuthorityCandidate,
-    *,
-    artifact_path: Path,
-) -> AuthorityArtifact:
-    """Publish a prior validation only if registry and source evidence remain unchanged."""
-    with exclusive_file_lock(
-        artifact_path,
-        timeout=_PUBLICATION_LOCK_TIMEOUT,
-        retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
-    ):
-        return _publish_candidate(candidate, artifact_path=artifact_path)
-
-
 def authority_candidate_identity(
     *,
     registry_root: Path,
@@ -326,79 +280,6 @@ def authority_candidate_identity(
         resolved_source_root,
         profile_schema_path=profile_schema_path,
     ).identity_digest
-
-
-def authority_artifact_currency(
-    artifact_path: Path,
-    *,
-    registry_root: Path,
-    source_root: Path,
-) -> AuthorityArtifactCurrency:
-    """Compare a published artifact's recorded identity with the live candidate's.
-
-    The artifact is read through the same strict reader the product runtime
-    uses, so an artifact that is missing, corrupt, or of an earlier format is
-    reported ``unreadable`` rather than judged on a field it cannot vouch for.
-    """
-    roots = canonical_authoring_root_pair(registry_root, source_root)
-    receipt = _capture_receipt(*roots)
-    candidate_identity = receipt.identity_digest
-    candidate_build = AuthorityBuildIdentity(
-        receipt.source_identity_digest,
-        receipt.compiler_identity_digest,
-        receipt.component_dependency_digest,
-    )
-    try:
-        artifact = read_authority_artifact(artifact_path)
-        recorded_identity = artifact.identity_digest
-    except AuthorityArtifactError as exc:
-        return AuthorityArtifactCurrency(
-            artifact_path=artifact_path,
-            status=AuthorityArtifactCurrencyStatus.UNREADABLE,
-            candidate_identity_digest=candidate_identity,
-            recorded_identity_digest=None,
-            candidate_build_identity=candidate_build,
-            recorded_build_identity=None,
-            detail=f"{type(exc).__name__}: {exc}",
-        )
-    if recorded_identity != candidate_identity:
-        return AuthorityArtifactCurrency(
-            artifact_path=artifact_path,
-            status=AuthorityArtifactCurrencyStatus.STALE,
-            candidate_identity_digest=candidate_identity,
-            recorded_identity_digest=recorded_identity,
-            candidate_build_identity=candidate_build,
-            recorded_build_identity=artifact.build_identity,
-            detail="changed authority inputs: "
-            + ", ".join(
-                name
-                for name, changed in (
-                    (
-                        "source manifest",
-                        candidate_build.source_identity_digest != artifact.build_identity.source_identity_digest,
-                    ),
-                    (
-                        "compiler/schema build",
-                        candidate_build.compiler_identity_digest != artifact.build_identity.compiler_identity_digest,
-                    ),
-                    (
-                        "component dependencies",
-                        candidate_build.component_dependency_digest
-                        != artifact.build_identity.component_dependency_digest,
-                    ),
-                )
-                if changed
-            ),
-        )
-    return AuthorityArtifactCurrency(
-        artifact_path=artifact_path,
-        status=AuthorityArtifactCurrencyStatus.CURRENT,
-        candidate_identity_digest=candidate_identity,
-        recorded_identity_digest=recorded_identity,
-        candidate_build_identity=candidate_build,
-        recorded_build_identity=artifact.build_identity,
-        detail="the artifact matches the live source manifest, compiler build, and component dependencies",
-    )
 
 
 def authority_database_currency(
@@ -451,29 +332,6 @@ def authority_database_currency(
         recorded_build_identity=None,
         detail=detail,
     )
-
-
-def _publish_candidate(
-    candidate: ValidatedAuthorityCandidate,
-    *,
-    artifact_path: Path,
-) -> AuthorityArtifact:
-    def require_current_candidate() -> None:
-        if (
-            _capture_receipt(
-                candidate.registry_root,
-                candidate.source_root,
-                profile_schema_path=candidate.profile_schema_path,
-            )
-            != candidate.receipt
-        ):
-            raise RegistryValidationError(
-                "registry candidate or source evidence changed after validation; authority publication is refused",
-            )
-
-    require_current_candidate()
-    write_authority_artifact(artifact_path, candidate.artifact, before_replace=require_current_candidate)
-    return candidate.artifact
 
 
 def _capture_receipt(

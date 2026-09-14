@@ -17,7 +17,6 @@ from cadrumo.domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules,
 )
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category
 from cadrumo.domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_normal_token,
@@ -33,6 +32,7 @@ from cadrumo.domain.deadlines.models import (
     IVARegime,
     TaxpayerProfile,
 )
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
@@ -109,7 +109,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
 def test_seed_modelo_applicability_legal_refs_resolve_in_registry() -> None:
     """Every seed applicability rule carries real scoped legal refs."""
 
-    registered_legal_ids = set(bundled_authority().catalogues.legal)
+    registered_legal_ids = set(compiled_bundled_authority().catalogues.legal)
     assert registered_legal_ids
 
     for rule in iter_modelo_applicability_rules():
@@ -523,7 +523,7 @@ def test_impatriado_in_window_routes_annual_irpf_to_modelo_151() -> None:
     assert m151.verdict is ApplicabilityVerdict.APPLICABLE
     assert m151.applicable is True
     assert "Modelo 151" in m151.reason
-    assert set(m151.legal_refs).issubset(bundled_authority().catalogues.legal)
+    assert set(m151.legal_refs).issubset(compiled_bundled_authority().catalogues.legal)
 
 
 def test_impatriado_year_seven_restores_m100_m720_and_suppresses_m151() -> None:

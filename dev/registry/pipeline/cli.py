@@ -27,7 +27,6 @@ from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority_descriptor_path,
 )
-from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
@@ -44,7 +43,7 @@ from ._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from .authority_publication import publish_authority_candidate, publish_sqlite_authority_candidate
+from .authority_publication import publish_sqlite_authority_candidate
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
     generated_export_bootstrap_target,
@@ -72,27 +71,6 @@ app = typer.Typer(
 )
 
 _SOURCE_MODELO_RE = re.compile(r'^\s*source_modelo\s*=\s*"(?P<modelo>[^"]+)"', re.MULTILINE)
-
-
-def publish_authority_candidate_workflow(
-    *,
-    registry_root: Path,
-    source_root: Path,
-    artifact_path: Path,
-    profile_schema_path: Path | None = None,
-) -> AuthorityArtifact:
-    """Run the dev pipeline's complete authority publication workflow.
-
-    Validates the candidate at ``registry_root`` and ``source_root`` and
-    atomically replaces ``artifact_path`` with its digest-checked publication,
-    which records the candidate identity it was compiled from.
-    """
-    return publish_authority_candidate(
-        registry_root=registry_root,
-        source_root=source_root,
-        artifact_path=artifact_path,
-        profile_schema_path=profile_schema_path,
-    )
 
 
 @app.command("publish-authority")
@@ -824,7 +802,6 @@ __all__ = [
     "TargetCurrentnessFact",
     "TargetCurrentnessState",
     "app",
-    "publish_authority_candidate_workflow",
     "stage_isolated_edition",
     "supporting_modelos",
     "target_currentness",

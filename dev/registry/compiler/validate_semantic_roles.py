@@ -16,7 +16,9 @@ from collections.abc import Iterable, Mapping
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.i18n.render import MissingTranslationError
+from cadrumo.domain.calculations.registry.casilla_lineage_totality import judging_predecessor
 from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
@@ -38,6 +40,7 @@ class _RoleObservation:
     modelo_id: str
     revision_id: RevisionId
     casilla_id: CasillaId
+    continuidad_id: str | None
     data_type: object
     constraints: object
     label: str
@@ -47,6 +50,7 @@ class _RoleObservation:
     __slots__ = (
         "casilla_id",
         "constraints",
+        "continuidad_id",
         "data_type",
         "label",
         "modelo_id",
@@ -64,6 +68,7 @@ class _RoleObservation:
         self.modelo_id = modelo_id
         self.revision_id = revision_id
         self.casilla_id = casilla.id
+        self.continuidad_id = casilla.continuidad_id
         self.data_type = casilla.data_type
         self.constraints = casilla.constraints
         try:
@@ -124,6 +129,52 @@ def _compatible_constraints(left: _RoleObservation, right: _RoleObservation) -> 
     return set(left_enum).issubset(right_enum) or set(right_enum).issubset(left_enum)
 
 
+def _representation_evolved(
+    left: _RoleObservation,
+    right: _RoleObservation,
+    modelos: Mapping[str, ModeloDefinition],
+) -> bool:
+    """Follow exact predecessor edges; every changed representation must be attested."""
+    if (
+        left.modelo_id != right.modelo_id
+        or left.revision_id == right.revision_id
+        or left.continuidad_id is None
+        or left.continuidad_id != right.continuidad_id
+    ):
+        return False
+    modelo = modelos[left.modelo_id]
+    ordered = ordered_revisions(modelo)
+    positions = {revision.id: index for index, revision in enumerate(ordered)}
+    earlier, later = sorted((left.revision_id, right.revision_id), key=positions.__getitem__)
+    if revisions_coexist(modelo.revisions[earlier], modelo.revisions[later]):
+        return False
+    current = modelo.revisions[later]
+    while current.id != earlier:
+        predecessor = judging_predecessor(modelo, ordered, positions[current.id])
+        if (
+            predecessor is None
+            or positions[predecessor.id] < positions[earlier]
+            or revisions_coexist(predecessor, current)
+        ):
+            return False
+        previous_rows = [row for row in predecessor.casillas if row.continuidad_id == left.continuidad_id]
+        current_rows = [row for row in current.casillas if row.continuidad_id == left.continuidad_id]
+        if len(previous_rows) != 1 or len(current_rows) != 1:
+            return False
+        if previous_rows[0].semantic_role != current_rows[0].semantic_role:
+            return False
+        if previous_rows[0].data_type != current_rows[0].data_type and not any(
+            evolution.continuidad_id == left.continuidad_id
+            and evolution.evolution_kind == "representation_evolved"
+            and evolution.from_revision == predecessor.id
+            and evolution.to_revision == current.id
+            for evolution in current.casilla_continuidad_evolutions
+        ):
+            return False
+        current = predecessor
+    return True
+
+
 def semantic_role_consistency_failures(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
@@ -136,10 +187,19 @@ def semantic_role_consistency_failures(
     contradictory changes in later editions.
     """
     failures: list[str] = []
-    for role, observations in _collect_role_observations(modelos).items():
-        canonical = observations[0]
+    modelo_tuple = tuple(modelos)
+    by_modelo = {str(modelo.id): modelo for modelo in modelo_tuple}
+    for role, observations in _collect_role_observations(modelo_tuple).items():
         for index, obs in enumerate(observations[1:], start=1):
-            if obs.data_type != canonical.data_type:
+            canonical = next(
+                (
+                    prior
+                    for prior in observations[:index]
+                    if obs.data_type != prior.data_type and not _representation_evolved(prior, obs, by_modelo)
+                ),
+                None,
+            )
+            if canonical is not None:
                 failures.append(
                     f"semantic_role {role!r}: casilla "
                     f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "

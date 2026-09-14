@@ -86,7 +86,7 @@ def _positions(revision, casilla_id: str) -> set[tuple[str, int]]:
 def _bundled_registry_root() -> Path:
     # src/cadrumo/_data/registry/aeat, three levels above this test file's
     # package (domain/calculations/registry/tests -> domain/calculations ->
-    # domain -> cadrumo), matching the layout _authority.bundled_authority()
+    # domain -> cadrumo), matching the layout _authority.compiled_bundled_authority()
     # points at.
     return Path(__file__).resolve().parents[4] / "_data" / "registry" / "aeat"
 

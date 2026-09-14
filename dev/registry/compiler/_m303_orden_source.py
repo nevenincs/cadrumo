@@ -51,7 +51,7 @@ from .m303_orden_raw_models import (
 )
 
 _SIDECAR_PREPROCESSOR_ID = "normatives-html"
-_SIDECAR_PREPROCESSOR_VERSION = "1.3"
+_SIDECAR_PREPROCESSOR_VERSION = "1.4"
 _SIDECAR_SCHEMA_VERSION = "1.0"
 _SIDECAR_TOP_LEVEL_KEYS = frozenset(
     {

@@ -35,7 +35,6 @@ from itertools import pairwise
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -108,7 +107,7 @@ def _registry_breaks() -> tuple[dict[tuple[str, str], list[str]], int]:
     """Walk every compiled revision's bracket tables, returning breaks and the scan size."""
     found: dict[tuple[str, str], list[str]] = {}
     scanned = 0
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
             for parameter in getattr(revision, "parameters", ()) or ():
                 if not parameter.brackets:
@@ -175,7 +174,7 @@ _MURCIA_2022_TOP_RUNG_RATE = Decimal("0.227")
 
 def _murcia_2022_top_rung() -> BracketEntry:
     """Return the open top bracket of the Region de Murcia 2022 autonomic scale."""
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
             if str(revision_id) != "2022":
                 continue
@@ -257,3 +256,6 @@ def test_a_consistent_scale_reports_no_break() -> None:
 def test_cent_rounding_is_not_reported_as_a_break() -> None:
     """The band exists because official scales round; it must actually absorb that."""
     assert _accumulated_cuota_breaks(_scale("1000.01")) == []
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

@@ -9,14 +9,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
-    read_authority_artifact,
-    write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 from cadrumo.domain.calculations.registry.runtime_catalogues import (
@@ -30,6 +27,7 @@ from cadrumo.domain.calculations.registry.runtime_catalogues import (
     TerritoryCarveOut,
 )
 
+from ..authority_json import bundled_authority_json_path, read_authority_artifact, write_authority_artifact
 from ..compiler import fact_providers
 from ..conformance.loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
@@ -240,7 +238,7 @@ def _previous_publication() -> AuthorityArtifact:
             )
         },
     ).require_complete()
-    published_facts = bundled_authority().catalogues.facts
+    published_facts = read_authority_artifact(bundled_authority_json_path()).catalogues.facts
     tax_id_fact = published_facts.facts["spanish-tax-identifier-format"]
     legal_text = "art-1 fixture authority text"
     build_identity = AuthorityBuildIdentity.from_inputs(
