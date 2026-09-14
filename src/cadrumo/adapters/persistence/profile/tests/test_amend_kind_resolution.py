@@ -48,6 +48,7 @@ from cadrumo.application.modelo.action_errors import (
 )
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -152,7 +153,7 @@ def _seed_m303_external_baseline(
         revision_id=compiled_bundled_authority()
         .snapshot("303", filing_year=filing_year, period=period.registry_token)
         .revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=repos_tuple[3]),
         clock=_T0,
     )
 

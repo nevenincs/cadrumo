@@ -35,6 +35,7 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.registry import resolve_category_profiles
@@ -171,6 +172,7 @@ def compute_current_approval_basis(
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -210,8 +212,8 @@ def compute_current_approval_basis(
             digest. When ``None``, the digest is self-loaded from the bucket's
             :class:`~application.user_profile.CommittedProfileRepository`.
             Explicit values let callers reuse a digest they already computed.
-        category_profiles: Optional override of the active category
-            profile map. Defaults to the bundled 2025 registry.
+        operation: Caller-owned generation-pinned indexed authority operation.
+        category_profiles: Optional override of the active category profile map.
 
     Returns:
         A freshly computed :class:`ModeloApprovalBasis`.
@@ -221,7 +223,10 @@ def compute_current_approval_basis(
     prior_observations_fingerprint = (
         prior_filing_observations_fingerprint
         if prior_filing_observations_fingerprint is not None
-        else _load_prior_filing_observations_fingerprint(ports.observation_repository)
+        else _load_prior_filing_observations_fingerprint(
+            ports.observation_repository,
+            operation=operation,
+        )
     )
     profile_fingerprint = (
         profile_activity_fingerprint
@@ -229,7 +234,9 @@ def compute_current_approval_basis(
         else _load_profile_activity_fingerprint(ports.profile_repository, bucket_id=bucket_id)
     )
     profiles = (
-        category_profiles if category_profiles is not None else resolve_category_profiles(draft.period.filing_year)
+        category_profiles
+        if category_profiles is not None
+        else resolve_category_profiles(draft.period.filing_year, operation=operation)
     )
     return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
@@ -294,6 +301,7 @@ def approval_stale_reasons(
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -312,6 +320,7 @@ def approval_stale_reasons(
             :class:`domain.filing.CasillaSchemaProvider`.
         ports: Required application-owned persistence capabilities forwarded to
             :func:`compute_current_approval_basis`.
+        operation: Caller-owned generation-pinned indexed authority operation.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest override; forwarded to :func:`compute_current_approval_basis`.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
@@ -339,6 +348,7 @@ def approval_stale_reasons(
         bucket_id=bucket_id,
         schema_provider=schema_provider,
         ports=ports,
+        operation=operation,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -353,6 +363,7 @@ def approve_draft(
     approved_by: str,
     schema_provider: CasillaSchemaProvider,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -371,6 +382,7 @@ def approve_draft(
             :class:`domain.filing.CasillaSchemaProvider`.
         ports: Required application-owned persistence capabilities forwarded to
             :func:`compute_current_approval_basis`.
+        operation: Caller-owned generation-pinned indexed authority operation.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest override; forwarded to :func:`compute_current_approval_basis`.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
@@ -403,6 +415,7 @@ def approve_draft(
         bucket_id=bucket_id,
         schema_provider=schema_provider,
         ports=ports,
+        operation=operation,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -470,6 +483,7 @@ def _refresh_approved_status(
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
     prior_filing_observations_fingerprint: str | None,
     profile_activity_fingerprint: str | None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None,
@@ -480,6 +494,7 @@ def _refresh_approved_status(
         bucket_id=bucket_id,
         schema_provider=schema_provider,
         ports=ports,
+        operation=operation,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -514,6 +529,7 @@ def refresh_review_status(
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -535,6 +551,7 @@ def refresh_review_status(
             :class:`domain.filing.CasillaSchemaProvider`.
         ports: Required application-owned persistence capabilities forwarded to
             :func:`approval_stale_reasons`.
+        operation: Caller-owned generation-pinned indexed authority operation.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest override; forwarded to :func:`approval_stale_reasons`.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
@@ -563,6 +580,7 @@ def refresh_review_status(
         bucket_id=bucket_id,
         schema_provider=schema_provider,
         ports=ports,
+        operation=operation,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -628,12 +646,20 @@ def _require_registry_review_alignment(
     )
 
 
-def _load_prior_filing_observations_fingerprint(repository: CalculationObservationRepositoryProtocol) -> str:
+def _load_prior_filing_observations_fingerprint(
+    repository: CalculationObservationRepositoryProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str:
     """Digest all persisted prior-filing observations supplied by the application port."""
-    return _prior_filing_observations_fingerprint(repository.iter_records())
+    return _prior_filing_observations_fingerprint(repository.iter_records(), operation=operation)
 
 
-def _prior_filing_observations_fingerprint(payloads: Iterable[_StoredPriorObservation]) -> str:
+def _prior_filing_observations_fingerprint(
+    payloads: Iterable[_StoredPriorObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str:
     """Order-independent digest over a set of stored observation payloads.
 
     Each payload is projected to a STABLE shape that captures the calculation-
@@ -652,7 +678,10 @@ def _prior_filing_observations_fingerprint(payloads: Iterable[_StoredPriorObserv
 
     projected = sorted(
         _normalize_prior_filing_observation(
-            require_observation_envelope_coordinates_current(cast(ObservationEnvelopePayload, payload))
+            require_observation_envelope_coordinates_current(
+                cast(ObservationEnvelopePayload, payload),
+                operation=operation,
+            )
         )
         for payload in payloads
     )

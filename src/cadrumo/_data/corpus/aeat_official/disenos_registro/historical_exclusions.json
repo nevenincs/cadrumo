@@ -1,11 +1,5 @@
 {
   "schema_version": 1,
-  "support_years": [
-    2023,
-    2024,
-    2025,
-    2026
-  ],
   "disposition": "outside-supported-window-or-superseded",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",

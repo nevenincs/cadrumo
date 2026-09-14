@@ -84,6 +84,12 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import (
+    build_amendment_action_ports,
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_work_lifecycle_ports,
+)
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -200,12 +206,12 @@ def _seed_work_unit(
     in ``calculate_modelo_revision`` has a snapshot to operate on."""
 
     return create_work_unit(
+        ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
         bucket_id=_PROFILE_ID,
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period_code),
         revision_id=revision_id,
-        repository=wu_repo,
         clock=_T0,
     )
 
@@ -364,17 +370,14 @@ def test_amend_refuses_evidence_less_m303_external_baseline(repos: _Repos) -> No
         filing_instance_evidence=None,
     )
 
-    with pytest.raises(AmendmentEvidenceMissingError):
+    with pytest.raises(AmendmentEvidenceMissingError), compiled_bundled_authority().operation() as operation:
         amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("1")},
             amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
             reason="correction requires immutable filing evidence",
             actor="operator-A",
-            work_unit_repository=repos[0],
-            calculation_repository=repos[1],
-            filing_repository=repos[2],
-            bucket_event_repository=repos[4],
             clock=_T4,
         )
 
@@ -384,25 +387,24 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={
-            _AMEND_INCOME_CASILLA: Decimal("1000"),
-            _AMEND_EXPENSE_CASILLA: Decimal("0"),
-            _AMEND_WITHHELD_CASILLA: Decimal("0"),
-            _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
-            _AMEND_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-            _AMEND_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-            _AMEND_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _AMEND_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-        },
-        binding_values=_DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            casilla_inputs={
+                _AMEND_INCOME_CASILLA: Decimal("1000"),
+                _AMEND_EXPENSE_CASILLA: Decimal("0"),
+                _AMEND_WITHHELD_CASILLA: Decimal("0"),
+                _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
+                _AMEND_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+                _AMEND_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+                _AMEND_HOME_DEDUCTION_CASILLA: Decimal("0"),
+                _AMEND_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+            },
+            binding_values=_DEFAULT_130_BINDING_VALUES,
+            clock=_T1,
+        )
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -424,10 +426,11 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     assert report.granted_verificado_completo is True
-    verified_revision = get_calculation_revision(
-        revision.calculation_revision_id,
-        calculation_repository=cr_repo,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        verified_revision = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
     locally_filed = _seed_local_filing_record(
         work_unit=work_unit,
         revision=verified_revision,
@@ -438,17 +441,14 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
     )
     assert locally_filed.external_evidence is None
 
-    with pytest.raises(AmendmentEvidenceMissingError):
+    with pytest.raises(AmendmentEvidenceMissingError), compiled_bundled_authority().operation() as operation:
         amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=locally_filed.filing_record_id,
             overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="under-reported turnover",
             actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T4,
         )
 
@@ -472,17 +472,14 @@ def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
         ),
     )
 
-    with pytest.raises(AmendmentTargetStateError):
+    with pytest.raises(AmendmentTargetStateError), compiled_bundled_authority().operation() as operation:
         amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="late evidence",
             actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T4,
         )
 
@@ -509,18 +506,16 @@ def _drive_amend_creates_complementaria(repos: _Repos) -> _AmendOutcome:
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000"), _AMEND_EXPENSE_CASILLA: Decimal("250")},
     )
-    new_filing = amend_modelo_revision(
-        from_filing_record_id=baseline.filing_record_id,
-        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        reason="under-reported turnover discovered in audit",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T4,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        new_filing = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="under-reported turnover discovered in audit",
+            actor="operator-A",
+            clock=_T4,
+        )
     return _AmendOutcome(
         work_unit=work_unit,
         baseline_revision=baseline_revision,
@@ -545,7 +540,10 @@ def test_amend_new_filing_records_filing_metadata(repos: _Repos) -> None:
 def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, _, fr_repo, _, _ = repos
-    refreshed_baseline = get_filing_record(outcome.baseline.filing_record_id, filing_repository=fr_repo)
+    refreshed_baseline = get_filing_record(
+        outcome.baseline.filing_record_id,
+        ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+    )
     assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_baseline.superseded_by_filing_record_id == outcome.new_filing.filing_record_id
 
@@ -553,8 +551,12 @@ def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos) -> None:
 def test_amend_new_revision_is_filed_complementaria(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
-    assert new_revision.state is CalculationRevisionState.PRESENTADO
+    with compiled_bundled_authority().operation() as operation:
+        new_revision = get_calculation_revision(
+            outcome.new_filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
+        assert new_revision.state is CalculationRevisionState.PRESENTADO
     assert new_revision.amendment_identity is not None
     assert new_revision.amendment_identity.kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
     assert new_revision.amendment_identity.amends_filing_record_id == outcome.baseline.filing_record_id
@@ -574,18 +576,16 @@ def test_amend_member_scoped_filing_id_carries_member_nif(repos: _Repos) -> None
     )
     assert baseline.member_nif == "A00000000"
 
-    new_filing = amend_modelo_revision(
-        from_filing_record_id=baseline.filing_record_id,
-        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        reason="member A turnover correction",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T4,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        new_filing = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="member A turnover correction",
+            actor="operator-A",
+            clock=_T4,
+        )
 
     assert new_filing.member_nif == "A00000000"
     assert new_filing.filing_record_id == derive_filing_record_id(
@@ -635,45 +635,57 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(re
     )
     fr_repo.save(upsert_filing_record(fr_repo.load(), single_filer_filing))
 
-    new_filing = amend_modelo_revision(
-        from_filing_record_id=baseline_a.filing_record_id,
-        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        reason="member A turnover correction",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T4,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        new_filing = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline_a.filing_record_id,
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="member A turnover correction",
+            actor="operator-A",
+            clock=_T4,
+        )
 
     assert new_filing.member_nif == "A00000000"
-    refreshed_single_filer = get_filing_record(single_filer_filing_id, filing_repository=fr_repo)
+    refreshed_single_filer = get_filing_record(
+        single_filer_filing_id,
+        ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+    )
     assert refreshed_single_filer.status is ModeloRecordStatus.VIGENTE
 
 
 def test_amend_overridden_casilla_takes_new_value(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
-    assert new_revision.casilla_values[_AMEND_INCOME_CASILLA] == Decimal("1100")
+    with compiled_bundled_authority().operation() as operation:
+        new_revision = get_calculation_revision(
+            outcome.new_filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
+        assert new_revision.casilla_values[_AMEND_INCOME_CASILLA] == Decimal("1100")
 
 
 def test_amend_unoverridden_casilla_inherits_baseline_value(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
-    assert (
-        new_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
-        == outcome.baseline_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
-    )
+    with compiled_bundled_authority().operation() as operation:
+        new_revision = get_calculation_revision(
+            outcome.new_filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
+        assert (
+            new_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
+            == outcome.baseline_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
+        )
 
 
 def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     wu_repo, _, _, _, _ = repos
-    refreshed_wu = get_work_unit(outcome.work_unit.work_unit_id, repository=wu_repo)
+    refreshed_wu = get_work_unit(
+        outcome.work_unit.work_unit_id,
+        ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
+    )
     assert refreshed_wu.filed_calculation_revision_id == outcome.new_filing.calculation_revision_id
     assert refreshed_wu.current_filing_record_id == outcome.new_filing.filing_record_id
 
@@ -726,18 +738,16 @@ def test_amend_refuses_no_op_overrides(repos: _Repos) -> None:
     _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
 
     with pytest.raises(CalculationRevisionStateError) as exc_info:
-        amend_modelo_revision(
-            from_filing_record_id=baseline.filing_record_id,
-            overrides={_AMEND_INCOME_CASILLA: Decimal("1000")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-            reason="duplicate filing attempt",
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T4,
-        )
+        with compiled_bundled_authority().operation() as operation:
+            amend_modelo_revision(
+                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+                from_filing_record_id=baseline.filing_record_id,
+                overrides={_AMEND_INCOME_CASILLA: Decimal("1000")},
+                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+                reason="duplicate filing attempt",
+                actor="operator-A",
+                clock=_T4,
+            )
     assert exc_info.value.translated_message == "errors.error.error_modelo_calculation_revision_state"
 
 
@@ -751,18 +761,16 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos)
     _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
 
     with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
-        amend_modelo_revision(
-            from_filing_record_id=baseline.filing_record_id,
-            overrides={_UNKNOWN_AMEND_CASILLA: Decimal("100")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-            reason="fabricated casilla rejected",
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T4,
-        )
+        with compiled_bundled_authority().operation() as operation:
+            amend_modelo_revision(
+                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+                from_filing_record_id=baseline.filing_record_id,
+                overrides={_UNKNOWN_AMEND_CASILLA: Decimal("100")},
+                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+                reason="fabricated casilla rejected",
+                actor="operator-A",
+                clock=_T4,
+            )
     assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
     assert exc_info.value.context is not None
     casillas_obj = exc_info.value.context.get("casillas", [])
@@ -788,18 +796,16 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos) -> None:
     )
 
     with pytest.raises(AmendmentOverrideCasillaError, match="non-canonical reference tokens") as exc_info:
-        amend_modelo_revision(
-            from_filing_record_id=baseline.filing_record_id,
-            overrides={_M303_PRINTED_RESULT_TOKEN: Decimal("50")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-            reason="printed number override rejected",
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T4,
-        )
+        with compiled_bundled_authority().operation() as operation:
+            amend_modelo_revision(
+                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+                from_filing_record_id=baseline.filing_record_id,
+                overrides={_M303_PRINTED_RESULT_TOKEN: Decimal("50")},
+                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+                reason="printed number override rejected",
+                actor="operator-A",
+                clock=_T4,
+            )
 
     assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
     assert exc_info.value.context is not None
@@ -814,18 +820,16 @@ def test_amend_refuses_non_string_override_casilla_keys_without_coercion(repos: 
     _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
 
     with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
-        amend_modelo_revision(
-            from_filing_record_id=baseline.filing_record_id,
-            overrides={1: Decimal("100")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-            reason="malformed casilla rejected",
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T4,
-        )
+        with compiled_bundled_authority().operation() as operation:
+            amend_modelo_revision(
+                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+                from_filing_record_id=baseline.filing_record_id,
+                overrides={1: Decimal("100")},
+                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+                reason="malformed casilla rejected",
+                actor="operator-A",
+                clock=_T4,
+            )
     assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
     assert exc_info.value.context is not None
     assert exc_info.value.context.get("casillas") == ["1"]
@@ -844,7 +848,11 @@ def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:
 
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
+    with compiled_bundled_authority().operation() as operation:
+        new_revision = get_calculation_revision(
+            outcome.new_filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
 
     observed = {obs.casilla_id: obs for obs in new_revision.observations}
     assert observed, "amendment revision persisted zero observations — provenance lost"
@@ -881,7 +889,11 @@ def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos) -> None:
     """
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
+    with compiled_bundled_authority().operation() as operation:
+        new_revision = get_calculation_revision(
+            outcome.new_filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
 
     assert outcome.baseline_revision.source_transaction_ids == ()
     assert new_revision.source_transaction_ids == ()
@@ -902,7 +914,11 @@ def test_export_refuses_an_amendment_carrying_contributors(repos: _Repos, tmp_pa
     """
     outcome = _drive_amend_creates_complementaria(repos)
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
+    with compiled_bundled_authority().operation() as operation:
+        new_revision = get_calculation_revision(
+            outcome.new_filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
 
     with_contributors = new_revision.model_copy(update={"source_transaction_ids": ("a" * 64,)})
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), with_contributors))
@@ -947,17 +963,14 @@ def test_amendment_commits_its_catalogues_and_event_in_one_transaction(
     )
     recorder = WriteUnitRecorder(amend_runtime.engine)
 
-    with recorder.recording():
+    with recorder.recording(), compiled_bundled_authority().operation() as operation:
         amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="under-reported turnover",
             actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T4,
         )
 
@@ -978,18 +991,16 @@ def test_split_amendment_write_shape_commits_between_catalogues(
         repos_tuple,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
     )
-    amend_modelo_revision(
-        from_filing_record_id=baseline.filing_record_id,
-        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        reason="under-reported turnover",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T4,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="under-reported turnover",
+            actor="operator-A",
+            clock=_T4,
+        )
     revisions = cr_repo.load()
     filings = fr_repo.load()
     work_units = wu_repo.load()
@@ -1016,24 +1027,29 @@ def test_amendment_event_and_state_are_both_present_after_success(
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
     )
 
-    amended = amend_modelo_revision(
-        from_filing_record_id=baseline.filing_record_id,
-        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        reason="under-reported turnover",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T4,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        amended = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="under-reported turnover",
+            actor="operator-A",
+            clock=_T4,
+        )
 
-    refreshed = get_work_unit(baseline.work_unit_id, repository=wu_repo)
+    refreshed = get_work_unit(
+        baseline.work_unit_id,
+        ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
+    )
     assert refreshed.current_filing_record_id == amended.filing_record_id
     assert refreshed.filed_calculation_revision_id == amended.calculation_revision_id
-    assert get_filing_record(baseline.filing_record_id, filing_repository=fr_repo).status is (
-        ModeloRecordStatus.SUPERSEDIDO
+    assert (
+        get_filing_record(
+            baseline.filing_record_id,
+            ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+        ).status
+        is ModeloRecordStatus.SUPERSEDIDO
     )
 
     amended_events = [

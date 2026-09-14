@@ -6,12 +6,14 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 from .....adapters.outbound.aeat.browser.site_health_records import (
     SiteHealthEvidence,
@@ -70,6 +72,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "a38b7cd5-d38e-4d69-809f-5a244c74e08b"
+
+
+def _create_work_unit(**kwargs: Any) -> Any:
+    kwargs.pop("repository", None)
+    kwargs.pop("bucket_event_repository", None)
+    return create_work_unit(ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID), **kwargs)
+
+
+def _resolve_modelo_workflow_resume_target(**kwargs: Any) -> Any:
+    bucket_id = kwargs.get("bucket_id") or _BUCKET_ID
+    with compiled_bundled_authority().operation() as operation:
+        return resolve_modelo_workflow_resume_target(
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            **kwargs,
+        )
+
+
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Test Operator"),
@@ -96,6 +115,8 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 def _seed_ready_profile_record(bucket_id: str) -> None:
     seed_test_profile_record(
         UserProfileRecord(
+            schema_id="cadrumo.user_profile",
+            schema_version=load_user_profile_schema().version,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
@@ -616,27 +637,27 @@ def test_unified_resume_target_refuses_invalid_or_incomplete_addresses(
     message: str,
 ) -> None:
     with pytest.raises(WorkflowError) as raised:
-        resolve_modelo_workflow_resume_target(**kwargs)
+        _resolve_modelo_workflow_resume_target(**kwargs)
 
     assert raised.value.translated_message == message
 
 
 def test_unified_resume_target_strips_exact_workflow_run_id() -> None:
-    resolved = resolve_modelo_workflow_resume_target(workflow_run_id=f"  {'b' * 16}  ")
+    resolved = _resolve_modelo_workflow_resume_target(workflow_run_id=f"  {'b' * 16}  ")
 
     assert resolved.run_id == "b" * 16
     assert resolved.source == "workflow_run_id"
 
 
 def test_unified_resume_target_classifies_exact_workflow_run_target() -> None:
-    resolved = resolve_modelo_workflow_resume_target(target="c" * 16)
+    resolved = _resolve_modelo_workflow_resume_target(target="c" * 16)
 
     assert resolved.run_id == "c" * 16
     assert resolved.source == "workflow_run_id"
 
 
 def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Path) -> None:
-    work_unit = create_work_unit(
+    work_unit = _create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
@@ -651,7 +672,7 @@ def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Pat
     )
     save_run(run)
 
-    resolved = resolve_modelo_workflow_resume_target(
+    resolved = _resolve_modelo_workflow_resume_target(
         modelo="130",
         year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -673,7 +694,7 @@ def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Pat
 
 
 def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: Path) -> None:
-    work_unit = create_work_unit(
+    work_unit = _create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
@@ -695,7 +716,7 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
     save_run(later)
 
     with pytest.raises(WorkflowResumeRunAmbiguousError) as raised:
-        resolve_modelo_workflow_resume_target(
+        _resolve_modelo_workflow_resume_target(
             modelo="130",
             year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -706,7 +727,7 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
 
 
 def test_exact_modelo_work_target_resolves_latest_run_for_period(tmp_path: Path) -> None:
-    work_unit = create_work_unit(
+    work_unit = _create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
@@ -727,7 +748,7 @@ def test_exact_modelo_work_target_resolves_latest_run_for_period(tmp_path: Path)
     save_run(earlier)
     save_run(later)
 
-    resolved = resolve_modelo_workflow_resume_target(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID)
+    resolved = _resolve_modelo_workflow_resume_target(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID)
     via_target = resolve_modelo_workflow_run_for_resume(
         ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID),
         catalogue=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load(),
@@ -739,7 +760,7 @@ def test_exact_modelo_work_target_resolves_latest_run_for_period(tmp_path: Path)
 
 
 def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tmp_path: Path) -> None:
-    work_unit = create_work_unit(
+    work_unit = _create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
@@ -754,7 +775,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
     )
     save_run(run)
 
-    resolved = resolve_modelo_workflow_resume_target(
+    resolved = _resolve_modelo_workflow_resume_target(
         modelo="130",
         year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -770,7 +791,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
 
 
 def test_unified_resume_target_resolves_work_unit_id_to_latest_run(tmp_path: Path) -> None:
-    work_unit = create_work_unit(
+    work_unit = _create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
@@ -792,7 +813,7 @@ def test_unified_resume_target_resolves_work_unit_id_to_latest_run(tmp_path: Pat
     ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
     save_run(later)
 
-    resolved = resolve_modelo_workflow_resume_target(target=work_unit.work_unit_id)
+    resolved = _resolve_modelo_workflow_resume_target(target=work_unit.work_unit_id)
 
     assert resolved.run_id == later.run_id
     assert resolved.source == "work_unit_id"
@@ -800,7 +821,7 @@ def test_unified_resume_target_resolves_work_unit_id_to_latest_run(tmp_path: Pat
 
 
 def test_unified_resume_target_routes_revision_selector_through_modelo_addressing(tmp_path: Path) -> None:
-    work_unit = create_work_unit(
+    work_unit = _create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
@@ -816,7 +837,7 @@ def test_unified_resume_target_routes_revision_selector_through_modelo_addressin
     )
     save_run(run)
 
-    resolved = resolve_modelo_workflow_resume_target(
+    resolved = _resolve_modelo_workflow_resume_target(
         modelo="130",
         year=2026,
         period=Period.from_year_and_code(2026, "1T"),
@@ -831,7 +852,7 @@ def test_unified_resume_target_routes_revision_selector_through_modelo_addressin
 
 
 def test_unified_resume_target_refuses_ambiguous_visible_modelo_runs_with_work_guidance(tmp_path: Path) -> None:
-    work_unit = create_work_unit(
+    work_unit = _create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
@@ -853,7 +874,7 @@ def test_unified_resume_target_refuses_ambiguous_visible_modelo_runs_with_work_g
     save_run(later)
 
     with pytest.raises(WorkflowResumeRunAmbiguousError) as raised:
-        resolve_modelo_workflow_resume_target(
+        _resolve_modelo_workflow_resume_target(
             modelo="130",
             year=2026,
             period=Period.from_year_and_code(2026, "1T"),

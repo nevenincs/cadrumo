@@ -24,6 +24,7 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     T1,
     T2,
     Repos,
+    calculation_ports_for_test,
     seed_work_unit,
     verify_revision,
 )
@@ -44,9 +45,9 @@ def test_a_verified_revision_leaves_its_approved_draft_in_the_store(repos: Repos
         work_unit.work_unit_id,
         casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     report = verify_revision(
@@ -80,9 +81,9 @@ def test_re_verifying_the_same_revision_rewrites_one_row(repos: Repos) -> None:
         work_unit.work_unit_id,
         casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     for clock in (T1, T2):
@@ -124,9 +125,9 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
         work_unit.work_unit_id,
         casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     verify_revision(

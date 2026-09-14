@@ -6,8 +6,11 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -21,6 +24,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -29,6 +33,19 @@ _Repos = tuple[
     CalculationRevisionCatalogueRepository,
     BucketEventHistoryRepository,
 ]
+
+
+def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
+    repository = kwargs.pop("work_unit_repository", None)
+    for key in ("calculation_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return calculate_modelo_revision(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            **kwargs,
+        )
+
 
 _CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
 
@@ -81,6 +98,8 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         objects = profile.repository
         seed_test_profile_record(
             UserProfileRecord(
+                schema_id="cadrumo.user_profile",
+                schema_version=load_user_profile_schema().version,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
@@ -134,7 +153,7 @@ def test_casilla_15_manual_input_is_rejected_at_3t(repos: _Repos) -> None:
     work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos)
 
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
-        calculate_modelo_revision(
+        _calculate_modelo_revision(
             work_unit.work_unit_id,
             casilla_inputs={**_common_inputs(), _M130_CARRY_FORWARD_CASILLA: Decimal("2694")},
             binding_values={
@@ -154,7 +173,7 @@ def test_casilla_15_binding_flows_into_casilla_17_when_within_cap(repos: _Repos)
         "irpf.previous_year_economic_activity_net_income": Decimal("0"),
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
     }
-    rev_zero = calculate_modelo_revision(
+    rev_zero = _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=_common_inputs(),
         binding_values=common_bindings,
@@ -164,7 +183,7 @@ def test_casilla_15_binding_flows_into_casilla_17_when_within_cap(repos: _Repos)
         clock=_CLOCK,
     )
     carry = Decimal("2694")
-    rev_override = calculate_modelo_revision(
+    rev_override = _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=_common_inputs(),
         binding_values={**common_bindings, "modelo-130-resultados-negativos-anteriores": carry},
@@ -184,7 +203,7 @@ def test_casilla_15_binding_flows_into_casilla_17_when_within_cap(repos: _Repos)
 def test_casilla_15_binding_is_capped_at_c14(repos: _Repos) -> None:
     work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos)
 
-    revision = calculate_modelo_revision(
+    revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=_common_inputs(),
         binding_values={

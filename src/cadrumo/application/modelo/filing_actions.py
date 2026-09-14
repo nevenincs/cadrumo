@@ -168,6 +168,10 @@ def file_modelo_revision(
     Args:
         calculation_revision_id: The id of the verified-complete revision
             to file.
+        certificate_secret_backend_factory: Factory for the encrypted
+            certificate-secret capability used by workflow authentication.
+        operator_scope_ports: Operator-scope capabilities used by workflow
+            authentication.
         actor: Operator identifier recorded in the filing record and audit
             trail.
         workflow_profile: The :class:`TaxpayerProfile`
@@ -191,6 +195,7 @@ def file_modelo_revision(
             the work-unit, calculation, filing, verification, observation,
             IVA-wallet, bucket-event, and workflow-run authorities for the
             active profile bucket.
+        operation: Caller-owned generation-pinned indexed authority operation.
         cross_period_expected_member_sets: Optional expected grupo member
             rosters used by the cross-period clean-state proof.
         workflow_engine: Optional workflow engine override for the preflight
@@ -327,6 +332,7 @@ def file_modelo_revision(
         settings=settings,
         draft_review_ports=ports.draft_review_ports,
         workflow_gate_ports=ports.workflow_gate_ports,
+        operation=operation,
     )
     _run_revision_workflow_gate(
         engine=gate_engine,
@@ -414,16 +420,13 @@ def _require_filing_preconditions(
         operation=operation,
     )
     _require_persisted_required_bindings_resolved(
-        work_unit=work_unit,
-        revision=target,
-        action="file",
+        work_unit=work_unit, revision=target, action="file", operation=operation
     )
     iva_compensation_decision = _require_iva_compensation_revision_match(
         work_unit,
         target,
         repository=ports.iva_compensation_decision_repository,
         subject_leaf_key="modelo.work.file",
-        operation=operation,
     )
     require_cross_period_clean_state(
         work_unit,

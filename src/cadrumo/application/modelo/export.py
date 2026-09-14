@@ -609,6 +609,7 @@ def _approve_export_draft(
     period: Period,
     schema_provider: RegistrySchemaAccessor,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Period, ModeloDraft]:
     """Build and approve the export draft for one :class:`~CalculationRevision`.
 
@@ -638,6 +639,7 @@ def _approve_export_draft(
             approved_by=actor,
             schema_provider=schema_provider,
             ports=ports,
+            operation=operation,
             approved_at=approved_at,
         )
     except FilingExportError as exc:
@@ -674,9 +676,7 @@ def _resolve_m303_export_arrivals(
                 "modelo 303 differentiated sectors require canonical sector apportionment",
             )
         contributions = resolve_iva_differentiated_deduction_contributions(
-            snapshot.revision,
-            iva_aggregation.observations,
-            apportionment=apportionment,
+            snapshot.revision, iva_aggregation.observations, apportionment=apportionment, operation=operation
         )
     else:
         contributions = ()
@@ -900,7 +900,6 @@ def _resolve_m303_filing_facts_for_export(
         supplier_regime=resolve_m303_supplier_regime_arrival(
             period=work_unit.period,
             iva_aggregation=iva_aggregation,
-            operation=operation,
         ),
         prorrata_transition=resolve_m303_prorrata_transition_arrival(
             period=work_unit.period,
@@ -1402,6 +1401,7 @@ def _prepare_modelo_export(
         calculation_repository=export_ports.calculation,
         filing_repository=export_ports.filing,
         regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+        operation=operation,
     )
     period, schema_provider = _prepare_modelo_export_schema(
         work_unit=work_unit,
@@ -1526,6 +1526,7 @@ def export_modelo_revision(
         period=export_period,
         schema_provider=schema_provider,
         ports=export_ports.draft_review_ports,
+        operation=operation,
     )
     return _persist_exported_draft(
         command=command,

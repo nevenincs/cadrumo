@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -15,6 +14,7 @@ from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidence, Purchas
 from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.core.config import Settings
 from cadrumo.core.document_shape import DocumentShape
+from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
 
 _PDF_BYTES = b"%PDF-1.4 evidence-input-roundtrip body"
 _BUCKET_ID = "30303030-3030-4030-8030-303030303030"
@@ -67,9 +67,9 @@ def _added_record(
 
 
 def _make_svc(isolated_settings: Settings, secure_objects: SecureObjectRepository) -> PurchaseInvoiceEvidenceService:
+    del isolated_settings, secure_objects
     return PurchaseInvoiceEvidenceService(
-        settings=isolated_settings,
-        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
     )
 
 

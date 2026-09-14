@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
@@ -40,7 +41,8 @@ def _create_parent(
     )
     return create_manual_transaction(
         command,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )

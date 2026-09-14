@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -129,8 +130,9 @@ def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_obj
                 direction=TransactionDirection.OUTGOING,
                 description="wrong bucket",
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository, bucket_event_repository=event_repository
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -151,7 +153,7 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
                 actor="operator-A",
                 source_command="aeat app ledger add",
             ),
-            transaction_repository=transaction_repository,
+            ports=ledger_ports_for_test(transaction_repository=transaction_repository),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -183,8 +185,9 @@ def test_manual_foreign_currency_row_converts_at_entry(
             direction=TransactionDirection.INCOMING,
             description="UK client invoice",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         currency_normalizer=normalizer,
     )
@@ -211,8 +214,9 @@ def test_manual_eur_row_carries_no_conversion_stamp(
             direction=TransactionDirection.INCOMING,
             description="Domestic invoice",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
 

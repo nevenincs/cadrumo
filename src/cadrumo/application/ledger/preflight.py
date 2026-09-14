@@ -209,6 +209,7 @@ def preflight_ledger_tax_readiness(
         bucket_id=bucket_id,
         period=period,
         transactions=transactions,
+        operation=operation,
         censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
         missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
     )
@@ -219,6 +220,7 @@ def preflight_transaction_catalogue(
     bucket_id: str,
     period: Period,
     transactions: TransactionCatalogue,
+    operation: PinnedAuthorityOperation,
     censo_ratio_mismatch_detail: str | None = None,
     missing_home_office_afectacion_detail: str | None = None,
 ) -> LedgerPreflightReport:
@@ -228,6 +230,7 @@ def preflight_transaction_catalogue(
         bucket_id: Stable bucket identifier for the ledger being checked.
         period: Filing period as a typed :class:`Period` instance.
         transactions: The :class:`TransactionCatalogue` to inspect for missing facts.
+        operation: Generation-pinned authority for governed IVA and category facts.
         censo_ratio_mismatch_detail: Optional censo mismatch detail previously
             resolved from the secure ratio profile. When supplied, active
             HOME_OFFICE ratio rows surface it as a preflight issue.
@@ -258,6 +261,7 @@ def preflight_transaction_catalogue(
         issues.extend(
             _issues_for_transaction(
                 transaction,
+                operation=operation,
                 censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
                 missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
             ),
@@ -351,7 +355,7 @@ def _censo_ratio_mismatch_detail(
 ) -> str | None:
     resolved_raw = raw_afectacion_ratio
     if resolved_raw is None:
-        resolved_raw = bound_raw_afectacion_ratio_for_bucket(bucket_id)
+        resolved_raw = bound_raw_afectacion_ratio_for_bucket(bucket_id, operation=operation)
     try:
         usage_ratio_profile_with_censo_guard(
             bucket_id=bucket_id,
@@ -559,14 +563,18 @@ def _home_office_preflight_issues(
     return tuple(issues)
 
 
-def _iva_preflight_issues(transaction: Transaction) -> tuple[LedgerPreflightIssue, ...]:
+def _iva_preflight_issues(
+    transaction: Transaction,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[LedgerPreflightIssue, ...]:
     # Trabajo (nómina) incoming rows are IVA-exempt by definition: an
     # employer-paid wage/salary carries no taxable_base / iva_rate / iva_amount
     # because the IRPF retenciones flow consumes the row, not the IVA
     # aggregation. Skip the IVA-fact preflight on these rows so a payroll-
     # receipt entry does not surface as three false-positive missing_iva_*
     # findings every period.
-    if _transaction_is_trabajo_income(transaction):
+    if _transaction_is_trabajo_income(transaction, operation=operation):
         return ()
     issues = [
         _preflight_issue(
@@ -576,7 +584,7 @@ def _iva_preflight_issues(transaction: Transaction) -> tuple[LedgerPreflightIssu
         )
         for reason in iva_ledger_missing_fact_reasons(transaction)
     ]
-    d5_issue = validate_iva_ledger_counterparty_category(transaction)
+    d5_issue = validate_iva_ledger_counterparty_category(transaction, operation=operation)
     if d5_issue is not None:
         issues.append(
             _preflight_issue(
@@ -591,6 +599,7 @@ def _iva_preflight_issues(transaction: Transaction) -> tuple[LedgerPreflightIssu
 def _issues_for_transaction(
     transaction: Transaction,
     *,
+    operation: PinnedAuthorityOperation,
     censo_ratio_mismatch_detail: str | None = None,
     missing_home_office_afectacion_detail: str | None = None,
 ) -> tuple[LedgerPreflightIssue, ...]:
@@ -622,7 +631,7 @@ def _issues_for_transaction(
             missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
         ),
     )
-    issues.extend(_iva_preflight_issues(transaction))
+    issues.extend(_iva_preflight_issues(transaction, operation=operation))
     return tuple(issues)
 
 
@@ -640,7 +649,11 @@ def _recargo_equivalencia_preflight_detail(transaction: Transaction) -> str:
     return "iva_category 'recargo_equivalencia' is not declarable through IVA ledger aggregation"
 
 
-def _transaction_is_trabajo_income(transaction: Transaction) -> bool:
+def _transaction_is_trabajo_income(
+    transaction: Transaction,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> bool:
     """Return whether the transaction is a nómina (trabajo) income row.
 
     AEAT classifies an IRPF rendimiento del trabajo (wage/salary)
@@ -655,7 +668,11 @@ def _transaction_is_trabajo_income(transaction: Transaction) -> bool:
     as employment in the preflight while naming no descriptor at all in the
     gross invariant.
     """
-    return has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction)
+    return has_employment_irpf_category(
+        transaction.irpf_category,
+        direction=transaction.direction,
+        authority=operation,
+    )
 
 
 #: The preflight counterpart of every aggregation reason that reaches preflight.

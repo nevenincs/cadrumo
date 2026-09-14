@@ -20,6 +20,7 @@ from cadrumo.domain.categories.spending_category import SpendingCategory
 from .....adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
+from .....adapters.persistence.profile.filing_history import FilingHistoryRepositoryAdapter
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.justificante import JustificanteRepository
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -33,6 +34,7 @@ from .....application.diagnostics import (
     secure_object_unreadable_total,
 )
 from .....application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
+from .....application.filing.history_ports import FilingHistoryPorts
 from .....application.filing.history_repository import ModeloHistoryRepository
 from .....application.live.borrador_100 import Borrador100SnapshotRepository
 from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
@@ -63,7 +65,10 @@ from ..attachment import AttachmentStore
 from ..errors import StorageValidationError
 from ..master_key.active_session import activate_session
 from ..runtime_readiness import StorageRuntimeReadinessCode
-from ..runtime_repository import secure_object_repository_for_active_bucket_or_default_route
+from ..runtime_repository import (
+    secure_object_repository_for_active_bucket_or_default_route,
+    secure_object_repository_for_bucket,
+)
 from ..secure_object_namespaces import LLM_USAGE_NAMESPACE
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,
@@ -179,7 +184,15 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("filing_drafts", lambda: ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load("d" * 64)),
     ("submission", lambda: SubmissionRepository().list_submission_ids()),
     ("justificante", lambda: JustificanteRepository().list_csvs()),
-    ("filing_history", lambda: ModeloHistoryRepository(bucket_id=_BUCKET_A_ID).list_modelos()),
+    (
+        "filing_history",
+        lambda: ModeloHistoryRepository(
+            ports=FilingHistoryPorts(
+                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_A_ID)),
+                bucket_id=_BUCKET_A_ID,
+            ),
+        ).list_modelos(),
+    ),
     ("modelo_work_units", lambda: WorkUnitCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
     ("modelo_calculation_revisions", lambda: CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
     ("modelo_filing_records", lambda: ModeloRecordCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
@@ -484,7 +497,12 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
     usage_b = _usage_profile(SpendingCategory._from_registry("telefonia_movil"), "0.60")
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        ModeloHistoryRepository(bucket_id=_BUCKET_A_ID).save(history_a)
+        ModeloHistoryRepository(
+            ports=FilingHistoryPorts(
+                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_A_ID)),
+                bucket_id=_BUCKET_A_ID,
+            ),
+        ).save(history_a)
         CalculationObservationRepository(bucket_id=_BUCKET_A_ID).save(
             CalculationObservationRepository(bucket_id=_BUCKET_A_ID).prepare_observation_envelope(
                 observation_a,
@@ -499,7 +517,17 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         save_usage_ratios(usage_a, bucket_id=_BUCKET_A_ID)
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert ModeloHistoryRepository(bucket_id=_BUCKET_B_ID).list_modelos() == ()
+        assert (
+            ModeloHistoryRepository(
+                ports=FilingHistoryPorts(
+                    repository=FilingHistoryRepositoryAdapter(
+                        objects=secure_object_repository_for_bucket(_BUCKET_B_ID)
+                    ),
+                    bucket_id=_BUCKET_B_ID,
+                ),
+            ).list_modelos()
+            == ()
+        )
         assert (
             CalculationObservationRepository(bucket_id=_BUCKET_B_ID).load_observation(
                 "303",
@@ -517,7 +545,12 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         )
         assert IvaCompensationHistoryRepository(bucket_id=_BUCKET_B_ID).list_periods() == ()
         assert load_usage_ratios(bucket_id=_BUCKET_B_ID) == UsageRatioProfile()
-        ModeloHistoryRepository(bucket_id=_BUCKET_B_ID).save(history_b)
+        ModeloHistoryRepository(
+            ports=FilingHistoryPorts(
+                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_B_ID)),
+                bucket_id=_BUCKET_B_ID,
+            ),
+        ).save(history_b)
         CalculationObservationRepository(bucket_id=_BUCKET_B_ID).save(
             CalculationObservationRepository(bucket_id=_BUCKET_B_ID).prepare_observation_envelope(
                 observation_b,
@@ -532,7 +565,12 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         save_usage_ratios(usage_b, bucket_id=_BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        modelo_ids = ModeloHistoryRepository(bucket_id=_BUCKET_A_ID).list_modelos()
+        modelo_ids = ModeloHistoryRepository(
+            ports=FilingHistoryPorts(
+                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_A_ID)),
+                bucket_id=_BUCKET_A_ID,
+            ),
+        ).list_modelos()
         observed = CalculationObservationRepository(bucket_id=_BUCKET_A_ID).load_observation(
             "303",
             Period.from_year_and_code(2026, "1T"),

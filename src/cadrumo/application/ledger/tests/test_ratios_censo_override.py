@@ -9,11 +9,20 @@ value, and stays silent for non-HOME_OFFICE categories.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 
+from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.categories.spending_category_catalogue import require_spending_category
 from ..ratios import (
     RatiosCensoOverrideWarning,
     censo_business_pct_for,
@@ -23,119 +32,148 @@ from ..ratios import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_no_warning_for_non_home_office_category() -> None:
+@pytest.fixture(scope="module")
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Expose canonical authored facts through one pinned component reader."""
+    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()}
+    )
+    pinned = PinnedAuthorityOperation(reader, reader.pin())
+    with validating_governed_facts(pinned):
+        yield pinned
+
+
+def _category(value: str, operation: PinnedAuthorityOperation) -> SpendingCategory:
+    return require_spending_category(value, effective_date=date(2025, 12, 31), authority=operation)
+
+
+def test_no_warning_for_non_home_office_category(operation: PinnedAuthorityOperation) -> None:
     result = censo_override_warning(
-        category=SpendingCategory._from_registry("telefonia_movil"),
+        category=_category("telefonia_movil", operation),
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
         year=2025,
+        operation=operation,
     )
 
     assert result is None
 
 
-def test_warning_emitted_when_home_office_override_diverges() -> None:
+def test_warning_emitted_when_home_office_override_diverges(operation: PinnedAuthorityOperation) -> None:
     result = censo_override_warning(
-        category=SpendingCategory._from_registry("suministros_home_office_luz"),
+        category=_category("suministros_home_office_luz", operation),
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
         year=2025,
+        operation=operation,
     )
 
     assert isinstance(result, RatiosCensoOverrideWarning)
-    assert result.category is SpendingCategory._from_registry("suministros_home_office_luz")
+    assert result.category == _category("suministros_home_office_luz", operation)
     assert result.override_ratio == Decimal("0.50")
     assert result.raw_afectacion_ratio == Decimal("0.20")
 
 
-def test_no_warning_when_suministros_override_matches_30pct_of_raw() -> None:
+def test_no_warning_when_suministros_override_matches_30pct_of_raw(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """When the operator-set ratio equals raw * 0.30 (LIRPF Art. 30.2 rule 5),
     no warning fires for suministros categories."""
 
     raw = Decimal("0.20")
 
     result = censo_override_warning(
-        category=SpendingCategory._from_registry("suministros_home_office_luz"),
+        category=_category("suministros_home_office_luz", operation),
         override_ratio=Decimal("0.060"),
         raw_afectacion_ratio=raw,
         year=2025,
+        operation=operation,
     )
 
     assert result is None
 
 
-def test_no_warning_when_ownership_override_matches_raw_afectacion() -> None:
+def test_no_warning_when_ownership_override_matches_raw_afectacion(operation: PinnedAuthorityOperation) -> None:
     """When the operator-set ratio equals the raw afectación ratio, no warning
     fires for titularidad categories (no statutory multiplier)."""
 
     raw = Decimal("0.20")
 
     result = censo_override_warning(
-        category=SpendingCategory._from_registry("amortizacion_vivienda_afecto"),
+        category=_category("amortizacion_vivienda_afecto", operation),
         override_ratio=raw,
         raw_afectacion_ratio=raw,
         year=2025,
+        operation=operation,
     )
 
     assert result is None
 
 
-def test_business_pct_is_none_when_censo_unset() -> None:
+def test_business_pct_is_none_when_censo_unset(operation: PinnedAuthorityOperation) -> None:
     assert (
         censo_business_pct_for(
-            SpendingCategory._from_registry("suministros_home_office_luz"),
+            _category("suministros_home_office_luz", operation),
             None,
             year=2025,
+            operation=operation,
         )
         is None
     )
 
 
-def test_business_pct_is_none_for_non_home_office_category() -> None:
+def test_business_pct_is_none_for_non_home_office_category(operation: PinnedAuthorityOperation) -> None:
     assert (
         censo_business_pct_for(
-            SpendingCategory._from_registry("telefonia_movil"),
+            _category("telefonia_movil", operation),
             Decimal("0.20"),
             year=2025,
+            operation=operation,
         )
         is None
     )
 
 
-def test_business_pct_for_suministros_applies_lirpf_30_2_rule_5_factor() -> None:
+def test_business_pct_for_suministros_applies_lirpf_30_2_rule_5_factor(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Suministros home-office categories deduct at raw * 0.30 (LIRPF Art. 30.2 rule 5)."""
 
     raw = Decimal("0.20")
 
     suministros = censo_business_pct_for(
-        SpendingCategory._from_registry("suministros_home_office_agua"),
+        _category("suministros_home_office_agua", operation),
         raw,
         year=2025,
+        operation=operation,
     )
 
     assert suministros == Decimal("0.060")
 
 
-def test_business_pct_for_ownership_uses_raw_afectacion() -> None:
+def test_business_pct_for_ownership_uses_raw_afectacion(operation: PinnedAuthorityOperation) -> None:
     """Ownership home-office categories deduct at the raw afectación ratio."""
 
     raw = Decimal("0.20")
 
     ownership = censo_business_pct_for(
-        SpendingCategory._from_registry("comunidad_vivienda_afecto"),
+        _category("comunidad_vivienda_afecto", operation),
         raw,
         year=2025,
+        operation=operation,
     )
 
     assert ownership == raw
 
 
-def test_warning_carries_censo_derived_ratio() -> None:
+def test_warning_carries_censo_derived_ratio(operation: PinnedAuthorityOperation) -> None:
     result = censo_override_warning(
-        category=SpendingCategory._from_registry("ibi_vivienda_afecto"),
+        category=_category("ibi_vivienda_afecto", operation),
         override_ratio=Decimal("0.40"),
         raw_afectacion_ratio=Decimal("0.20"),
         year=2025,
+        operation=operation,
     )
 
     assert result is not None

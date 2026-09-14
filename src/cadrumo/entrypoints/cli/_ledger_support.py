@@ -10,6 +10,7 @@ id resolution. Mutation emitters validate their result through the supplied
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from datetime import date
 from decimal import Decimal
 from typing import Final, Protocol
 
@@ -32,6 +33,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, OutputSchema
 from ...core.unit_proportion import is_unit_proportion
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.spending_category_catalogue import require_spending_category, spending_category_tokens
 from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines.models import IrpfSpecialRegime
@@ -301,6 +303,7 @@ def resolve_business_pct_with_censo(
     category_id: str | None,
     operator_supplied: Decimal | None,
     year: int,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
     """Read the censo fact this session can reach and stamp the resolved share.
 
@@ -320,17 +323,26 @@ def resolve_business_pct_with_censo(
     pinned literal: the multiplier is year-versioned regulatory data.
     """
     from ...application.ledger.ratios import resolve_business_share_pct
-    from ...application.user_profile.censo_sync import CensoSyncService
+    from ...application.user_profile.censo_sync import bound_raw_afectacion_ratio
 
-    category = None if category_id is None else require_spending_category(category_id)
+    category = (
+        None
+        if category_id is None
+        else require_spending_category(category_id, effective_date=date(year, 12, 31), authority=operation)
+    )
     ratio: Decimal | None = None
     if category is not None and active_profile is not None:
-        ratio = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=active_profile)
+        ratio = bound_raw_afectacion_ratio(
+            bucket_id=bucket_id,
+            profile_id=active_profile,
+            operation=operation,
+        )
     return resolve_business_share_pct(
         operator_supplied=operator_supplied,
         category=category,
         censo_afectacion_ratio=ratio,
         year=year,
+        operation=operation,
     ).business_pct
 
 

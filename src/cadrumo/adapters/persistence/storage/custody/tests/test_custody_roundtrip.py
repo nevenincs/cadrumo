@@ -9,6 +9,9 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from cadrumo.application.user_profile.custody_carry import build_secure_object_custody_payload
 from cadrumo.domain.buckets.event import (
@@ -56,6 +59,7 @@ def _seed_bucket_event(bucket_id: str) -> None:
 
 def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -> None:
     """Structured export excludes evidence bytes that full custody includes."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from cadrumo.core.storage_taxonomy import StorageCustodyProfile
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
@@ -65,10 +69,12 @@ def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -
         structured, _ = build_secure_object_custody_payload(
             bucket_id=runtime.primary.bucket_id,
             custody_profile=StorageCustodyProfile.STRUCTURED,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         full, _ = build_secure_object_custody_payload(
             bucket_id=runtime.primary.bucket_id,
             custody_profile=StorageCustodyProfile.FULL,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         structured_namespaces = {obj.namespace for obj in structured}

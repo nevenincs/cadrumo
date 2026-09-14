@@ -211,9 +211,10 @@ def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing
         calculation_repository=cr_repo,
     )
     assert refreshed.state is CalculationRevisionState.PRESENTADO
-    assert get_work_unit(work_unit.work_unit_id, repository=wu_repo).filed_calculation_revision_id == (
-        revision.calculation_revision_id
-    )
+    assert get_work_unit(
+        work_unit.work_unit_id,
+        repository=wu_repo,
+    ).filed_calculation_revision_id == (revision.calculation_revision_id)
     observation = CalculationObservationRepository().load_observation(
         "130",
         Period.from_year_and_code(2024, "1T"),
@@ -340,9 +341,10 @@ def test_file_records_overdue_modelo_130_2025_as_late_local_filing(repos: Repos)
         calculation_repository=cr_repo,
     )
     assert refreshed.state is CalculationRevisionState.PRESENTADO
-    assert get_work_unit(work_unit.work_unit_id, repository=wu_repo).filed_calculation_revision_id == (
-        revision.calculation_revision_id
-    )
+    assert get_work_unit(
+        work_unit.work_unit_id,
+        repository=wu_repo,
+    ).filed_calculation_revision_id == (revision.calculation_revision_id)
 
 
 def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> None:

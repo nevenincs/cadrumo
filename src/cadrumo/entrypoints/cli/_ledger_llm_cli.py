@@ -63,6 +63,7 @@ from ._ledger_support import (
     resolve_id,
 )
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from .state_projection_support import authority_operation
 
 __all__ = [
     "dispatch_autosplit",
@@ -652,10 +653,12 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
     composition = compose_ledger_llm(bucket_id=transaction_repository.bucket_id, settings=load_settings())
+    operation = authority_operation(ctx)
     resolved_id = resolve_id(transaction_repository, validated_transaction_id)
     suggestion = suggest_fn(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
+        operation=operation,
         transaction_repository=transaction_repository,
         read_evidence=read_evidence,
         vision_model=vision_model,

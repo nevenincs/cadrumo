@@ -79,6 +79,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -391,7 +392,10 @@ def _seed_m303_prorrata_work_unit(work_unit_repository: WorkUnitCatalogueReposit
             period=_PRORRATA_PERIOD.registry_token,
         )
         .revision.id,
-        repository=work_unit_repository,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_unit_repository,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_PRORRATA_T0,
     )
 
@@ -454,10 +458,12 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
 
     live_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            calculation_repository=cr_repo,
+            invoice_repository=invoice_repo,
+            transaction_repository=tx_repo,
+            work_unit_repository=wu_repo,
+        ),
         clock=_T1,
     )
     live_casilla_values = live_result.revision.casilla_values
@@ -593,11 +599,13 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
             _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0.00"),
         },
         iva_compensation_decision=wallet_decision,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        bucket_event_repository=bucket_event_repository,
-        transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
+        ports=calculation_ports_for_test(
+            bucket_event_repository=bucket_event_repository,
+            calculation_repository=calculation_repository,
+            invoice_repository=invoice_repository,
+            transaction_repository=transaction_repository,
+            work_unit_repository=work_unit_repository,
+        ),
         filing_instance_evidence=general_m303_filing_evidence(
             _PRORRATA_PERIOD,
             reference="test:pull-calculate-parity:exonerado-not-applicable",

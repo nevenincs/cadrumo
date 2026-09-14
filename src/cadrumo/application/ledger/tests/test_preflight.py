@@ -12,6 +12,7 @@ from cadrumo.domain.iva.schema import require_eu_member_state
 
 from ....core.config import override_settings
 from ....core.i18n.render import clear_output_language_cache
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import TransactionCatalogue
@@ -34,11 +35,12 @@ from ._preflight_test_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_preflight_refuses_non_span_period_even_with_empty_catalogue() -> None:
+def test_preflight_refuses_non_span_period_even_with_empty_catalogue(operation: PinnedAuthorityOperation) -> None:
     report = preflight_transaction_catalogue(
         bucket_id=_BUCKET_ID,
         period=_AD_HOC_2026,
         transactions=TransactionCatalogue.from_transactions(()),
+        operation=operation,
     )
 
     assert report.ready is False
@@ -47,11 +49,12 @@ def test_preflight_refuses_non_span_period_even_with_empty_catalogue() -> None:
     assert "no date span" in report.issues[0].detail
 
 
-def test_preflight_refuses_non_span_period_before_touching_transactions() -> None:
+def test_preflight_refuses_non_span_period_before_touching_transactions(operation: PinnedAuthorityOperation) -> None:
     report = preflight_transaction_catalogue(
         bucket_id=_BUCKET_ID,
         period=_AD_HOC_2026,
         transactions=TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
+        operation=operation,
     )
 
     assert report.ready is False
@@ -59,7 +62,7 @@ def test_preflight_refuses_non_span_period_before_touching_transactions() -> Non
     assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.UNSUPPORTED_PERIOD]
 
 
-def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
+def test_preflight_reports_all_missing_modelo_readiness_facts(operation: PinnedAuthorityOperation) -> None:
     unclassified = _transaction(
         "row-unclassified",
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
@@ -89,6 +92,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
         transactions=TransactionCatalogue.from_transactions(
             (unclassified, missing_business_facts, mixed_missing_ratio),
         ),
+        operation=operation,
     )
 
     assert report.ready is False
@@ -105,7 +109,9 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
     )
 
 
-def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows() -> None:
+def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows(
+    operation: PinnedAuthorityOperation,
+) -> None:
     personal = _transaction(
         "row-personal",
         business_classification=BusinessClassification.PERSONAL,
@@ -136,6 +142,7 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows() -
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((personal, transfer, old)),
+        operation=operation,
     )
 
     assert report.checked_transaction_count == 2
@@ -143,7 +150,7 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows() -
     assert report.ready is True
 
 
-def test_preflight_ignores_archived_and_stashed_rows() -> None:
+def test_preflight_ignores_archived_and_stashed_rows(operation: PinnedAuthorityOperation) -> None:
     ready = _transaction("row-ready")
     archived_missing_facts = _transaction(
         "row-archived",
@@ -166,6 +173,7 @@ def test_preflight_ignores_archived_and_stashed_rows() -> None:
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((ready, archived_missing_facts, stashed_missing_facts)),
+        operation=operation,
     )
 
     assert report.checked_transaction_count == 1
@@ -173,20 +181,25 @@ def test_preflight_ignores_archived_and_stashed_rows() -> None:
     assert report.ready is True
 
 
-def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> None:
+def test_preflight_reports_unsupported_currency_before_modelo_aggregation(
+    operation: PinnedAuthorityOperation,
+) -> None:
     usd = _transaction("row-usd", currency="USD")
 
     report = preflight_transaction_catalogue(
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((usd,)),
+        operation=operation,
     )
 
     assert report.ready is False
     assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY]
 
 
-def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggregation() -> None:
+def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggregation(
+    operation: PinnedAuthorityOperation,
+) -> None:
     transaction = _transaction(
         "row-intracom-es",
         direction=TransactionDirection.INCOMING,
@@ -195,13 +208,15 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
         iva_category=IvaCategory("intra_community_supply"),
-        counterparty_identification_state=require_eu_member_state("ES"),
+    ).model_copy(
+        update={"counterparty_identification_state": require_eu_member_state("ES", authority=operation)},
     )
 
     report = preflight_transaction_catalogue(
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((transaction,)),
+        operation=operation,
     )
 
     assert report.ready is False
@@ -211,7 +226,9 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
     assert not report.issues[0].detail.startswith("aggregation.")
 
 
-def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian() -> None:
+def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
+    operation: PinnedAuthorityOperation,
+) -> None:
     transaction = _transaction(
         "row-intracom-es-hu",
         direction=TransactionDirection.INCOMING,
@@ -220,7 +237,8 @@ def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
         iva_category=IvaCategory("intra_community_supply"),
-        counterparty_identification_state=require_eu_member_state("ES"),
+    ).model_copy(
+        update={"counterparty_identification_state": require_eu_member_state("ES", authority=operation)},
     )
 
     with override_settings(cadrumo_output_language="hu"):
@@ -229,6 +247,7 @@ def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
             bucket_id=_BUCKET_ID,
             period=_Q2_2026,
             transactions=TransactionCatalogue.from_transactions((transaction,)),
+            operation=operation,
         )
     clear_output_language_cache()
 
@@ -241,7 +260,9 @@ def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
     assert not report.issues[0].detail.startswith("aggregation.")
 
 
-def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation() -> None:
+def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation(
+    operation: PinnedAuthorityOperation,
+) -> None:
     transaction = _transaction(
         "row-export-de",
         direction=TransactionDirection.INCOMING,
@@ -257,13 +278,14 @@ def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation() 
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((transaction,)),
+        operation=operation,
     )
 
     assert report.ready is False
     assert [issue.reason for issue in report.issues] == [
         LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
     ]
-    assert require_eu_member_state("DE").value in report.issues[0].detail
+    assert require_eu_member_state("DE", authority=operation).value in report.issues[0].detail
 
 
 class TestEveryMappedIvaReasonResolves:

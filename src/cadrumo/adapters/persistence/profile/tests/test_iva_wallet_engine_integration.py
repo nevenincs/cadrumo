@@ -14,6 +14,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     IvaWalletDecisionRepository,
 )
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
@@ -112,9 +113,9 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=loaded_decision,
             filing_period_date=date(2026, 6, 30),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:iva-wallet-engine-integration"
@@ -162,9 +163,9 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
                 binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
                 filing_period_date=date(2026, 6, 30),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+                ),
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-integration"
@@ -224,9 +225,9 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
                 backend_binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=report.decision,
                 filing_period_date=date(2026, 6, 30),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+                ),
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-integration"
@@ -263,9 +264,9 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
             },
             iva_compensation_decision=None,
             filing_period_date=date(2026, 3, 31),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=decided_1t_at,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit_1t.period, reference="test:iva-wallet-engine-integration"
@@ -285,9 +286,9 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
                 backend_binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
                 filing_period_date=date(2026, 6, 30),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+                ),
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit_2t.period, reference="test:iva-wallet-engine-integration"
@@ -312,9 +313,9 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=None,
             filing_period_date=date(2026, 6, 30),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit_2t.period, reference="test:iva-wallet-engine-integration"
@@ -386,9 +387,9 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=report.decision,
             filing_period_date=date(2026, 3, 31),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:iva-wallet-engine-integration"
@@ -418,9 +419,9 @@ def _calculate_credit_1t(
         backend_binding_values=_negative_modelo_303_engine_inputs(),
         iva_compensation_decision=None,
         filing_period_date=date(2026, 3, 31),
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        bucket_event_repository=event_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+        ),
         clock=_DECIDED_AT,
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period, reference="test:iva-wallet-engine-integration"
@@ -508,9 +509,9 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=None,
             filing_period_date=date(2026, 6, 30),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit_2t.period, reference="test:iva-wallet-engine-integration"
@@ -538,9 +539,9 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=None,
             filing_period_date=date(2026, 9, 30),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit_3t.period, reference="test:iva-wallet-engine-integration"

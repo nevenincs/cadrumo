@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -142,10 +143,12 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(tmp_p
 
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-            invoice_repository=InvoiceCatalogueRepository(objects=objects),
+            ports=calculation_ports_for_test(
+                calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+                invoice_repository=InvoiceCatalogueRepository(objects=objects),
+                transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+                work_unit_repository=wu_repo,
+            ),
             clock=_T1,
         )
 
@@ -192,10 +195,12 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_p
 
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-            invoice_repository=InvoiceCatalogueRepository(objects=objects),
+            ports=calculation_ports_for_test(
+                calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+                invoice_repository=InvoiceCatalogueRepository(objects=objects),
+                transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+                work_unit_repository=wu_repo,
+            ),
             clock=_T1,
         )
 
@@ -244,10 +249,12 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(tmp_path: Pat
 
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-            invoice_repository=InvoiceCatalogueRepository(objects=objects),
+            ports=calculation_ports_for_test(
+                calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+                invoice_repository=InvoiceCatalogueRepository(objects=objects),
+                transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+                work_unit_repository=wu_repo,
+            ),
             clock=_T1,
         )
 

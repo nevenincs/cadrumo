@@ -59,6 +59,7 @@ from cadrumo.domain.user_profile.values import (
     UserProfileFact,
     create_user_profile_record,
 )
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -203,19 +204,17 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
                 clock=_CLOCK,
             )
 
-            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                bucket_event_repository=ambient_event_repository,
-                transaction_repository=injected_transaction_repository,
-                clock=_CLOCK,
-            ).revision
+            with compiled_bundled_authority().operation() as operation:
+                revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                    work_unit.work_unit_id,
+                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator",
+                    casilla_inputs={},
+                    text_casilla_inputs={"tipo_renta": "general"},
+                    m210_official_tipo_renta_code="01",
+                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                    clock=_CLOCK,
+                ).revision
 
             assert revision.casilla_values["rendimientos_integros"] == Decimal("1234.56")
             assert revision.source_transaction_ids == (injected_id,)
@@ -352,106 +351,92 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             clock=_CLOCK,
         )
 
-        manual_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={"rendimientos_integros": Decimal("777.00")},
-            text_casilla_inputs={"tipo_renta": "general"},
-            m210_official_tipo_renta_code="01",
-            m210_gross_income_source_mode=M210GrossIncomeSourceMode.MANUAL,
-            detail_rows=(_annual_evidence_row(),),
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            bucket_event_repository=event_repository,
-            transaction_repository=transaction_repository,
-            clock=_CLOCK,
-        )
-        manual = manual_result.revision
-        with pytest.raises(ModeloAggregationBindingError):
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        with compiled_bundled_authority().operation() as operation:
+            manual_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
                 actor="operator",
                 casilla_inputs={"rendimientos_integros": Decimal("777.00")},
-                text_casilla_inputs={"tipo_renta": "pension"},
+                text_casilla_inputs={"tipo_renta": "general"},
                 m210_official_tipo_renta_code="01",
                 m210_gross_income_source_mode=M210GrossIncomeSourceMode.MANUAL,
                 detail_rows=(_annual_evidence_row(),),
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                bucket_event_repository=event_repository,
-                transaction_repository=transaction_repository,
                 clock=_CLOCK,
             )
+        manual = manual_result.revision
         with pytest.raises(ModeloAggregationBindingError):
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={"rendimientos_integros": Decimal("777.00")},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                detail_rows=(_annual_evidence_row(),),
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                bucket_event_repository=event_repository,
-                transaction_repository=transaction_repository,
-                clock=_CLOCK,
-            )
+            with compiled_bundled_authority().operation() as operation:
+                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                    work_unit.work_unit_id,
+                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator",
+                    casilla_inputs={"rendimientos_integros": Decimal("777.00")},
+                    text_casilla_inputs={"tipo_renta": "pension"},
+                    m210_official_tipo_renta_code="01",
+                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.MANUAL,
+                    detail_rows=(_annual_evidence_row(),),
+                    clock=_CLOCK,
+                )
         with pytest.raises(ModeloAggregationBindingError):
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            with compiled_bundled_authority().operation() as operation:
+                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                    work_unit.work_unit_id,
+                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator",
+                    casilla_inputs={"rendimientos_integros": Decimal("777.00")},
+                    text_casilla_inputs={"tipo_renta": "general"},
+                    m210_official_tipo_renta_code="01",
+                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                    detail_rows=(_annual_evidence_row(),),
+                    clock=_CLOCK,
+                )
+        with pytest.raises(ModeloAggregationBindingError):
+            with compiled_bundled_authority().operation() as operation:
+                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                    work_unit.work_unit_id,
+                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator",
+                    casilla_inputs={},
+                    text_casilla_inputs={"tipo_renta": "general"},
+                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                    clock=_CLOCK,
+                )
+        with pytest.raises(ModeloAggregationBindingError):
+            with compiled_bundled_authority().operation() as operation:
+                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                    work_unit.work_unit_id,
+                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator",
+                    casilla_inputs={},
+                    text_casilla_inputs={"tipo_renta": "pension"},
+                    m210_official_tipo_renta_code="01",
+                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                    clock=_CLOCK,
+                )
+        with pytest.raises(ModeloAggregationBindingError):
+            with compiled_bundled_authority().operation() as operation:
+                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                    work_unit.work_unit_id,
+                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator",
+                    casilla_inputs={},
+                    text_casilla_inputs={"tipo_renta": "general"},
+                    m210_official_tipo_renta_code="01",
+                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                    detail_rows=(_annual_evidence_row(),),
+                    clock=_CLOCK,
+                )
+        with compiled_bundled_authority().operation() as operation:
+            ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
                 actor="operator",
                 casilla_inputs={},
                 text_casilla_inputs={"tipo_renta": "general"},
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                bucket_event_repository=event_repository,
-                transaction_repository=transaction_repository,
-                clock=_CLOCK,
-            )
-        with pytest.raises(ModeloAggregationBindingError):
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                text_casilla_inputs={"tipo_renta": "pension"},
                 m210_official_tipo_renta_code="01",
                 m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                bucket_event_repository=event_repository,
-                transaction_repository=transaction_repository,
                 clock=_CLOCK,
-            )
-        with pytest.raises(ModeloAggregationBindingError):
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                text_casilla_inputs={"tipo_renta": "general"},
-                m210_official_tipo_renta_code="01",
-                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                detail_rows=(_annual_evidence_row(),),
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                bucket_event_repository=event_repository,
-                transaction_repository=transaction_repository,
-                clock=_CLOCK,
-            )
-        ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            text_casilla_inputs={"tipo_renta": "general"},
-            m210_official_tipo_renta_code="01",
-            m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            bucket_event_repository=event_repository,
-            transaction_repository=transaction_repository,
-            clock=_CLOCK,
-        ).revision
+            ).revision
         ledger_snapshot = compute_ledger_filing_snapshot(
             source_transaction_ids=ledger.source_transaction_ids,
             catalogue=transaction_repository.load(),
@@ -477,19 +462,17 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             repository=work_repository,
             clock=_CLOCK,
         )
-        ledger_code_35 = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            code_35_work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            text_casilla_inputs={"tipo_renta": "general"},
-            m210_official_tipo_renta_code="35",
-            m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            bucket_event_repository=event_repository,
-            transaction_repository=transaction_repository,
-            clock=_CLOCK,
-        ).revision
+        with compiled_bundled_authority().operation() as operation:
+            ledger_code_35 = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                code_35_work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator",
+                casilla_inputs={},
+                text_casilla_inputs={"tipo_renta": "general"},
+                m210_official_tipo_renta_code="35",
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                clock=_CLOCK,
+            ).revision
         # The verify half of this test moved to
         # test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income.
         # It cannot run here any more, and the two guards that make it
@@ -608,19 +591,17 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
             repository=work_repository,
             clock=_CLOCK,
         )
-        ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            text_casilla_inputs={"tipo_renta": "general"},
-            m210_official_tipo_renta_code="01",
-            m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            bucket_event_repository=event_repository,
-            transaction_repository=transaction_repository,
-            clock=_CLOCK,
-        ).revision
+        with compiled_bundled_authority().operation() as operation:
+            ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator",
+                casilla_inputs={},
+                text_casilla_inputs={"tipo_renta": "general"},
+                m210_official_tipo_renta_code="01",
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                clock=_CLOCK,
+            ).revision
 
         verification = verify_modelo_revision(
             ledger.calculation_revision_id,

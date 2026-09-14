@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import restore_manual_transaction, stash_manual_transaction
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
@@ -67,8 +68,9 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
             description="roundtrip restore row",
             idempotency_key="restore-roundtrip",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     stash_manual_transaction(
@@ -76,8 +78,11 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="parked",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
     restore_manual_transaction(

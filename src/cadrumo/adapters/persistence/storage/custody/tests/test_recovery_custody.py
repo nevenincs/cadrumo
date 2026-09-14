@@ -27,6 +27,9 @@ from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRe
 from cadrumo.adapters.persistence.storage.custody.records import ProfileCustodyEnvelope
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.recovery_key import RecoveryKey, generate_recovery_key
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.custody_ports import create_profile_custody_registration_material
@@ -57,6 +60,7 @@ class _EnrolledProfile:
     __slots__ = ("dek", "enrollment", "envelope", "profile_id", "root", "sentinel")
 
     def __init__(self, root: Path) -> None:
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         self.root = root
         self.profile_id = uuid4()
         self.dek = token_bytes(32)
@@ -80,7 +84,9 @@ class _EnrolledProfile:
             dek=self.dek,
             dek_epoch=dek_epoch,
         )
-        session = ProfileRecordSession.from_envelope(envelope=self.envelope, dek=self.dek)
+        session = ProfileRecordSession.from_envelope(
+            envelope=self.envelope, dek=self.dek, profile_decode_context=_profile_decode_context_for_test
+        )
         try:
             ProfileCapsuleLifecycle(root=root).create(
                 label=f"Recovery operator {self.profile_id}",
@@ -158,6 +164,7 @@ def test_export_import_prove_returns_exactly_the_profiles_key(
     tmp_path: Path,
 ) -> None:
     """The full artifact round trip hands back the same 32 bytes, and only those."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     target = tmp_path / "exports" / "recovery.json"
 
     receipt = enrolled.export(target)
@@ -176,6 +183,7 @@ def test_export_import_prove_returns_exactly_the_profiles_key(
         sentinel=enrolled.sentinel,
         database_bytes=enrolled.database_bytes,
         root=tmp_path / "restored",
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
     assert restored.profile_id == str(enrolled.profile_id)
@@ -223,6 +231,7 @@ def test_a_corrupted_artifact_is_refused_instead_of_yielding_key_material(
     establishes that a successful import is a real check on the bytes, not a
     parse that accepts whatever it finds.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     target = tmp_path / "exports" / "recovery.json"
     enrolled.export(target)
     intact = target.read_text(encoding="utf-8")
@@ -240,6 +249,7 @@ def test_a_corrupted_artifact_is_refused_instead_of_yielding_key_material(
             sentinel=enrolled.sentinel,
             database_bytes=enrolled.database_bytes,
             root=tmp_path / "refused",
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
 
@@ -262,6 +272,7 @@ def test_hostile_recovery_secret_has_one_exact_public_refusal_and_no_mutation(
     enrolled: _EnrolledProfile,
     tmp_path: Path,
 ) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     target = tmp_path / "exports" / f"{candidate_kind}.json"
     destination = tmp_path / f"{candidate_kind}-refused"
     enrolled.export(target)
@@ -281,6 +292,7 @@ def test_hostile_recovery_secret_has_one_exact_public_refusal_and_no_mutation(
             sentinel=enrolled.sentinel,
             database_bytes=enrolled.database_bytes,
             root=destination,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
     assert refused.value.context is None
@@ -320,6 +332,7 @@ def test_an_artifact_cannot_become_another_profiles_authority(
     authority onto a different UUID, because a capsule published that way
     would authenticate under an identity its own contents contradict.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     target = tmp_path / "exports" / "recovery.json"
     enrolled.export(target)
     other_id = uuid4()
@@ -340,6 +353,7 @@ def test_an_artifact_cannot_become_another_profiles_authority(
             sentinel=other.sentinel,
             database_bytes=enrolled.database_bytes,
             root=tmp_path / "wrong-identity",
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
 
@@ -421,6 +435,7 @@ def test_password_only_restore_publishes_the_capsule(
     tmp_path: Path,
 ) -> None:
     """The password alone republishes a capsule: no recovery material at all."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     restored = restore_profile_with_password(
         label="Recovered by password",
         password=_PASSWORD,
@@ -428,6 +443,7 @@ def test_password_only_restore_publishes_the_capsule(
         sentinel=enrolled.sentinel,
         database_bytes=enrolled.database_bytes,
         root=tmp_path / "password-restored",
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
     assert restored.profile_id == str(enrolled.profile_id)
@@ -441,6 +457,7 @@ def test_password_only_restore_refuses_the_wrong_password(
     candidate: str,
 ) -> None:
     """The password proof is a real unwrap, so a wrong one publishes nothing."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     destination = tmp_path / "refused-restore"
 
     with pytest.raises(ProfileAuthenticationRefusedError) as refused:
@@ -451,6 +468,7 @@ def test_password_only_restore_refuses_the_wrong_password(
             sentinel=enrolled.sentinel,
             database_bytes=enrolled.database_bytes,
             root=destination,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
     assert not (destination / "buckets" / str(enrolled.profile_id)).exists()
@@ -478,8 +496,11 @@ def test_restore_refuses_a_database_key_the_committed_sentinel_does_not_commit_t
     divergence is constructed rather than simulated: the source capsule below
     is genuinely created under the divergent key.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     divergent_dek = token_bytes(32)
-    divergent_session = ProfileRecordSession.from_envelope(envelope=enrolled.envelope, dek=divergent_dek)
+    divergent_session = ProfileRecordSession.from_envelope(
+        envelope=enrolled.envelope, dek=divergent_dek, profile_decode_context=_profile_decode_context_for_test
+    )
     source_root = tmp_path / "divergent-source"
     target_root = tmp_path / "divergent-target"
     try:
@@ -519,6 +540,7 @@ def test_restore_refuses_a_sentinel_from_a_different_profile(
     tmp_path: Path,
 ) -> None:
     """A sentinel and an envelope naming different profiles cannot be combined."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     other_id = UUID("6f3c0b4d-2f5a-4a6a-9c1f-0d2c5e7a8b90")
     other_envelope = create_profile_custody_registration_material(
         profile_id=other_id,
@@ -529,7 +551,9 @@ def test_restore_refuses_a_sentinel_from_a_different_profile(
     ).envelope
     assert isinstance(other_envelope, ProfileCustodyEnvelope)
     foreign_sentinel = create_profile_custody_sentinel(envelope=other_envelope, dek=enrolled.dek)
-    session = ProfileRecordSession.from_envelope(envelope=enrolled.envelope, dek=enrolled.dek)
+    session = ProfileRecordSession.from_envelope(
+        envelope=enrolled.envelope, dek=enrolled.dek, profile_decode_context=_profile_decode_context_for_test
+    )
     try:
         with pytest.raises(ValueError, match="must bind one UUID"):
             ProfileCapsuleLifecycle(root=tmp_path / "foreign-sentinel").restore(
@@ -558,6 +582,7 @@ def test_recovery_artifact_restore_publishes_a_capsule_whose_records_are_readabl
     record is decrypted out of the restored capsule, through a session built
     from the key the ARTIFACT proved, and compared to what was stored.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     artifact = tmp_path / "exports" / "recovery.artifact.json"
     enrolled.export(artifact)
     destination = tmp_path / "artifact-restored"
@@ -570,12 +595,15 @@ def test_recovery_artifact_restore_publishes_a_capsule_whose_records_are_readabl
         sentinel=enrolled.sentinel,
         database_bytes=enrolled.database_bytes,
         root=destination,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
     assert restored.profile_id == str(enrolled.profile_id)
     assert restored.publication_kind == "restore"
 
-    session = ProfileRecordSession.from_envelope(envelope=enrolled.envelope, dek=enrolled.dek)
+    session = ProfileRecordSession.from_envelope(
+        envelope=enrolled.envelope, dek=enrolled.dek, profile_decode_context=_profile_decode_context_for_test
+    )
     try:
         recovered = ProfileRecordStore(session=session, root=destination).load().record
     finally:
@@ -598,6 +626,7 @@ def test_recovery_artifact_restore_does_not_hand_back_password_access(
     door, which is a different capability with a different authorisation --
     so this pins the boundary rather than describing it in a docstring.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     artifact = tmp_path / "exports" / "no-password-reset.artifact.json"
     enrolled.export(artifact)
     destination = tmp_path / "artifact-restored-envelope"
@@ -610,6 +639,7 @@ def test_recovery_artifact_restore_does_not_hand_back_password_access(
         sentinel=enrolled.sentinel,
         database_bytes=enrolled.database_bytes,
         root=destination,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
     republished = (destination / "buckets" / str(enrolled.profile_id) / "custody" / "envelope.v1.json").read_bytes()
@@ -627,6 +657,7 @@ def test_a_wrong_mnemonic_restores_nothing_through_the_artifact_door(
     sufficient, so a real artifact presented with a different real mnemonic
     must publish nothing at all.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     artifact = tmp_path / "exports" / "wrong-secret.artifact.json"
     enrolled.export(artifact)
     destination = tmp_path / "artifact-refused"
@@ -642,6 +673,7 @@ def test_a_wrong_mnemonic_restores_nothing_through_the_artifact_door(
                 sentinel=enrolled.sentinel,
                 database_bytes=enrolled.database_bytes,
                 root=destination,
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
     assert refused.value.context is None

@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
@@ -57,8 +58,9 @@ def _seed_transaction_and_invoice(
             description="material oficina",
             idempotency_key=idempotency_key,
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     return transaction_repository, event_repository, invoice_repository, purchase_evidence, created
@@ -80,9 +82,11 @@ def test_attach_manual_transaction_evidence_attaches_and_emits_event(
         transaction_id=created.ref.transaction_id,
         purchase_invoice_evidence_id=purchase_evidence.invoice_id,
         actor="operator-B",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        invoice_repository=invoice_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+            transaction_repository=transaction_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -125,9 +129,11 @@ def test_update_manual_transaction_refuses_direct_evidence_change(
                 source_command="aeat app ledger update",
                 idempotency_key="direct-evidence-refused",
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
+            ports=ledger_ports_for_test(
+                bucket_event_repository=event_repository,
+                invoice_repository=invoice_repository,
+                transaction_repository=transaction_repository,
+            ),
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -158,8 +164,9 @@ def test_update_manual_transaction_fields_refuses_evidence_patch(
             patch=ManualLedgerTransactionPatch(purchase_invoice_evidence_id=purchase_evidence.invoice_id),
             actor="operator-B",
             source_command="aeat app ledger update",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_event_repository=event_repository, transaction_repository=transaction_repository
+            ),
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -186,9 +193,11 @@ def test_generic_field_edit_preserves_existing_evidence(
         transaction_id=created.ref.transaction_id,
         purchase_invoice_evidence_id=purchase_evidence.invoice_id,
         actor="operator-B",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        invoice_repository=invoice_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+            transaction_repository=transaction_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -198,8 +207,9 @@ def test_generic_field_edit_preserves_existing_evidence(
         patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS),
         actor="operator-B",
         source_command="aeat app ledger classify",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
         occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
     )
 
@@ -238,9 +248,11 @@ def test_invoice_linkage_does_not_mutate_evidence(
         transaction_id=created.ref.transaction_id,
         purchase_invoice_evidence_id=purchase_evidence.invoice_id,
         actor="operator-B",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        invoice_repository=invoice_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+            transaction_repository=transaction_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
     events_before = [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)]
@@ -285,8 +297,9 @@ def test_failed_attach_leaves_transaction_and_history_unchanged(
             description="material oficina",
             idempotency_key="failed-attach-unchanged",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -296,8 +309,9 @@ def test_failed_attach_leaves_transaction_and_history_unchanged(
             transaction_id=created.ref.transaction_id,
             purchase_invoice_evidence_id="deadbeefdeadbeef",
             actor="operator-B",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_event_repository=event_repository, transaction_repository=transaction_repository
+            ),
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -324,8 +338,9 @@ def test_failed_invoice_link_leaves_transaction_and_history_unchanged(
             description="material oficina",
             idempotency_key="failed-link-unchanged",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 

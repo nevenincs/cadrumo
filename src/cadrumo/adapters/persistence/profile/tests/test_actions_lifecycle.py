@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import archive_manual_transaction, stash_manual_transaction
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
@@ -33,8 +34,9 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
             description="wrong account import",
             idempotency_key="archive-row",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -43,8 +45,11 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="wrong account import",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -76,8 +81,9 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
             description="hold for later classification",
             idempotency_key="stash-row",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -86,8 +92,11 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="needs supporting statement",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 

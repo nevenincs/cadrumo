@@ -48,6 +48,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -57,6 +58,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -89,6 +91,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -98,6 +101,24 @@ _YEAR = 2024
 _PRIOR_YEAR = _YEAR - 1
 _T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC)
+
+
+def _build_catalogue_invoice(**kwargs: Any) -> Any:
+    kwargs.setdefault("rate_provider", build_catalogue_creation_ports(bucket_id=_BUCKET_ID).rate_provider)
+    return build_catalogue_invoice(**kwargs)
+
+
+def _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(work_unit_id: str, **kwargs: Any) -> Any:
+    repository = kwargs.pop("work_unit_repository", None)
+    for key in ("calculation_repository", "transaction_repository", "invoice_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            **kwargs,
+        )
+
 
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
 _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
@@ -188,6 +209,8 @@ def _seed_taxpayer_profile() -> None:
     """Seed the one taxpayer profile both M303 and M100/M130 bindings read."""
     seed_test_profile_record(
         UserProfileRecord(
+            schema_id="cadrumo.user_profile",
+            schema_version=compiled_bundled_authority().profile_schema().version,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -277,7 +300,7 @@ def _persist_invoice_life(secure_objects: SecureObjectRepository) -> None:
     transactions = TransactionCatalogue()
     for period in _QUARTER_ORDER:
         base = _QUARTER_INVOICE_BASE[period]
-        invoice = build_catalogue_invoice(
+        invoice = _build_catalogue_invoice(
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Cliente SA",
@@ -381,7 +404,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
     )
     decision = _wallet_decision(period=period)
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
-    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    revision = _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=dict(_M303_MANUAL_RESULTADO_CASILLA_ZEROS),
         binding_values={
@@ -435,7 +458,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
         ),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values={},
         work_unit_repository=wu_repo,
@@ -463,7 +486,7 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
         ),
         clock=_T0,
     )
-    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    revision = _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=_M130_MANUAL_INPUTS,
         work_unit_repository=wu_repo,
@@ -522,7 +545,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
         ),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values=_m100_non_relation_zero_bindings(secure_objects),
         work_unit_repository=wu_repo,

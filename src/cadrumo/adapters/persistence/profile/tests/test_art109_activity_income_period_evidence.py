@@ -12,6 +12,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -250,9 +251,9 @@ def _calculate_m130_draft(objects: SecureObjectRepository) -> CalculationRevisio
             "irpf.previous_year_economic_activity_net_income": Decimal("20000.00"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0.00"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T1,
     )
     return revision

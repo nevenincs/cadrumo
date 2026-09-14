@@ -9,6 +9,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
@@ -38,8 +39,9 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
             description="modelo source row",
             idempotency_key="update-blocked",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
@@ -55,10 +57,12 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
                 description="mutated modelo source row",
                 idempotency_key="update-blocked",
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+            ports=ledger_ports_for_test(
+                bucket_event_repository=event_repository,
+                calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+                transaction_repository=transaction_repository,
+                work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+            ),
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
 
@@ -82,8 +86,9 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
             description="telefono movil",
             idempotency_key="usage-ratio-update",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
@@ -102,8 +107,9 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
                 category_id=category.value,
                 usage_ratio_id=category.value,
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_event_repository=event_repository, transaction_repository=transaction_repository
+            ),
             usage_ratio_profile=profile,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
@@ -125,8 +131,9 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
             description="same row",
             idempotency_key="same-row",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -141,7 +148,8 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
                 description="same row",
                 idempotency_key="same-row",
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_event_repository=event_repository, transaction_repository=transaction_repository
+            ),
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )

@@ -29,12 +29,15 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
 from cadrumo.application.modelo.semantic_role_resolution import casilla_id_for_unique_semantic_role
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.core.rescate_type import RescateType
 
@@ -75,6 +78,10 @@ def _create_m100_work_unit() -> tuple[str, str]:
         period=period,
         revision_id=snapshot.revision.id,
         clock=datetime(2026, 6, 30, 12, 0, tzinfo=UTC),
+        ports=WorkLifecyclePorts(
+            work_unit_repository=WorkUnitCatalogueRepository(),
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
     )
     return work_unit.work_unit_id, reduccion_casilla_id
 

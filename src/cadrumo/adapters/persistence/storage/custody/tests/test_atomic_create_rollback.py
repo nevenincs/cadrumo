@@ -31,6 +31,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import list_current_profile_custody_capsule_ids
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import profile_storage_root_fixture
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
@@ -68,11 +71,14 @@ _PASSPHRASE = "atomic-create-rollback-operator-secret"  # noqa: S105 - synthetic
 
 def _register(label: str, *, facts: Mapping[str, str]) -> None:
     """Run the real create door for ``label`` against ``facts``."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_PASSPHRASE,
         facts=tuple(UserProfileFact(path=path, value=value) for path, value in facts.items()),
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
 

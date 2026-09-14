@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     T2,
     T3,
     Repos,
+    calculation_ports_for_test,
     registry_required_manual_casillas,
     seed_modelo_180_work_unit,
     workflow_profile,
@@ -58,9 +59,9 @@ def _seed_nongranting_revision(repos: Repos):
         casilla_inputs=supplied,
         binding_values=DEFAULT_180_BINDING_VALUES,
         relation_values=DEFAULT_180_RELATION_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     seed_clean_cross_period_sources(

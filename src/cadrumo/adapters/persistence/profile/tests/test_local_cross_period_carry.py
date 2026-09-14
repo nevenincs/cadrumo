@@ -57,6 +57,7 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     _file_revision,
     _Repos,
     _verify_revision,
+    calculation_ports_for_test,
 )
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -164,7 +165,7 @@ def _seed_130(repos_: _Repos, *, period: str, clock: datetime):
         filing_year=2026,
         period=Period.from_year_and_code(2026, period),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=clock,
     )
 
@@ -182,9 +183,9 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
         work_unit.work_unit_id,
         casilla_inputs=_NEGATIVE_1T_INPUTS,
         binding_values=_DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T1,
     )
     saldo = Decimal(revision.casilla_values[_M130_SALDO_NEGATIVO_CASILLA])
@@ -330,9 +331,9 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
         work_unit_2t.work_unit_id,
         casilla_inputs=_2T_INPUTS_WITHOUT_15,
         binding_values=_DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T4,
     )
 
@@ -354,9 +355,9 @@ def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(repo
         work_unit_2t.work_unit_id,
         casilla_inputs=_2T_INPUTS_WITHOUT_15,
         binding_values={},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T4,
     )
 
@@ -420,9 +421,9 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
         work_unit_2t.work_unit_id,
         casilla_inputs=_2T_INPUTS_WITHOUT_15,
         binding_values=_DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T4,
     ).revision
     # The 2T cross-period state is deliberately UNCLEAN (the only upstream 1T
@@ -489,9 +490,9 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
         work_unit_2t.work_unit_id,
         casilla_inputs=_2T_INPUTS_WITHOUT_15,
         binding_values={**_DEFAULT_130_BINDING_VALUES, _CARRY_BINDING_ID: override_value},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T4,
     )
 
@@ -523,7 +524,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
         revision_id="2026-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=_T4,
     )
     _persist_prior_303(CalculationObservationRepository())
@@ -589,7 +590,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
         revision_id="2026-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=_T4,
     )
     _persist_prior_303(CalculationObservationRepository())
@@ -598,8 +599,9 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     resolution = resolve_bucket_source_mesh(
         snapshot,
         work_unit_303,
-        transaction_repository=None,
-        invoice_repository=None,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()
+        ),
         foreign_asset_observations=(),
         foreign_asset_row_observations=(),
     )
@@ -644,9 +646,9 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
     with pytest.raises(ModeloIvaWalletReconciliationBlocked):
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
             clock=_T1,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:m303-local-cross-period-carry"
@@ -670,9 +672,9 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T1,
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period, reference="test:m303-local-cross-period-carry"
@@ -752,9 +754,9 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as blocked:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
             clock=_T1,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:m303-local-cross-period-carry"
@@ -835,9 +837,9 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
         work_unit_2t.work_unit_id,
         casilla_inputs=_2T_INPUTS_WITHOUT_15,
         binding_values=_DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T4,
     )
 

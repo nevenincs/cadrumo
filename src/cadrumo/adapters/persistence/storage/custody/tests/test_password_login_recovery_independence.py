@@ -8,6 +8,9 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import profile_custody_recovery_envelope_path
 from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
@@ -24,11 +27,14 @@ _PASSWORD = "recovery-independent-password-login-secret"  # noqa: S105 - synthet
 @pytest.mark.parametrize("recovery_state", ["missing", "damaged"])
 def test_password_login_ignores_missing_or_damaged_recovery(tmp_path: Path, recovery_state: str) -> None:
     """Recovery loss reduces disaster recovery only; the password still logs in."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=f"Recovery independent {recovery_state}",
             passphrase=_PASSWORD,
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         material = load_committed_profile_password_material(UUID(outcome.profile_id))
         wrapper = profile_custody_recovery_envelope_path(material.capsule_path)
@@ -37,7 +43,11 @@ def test_password_login_ignores_missing_or_damaged_recovery(tmp_path: Path, reco
         else:
             wrapper.write_bytes(b"not-a-recovery-envelope")
 
-        authenticated = login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
+        authenticated = login_profile(
+            name=outcome.profile_id,
+            passphrase_callback=lambda: _PASSWORD,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         try:
             assert authenticated.bucket_id == outcome.profile_id
         finally:

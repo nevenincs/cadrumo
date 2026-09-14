@@ -55,6 +55,7 @@ from ...application.auth.providers import select_provider
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window
@@ -175,6 +176,7 @@ class _RevisionDraftBuilder:
         clock: datetime,
         draft_review_ports: DraftReviewPorts,
         draft_repository: WorkflowGateDraftRepositoryProtocol,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         self._revision = revision
         self._work_unit = work_unit
@@ -182,10 +184,12 @@ class _RevisionDraftBuilder:
         self._clock = clock
         self._draft_review_ports = draft_review_ports
         self._draft_repository = draft_repository
+        self._operation = operation
         self._schema_provider = build_runtime_schema_provider(
             filing_year=work_unit.filing_year,
             period=work_unit.period,
             modelos=(work_unit.modelo,),
+            operation=operation,
         )
 
     def _drafts(self) -> WorkflowGateDraftRepositoryProtocol:
@@ -246,6 +250,7 @@ class _RevisionDraftBuilder:
             approved_by=self._actor,
             schema_provider=self._schema_provider,
             ports=self._draft_review_ports,
+            operation=self._operation,
             approved_at=self._clock,
         )
         self._drafts().save(approved)
@@ -312,6 +317,7 @@ def build_revision_workflow_engine(
     settings: Settings | None,
     draft_review_ports: DraftReviewPorts,
     workflow_gate_ports: WorkflowGatePorts,
+    operation: PinnedAuthorityOperation,
 ) -> WorkflowEngine:
     """Build and return a :class:`WorkflowEngine` configured for one calculation revision.
 
@@ -345,6 +351,7 @@ def build_revision_workflow_engine(
             the transient filing draft.
         workflow_gate_ports: Required application-owned draft persistence and
             submission-history capabilities.
+        operation: Caller-owned generation-pinned indexed authority operation.
     """
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
@@ -369,6 +376,7 @@ def build_revision_workflow_engine(
             clock=clock,
             draft_review_ports=draft_review_ports,
             draft_repository=workflow_gate_ports.draft_repository,
+            operation=operation,
         ),
         submission_engine=submission_engine,
         session=None,

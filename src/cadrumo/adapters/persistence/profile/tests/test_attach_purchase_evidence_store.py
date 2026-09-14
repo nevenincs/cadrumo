@@ -18,6 +18,7 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -37,9 +38,51 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, Ma
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .ledger_action_create_support import ledger_ports_for_test
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "31313131-3131-4131-8131-313131313131"
+
+
+def _create_manual_transaction(command: Any, **kwargs: Any) -> Any:
+    transaction_repository = kwargs.pop("transaction_repository")
+    bucket_event_repository = kwargs.pop("bucket_event_repository")
+    return create_manual_transaction(
+        command,
+        ports=ledger_ports_for_test(
+            bucket_id=command.bucket_id,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=bucket_event_repository,
+        ),
+        **kwargs,
+    )
+
+
+def _attach_manual_transaction_evidence(**kwargs: Any) -> Any:
+    transaction_repository = kwargs.pop("transaction_repository")
+    bucket_event_repository = kwargs.pop("bucket_event_repository")
+    return attach_manual_transaction_evidence(
+        ports=ledger_ports_for_test(
+            bucket_id=kwargs["bucket_id"],
+            transaction_repository=transaction_repository,
+            bucket_event_repository=bucket_event_repository,
+        ),
+        **kwargs,
+    )
+
+
+def _update_manual_transaction_fields(**kwargs: Any) -> Any:
+    transaction_repository = kwargs.pop("transaction_repository")
+    bucket_event_repository = kwargs.pop("bucket_event_repository")
+    return update_manual_transaction_fields(
+        ports=ledger_ports_for_test(
+            bucket_id=kwargs["bucket_id"],
+            transaction_repository=transaction_repository,
+            bucket_event_repository=bucket_event_repository,
+        ),
+        **kwargs,
+    )
 
 
 @pytest.fixture
@@ -69,7 +112,7 @@ def _create_outgoing_business_transaction(
     idempotency_key: str,
     purchase_invoice_evidence_id: str | None = None,
 ) -> str:
-    result = create_manual_transaction(
+    result = _create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=_BUCKET,
             booked_date=date(2026, 5, 1),
@@ -93,7 +136,7 @@ def test_evidence_add_id_is_accepted_by_attach_and_persisted(
     evidence_id = _mint_evidence_id(profile, pdf_file)
     transaction_id = _create_outgoing_business_transaction(profile, idempotency_key="attach-evidence-add")
 
-    attached = attach_manual_transaction_evidence(
+    attached = _attach_manual_transaction_evidence(
         bucket_id=_BUCKET,
         transaction_id=transaction_id,
         purchase_invoice_evidence_id=evidence_id,
@@ -133,7 +176,7 @@ def test_generic_update_patch_refuses_evidence_field(profile: TestRuntimeProfile
     transaction_id = _create_outgoing_business_transaction(profile, idempotency_key="update-evidence-add")
 
     with pytest.raises(TransactionValidationError) as exc_info:
-        update_manual_transaction_fields(
+        _update_manual_transaction_fields(
             bucket_id=_BUCKET,
             transaction_id=transaction_id,
             patch=ManualLedgerTransactionPatch(purchase_invoice_evidence_id=evidence_id),
@@ -154,7 +197,7 @@ def test_nonexistent_evidence_id_is_refused_with_instructive_message(profile: Te
     transaction_id = _create_outgoing_business_transaction(profile, idempotency_key="attach-unknown")
 
     with pytest.raises(TransactionValidationError) as exc_info:
-        attach_manual_transaction_evidence(
+        _attach_manual_transaction_evidence(
             bucket_id=_BUCKET,
             transaction_id=transaction_id,
             purchase_invoice_evidence_id="deadbeef00000000",
@@ -188,7 +231,7 @@ def test_invoice_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
     transaction_id = _create_outgoing_business_transaction(profile, idempotency_key="attach-slim-invoice")
 
     with pytest.raises(TransactionValidationError) as exc_info:
-        attach_manual_transaction_evidence(
+        _attach_manual_transaction_evidence(
             bucket_id=_BUCKET,
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=invoice_id,

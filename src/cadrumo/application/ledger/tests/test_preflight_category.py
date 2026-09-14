@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
@@ -15,7 +16,9 @@ from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _raw_transaction, _tr
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_preflight_does_not_flag_missing_category_on_income_transaction() -> None:
+def test_preflight_does_not_flag_missing_category_on_income_transaction(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Income direction does not require the deductible-expense category key."""
     income = _transaction(
         "row-income",
@@ -31,6 +34,7 @@ def test_preflight_does_not_flag_missing_category_on_income_transaction() -> Non
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income,)),
+        operation=operation,
     )
 
     assert report.checked_transaction_count == 1
@@ -38,7 +42,9 @@ def test_preflight_does_not_flag_missing_category_on_income_transaction() -> Non
     assert report.ready is True
 
 
-def test_preflight_still_flags_missing_category_on_expense_transaction() -> None:
+def test_preflight_still_flags_missing_category_on_expense_transaction(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Expense direction still requires the deductible-expense category key."""
     expense = _transaction(
         "row-expense",
@@ -51,12 +57,15 @@ def test_preflight_still_flags_missing_category_on_expense_transaction() -> None
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((expense,)),
+        operation=operation,
     )
 
     assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}
 
 
-def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidence() -> None:
+def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidence(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Purchase-evidence income is an expense refund, so it needs a category."""
     refund = Transaction.model_validate(
         {
@@ -82,6 +91,7 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((refund,)),
+        operation=operation,
     )
 
     assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}

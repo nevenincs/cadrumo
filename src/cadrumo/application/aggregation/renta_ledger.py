@@ -44,6 +44,7 @@ from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_exe
 from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.categories.profile import CategoryProfile
+from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.errors import ForalRegimeError, TaxResidenceProfileError
@@ -66,7 +67,6 @@ from ...domain.renta.ledger_expenses import (
     resolve_region_category_profiles,
     select_deductibility_profile,
 )
-from ...domain.resources.registry import resources
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -587,7 +587,7 @@ def aggregate_renta_ledger_expenses(
             )
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.filing_year
-    profiles = resources().category_profiles.get(resolved_profile_year)
+    profiles = resolve_category_profiles(resolved_profile_year, operation=operation)
     region_overrides = (
         region_category_overrides
         if region_category_overrides is not None

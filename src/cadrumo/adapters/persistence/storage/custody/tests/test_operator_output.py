@@ -28,6 +28,9 @@ from cadrumo.adapters.persistence.storage.custody.records import (
     ProfileCustodyWrappedDek,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operator_output.emit import emit_operator_json_success
@@ -47,6 +50,7 @@ _DEK = bytes(range(32))
 
 def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None:
     """Create and select the real committed capsule that owns the label projection."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     profile_id = UUID(bucket_id)
     envelope = ProfileCustodyEnvelope.create(
         profile_id=profile_id,
@@ -67,7 +71,9 @@ def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None
             tag_b64=b64encode(b"t" * 16).decode("ascii"),
         ),
     )
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_DEK)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
     lifecycle = ProfileCapsuleLifecycle(root=root)
     try:
         lifecycle.create(

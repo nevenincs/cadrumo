@@ -5,10 +5,15 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
@@ -41,6 +46,7 @@ from cadrumo.application.modelo.iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision,
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -48,12 +54,48 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _reconcile_modelo_303_iva_compensation(snapshot: Any, **kwargs: Any) -> Any:
+    kwargs.setdefault("decision_repository", IvaWalletDecisionRepository())
+    with compiled_bundled_authority().operation() as operation:
+        return reconcile_modelo_303_iva_compensation(snapshot, operation=operation, **kwargs)
+
+
+def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
+    repository = kwargs.pop("work_unit_repository", None)
+    for key in ("calculation_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return calculate_modelo_revision(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            **kwargs,
+        )
+
+
+def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+    for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return verify_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            operation=operation,
+            **kwargs,
+        )
+
+
+def _require_persisted_iva_compensation_decision_matches_revision(work_unit: Any, revision: Any, **kwargs: Any) -> Any:
+    kwargs.setdefault("repository", IvaWalletDecisionRepository())
+    return require_persisted_iva_compensation_decision_matches_revision(work_unit, revision, **kwargs)
+
+
 def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tmp_path: Path) -> None:
     taxpayer_nif = "12345678Z"
     with _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = _snapshot_303(period="1T")
-        report = reconcile_modelo_303_iva_compensation(
+        report = _reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=taxpayer_nif,
             wallet=None,
@@ -71,7 +113,7 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
         assert {source.source_kind for source in report.decision.authority_sources} == {"local_recurrence"}
 
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-        revision = calculate_modelo_revision(
+        revision = _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs={},
@@ -90,10 +132,10 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("0")
         assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0.00")
         assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("0.00")
-        decision = require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
+        decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
         assert decision is not None
         assert decision.divergence == "first_period_zero"
-        verification = verify_modelo_revision(
+        verification = _verify_modelo_revision(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -115,7 +157,7 @@ def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(tmp_path:
         work_unit, revision = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("1200.00"))
 
         with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-            require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
+            _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
 
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
 
@@ -127,7 +169,7 @@ def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(tmp_pat
         work_unit, revision = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("1200.00"))
 
         with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-            require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
+            _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_blocked"
         assert exc_info.value.context is not None
         assert exc_info.value.context["divergence"] == "authority_amount_mismatch"
@@ -139,7 +181,7 @@ def test_modelo_303_lifecycle_gate_accepts_matching_wallet_authority(tmp_path: P
         _save_wallet_gate_decision(amount=Decimal("1200.00"))
         work_unit, revision = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("1200.00"))
 
-        decision = require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
+        decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
 
         assert decision is not None
         assert decision.selected_authority == "aeat_wallet"
@@ -149,7 +191,7 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
     with _secure_backend(tmp_path):
         _store_operator_profile()
         snapshot = _snapshot_303()
-        report = reconcile_modelo_303_iva_compensation(
+        report = _reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
             wallet=_wallet_observation(pending=Decimal("1200.00")),
@@ -165,7 +207,7 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
         assert {source.source_kind for source in report.decision.authority_sources} == {"aeat_wallet"}
 
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-        revision = calculate_modelo_revision(
+        revision = _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs={},
@@ -186,6 +228,6 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
         assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("1000.00")
         assert revision.casilla_values[_M303_POSTERIOR_CASILLA] == Decimal("200.00")
         assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("0.00")
-        decision = require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
+        decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
         assert decision is not None
         assert decision.divergence == "wallet_only"

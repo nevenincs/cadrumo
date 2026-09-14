@@ -67,6 +67,7 @@ from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -187,11 +188,13 @@ def _calculate_estatal_minimo() -> Decimal:
         revision_id=snapshot.revision.id,
         clock=_T0,
     )
-    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values=_non_mesh_zero_bindings(),
-        clock=_T0,
-    ).revision
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET, operation=operation),
+            binding_values=_non_mesh_zero_bindings(),
+            clock=_T0,
+        ).revision
     return Decimal(
         revision.casilla_values[
             validated_casilla_id(_ESTATAL_CASILLA, surface="test_derived_aggregate_override_real_path.casilla")

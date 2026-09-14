@@ -22,7 +22,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.ratios import (
@@ -31,6 +31,7 @@ from cadrumo.application.ledger.ratios import (
     eligible_ratio_categories,
 )
 from cadrumo.application.ledger.usage_ratio_repository import load_usage_ratio_profile
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
 from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
@@ -53,16 +54,17 @@ def _eligible_category() -> SpendingCategory:
         rows = eligible_ratio_categories(
             load_usage_ratio_profile(bucket_id=_BUCKET, operation=operation),
             year=_YEAR,
+            operation=operation,
         )
     return rows[0].category
 
 
 @contextmanager
 def _profile() -> Iterator[PinnedAuthorityOperation]:
-    """Real encrypted storage: the write, the lock and the event all need it."""
-    authority = compiled_bundled_authority()
+    """Inject canonical facts through one pin while retaining encrypted storage."""
+    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
     reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()}
     )
     operation = PinnedAuthorityOperation(reader, reader.pin())
     with (

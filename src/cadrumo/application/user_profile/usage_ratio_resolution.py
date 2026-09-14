@@ -80,10 +80,14 @@ def resolve_effective_usage_ratios(
         stored nothing and declared no dwelling m².
     """
     stored = dict(usage_ratio_profile_loader(bucket_id=bucket_id, operation=operation).ratios)
-    raw_afectacion_ratio = bound_raw_afectacion_ratio_for_bucket(bucket_id)
+    raw_afectacion_ratio = bound_raw_afectacion_ratio_for_bucket(bucket_id, operation=operation)
     if raw_afectacion_ratio is None:
         return stored
-    derived = derive_home_office_ratios_from_censo(raw_afectacion_ratio, year=year).ratios
+    derived = derive_home_office_ratios_from_censo(
+        raw_afectacion_ratio,
+        year=year,
+        operation=operation,
+    ).ratios
     # Stored last: an operator override wins over the derivation, and the censo guard
     # separately holds the two to agreement, so this ordering never silently replaces
     # a deliberate value with a computed one.

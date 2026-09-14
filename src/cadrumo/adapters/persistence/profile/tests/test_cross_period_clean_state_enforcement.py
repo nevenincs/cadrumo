@@ -10,11 +10,14 @@ from typing import TYPE_CHECKING
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 
@@ -244,6 +247,10 @@ def _seed_verified_revision(
         period=work_period,
         revision_id=snapshot.revision.id,
         clock=_CLOCK,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=WorkUnitCatalogueRepository(),
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
     )
     filing_instance_evidence = (
         general_m303_filing_evidence(work_period, reference="test:cross-period-clean-state:m303")
@@ -328,6 +335,10 @@ def _seed_draft_revision(
         period=work_period,
         revision_id=snapshot.revision.id,
         clock=_CLOCK,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=WorkUnitCatalogueRepository(),
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
     )
     filing_instance_evidence = (
         general_m303_filing_evidence(work_period, reference="test:cross-period-clean-state:m303")
@@ -543,6 +554,10 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
             period=Period.from_year_and_code(2025, "0A"),
             revision_id=snapshot.revision.id,
             clock=_CLOCK,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=WorkUnitCatalogueRepository(),
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
         )
         revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
@@ -628,6 +643,10 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                 period=Period.from_year_and_code(filing_year, period),
                 revision_id=source_snapshot.revision.id,
                 clock=_CLOCK,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=WorkUnitCatalogueRepository(),
+                    bucket_event_repository=BucketEventHistoryRepository(),
+                ),
             )
             casilla_values = {
                 casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casilla_ids))

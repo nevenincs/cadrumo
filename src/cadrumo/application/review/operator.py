@@ -19,6 +19,7 @@ from ...core.i18n.render import tr
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import LegalRefId
 from ..filing.draft_review import describe_stale_reason
 from ..filing.draft_review_ports import DraftReviewPorts
@@ -126,15 +127,17 @@ def project_review_queue(
     bucket_id = _active_bucket_id()
     from ...core.config import load_settings as _load_settings
 
-    items = ReviewQueue.collect(
-        settings or _load_settings(),
-        bucket_id=bucket_id,
-        ports=ports,
-        kinds=selected,
-        state=state,
-        modelo=modelo,
-        confidence_below=confidence_below,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        items = ReviewQueue.collect(
+            settings or _load_settings(),
+            bucket_id=bucket_id,
+            ports=ports,
+            operation=operation,
+            kinds=selected,
+            state=state,
+            modelo=modelo,
+            confidence_below=confidence_below,
+        )
     accepted_kinds = frozenset(kind.strip() for kind in kinds if kind.strip())
     accepted_source_kinds = frozenset(kind.strip() for kind in source_kinds if kind.strip())
     rows = tuple(

@@ -11,6 +11,7 @@ from decimal import Decimal
 
 from ...core.config import Settings
 from ...core.logging import get_logger
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..filing.draft_review_ports import DraftReviewPorts
 from .enums import ReviewItemKind, ReviewState, severity_rank
 from .models import ReviewItem
@@ -29,6 +30,7 @@ def _source_review_items(
     *,
     bucket_id: str,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
     confidence_below: Decimal | None,
 ) -> list[ReviewItem]:
     """Collect the source-owned items before queue-level filters are applied."""
@@ -39,7 +41,7 @@ def _source_review_items(
     return [
         *transactions_pending(ports=ports),
         *invoices_pending(ports=ports),
-        *drafts_pending(settings, bucket_id=bucket_id, ports=ports),
+        *drafts_pending(settings, bucket_id=bucket_id, ports=ports, operation=operation),
     ]
 
 
@@ -79,6 +81,7 @@ class ReviewQueue:
         *,
         bucket_id: str,
         ports: DraftReviewPorts,
+        operation: PinnedAuthorityOperation,
         kinds: frozenset[ReviewItemKind] | None = None,
         modelo: str | None = None,
         state: ReviewState = ReviewState.PENDING,
@@ -90,6 +93,8 @@ class ReviewQueue:
             settings: Loaded :class:`cadrumo.core.config.Settings`.
             bucket_id: Active bucket identifier used to scope the query
                 to the correct operator profile.
+            ports: Required encrypted persistence capabilities.
+            operation: Caller-owned generation-pinned indexed authority operation.
             kinds: Optional set of :class:`ReviewItemKind` to include.
                 ``None`` (default) means every kind. The argument is a
                 ``frozenset`` so callers cannot mutate it after passing.
@@ -116,6 +121,7 @@ class ReviewQueue:
             settings,
             bucket_id=bucket_id,
             ports=ports,
+            operation=operation,
             confidence_below=confidence_below,
         )
         items = _filter_review_items(items, kinds=kinds, modelo=modelo)

@@ -712,6 +712,7 @@ def _append_model_specific_findings(
             target=target,
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
+            operation=operation,
         ),
     )
     findings.extend(
@@ -862,7 +863,8 @@ def verify_modelo_revision_with_preconditions(
         # so it falls through to the hard refusal below rather than fabricating
         # one. Mirrors the re-file no-op in file_modelo_revision.
         existing = _existing_granting_verification_report(
-            require_verification_report_coordinates_current(vr_repo.load()), calculation_revision_id
+            require_verification_report_coordinates_current(vr_repo.load(), operation=operation),
+            calculation_revision_id,
         )
         if existing is not None:
             return ModeloVerificationResult(
@@ -885,16 +887,19 @@ def verify_modelo_revision_with_preconditions(
         calculation_repository=cr_repo,
         filing_repository=repos.filing,
         regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+        operation=operation,
     )
     require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
 
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
-    require_profile_ready_for_work_unit(work_unit)
+    require_profile_ready_for_work_unit(
+        work_unit,
+        profile_decode_context=operation.profile_decode_context(),
+        operation=operation,
+    )
     _require_persisted_required_bindings_resolved(
-        work_unit=work_unit,
-        revision=target,
-        action="verify",
+        work_unit=work_unit, revision=target, action="verify", operation=operation
     )
 
     findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
@@ -952,6 +957,7 @@ def verify_modelo_revision_with_preconditions(
             settings=settings,
             draft_review_ports=repos.draft_review_ports,
             workflow_gate_ports=repos.workflow_gate_ports,
+            operation=operation,
         )
         _run_revision_workflow_gate(
             engine=gate_engine,
@@ -965,7 +971,11 @@ def verify_modelo_revision_with_preconditions(
 
     # Persist the report regardless of outcome — failed attempts
     # are part of the audit trail.
-    vr_repo.save(upsert_verification_report(require_verification_report_coordinates_current(vr_repo.load()), report))
+    vr_repo.save(
+        upsert_verification_report(
+            require_verification_report_coordinates_current(vr_repo.load(), operation=operation), report
+        )
+    )
 
     if granted:
         _persist_verified_revision_evidence(

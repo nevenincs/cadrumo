@@ -49,9 +49,11 @@ from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -103,11 +105,54 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(work_unit_id: str, **kwargs: Any) -> Any:
+    repository = kwargs.pop("work_unit_repository", None)
+    for key in ("calculation_repository", "transaction_repository", "invoice_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            **kwargs,
+        )
+
+
+def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+    for key in (
+        "work_unit_repository",
+        "calculation_repository",
+        "filing_repository",
+        "verification_repository",
+        "bucket_event_repository",
+    ):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return verify_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            operation=operation,
+            **kwargs,
+        )
+
+
+def _export_modelo_revision(command: Any, **kwargs: Any) -> Any:
+    with compiled_bundled_authority().operation() as operation:
+        return export_modelo_revision(command, operation=operation, **kwargs)
+
+
+def _import_external_filing_evidence(**kwargs: Any) -> Any:
+    kwargs.setdefault("observation_repository", CalculationObservationRepository())
+    return import_external_filing_evidence(**kwargs)
+
 
 _BUCKET_ID = "13010000-0000-4000-8000-000000000100"
 _TAX_ID = "12345678Z"
@@ -356,7 +401,7 @@ def _calculate_and_file_m130_quarter(
         ),
         clock=_T0,
     )
-    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    revision = _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=_M130_MANUAL_INPUTS,
         work_unit_repository=wu_repo,
@@ -413,7 +458,7 @@ def _import_official_m130_result_observation(
         captured_at=_FILE_AT,
         tax_id=_TAX_ID,
     )
-    import_external_filing_evidence(
+    _import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
         casilla_values=casilla_values,
         evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
@@ -512,6 +557,8 @@ def _seed_taxpayer_profile() -> None:
     # ("Test runtime profile") — CommittedProfileView._validate_cross_store_agreement
     # rejects a label/display_name mismatch as a torn-rename inconsistency.
     record = UserProfileRecord(
+        schema_id="cadrumo.user_profile",
+        schema_version=load_user_profile_schema().version,
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -604,7 +651,7 @@ def _calculate_m100_annual(
         ),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values={**_m100_non_relation_zero_bindings(), **(binding_values or {})},
@@ -691,7 +738,7 @@ def test_verify_accepts_autonoma_m100_with_official_m130_observations(
         Decimal("0"),
     )
 
-    report = verify_modelo_revision(
+    report = _verify_modelo_revision(
         annual.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
@@ -732,7 +779,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
 
-    report = verify_modelo_revision(
+    report = _verify_modelo_revision(
         annual.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
@@ -754,7 +801,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     # keeping this replay end-to-end: it shows exactly how far the operator gets.
     output = tmp_path / "modelo-100-2024-0A.xml"
     with pytest.raises(ModeloExportError) as refusal:
-        export_modelo_revision(
+        _export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=annual.calculation_revision_id,
                 output_path=output,
@@ -840,7 +887,7 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
         _calculate_and_file_m130_quarter(secure_objects, period=period)
     annual = _calculate_m100_annual(secure_objects)
 
-    report = verify_modelo_revision(
+    report = _verify_modelo_revision(
         annual.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),

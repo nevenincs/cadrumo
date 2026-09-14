@@ -26,6 +26,7 @@ from pydantic import BaseModel, NonNegativeInt
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.service import LinkInconsistency
 from ..invoices.catalogue_reads import verify_invoice_repository_links
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -70,6 +71,7 @@ def read_ledger_check(
     bucket_id: str,
     transactions: TransactionCatalogue,
     ports: InvoiceCatalogueReadPorts,
+    operation: PinnedAuthorityOperation,
     period: Period | None = None,
 ) -> LedgerCheckV1:
     """Assess one ledger's readiness over a period, or over everything it spans.
@@ -78,6 +80,7 @@ def read_ledger_check(
         bucket_id: The owning profile bucket.
         transactions: The live ledger to assess.
         ports: Required invoice and transaction catalogue read capabilities.
+        operation: Caller-owned generation-pinned authority for preflight facts.
         period: One period to check; when omitted, every year the ledger spans
             is swept over its annual period.
 
@@ -87,7 +90,12 @@ def read_ledger_check(
     link_inconsistencies = tuple(verify_invoice_repository_links(ports=ports))
 
     if period is not None:
-        report = preflight_transaction_catalogue(bucket_id=bucket_id, period=period, transactions=transactions)
+        report = preflight_transaction_catalogue(
+            bucket_id=bucket_id,
+            period=period,
+            transactions=transactions,
+            operation=operation,
+        )
         periods = (str(period),)
         checked = report.checked_transaction_count
         issues = tuple(report.issues)
@@ -101,6 +109,7 @@ def read_ledger_check(
                 bucket_id=bucket_id,
                 period=Period.from_year_and_code(year, _ANNUAL_PERIOD_CODE),
                 transactions=transactions,
+                operation=operation,
             )
             checked += report.checked_transaction_count
             collected.extend(report.issues)

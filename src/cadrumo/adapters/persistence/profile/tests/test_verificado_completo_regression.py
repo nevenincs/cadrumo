@@ -38,6 +38,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -315,9 +316,9 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T1,
     )
 
@@ -381,9 +382,9 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T1,
     )
     observation_repo = _seed_clean_cross_period_sources_for_m130(
@@ -464,9 +465,9 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=_T1,
     )
 

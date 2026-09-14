@@ -15,12 +15,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import WorkUnitMutationRefusedError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit, list_work_units
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState
@@ -83,7 +85,10 @@ def _create(repository: WorkUnitCatalogueRepository, *, bucket_id: str) -> WorkU
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE),
         revision_id=_REVISION_ID,
-        repository=repository,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_T0,
     )
 
@@ -98,7 +103,10 @@ def test_recreating_a_discarded_target_refuses_instead_of_returning_it(
         created.work_unit_id,
         actor="operator",
         reason="changed my mind",
-        repository=repository,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_T0,
     )
 
@@ -114,7 +122,14 @@ def test_the_refusal_names_the_state_and_the_target_coordinates(
     """Structure only: an operator must be able to see WHICH target and WHY."""
     bucket_id, repository = discard_repos
     created = _create(repository, bucket_id=bucket_id)
-    discard_work_unit(created.work_unit_id, actor="operator", repository=repository, clock=_T0)
+    discard_work_unit(
+        created.work_unit_id,
+        actor="operator",
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository, bucket_event_repository=BucketEventHistoryRepository()
+        ),
+        clock=_T0,
+    )
 
     with pytest.raises(WorkUnitMutationRefusedError) as raised:
         _create(repository, bucket_id=bucket_id)
@@ -146,7 +161,14 @@ def test_the_refusal_has_its_own_terminal_create_scenario(
     """The create refusal identifies the terminal target state without recovery prose."""
     bucket_id, repository = discard_repos
     created = _create(repository, bucket_id=bucket_id)
-    discard_work_unit(created.work_unit_id, actor="operator", repository=repository, clock=_T0)
+    discard_work_unit(
+        created.work_unit_id,
+        actor="operator",
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository, bucket_event_repository=BucketEventHistoryRepository()
+        ),
+        clock=_T0,
+    )
 
     with pytest.raises(WorkUnitMutationRefusedError) as raised:
         _create(repository, bucket_id=bucket_id)
@@ -180,13 +202,31 @@ def test_discovery_and_creation_now_agree_that_a_discarded_unit_is_gone(
     """The asymmetry being closed: listing hid it while creation handed it back."""
     bucket_id, repository = discard_repos
     created = _create(repository, bucket_id=bucket_id)
-    discard_work_unit(created.work_unit_id, actor="operator", repository=repository, clock=_T0)
+    discard_work_unit(
+        created.work_unit_id,
+        actor="operator",
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository, bucket_event_repository=BucketEventHistoryRepository()
+        ),
+        clock=_T0,
+    )
 
-    active = list_work_units(bucket_id=bucket_id, repository=repository)
+    active = list_work_units(
+        bucket_id=bucket_id,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository, bucket_event_repository=BucketEventHistoryRepository()
+        ),
+    )
     assert all(unit.work_unit_id != created.work_unit_id for unit in active)
 
     with pytest.raises(WorkUnitMutationRefusedError):
         _create(repository, bucket_id=bucket_id)
 
-    audit = list_work_units(bucket_id=bucket_id, include_discarded=True, repository=repository)
+    audit = list_work_units(
+        bucket_id=bucket_id,
+        include_discarded=True,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository, bucket_event_repository=BucketEventHistoryRepository()
+        ),
+    )
     assert any(unit.work_unit_id == created.work_unit_id for unit in audit)

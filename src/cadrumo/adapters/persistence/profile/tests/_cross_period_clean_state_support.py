@@ -12,6 +12,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -35,6 +36,7 @@ from cadrumo.application.calculations.observations_repository import Observation
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
@@ -470,6 +472,10 @@ def _create_source_303_work_unit(period: str) -> WorkUnit:
         period=Period.from_year_and_code(_M390_YEAR, period),
         revision_id=registry_snapshot.revision.id,
         clock=_CLOCK,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=WorkUnitCatalogueRepository(),
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
     )
 
 

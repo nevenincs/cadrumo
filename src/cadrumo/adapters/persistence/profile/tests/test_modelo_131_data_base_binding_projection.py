@@ -8,6 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -19,6 +21,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -36,6 +39,8 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _store_objective_estimation_profile(objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
         UserProfileRecord(
+            schema_id="cadrumo.user_profile",
+            schema_version=load_user_profile_schema().version,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -77,7 +82,7 @@ def _seed_m131_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2026",
-        repository=work_unit_repository,
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
     )
 
@@ -88,20 +93,19 @@ def test_m131_page1_activity_bindings_feed_data_base_liquidation_without_repurpo
     wu_repo, cr_repo, bv_repo = _repos(secure_objects)
     work_unit = _seed_m131_work_unit(wu_repo)
 
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={"03": Decimal("1000")},
-        binding_values={
-            "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("10000"),
-            "modelo-131.page1.actividad-1-porcentaje": Decimal("4"),
-            "modelo-131.page1.actividad-2-rendimiento-neto": Decimal("2000"),
-            "modelo-131.page1.actividad-2-resultado": Decimal("50"),
-        },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T0,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            casilla_inputs={"03": Decimal("1000")},
+            binding_values={
+                "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("10000"),
+                "modelo-131.page1.actividad-1-porcentaje": Decimal("4"),
+                "modelo-131.page1.actividad-2-rendimiento-neto": Decimal("2000"),
+                "modelo-131.page1.actividad-2-resultado": Decimal("50"),
+            },
+            clock=_T0,
+        )
 
     assert revision.casilla_values["01"] == Decimal("12000")
     assert revision.casilla_values["02"] == Decimal("450.00")
@@ -118,19 +122,18 @@ def test_m131_dpa_module_rendimiento_can_supply_data_base_casilla_01_when_page1_
     wu_repo, cr_repo, bv_repo = _repos(secure_objects)
     work_unit = _seed_m131_work_unit(wu_repo)
 
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={"03": Decimal("500")},
-        binding_values={
-            "modelo-131.dpa.modulo-1-unidades": Decimal("2"),
-            "modelo-131.dpa.modulo-1-rendimiento-neto": Decimal("1600"),
-            "modelo-131.page1.actividad-1-resultado": Decimal("64"),
-        },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T0,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            casilla_inputs={"03": Decimal("500")},
+            binding_values={
+                "modelo-131.dpa.modulo-1-unidades": Decimal("2"),
+                "modelo-131.dpa.modulo-1-rendimiento-neto": Decimal("1600"),
+                "modelo-131.page1.actividad-1-resultado": Decimal("64"),
+            },
+            clock=_T0,
+        )
 
     assert revision.casilla_values["01"] == Decimal("1600")
     assert revision.casilla_values["02"] == Decimal("64")
@@ -147,15 +150,14 @@ def test_m131_unrelated_fixed_record_manual_binding_is_not_projected_as_a_casill
     wu_repo, cr_repo, bv_repo = _repos(secure_objects)
     work_unit = _seed_m131_work_unit(wu_repo)
 
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={},
-        binding_values={"modelo-131.dpa.vehiculos-afectos": Decimal("9")},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T0,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            casilla_inputs={},
+            binding_values={"modelo-131.dpa.vehiculos-afectos": Decimal("9")},
+            clock=_T0,
+        )
 
     assert revision.casilla_values["01"] == Decimal("0")
     assert revision.casilla_values["02"] == Decimal("0")
@@ -169,21 +171,20 @@ def test_m131_explicit_casilla_inputs_override_data_base_binding_projection(
     wu_repo, cr_repo, bv_repo = _repos(secure_objects)
     work_unit = _seed_m131_work_unit(wu_repo)
 
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={
-            "01": Decimal("777"),
-            "02": Decimal("33"),
-        },
-        binding_values={
-            "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("10000"),
-            "modelo-131.page1.actividad-1-porcentaje": Decimal("4"),
-        },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T0,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            casilla_inputs={
+                "01": Decimal("777"),
+                "02": Decimal("33"),
+            },
+            binding_values={
+                "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("10000"),
+                "modelo-131.page1.actividad-1-porcentaje": Decimal("4"),
+            },
+            clock=_T0,
+        )
 
     assert revision.casilla_values["01"] == Decimal("777")
     assert revision.casilla_values["02"] == Decimal("33")
