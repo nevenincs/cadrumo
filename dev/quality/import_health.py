@@ -287,8 +287,10 @@ def render_import_health(payload: dict[str, object]) -> str:
     ratchet = payload["ratchet"]
     hard = payload["hard_findings"]
     advisory = payload["advisories"]
+    loadability = payload["loadability"]
     assert isinstance(graph, dict) and isinstance(ratchet, dict)
     assert isinstance(hard, dict) and isinstance(advisory, dict)
+    assert isinstance(loadability, dict)
     counts = ratchet["counts"]
     assert isinstance(counts, dict)
     return "\n".join(
@@ -405,7 +407,25 @@ def unavailable_import_health(reason: str) -> dict[str, object]:
     }
 
 
-def _graph_summary(output: str) -> dict[str, object]:
+def _loadability_int(loadability: dict[str, object], key: str, default: int = 0) -> int:
+    """Read an integer field from the subprocess JSON contract."""
+    value = loadability.get(key, default)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, (str, bytes, bytearray, float)):
+        return int(value)
+    raise TypeError(f"loadability field {key!r} is not integer-compatible")
+
+
+def _loadability_items(loadability: dict[str, object], key: str) -> list[object]:
+    """Read an iterable sample from the subprocess JSON contract."""
+    value = loadability.get(key, ())
+    if isinstance(value, Iterable):
+        return list(value)
+    raise TypeError(f"loadability field {key!r} is not iterable")
+
+
+def _graph_summary(output: str) -> _GraphSummary:
     files = 0
     dependencies = 0
     contracts: Counter[str] = Counter()
