@@ -13,6 +13,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, Ma
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
@@ -35,8 +36,11 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
             description="pending row",
             idempotency_key="typed-patch",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -53,8 +57,11 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
         ),
         actor="operator-C",
         source_command="aeat app ledger classify",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -86,8 +93,11 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
             idempotency_key="source-jurisdiction-classify",
             source_command="aeat app ledger import",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 7, 15, 8, 0, tzinfo=UTC),
     )
 
@@ -103,8 +113,11 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
         ),
         actor="operator-C",
         source_command="aeat app ledger classify",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 7, 16, 10, 0, tzinfo=UTC),
     )
 
@@ -133,8 +146,11 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
             prorrata_reference="iva-prorrata-2026",
             idempotency_key="personal-reclassification",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -144,8 +160,11 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
         patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
         actor="operator-C",
         source_command="aeat app ledger classify",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 

@@ -4,10 +4,14 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_lifecycle import stash_manual_transaction
 from cadrumo.application.ledger.actions_manual import (
     create_manual_transaction,
@@ -21,6 +25,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionNotFoundError
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,
@@ -29,6 +34,23 @@ from .ledger_action_persistence_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["secure_objects"]
+
+
+def _ledger_ports(
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+    *,
+    bucket_id: str,
+) -> LedgerActionPorts:
+    """Compose canonical ledger ports over the isolated repositories."""
+    return cast(
+        LedgerActionPorts,
+        ledger_ports_for_test(
+            bucket_id=bucket_id,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
+    )
 
 
 def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
@@ -45,8 +67,7 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
             description="first bucket row",
             idempotency_key="first",
         ),
-        transaction_repository=repo_a,
-        bucket_event_repository=event_repo,
+        ports=_ledger_ports(repo_a, event_repo, bucket_id=_BUCKET_ID),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     create_manual_transaction(
@@ -58,16 +79,16 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
             description="other bucket row",
             idempotency_key="first",
         ),
-        transaction_repository=repo_b,
-        bucket_event_repository=event_repo_b,
+        ports=_ledger_ports(repo_b, event_repo_b, bucket_id=_OTHER_BUCKET_ID),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
-    listed = list_manual_transactions(bucket_id=_BUCKET_ID, transaction_repository=repo_a)
+    bucket_ports = _ledger_ports(repo_a, event_repo, bucket_id=_BUCKET_ID)
+    listed = list_manual_transactions(bucket_id=_BUCKET_ID, ports=bucket_ports)
     fetched = get_manual_transaction(
         bucket_id=_BUCKET_ID,
         transaction_id=first.ref.transaction_id,
-        transaction_repository=repo_a,
+        ports=bucket_ports,
     )
 
     assert [item.ref.transaction_id for item in listed] == [first.ref.transaction_id]
@@ -76,7 +97,7 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
         get_manual_transaction(
             bucket_id=_BUCKET_ID,
             transaction_id="0" * 64,
-            transaction_repository=repo_a,
+            ports=bucket_ports,
         )
 
 
@@ -98,8 +119,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
             iva_amount=Decimal("21.00"),
             idempotency_key="ready-status",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     pending = create_manual_transaction(
@@ -111,23 +131,21 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
             description="pending row",
             idempotency_key="pending-status",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID),
         occurred_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
     )
     stash_manual_transaction(
         bucket_id=_BUCKET_ID,
         transaction_id=pending.ref.transaction_id,
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID),
         occurred_at=datetime(2026, 5, 3, 8, 0, tzinfo=UTC),
     )
 
     report = summarize_manual_transactions(
         bucket_id=_BUCKET_ID,
         period=Period.from_year_and_code(2026, "05"),
-        transaction_repository=transaction_repository,
+        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID),
     )
 
     assert ledger_transaction_review_status(ready.transaction) == "reviewed"

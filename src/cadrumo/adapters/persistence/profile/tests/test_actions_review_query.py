@@ -4,15 +4,20 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_manual import create_manual_transaction, query_ledger_review_rows
 from cadrumo.application.ledger.models import LedgerReviewQuery, ManualLedgerTransactionCommand
 from cadrumo.core.period import Period
 from cadrumo.domain.transactions.enums import TransactionDirection
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
@@ -22,10 +27,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["secure_objects"]
 
 
+def _ledger_ports(
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+    *,
+    bucket_id: str,
+) -> LedgerActionPorts:
+    """Compose canonical ledger ports over the isolated repositories."""
+    return cast(
+        LedgerActionPorts,
+        ledger_ports_for_test(
+            bucket_id=bucket_id,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
+    )
+
+
 def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects, bucket_id=_BUCKET_ID)
+    ports = _ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID)
     may = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=_BUCKET_ID,
@@ -36,8 +59,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
             description="may row",
             idempotency_key="review-may",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ports,
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     create_manual_transaction(
@@ -50,18 +72,17 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
             description="june row",
             idempotency_key="review-june",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ports,
         occurred_at=datetime(2026, 6, 1, 8, 0, tzinfo=UTC),
     )
 
     listed = query_ledger_review_rows(
         LedgerReviewQuery(bucket_id=_BUCKET_ID, period=Period.from_year_and_code(2026, "05"), status="pending"),
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     single = query_ledger_review_rows(
         LedgerReviewQuery(bucket_id=_BUCKET_ID, transaction_id=may.ref.transaction_id),
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     single_filtered_out = query_ledger_review_rows(
         LedgerReviewQuery(
@@ -69,7 +90,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
             period=Period.from_year_and_code(2026, "06"),
             transaction_id=may.ref.transaction_id,
         ),
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
 
     assert [row.description for row in listed.rows] == ["may row"]
@@ -81,6 +102,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
 
 def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects, bucket_id=_BUCKET_ID)
+    ports = _ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID)
     create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=_BUCKET_ID,
@@ -90,8 +112,7 @@ def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObj
             description="client payment",
             idempotency_key="dir-incoming",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ports,
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     expense = create_manual_transaction(
@@ -103,18 +124,17 @@ def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObj
             description="material oficina",
             idempotency_key="dir-outgoing",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ports,
         occurred_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
     )
 
     full = query_ledger_review_rows(
         LedgerReviewQuery(bucket_id=_BUCKET_ID),
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     outgoing = query_ledger_review_rows(
         LedgerReviewQuery(bucket_id=_BUCKET_ID, direction=TransactionDirection.OUTGOING.value),
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
 
     assert len(full.rows) == 2

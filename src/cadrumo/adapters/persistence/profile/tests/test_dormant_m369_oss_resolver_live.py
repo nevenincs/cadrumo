@@ -16,13 +16,13 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogu
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._dormant_resolver_live_support import (
     _T0,
     _T1,
     _revision,
     _seed_ready_profile,
 )
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -682,23 +682,22 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
     assert persisted is not None
     assert persisted.state is CalculationRevisionState.BORRADOR
     output_path = tmp_path / "modelo-369.txt"
-    with pytest.raises(CalculationRevisionStateError):
-        with bundled_indexed_authority().operation() as operation:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=result.revision.calculation_revision_id,
-                    output_path=output_path,
-                    actor="m369-unresolved-operator",
-                ),
-                workflow_profile=workflow_profile(),
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=_M369_BUCKET,
-                    secure_objects=m369_objects,
-                    work_unit=wu_repo,
-                    calculation=cr_repo,
-                ),
-                operation=operation,
-            )
+    with pytest.raises(CalculationRevisionStateError), bundled_indexed_authority().operation() as operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=result.revision.calculation_revision_id,
+                output_path=output_path,
+                actor="m369-unresolved-operator",
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_M369_BUCKET,
+                secure_objects=m369_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+            ),
+            operation=operation,
+        )
     assert not output_path.exists()
     assert not (tmp_path / "modelo-369.txt.tmp").exists()
 
@@ -818,23 +817,22 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
     assert persisted is not None
     assert persisted.state is CalculationRevisionState.BORRADOR
     output_path = tmp_path / "modelo-369-unrouted.txt"
-    with pytest.raises(CalculationRevisionStateError):
-        with bundled_indexed_authority().operation() as operation:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=result.revision.calculation_revision_id,
-                    output_path=output_path,
-                    actor="m369-unrouted-operator",
-                ),
-                workflow_profile=workflow_profile(),
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=_M369_BUCKET,
-                    secure_objects=m369_objects,
-                    work_unit=wu_repo,
-                    calculation=cr_repo,
-                ),
-                operation=operation,
-            )
+    with pytest.raises(CalculationRevisionStateError), bundled_indexed_authority().operation() as operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=result.revision.calculation_revision_id,
+                output_path=output_path,
+                actor="m369-unrouted-operator",
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_M369_BUCKET,
+                secure_objects=m369_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+            ),
+            operation=operation,
+        )
     assert not output_path.exists()
     assert not (tmp_path / "modelo-369-unrouted.txt.tmp").exists()
 

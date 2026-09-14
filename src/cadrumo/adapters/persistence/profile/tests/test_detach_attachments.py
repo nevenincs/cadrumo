@@ -35,6 +35,7 @@ from cadrumo.domain.attachments.service import (
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
@@ -76,9 +77,12 @@ def _seed_transaction(secure_objects: SecureObjectRepository, *, idempotency_key
             description="material oficina",
             idempotency_key=idempotency_key,
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        attachment_store=_store(secure_objects),
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            attachment_store=_store(secure_objects),
+        ),
     )
     return created.transaction.transaction_id
 
@@ -90,9 +94,12 @@ def _attach(secure_objects: SecureObjectRepository, *, transaction_id: str, atta
         transaction_id=transaction_id,
         actor="operator",
         attachment_ids=attachment_ids,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        attachment_store=_store(secure_objects),
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            attachment_store=_store(secure_objects),
+        ),
     )
 
 
@@ -103,9 +110,12 @@ def _detach(secure_objects: SecureObjectRepository, *, transaction_id: str, atta
         transaction_id=transaction_id,
         actor="operator",
         attachment_ids=attachment_ids,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        attachment_store=_store(secure_objects),
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            attachment_store=_store(secure_objects),
+        ),
     )
 
 

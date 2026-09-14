@@ -45,9 +45,9 @@ from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -259,13 +259,10 @@ def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing
     assert computing.details.overdue is True
     assert computing.details.extemporanea is True
 
-    assert (
-        target_filing_records(
-            list_filing_records(ports=build_filing_action_ports(bucket_id=work_unit.bucket_id)),
-            work_unit,
-        )
-        == (filing,)
-    )
+    assert target_filing_records(
+        list_filing_records(ports=build_filing_action_ports(bucket_id=work_unit.bucket_id)),
+        work_unit,
+    ) == (filing,)
 
 
 def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> None:

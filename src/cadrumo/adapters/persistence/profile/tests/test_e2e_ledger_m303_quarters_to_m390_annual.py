@@ -39,6 +39,7 @@ registry grounding gate.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -48,6 +49,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -64,7 +66,6 @@ from cadrumo.adapters.persistence.profile.tests._export_modelo_303_support impor
 from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -80,6 +81,8 @@ from cadrumo.application.modelo.export import ModeloExportCommand, ModeloExportU
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -88,6 +91,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -101,6 +105,11 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import (
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_verification_repository_bundle,
+)
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -202,6 +211,50 @@ _IRENE_ANNUAL_EXPECTED = {
 _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
 
+def _verification_ports(
+    *,
+    work_repo: WorkUnitCatalogueRepository,
+    calc_repo: CalculationRevisionCatalogueRepository,
+    filing_repo: ModeloRecordCatalogueRepository,
+    verification_repo: VerificationReportCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
+    tx_repo: TransactionCatalogueRepository,
+) -> VerificationRepositoryBundle:
+    """Compose complete verification ports over the isolated repositories."""
+    return replace(
+        build_verification_repository_bundle(_BUCKET_ID),
+        work_unit=work_repo,
+        calculation=calc_repo,
+        filing=filing_repo,
+        verification=verification_repo,
+        bucket_event=event_repo,
+        transaction=tx_repo,
+    )
+
+
+def _filing_ports(
+    *,
+    work_repo: WorkUnitCatalogueRepository,
+    calc_repo: CalculationRevisionCatalogueRepository,
+    filing_repo: ModeloRecordCatalogueRepository,
+    verification_repo: VerificationReportCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
+    wallet_repo: IvaWalletDecisionRepository,
+    observation_repo: CalculationObservationRepository,
+) -> FilingActionPorts:
+    """Compose complete filing ports over the isolated repositories."""
+    return replace(
+        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        filing_repository=filing_repo,
+        verification_repository=verification_repo,
+        bucket_event_repository=event_repo,
+        iva_compensation_decision_repository=wallet_repo,
+        observation_repository=observation_repo,
+    )
+
+
 def _iva_transaction(
     provider_id: str,
     *,
@@ -287,6 +340,7 @@ def _persist_year_of_invoices(
     transactions: list[Transaction] = []
     purchase_invoices = []
     stored: StoredIvaByPeriod = {}
+    catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
     for period, facts in facts_by_period.items():
         purchase_invoice = build_catalogue_invoice(
             bucket_id=_BUCKET_ID,
@@ -299,6 +353,7 @@ def _persist_year_of_invoices(
             taxable_base=facts["received_base"],
             iva_rate=Decimal("21"),
             currency="EUR",
+            rate_provider=catalogue_ports.rate_provider,
         )
         purchase_invoices.append(purchase_invoice)
         issued = _iva_transaction(
@@ -542,30 +597,28 @@ def _calculate_m303_quarter_revision(
         period=period, filing_year=filing_year, taxpayer_nif=taxpayer_nif, decided_at=calculated_at
     )
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
-    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        actor="system",
-        # Manual, formula-operand "resultado" casillas (58/68/70/76/77/109/18)
-        # the fichero-BOE completeness manifest requires but the engine never
-        # auto-zero-fills; see ``_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS``.
-        casilla_inputs=dict(_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS),
-        binding_values={
-            # No prior-period compensación carry in this scenario (each quarter
-            # is net-positive); autoconsumo del promotor is nil for this filer.
-            "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-            "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-        },
-        iva_compensation_decision=decision,
-        filing_instance_evidence=general_m303_filing_evidence(
-            typed_period,
-            reference=f"test:e2e-ledger-m303:{period}",
-        ),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=event_repo,
-        transaction_repository=tx_repo,
-        clock=calculated_at,
-    ).revision
+    with bundled_indexed_authority().operation() as operation:
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            actor="system",
+            # Manual, formula-operand "resultado" casillas (58/68/70/76/77/109/18)
+            # the fichero-BOE completeness manifest requires but the engine never
+            # auto-zero-fills; see ``_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS``.
+            casilla_inputs=dict(_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS),
+            binding_values={
+                # No prior-period compensación carry in this scenario (each quarter
+                # is net-positive); autoconsumo del promotor is nil for this filer.
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            iva_compensation_decision=decision,
+            filing_instance_evidence=general_m303_filing_evidence(
+                typed_period,
+                reference=f"test:e2e-ledger-m303:{period}",
+            ),
+            clock=calculated_at,
+        ).revision
     return work_unit, revision
 
 
@@ -601,16 +654,25 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
     assert Decimal(revision.casilla_values[_DEVENGADA_TOTAL]) == stored["1T"]["devengada"]
     assert Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]) == stored["1T"]["deducible"]
 
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator",
-        workflow_profile=workflow_profile(),
-        settings=ready_clave_settings(_TAX_ID),
-        clock=_FILE_AT,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_ports(
+                work_repo=wu_repo,
+                calc_repo=cr_repo,
+                filing_repo=filing_repo,
+                verification_repo=vr_repo,
+                event_repo=event_repo,
+                tx_repo=tx_repo,
+            ),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings(_TAX_ID),
+            clock=_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -621,25 +683,27 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
 
     output_path = tmp_path / f"modelo-303-{_YEAR}-1T.boe"
     with pytest.raises(ModeloExportUnsupportedError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=revision.calculation_revision_id,
-                output_path=output_path,
-                actor="operator",
-            ),
-            workflow_profile=workflow_profile(),
-            export_ports=modelo_export_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                taxpayer_tax_id=_TAX_ID,
-                secure_objects=secure_objects,
-                work_unit=wu_repo,
-                calculation=cr_repo,
-                filing=filing_repo,
-                verification=vr_repo,
-                bucket_event=event_repo,
-            ),
-            clock=_FILE_AT,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=revision.calculation_revision_id,
+                    output_path=output_path,
+                    actor="operator",
+                ),
+                workflow_profile=workflow_profile(),
+                export_ports=modelo_export_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    taxpayer_tax_id=_TAX_ID,
+                    secure_objects=secure_objects,
+                    work_unit=wu_repo,
+                    calculation=cr_repo,
+                    filing=filing_repo,
+                    verification=vr_repo,
+                    bucket_event=event_repo,
+                ),
+                operation=operation,
+                clock=_FILE_AT,
+            )
 
     assert exc_info.value.context == {
         "modelo": "303",
@@ -666,15 +730,13 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
         ),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values={},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_FILE_AT,
-    ).revision
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            binding_values={},
+            clock=_FILE_AT,
+        ).revision
 
 
 def _non_official_local_chain_advisory_periods(report: VerificationReport) -> set[str]:
@@ -738,61 +800,77 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
             _RESULTADO: Decimal(revision.casilla_values[_RESULTADO]),
         }
 
-        report = verify_modelo_revision(
-            revision.calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="irene",
-            workflow_profile=workflow_profile,
-            settings=ready_clave_settings("12345678Z"),
-            clock=_IRENE_FILE_AT,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_ports(
+                    work_repo=wu_repo,
+                    calc_repo=cr_repo,
+                    filing_repo=filing_repo,
+                    verification_repo=verification_repo,
+                    event_repo=event_repo,
+                    tx_repo=tx_repo,
+                ),
+                actor="irene",
+                workflow_profile=workflow_profile,
+                settings=ready_clave_settings("12345678Z"),
+                clock=_IRENE_FILE_AT,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         assert report.granted_verificado_completo is True, report.findings
 
         quarter_output = tmp_path / f"modelo-303-{_IRENE_YEAR}-{period}.boe"
         with pytest.raises(ModeloExportUnsupportedError) as exc_info:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=revision.calculation_revision_id,
-                    output_path=quarter_output,
-                    actor="irene",
-                ),
-                workflow_profile=workflow_profile,
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    taxpayer_tax_id=_IRENE_TAX_ID,
-                    secure_objects=secure_objects,
-                    work_unit=wu_repo,
-                    calculation=cr_repo,
-                    filing=filing_repo,
-                    verification=verification_repo,
-                    bucket_event=event_repo,
-                    iva_compensation_decision=wallet_repo,
-                    observation=observation_repo,
-                ),
-                clock=_IRENE_FILE_AT,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                export_modelo_revision(
+                    ModeloExportCommand(
+                        calculation_revision_id=revision.calculation_revision_id,
+                        output_path=quarter_output,
+                        actor="irene",
+                    ),
+                    workflow_profile=workflow_profile,
+                    export_ports=modelo_export_ports_for_test(
+                        bucket_id=_BUCKET_ID,
+                        taxpayer_tax_id=_IRENE_TAX_ID,
+                        secure_objects=secure_objects,
+                        work_unit=wu_repo,
+                        calculation=cr_repo,
+                        filing=filing_repo,
+                        verification=verification_repo,
+                        bucket_event=event_repo,
+                        iva_compensation_decision=wallet_repo,
+                        observation=observation_repo,
+                    ),
+                    operation=operation,
+                    clock=_IRENE_FILE_AT,
+                )
         assert exc_info.value.context == {
             "modelo": "303",
             "reason": "the registry snapshot has no complete export_layouts definition",
         }
         assert not quarter_output.exists()
 
-        filing = file_modelo_revision(
-            revision.calculation_revision_id,
-            actor="irene",
-            workflow_profile=workflow_profile,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=filing_repo,
-            verification_repository=verification_repo,
-            bucket_event_repository=event_repo,
-            iva_compensation_decision_repository=wallet_repo,
-            calculation_observation_repository=observation_repo,
-            clock=_IRENE_FILE_AT,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            filing = file_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                actor="irene",
+                workflow_profile=workflow_profile,
+                ports=_filing_ports(
+                    work_repo=wu_repo,
+                    calc_repo=cr_repo,
+                    filing_repo=filing_repo,
+                    verification_repo=verification_repo,
+                    event_repo=event_repo,
+                    wallet_repo=wallet_repo,
+                    observation_repo=observation_repo,
+                ),
+                clock=_IRENE_FILE_AT,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         assert filing.aeat_accepted is False
         assert filing.external_evidence is None
         stored_observation = observation_repo.load_observation("303", Period.from_year_and_code(_IRENE_YEAR, period))
@@ -811,16 +889,25 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
     assert Decimal(annual.casilla_values[_M390_DEDUCIBLE]) == _IRENE_ANNUAL_EXPECTED["deducible"]
     assert Decimal(annual.casilla_values[_M390_RESULTADO]) == _IRENE_ANNUAL_EXPECTED["resultado"]
 
-    annual_report = verify_modelo_revision(
-        annual.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="irene",
-        workflow_profile=workflow_profile,
-        settings=ready_clave_settings("12345678Z"),
-        clock=_IRENE_FILE_AT,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        annual_report = verify_modelo_revision(
+            annual.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_ports(
+                work_repo=wu_repo,
+                calc_repo=cr_repo,
+                filing_repo=filing_repo,
+                verification_repo=verification_repo,
+                event_repo=event_repo,
+                tx_repo=tx_repo,
+            ),
+            actor="irene",
+            workflow_profile=workflow_profile,
+            settings=ready_clave_settings("12345678Z"),
+            clock=_IRENE_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert annual_report.granted_verificado_completo is True, annual_report.findings
     assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
 
@@ -828,26 +915,28 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
     # live revision also has no filing-grade fixed-width layout.
     annual_output = tmp_path / f"modelo-390-{_IRENE_YEAR}-0A.boe"
     with pytest.raises(ModeloExportUnsupportedError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=annual.calculation_revision_id,
-                output_path=annual_output,
-                actor="irene",
-            ),
-            workflow_profile=workflow_profile,
-            export_ports=modelo_export_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                taxpayer_tax_id=_IRENE_TAX_ID,
-                secure_objects=secure_objects,
-                work_unit=wu_repo,
-                calculation=cr_repo,
-                filing=filing_repo,
-                verification=verification_repo,
-                bucket_event=event_repo,
-                observation=observation_repo,
-            ),
-            clock=_IRENE_FILE_AT,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=annual.calculation_revision_id,
+                    output_path=annual_output,
+                    actor="irene",
+                ),
+                workflow_profile=workflow_profile,
+                export_ports=modelo_export_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    taxpayer_tax_id=_IRENE_TAX_ID,
+                    secure_objects=secure_objects,
+                    work_unit=wu_repo,
+                    calculation=cr_repo,
+                    filing=filing_repo,
+                    verification=verification_repo,
+                    bucket_event=event_repo,
+                    observation=observation_repo,
+                ),
+                operation=operation,
+                clock=_IRENE_FILE_AT,
+            )
     assert exc_info.value.context == {
         "modelo": "390",
         "reason": "the registry snapshot has no complete export_layouts definition",

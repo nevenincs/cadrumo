@@ -23,6 +23,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _create_manual_row,
@@ -45,8 +46,11 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
         transaction_id=restore_row.ref.transaction_id,
         actor="operator-A",
         reason="parked pending review",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
     )
     _, _, remove_row = _create_manual_row(
@@ -74,8 +78,11 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
             description="modelo source row corrected",
             idempotency_key="prior-id",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
     assert updated_prior_row.ref.transaction_id != prior_source_row.ref.transaction_id
@@ -96,10 +103,13 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
             bucket_id=_BUCKET_ID,
             transaction_id=restore_row.ref.transaction_id,
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+            ),
             occurred_at=datetime(2026, 5, 6, 10, 0, tzinfo=UTC),
         )
     dry_run_removal = remove_manual_transaction(
@@ -128,10 +138,13 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
             bucket_id=_BUCKET_ID,
             transaction_id=lifecycle_row.ref.transaction_id,
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+            ),
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
     with pytest.raises(TransactionValidationError, match="finalized modelo"):

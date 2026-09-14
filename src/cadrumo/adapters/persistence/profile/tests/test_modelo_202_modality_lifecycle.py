@@ -8,6 +8,7 @@ revision, local filing, or export can be produced.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -15,13 +16,17 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition import (
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_verification_repository_bundle,
+)
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -38,10 +43,14 @@ from cadrumo.application.modelo.action_errors import CalculationRevisionStateErr
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.export import ModeloExportCommand, ModeloExportUnsupportedError, export_modelo_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -82,6 +91,48 @@ _ZERO_M202_CASILLA_VALUES = {
     "30": Decimal("0"),
     "34": Decimal("0"),
 }
+
+
+def _work_ports(work_repo: WorkUnitCatalogueRepository) -> WorkLifecyclePorts:
+    """Compose the lifecycle ports over the isolated work-unit repository."""
+    return WorkLifecyclePorts(
+        work_unit_repository=work_repo,
+        bucket_event_repository=BucketEventHistoryRepository(),
+    )
+
+
+def _verification_ports(
+    *,
+    work_repo: WorkUnitCatalogueRepository,
+    calc_repo: CalculationRevisionCatalogueRepository,
+    filing_repo: ModeloRecordCatalogueRepository,
+    verification_repo: VerificationReportCatalogueRepository,
+) -> VerificationRepositoryBundle:
+    """Compose the complete verification bundle over the isolated repositories."""
+    return replace(
+        build_verification_repository_bundle(_BUCKET_ID),
+        work_unit=work_repo,
+        calculation=calc_repo,
+        filing=filing_repo,
+        verification=verification_repo,
+    )
+
+
+def _filing_ports(
+    *,
+    work_repo: WorkUnitCatalogueRepository,
+    calc_repo: CalculationRevisionCatalogueRepository,
+    filing_repo: ModeloRecordCatalogueRepository,
+    verification_repo: VerificationReportCatalogueRepository,
+) -> FilingActionPorts:
+    """Compose the complete filing bundle over the isolated repositories."""
+    return replace(
+        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        filing_repository=filing_repo,
+        verification_repository=verification_repo,
+    )
 
 
 def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
@@ -150,7 +201,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
         filing_year=2024,
         period=Period.from_year_and_code(2024, "0A"),
         revision_id=snapshot.revision.id,
-        repository=work_repo,
+        ports=_work_ports(work_repo),
         clock=_CLOCK,
     )
     evidence_reference_id = "JUSTM20020240A"
@@ -172,6 +223,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
+        observation_repository=CalculationObservationRepository(),
         expected_tax_id=_TAX_ID,
         clock=_CLOCK,
     )
@@ -223,10 +275,10 @@ def _calculate_m202(
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1P"),
         revision_id=snapshot.revision.id,
-        repository=work_repo,
+        ports=_work_ports(work_repo),
         clock=_CLOCK,
     )
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -297,12 +349,12 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(tmp
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1P"),
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=_work_ports(work_repo),
             clock=_CLOCK,
         )
 
         with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
-            with compiled_bundled_authority().operation() as operation:
+            with bundled_indexed_authority().operation() as operation:
                 calculate_modelo_revision(
                     work_unit.work_unit_id,
                     ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -341,7 +393,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1P"),
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=_work_ports(work_repo),
             clock=_CLOCK,
         )
         draft = _seed_legacy_zero_m202_revision(
@@ -349,18 +401,25 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
             calculation_repository=calc_repo,
             state=CalculationRevisionState.BORRADOR,
         )
-        workflow_profile = workflow_profile(Decimal("500000"))
+        profile = workflow_profile(Decimal("500000"))
 
         with pytest.raises(ModeloRequiredBindingsMissingError) as verify_error:
-            verify_modelo_revision(
-                draft.calculation_revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=build_test_verification_repository_bundle(),
-                actor="operator-test",
-                workflow_profile=workflow_profile,
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                verify_modelo_revision(
+                    draft.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    verification_repositories=_verification_ports(
+                        work_repo=work_repo,
+                        calc_repo=calc_repo,
+                        filing_repo=filing_repo,
+                        verification_repo=verification_repo,
+                    ),
+                    actor="operator-test",
+                    workflow_profile=profile,
+                    clock=_CLOCK,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=operation,
+                )
         verify_failure = verify_error.value.precondition_failure
         assert verify_failure is not None
         assert verify_failure.scenario_id == "modelo.work.verify.required_bindings_missing"
@@ -379,17 +438,22 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )
         with pytest.raises(ModeloRequiredBindingsMissingError) as file_error:
-            file_modelo_revision(
-                verified.calculation_revision_id,
-                actor="operator-test",
-                workflow_profile=workflow_profile,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                filing_repository=filing_repo,
-                verification_repository=verification_repo,
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                file_modelo_revision(
+                    verified.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator-test",
+                    workflow_profile=profile,
+                    ports=_filing_ports(
+                        work_repo=work_repo,
+                        calc_repo=calc_repo,
+                        filing_repo=filing_repo,
+                        verification_repo=verification_repo,
+                    ),
+                    clock=_CLOCK,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=operation,
+                )
         file_failure = file_error.value.precondition_failure
         assert file_failure is not None
         assert file_failure.scenario_id == "modelo.work.file.required_bindings_missing"
@@ -400,23 +464,25 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
         assert _M202_PRIOR_PAYMENTS_BINDING in file_missing_bindings
         export_path = tmp_path / "modelo-202-2026-1P.txt"
         with pytest.raises(ModeloExportUnsupportedError) as export_error:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=verified.calculation_revision_id,
-                    output_path=export_path,
-                    actor="operator-test",
-                ),
-                workflow_profile=workflow_profile,
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    taxpayer_tax_id=workflow_profile.tax_id,
-                    work_unit=work_repo,
-                    calculation=calc_repo,
-                    filing=filing_repo,
-                    verification=verification_repo,
-                ),
-                clock=_CLOCK,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                export_modelo_revision(
+                    ModeloExportCommand(
+                        calculation_revision_id=verified.calculation_revision_id,
+                        output_path=export_path,
+                        actor="operator-test",
+                    ),
+                    workflow_profile=profile,
+                    export_ports=modelo_export_ports_for_test(
+                        bucket_id=_BUCKET_ID,
+                        taxpayer_tax_id=profile.tax_id,
+                        work_unit=work_repo,
+                        calculation=calc_repo,
+                        filing=filing_repo,
+                        verification=verification_repo,
+                    ),
+                    operation=operation,
+                    clock=_CLOCK,
+                )
         export_context = export_error.value.context
         assert export_context is not None
         export_modelo = export_context["modelo"]
@@ -440,17 +506,22 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(tmp_pa
             CalculationRevisionStateError,
             match="error_modelo_calculation_revision_state",
         ) as state_error:
-            file_modelo_revision(
-                revision.calculation_revision_id,
-                actor="operator-test",
-                workflow_profile=workflow_profile(Decimal("500000")),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                filing_repository=filing_repo,
-                verification_repository=verification_repo,
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                file_modelo_revision(
+                    revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator-test",
+                    workflow_profile=workflow_profile(Decimal("500000")),
+                    ports=_filing_ports(
+                        work_repo=work_repo,
+                        calc_repo=calc_repo,
+                        filing_repo=filing_repo,
+                        verification_repo=verification_repo,
+                    ),
+                    clock=_CLOCK,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=operation,
+                )
         state_context = state_error.value.context
         assert state_context is not None
         state = state_context["state"]
@@ -471,12 +542,12 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(tmp_p
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1P"),
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=_work_ports(work_repo),
             clock=_CLOCK,
         )
 
         with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
-            with compiled_bundled_authority().operation() as operation:
+            with bundled_indexed_authority().operation() as operation:
                 calculate_modelo_revision(
                     work_unit.work_unit_id,
                     ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -505,16 +576,23 @@ def test_m202_declared_incn_below_or_above_threshold_can_verify(tmp_path: Path, 
             bucket_id=_BUCKET_ID,
         )
 
-        report = verify_modelo_revision(
-            revision.calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="operator-test",
-            workflow_profile=workflow_profile(incn),
-            settings=ready_clave_settings("12345678Z"),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_ports(
+                    work_repo=work_repo,
+                    calc_repo=calc_repo,
+                    filing_repo=filing_repo,
+                    verification_repo=verification_repo,
+                ),
+                actor="operator-test",
+                workflow_profile=workflow_profile(incn),
+                settings=ready_clave_settings("12345678Z"),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
         assert report.granted_verificado_completo is True
         stored = calc_repo.load().get(revision.calculation_revision_id)

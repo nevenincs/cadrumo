@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import archive_manual_transaction
 from cadrumo.application.ledger.actions_split_merge import split_transaction
@@ -25,8 +26,11 @@ def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository)
         transaction_id=parent_result.ref.transaction_id,
         actor="operator-A",
         source_command="aeat app ledger archive",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
     )
     with pytest.raises(TransactionValidationError, match="only active"):
         split_transaction(
@@ -37,8 +41,11 @@ def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository)
                 SplitChildCommand(amount=Decimal("40.00"), description="b"),
             ),
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )
 
 
@@ -54,8 +61,11 @@ def test_split_refuses_sum_mismatch(secure_objects: SecureObjectRepository) -> N
                 SplitChildCommand(amount=Decimal("50.00"), description="b"),
             ),
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )
 
 
@@ -68,8 +78,11 @@ def test_split_refuses_single_child(secure_objects: SecureObjectRepository) -> N
             transaction_id=parent_result.ref.transaction_id,
             children=(SplitChildCommand(amount=Decimal("100.00"), description="only one"),),
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )
 
 
@@ -85,8 +98,11 @@ def test_split_refuses_negative_magnitude_child(secure_objects: SecureObjectRepo
                 SplitChildCommand(amount=Decimal("130.00"), description="b"),
             ),
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )
 
 
@@ -102,6 +118,9 @@ def test_split_refuses_zero_child_amount(secure_objects: SecureObjectRepository)
                 SplitChildCommand(amount=Decimal("0.00"), description="b"),
             ),
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )
