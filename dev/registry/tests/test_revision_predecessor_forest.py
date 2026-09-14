@@ -108,13 +108,13 @@ def _chain(third_extra: str, *, second_extra: str = _names("2024")) -> tuple[_Ed
     )
 
 
-def test_a_successor_omitting_the_key_is_a_second_root_naming_both(tmp_path: Path) -> None:
-    """The silent case: a forgotten key on a successor refuses, naming both key-less editions."""
-    two_roots = re.escape("has 2 editions omitting the predecessor key: '2024' and '2026'")
+def test_keyless_full_copies_remain_independent_roots_beside_a_delta(tmp_path: Path) -> None:
+    """A named storage dependency does not turn unrelated full copies into errors."""
     modelo_dir = _write_editions(tmp_path, *_chain(""))
 
-    with pytest.raises(RegistryLoadError, match=two_roots):
-        load_modelo_directory(modelo_dir)
+    independent = load_modelo_directory(modelo_dir)
+    assert independent.revisions["2024"].predecessor is None
+    assert independent.revisions["2026"].predecessor is None
 
     _write_edition(modelo_dir, _Edition("2026", 2026, manifest_extra=_names("2025")))
     restored = load_modelo_directory(modelo_dir)
@@ -122,8 +122,7 @@ def test_a_successor_omitting_the_key_is_a_second_root_naming_both(tmp_path: Pat
     assert restored.revisions["2024"].predecessor is None
 
     _write_edition(modelo_dir, _Edition("2026", 2026))
-    with pytest.raises(RegistryLoadError, match=two_roots):
-        load_modelo_directory(modelo_dir)
+    assert load_modelo_directory(modelo_dir).revisions["2026"].predecessor is None
 
 
 def test_parallel_editions_each_declaring_no_predecessor_load_without_an_order(tmp_path: Path) -> None:
@@ -240,22 +239,17 @@ def test_a_section_fragment_declaring_the_predecessor_is_refused(tmp_path: Path)
         load_modelo_directory(modelo_dir)
 
 
-def test_the_rule_binds_a_modelo_only_once_an_edition_declares_the_key(tmp_path: Path) -> None:
-    """Where the rule stops: an all-full-copy modelo is unbound, and one declaration binds it.
-
-    Every edition omitting the key is the full-copy format, each edition its own
-    root, and it loads unchanged. The first declaration on any edition, of
-    either kind, moves the modelo into the forest, where the other key-less
-    editions are then more than one undeclared root.
-    """
+def test_one_declared_root_does_not_invalidate_other_full_copy_roots(tmp_path: Path) -> None:
+    """Authored full copies and explicit roots are both valid forest roots."""
     modelo_dir = _write_editions(tmp_path, *_chain("", second_extra=""), _Edition("2027", 2027))
     full_copy = load_modelo_directory(modelo_dir)
     assert len(full_copy.revisions) == 4
     assert all(revision.predecessor is None for revision in full_copy.revisions.values())
 
     _write_edition(modelo_dir, _Edition("2025", 2025, manifest_extra=_NONE))
-    with pytest.raises(RegistryLoadError, match=re.escape("has 3 editions omitting the predecessor key")):
-        load_modelo_directory(modelo_dir)
+    mixed = load_modelo_directory(modelo_dir)
+    assert isinstance(mixed.revisions["2025"].predecessor, NoPredecessor)
+    assert all(mixed.revisions[key].predecessor is None for key in ("2024", "2026", "2027"))
 
     _write_edition(modelo_dir, _Edition("2025", 2025))
     assert load_modelo_directory(modelo_dir).revisions["2025"].predecessor is None

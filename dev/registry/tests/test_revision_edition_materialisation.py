@@ -223,6 +223,34 @@ def test_field_delta_distinguishes_inherit_delete_and_meaningful_empty_false_zer
     assert patched.segmento is None  # explicit field deletion reaches the schema default
 
 
+def test_a_source_only_change_authors_only_source_refs_and_the_selector(tmp_path: Path) -> None:
+    modelo_dir = _modelo_root(tmp_path)
+    _write_edition(
+        modelo_dir,
+        "2024",
+        year=2024,
+        casillas=_casilla("2024", "0001", number="1", lineage=None),
+    )
+    _write_edition(
+        modelo_dir,
+        "2025",
+        year=2025,
+        manifest_extra=(
+            'casilla_storage_baseline = "2024"\n'
+            '[[revisions."2025".casilla_overrides]]\n'
+            'selector = { revision = "2024", id = "0001" }\n'
+            'fields = { source_refs = ["aeat-form"] }\n'
+        ),
+        casillas="",
+    )
+
+    successor = load_modelo_directory(modelo_dir).revisions["2025"]
+
+    assert dict(successor.casilla_overrides[0].fields) == {"source_refs": ("aeat-form",)}
+    assert successor.casillas[0].number == "1"
+    assert successor.casillas[0].source_refs == ("aeat-form",)
+
+
 def test_an_inherited_row_takes_the_successor_editions_locale_key(tmp_path: Path) -> None:
     """Materialisation runs before enrolment, so no successor row carries a key naming its predecessor."""
     successor = load_modelo_directory(_delta_successor_modelo(tmp_path, declare_predecessor=True)).revisions["2025"]
