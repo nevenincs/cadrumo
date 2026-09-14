@@ -1307,23 +1307,23 @@ class SociedadesAnnualManualCoverageDisposition(RegistryModel):
     def _validate_disposition(self) -> SociedadesAnnualManualCoverageDisposition:
         if self.status is SociedadesAnnualManualCoverageStatus.AVAILABLE:
             if self.source_ref is None:
-                raise RegistryValidationError("available Sociedades manual coverage requires source_ref")
+                raise ValueError("available Sociedades manual coverage requires source_ref")
             if self.acquisition_condition_key is not None:
-                raise RegistryValidationError(
+                raise ValueError(
                     "available Sociedades manual coverage must not declare acquisition_condition_key",
                 )
         elif self.status is SociedadesAnnualManualCoverageStatus.UNACQUIRED:
             if self.source_ref is not None:
-                raise RegistryValidationError("unacquired Sociedades manual coverage must not declare source_ref")
+                raise ValueError("unacquired Sociedades manual coverage must not declare source_ref")
             if self.acquisition_condition_key is None:
-                raise RegistryValidationError(
+                raise ValueError(
                     "unacquired Sociedades manual coverage requires acquisition_condition_key",
                 )
         else:
             if self.source_ref is not None:
-                raise RegistryValidationError("unpublished Sociedades manual coverage must not declare source_ref")
+                raise ValueError("unpublished Sociedades manual coverage must not declare source_ref")
             if self.acquisition_condition_key is None:
-                raise RegistryValidationError(
+                raise ValueError(
                     "unpublished Sociedades manual coverage requires acquisition_condition_key",
                 )
         return self
