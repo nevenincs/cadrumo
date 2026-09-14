@@ -221,13 +221,7 @@ def test_attribution_resolves_for_both_manifest_shapes() -> None:
 
 
 def test_attribution_resolves_shipped_sibling_diseno_manifest() -> None:
-    historical = (
-        _CORPUS
-        / "aeat_official"
-        / "disenos_registro"
-        / "modelo_210"
-        / "dr210_2011.pdf"
-    )
+    historical = _CORPUS / "aeat_official" / "disenos_registro" / "modelo_210" / "dr210_2011.pdf"
 
     attribution = _attribution_for(historical)
     assert "AEAT" in attribution

@@ -22,10 +22,13 @@ Exercises real corpus HTML through the production extractor (no mocks):
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from bs4 import BeautifulSoup
 
+from cadrumo.core.orden_anual_sections import extract_lorca_2022_reduction
 from dev._paths import REPO_ROOT
 
 from ..normatives_html import (
@@ -212,6 +215,7 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     assert "será deducible el\xa01 por ciento" in instructions.text
     assert "La cuota derivada del régimen simplificado será la mayor" in instructions.text
     assert "Cuotas trimestrales" not in instructions.text
+    assert not any(unit.anchor and unit.anchor.startswith("#m303-da-4-") for unit in output.units)
 
     iva_table_anchors = tuple(
         unit.anchor
@@ -274,6 +278,39 @@ def test_2022_iva_units_preserve_the_legacy_table_shape_and_lorca_reduction() ->
     assert "20 por ciento" in lorca.text
     assert "cuota trimestral" in lorca.text
     assert "cuota anual" in lorca.text
+
+
+def test_lorca_2022_reduction_is_scoped_to_its_observed_heading() -> None:
+    """The singular extractor accepts Lorca 2022 but does not reinterpret DANA."""
+    lorca = BeautifulSoup(
+        """
+        <h5>Disposición adicional cuarta. Reducción en 2022 para actividades en Lorca.</h5>
+        <p>Los sujetos pasivos con actividades incluidas en el anexo II de esta Orden en el
+        término municipal de Lorca podrán reducir en un 20 por ciento las cuotas devengadas
+        por operaciones corrientes correspondientes al año 2022.</p>
+        <p>Esta reducción se tendrá en cuenta para el cálculo de la cuota trimestral y la cuota anual.</p>
+        """,
+        "lxml",
+    )
+    dana = BeautifulSoup(
+        """
+        <h5>Disposición adicional quinta. Reducción en 2024 para municipios afectados por la DANA.</h5>
+        <p>Los sujetos pasivos podrán reducir en un 25 por ciento las cuotas devengadas por
+        operaciones corrientes correspondientes al año 2024.</p>
+        <p>Esta reducción se tendrá en cuenta para el cálculo de la cuota anual.</p>
+        """,
+        "lxml",
+    )
+
+    reduction = extract_lorca_2022_reduction(lorca, source_label="synthetic-lorca-2022.html")
+
+    assert reduction is not None
+    assert reduction.ejercicio == 2022
+    assert reduction.municipality == "Lorca"
+    assert reduction.annex_scope == "ANEXO II"
+    assert reduction.percentage == Decimal("20")
+    assert reduction.calculation_periods == ("trimestral", "anual")
+    assert extract_lorca_2022_reduction(dana, source_label="synthetic-dana-2024.html") is None
 
 
 def test_toc_and_form_boilerplate_is_stripped() -> None:
