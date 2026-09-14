@@ -5,9 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from pydantic import ValidationError
-
 from .....core.revision_review import RevisionReviewStatus
+from ..errors import RegistryValidationError
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
 
@@ -68,7 +67,7 @@ def test_a_comparison_may_name_a_revision_other_than_the_storage_predecessor() -
 
 
 def test_a_scope_on_an_unreviewed_delta_edition_is_refused() -> None:
-    with pytest.raises(ValidationError, match="a review scope belongs to a review"):
+    with pytest.raises(RegistryValidationError, match="a review scope belongs to a review"):
         _revision(
             predecessor=_PREDECESSOR, review_status=RevisionReviewStatus.PENDING_REVIEW, reviewed_against=_PREDECESSOR
         )

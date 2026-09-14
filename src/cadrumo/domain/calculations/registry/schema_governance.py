@@ -229,13 +229,12 @@ def validate_review_scope(
         RegistryValidationError: A comparison reference is declared without a
             completed review.
     """
-    if review_status not in REVIEWED_REVISION_REVIEW_STATUSES:
-        if reviewed_against is not None:
-            raise RegistryValidationError(
-                f"revision {revision_id!r} declares review_status={review_status.value!r} but also declares "
-                f"reviewed_against={reviewed_against!r}; a review scope belongs to a review, so drop it or "
-                "advance review_status",
-            )
+    if review_status not in REVIEWED_REVISION_REVIEW_STATUSES and reviewed_against is not None:
+        raise RegistryValidationError(
+            f"revision {revision_id!r} declares review_status={review_status.value!r} but also declares "
+            f"reviewed_against={reviewed_against!r}; a review scope belongs to a review, so drop it or "
+            "advance review_status",
+        )
 
 
 __all__ = [

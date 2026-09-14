@@ -998,7 +998,6 @@ def _plan(
             )
             materialised[revision_id] = merged
         is_delta = basis in {PredecessorBasis.ADJACENT, PredecessorBasis.DECLARED}
-        review = source.manifest.get("review_status", _PENDING_REVIEW)
         plan = EditionPlan(
             revision_id=revision_id,
             basis=basis,
