@@ -19,6 +19,7 @@ _CODE_ORDER_KEY = "m210.tipo_renta.code_order"
 _CODE_PROJECTION_ORDER_KEY = "m210.tipo_renta.code_projection_order"
 _FETCH_GATED_KEY = "m210.tipo_renta.fetch_gated_codes"
 _PREFIX = "m210.tipo_renta."
+_UE_RESIDENTE_VALUE_KEY = "m210.tipo_renta.ue_residente.value"
 _PENSION_VALUE_KEY = "m210.tipo_renta.pension.value"
 _INMOBILIARIA_VALUE_KEY = "m210.tipo_renta.inmobiliaria.value"
 
@@ -54,10 +55,12 @@ class TipoRentaIrnrCatalogue:
 
     @property
     def all_tokens(self) -> frozenset[TipoRentaIrnr]:
+        """Return every income token declared by the selected fact."""
         return frozenset(definition.token for definition in self.definitions)
 
     @property
     def code_projection(self) -> Mapping[str, TipoRentaIrnr]:
+        """Return each grounded official code's declared income token."""
         return MappingProxyType(
             {
                 definition.code: definition.concept
@@ -68,6 +71,7 @@ class TipoRentaIrnrCatalogue:
 
     @property
     def official_codes(self) -> tuple[str, ...]:
+        """Return official codes in registry-declared order."""
         return tuple(definition.code for definition in self.code_definitions)
 
     def require(self, value: object) -> TipoRentaIrnr:
@@ -88,6 +92,7 @@ class TipoRentaIrnrCatalogue:
         return token
 
     def definition(self, value: object) -> TipoRentaIrnrDefinition:
+        """Return the selected fact definition for one declared token."""
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
@@ -305,6 +310,20 @@ def tipo_renta_pension_token(
     )
 
 
+def tipo_renta_ue_residente_token(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> TipoRentaIrnr:
+    """Return the EU/EEA-resident income token declared by fact 0080."""
+    entries = _selected_entries(effective_date=effective_date, authority=authority)
+    return require_tipo_renta_irnr(
+        _required(entries, _UE_RESIDENTE_VALUE_KEY),
+        effective_date=effective_date,
+        authority=authority,
+    )
+
+
 def tipo_renta_inmobiliaria_token(
     *,
     effective_date: date | None = None,
@@ -329,4 +348,5 @@ __all__ = [
     "resolve_tipo_renta_irnr_catalogue",
     "tipo_renta_inmobiliaria_token",
     "tipo_renta_pension_token",
+    "tipo_renta_ue_residente_token",
 ]

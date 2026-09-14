@@ -1,9 +1,8 @@
 """Typed axes for the IRNR (non-resident income tax) treaty surface.
 
-The closed conceptual axes governing the Modelo 210 IRNR rate-resolution path
-remain :class:`enum.StrEnum` values here. Registry-owned payer-mode membership
-is represented by an opaque token and projected at the domain boundary rather
-than enumerated in this core module:
+Registry-owned axes governing the Modelo 210 IRNR rate-resolution path are
+represented here by opaque string types. Their membership is projected at the
+domain boundary rather than enumerated in this core module:
 
 * :class:`TipoRentaIrnr` — the income-type axis an IRNR filer tags each item
   with. It keys the TRLIRNR baseline rate table, the treaty override rows, and
@@ -44,6 +43,7 @@ class TipoRentaIrnr(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct only when called by the registry projection boundary."""
         if not _registry_validated:
             raise TypeError("TipoRentaIrnr tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -96,6 +96,7 @@ class M210PayerMode(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct only when called by the registry projection boundary."""
         if not _registry_validated:
             raise TypeError("M210PayerMode tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -156,6 +157,7 @@ class ConvenioOverrideKind(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct only when called by the registry projection boundary."""
         if not _registry_validated:
             raise TypeError("ConvenioOverrideKind tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -178,6 +180,7 @@ class ConvenioOverrideKind(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Accept only a projected token and serialize it as text."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -186,8 +189,10 @@ class ConvenioOverrideKind(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical wire token."""
         return str(self)
 
     @property
     def name(self) -> str:
+        """Return the canonical token for diagnostics."""
         return str(self)

@@ -25,23 +25,37 @@ populate the :class:`Recovery` field on every OVERDUE
 from __future__ import annotations
 
 import calendar
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
+from typing import TYPE_CHECKING
 
 from ...core.period import Period
 from .errors import DeadlineValidationError
 from .models import RecargoBand, Recovery
 
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
-def load_recargo_bands() -> tuple[RecargoBand, ...]:
-    """Adapt the recargo brackets from the bundled published authority.
+
+def load_recargo_bands(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[RecargoBand, ...]:
+    """Adapt recargo brackets from the caller's pinned published authority.
 
     Returns:
         Tuple of :class:`RecargoBand` records ordered by
         ``min_completed_months`` ascending.
 
     """
-    from ..calculations.registry.authority import bundled_authority
+    if operation is None:
+        raise DeadlineValidationError("recargo-band table requires an explicit pinned authority operation")
+    from ..calculations.registry.runtime_catalogues import PublishedRecargoBand
+
+    loaded = operation.runtime_catalogue("recargo_bands")
+    if not isinstance(loaded, Mapping) or not all(isinstance(value, PublishedRecargoBand) for value in loaded.values()):
+        raise DeadlineValidationError("indexed authority recargo-band component has an invalid shape")
+    published_values = loaded.values()
 
     return tuple(
         RecargoBand.model_validate(
@@ -55,7 +69,7 @@ def load_recargo_bands() -> tuple[RecargoBand, ...]:
             }
         )
         for published in sorted(
-            bundled_authority().catalogues.runtime.recargo_bands.values(),
+            published_values,
             key=lambda band: band.min_completed_months,
         )
     )

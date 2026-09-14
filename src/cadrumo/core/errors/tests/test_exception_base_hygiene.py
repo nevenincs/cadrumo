@@ -1,9 +1,9 @@
 """Static guard for production exception base classes.
 
-User/application-facing Cadrumo exceptions must derive from
-:class:`cadrumo.core.errors.CadrumoError` so they bind to the central error
-registry. A class that deliberately roots at a bare builtin instead declares
-why **on itself**, through a ``__bare_base_rationale__`` ClassVar.
+Every Cadrumo-owned production exception derives from
+:class:`cadrumo.core.errors.CadrumoError` so it binds to the central error
+registry. The only direct built-in roots are the canonical root itself and the
+source-only Playwright fallback required to mirror a third-party import type.
 
 The declaration replaced a curated allowlist in this module. The allowlist was
 a second copy of a fact the class already carried, and it could drift from it:
@@ -18,18 +18,19 @@ same change.
 Read per class, never inherited. An inherited rationale would exempt every
 subclass of a declaring class, a hole the allowlist did not have.
 
-The gate below walks IMPORTED modules, so its subject set is whatever the
-installed environment actually executed. That is deliberate -- resolving a base
-through aliases and multiple inheritance needs the live MRO, which source alone
-cannot give -- but it means a class defined only inside an optional-import
-fallback branch is invisible whenever the extra IS installed. The AST companion
-at the end of this module covers exactly that blind spot; see its docstring for
-why two gates deliberately overlap here.
+The gate below reads the production source tree through ASTs, so its subject set
+does not depend on which optional modules happen to import successfully. Source
+descriptors carry explicit ``module``, ``qualname``, and ``bases`` fields; they
+never impersonate Python class metadata. The companion at the end of this module
+keeps the optional-import fallback declaration check deliberately source-local,
+where a live import walk cannot observe the fallback branch on installations
+that provide the optional extra.
 """
 
 from __future__ import annotations
 
 import ast
+import builtins
 from dataclasses import dataclass
 from functools import cache
 
@@ -48,7 +49,15 @@ from .optional_extras import describe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_BARE_EXCEPTION_BASES = (Exception, ValueError, RuntimeError, KeyError, TypeError)
+_BARE_EXCEPTION_BASES = tuple(
+    value for value in vars(builtins).values() if isinstance(value, type) and issubclass(value, BaseException)
+)
+_PERMITTED_BUILTIN_ROOTS = frozenset(
+    {
+        "cadrumo.core.errors.hierarchy.CadrumoError",
+        "cadrumo.adapters.outbound.aeat._playwright.PlaywrightError",
+    }
+)
 
 # Anti-vacuity floor. Set far below the measured population (near 630 production
 # exception classes) so ordinary churn never trips it, and far enough above zero
@@ -76,10 +85,12 @@ def _declared_bare_base_rationale(error_type: type[BaseException] | _SourceExcep
 def _has_only_bare_bases(error_type: type[BaseException] | _SourceExceptionClass) -> bool:
     """Whether every base of ``error_type`` is an unregistered builtin root."""
     if isinstance(error_type, _SourceExceptionClass):
-        bare = tuple(base for base in error_type.__bases__ if base.__name__ in _BARE_BASE_NAMES)
+        bases = error_type.bases
+        bare = tuple(base for base in bases if base.name.rsplit(".", 1)[-1] in _BARE_BASE_NAMES)
     else:
-        bare = tuple(base for base in error_type.__bases__ if base in _BARE_EXCEPTION_BASES)
-    return bool(bare) and len(bare) == len(error_type.__bases__)
+        bases = error_type.__bases__
+        bare = tuple(base for base in bases if base in _BARE_EXCEPTION_BASES)
+    return bool(bare) and len(bare) == len(bases)
 
 
 @dataclass(frozen=True)
@@ -87,10 +98,6 @@ class _SourceBase:
     """One class base as written in a production source file."""
 
     name: str
-
-    @property
-    def __name__(self) -> str:
-        return self.name.rsplit(".", 1)[-1]
 
 
 @dataclass(frozen=True)
@@ -108,32 +115,88 @@ class _SourceExceptionClass:
     bases: tuple[_SourceBase, ...]
     rationale: str | None
 
-    @property
-    def __module__(self) -> str:
-        return self.module
 
-    @property
-    def __qualname__(self) -> str:
-        return self.qualname
+def _describe_exception(error_type: type[BaseException] | _SourceExceptionClass) -> str:
+    """Return the stable location/base summary used in gate diagnostics."""
+    if isinstance(error_type, _SourceExceptionClass):
+        location = f"{error_type.module}.{error_type.qualname}"
+        base_names = (base.name.rsplit(".", 1)[-1] for base in error_type.bases)
+    else:
+        location = f"{error_type.__module__}.{error_type.__qualname__}"
+        base_names = (base.__name__ for base in error_type.__bases__)
+    return f"{location}({', '.join(sorted(base_names))})"
 
-    @property
-    def __bases__(self) -> tuple[_SourceBase, ...]:
-        return self.bases
+
+def _exception_identity(error_type: type[BaseException] | _SourceExceptionClass) -> str:
+    """Return the exact registry-style identity of one declaration."""
+    if isinstance(error_type, _SourceExceptionClass):
+        return f"{error_type.module}.{error_type.qualname}"
+    return f"{error_type.__module__}.{error_type.__qualname__}"
 
 
 def _source_class_qualnames(tree: ast.AST) -> dict[int, str]:
+    """Return Python-style lexical qualnames for every class declaration.
+
+    ``ast.walk`` discovers classes in control-flow blocks and functions as well
+    as classes nested directly in another class body.  Walking only ``body``
+    lists of ``ClassDef`` nodes would therefore leave some discovered nodes
+    unmapped and make source discovery fail with ``KeyError``.  Control-flow
+    containers preserve the surrounding lexical prefix; functions add the
+    ``<locals>`` segment used by Python's runtime ``__qualname__``.
+    """
     qualnames: dict[int, str] = {}
 
-    def visit(body: list[ast.stmt], prefix: str = "") -> None:
-        for statement in body:
-            if not isinstance(statement, ast.ClassDef):
-                continue
-            qualname = f"{prefix}.{statement.name}" if prefix else statement.name
-            qualnames[id(statement)] = qualname
-            visit(statement.body, qualname)
+    def visit(node: ast.AST, prefix: str = "") -> None:
+        if isinstance(node, ast.ClassDef):
+            qualname = f"{prefix}.{node.name}" if prefix else node.name
+            qualnames[id(node)] = qualname
+            for statement in node.body:
+                visit(statement, qualname)
+            return
 
-    visit(getattr(tree, "body", []))
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            function_prefix = f"{prefix}.{node.name}" if prefix else node.name
+            function_prefix += ".<locals>"
+            for statement in node.body:
+                visit(statement, function_prefix)
+            return
+
+        for child in ast.iter_child_nodes(node):
+            visit(child, prefix)
+
+    visit(tree)
     return qualnames
+
+
+def test_source_class_qualnames_cover_nested_and_control_flow_declarations() -> None:
+    """Every ``ClassDef`` reached by the source walk receives a stable name."""
+    tree = ast.parse(
+        "class Outer:\n"
+        "    class Nested(Exception):\n"
+        "        pass\n"
+        "def factory():\n"
+        "    class Local(Exception):\n"
+        "        pass\n"
+        "if True:\n"
+        "    class Conditional(Exception):\n"
+        "        pass\n"
+        "try:\n"
+        "    class Tried(Exception):\n"
+        "        pass\n"
+        "except Exception:\n"
+        "    class Handled(Exception):\n"
+        "        pass\n"
+    )
+    classes = {node.name: node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
+
+    assert _source_class_qualnames(tree) == {
+        id(classes["Outer"]): "Outer",
+        id(classes["Nested"]): "Outer.Nested",
+        id(classes["Local"]): "factory.<locals>.Local",
+        id(classes["Conditional"]): "Conditional",
+        id(classes["Tried"]): "Tried",
+        id(classes["Handled"]): "Handled",
+    }
 
 
 @cache
@@ -188,7 +251,7 @@ def _production_exception_classes() -> tuple[_SourceExceptionClass, ...]:
             origins = [base_origin(module, base, bindings) for base in node.bases]
             if any(
                 origin.rsplit(".", 1)[-1] in builtin_exception_names
-                or (resolved := resolve_reference(module, origin)) in exception_keys
+                or resolve_reference(module, origin) in exception_keys
                 for origin in origins
             ):
                 exception_keys.add(key)
@@ -224,37 +287,31 @@ def test_scan_reaches_a_plausible_exception_population() -> None:
     trips it, and far enough above zero that a packaging or import-walk
     regression fails loudly instead of silently.
 
-    The scope line is reported rather than only asserted. Because this walk
-    imports, its subject set is a property of the installed environment, and a
-    green that does not say what it covered invites the reader to assume it
-    covered everything. Stating the population and the extras that shaped it
-    makes the difference between two machines visible in the log instead of
-    discoverable only by a dedicated investigation.
+    The scope line is reported rather than only asserted. Stating the population
+    makes source-discovery regressions visible in the log instead of discoverable
+    only by a dedicated investigation.
     """
     population = _production_exception_classes()
     print(f"exception-base scope: {len(population)} classes scanned; {describe_optional_extras()}")
     assert len(population) >= _MIN_EXCEPTION_CLASSES_SCANNED, (
         f"only {len(population)} production exception classes discovered (floor "
-        f"{_MIN_EXCEPTION_CLASSES_SCANNED}); the import walk collapsed, so a green result below "
+        f"{_MIN_EXCEPTION_CLASSES_SCANNED}); the source walk collapsed, so a green result below "
         f"would mean 'nothing was examined' rather than 'nothing is wrong'. Scope: "
         f"{describe_optional_extras()}"
     )
 
 
 def test_production_exception_classes_do_not_introduce_unregistered_builtin_roots() -> None:
-    """A class rooting only at bare builtins must declare why, on itself."""
+    """Only the canonical root and proven external shim may root at builtins."""
     violations = [
-        f"{error_type.__module__}.{error_type.__qualname__}("
-        + ", ".join(sorted(base.__name__ for base in error_type.__bases__))
-        + ")"
+        _describe_exception(error_type)
         for error_type in _production_exception_classes()
-        if _has_only_bare_bases(error_type) and _declared_bare_base_rationale(error_type) is None
+        if _has_only_bare_bases(error_type) and _exception_identity(error_type) not in _PERMITTED_BUILTIN_ROOTS
     ]
     assert violations == [], (
-        "production exception class(es) root only at unregistered builtin bases and declare no "
-        f"reason. Derive from CadrumoError so the class binds to the error registry, or — if the "
-        f"bare root is deliberate — declare `{_BARE_BASE_RATIONALE_ATTR}: ClassVar[str]` on the "
-        "class itself stating why:\n  " + "\n  ".join(violations)
+        "production exception class(es) root only at unregistered builtin bases. Derive from "
+        "CadrumoError so each class binds to the error registry; interoperability translations "
+        "belong at the narrow external boundary:\n  " + "\n  ".join(violations)
     )
 
 
@@ -268,11 +325,10 @@ def test_no_class_declares_a_rationale_it_does_not_need() -> None:
     change, so the exemption cannot outlive the condition it describes.
     """
     unnecessary = [
-        f"{error_type.__module__}.{error_type.__qualname__}("
-        + ", ".join(sorted(base.__name__ for base in error_type.__bases__))
-        + ")"
+        _describe_exception(error_type)
         for error_type in _production_exception_classes()
-        if _declared_bare_base_rationale(error_type) is not None and not _has_only_bare_bases(error_type)
+        if _declared_bare_base_rationale(error_type) is not None
+        and _exception_identity(error_type) not in _PERMITTED_BUILTIN_ROOTS
     ]
     assert unnecessary == [], (
         f"class(es) declaring `{_BARE_BASE_RATIONALE_ATTR}` while NOT rooting only at bare builtin "

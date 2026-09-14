@@ -14,12 +14,170 @@ from itertools import pairwise
 
 import pytest
 
+from ...calculations.registry.authority_artifact import GovernedFactComponentQuery
+from ...calculations.registry.facts.schema import GovernedFact
+from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ..errors import IvaRateNotFoundError, IvaRateOverlapError
-from ..lookup import lookup_rate, rate_kinds_for_declared_rate, resolve_iva_rate
+from ..lookup import lookup_rate, rate_kinds_for_declared_rate, resolve_iva_rate, resolve_iva_rate_from_component
 from ..rates import load_iva_rate_table
 from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_ES = EUMemberState._from_registry("es")
+_GENERAL = IvaRateKind("general")
+_REDUCED = IvaRateKind("reduced")
+_SUPER_REDUCED = IvaRateKind("super_reduced")
+_ZERO = IvaRateKind("zero")
+
+
+def _mapping_fact(
+    fact_id: str,
+    variant_id: str,
+    *,
+    valid_from: date,
+    valid_to: date | None = None,
+    date_axis: str = "devengo_date",
+    selectors: tuple[dict[str, object], ...] = (),
+    entries: tuple[dict[str, object], ...],
+) -> GovernedFact:
+    """Build one narrow typed fact fixture for the pinned IVA reader seam."""
+    return GovernedFact.model_validate(
+        {
+            "fact_id": fact_id,
+            "family": "mapping",
+            "variants": (
+                {
+                    "variant_id": variant_id,
+                    "selectors": selectors,
+                    "date_axis": date_axis,
+                    "valid_from": valid_from,
+                    "valid_to": valid_to,
+                    "payload": {"kind": "mapping", "entries": entries},
+                    "source_refs": ("aeat-iva-rate-schedule",),
+                    "review_status": "agent_reviewed",
+                    "ownership": "authored",
+                },
+            ),
+        },
+    )
+
+
+def _pinned_iva_facts() -> dict[GovernedFactComponentQuery, GovernedFact]:
+    """Return only the rate and vocabulary facts required by one lookup."""
+    return {
+        GovernedFactComponentQuery("eu-member-state-catalogue"): _mapping_fact(
+            "eu-member-state-catalogue",
+            "eu-member-state-catalogue:2021-01-01",
+            valid_from=date(2021, 1, 1),
+            date_axis="filing_period",
+            entries=(
+                {"key": "member_state.order", "value": "es"},
+                {"key": "member_state.aliases", "value": "ES=es"},
+            ),
+        ),
+        GovernedFactComponentQuery("iva-rate-slot-catalogue"): _mapping_fact(
+            "iva-rate-slot-catalogue",
+            "iva-rate-slot-catalogue:1993-01-01",
+            valid_from=date(1993, 1, 1),
+            entries=(
+                {"key": "rate_kind.order", "value": "general,reduced,super_reduced,zero,exempt"},
+                {"key": "rate_kind.positive_order", "value": "general,reduced,super_reduced"},
+                {"key": "rate_kind.zero_token", "value": "zero"},
+                {"key": "rate_kind.exempt_token", "value": "exempt"},
+                {"key": "rate_kind.non_rate_token", "value": "none"},
+                {"key": "rate_kind.general.value", "value": "general"},
+                {"key": "rate_kind.general.description", "value": "General IVA rate tier."},
+                {"key": "rate_kind.general.category", "value": "domestic_general"},
+                {"key": "rate_kind.reduced.value", "value": "reduced"},
+                {"key": "rate_kind.reduced.description", "value": "Reduced IVA rate tier."},
+                {"key": "rate_kind.reduced.category", "value": "domestic_reduced"},
+                {"key": "rate_kind.super_reduced.value", "value": "super_reduced"},
+                {"key": "rate_kind.super_reduced.description", "value": "Super-reduced IVA rate tier."},
+                {"key": "rate_kind.super_reduced.category", "value": "domestic_super_reduced"},
+                {"key": "rate_kind.zero.value", "value": "zero"},
+                {"key": "rate_kind.zero.description", "value": "Zero-rated IVA tier."},
+                {"key": "rate_kind.zero.category", "value": "domestic_zero"},
+                {"key": "rate_kind.exempt.value", "value": "exempt"},
+                {"key": "rate_kind.exempt.description", "value": "Exempt IVA tier."},
+                {"key": "rate_kind.exempt.category", "value": "domestic_exempt"},
+            ),
+        ),
+        GovernedFactComponentQuery("iva-rate-schedule"): GovernedFact.model_validate(
+            {
+                "fact_id": "iva-rate-schedule",
+                "family": "mapping",
+                "variants": (
+                    {
+                        "variant_id": "iva-rate.es.general.2024.ordinary",
+                        "selectors": (
+                            {"name": "member_state", "value": "es"},
+                            {"name": "kind", "value": "general"},
+                            {"name": "rate_role", "value": "ordinary"},
+                        ),
+                        "date_axis": "devengo_date",
+                        "valid_from": date(2024, 1, 1),
+                        "valid_to": date(2024, 12, 31),
+                        "payload": {
+                            "kind": "mapping",
+                            "entries": (
+                                {"key": "pct", "value_type": "decimal", "value": "21"},
+                                {"key": "supersedes_tier_default", "value": False},
+                            ),
+                        },
+                        "legal_refs": ("ley-37-1992:art-90",),
+                        "review_status": "agent_reviewed",
+                        "ownership": "authored",
+                    },
+                    {
+                        "variant_id": "iva-rate-schedule:rate-role-catalogue:1995-01-01",
+                        "selectors": ({"name": "scope", "value": "rate_role_catalogue"},),
+                        "date_axis": "devengo_date",
+                        "valid_from": date(1995, 1, 1),
+                        "payload": {
+                            "kind": "mapping",
+                            "entries": (
+                                {"key": "rate_role.order", "value": "ordinary"},
+                                {"key": "rate_role.default", "value": "ordinary"},
+                                {"key": "rate_role.ordinary.value", "value": "ordinary"},
+                                {"key": "rate_role.ordinary.is_default", "value": "true"},
+                                {"key": "rate_role.ordinary.supersedes_tier_default", "value": "false"},
+                            ),
+                        },
+                        "legal_refs": ("ley-37-1992:art-90",),
+                        "review_status": "agent_reviewed",
+                        "ownership": "authored",
+                    },
+                ),
+            },
+        ),
+    }
+
+
+def test_component_reader_resolves_dated_iva_rate_with_one_pin() -> None:
+    """Load the rate declaration by exact fact id and retain its generation."""
+    reader = FakeAuthorityComponentReader(_pinned_iva_facts())
+    generation = reader.pin()
+
+    resolved = resolve_iva_rate_from_component(
+        reader,
+        pin=generation,
+        member_state="es",
+        kind=IvaRateKind("general"),
+        on_date=date(2024, 6, 15),
+    )
+
+    assert resolved.fact_id == "iva-rate-schedule"
+    assert resolved.variant_id == "iva-rate.es.general.2024.ordinary"
+    assert resolved.effective_date == date(2024, 6, 15)
+    assert resolved.valid_from == date(2024, 1, 1)
+    assert resolved.valid_to == date(2024, 12, 31)
+    assert resolved.authority_digest == generation.logical_generation
+    assert reader.loads == [
+        GovernedFactComponentQuery("eu-member-state-catalogue"),
+        GovernedFactComponentQuery("iva-rate-slot-catalogue"),
+        GovernedFactComponentQuery("iva-rate-schedule"),
+    ]
 
 
 def test_es_general_2024_rate() -> None:
@@ -31,7 +189,7 @@ def test_es_general_2024_rate() -> None:
     test asserted it back. RDL 20/2012 art. 23.Dos fixed 21 % from 1 September
     2012 and nothing has changed it since.
     """
-    rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2024, 6, 15))
+    rate = lookup_rate(_ES, _GENERAL, date(2024, 6, 15))
     assert rate.pct == Decimal("21")
     assert rate.effective_from == date(2012, 9, 1)
     assert rate.effective_until == date(2024, 12, 31)
@@ -40,8 +198,8 @@ def test_es_general_2024_rate() -> None:
 def test_rate_lookup_retains_the_matched_authority_provenance() -> None:
     """The public projection is backed by the exact coexisting fact variant."""
     resolved = resolve_iva_rate(
-        EUMemberState.ES,
-        IvaRateKind.SUPER_REDUCED,
+        _ES,
+        _SUPER_REDUCED,
         date(2024, 11, 1),
         rate_role="coexisting-2",
     )
@@ -59,7 +217,7 @@ def test_rate_lookup_retains_the_matched_authority_provenance() -> None:
 
 
 def test_es_general_2025_rate() -> None:
-    rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2025, 6, 15))
+    rate = lookup_rate(_ES, _GENERAL, date(2025, 6, 15))
     assert rate.pct == Decimal("21")
     assert rate.effective_from == date(2025, 1, 1)
     assert rate.effective_until is None
@@ -67,28 +225,28 @@ def test_es_general_2025_rate() -> None:
 
 def test_es_general_2024_last_day() -> None:
     """December 31 2024 still resolves to the 2024 record."""
-    rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2024, 12, 31))
+    rate = lookup_rate(_ES, _GENERAL, date(2024, 12, 31))
     assert rate.effective_until == date(2024, 12, 31)
 
 
 def test_es_general_2025_first_day() -> None:
     """January 1 2025 resolves to the 2025 record (no overlap)."""
-    rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2025, 1, 1))
+    rate = lookup_rate(_ES, _GENERAL, date(2025, 1, 1))
     assert rate.effective_from == date(2025, 1, 1)
 
 
 def test_es_super_reduced_2024_and_2025_both_resolve() -> None:
     """The 4 % super-reducido is registered for both years."""
-    rate_2024 = lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, date(2024, 6, 15))
-    rate_2025 = lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, date(2025, 6, 15))
+    rate_2024 = lookup_rate(_ES, _SUPER_REDUCED, date(2024, 6, 15))
+    rate_2025 = lookup_rate(_ES, _SUPER_REDUCED, date(2025, 6, 15))
     assert rate_2024.pct == Decimal("4")
     assert rate_2025.pct == Decimal("4")
 
 
 def test_es_reduced_2024_and_2025_both_resolve() -> None:
     """The 10 % reducido is registered for both years."""
-    rate_2024 = lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, date(2024, 6, 15))
-    rate_2025 = lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, date(2025, 6, 15))
+    rate_2024 = lookup_rate(_ES, _REDUCED, date(2024, 6, 15))
+    rate_2025 = lookup_rate(_ES, _REDUCED, date(2025, 6, 15))
     assert rate_2024.pct == Decimal("10")
     assert rate_2025.pct == Decimal("10")
 
@@ -107,9 +265,9 @@ def test_es_lookup_before_the_general_rate_existed_raises() -> None:
     with no matching acceptance cannot tell a boundary from a blanket gap.
     """
     with pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2012|rate"):
-        lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2012, 8, 31))
+        lookup_rate(_ES, _GENERAL, date(2012, 8, 31))
 
-    assert lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2012, 9, 1)).pct == Decimal("21")
+    assert lookup_rate(_ES, _GENERAL, date(2012, 9, 1)).pct == Decimal("21")
 
 
 def test_es_pre_2024_years_inside_prescripcion_now_resolve() -> None:
@@ -121,8 +279,8 @@ def test_es_pre_2024_years_inside_prescripcion_now_resolve() -> None:
     refused for both.
     """
     for year in (2022, 2023):
-        assert lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(year, 6, 1)).pct == Decimal("21")
-        assert lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, date(year, 6, 1)).pct == Decimal("10")
+        assert lookup_rate(_ES, _GENERAL, date(year, 6, 1)).pct == Decimal("21")
+        assert lookup_rate(_ES, _REDUCED, date(year, 6, 1)).pct == Decimal("10")
 
 
 def test_committed_registry_has_no_overlapping_windows() -> None:
@@ -171,7 +329,7 @@ def test_a_declared_zero_resolves_to_the_zero_tier_on_every_date() -> None:
     structurally cannot express it, so it must not pretend to answer it.
     """
     for on_date in (date(2024, 3, 15), date(2024, 8, 15), date(2024, 11, 15), date(2025, 6, 1), date(2026, 6, 1)):
-        assert rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0"), on_date) == (IvaRateKind.ZERO,), (
+        assert rate_kinds_for_declared_rate(_ES, Decimal("0"), on_date) == (_ZERO,), (
             f"0 % must resolve to the zero tier on {on_date.isoformat()}: the table's silence about a zero "
             "record is incomplete coverage, not a statement that zero-rating was unlawful that day"
         )
@@ -192,14 +350,12 @@ def test_the_zero_exemption_does_not_leak_into_the_dated_temporary_rates() -> No
     inside_autumn = date(2024, 11, 15)
     after = date(2025, 6, 1)
 
-    assert rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0.05"), inside_summer) == (IvaRateKind.REDUCED,)
-    assert rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0.02"), inside_autumn) == (
-        IvaRateKind.SUPER_REDUCED,
-    )
-    assert rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0.075"), inside_autumn) == (IvaRateKind.REDUCED,)
+    assert rate_kinds_for_declared_rate(_ES, Decimal("0.05"), inside_summer) == (_REDUCED,)
+    assert rate_kinds_for_declared_rate(_ES, Decimal("0.02"), inside_autumn) == (_SUPER_REDUCED,)
+    assert rate_kinds_for_declared_rate(_ES, Decimal("0.075"), inside_autumn) == (_REDUCED,)
 
     for withdrawn in (Decimal("0.02"), Decimal("0.05"), Decimal("0.075")):
-        assert rate_kinds_for_declared_rate(EUMemberState.ES, withdrawn, after) == (), (
+        assert rate_kinds_for_declared_rate(_ES, withdrawn, after) == (), (
             f"{withdrawn} must not resolve in 2025 -- the temporary windows closed, and a date-blind fix "
             "would silently re-admit a rate the statute withdrew"
         )

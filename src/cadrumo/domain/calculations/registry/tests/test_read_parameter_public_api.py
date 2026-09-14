@@ -14,8 +14,12 @@ from decimal import Decimal
 
 import pytest
 
+from ..authority import bundled_authority
+from ..authority_artifact import ModeloRevisionComponentQuery
 from ..errors import RegistryValidationError
-from ..formula_runtime_ops import read_parameter
+from ..formula_runtime_ops import read_parameter, read_parameter_from_component
+from ..schema import ModeloRevision
+from .authority_fakes import FakeAuthorityComponentReader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,7 +77,7 @@ def test_read_parameter_reads_the_bundled_authority() -> None:
 
 
 def test_read_parameter_raises_for_unknown_modelo() -> None:
-    with pytest.raises(RegistryValidationError, match="modelo '999' not registered"):
+    with pytest.raises(RegistryValidationError, match="modelo '999' is not registered"):
         read_parameter(
             "999",
             "2025",
@@ -98,5 +102,43 @@ def test_read_parameter_raises_for_unknown_parameter_id() -> None:
             "100",
             "2025",
             "does-not-exist",
+            date_context={"filing_period": date(2025, 12, 31)},
+        )
+
+
+def test_read_parameter_from_component_uses_one_pinned_revision_query() -> None:
+    """A component consumer addresses the selected revision without graph traversal."""
+    revision = bundled_authority().modelo("100").revisions["2025"]
+    assert isinstance(revision, ModeloRevision)
+    reader = FakeAuthorityComponentReader({})
+
+    query = ModeloRevisionComponentQuery(modelo_id="100", revision_id="2025")
+    reader.components[query] = revision
+    pin = reader.pin()
+
+    value = read_parameter_from_component(
+        reader,
+        pin=pin,
+        modelo_id="100",
+        revision_id="2025",
+        parameter_id="renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert value == Decimal("5")
+    assert reader.loads == [query]
+
+
+def test_read_parameter_from_component_refuses_a_non_revision_payload() -> None:
+    """A component-family mismatch cannot be interpreted as a revision."""
+    reader = FakeAuthorityComponentReader({ModeloRevisionComponentQuery("100", "2025"): object()})
+
+    with pytest.raises(RegistryValidationError, match="invalid modelo revision"):
+        read_parameter_from_component(
+            reader,
+            pin=reader.pin(),
+            modelo_id="100",
+            revision_id="2025",
+            parameter_id="any-parameter",
             date_context={"filing_period": date(2025, 12, 31)},
         )

@@ -24,7 +24,7 @@ from .orden_anual_html import (
     row_values,
 )
 
-_REDUCTION_HEADING_MARKERS = ("disposición adicional", "reducción")
+_LORCA_2022_HEADING_MARKERS = ("disposición adicional cuarta", "reducción", "2022", "lorca")
 _REDUCTION_IVA_MARKERS = ("cuotas devengadas", "operaciones corrientes", "reduc")
 _REDUCTION_PERIOD_MARKERS = ("cálculo", "cuota")
 _REDUCTION_RATE_RE = re.compile(r"reducir\s+en\s+un\s+([0-9]+(?:,[0-9]+)?)\s+por\s+ciento", re.I)
@@ -124,12 +124,11 @@ def extract_lorca_2022_reduction(
     *,
     source_label: str,
 ) -> OrdenAnualIvaLorca2022Reduction | None:
-    """Return the sole annual-Orden municipal reduction candidate, when published.
+    """Return the source-observed Lorca 2022 reduction, when published.
 
-    The parser identifies source structure and returns observed values.  It
-    intentionally does not decide which municipality, year, rate, annex, or
-    applicability window is governed.  That decision belongs to the compiler's
-    typed facts-authority projection.
+    Other municipal reductions are not interchangeable with this source shape
+    and remain outside this singular extraction contract.  The compiler still
+    validates the observed values against its typed facts authority before use.
     """
     heading = _find_lorca_2022_heading(soup, source_label=source_label)
     if heading is None:
@@ -179,7 +178,7 @@ def _find_lorca_2022_heading(soup: BeautifulSoup, *, source_label: str) -> Tag |
     headings = tuple(
         tag
         for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
-        if _contains_all_markers(normalise_html_text(tag.get_text(" ", strip=True)), _REDUCTION_HEADING_MARKERS)
+        if _contains_all_markers(normalise_html_text(tag.get_text(" ", strip=True)), _LORCA_2022_HEADING_MARKERS)
         and any(_contains_all_markers(text, _REDUCTION_IVA_MARKERS) for text in _lorca_2022_paragraphs(tag))
     )
     if not headings:

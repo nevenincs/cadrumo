@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, NoReturn
 
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ZERO
+from ....core.irnr import TipoRentaIrnr
 from .convenio import ResolvedConvenioOverride, resolve_convenio_override
 from .errors import RegistryValidationError
 from .formula_runtime_ops import (
@@ -54,6 +55,7 @@ from .irnr_tipo_renta import (
     require_tipo_renta_irnr,
     tipo_renta_inmobiliaria_token,
     tipo_renta_pension_token,
+    tipo_renta_ue_residente_token,
 )
 from .renta_codes_catalogue import is_ue_eea_country_code
 from .schema_formula import FormulaExpression
@@ -273,7 +275,7 @@ def _apply_convenio_override(override: ResolvedConvenioOverride, *, baseline_rat
         if baseline_rate is None:
             return None
         return min(baseline_rate, override.rate)
-    raise RegistryValidationError(f"unsupported convenio override kind {kind.value!r}")
+    raise RegistryValidationError(f"unsupported convenio override kind {override.kind.value!r}")
 
 
 def _irnr_pension_effective_rate(
@@ -357,7 +359,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
         if deductible_expenses == ZERO:
             return gross
         if not _m210_allows_art_24_6_expenses(
-            tipo_renta=tipo_renta,
+            tipo_renta=tipo_renta_token,
             country_code=country,
             effective_date=ctx.date_context.get("filing_period"),
         ):
@@ -492,11 +494,11 @@ def _required_parameter_leaf(expression: FormulaExpression, *, op: str, index: i
 
 def _m210_allows_art_24_6_expenses(
     *,
-    tipo_renta: str,
+    tipo_renta: TipoRentaIrnr,
     country_code: str,
     effective_date: date | None,
 ) -> bool:
-    return tipo_renta == "ue_residente" or is_ue_eea_country_code(
+    return tipo_renta == tipo_renta_ue_residente_token(effective_date=effective_date) or is_ue_eea_country_code(
         country_code,
         effective_date=effective_date,
     )

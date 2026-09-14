@@ -1,6 +1,6 @@
 """Static enforcement of the :data:`~core.errors.ERROR_REGISTRY` invariants.
 
-Walks every importable module under ``cadrumo``, discovers each
+Walks every production source module under ``cadrumo``, discovers each
 :class:`~core.errors.CadrumoError` subclass, and asserts:
 
 * every subclass binds to a registered :class:`~core.errors.ErrorCode`,
@@ -57,26 +57,30 @@ class _SourceErrorClass:
     bases: tuple[str, ...]
 
     @property
-    def __name__(self) -> str:
+    def name(self) -> str:
+        """Return the declaration's leaf name without duplicating identity state."""
         return self.qualname.rsplit(".", 1)[-1]
 
-    @property
-    def __module__(self) -> str:
-        return self.module
+
+def _source_error_key(error_type: _SourceErrorClass) -> str:
+    """Return the registry identity for a source descriptor."""
+    return f"{error_type.module}.{error_type.qualname}"
 
 
 def _class_qualnames(tree: ast.AST) -> dict[int, str]:
     qualnames: dict[int, str] = {}
 
-    def visit(body: list[ast.stmt], prefix: str = "") -> None:
-        for statement in body:
-            if not isinstance(statement, ast.ClassDef):
-                continue
-            qualname = f"{prefix}.{statement.name}" if prefix else statement.name
-            qualnames[id(statement)] = qualname
-            visit(statement.body, qualname)
+    def visit(node: ast.AST, prefix: str = "") -> None:
+        if isinstance(node, ast.ClassDef):
+            prefix = f"{prefix}.{node.name}" if prefix else node.name
+            qualnames[id(node)] = prefix
+        elif isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef)):
+            prefix = f"{prefix}.{node.name}.<locals>" if prefix else f"{node.name}.<locals>"
 
-    visit(getattr(tree, "body", []))
+        for child in ast.iter_child_nodes(node):
+            visit(child, prefix)
+
+    visit(tree)
     return qualnames
 
 
@@ -118,7 +122,7 @@ def _source_error_classes() -> tuple[_SourceErrorClass, ...]:
         for key, (module, _qualname, bases) in by_key.items():
             if key in descendants:
                 continue
-            if any((resolved := resolve_reference(module, base)) in descendants for base in bases):
+            if any(resolve_reference(module, base) in descendants for base in bases):
                 descendants.add(key)
                 changed = True
 
@@ -160,9 +164,48 @@ def _looks_like_cadrumo_error_reference(node: ast.expr, known_names: set[str]) -
     return last_token in known_names
 
 
+def test_source_descriptor_keeps_reserved_metadata_on_its_class() -> None:
+    """Source metadata must remain ordinary descriptor data, not dunder properties."""
+    descriptor = _SourceErrorClass(
+        module="cadrumo.synthetic.errors",
+        qualname="Outer.Error",
+        bases=("cadrumo.core.errors.CadrumoError",),
+    )
+
+    assert descriptor.module == "cadrumo.synthetic.errors"
+    assert descriptor.qualname == "Outer.Error"
+    assert descriptor.name == "Error"
+    assert descriptor.bases == ("cadrumo.core.errors.CadrumoError",)
+    assert isinstance(_SourceErrorClass.__module__, str)
+    assert isinstance(_SourceErrorClass.__qualname__, str)
+    assert set(_SourceErrorClass.__dataclass_fields__) == {"module", "qualname", "bases"}
+
+
+def test_class_qualnames_cover_control_flow_and_function_scopes() -> None:
+    tree = ast.parse(
+        "class Top(CadrumoError):\n"
+        "    class Nested(CadrumoError):\n"
+        "        pass\n"
+        "if True:\n"
+        "    class Conditional(CadrumoError):\n"
+        "        pass\n"
+        "def factory():\n"
+        "    class Local(CadrumoError):\n"
+        "        pass\n"
+    )
+    classes = {node.name: node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
+
+    qualnames = _class_qualnames(tree)
+
+    assert qualnames[id(classes["Top"])] == "Top"
+    assert qualnames[id(classes["Nested"])] == "Top.Nested"
+    assert qualnames[id(classes["Conditional"])] == "Conditional"
+    assert qualnames[id(classes["Local"])] == "factory.<locals>.Local"
+
+
 #: Lowest plausible number of registered ``CadrumoError`` subclasses. Far below
 #: the measured figure so ordinary churn never trips it, far enough above zero
-#: that a collapsed import walk reds instead of greening vacuously.
+#: that a collapsed source walk reds instead of greening vacuously.
 _MIN_ERROR_SUBCLASSES = 300
 
 
@@ -173,41 +216,30 @@ def test_the_subclass_walk_reaches_a_plausible_population() -> None:
     equality, and all of them hold trivially over an empty population -- so
     without this floor the gate is indistinguishable from one that works.
 
-    The subject set here is built from ``__subclasses__`` after a package-wide
-    import, which is doubly environment-shaped: it lists only classes whose
-    defining statement actually EXECUTED, so an importable-but-unimported class
-    is invisible, as is any class defined inside an optional-import fallback
-    whose extra is installed. The scope line is therefore reported, not merely
-    asserted: a green from this gate is a claim about one environment, and it
-    should say which.
+    The subject set here is built from the production source AST, so it includes
+    importable-but-unimported classes and classes defined inside an optional-import
+    fallback whose extra is installed. The scope line is therefore reported, not
+    merely asserted: a green from this gate is a claim about the production source
+    tree, and it should say which.
     """
     subclasses = _iter_error_subclasses(CadrumoError)
     print(f"error-registry scope: {len(subclasses)} CadrumoError subclasses walked; {describe_optional_extras()}")
     assert len(subclasses) >= _MIN_ERROR_SUBCLASSES, (
         f"only {len(subclasses)} CadrumoError subclasses discovered (floor {_MIN_ERROR_SUBCLASSES}); "
-        f"the import walk collapsed, so every assertion in this module would pass by examining "
+        f"the source walk collapsed, so every assertion in this module would pass by examining "
         f"nothing. Scope: {describe_optional_extras()}"
     )
 
 
 def test_every_cadrumo_error_subclass_has_a_registered_code() -> None:
     subclasses = _iter_error_subclasses(CadrumoError)
-    ordered = sorted(subclasses, key=lambda error_type: f"{error_type.__module__}.{error_type.__qualname__}")
+    ordered = sorted(subclasses, key=_source_error_key)
 
     declared = dict(ALL_DECLARED_ERROR_CODES)
-    missing = [
-        f"{error_type.__module__}.{error_type.__qualname__}"
-        for error_type in ordered
-        if f"{error_type.__module__}.{error_type.__qualname__}" not in declared
-    ]
+    missing = [_source_error_key(error_type) for error_type in ordered if _source_error_key(error_type) not in declared]
     assert missing == []
 
-    bound = {
-        f"{error_type.__module__}.{error_type.__qualname__}": declared[
-            f"{error_type.__module__}.{error_type.__qualname__}"
-        ]
-        for error_type in subclasses
-    }
+    bound = {_source_error_key(error_type): declared[_source_error_key(error_type)] for error_type in subclasses}
     assert len(bound) == len(subclasses)
 
 

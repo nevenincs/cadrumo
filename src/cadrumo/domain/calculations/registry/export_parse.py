@@ -13,7 +13,6 @@ from defusedxml import ElementTree
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.decimal.coercion import normalize_decimal_separators
 from ....core.export_layout_format import ExportLayoutFormat
-from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
 from .export_value_policy import ParsedExportPolicyValue
@@ -278,7 +277,10 @@ def _read_dictionary_text(body: bytes) -> str:
     try:
         return body.decode("utf-8")
     except UnicodeDecodeError:
-        return body.decode(_LATIN_1_ENCODING)
+        try:
+            return body.decode("cp1252")
+        except UnicodeDecodeError as exc:
+            raise RegistryValidationError("XML dictionary is neither UTF-8 nor CP1252") from exc
 
 
 def _parse_dictionary_casilla_id(value: str, *, allow_letter_id: bool = False) -> CasillaId | None:

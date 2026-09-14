@@ -41,6 +41,7 @@ from .schema_rounding import RegistryRoundingCode
 if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
+    from .authority_artifact import AuthorityComponentReader, AuthorityGenerationPin
     from .formula_runtime import EvalContext as _EvalContext
     from .schema import ModeloRevision
 
@@ -525,16 +526,44 @@ def read_parameter(
     no registry-root override, cache, or raw-tree loading path.
     """
     from .authority import bundled_authority
+    from .queries import RegistryQueryService
 
-    authority = bundled_authority()
     try:
-        modelo_match = authority.modelo(modelo_id)
+        revision = RegistryQueryService(bundled_authority()).revision_by_id(modelo_id, str(revision_id))
     except RegistrySnapshotError as exc:
         raise RegistryValidationError(f"modelo {modelo_id!r} is not registered in the bundled authority") from exc
-    revision = modelo_match.revisions.get(revision_id)
-    if revision is None:
-        raise RegistryValidationError(f"modelo {modelo_id!r} has no revision {revision_id!r}")
     parameter = next((p for p in revision.parameters if p.id == parameter_id), None)
+    if parameter is None:
+        raise RegistryValidationError(
+            f"parameter {parameter_id!r} not registered under modelo {modelo_id!r} revision {revision_id!r}",
+        )
+    return resolve_parameter(parameter, date_context)
+
+
+def read_parameter_from_component(
+    reader: AuthorityComponentReader,
+    *,
+    pin: AuthorityGenerationPin,
+    modelo_id: str,
+    revision_id: RevisionId,
+    parameter_id: str,
+    date_context: Mapping[str, date],
+) -> Decimal:
+    """Resolve one parameter from a revision loaded through a pinned reader.
+
+    The caller owns the operation pin.  This path performs no repinning and no
+    authority-wide model traversal; the reader receives the exact modelo and
+    revision coordinate and returns one typed revision component.
+    """
+    from .queries import load_modelo_revision_component
+
+    revision = load_modelo_revision_component(
+        reader,
+        pin=pin,
+        modelo_id=modelo_id,
+        revision_id=str(revision_id),
+    )
+    parameter = next((candidate for candidate in revision.parameters if candidate.id == parameter_id), None)
     if parameter is None:
         raise RegistryValidationError(
             f"parameter {parameter_id!r} not registered under modelo {modelo_id!r} revision {revision_id!r}",

@@ -49,7 +49,7 @@ from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
-from ..user_profile.loader import load_user_profile_schema
+from ..user_profile.schema import ProfileSchemaDefinition
 from .errors import RentaError, RentaValidationError
 
 # The selected registry revision supplies cap, fraction, target, and eligibility
@@ -157,16 +157,13 @@ class ProfileCompletenessError(RentaError):
 #
 
 
-def _vessel_registry_enum() -> type[StrEnum]:
-    """Build the typed vessel vocabulary from the bundled profile schema."""
-    values = load_user_profile_schema().field("maritime_worker.vessel_registry").enum_values
+def vessel_registry_enum(schema: ProfileSchemaDefinition) -> type[StrEnum]:
+    """Build the typed vessel vocabulary from an operation-pinned schema."""
+    values = schema.field("maritime_worker.vessel_registry").enum_values
     return StrEnum(
         "VesselRegistry",
         {value.upper(): value for value in values},
     )
-
-
-VesselRegistry = _vessel_registry_enum()
 
 
 @dataclass(frozen=True, slots=True)
@@ -351,7 +348,6 @@ __all__ = [
     "MaritimeExemptionInactiveError",
     "MaritimeWorkerFacts",
     "ProfileCompletenessError",
-    "VesselRegistry",
     "art_7p_eligible",
     "calculate_art_7p_exemption",
     "calculate_rebeca_exemption",
@@ -360,4 +356,5 @@ __all__ = [
     "guard_da41_inactive",
     "maritime_exemption_registry_declarations",
     "rebeca_eligible",
+    "vessel_registry_enum",
 ]

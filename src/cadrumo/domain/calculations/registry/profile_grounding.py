@@ -29,6 +29,7 @@ from .authority import ValidatedRegistryAuthority
 from .binding_selector_utils import provider_member
 from .errors import RegistryValidationError
 from .profile_bindings import ProfileProvider
+from .queries import RegistryQueryService
 from .schema import BindingDefinition
 
 
@@ -100,15 +101,14 @@ def _compute_profile_grounding_index(
     legal_refs: dict[str, set[str]] = {}
     source_refs: dict[str, set[str]] = {}
 
-    for definition in authority.modelos:
-        for revision in definition.revisions.values():
-            for binding in revision.bindings:
-                if binding.source is not BindingSourceKind.PROFILE:
-                    continue
-                for key in binding_profile_keys(binding):
-                    modelos.setdefault(key, set()).add(definition.id)
-                    legal_refs.setdefault(key, set()).update(binding.legal_refs)
-                    source_refs.setdefault(key, set()).update(binding.source_refs)
+    for modelo_id, revision in RegistryQueryService(authority).iter_modelo_revisions():
+        for binding in revision.bindings:
+            if binding.source is not BindingSourceKind.PROFILE:
+                continue
+            for key in binding_profile_keys(binding):
+                modelos.setdefault(key, set()).add(modelo_id)
+                legal_refs.setdefault(key, set()).update(binding.legal_refs)
+                source_refs.setdefault(key, set()).update(binding.source_refs)
 
     return {
         key: ProfileKeyGrounding(
