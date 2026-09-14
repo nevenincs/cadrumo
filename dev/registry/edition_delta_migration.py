@@ -406,6 +406,8 @@ class MigrationOutcome:
     def source_status(self) -> str:
         if self.source_findings:
             return "refused"
+        if self.blocked:
+            return "partial"
         return "applied" if self.applied else "accepted"
 
     @property
@@ -2793,15 +2795,24 @@ def persist_migration_report(
         encoding="utf-8",
         newline="\n",
     )
+    machine: dict[str, object] = {
+        "command": list(command),
+        "report": rendered,
+        "source_migration": outcome.source_status,
+        "publication_readiness": outcome.publication_readiness_status,
+        "publication_execution": outcome.publication_execution_status,
+    }
+    if isinstance(outcome, MigrationOutcome):
+        machine["outcomes"] = {
+            "completed": list(outcome.completed),
+            "unchanged": list(outcome.unchanged),
+            "blocked": {revision: list(details) for revision, details in outcome.blocked.items()},
+            "complete": outcome.complete,
+            "applied": outcome.applied,
+        }
     (run_dir / "report.json").write_text(
         json.dumps(
-            {
-                "command": list(command),
-                "report": rendered,
-                "source_migration": outcome.source_status,
-                "publication_readiness": outcome.publication_readiness_status,
-                "publication_execution": outcome.publication_execution_status,
-            },
+            machine,
             ensure_ascii=False,
             indent=2,
         )
