@@ -1,3 +1,7 @@
+---
+name: aeat-quality-gates
+---
+
 # AEAT quality gates
 
 ## What a gate must prove
@@ -10,6 +14,22 @@
 ## Detector teeth
 
 A gate that protects a declaration or generated relationship must demonstrate that a representative defect is detected. Use an isolated fixture, temporary registry tree, or explicit test input; do not monkeypatch production modules globally or mutate the contributor's working tree. The defect proof and the normal path must both pass in the same test suite.
+
+## Repository enumeration
+
+### Rule
+
+Never use Git commands, the Git index, tracked-file lists, commit history, or branch state as the authority for a quality, completeness, parity, or packaging gate. Derive the expected set in-process from the current source tree and its checked-in inclusion, exclusion, catalogue, or schema policy.
+
+### Why
+
+The `2026-09-14-evidence-corpus-registry-evidence-normalization-audit` exposed a wheel-parity gate whose answer changed with staging state: deleted source paths remained expected and new valid paths appeared unexpected. Version-control metadata describes a proposed commit, not the product contract, and makes an otherwise valid worktree fail for reasons unrelated to correctness.
+
+### How
+
+- Good: enumerate current files with `dev.source_tree.repository_files`, then project them through the packaging or corpus policy and compare that set with the built artifact.
+- Good: use Git in an explicitly named release workflow to inspect or publish a commit, where commit identity itself is the subject—not as a test oracle.
+- Bad: define expected wheel members, registry completeness, source coverage, or corpus parity with `git ls-files`, `git status`, or a commit diff.
 
 ## Layered validation
 
