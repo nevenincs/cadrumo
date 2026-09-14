@@ -1,0 +1,29 @@
+{
+  "input": {
+    "name": "ty-gitlab.json",
+    "sha256": "b4cedbdcf7cbb3c19996788071854876204301a2c6e4a48b399327a8d2b122f1",
+    "size_bytes": 6498388
+  },
+  "output_sha256": {
+    "burn-down.json": "3e32d4d8e1f9074cedaf108f5240dd5c2739706cd2cdd68035b2c32d84b43e48",
+    "call-signatures.json": "08d5163040348365123261fcded9711cb126ed00f13f39dec8ab22a4df049d97",
+    "class-attribute-members.csv": "b3ac7a65e292e30b91270409fe02278abc8cee64c1a46f0be6a0c3056dc723e1",
+    "class-attribute-owners.csv": "9adc46194753c92f1a2bb0ccad9129024dc23fd9b56062a170b08fbf9679ff83",
+    "diagnostic-index.csv": "135b68b7e22d0a87f7967952f32b2f2dbcba10362d6438f4fb9ca2820966f360",
+    "exact-messages.csv": "58db3b3c453062075cf55741505bc3ad941b81bb85c87c0a060655b294ea4ab4",
+    "files.csv": "2e4df002f336b5807a01f7c2754fd50b372d774fd4a0c9f575a1d903797ac0ee",
+    "invalid-argument-type-pairs.csv": "f4245f7fc212e25fa485956514b50e7306bc35326ce3dbee001472a726c01319",
+    "message-templates.csv": "e23dfc2f2ab6cd733ae4743dc8d0e93371ed106b9fdd421f81637cf090390477",
+    "object-attributes.csv": "12477a7fdaba8165627da82f428eb4c1f4f77469155db1ceb4c6a55bea62875e",
+    "offender-clusters.json": "fcf2c1d3bdf59e291cfdee98c072ac90bed38a8afad642f26075d0b027f1d256",
+    "report.md": "0891980385c7573663b9cef3f6ec3ab054d08f5726630eba57117684a3a9753f",
+    "root-clusters.json": "a67ed2ab95100bb2b19f0005a54f1606739631624d9c17de61512caedd5c27d4",
+    "rule-cooccurrence.csv": "3a41785768e8ecd3cc8bc52dc2f444cc6b8d66c4ab2fa2f9eb65a1f705bb7d23",
+    "rules.csv": "f28b38b4b3c3426f223e9d953ccf45730b502a656c6136a2a831637449ba69c4",
+    "summary.json": "610b2c91bcaca562b2917ce617e49cc06c21ab61c788f9102f8622e6ad3cfd69",
+    "work-packets.csv": "dd309b074847cabcda1e65a8312a21270fb5dc5091c3ec21d0bd4b552fc40212"
+  },
+  "schema": "cadrumo.ty-static-analysis-manifest.v1",
+  "tool_version": "1.0.0",
+  "ty_command": "uv run --no-sync ty check src dev/__init__.py dev/_paths.py dev/actionlint.py dev/ci_contract.py dev/ci_reports.py dev/exit_codes.py dev/scripted_registration_channels.py dev/containers dev/corpus dev/env dev/identity dev/ingest_harness dev/init dev/quality dev/readme dev/registry dev/release dev/sanitizer dev/smoke dev/test_runs --output-format gitlab --color never"
+}

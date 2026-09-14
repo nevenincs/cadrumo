@@ -1,0 +1,244 @@
+expected,found,count
+str | None,object,209
+Decimal | None,object,199
+str,object,74
+date | None,object,67
+CatalogueCreationPorts,object,34
+CounterpartyEstablishmentRepositoryProtocol,object,34
+InvoiceConfirmationPorts,object,34
+InvoiceDraftExtractionPorts,object,34
+LedgerEvidencePorts,object,34
+PinnedAuthorityOperation,object,34
+SupplyNature | None,object,34
+"tuple[RegimeLegend, ...]",object,34
+IntracomOperationType | None,object,33
+IvaCategory | None,object,33
+InvoiceClass | None,object,32
+Sequence[FindingResolution],object,28
+PinnedAuthorityOperation,ValidatedRegistryAuthority,19
+str,X25519PrivateKey,16
+Translatable,str,15
+str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc,object,14
+BindingDefinition,_Binding,13
+SecureObjectRepository | None,~AlwaysFalsy | SecureObjectRepository,11
+"tuple[FiledDeclaracionObservationProtocol, ...]",tuple[_CalendarFiledObservation],11
+Iterable[_BindingWithProvider],"tuple[BindingDefinition, ...]",8
+SecureObjectRepository | None,object,6
+str,str | int,6
+FiledObservationProtocol,_FiledObservation,5
+Path,Path | None,5
+TransactionCatalogueCoCommitWriterProtocol | None,TransactionCatalogueRepositoryProtocol,5
+TransactionCatalogueCoCommitWriterProtocol,TransactionCatalogueRepositoryProtocol,5
+UsageRatioProfileLoader,"def _empty_usage_ratio_profile(*, bucket_id: str) -> UsageRatioProfile",5
+BucketEventHistoryRepositoryProtocol,BucketEventHistoryRepositoryProtocol | None,4
+CalculationRevisionCatalogueRepositoryProtocol,_CalculationRepository,4
+EvidenceConsentToken | None,EvidenceConsentProof | None,4
+Iterable[Unknown],<class 'IvaCategory'>,4
+Iterable[Unknown],<class 'IvaTerritorialScope'>,4
+LaxDate,date | None,4
+LaxStr | None,Unknown | IvaDeductionClassificationProvenance,4
+ModeloRecordCatalogueRepositoryProtocol,_FilingRepository,4
+ProfileSessionResumeDoorV1,"(*, bucket_id) -> None",4
+TransactionCatalogueCoCommitWriterProtocol | None,TransactionCatalogueRepositoryProtocol | None,4
+TransactionCatalogueRepositoryProtocol,TransactionCatalogueRepositoryProtocol | None,4
+WorkUnit,object,4
+WorkUnitCatalogueRepositoryProtocol,_WorkUnitRepository,4
+str | None,_FakeAuthProbe | date | LLMRunTelemetryDiagnosticsAdapter,4
+"tuple[EvidenceImage, ...]",tuple[MultimodalImageInput],4
+AST,expr | None,3
+CalculationRevisionCatalogueRepositoryProtocol,object,3
+DiagnosticSessionFailureClassifier,(_error) -> Literal[False],3
+EvidenceDocumentShapeProbe,(_data) -> Literal[DocumentShape.PDF_TEXT_LAYER],3
+FiledDeclaracionArtefactSink | None,((...) -> FiledObservationArtefactProtocol) | None,3
+FiledDeclaracionObservation,FiledObservationProtocol,3
+Iterable[Unknown],object,3
+SecureObjectRepository,object,3
+Settings | None,object,3
+TransactionCatalogueRepositoryProtocol,_TransactionRepository,3
+VisionClassifier | None,LocalVisionLLMClassifier,3
+"(DocumentTranscription, Settings, LLMProvider | None, EvidenceConsentProof | None, object, /) -> InvoiceDraft","def read_text(transcription: DocumentTranscription, settings: Settings, provider: LLMProvider | None, consent_token: EvidenceConsentProof | None, authority_values: InvoiceExtractionAuthorityValues) -> Unknown",2
+"(InvoiceDraft, tuple[RegimeLegend, ...], PinnedAuthorityOperation, /) -> tuple[DraftDiscrepancyFinding, ...]",(draft: InvoiceDraft) -> tuple[()],2
+AuthorityComponentReader,PinnedAuthorityOperation,2
+BucketEventHistoryCoCommitWriterProtocol,BucketEventHistoryRepositoryProtocol,2
+BucketEventHistoryCoCommitWriterProtocol,_EmptyBucketEventHistory,2
+BucketEventHistoryCoCommitWriterProtocol,_EventRepository,2
+CommandWriteRouteValue,str,2
+Decimal | None,str | Decimal,2
+EvidencePageTextExtractor,"(_data) -> tuple[str, ...]",2
+FiledObservationProtocol,_PriorObservation,2
+InvoiceCatalogueRepositoryProtocol,_EmptyInvoiceRepository,2
+InvoiceExtractionAuthorityValues | None,object,2
+Iterable[Unknown],<class 'IvaArt69DosService'>,2
+Iterable[Unknown],<class 'SpendingCategory'>,2
+Iterable[Unknown],<class 'ThirdPartyDeclarationRole'>,2
+LaxBool,Modelo | frozenset[EntityType] | frozenset[IrpfIncomeCategory] | frozenset[IVARegime],2
+LaxInt,object,2
+LaxStr,AnyHttpUrl,2
+"Literal[CasillaDataType.TEXT, CasillaDataType.INTEGER, CasillaDataType.DECIMAL, CasillaDataType.MONEY, CasillaDataType.DATE, CasillaDataType.BOOLEAN] | None","Literal[""text""]",2
+"Mapping[str, object]","dict[str | int | Decimal | date, str | int | Decimal | date]",2
+"Mapping[str, str | int]","dict[str, object]",2
+PerformanceClass,str,2
+ProrrataRegisterRepositoryProtocol,_InMemoryProrrataRegisterRepository,2
+RetencionObservationRepository,_EmptyRetencionObservationRepository,2
+Sized,<class 'CalendarCCAA'>,2
+StructuredInvoiceReader,def parse_structured_invoice(_data: bytes) -> object,2
+TransactionCatalogueRepositoryProtocol,None,2
+UsageRatioProfileLoader,"(*, bucket_id) -> UsageRatioProfile",2
+frozenset[Capability],frozenset[str],2
+frozenset[SideEffect],frozenset[str],2
+str | None,str | Decimal,2
+"tuple[FiledObservationProtocol, ...]",tuple[_FiledObservation],2
+"tuple[LegalRefId, ...]",object,2
+"tuple[_PreparedEventWrite, ...]",tuple[SecureObjectWrite],2
+type,_SourceTuiClass,2
+(() -> Awaitable[VerifyBrowserSessionLike]) | None,(() -> object) | None,1
+"((str, /) -> WorkUnit) | None",(_work_unit_id: str) -> None,1
+"((str, /) -> WorkUnit) | None",(_work_unit_id: str) -> SimpleNamespace,1
+"((str, /) -> str | None) | None","def country_code_for_stated_country_code(stated_code: str | None, *, operation: PinnedAuthorityOperation) -> str | None",1
+"() -> RetainedAuthorityValue[dict[str, tuple[str, ...]]]","() -> RetainedAuthorityValue[dict[str, tuple[str, str]]]",1
+(...) -> Any,object,1
+"(DocumentTranscription, Settings, LLMProvider | None, EvidenceConsentProof | None, object, /) -> InvoiceDraft","def unavailable(*args: object, **kwargs: object) -> object",1
+"(InvoiceDraft, tuple[RegimeLegend, ...], PinnedAuthorityOperation, /) -> tuple[DraftDiscrepancyFinding, ...]",(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding],1
+"(PromptSpec, /) -> LLMClassifier",(spec: PromptSpec) -> LocalTextLLMClassifier,1
+"(str, str, str, (ProfileRecoveryEnrollment, /) -> str, /) -> RegistrationAttempt",(_request: str) -> None,1
+"(tuple[VisionImage, ...], str, Settings, LLMProvider | None, EvidenceConsentProof | None, /) -> DocumentTranscription","def vision_reader_was_not_expected(*args: object, **kwargs: object) -> object",1
+AeatSession,object,1
+AeatSession,~None,1
+AggregationCaptureKind,"Literal[""aeat_sede_justificante""]",1
+AttachmentStoreProtocol,object,1
+BienesInversionIvaRegisterRepositoryProtocol,_UnavailableExportAuthority,1
+BienesInversionIvaRegisterRepositoryProtocol,object,1
+BrowserSessionFactoryPort,"def _unused_browser_session_factory(settings: object) -> CoroutineType[Any, Any, object]",1
+BucketEventHistoryCoCommitWriterProtocol | None,BucketEventHistoryRepositoryProtocol | None,1
+BucketEventHistoryRepositoryProtocol,_EventRepository,1
+BucketEventHistoryRepositoryProtocol,_InMemoryBucketEventRepository,1
+BucketEventHistoryRepositoryProtocol,_UnavailableExportAuthority,1
+CalculationObservationRepositoryProtocol,InMemoryObservationRepository,1
+CalculationObservationRepositoryProtocol,_EmptyCalculationObservationRepository,1
+CalculationObservationRepositoryProtocol,_EmptyObservationRepository,1
+CalculationObservationRepositoryProtocol,_UnavailableExportAuthority,1
+CalculationRevisionCatalogueRepositoryProtocol,_EmptyCalculationRepository,1
+CalculationRevisionCatalogueRepositoryProtocol,_InMemoryCalculationRevisionRepository,1
+CalculationRevisionCatalogueRepositoryProtocol,_UnavailableExportAuthority,1
+CatalogueInvoiceEventRepositoryPort,_InMemoryEventRepository,1
+CensalFetchPort,"def _unused_censal_fetch(session: object, *, taxpayer_nif: str, settings: object) -> CoroutineType[Any, Any, object]",1
+CompiledRegistryPayload,"tuple[Literal[""not""], Literal[""a""], Literal[""compiled""], Literal[""registry""]]",1
+Declaracion,FiledDeclarationProtocol,1
+Declaracion,FiledRegisterDeclarationProtocol,1
+DiagnosticAuthProbePort,_FakeAuthProbe | date | LLMRunTelemetryDiagnosticsAdapter,1
+EvidencePageTextExtractor,"def extract_pages_text(_data: bytes) -> tuple[str, ...]",1
+EvidencePageTextExtractor,"def refuse(_data: bytes) -> tuple[str, ...]",1
+Expediente,object,1
+FactProviderCompiler,(_root) -> tuple[()],1
+FiledBaselineImportPort,_InMemoryBaselineImport,1
+FiledCalculationObservationRepositoryPort,_InMemoryCalculationRepository,1
+FiledDataCapturePort,_DiscoveryPort,1
+FiledDataCapturePort,_UnavailableFiledDataCapturePort,1
+FiledDeclaracionArtefact,FiledObservationArtefactProtocol,1
+FiledDeclaracionArtefactSink | None,"bound method FiledObservationPersistencePort.persist_artefact(observation_key: tuple[str, int, Period, str], artefact: FiledObservationArtefactProtocol, body: bytes) -> FiledObservationArtefactProtocol",1
+FiledDeclarationTransformationPort,_InMemoryTransformation,1
+FiledIvaHistoryRepositoryPort,_InMemoryIvaHistoryRepository,1
+FiledIvaObservationPersistencePort,_InMemoryIvaObservationPersistence,1
+FiledObservationParserPort,_InMemoryParser,1
+FiledObservationPersistencePort,_InMemoryObservationPersistence,1
+GoogleSheetsExportPreparePort,(_profile: str) -> Prepared,1
+GovernedFactSource | None,int,1
+InvoiceCatalogueCoCommitWriterProtocol,_EmptyInvoiceRepository,1
+InvoiceCatalogueReader,object,1
+InvoiceCatalogueRepositoryProtocol,InMemoryInvoiceRepository,1
+Iterable[CorpusChunk],object,1
+"Iterable[Literal[""borrador"", ""renta_ledger_default""]]","tuple[str, ...]",1
+Iterable[Never],Iterator[AST],1
+Iterable[Unknown],<class 'IrpfActivityKind'>,1
+Iterable[Unknown],<class 'IvaFlowDirection'>,1
+Iterable[Unknown],<class 'ProrrataProvisionalProvenance'>,1
+Iterable[Unknown],<class 'ProrrataRegisterRegime'>,1
+Iterable[Unknown],<class 'RentalReductionArt232Tier'>,1
+Iterable[Unknown],~AlwaysFalsy,1
+IvaCompensationHistoryRepositoryProtocol,_EmptyIvaCompensationHistoryRepository,1
+IvaWalletDecisionRepositoryProtocol,IvaWalletDecisionRepository | None,1
+IvaWalletDecisionRepositoryProtocol,_UnavailableExportAuthority,1
+JustificanteMetadataPort,JustificanteRepository,1
+JustificanteRepositoryProtocol,_InMemoryJustificanteRepository,1
+JustificanteRepositoryProtocol,_UnavailableExportAuthority,1
+LaxDecimal | None,Unknown | IvaDeductionClassificationProvenance,1
+LaxDecimal,Unknown | IvaDeductionClassificationProvenance,1
+LaxInt | None,object,1
+LaxStr,str | None,1
+LedgerProviderResolverProtocol,_ProviderResolverFake,1
+"Literal[""1"", ""2""] | None",str | None,1
+"Literal[""exactly_one"", ""at_least_one"", ""zero_or_more""]",str,1
+"Literal[""replaced""]",tuple[str],1
+"Literal[""retired""]",tuple[str],1
+M036DeclarationRepositoryPort,_DeclarationRepository,1
+ManualInputProvider | DesignConstantProvider | ProfileProvider | ... omitted 28 union elements,_UnrelatedSelector,1
+"Mapping[str, str] | None","dict[str, str | int | Decimal | date | None]",1
+ModeloDefinition,"tuple[ModeloDefinition, RegistryCatalogues]",1
+ModeloFactProjector | None,(_modelos) -> tuple[()],1
+ModeloRecordCatalogueRepositoryProtocol,_InMemoryFilingRepository,1
+ModeloRecordCatalogueRepositoryProtocol,_UnavailableExportAuthority,1
+ModeloRecordCatalogueRepositoryProtocol,object,1
+ModeloRevision,~None,1
+ModuleType | type[Any] | ((...) -> Any) | ... omitted 3 union elements,object,1
+OperationEventEmitter | None,object,1
+PercepcionObservationRepository,_EmptyPercepcionRepository,1
+Period,None,1
+ProfileCustodyRecoveryEnvelopePort,None,1
+ProfileSessionResumeDoorV1,"(*, bucket_id) -> Literal[""expired""]",1
+ProrrataRegisterRepositoryProtocol,_UnavailableExportAuthority,1
+ProrrataRegisterServiceRepositoryProtocol,_InMemoryProrrataRegisterRepository,1
+RegistrySnapshot | None,ModeloRevision,1
+ResultDisposition | None,object,1
+RetencionObservationRepository,_EmptyRetencionRepository,1
+ReviewedSuggestion,LLMClassificationSuggestion,1
+"Sequence[Mapping[str, object]]",tuple[object],1
+Sequence[Parameter] | None,"GeneratorType[Parameter, None, None]",1
+Settings | None,~None,1
+Sized,object,1
+StructuredInvoiceReader,"def structured_reader_was_not_expected(*args: object, **kwargs: object) -> object",1
+SyncRunRecordRepositoryProtocol | None,object,1
+TaxpayerProfile | None,object,1
+TransactionCatalogueCoCommitWriterProtocol,_InMemoryTransactionRepository,1
+TransactionCatalogueCoCommitWriterProtocol,_InterleavingTransactionWriter,1
+TransactionCatalogueReader,_TransactionCatalogueReader,1
+TransactionCatalogueReader,_TransactionReader,1
+TransactionCatalogueRepositoryProtocol,InMemoryTransactionRepository,1
+TransactionCatalogueRepositoryProtocol,TransactionCatalogueRepository | None,1
+TransactionCatalogueRepositoryProtocol,_EmptyTransactionRepository,1
+TransactionCatalogueRepositoryProtocol,_InMemoryTransactionCatalogueRepository,1
+TransactionCatalogueRepositoryProtocol,_UnavailableExportAuthority,1
+Translatable,"Literal[""selected registry revision does not match the requested IRNR scope""]",1
+Translatable,"Literal[""selected registry revision exposes no income codes for the requested period""]",1
+Translatable,"Literal[""selected registry revision must expose exactly one coded income namespace""]",1
+Translatable,"Literal[""transaction_kind is not admitted by the supplied OSS/IOSS regime""]",1
+VerificationReportCatalogueRepositoryProtocol,_UnavailableExportAuthority,1
+VerifyBrowserSessionLike | None,object,1
+WorkUnitCatalogueRepositoryProtocol,_EmptyWorkUnitRepository,1
+WorkUnitCatalogueRepositoryProtocol,_InMemoryWorkUnitRepository,1
+WorkUnitCatalogueRepositoryProtocol,_UnavailableExportAuthority,1
+WorkUnitCatalogueRepositoryProtocol,object,1
+_StaticTarget,(...) -> object,1
+bool,object,1
+cadrumo.application.ledger.llm_classification_ports.LLMClassificationSuggestion | LLMSplitSuggestion,cadrumo.adapters.outbound.llm.suggestions.LLMClassificationSuggestion,1
+cadrumo.application.live.notification_ports.NotificationsSnapshot,cadrumo.adapters.outbound.aeat.sede.notifications.NotificationsSnapshot,1
+datetime | None,object,1
+"dict[str, LocaleNode]",LocaleNode,1
+"dict[str, object]","dict[str, object] | (Any & dict[Unknown, Unknown]) | dict[str, dict[str, str | float]]",1
+frozenset[IvaComponentPresence],frozenset[_IvaRegistryToken],1
+frozenset[IvaKindApplicability],frozenset[_IvaRegistryToken],1
+frozenset[IvaRetencionExpectation],frozenset[_IvaRegistryToken],1
+frozenset[IvaRetencionRole],frozenset[_IvaRegistryToken],1
+int,None,1
+int,int | None,1
+int,object,1
+int,str | int,1
+list[expr],list[expr | None],1
+str | None,str | int,1
+str | PathLike[str],Traversable,1
+str | tuple[str],"tuple[Literal[""a""], Literal[""c""]]",1
+str | tuple[str],"tuple[Literal[""b""], Literal[""d""]]",1
+str,str | Decimal,1
+"tuple[Decimal, date, date | None]","tuple[Decimal, date | None, date | None]",1
+"tuple[EUMemberState, IvaRateKind, date, Decimal, bool]","tuple[EUMemberState, IvaRateKind, date | None, Decimal, bool]",1
+"tuple[str, ...]",object,1
+"tuple[tuple[str, str], ...]","tuple[tuple[str, object], ...]",1
