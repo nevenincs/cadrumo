@@ -144,7 +144,6 @@ def test_resources_factory_composes_every_repository() -> None:
 
     expected_fields = {
         "apoderamientos",
-        "category_profiles",
         "holiday_calendars",
         "manuals",
         "recargo_bands",

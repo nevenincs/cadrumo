@@ -26,6 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...iva.schema import IvaCategory
 from ..enums import BusinessClassification, TransactionDirection
 from ..errors import LLMClassifierError
@@ -130,14 +131,16 @@ def test_response_rejects_business_pct_out_of_range() -> None:
 
 def test_iva_choices_cover_every_grounded_category(operation: PinnedAuthorityOperation) -> None:
     choices = default_iva_category_choices(operation=operation)
-    assert {choice.value for choice in choices} == set(IvaCategory)
+    catalogue = resolve_iva_category_catalogue(authority=operation)
+    assert {choice.value for choice in choices} == set(catalogue.all_categories)
     # Every choice carries a non-empty hint resolved from the catalogue label.
     assert all(choice.hint for choice in choices)
 
 
 def test_saturation_spec_allow_list_matches_every_category(operation: PinnedAuthorityOperation) -> None:
     spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
-    assert spec.allowed_iva_categories() == frozenset(IvaCategory)
+    catalogue = resolve_iva_category_catalogue(authority=operation)
+    assert spec.allowed_iva_categories() == frozenset(catalogue.all_categories)
     # The default spec asks for no IVA category at all.
     assert default_prompt_spec().allowed_iva_categories() == frozenset()
 

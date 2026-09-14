@@ -209,41 +209,26 @@ def validate_review_scope(
     *,
     revision_id: RevisionId,
     review_status: RevisionReviewStatus,
-    predecessor_id: RevisionId | None,
     reviewed_against: RevisionId | None,
 ) -> None:
-    """Bind a delta edition's review claim to the predecessor it was reviewed against.
+    """Keep a comparison reference paired with an actual review claim.
 
-    An edition naming a predecessor compiles with casilla rows it inherits and
-    does not state. A review of it covers the rows it states, judged against that
-    predecessor, and the inherited rows are attested by the stamp of the edition
-    that states them. ``reviewed_at`` and ``reviewed_by`` say who and when, never
-    what, so the scope is its own scalar: ``reviewed_against`` names the
-    predecessor the reviewer read the delta against. The stamp alone then says
-    what it covers, and a predecessor declared or re-pointed after the review
-    leaves a claim that names a different edition, which refuses here instead of
-    silently widening.
+    ``reviewed_against`` records the historical comparison used by the reviewer.
+    It is deliberately independent of any current predecessor or storage
+    baseline: representation-only transformations must not rewrite the review.
+    A reviewed revision with no comparison reference claims a review of its full
+    materialised content; a reviewed revision with a reference claims the
+    explicitly narrower comparison review.
 
     Args:
         revision_id: Revision the stamp belongs to, named in the refusal message.
         review_status: The declared review status.
-        predecessor_id: The revision id the edition declares as its predecessor,
-            or ``None`` when it states every row itself.
         reviewed_against: The declared review scope, or ``None`` when omitted.
 
     Raises:
-        RegistryValidationError: A review scope on an edition that names no
-            predecessor or is unreviewed, or a reviewed delta edition whose scope
-            is missing or names a different edition than its declared predecessor.
+        RegistryValidationError: A comparison reference is declared without a
+            completed review.
     """
-    if predecessor_id is None:
-        if reviewed_against is not None:
-            raise RegistryValidationError(
-                f"revision {revision_id!r} declares reviewed_against={reviewed_against!r} but names no "
-                "predecessor; a review scope belongs only to an edition that inherits rows, and this one "
-                "states every row itself",
-            )
-        return
     if review_status not in REVIEWED_REVISION_REVIEW_STATUSES:
         if reviewed_against is not None:
             raise RegistryValidationError(
@@ -251,17 +236,6 @@ def validate_review_scope(
                 f"reviewed_against={reviewed_against!r}; a review scope belongs to a review, so drop it or "
                 "advance review_status",
             )
-        return
-    if reviewed_against != predecessor_id:
-        stated = (
-            "omits reviewed_against" if reviewed_against is None else f"declares reviewed_against={reviewed_against!r}"
-        )
-        raise RegistryValidationError(
-            f"revision {revision_id!r} names predecessor {predecessor_id!r} and declares "
-            f"review_status={review_status.value!r} but {stated}; the edition compiles with rows inherited "
-            f"from {predecessor_id!r} that its reviewer never read, so the review must state it was made "
-            f"against {predecessor_id!r}, or be re-made and restamped",
-        )
 
 
 __all__ = [

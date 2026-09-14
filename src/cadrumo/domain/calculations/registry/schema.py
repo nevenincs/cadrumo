@@ -1086,11 +1086,10 @@ class ModeloRevision(RegistryRevisionDeclaration):
 
     @model_validator(mode="after")
     def _validate_review_scope(self) -> ModeloRevision:
-        """Bind a delta edition's review claim to the predecessor it was reviewed against."""
+        """Keep a comparison reference paired with an actual review claim."""
         validate_review_scope(
             revision_id=self.id,
             review_status=self.review_status,
-            predecessor_id=self.predecessor.revision_id if isinstance(self.predecessor, DeclaredPredecessor) else None,
             reviewed_against=self.reviewed_against,
         )
         return self
@@ -1219,6 +1218,16 @@ class ModeloDefinition(RegistryModel):
         for key, revision in self.revisions.items():
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
+            if revision.reviewed_against == revision.id:
+                raise RegistryValidationError(
+                    f"revision {revision.id!r} has invalid review reference: reviewed_against cannot name itself"
+                )
+            if revision.reviewed_against is not None and revision.reviewed_against not in self.revisions:
+                raise RegistryValidationError(
+                    f"revision {revision.id!r} has dangling review reference "
+                    f"reviewed_against={revision.reviewed_against!r}; declared revisions are "
+                    f"{sorted(self.revisions)!r}"
+                )
         validate_revision_predecessors(self.id, self.revisions)
         failures = structural_succession_failures(self)
         if failures:
@@ -1244,13 +1253,10 @@ class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):
 
     Authored as bounds rather than an enumeration, because the two ends of the
     span do not carry the same force. ``floor`` is a hard gate: nothing resolves
-    below it, and a request below it is outside what the product claims rather
-    than a coverage gap somebody should close. ``horizon`` is the last year the
-    corpus carries authored coverage for, and is deliberately not a gate -- a
-    year above it remains answerable by carrying the newest declared revision
-    forward, which a list of years has no way to say. ``hard_ceiling`` closes
-    that open end where the product must stop somewhere, and stays absent where
-    it need not.
+    below it. ``horizon`` is the last globally authored coordinate, not a gate;
+    when ``hard_ceiling`` is absent the supported range remains open above it.
+    Missing modelo editions inside that range are projected from an eligible
+    authored anchor.
 
     The span is contiguous by construction. A product that supports 2022 and
     2024 but not 2023 is not a state the law produces; the enumerated form could
@@ -1264,21 +1270,8 @@ class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):
     """
 
     def admits_filing_year(self, filing_year: int) -> bool:
-        """Return whether a filing year is inside the product's hard gates.
-
-        Above :attr:`horizon` is admitted while no ``hard_ceiling`` is declared:
-        the newest revision carries forward, so the year is answerable even
-        though no revision names it. Below :attr:`floor` is never admitted.
-        """
-        return self.floor <= filing_year <= self.horizon
-
-    def admits_coordinate(self, coordinate: int) -> bool:
-        """Admit only coordinates inside the registry's declared support range."""
-        return self.floor <= coordinate <= self.horizon
-
-    def projection_coordinate(self, coordinate: int) -> int | None:
-        """Return an admitted registry coordinate without inventing another bound."""
-        return coordinate if self.admits_coordinate(coordinate) else None
+        """Return whether a filing year is inside the product's hard gates."""
+        return self.projection_coordinate(filing_year) is not None
 
 
 class SociedadesAnnualManualCoverageStatus(StrEnum):
