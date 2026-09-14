@@ -9,6 +9,9 @@ from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -48,6 +51,7 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349CountryPrefixContextError, Modelo349OperadorRow
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -1050,10 +1054,11 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         ),
     )
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
             facts=facts,
+            context=_profile_creation_context_for_test(),
         ),
     )
 

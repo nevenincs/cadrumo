@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
@@ -63,7 +66,8 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -84,7 +88,7 @@ def workflow_profile() -> TaxpayerProfile:
 
 def _store_ready_profile_record(*, activity_start_date: str | None = None) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -111,6 +115,7 @@ def _store_ready_profile_record(*, activity_start_date: str | None = None) -> No
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
+            context=_profile_creation_context_for_test(),
         ),
     )
 

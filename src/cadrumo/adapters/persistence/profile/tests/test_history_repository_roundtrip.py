@@ -12,8 +12,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.filing_history import FilingHistoryRepositoryAdapter
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.filing.history_models import ModeloHistory, ModeloHistoryEntry
+from cadrumo.application.filing.history_ports import FilingHistoryPorts
 from cadrumo.application.filing.history_repository import ModeloHistoryRepository
 from cadrumo.core.period import Period
 from cadrumo.core.storage_taxonomy import StorageCategory
@@ -24,6 +26,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "77777777-7777-4777-8777-777777777777"
 _LATEST_SUBMITTED_AT = datetime(2026, 5, 28, 11, 25, 0, tzinfo=UTC)
+
+
+def _history_repository(profile) -> ModeloHistoryRepository:
+    """Compose the application history facade with its encrypted adapter port."""
+    return ModeloHistoryRepository(
+        ports=FilingHistoryPorts(
+            repository=FilingHistoryRepositoryAdapter(objects=profile.repository),
+            bucket_id=profile.bucket_id,
+        ),
+    )
 
 
 def _populated_history() -> ModeloHistory:
@@ -59,11 +71,11 @@ def test_filing_history_survives_encrypted_storage_roundtrip(
 ) -> None:
     """ModeloHistory entries tuple round-trips strictly with non-default statuses."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         original = _populated_history()
-        repo = ModeloHistoryRepository(bucket_id=_BUCKET_ID)
+        repo = _history_repository(profile)
         repo.save(original)
-        loaded = ModeloHistoryRepository(bucket_id=_BUCKET_ID).load("303")
+        loaded = _history_repository(profile).load("303")
 
     assert loaded is not None
     assert loaded == original
@@ -102,9 +114,9 @@ def test_filing_history_persists_only_to_the_secure_database_object(
     against a stale path.
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         original = _populated_history()
-        repo = ModeloHistoryRepository(bucket_id=_BUCKET_ID)
+        repo = _history_repository(profile)
         repo.save(original)
 
         assert repo.load("303") == original

@@ -17,6 +17,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
@@ -43,9 +44,12 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
             purchase_invoice_evidence_id=purchase_evidence.invoice_id,
             idempotency_key="reset-first",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        invoice_repository=invoice_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     second = create_manual_transaction(
@@ -57,8 +61,11 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
             description="second reset row",
             idempotency_key="reset-second",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
     )
     invoice_repository.save(
@@ -123,8 +130,11 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
                 description=f"bulk reset row {index}",
                 idempotency_key=f"bulk-reset-{index}",
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
             occurred_at=datetime(2026, 5, 4, 9, index, tzinfo=UTC),
         )
         created_ids.append(created.ref.transaction_id)

@@ -15,6 +15,10 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.capabilities import CapabilitySource
 from ....application.user_profile.login_session import login_profile
@@ -31,6 +35,7 @@ _PASSPHRASE = "capability-test-passphrase"  # noqa: S105 - synthetic test creden
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
@@ -39,11 +44,17 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         # Registration closes its own session, so the profile is LOCKED and every
         # verb below refuses with "you are not logged in". Logging in derives the
         # DEK the capsule was sealed under.
-        login_profile(name=_LABEL, passphrase_callback=lambda: _PASSPHRASE)
+        login_profile(
+            name=_LABEL,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         yield
 
 

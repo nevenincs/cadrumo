@@ -15,6 +15,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
@@ -37,8 +38,11 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
             description="wrong account import",
             idempotency_key="archived-edit-refusal",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     archived = archive_manual_transaction(
@@ -46,8 +50,11 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
         reason="wrong account import",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -63,8 +70,11 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
                 actor="operator-B",
                 source_command="aeat app ledger update",
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
             occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
         )
 
@@ -89,16 +99,22 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
             description="wrong account import",
             idempotency_key="archive-stash-refusal",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     archive_manual_transaction(
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -107,8 +123,11 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
             occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
         )
     with pytest.raises(TransactionValidationError, match="cannot be stashed"):
@@ -116,8 +135,11 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
             occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
         )
 

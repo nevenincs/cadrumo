@@ -14,6 +14,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -33,6 +36,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -247,10 +251,11 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
 
 def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
     """Build a user-profile record from explicitly supplied IVA facts."""
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="44444444-4444-4444-8444-444444444444",
         facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
+        context=_profile_creation_context_for_test(),
     )
 
 

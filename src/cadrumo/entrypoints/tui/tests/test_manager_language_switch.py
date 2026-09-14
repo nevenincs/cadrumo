@@ -23,6 +23,9 @@ import pytest
 from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -85,6 +88,7 @@ _COLUMN_KEYS = (
 
 def _register_in(language: str) -> None:
     """Create the profile already carrying a language, as registration does."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....domain.user_profile.values import UserProfileFact
 
     register_profile_with_credentials(
@@ -92,6 +96,8 @@ def _register_in(language: str) -> None:
         label=_LABEL,
         passphrase=_PASSWORD,
         facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),),
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
 
@@ -101,7 +107,10 @@ def _ensure_logged_in() -> None:
     Registration closes its own session and the custody capsule is the sole
     profile authority, so a read here meets a locked capsule without one.
     """
-    login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    login_profile(
+        name=_LABEL, passphrase_callback=lambda: _PASSWORD, profile_decode_context=_profile_decode_context_for_test
+    )
 
 
 def _manager() -> ProfileManagerScreen:
@@ -109,10 +118,12 @@ def _manager() -> ProfileManagerScreen:
     record = load_test_profile_record(require_active_bucket_id())
 
     def persist(path: str, value: str):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         applied = apply_manager_profile_field_mutation(
             profile_id=require_active_bucket_id(),
             path=path,
             value=value,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         return build_profile_overview(applied, label=_LABEL)
 

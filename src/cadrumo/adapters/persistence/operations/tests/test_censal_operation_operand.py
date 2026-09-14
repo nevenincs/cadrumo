@@ -8,6 +8,9 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.operations.secure_references import (
@@ -34,7 +37,8 @@ from cadrumo.application.user_profile.censal_operation import (
     build_censal_operation_definition,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -95,7 +99,7 @@ def _operand() -> CensalReviewedOperand:
         captured_at=_NOW,
         source_url=aeat_url("sede", "/censo/consulta"),
     )
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z", source="manual_cli"),),
         setup_state=ProfileSetupState.COMPLETE,
@@ -103,6 +107,7 @@ def _operand() -> CensalReviewedOperand:
         previous_record_digest="a" * 64,
         created_at=_NOW,
         updated_at=_NOW,
+        context=_profile_creation_context_for_test(),
     )
     return CensalReviewedOperand(
         observation=observation,

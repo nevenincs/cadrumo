@@ -9,10 +9,14 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -56,7 +60,9 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -88,12 +94,13 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
@@ -137,7 +144,7 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
         filing_year=2026,
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
+        ports=build_work_lifecycle_ports(bucket_id=wu_repo.bucket_id or _REVISION_SELECTOR_PROFILE_ID),
         clock=_T0,
     )
 
@@ -266,7 +273,7 @@ def test_natural_target_resolution_retains_discarded_work_units_for_terminal_sta
         filing_year=2026,
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
-        repository=work_repo,
+        ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         clock=_T0,
     )
     discarded = unit.model_copy(
@@ -346,7 +353,7 @@ def test_visible_target_resolution_returns_single_active_work_unit(work_repo: Wo
         filing_year=2026,
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
-        repository=work_repo,
+        ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         clock=_T0,
     )
 
@@ -429,7 +436,7 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: W
         filing_year=2026,
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
-        repository=work_repo,
+        ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         clock=_T0,
     )
 
@@ -444,7 +451,7 @@ def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkU
         filing_year=2026,
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
-        repository=work_repo,
+        ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         clock=_T0,
     )
 
@@ -464,7 +471,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
         filing_year=2026,
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
-        repository=work_repo,
+        ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         clock=_T0,
     )
     second_id = derive_work_unit_id(
@@ -740,11 +747,17 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
     address = ModeloWorkAddress(modelo="130", filing_year=2026, period=_P_2026_1T)
 
     catalogue = wu_repo.load()
+    ports = calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+    )
     assert (
         resolve_verifiable_modelo_calculation_revision_address(
             address=address,
             catalogue=catalogue,
             resolved_bucket_id=work_unit.bucket_id,
+            ports=ports,
         )
         == draft
     )
@@ -754,6 +767,7 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
             selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED,
             catalogue=catalogue,
             resolved_bucket_id=work_unit.bucket_id,
+            ports=ports,
         )
         == verified
     )
@@ -762,6 +776,7 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
             address=address,
             catalogue=catalogue,
             resolved_bucket_id=work_unit.bucket_id,
+            ports=ports,
         )
         == filed
     )
@@ -775,6 +790,7 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
             calculation_revision_id=verified.calculation_revision_id,
             catalogue=catalogue,
             resolved_bucket_id=work_unit.bucket_id,
+            ports=ports,
         )
         == verified
     )
@@ -784,6 +800,7 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
             selector=ModeloCalculationRevisionSelector.LATEST_DRAFT,
             catalogue=catalogue,
             resolved_bucket_id=work_unit.bucket_id,
+            ports=ports,
         )
     failure = raised.value.precondition_failure
     assert failure is not None

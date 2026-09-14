@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
 from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.authority_artifact import GovernedFactComponentQuery
+from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (
     CategoryCitation,
@@ -18,6 +23,7 @@ from ...categories.proportionality import (
     ProportionalityRule,
     parse_http_url,
 )
+from ...categories.proportionality_catalogue import require_proportionality_kind
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory, SpendingCategoryFamily
 from ..ledger_expenses import (
@@ -33,6 +39,24 @@ from ..ledger_expenses import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="session")
+def operation() -> PinnedAuthorityOperation:
+    """Expose canonical authored facts through one generation-pinned operation."""
+    authority = compiled_bundled_authority()
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
+    )
+    return PinnedAuthorityOperation(reader, reader.pin())
+
+
+@pytest.fixture(scope="module")
+def category_profiles(
+    operation: PinnedAuthorityOperation,
+) -> Mapping[SpendingCategory, CategoryProfile]:
+    """Resolve the selected filing-year profiles from the injected operation."""
+    return resolve_category_profiles(2025, operation=operation)
 
 
 def _fact(
@@ -92,7 +116,9 @@ def _profile(category: SpendingCategory, rule: ProportionalityRule) -> CategoryP
     )
 
 
-def test_full_deductible_first_slice_fact_builds_binding_ready_observation() -> None:
+def test_full_deductible_first_slice_fact_builds_binding_ready_observation(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(
         category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
         amount=Decimal("294.00"),
@@ -101,7 +127,7 @@ def test_full_deductible_first_slice_fact_builds_binding_ready_observation() -> 
     )
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("cuotas_autonomos_ss")],
+        category_profiles[SpendingCategory._from_registry("cuotas_autonomos_ss")],
         _context(),
     )
 
@@ -121,7 +147,9 @@ def test_full_deductible_first_slice_fact_builds_binding_ready_observation() -> 
     assert observation.legal_references
 
 
-def test_transaction_only_fact_uses_operation_date_and_prevents_invoice_evidence() -> None:
+def test_transaction_only_fact_uses_operation_date_and_prevents_invoice_evidence(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(
         category=SpendingCategory._from_registry("gastos_bancarios"),
         amount=Decimal("48.00"),
@@ -129,7 +157,7 @@ def test_transaction_only_fact_uses_operation_date_and_prevents_invoice_evidence
     )
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("gastos_bancarios")],
+        category_profiles[SpendingCategory._from_registry("gastos_bancarios")],
         _context(),
     )
 
@@ -142,7 +170,9 @@ def test_transaction_only_fact_uses_operation_date_and_prevents_invoice_evidence
     assert observation.reconciliation_status is RentaReconciliationStatus.TRANSACTION_ONLY
 
 
-def test_linked_refund_preserves_category_and_becomes_negative_observation() -> None:
+def test_linked_refund_preserves_category_and_becomes_negative_observation(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(
         category=SpendingCategory._from_registry("gastos_financieros"),
         amount=Decimal("35.00"),
@@ -152,7 +182,7 @@ def test_linked_refund_preserves_category_and_becomes_negative_observation() -> 
     )
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("gastos_financieros")],
+        category_profiles[SpendingCategory._from_registry("gastos_financieros")],
         _context(),
     )
 
@@ -176,7 +206,9 @@ def test_unlinked_refund_is_rejected_before_it_can_enter_calculation() -> None:
         )
 
 
-def test_wholly_exempt_activity_joins_the_full_iva_amount_to_the_deductible_cost() -> None:
+def test_wholly_exempt_activity_joins_the_full_iva_amount_to_the_deductible_cost(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """A médico radiólogo's non-deductible input IVA becomes part of the gasto.
 
     AEAT Manual práctico de Renta 2024, Parte 1, Capítulo 7, caso práctico
@@ -204,7 +236,7 @@ def test_wholly_exempt_activity_joins_the_full_iva_amount_to_the_deductible_cost
 
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("material_oficina")],
+        category_profiles[SpendingCategory._from_registry("material_oficina")],
         _context(iva_deduction_ratio=Decimal("0")),
     )
 
@@ -213,7 +245,9 @@ def test_wholly_exempt_activity_joins_the_full_iva_amount_to_the_deductible_cost
     assert result.non_deductible_amount == Decimal("0.00")
 
 
-def test_prorrata_rationed_activity_joins_only_the_non_deductible_iva_share() -> None:
+def test_prorrata_rationed_activity_joins_only_the_non_deductible_iva_share(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """A prorrata-general taxpayer joins only the non-recoverable IVA fraction.
 
     LIVA art. 104.Uno: under prorrata general a single percentage governs how
@@ -230,7 +264,7 @@ def test_prorrata_rationed_activity_joins_only_the_non_deductible_iva_share() ->
 
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("material_oficina")],
+        category_profiles[SpendingCategory._from_registry("material_oficina")],
         _context(iva_deduction_ratio=Decimal("0.70")),
     )
 
@@ -240,7 +274,9 @@ def test_prorrata_rationed_activity_joins_only_the_non_deductible_iva_share() ->
     assert result.non_deductible_amount == Decimal("147.00")
 
 
-def test_full_deduction_right_and_unevaluated_ratio_both_leave_the_base_untouched() -> None:
+def test_full_deduction_right_and_unevaluated_ratio_both_leave_the_base_untouched(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """A ratio of 1 (full right to deduct) and the unset default agree with the historic base-only result."""
     fact = _fact(
         category=SpendingCategory._from_registry("material_oficina"),
@@ -248,7 +284,7 @@ def test_full_deduction_right_and_unevaluated_ratio_both_leave_the_base_untouche
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
     )
-    profile = resolve_category_profiles(2025)[SpendingCategory._from_registry("material_oficina")]
+    profile = category_profiles[SpendingCategory._from_registry("material_oficina")]
 
     full_right = evaluate_renta_deductibility(fact, profile, _context(iva_deduction_ratio=Decimal("1")))
     unevaluated = evaluate_renta_deductibility(fact, profile, _context())
@@ -257,7 +293,9 @@ def test_full_deduction_right_and_unevaluated_ratio_both_leave_the_base_untouche
     assert unevaluated.deductible_amount == Decimal("1000.00")
 
 
-def test_iva_deduction_ratio_is_inert_without_an_invoice_evidenced_base_split() -> None:
+def test_iva_deduction_ratio_is_inert_without_an_invoice_evidenced_base_split(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """A fact with no ``taxable_base``/``iva_amount`` split is unaffected by the ratio.
 
     ``gross_amount`` is already IVA-inclusive when no invoice evidence split it
@@ -278,14 +316,16 @@ def test_iva_deduction_ratio_is_inert_without_an_invoice_evidenced_base_split() 
 
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("gastos_bancarios")],
+        category_profiles[SpendingCategory._from_registry("gastos_bancarios")],
         _context(iva_deduction_ratio=Decimal("0")),
     )
 
     assert result.deductible_amount == Decimal("48.00")
 
 
-def test_arrendamiento_vivienda_afecto_is_ineligible_until_user_ratio_exists() -> None:
+def test_arrendamiento_vivienda_afecto_is_ineligible_until_user_ratio_exists(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """arrendamiento_vivienda_afecto carries no registry default_ratio.
 
     It is the renter's parallel to amortizacion / ibi / comunidad
@@ -307,12 +347,12 @@ def test_arrendamiento_vivienda_afecto_is_ineligible_until_user_ratio_exists() -
 
     missing = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("arrendamiento_vivienda_afecto")],
+        category_profiles[SpendingCategory._from_registry("arrendamiento_vivienda_afecto")],
         _context(),
     )
     with_ratio = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("arrendamiento_vivienda_afecto")],
+        category_profiles[SpendingCategory._from_registry("arrendamiento_vivienda_afecto")],
         _context(usage_ratios={SpendingCategory._from_registry("arrendamiento_vivienda_afecto"): Decimal("0.30")}),
     )
 
@@ -326,7 +366,9 @@ def test_arrendamiento_vivienda_afecto_is_ineligible_until_user_ratio_exists() -
     assert with_ratio.non_deductible_amount == Decimal("706.3000")
 
 
-def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists() -> None:
+def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(
         category=SpendingCategory._from_registry("telefonia_movil"),
         amount=Decimal("60.00"),
@@ -336,12 +378,12 @@ def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists() -> 
 
     missing = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("telefonia_movil")],
+        category_profiles[SpendingCategory._from_registry("telefonia_movil")],
         _context(),
     )
     with_ratio = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("telefonia_movil")],
+        category_profiles[SpendingCategory._from_registry("telefonia_movil")],
         _context(usage_ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("0.25")}),
     )
 
@@ -353,12 +395,14 @@ def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists() -> 
     assert with_ratio.non_deductible_amount == Decimal("50.2500")
 
 
-def test_statutory_annual_cap_limits_health_insurance_amount() -> None:
+def test_statutory_annual_cap_limits_health_insurance_amount(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(category=SpendingCategory._from_registry("seguros_salud_autonomo"), amount=Decimal("800.00"))
 
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("seguros_salud_autonomo")],
+        category_profiles[SpendingCategory._from_registry("seguros_salud_autonomo")],
         _context(statutory_cap_person_count=1),
     )
 
@@ -371,9 +415,11 @@ def test_statutory_annual_cap_limits_health_insurance_amount() -> None:
     assert result.non_deductible_amount == Decimal("300.00")
 
 
-def test_daily_statutory_cap_variant_requires_days_and_variant() -> None:
+def test_daily_statutory_cap_variant_requires_days_and_variant(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(category=SpendingCategory._from_registry("manutencion_dietas_nacional"), amount=Decimal("80.00"))
-    profile = resolve_category_profiles(2025)[SpendingCategory._from_registry("manutencion_dietas_nacional")]
+    profile = category_profiles[SpendingCategory._from_registry("manutencion_dietas_nacional")]
 
     missing = evaluate_renta_deductibility(fact, profile, _context())
     capped = evaluate_renta_deductibility(
@@ -389,7 +435,9 @@ def test_daily_statutory_cap_variant_requires_days_and_variant() -> None:
     assert capped.non_deductible_amount == Decimal("26.66")
 
 
-def test_fixed_percentage_profiles_are_supported_by_the_evaluator() -> None:
+def test_fixed_percentage_profiles_are_supported_by_the_evaluator(
+    operation: PinnedAuthorityOperation,
+) -> None:
     fact = _fact(
         category=SpendingCategory._from_registry("material_oficina"),
         amount=Decimal("200.00"),
@@ -399,7 +447,7 @@ def test_fixed_percentage_profiles_are_supported_by_the_evaluator() -> None:
     profile = _profile(
         SpendingCategory._from_registry("material_oficina"),
         ProportionalityRule(
-            kind=require_proportionality_kind("fixed_percentage"),
+            kind=require_proportionality_kind("fixed_percentage", authority=operation),
             fixed_pct=Decimal("0.40"),
             citations=(_citation(),),
             notes=tr("Regla de porcentaje fijo."),
@@ -413,12 +461,12 @@ def test_fixed_percentage_profiles_are_supported_by_the_evaluator() -> None:
     assert result.non_deductible_amount == Decimal("128.4000")
 
 
-def test_non_deductible_profiles_cannot_become_observations() -> None:
+def test_non_deductible_profiles_cannot_become_observations(operation: PinnedAuthorityOperation) -> None:
     fact = _fact(category=SpendingCategory._from_registry("material_oficina"), amount=Decimal("200.00"))
     profile = _profile(
         SpendingCategory._from_registry("material_oficina"),
         ProportionalityRule(
-            kind=require_proportionality_kind("non_deductible"),
+            kind=require_proportionality_kind("non_deductible", authority=operation),
             citations=(_citation(),),
             notes=tr("Regla no deducible."),
         ),
@@ -431,7 +479,7 @@ def test_non_deductible_profiles_cannot_become_observations() -> None:
         build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
 
-def test_exclusive_use_profiles_require_confirmation() -> None:
+def test_exclusive_use_profiles_require_confirmation(operation: PinnedAuthorityOperation) -> None:
     """Confirmation gates deductibility; it does not widen the basis to the gross.
 
     The fixture's 200.00 gross is a 179.00 base plus 21.00 of input IVA. That
@@ -444,7 +492,7 @@ def test_exclusive_use_profiles_require_confirmation() -> None:
     profile = _profile(
         SpendingCategory._from_registry("material_oficina"),
         ProportionalityRule(
-            kind=require_proportionality_kind("requires_exclusive_use"),
+            kind=require_proportionality_kind("requires_exclusive_use", authority=operation),
             citations=(_citation(),),
             notes=tr("Regla que requiere afectacion exclusiva."),
         ),
@@ -460,7 +508,9 @@ def test_exclusive_use_profiles_require_confirmation() -> None:
     assert confirmed.non_deductible_amount == Decimal("21.00")
 
 
-def test_first_slice_routes_every_eligible_category_to_a_real_casilla() -> None:
+def test_first_slice_routes_every_eligible_category_to_a_real_casilla(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """Every :class:`SpendingCategory` builds a real observation.
 
     The first-slice routing projection is a total mapping: no eligible
@@ -474,7 +524,7 @@ def test_first_slice_routes_every_eligible_category_to_a_real_casilla() -> None:
     fact = _fact(category=SpendingCategory._from_registry("hardware_amortizable"), amount=Decimal("55.00"))
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("hardware_amortizable")],
+        category_profiles[SpendingCategory._from_registry("hardware_amortizable")],
         _context(),
     )
 
@@ -483,11 +533,13 @@ def test_first_slice_routes_every_eligible_category_to_a_real_casilla() -> None:
     assert observation.target_casilla_id == "0208"
 
 
-def test_tax_year_mismatch_is_rejected_before_observation_creation() -> None:
+def test_tax_year_mismatch_is_rejected_before_observation_creation(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(category=SpendingCategory._from_registry("asesoria_fiscal"), amount=Decimal("120.00"))
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("asesoria_fiscal")],
+        category_profiles[SpendingCategory._from_registry("asesoria_fiscal")],
         _context(),
     )
 
@@ -511,11 +563,13 @@ def test_fact_model_rejects_boolean_and_float_amounts() -> None:
         RentaDeductibleExpenseFact.model_validate(payload)
 
 
-def test_result_model_rejects_mismatched_category_family() -> None:
+def test_result_model_rejects_mismatched_category_family(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(category=SpendingCategory._from_registry("gastos_bancarios"))
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("gastos_bancarios")],
+        category_profiles[SpendingCategory._from_registry("gastos_bancarios")],
         _context(),
     )
     payload = result.model_dump()
@@ -525,11 +579,13 @@ def test_result_model_rejects_mismatched_category_family() -> None:
         type(result).model_validate(payload)
 
 
-def test_observation_model_rejects_mismatched_first_slice_casilla() -> None:
+def test_observation_model_rejects_mismatched_first_slice_casilla(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(category=SpendingCategory._from_registry("gastos_bancarios"))
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("gastos_bancarios")],
+        category_profiles[SpendingCategory._from_registry("gastos_bancarios")],
         _context(),
     )
     observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
@@ -540,11 +596,13 @@ def test_observation_model_rejects_mismatched_first_slice_casilla() -> None:
         type(observation).model_validate(payload)
 
 
-def test_observation_model_rejects_legacy_target_casilla_key() -> None:
+def test_observation_model_rejects_legacy_target_casilla_key(
+    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     fact = _fact(category=SpendingCategory._from_registry("gastos_bancarios"))
     result = evaluate_renta_deductibility(
         fact,
-        resolve_category_profiles(2025)[SpendingCategory._from_registry("gastos_bancarios")],
+        category_profiles[SpendingCategory._from_registry("gastos_bancarios")],
         _context(),
     )
     observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)

@@ -30,6 +30,11 @@ See Also:
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.iva.classification import IvaTerritorialScope
@@ -49,7 +54,12 @@ def _profile(postcode: str | None) -> UserProfileRecord:
     facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
     if postcode is not None:
         facts = (*facts, UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value=postcode))
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts)
+    return _create_profile_record_for_test(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=facts,
+        context=_profile_creation_context_for_test(),
+    )
 
 
 @pytest.mark.parametrize(

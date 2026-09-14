@@ -16,6 +16,11 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -55,7 +60,7 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -82,6 +87,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
 
@@ -118,12 +124,13 @@ def test_profile_resolution_skips_caller_supplied_bindings() -> None:
 
 def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
     """A profile without the CCAA fact contributes nothing for that binding."""
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
     result = resolve_profile_sourced_bindings(
         _modelo_100_snapshot(),
@@ -165,7 +172,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
     must not leak into ``enum_binding_values``.
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -174,6 +181,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
     result = resolve_profile_sourced_bindings(
@@ -253,7 +261,7 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
 
 
 def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -262,6 +270,7 @@ def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
 
@@ -323,7 +332,7 @@ class TestBoolTypedProfileBinding:
         # Construct a snapshot whose CCAA binding (enum channel) is satisfied
         # by a bool fact — a mis-wired scenario the guard must catch.
         snapshot = _modelo_100_snapshot()
-        bool_profile = UserProfileRecord(
+        bool_profile = _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(
@@ -332,6 +341,7 @@ class TestBoolTypedProfileBinding:
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
+            context=_profile_creation_context_for_test(),
         )
         with pytest.raises(
             ProfileBindingResolutionError,
@@ -356,7 +366,7 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
     without echoing the raw value, preserving redaction and localization.
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -365,6 +375,7 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
     with pytest.raises(ProfileBindingResolutionError, match="decimal-compatible") as exc_info:

@@ -7,6 +7,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -22,7 +25,8 @@ from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -109,12 +113,13 @@ def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) 
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
                 created_at=_PROFILE_SEEDED_AT,
                 updated_at=_PROFILE_SEEDED_AT,
+                context=_profile_creation_context_for_test(),
             ),
         )
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)

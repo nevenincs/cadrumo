@@ -31,6 +31,9 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
 from cadrumo.core.bucket_pointer import read_pointer
@@ -68,11 +71,16 @@ def _register_in_separate_process_child(
     result_queue: Queue[_ChildRegistrationResult],
 ) -> None:
     """Create one profile the way an operator invocation does: a fresh process."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=password
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=label,
+            passphrase=password,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         result_queue.put({"profile_id": outcome.profile_id, "label": outcome.label})
     finally:
@@ -106,12 +114,17 @@ def _attempt_registration_in_separate_process_child(
     result_queue: Queue[_ChildRefusalResult],
 ) -> None:
     """Report whatever the registration door tells the operator, refusal included."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         try:
             register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=password
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+                label=label,
+                passphrase=password,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
         except ProfileRegistrationError as exc:
             result_queue.put(

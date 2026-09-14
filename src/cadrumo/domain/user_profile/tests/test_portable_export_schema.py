@@ -7,7 +7,12 @@ from datetime import UTC, date, datetime
 from types import MappingProxyType
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import ValidationError
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.classification.policies import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
@@ -32,12 +37,13 @@ _BINARY_PAYLOAD_B64 = base64.b64encode(_BINARY_PAYLOAD).decode("ascii")
 
 
 def _profile() -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_INSTANT,
         updated_at=_INSTANT,
+        context=_profile_creation_context_for_test(),
     )
 
 
@@ -55,7 +61,7 @@ def _campaign_record() -> UserProfileRecord:
     ``source`` and a real effective-dated window) so a save-drops-field
     regression would break the strict equality the roundtrip asserts.
     """
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         profile_id=_BUCKET_ID,
         setup_state=ProfileSetupState.INCOMPLETE,
         facts=(
@@ -83,6 +89,7 @@ def _campaign_record() -> UserProfileRecord:
         ),
         created_at=_INSTANT,
         updated_at=_INSTANT,
+        context=_profile_creation_context_for_test(),
     )
 
 

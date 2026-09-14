@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -20,6 +21,8 @@ from ....renta.ledger_expenses import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
 )
+from ..authority import PinnedAuthorityOperation
+from ..authority_artifact import GovernedFactComponentQuery
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
@@ -31,6 +34,7 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ._published_authority import artifact_components
+from .authority_fakes import FakeAuthorityComponentReader
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -55,6 +59,16 @@ _UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
     "9999",
     surface="_UNKNOWN_RENTA_EXPENSE_CASILLA",
 )
+
+
+@pytest.fixture(scope="session")
+def operation() -> PinnedAuthorityOperation:
+    """Expose canonical authored facts through one generation-pinned operation."""
+    authority = compiled_bundled_authority()
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
+    )
+    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 def _modelo_100_snapshot(filing_year: int):
@@ -88,6 +102,7 @@ def _readable_transaction_id(label: str) -> str:
 def _expense_observation(
     transaction_id: str,
     *,
+    operation: PinnedAuthorityOperation,
     category: SpendingCategory,
     gross_amount: Decimal,
     taxable_base: Decimal | None = None,
@@ -103,7 +118,7 @@ def _expense_observation(
         direction=RentaExpenseDirection.OUTGOING_EXPENSE,
         category=category,
     )
-    profile = resolve_category_profiles(2025)[category]
+    profile = resolve_category_profiles(2025, operation=operation)[category]
     result = evaluate_renta_deductibility(
         fact,
         profile,
@@ -112,7 +127,9 @@ def _expense_observation(
     return build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
 
-def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas() -> None:
+def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas(
+    operation: PinnedAuthorityOperation,
+) -> None:
     snapshot = _modelo_100_2025_snapshot()
     revision = snapshot.revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
@@ -125,31 +142,37 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     observations = (
         _expense_observation(
             "tx-ss",
+            operation=operation,
             category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
             gross_amount=Decimal("300.00"),
         ),
         _expense_observation(
             "tx-fiscal",
+            operation=operation,
             category=SpendingCategory._from_registry("asesoria_fiscal"),
             gross_amount=Decimal("121.00"),
         ),
         _expense_observation(
             "tx-contable",
+            operation=operation,
             category=SpendingCategory._from_registry("asesoria_contable"),
             gross_amount=Decimal("79.00"),
         ),
         _expense_observation(
             "tx-software",
+            operation=operation,
             category=SpendingCategory._from_registry("software_suscripcion"),
             gross_amount=Decimal("360.00"),
         ),
         _expense_observation(
             "tx-material",
+            operation=operation,
             category=SpendingCategory._from_registry("material_oficina"),
             gross_amount=Decimal("240.00"),
         ),
         _expense_observation(
             "tx-marketing",
+            operation=operation,
             category=SpendingCategory._from_registry("publicidad_marketing"),
             gross_amount=Decimal("180.00"),
         ),
@@ -368,7 +391,9 @@ def _single_expense_binding_revision(snapshot: RegistrySnapshot, target_casilla_
     return revision.model_copy(update={"bindings": (binding,)})
 
 
-def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> None:
+def test_unsupported_renta_expense_flags_observation_routed_to_no_binding(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A non-zero deductible whose target_casilla_id matches no binding is surfaced.
 
     The revision carries only the 0186 binding; a 0199-routed deductible
@@ -380,11 +405,13 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> N
 
     routed = _expense_observation(
         "tx-ss",
+        operation=operation,
         category=SpendingCategory._from_registry("cuotas_autonomos_ss"),  # routes to 0186 (the only binding)
         gross_amount=Decimal("300.00"),
     )
     unrouted = _expense_observation(
         "tx-fiscal",
+        operation=operation,
         category=SpendingCategory._from_registry("asesoria_fiscal"),  # routes to 0199 — no binding on this revision
         gross_amount=Decimal("121.00"),
     )
@@ -396,7 +423,9 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> N
     assert result == (unrouted,)
 
 
-def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
+def test_unsupported_renta_expense_does_not_flag_zero_deductible(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A zero-deductible observation routed to no binding must NOT false-fire.
 
     A zero deductible contributes nothing whether or not it is routed, so the
@@ -408,6 +437,7 @@ def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
 
     zero_unrouted = _expense_observation(
         "tx-zero-ratio",
+        operation=operation,
         category=SpendingCategory._from_registry("asesoria_fiscal"),
         gross_amount=Decimal("121.00"),
         taxable_base=Decimal("0"),

@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M111_ACTIVITY_AMOUNT_CASILLA,
@@ -56,6 +57,7 @@ from cadrumo.application.modelo.work_lifecycle import (
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -67,6 +69,10 @@ from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRev
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.entrypoints.adapter_composition import (
+    build_amendment_action_ports,
+    build_calculation_action_ports,
+)
 
 __all__ = ["repos"]
 
@@ -81,8 +87,7 @@ def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
     discard_work_unit(
         work_unit.work_unit_id,
         actor="operator-A",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
 
@@ -172,9 +177,12 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
             _M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
             _M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_PROFILE_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+        ),
         clock=_T1,
     )
     verified_revision = revision.model_copy(
@@ -196,18 +204,16 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
     )
     assert locally_filed.external_evidence is None
 
-    with pytest.raises(AmendmentEvidenceMissingError):
+    with pytest.raises(AmendmentEvidenceMissingError), bundled_indexed_authority().operation() as operation:
         amend_modelo_revision(
             from_filing_record_id=locally_filed.filing_record_id,
             overrides={_M111_AMENDMENT_CASILLA: Decimal("1700")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="needed to amend",
             actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             clock=_T4,
+            operation=operation,
         )
 
 
@@ -286,9 +292,12 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
                     _GUARD_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
                 },
                 binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("0")},
-                work_unit_repository=wu_repo,
-                calculation_repository=cr_repo,
-                bucket_event_repository=bv_repo,
+                ports=calculation_ports_for_test(
+                    bucket_id=_GUARD_BUCKET_B,
+                    work_unit_repository=wu_repo,
+                    calculation_repository=cr_repo,
+                    bucket_event_repository=bv_repo,
+                ),
                 clock=_GUARD_CLOCK,
             )
 
@@ -352,11 +361,11 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
         cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 
         with pytest.raises(CalculationRevisionNotFoundError):
-            get_calculation_revision(
-                revision.calculation_revision_id,
-                calculation_repository=cr_repo,
-                work_unit_repository=wu_repo,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                get_calculation_revision(
+                    revision.calculation_revision_id,
+                    ports=build_calculation_action_ports(bucket_id=_GUARD_BUCKET_A, operation=operation),
+                )
 
         assert cr_repo.load().get(revision.calculation_revision_id) == revision
 

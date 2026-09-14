@@ -13,11 +13,13 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 from ....domain.deadlines.profiles import taxpayer_profile_from_mapping
 from ....domain.user_profile.setup_answers import SetupAnswers
-from ..catalogue import SETUP_FLOW
 from ..persistence import project_answers, serialise_answers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -74,10 +76,10 @@ class TestSetupAnswersTaxpayerAxes:
 class TestWizardPersistenceRoundTrip:
     """SetupAnswers survives the canonical-token persistence cycle."""
 
-    def test_taxpayer_axes_round_trip_through_canonical_dict(self) -> None:
+    def test_taxpayer_axes_round_trip_through_canonical_dict(self, *, registry_setup_flow: WizardFlow) -> None:
         original = _fully_populated_answers()
-        canonical = serialise_answers(SETUP_FLOW, original)
-        rebuilt = project_answers(SETUP_FLOW, canonical)
+        canonical = serialise_answers(registry_setup_flow, original)
+        rebuilt = project_answers(registry_setup_flow, canonical)
         assert isinstance(rebuilt, SetupAnswers)
         assert rebuilt.entity_type == original.entity_type
         assert rebuilt.irpf_income_categories == original.irpf_income_categories
@@ -89,8 +91,8 @@ class TestWizardPersistenceRoundTrip:
         assert rebuilt.iva_redeme_enrolled == original.iva_redeme_enrolled
         assert rebuilt.art109_activity_income_withholding_ge_70pct is True
 
-    def test_canonical_dict_carries_taxpayer_axis_profile_keys(self) -> None:
-        canonical = serialise_answers(SETUP_FLOW, _fully_populated_answers())
+    def test_canonical_dict_carries_taxpayer_axis_profile_keys(self, *, registry_setup_flow: WizardFlow) -> None:
+        canonical = serialise_answers(registry_setup_flow, _fully_populated_answers())
         assert canonical["taxpayer_type.entity_type"] == "natural_person"
         assert canonical["taxpayer_type.irpf_income_categories"] == ("trabajo,capital_inmobiliario,pension")
         assert canonical["irpf.estimation_regime"] == "directa_simplificada"
@@ -100,7 +102,7 @@ class TestWizardPersistenceRoundTrip:
         assert canonical["iva.sii_enrolled"] == "true"
         assert canonical["iva.redeme_enrolled"] == "true"
 
-    def test_dropped_enrolment_key_stays_undeclared_on_reprojection(self) -> None:
+    def test_dropped_enrolment_key_stays_undeclared_on_reprojection(self, *, registry_setup_flow: WizardFlow) -> None:
         """Anti-tautology: removing iva.sii_enrolled preserves its undeclared state.
 
         If the roundtrip were tautological, the dropped key would not
@@ -109,9 +111,9 @@ class TestWizardPersistenceRoundTrip:
         """
 
         original = _fully_populated_answers()
-        canonical = serialise_answers(SETUP_FLOW, original)
+        canonical = serialise_answers(registry_setup_flow, original)
         del canonical["iva.sii_enrolled"]
-        rebuilt = project_answers(SETUP_FLOW, canonical)
+        rebuilt = project_answers(registry_setup_flow, canonical)
         assert isinstance(rebuilt, SetupAnswers)
         assert rebuilt.iva_sii_enrolled == ""
         assert rebuilt != original
@@ -258,31 +260,31 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
             new_entity_first_two_profit_periods=new_entity,
         )
 
-    def test_undeclared_new_entity_state_drops_from_canonical_dict(self) -> None:
+    def test_undeclared_new_entity_state_drops_from_canonical_dict(self, *, registry_setup_flow: WizardFlow) -> None:
         """Blank ``new_entity_first_two_profit_periods`` produces an empty
         canonical token; the persistence-layer ``if value`` filter then
         drops the fact, so a profile that never positively declared the
         override does not carry the fact in storage."""
 
         answers = self._legal_entity_answers(new_entity="")
-        canonical = serialise_answers(SETUP_FLOW, answers)
+        canonical = serialise_answers(registry_setup_flow, answers)
         assert canonical.get("taxpayer_type.new_entity_first_two_profit_periods") == ""
 
-    def test_declared_true_round_trips_through_canonical_dict(self) -> None:
+    def test_declared_true_round_trips_through_canonical_dict(self, *, registry_setup_flow: WizardFlow) -> None:
         answers = self._legal_entity_answers(new_entity=True)
-        canonical = serialise_answers(SETUP_FLOW, answers)
+        canonical = serialise_answers(registry_setup_flow, answers)
         assert canonical["taxpayer_type.new_entity_first_two_profit_periods"] == "true"
 
-        rebuilt = project_answers(SETUP_FLOW, canonical)
+        rebuilt = project_answers(registry_setup_flow, canonical)
         assert isinstance(rebuilt, SetupAnswers)
         assert rebuilt.new_entity_first_two_profit_periods is True
 
-    def test_declared_false_round_trips_through_canonical_dict(self) -> None:
+    def test_declared_false_round_trips_through_canonical_dict(self, *, registry_setup_flow: WizardFlow) -> None:
         answers = self._legal_entity_answers(new_entity=False)
-        canonical = serialise_answers(SETUP_FLOW, answers)
+        canonical = serialise_answers(registry_setup_flow, answers)
         assert canonical["taxpayer_type.new_entity_first_two_profit_periods"] == "false"
 
-        rebuilt = project_answers(SETUP_FLOW, canonical)
+        rebuilt = project_answers(registry_setup_flow, canonical)
         assert isinstance(rebuilt, SetupAnswers)
         assert rebuilt.new_entity_first_two_profit_periods is False
 
@@ -333,7 +335,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         )
         assert profile.new_entity_first_two_profit_periods is False
 
-    def test_full_wizard_runtime_quiet_path_preserves_undeclared(self) -> None:
+    def test_full_wizard_runtime_quiet_path_preserves_undeclared(self, *, registry_setup_flow: WizardFlow) -> None:
         """End-to-end through the scripted flow-substrate walk with no
         positively-declared CONFIRM answer for the new-entity flag.
 
@@ -366,7 +368,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
             "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
         }
         answers = _run_scripted_walk(
-            SETUP_FLOW,
+            registry_setup_flow,
             canonical,
             mode="create",
             explicit_question_ids=frozenset(),
@@ -379,7 +381,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
 
         # Serialise; the canonical dict drops the undeclared field at
         # the ``if value`` persistence filter ⇒ blank canonical token.
-        serialised = serialise_answers(SETUP_FLOW, answers)
+        serialised = serialise_answers(registry_setup_flow, answers)
         assert serialised.get("taxpayer_type.new_entity_first_two_profit_periods") == ""
 
         # Filter blanks and the wizard's undeclared IVA defaults before
@@ -417,30 +419,32 @@ class TestLey49SpecialRegimeRoundTrip:
             ley_49_2002_renunciation_date=renunciation_date,
         )
 
-    def test_declared_option_and_renunciation_round_trip_through_canonical_dict(self) -> None:
+    def test_declared_option_and_renunciation_round_trip_through_canonical_dict(
+        self, *, registry_setup_flow: WizardFlow
+    ) -> None:
         answers = self._answers(
             option_declared=True,
             option_date="2024-02-03",
             renunciation_declared=False,
             renunciation_date="2026-05-11",
         )
-        canonical = serialise_answers(SETUP_FLOW, answers)
+        canonical = serialise_answers(registry_setup_flow, answers)
 
         assert canonical["taxpayer_type.ley_49_2002_special_regime_option_declared"] == "true"
         assert canonical["taxpayer_type.ley_49_2002_special_regime_option_date"] == "2024-02-03"
         assert canonical["taxpayer_type.ley_49_2002_special_regime_renunciation_declared"] == "false"
         assert canonical["taxpayer_type.ley_49_2002_special_regime_renunciation_date"] == "2026-05-11"
 
-        rebuilt = project_answers(SETUP_FLOW, canonical)
+        rebuilt = project_answers(registry_setup_flow, canonical)
         assert isinstance(rebuilt, SetupAnswers)
         assert rebuilt.ley_49_2002_option_declared is True
         assert rebuilt.ley_49_2002_option_date == "2024-02-03"
         assert rebuilt.ley_49_2002_renunciation_declared is False
         assert rebuilt.ley_49_2002_renunciation_date == "2026-05-11"
 
-    def test_undeclared_ley_49_option_state_drops_from_canonical_dict(self) -> None:
+    def test_undeclared_ley_49_option_state_drops_from_canonical_dict(self, *, registry_setup_flow: WizardFlow) -> None:
         answers = self._answers()
-        canonical = serialise_answers(SETUP_FLOW, answers)
+        canonical = serialise_answers(registry_setup_flow, answers)
 
         assert canonical.get("taxpayer_type.ley_49_2002_special_regime_option_declared") == ""
         assert canonical.get("taxpayer_type.ley_49_2002_special_regime_option_date") == ""

@@ -23,6 +23,10 @@ from uuid import UUID
 import pytest
 from textual.widgets import Button
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.user_profile.acquisition_sources import (
     AcquisitionSourceCredentialPostureV1,
@@ -56,14 +60,23 @@ def _persist_not_exercised(path: str, value: str) -> ProfileOverview:
 
 
 def _build_overview() -> ProfileOverview:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     enrolled = register_profile_with_credentials(
         label="Acquisition serialisation subject",
         passphrase=_PASSPHRASE,
         facts=(),
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
-    login_profile(name=enrolled.profile_id, passphrase_callback=lambda: _PASSPHRASE)
-    record = ProfileRecordRepository.for_current_session(UUID(enrolled.profile_id)).load(UUID(enrolled.profile_id))
+    login_profile(
+        name=enrolled.profile_id,
+        passphrase_callback=lambda: _PASSPHRASE,
+        profile_decode_context=_profile_decode_context_for_test,
+    )
+    record = ProfileRecordRepository.for_current_session(
+        UUID(enrolled.profile_id), profile_decode_context=_profile_decode_context_for_test
+    ).load(UUID(enrolled.profile_id))
     return build_profile_overview(record)
 
 

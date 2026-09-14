@@ -16,7 +16,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
 from ._app_live_auth_preflight import emit_live_auth_preflight
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .state_projection_support import certificate_secret_backend_factory, operator_scope_ports
+from .state_projection_support import authority_operation, certificate_secret_backend_factory, operator_scope_ports
 
 
 def _period_option(period: str, *, year: int) -> Period:
@@ -60,6 +60,7 @@ def justificante_pull(
             read_port=build_justificante_live_read_port(
                 certificate_secret_backend_factory(ctx),
                 operator_scope_ports(ctx),
+                authority_operation(ctx),
             ),
             registration_ports=build_justificante_registration_ports(),
             verifier=build_justificante_authenticity_verifier(),

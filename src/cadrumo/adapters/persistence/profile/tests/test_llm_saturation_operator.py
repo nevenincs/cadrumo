@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
 from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
     repositories as repositories,
 )
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.application.ledger.llm_classification import derive_operator_iva_substrate
 from cadrumo.application.ledger.llm_classification_ports import OperatorIvaDerivationResult
@@ -42,8 +43,11 @@ def test_operator_derive_persists_substrate_with_derived_provenance(
         iva_category=IvaCategory("domestic_general"),
         actor="operator-A",
         source_command="aeat app ledger classify --iva-category --saturate",
-        transaction_repository=repository,
-        bucket_event_repository=events,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ),
         occurred_at=_NOW,
     )
 
@@ -76,8 +80,11 @@ def test_operator_derive_non_derivable_returns_reason_and_leaves_row_unmutated(
         iva_category=IvaCategory("intra_community_supply"),
         actor="operator-A",
         source_command="aeat app ledger classify --iva-category --saturate",
-        transaction_repository=repository,
-        bucket_event_repository=events,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ),
         occurred_at=_NOW,
     )
 
@@ -108,8 +115,11 @@ def test_operator_derive_refuses_non_business_row(
             iva_category=IvaCategory("domestic_general"),
             actor="operator-A",
             source_command="aeat app ledger classify --iva-category --saturate",
-            transaction_repository=repository,
-            bucket_event_repository=events,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET,
+                transaction_repository=repository,
+                bucket_event_repository=events,
+            ),
             occurred_at=_NOW,
         )
 
@@ -127,8 +137,11 @@ def test_operator_derive_zero_rated_category_derives_zero_iva(
         iva_category=IvaCategory("domestic_zero"),
         actor="operator-A",
         source_command="aeat app ledger classify --iva-category --saturate",
-        transaction_repository=repository,
-        bucket_event_repository=events,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ),
         occurred_at=_NOW,
     )
 

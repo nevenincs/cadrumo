@@ -8,8 +8,13 @@ from typing import cast
 from ...adapters.inbound.justificante.parser import parse_justificante_bytes
 from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ...adapters.outbound.aeat.sede.schema import Expediente
 from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
-from ...adapters.outbound.aeat.verify.contract import verify_csv
+from ...adapters.outbound.aeat.verify.contract import (
+    VerifyBrowserSessionFactory,
+    VerifyBrowserSessionLike,
+    verify_csv,
+)
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -19,6 +24,7 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.auth.operator_scope_ports import OperatorScopePorts
+from ...application.auth.session_types import AeatSession
 from ...application.live.errors import LiveApplicationInputError
 from ...application.live.justificante import (
     JustificanteCaptureSnapshot,
@@ -36,10 +42,13 @@ from ...application.live.justificante_ports import (
     JustificanteRegistrationPorts,
 )
 from ...application.live.session import active_verified_session
+from ...core.config import Settings
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
 from ...domain.buckets.event import BucketEvent
 from ...domain.buckets.event_repository import emit_bucket_events
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.justificante.schema import Justificante
 
 
 class _SnapshotPersistence:
@@ -103,17 +112,29 @@ class _RegistrationEvents:
         emit_bucket_events(repository=BucketEventHistoryRepository(), events=events)
 
 
+class _JustificanteMetadata:
+    """Adapt the generic repository's payload parameter to the application port."""
+
+    def __init__(self, repository: JustificanteRepository) -> None:
+        self._repository = repository
+
+    def save(self, justificante: Justificante) -> None:
+        self._repository.save(justificante)
+
+
 class _LiveRead:
     def __init__(
         self,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         operator_scope_ports: OperatorScopePorts,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
         self._operator_scope_ports = operator_scope_ports
-        self._session: object | None = None
-        self._settings: object | None = None
-        self._expedientes: dict[str, object] = {}
+        self._operation = operation
+        self._session: AeatSession | None = None
+        self._settings: Settings | None = None
+        self._expedientes: dict[str, Expediente] = {}
 
     async def declarations_and_expedientes(
         self, *, modelo: str, year: int
@@ -126,7 +147,12 @@ class _LiveRead:
         )
         async with (
             shared_playwright(session) as playwright,
-            open_declarations_register(session, settings=settings, playwright=playwright) as register,
+            open_declarations_register(
+                session,
+                operation=self._operation,
+                settings=settings,
+                playwright=playwright,
+            ) as register,
         ):
             declarations = tuple(await register.walk(modelo=modelo, ejercicio=year))
         expedientes = await walk_expedientes_tree(session, modelo=modelo, settings=settings)
@@ -148,12 +174,15 @@ class _LiveRead:
         )
 
     async def capture(self, *, expediente_id: str) -> CapturedJustificante:
-        if self._session is None or self._settings is None or expediente_id not in self._expedientes:
+        session = self._session
+        settings = self._settings
+        expediente = self._expedientes.get(expediente_id)
+        if session is None or settings is None or expediente is None:
             raise InternalInvariantError("live justificante capture requires declaration discovery")
         capture = await capture_justificante(
-            self._session,
-            self._expedientes[expediente_id],
-            settings=self._settings,
+            session,
+            expediente,
+            settings=settings,
         )
         return CapturedJustificante(
             expediente_id=capture.expediente.expediente_id,
@@ -171,7 +200,30 @@ class _Verifier:
         browser: object | None = None,
         browser_session_factory: Callable[[], object] | None = None,
     ) -> Awaitable[bool]:
-        return verify_csv(csv, browser=browser, browser_session_factory=browser_session_factory)
+        typed_browser: VerifyBrowserSessionLike | None
+        if browser is None:
+            typed_browser = None
+        elif isinstance(browser, VerifyBrowserSessionLike):
+            typed_browser = browser
+        else:
+            raise InternalInvariantError("justificante verifier received an incompatible browser session")
+
+        typed_factory: VerifyBrowserSessionFactory | None
+        if browser_session_factory is None:
+            typed_factory = None
+        else:
+
+            async def checked_factory() -> VerifyBrowserSessionLike:
+                result = browser_session_factory()
+                if not isinstance(result, Awaitable):
+                    raise InternalInvariantError("justificante verifier factory did not return an awaitable")
+                candidate = await result
+                if not isinstance(candidate, VerifyBrowserSessionLike):
+                    raise InternalInvariantError("justificante verifier factory returned an incompatible session")
+                return candidate
+
+            typed_factory = checked_factory
+        return verify_csv(csv, browser=typed_browser, browser_session_factory=typed_factory)
 
 
 def build_justificante_capture_service(bucket_id: str) -> JustificanteCaptureSnapshotService:
@@ -186,7 +238,7 @@ def build_justificante_registration_ports() -> JustificanteRegistrationPorts:
     """Bind receipt metadata, filing catalogue, and event persistence adapters."""
     return JustificanteRegistrationPorts(
         parse_pdf=parse_justificante_bytes,
-        metadata=JustificanteRepository(),
+        metadata=_JustificanteMetadata(JustificanteRepository()),
         filing=ModeloRecordCatalogueRepository(),
         events=_RegistrationEvents(),
     )
@@ -195,8 +247,9 @@ def build_justificante_registration_ports() -> JustificanteRegistrationPorts:
 def build_justificante_live_read_port(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
+    operation: PinnedAuthorityOperation,
 ) -> JustificanteLiveReadPort:
-    return _LiveRead(certificate_secret_backend_factory, operator_scope_ports)
+    return _LiveRead(certificate_secret_backend_factory, operator_scope_ports, operation)
 
 
 def build_justificante_authenticity_verifier() -> JustificanteAuthenticityVerifierPort:

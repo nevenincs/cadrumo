@@ -22,6 +22,7 @@ from cadrumo.adapters.persistence.profile.tests._dormant_resolver_live_support i
     _revision,
     _seed_ready_profile,
 )
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -60,6 +61,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
@@ -306,10 +308,14 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     )
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_M369_BUCKET,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
     period_casilla = validated_casilla_id("decl.periodo")
@@ -317,32 +323,36 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     assert result.revision.input_values_by_casilla_id[period_casilla] == period_token
     assert Decimal(result.revision.casilla_values[exterior_cuota]) == Decimal("19.00")
 
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="m369-exterior-reviewer",
-        workflow_profile=workflow_profile(),
-        clock=_T1,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="m369-exterior-reviewer",
+            workflow_profile=workflow_profile(),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert report.granted_verificado_completo is True, report.findings
 
     output_path = tmp_path / f"modelo-369-{period_token}.txt"
-    receipt = export_modelo_revision(
-        ModeloExportCommand(
-            calculation_revision_id=result.revision.calculation_revision_id,
-            output_path=output_path,
-            actor="m369-exterior-exporter",
-        ),
-        workflow_profile=workflow_profile(),
-        export_ports=modelo_export_ports_for_test(
-            bucket_id=_M369_BUCKET,
-            secure_objects=m369_objects,
-            work_unit=wu_repo,
-            calculation=cr_repo,
-        ),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        receipt = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=result.revision.calculation_revision_id,
+                output_path=output_path,
+                actor="m369-exterior-exporter",
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_M369_BUCKET,
+                secure_objects=m369_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+            ),
+            operation=operation,
+        )
     assert receipt.period.registry_token == period_token
     wire = output_path.read_bytes()
     assert wire[10:12] == expected_wire_period
@@ -395,10 +405,12 @@ def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_voca
     )
 
     with pytest.raises(AggregationValidationError) as exc_info:
-        oss_ioss_module._exterior_detail_binding_values(
-            _revision("369", "esquema-exterior"),
-            (observation,),
-        )
+        with bundled_indexed_authority().operation() as operation:
+            oss_ioss_module._exterior_detail_binding_values(
+                _revision("369", "esquema-exterior"),
+                (observation,),
+                operation=operation,
+            )
 
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"
     assert exc_info.value.context is not None
@@ -473,10 +485,14 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             )
             result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
-                work_unit_repository=wu_repo,
-                calculation_repository=cr_repo,
-                transaction_repository=tx_repo,
-                invoice_repository=invoice_repo,
+                ports=calculation_ports_for_test(
+                    bucket_id=_M369_BUCKET,
+                    work_unit_repository=wu_repo,
+                    calculation_repository=cr_repo,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
+                    transaction_repository=tx_repo,
+                    invoice_repository=invoice_repo,
+                ),
                 clock=_T1,
             )
 
@@ -498,15 +514,17 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                 for diag in result.source_diagnostics
             )
 
-            report = verify_modelo_revision(
-                result.revision.calculation_revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=build_test_verification_repository_bundle(),
-                actor="m369-live-operator",
-                workflow_profile=workflow_profile(),
-                clock=_T1,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                report = verify_modelo_revision(
+                    result.revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    verification_repositories=build_test_verification_repository_bundle(),
+                    actor="m369-live-operator",
+                    workflow_profile=workflow_profile(),
+                    clock=_T1,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=operation,
+                )
             assert ambient_invoice_repo.exists() is False
             assert any(
                 ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
@@ -617,10 +635,14 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_M369_BUCKET,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
 
@@ -630,15 +652,17 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
     ), result.source_diagnostics
     assert result.revision.source_provenance == (), "unresolved OSS source must persist no resolved-source trace"
 
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="m369-unresolved-operator",
-        workflow_profile=workflow_profile(),
-        clock=_T1,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="m369-unresolved-operator",
+            workflow_profile=workflow_profile(),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert report.granted_verificado_completo is False
     finding = next(
@@ -658,7 +682,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
     assert persisted is not None
     assert persisted.state is CalculationRevisionState.BORRADOR
     output_path = tmp_path / "modelo-369.txt"
-    with pytest.raises(CalculationRevisionStateError):
+    with pytest.raises(CalculationRevisionStateError), bundled_indexed_authority().operation() as operation:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=result.revision.calculation_revision_id,
@@ -672,6 +696,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
                 work_unit=wu_repo,
                 calculation=cr_repo,
             ),
+            operation=operation,
         )
     assert not output_path.exists()
     assert not (tmp_path / "modelo-369.txt.tmp").exists()
@@ -716,10 +741,14 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_M369_BUCKET,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
 
@@ -740,8 +769,14 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
         calculate_modelo_revision(
             work_unit.work_unit_id,
             casilla_inputs={},
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
+            ports=calculation_ports_for_test(
+                bucket_id=_M369_BUCKET,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+                transaction_repository=tx_repo,
+                invoice_repository=invoice_repo,
+            ),
             **retired_keyword,
         )
     assert cr_repo.load().get(result.revision.calculation_revision_id) == result.revision
@@ -750,15 +785,17 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
         == result.revision.calculation_revision_id
     )
 
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="m369-unrouted-operator",
-        workflow_profile=workflow_profile(),
-        clock=_T1,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="m369-unrouted-operator",
+            workflow_profile=workflow_profile(),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert report.granted_verificado_completo is False
     finding = next(
@@ -780,7 +817,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
     assert persisted is not None
     assert persisted.state is CalculationRevisionState.BORRADOR
     output_path = tmp_path / "modelo-369-unrouted.txt"
-    with pytest.raises(CalculationRevisionStateError):
+    with pytest.raises(CalculationRevisionStateError), bundled_indexed_authority().operation() as operation:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=result.revision.calculation_revision_id,
@@ -794,6 +831,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
                 work_unit=wu_repo,
                 calculation=cr_repo,
             ),
+            operation=operation,
         )
     assert not output_path.exists()
     assert not (tmp_path / "modelo-369-unrouted.txt.tmp").exists()
@@ -837,10 +875,14 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_M369_BUCKET,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
 
@@ -852,15 +894,17 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
     assert any(ref.contributor_source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance), (
         result.revision.source_provenance
     )
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="m369-zero-operator",
-        workflow_profile=workflow_profile(),
-        clock=_T1,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="m369-zero-operator",
+            workflow_profile=workflow_profile(),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert report.granted_verificado_completo is True, report.findings
     assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
         result.revision.calculation_revision_id

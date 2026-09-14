@@ -16,6 +16,11 @@ projection; nothing is stubbed.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....application.user_profile.projections import projection_for_taxpayer
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -30,10 +35,11 @@ _PROFILE_ID = "3f2a9c14-8b7d-4e21-9f60-5c1a7d3e8b42"
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=facts,
+        context=_profile_creation_context_for_test(),
     )
 
 

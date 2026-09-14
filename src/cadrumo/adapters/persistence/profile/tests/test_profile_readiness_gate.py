@@ -8,6 +8,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -50,6 +53,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -66,31 +70,33 @@ _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
 def _store_incomplete_profile(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_NOW,
             updated_at=_NOW,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(),
             created_at=_NOW,
             updated_at=_NOW,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_profile_without_activity(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
@@ -111,6 +117,7 @@ def _store_profile_without_activity(bucket_id: str) -> None:
             ),
             created_at=_NOW,
             updated_at=_NOW,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
@@ -122,7 +129,7 @@ def _store_ready_profile(
     setup_state: ProfileSetupState = ProfileSetupState.COMPLETE,
 ) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=setup_state,
             profile_id=bucket_id,
             facts=(
@@ -145,13 +152,14 @@ def _store_ready_profile(
             ),
             created_at=_NOW,
             updated_at=_NOW,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
@@ -172,6 +180,7 @@ def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
             ),
             created_at=_NOW,
             updated_at=_NOW,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
@@ -185,7 +194,7 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
     Renta).
     """
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
@@ -210,6 +219,7 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
             ),
             created_at=_NOW,
             updated_at=_NOW,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
@@ -905,7 +915,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_OPERATOR_PROFILE_ID,
                 facts=(
@@ -914,6 +924,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
                 ),
                 created_at=_NOW,
                 updated_at=_NOW,
+                context=_profile_creation_context_for_test(),
             ),
         )
         repository = WorkUnitCatalogueRepository()
@@ -955,7 +966,7 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
     Both facts are live at one effective-dated path, so declaration order and
     ``valid_from`` order disagree and the two readers can be told apart.
     """
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_OPERATOR_PROFILE_ID,
         facts=(
@@ -972,6 +983,7 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
         ),
         created_at=_NOW,
         updated_at=_NOW,
+        context=_profile_creation_context_for_test(),
     )
 
 

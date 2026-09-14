@@ -35,6 +35,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -51,6 +54,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -69,7 +73,9 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -114,12 +120,13 @@ def repos(tmp_path: Path) -> Generator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
+                context=_profile_creation_context_for_test(),
             ),
         )
         yield (
@@ -230,7 +237,6 @@ def _seed_m303_external_baseline(
 def test_rectificativa_kind_refused_for_pre_boundary_period(repos: _Repos) -> None:
     """M303 2T 2024 predates the rectificativa fichero fields; requesting
     ``rectificativa`` is refused, naming the accepted kind set."""
-    wu_repo, cr_repo, fr_repo, bv_repo = repos
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
@@ -239,18 +245,16 @@ def test_rectificativa_kind_refused_for_pre_boundary_period(repos: _Repos) -> No
     )
 
     with pytest.raises(AmendmentKindNotPermittedError) as exc_info:
-        amend_modelo_revision(
-            from_filing_record_id=baseline.filing_record_id,
-            overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
-            reason="illegal rectificativa for a pre-boundary period",
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T4,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            amend_modelo_revision(
+                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+                from_filing_record_id=baseline.filing_record_id,
+                overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
+                amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                reason="illegal rectificativa for a pre-boundary period",
+                actor="operator-A",
+                clock=_T4,
+            )
     assert exc_info.value.context is not None
     assert exc_info.value.context.get("requested_kind") == "rectificativa"
     accepted = str(exc_info.value.context.get("accepted_kinds"))
@@ -261,7 +265,6 @@ def test_rectificativa_kind_refused_for_pre_boundary_period(repos: _Repos) -> No
 
 def test_complementaria_permitted_for_pre_boundary_liability_increase(repos: _Repos) -> None:
     """A pre-boundary complementaria that RAISES liability is the lawful, permitted kind."""
-    wu_repo, cr_repo, fr_repo, bv_repo = repos
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
@@ -269,18 +272,16 @@ def test_complementaria_permitted_for_pre_boundary_liability_increase(repos: _Re
         period_code="2T",
     )
 
-    record = amend_modelo_revision(
-        from_filing_record_id=baseline.filing_record_id,
-        overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        reason="under-reported cuota discovered in audit",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T4,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        record = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="under-reported cuota discovered in audit",
+            actor="operator-A",
+            clock=_T4,
+        )
     assert record.amends_filing_record_id == baseline.filing_record_id
 
 
@@ -288,7 +289,6 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(repos: _Repo
     """A pre-boundary complementaria that LOWERS liability is refused — that
     correction is a solicitud de rectificación (LGT art. 120.3), not a
     complementaria (LGT art. 122.2)."""
-    wu_repo, cr_repo, fr_repo, bv_repo = repos
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
@@ -297,18 +297,16 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(repos: _Repo
     )
 
     with pytest.raises(AmendmentComplementariaLiabilityDecreaseError) as exc_info:
-        amend_modelo_revision(
-            from_filing_record_id=baseline.filing_record_id,
-            overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-            reason="illegal liability-decreasing complementaria",
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T4,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            amend_modelo_revision(
+                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+                from_filing_record_id=baseline.filing_record_id,
+                overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
+                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+                reason="illegal liability-decreasing complementaria",
+                actor="operator-A",
+                clock=_T4,
+            )
     assert exc_info.value.context is not None
     assert exc_info.value.context.get("baseline_result") == "100.00"
     assert exc_info.value.context.get("corrected_result") == "40.00"
@@ -318,7 +316,6 @@ def test_complementaria_kind_refused_for_post_boundary_period(repos: _Repos) -> 
     """M303 3T 2024 is the diseño's stated rectificativa boundary quarter;
     ``complementaria`` is no longer a permitted kind — rectificativa is the
     unified mechanism from this period onward."""
-    wu_repo, cr_repo, fr_repo, bv_repo = repos
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
@@ -327,18 +324,16 @@ def test_complementaria_kind_refused_for_post_boundary_period(repos: _Repos) -> 
     )
 
     with pytest.raises(AmendmentKindNotPermittedError) as exc_info:
-        amend_modelo_revision(
-            from_filing_record_id=baseline.filing_record_id,
-            overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-            reason="illegal complementaria for a post-boundary period",
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T4,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            amend_modelo_revision(
+                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+                from_filing_record_id=baseline.filing_record_id,
+                overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
+                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+                reason="illegal complementaria for a post-boundary period",
+                actor="operator-A",
+                clock=_T4,
+            )
     accepted = str(exc_info.value.context.get("accepted_kinds")) if exc_info.value.context else ""
     assert "rectificativa" in accepted
     assert "sustitutiva" in accepted
@@ -348,7 +343,6 @@ def test_complementaria_kind_refused_for_post_boundary_period(repos: _Repos) -> 
 def test_rectificativa_kind_permits_liability_decrease_post_boundary(repos: _Repos) -> None:
     """Post-boundary, rectificativa may lawfully lower the declared result —
     the liability-decrease guard is complementaria-specific and does not fire."""
-    wu_repo, cr_repo, fr_repo, bv_repo = repos
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
@@ -356,24 +350,21 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(repos: _Rep
         period_code="3T",
     )
 
-    record = amend_modelo_revision(
-        from_filing_record_id=baseline.filing_record_id,
-        overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-        amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
-        reason="lawful rectificativa lowering the declared result",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T4,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        record = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
+            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            reason="lawful rectificativa lowering the declared result",
+            actor="operator-A",
+            clock=_T4,
+        )
     assert record.amends_filing_record_id == baseline.filing_record_id
 
 
 def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos) -> None:
     """sustitutiva is always in the permitted set, pre- and post-boundary."""
-    wu_repo, cr_repo, fr_repo, bv_repo = repos
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
@@ -381,16 +372,14 @@ def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos) -> None:
         period_code="2T",
     )
 
-    record = amend_modelo_revision(
-        from_filing_record_id=baseline.filing_record_id,
-        overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-        amendment_kind=CalculationRevisionAmendmentKind.SUSTITUTIVA,
-        reason="material restatement, sustitutiva always permitted",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T4,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        record = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
+            amendment_kind=CalculationRevisionAmendmentKind.SUSTITUTIVA,
+            reason="material restatement, sustitutiva always permitted",
+            actor="operator-A",
+            clock=_T4,
+        )
     assert record.amends_filing_record_id == baseline.filing_record_id

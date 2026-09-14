@@ -21,6 +21,9 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
@@ -680,6 +683,7 @@ def test_failed_reset_serializes_and_refuses_concurrent_central_session_writer(
             missing custody long before it could meet the cleanup intent this
             test is about.
             """
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
             writer_started.set()
             with open_test_profile_session(_BUCKET_ID):
                 asyncio.run(
@@ -688,6 +692,7 @@ def test_failed_reset_serializes_and_refuses_concurrent_central_session_writer(
                         kind=AuthProviderKind.CERTIFICATE,
                         fresh=True,
                         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                        profile_decode_context=_profile_decode_context_for_test,
                     ),
                 )
 

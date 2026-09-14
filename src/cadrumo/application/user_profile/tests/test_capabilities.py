@@ -11,6 +11,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.capabilities import ServiceCapability
 from ....core.config import load_settings
@@ -24,12 +29,13 @@ _NOW = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="19191919-1919-4191-8191-191919191919",
         facts=facts,
         created_at=_NOW,
         updated_at=_NOW,
+        context=_profile_creation_context_for_test(),
     )
 
 

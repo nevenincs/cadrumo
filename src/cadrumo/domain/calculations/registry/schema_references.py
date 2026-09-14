@@ -338,7 +338,8 @@ def materialize_date_window_series(
     are retained verbatim.
     """
     if not declarations:
-        return MappingProxyType({})
+        empty: dict[str, RegistryValidityWindow] = {}
+        return MappingProxyType(empty)
     identifiers = [identifier for identifier, _ in declarations]
     if len(set(identifiers)) != len(identifiers):
         raise RegistryValidationError("temporal delta series identifiers must be unique")
@@ -395,17 +396,17 @@ class TemporalProjectionDirection(StrEnum):
     FORWARD = "forward"
 
 
-def _validate_support_bounds[T](floor: T, horizon: T, hard_ceiling: T | None) -> None:
-    if horizon < floor:  # type: ignore[operator]
+def _validate_support_bounds[T: (int, date)](floor: T, horizon: T, hard_ceiling: T | None) -> None:
+    if horizon < floor:
         raise ValueError("temporal support horizon must be on or after floor")
-    if hard_ceiling is not None and hard_ceiling < horizon:  # type: ignore[operator]
+    if hard_ceiling is not None and hard_ceiling < horizon:
         raise ValueError(
             "temporal support hard_ceiling must be on or after horizon; a ceiling before "
             "the horizon would close a span the corpus already declares coverage for"
         )
 
 
-class OrderedSupportEnvelope[CoordinateT]:
+class OrderedSupportEnvelope[CoordinateT: (int, date)]:
     """One implementation of hard-gate admission and newest-authority projection."""
 
     floor: CoordinateT
@@ -414,15 +415,15 @@ class OrderedSupportEnvelope[CoordinateT]:
 
     def admits_coordinate(self, coordinate: CoordinateT) -> bool:
         """Return whether a coordinate lies between the hard support gates."""
-        if coordinate < self.floor:  # type: ignore[operator]
+        if coordinate < self.floor:
             return False
-        return self.hard_ceiling is None or coordinate <= self.hard_ceiling  # type: ignore[operator]
+        return self.hard_ceiling is None or coordinate <= self.hard_ceiling
 
     def projection_coordinate(self, coordinate: CoordinateT) -> CoordinateT | None:
         """Map an admitted coordinate to the newest authored coordinate."""
         if not self.admits_coordinate(coordinate):
             return None
-        return min(coordinate, self.horizon)  # type: ignore[type-var]
+        return min(coordinate, self.horizon)
 
 
 class DateSupportEnvelope(RegistryModel, OrderedSupportEnvelope[date]):

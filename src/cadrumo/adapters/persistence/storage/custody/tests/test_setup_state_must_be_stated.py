@@ -23,14 +23,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.profile_record_repository import require_profile_record_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -43,7 +50,10 @@ _PASSPHRASE = "setup-state-must-be-stated-operator-secret"  # noqa: S105 - synth
 
 def _live_store(profile_id: str) -> ProfileRecordStore:
     """Return a record store over the logged-in profile's own session."""
-    return ProfileRecordStore(session=require_profile_record_session(profile_id))
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    return ProfileRecordStore(
+        session=require_profile_record_session(profile_id, profile_decode_context=_profile_decode_context_for_test)
+    )
 
 
 def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
@@ -55,11 +65,20 @@ def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
     rather than by reasoning about what pydantic records in ``model_fields_set``
     when it validates a payload.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
+        login_profile(
+            name=outcome.label,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
 
         loaded = _live_store(outcome.profile_id).load().record
 
@@ -117,8 +136,10 @@ def test_model_copy_preserves_the_statement_so_the_guard_is_not_defeated(tmp_pat
     one can rely on it rather than discovering it.
     """
     del tmp_path
-    stated = UserProfileRecord(
-        profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e", setup_state=ProfileSetupState.COMPLETE
+    stated = _create_profile_record_for_test(
+        profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e",
+        setup_state=ProfileSetupState.COMPLETE,
+        context=_profile_creation_context_for_test(),
     )
 
     carried = stated.model_copy(update={"record_revision": 2})

@@ -52,6 +52,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -60,13 +63,11 @@ from cadrumo.adapters.persistence.profile.tests.verification_repository_support 
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 __all__ = ["register_wizard_catalogue"]
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -80,6 +81,7 @@ from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
@@ -87,7 +89,8 @@ from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import VerificationReport
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -125,7 +128,7 @@ _ADVISORY_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=(
@@ -159,6 +162,7 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
                 ),
                 created_at=_CLOCK_N,
                 updated_at=_CLOCK_N,
+                context=_profile_creation_context_for_test(),
             ),
         )
         yield
@@ -266,16 +270,13 @@ def _calculate_through_the_mesh(
             filing_year=_YEAR_N_PLUS_1,
             period=_PERIOD,
         )
-        work_repository = WorkUnitCatalogueRepository()
-        calculation_repository = CalculationRevisionCatalogueRepository()
-        event_repository = BucketEventHistoryRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo=Modelo("720").value,
             filing_year=_YEAR_N_PLUS_1,
             period=Period.from_year_and_code(_YEAR_N_PLUS_1, _PERIOD),
             revision_id=snapshot.revision.id,
-            repository=work_repository,
+            ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
             clock=_CLOCK_N_PLUS_1,
         )
 
@@ -286,25 +287,26 @@ def _calculate_through_the_mesh(
         if declare_cuentas:
             casilla_inputs[_CUENTAS_VALORACION] = _CUENTAS_N1
 
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs=casilla_inputs,
-            foreign_asset_observations=observations,
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            bucket_event_repository=event_repository,
-            clock=_CLOCK_N_PLUS_1,
-        ).revision
-        report = verify_modelo_revision(
-            revision.calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="system",
-            workflow_profile=_resident_profile(),
-            clock=_CLOCK_N_PLUS_1,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+                actor="operator",
+                casilla_inputs=casilla_inputs,
+                foreign_asset_observations=observations,
+                clock=_CLOCK_N_PLUS_1,
+            ).revision
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=build_test_verification_repository_bundle(),
+                actor="system",
+                workflow_profile=_resident_profile(),
+                clock=_CLOCK_N_PLUS_1,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         return revision, snapshot.revision, report
 
 
@@ -355,12 +357,14 @@ def test_the_evidence_projection_joins_the_produced_rows_at_their_bloque_totals(
         observations=_foreign_asset_observations(),
     )
 
-    evidence = modelo_720_evidence_observation(
-        revision=revision,
-        modelo_revision=modelo_revision,
-        filing_year=_YEAR_N_PLUS_1,
-        period=_PERIOD,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        evidence = modelo_720_evidence_observation(
+            revision=revision,
+            modelo_revision=modelo_revision,
+            filing_year=_YEAR_N_PLUS_1,
+            period=_PERIOD,
+            operation=operation,
+        )
 
     assert evidence.observations, (
         "the evidence projection joined empty against a revision the real producer "
@@ -390,12 +394,14 @@ def test_the_evidence_projection_is_empty_when_the_producer_receives_no_observat
     assert revision.row_binding_values.get(class_binding, {}) == {}
     assert revision.row_binding_values.get(valuation_binding, {}) == {}
 
-    evidence = modelo_720_evidence_observation(
-        revision=revision,
-        modelo_revision=modelo_revision,
-        filing_year=_YEAR_N_PLUS_1,
-        period=_PERIOD,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        evidence = modelo_720_evidence_observation(
+            revision=revision,
+            modelo_revision=modelo_revision,
+            filing_year=_YEAR_N_PLUS_1,
+            period=_PERIOD,
+            operation=operation,
+        )
     assert evidence.observations == ()
     assert [finding for finding in report.findings if finding.message_locale_key == _ADVISORY_LOCALE_KEY] == [], (
         "with no independent valuation evidence the advisory must stay silent rather "

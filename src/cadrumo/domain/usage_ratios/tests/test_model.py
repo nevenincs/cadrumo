@@ -8,11 +8,18 @@ that keeps the persisted envelope diff-free across re-saves.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 from typing import Any, cast
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 
 from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
@@ -27,6 +34,23 @@ from ..model import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="session")
+def operation() -> PinnedAuthorityOperation:
+    """Expose the compiled source authority through the typed operation contract."""
+    authority = compiled_bundled_authority()
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
+    )
+    return PinnedAuthorityOperation(reader, reader.pin())
+
+
+@pytest.fixture(autouse=True)
+def _authority_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
+    """Give model validation the same generation-pinned context as production."""
+    with validating_governed_facts(operation):
+        yield
 
 
 def test_empty_profile_round_trips_json() -> None:
@@ -120,11 +144,12 @@ def test_resolve_user_ratio_returns_set_or_none() -> None:
     assert resolve_user_ratio(profile, SpendingCategory._from_registry("suministros_home_office_agua")) is None
 
 
-def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
+def test_eligible_categories_are_exactly_the_usage_ratio_rows(operation: PinnedAuthorityOperation) -> None:
     """``ELIGIBLE_USAGE_RATIO_CATEGORIES`` must track the registry verbatim.
 
-    The eligibility set is derived from ``resolve_category_profiles(2025)`` at import
-    time. This test re-derives it from the registry using the same predicate
+    The eligibility set is derived from the pinned operation's
+    ``resolve_category_profiles(2025, operation=operation)`` projection. This test
+    re-derives it from the registry using the same predicate
     and asserts equality, so a kind-table edit in the registry (adding or
     removing a ``USAGE_RATIO_*`` category) cannot silently drift from what the
     usage-ratio feature accepts. The count pin (twelve) is a secondary
@@ -132,7 +157,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
     """
     derived_from_registry = frozenset(
         category
-        for category, profile in resolve_category_profiles(2025).items()
+        for category, profile in resolve_category_profiles(2025, operation=operation).items()
         if profile.proportionality.kind
         in {
             ProportionalityKind._from_registry(
@@ -159,7 +184,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
     assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 15
 
 
-def test_an_undeclared_usage_ratio_has_no_registry_fallback() -> None:
+def test_an_undeclared_usage_ratio_has_no_registry_fallback(operation: PinnedAuthorityOperation) -> None:
     """Reference example of the deductibility-compute consumer pattern.
 
     This test previously pinned the OPPOSITE pattern -- prefer the operator's
@@ -187,7 +212,7 @@ def test_an_undeclared_usage_ratio_has_no_registry_fallback() -> None:
         user_value = resolve_user_ratio(profile, category)
         if user_value is not None:
             return user_value
-        return resolve_category_profiles(2025)[category].proportionality.default_ratio
+        return resolve_category_profiles(2025, operation=operation)[category].proportionality.default_ratio
 
     assert resolve_for_compute(SpendingCategory._from_registry("suministros_home_office_luz")) == Decimal("0.21")
     assert resolve_for_compute(SpendingCategory._from_registry("suministros_home_office_agua")) is None

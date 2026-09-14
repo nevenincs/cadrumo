@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import TypedDict
+from typing import TypedDict, cast
 
 import pytest
 from pydantic import ValidationError
@@ -21,13 +21,16 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_import import import_ledger_transactions
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
+from cadrumo.entrypoints.ledger_action_composition import compose_ledger_import_ports
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,
@@ -53,6 +56,23 @@ class _ManualTransactionBaseArgs(TypedDict):
     direction: TransactionDirection
     description: str
     idempotency_key: str
+
+
+def _ledger_ports(
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+    *,
+    bucket_id: str = _BUCKET_ID,
+) -> LedgerActionPorts:
+    """Compose canonical ledger action ports over the isolated repositories."""
+    return cast(
+        LedgerActionPorts,
+        ledger_ports_for_test(
+            bucket_id=bucket_id,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
+    )
 
 
 def _created_event_count(event_repository: BucketEventHistoryRepository, *, bucket_id: str = _BUCKET_ID) -> int:
@@ -84,8 +104,7 @@ def _add(
             description=description,
             idempotency_key=idempotency_key,
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=bucket_id),
         occurred_at=occurred_at,
     )
 
@@ -165,15 +184,13 @@ def test_same_key_differing_only_in_recargo_raises_conflict(secure_objects: Secu
     }
     create_manual_transaction(
         ManualLedgerTransactionCommand(**base, recargo_amount=Decimal("1.30")),
-        transaction_repository=repo,
-        bucket_event_repository=events,
+        ports=_ledger_ports(repo, events),
         occurred_at=_DEFAULT_OCCURRED_AT,
     )
     with pytest.raises(TransactionValidationError):
         create_manual_transaction(
             ManualLedgerTransactionCommand(**base, recargo_amount=Decimal("2.60")),
-            transaction_repository=repo,
-            bucket_event_repository=events,
+            ports=_ledger_ports(repo, events),
             occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
     assert len(repo.load().transactions) == 1
@@ -195,15 +212,13 @@ def test_same_key_differing_only_in_source_jurisdiction_raises_conflict(
     }
     create_manual_transaction(
         ManualLedgerTransactionCommand(**base, source_jurisdiction="ES"),
-        transaction_repository=repo,
-        bucket_event_repository=events,
+        ports=_ledger_ports(repo, events),
         occurred_at=_DEFAULT_OCCURRED_AT,
     )
     with pytest.raises(TransactionValidationError):
         create_manual_transaction(
             ManualLedgerTransactionCommand(**base, source_jurisdiction="PT"),
-            transaction_repository=repo,
-            bucket_event_repository=events,
+            ports=_ledger_ports(repo, events),
             occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
     assert len(repo.load().transactions) == 1
@@ -236,8 +251,7 @@ def test_same_key_differing_only_in_classified_by_override_raises_conflict(
             business_classification=BusinessClassification.BUSINESS,
             classified_by_override="rule:office-supplies",
         ),
-        transaction_repository=repo,
-        bucket_event_repository=events,
+        ports=_ledger_ports(repo, events),
         occurred_at=_DEFAULT_OCCURRED_AT,
     )
     stored = repo.load().get(first.ref.transaction_id)
@@ -251,8 +265,7 @@ def test_same_key_differing_only_in_classified_by_override_raises_conflict(
                 business_classification=BusinessClassification.BUSINESS,
                 classified_by_override="rule:travel",
             ),
-            transaction_repository=repo,
-            bucket_event_repository=events,
+            ports=_ledger_ports(repo, events),
             occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
 
@@ -287,8 +300,7 @@ def test_same_key_repeating_the_same_classified_by_override_is_a_noop(
             business_classification=BusinessClassification.BUSINESS,
             classified_by_override="rule:office-supplies",
         ),
-        transaction_repository=repo,
-        bucket_event_repository=events,
+        ports=_ledger_ports(repo, events),
         occurred_at=_DEFAULT_OCCURRED_AT,
     )
     retry = create_manual_transaction(
@@ -297,8 +309,7 @@ def test_same_key_repeating_the_same_classified_by_override_is_a_noop(
             business_classification=BusinessClassification.BUSINESS,
             classified_by_override="rule:office-supplies",
         ),
-        transaction_repository=repo,
-        bucket_event_repository=events,
+        ports=_ledger_ports(repo, events),
         occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
     )
     assert retry.ref.transaction_id == first.ref.transaction_id
@@ -412,6 +423,7 @@ def test_import_recognises_a_prior_manual_movement(secure_objects: SecureObjectR
     outcome = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=(parsed_import_transaction(),),
+        ports=compose_ledger_import_ports(),
         transaction_repository=repo,
         bucket_event_repository=events,
         occurred_at=datetime(2026, 5, 6, 9, 0, tzinfo=UTC),

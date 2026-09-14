@@ -12,38 +12,40 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....domain.deadlines.profiles import MODELO_IVA_BLOCK_CLAIMING_PATHS, MODELO_IVA_BLOCK_REQUIRED_PATHS
-from ..catalogue import _IVA_BLOCK_CLAIMED, SETUP_FLOW
-from ..models import WizardQuestion
+from ..models import WizardCondition, WizardQuestion, WizardVisibility
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _questions() -> tuple[WizardQuestion, ...]:
-    return tuple(question for section in SETUP_FLOW.sections for question in section.questions)
+def _questions(*, registry_setup_flow: WizardFlow) -> tuple[WizardQuestion, ...]:
+    return tuple(question for section in registry_setup_flow.sections for question in section.questions)
 
 
-def test_every_block_claiming_question_sits_behind_the_claim_gate() -> None:
+def test_every_block_claiming_question_sits_behind_the_claim_gate(*, registry_setup_flow: WizardFlow) -> None:
     """A question that claims the block, gated more loosely, is the divergence."""
     offenders = {
         question.id: question.visible_when
-        for question in _questions()
+        for question in _questions(registry_setup_flow=registry_setup_flow)
         if question.profile_key in MODELO_IVA_BLOCK_CLAIMING_PATHS
         and question.profile_key != "iva.regime"
-        and question.visible_when != _IVA_BLOCK_CLAIMED
+        and question.visible_when != _expected_claim_gate(registry_setup_flow)
     }
 
     assert offenders == {}, f"these questions claim the IVA block behind a different gate: {offenders}"
 
 
-def test_the_facts_a_claimed_block_requires_are_asked_and_required() -> None:
+def test_the_facts_a_claimed_block_requires_are_asked_and_required(*, registry_setup_flow: WizardFlow) -> None:
     """Every path the resolver refuses without is a required question on that gate.
 
     ``tax_residence.jurisdiction_scope`` is excluded: it is required of every
     profile by the schema, not conditionally by the IVA block, so it is
     collected outside this section.
     """
-    by_key = {question.profile_key: question for question in _questions()}
+    by_key = {question.profile_key: question for question in _questions(registry_setup_flow=registry_setup_flow)}
 
     for path in MODELO_IVA_BLOCK_REQUIRED_PATHS:
         if path == "tax_residence.jurisdiction_scope":
@@ -51,4 +53,15 @@ def test_the_facts_a_claimed_block_requires_are_asked_and_required() -> None:
         question = by_key.get(path)
         assert question is not None, f"the block requires {path} and no question collects it"
         assert question.required is True, f"{path} is required by the resolver but optional in the wizard"
-        assert question.visible_when == _IVA_BLOCK_CLAIMED, f"{path} is not gated on the claim"
+        assert question.visible_when == _expected_claim_gate(registry_setup_flow), f"{path} is not gated on the claim"
+
+
+def _expected_claim_gate(flow: WizardFlow) -> WizardVisibility:
+    """Claim the block for every declared IVA-regime choice, independent of its gates."""
+    regime = next(
+        question for section in flow.sections for question in section.questions if question.id == "iva-regime"
+    )
+    assert regime.choices, "the setup descriptor must offer IVA regimes"
+    return WizardVisibility(
+        any_of=tuple(WizardCondition(question_id="iva-regime", equals=choice.value) for choice in regime.choices)
+    )

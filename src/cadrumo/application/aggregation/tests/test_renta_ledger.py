@@ -7,10 +7,14 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.domain.categories.proportionality import ProportionalityKind
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -627,8 +631,9 @@ def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
     facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
     if ccaa_value is not None:
         facts = (*facts, UserProfileFact(path="tax_residence.ccaa", value=ccaa_value))
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=facts,
+        context=_profile_creation_context_for_test(),
     )

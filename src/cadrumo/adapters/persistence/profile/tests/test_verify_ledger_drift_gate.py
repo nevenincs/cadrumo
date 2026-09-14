@@ -18,8 +18,10 @@ deductible-evidence promotion depends on.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -34,10 +36,15 @@ from cadrumo.adapters.persistence.profile.tests._verify_ledger_drift_gate_suppor
     calculate_irene_revision,
     workflow_profile,
 )
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_filing_snapshot import row_fingerprint
+from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
     update_manual_transaction_fields,
@@ -45,6 +52,8 @@ from cadrumo.application.ledger.actions_manual import (
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
@@ -53,6 +62,10 @@ from cadrumo.domain.modelos.verification_report import (
 )
 from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.domain.transactions.models import Transaction
+from cadrumo.entrypoints.adapter_composition import (
+    build_ledger_evidence_ports,
+    build_verification_repository_bundle,
+)
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -69,6 +82,35 @@ _Repos = tuple[
 ]
 
 _AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+
+
+def _ledger_ports(
+    tx_repo: TransactionCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
+) -> LedgerActionPorts:
+    """Compose canonical ledger ports over the isolated repositories."""
+    return cast(
+        LedgerActionPorts,
+        ledger_ports_for_test(
+            bucket_id=BUCKET_ID,
+            transaction_repository=tx_repo,
+            bucket_event_repository=event_repo,
+        ),
+    )
+
+
+def _verification_ports(repos: _Repos) -> VerificationRepositoryBundle:
+    """Compose the complete verification bundle over the isolated repositories."""
+    wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = repos
+    return replace(
+        build_verification_repository_bundle(BUCKET_ID),
+        work_unit=wu_repo,
+        calculation=cr_repo,
+        filing=filing_repo,
+        verification=vr_repo,
+        bucket_event=event_repo,
+        transaction=tx_repo,
+    )
 
 
 def _row(tx_repo: TransactionCatalogueRepository, transaction_id: str) -> Transaction:
@@ -101,16 +143,14 @@ def test_attaching_evidence_does_not_move_the_row_fingerprint(tmp_path: Path) ->
         before = row_fingerprint(_row(tx_repo, purchase.transaction_id))
 
         evidence = PurchaseInvoiceEvidenceService(
-            settings=profile.settings,
-            bucket_event_repository=event_repo,
+            ports=build_ledger_evidence_ports(bucket_id=BUCKET_ID),
         ).add(bucket_id=BUCKET_ID, source_path=_write_invoice(tmp_path))
         attach_manual_transaction_evidence(
             bucket_id=BUCKET_ID,
             transaction_id=purchase.transaction_id,
             purchase_invoice_evidence_id=evidence.record.evidence_id,
             actor="operator",
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo, event_repo),
             occurred_at=_AT,
         )
 
@@ -141,8 +181,7 @@ def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
             patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
             actor="operator",
             source_command="test",
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo, event_repo),
             occurred_at=_AT,
         )
 
@@ -152,21 +191,18 @@ def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
 
 
 def _verify(revision_id: str, repos: _Repos) -> VerificationReport:
-    wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = repos
-    return verify_modelo_revision(
-        revision_id,
-        actor="operator",
-        workflow_profile=workflow_profile(),
-        settings=ready_clave_settings(TAX_ID),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=filing_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=event_repo,
-        transaction_repository=tx_repo,
-        clock=_AT,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return verify_modelo_revision(
+            revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings(TAX_ID),
+            verification_repositories=_verification_ports(repos),
+            clock=_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
 
 def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path) -> None:
@@ -194,8 +230,7 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
             patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
             actor="operator",
             source_command="test",
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo, event_repo),
             occurred_at=_AT,
         )
 
@@ -250,16 +285,14 @@ def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
         repos: _Repos = (wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo)
 
         evidence = PurchaseInvoiceEvidenceService(
-            settings=profile.settings,
-            bucket_event_repository=event_repo,
+            ports=build_ledger_evidence_ports(bucket_id=BUCKET_ID),
         ).add(bucket_id=BUCKET_ID, source_path=_write_invoice(tmp_path))
         attach_manual_transaction_evidence(
             bucket_id=BUCKET_ID,
             transaction_id=purchase.transaction_id,
             purchase_invoice_evidence_id=evidence.record.evidence_id,
             actor="operator",
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo, event_repo),
             occurred_at=_AT,
         )
 

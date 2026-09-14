@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from cadrumo.application.ledger.models import (
     ManualLedgerTransactionCommand,
@@ -20,12 +22,28 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _ledger_ports(
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+) -> LedgerActionPorts:
+    """Compose canonical ledger ports over the isolated repositories."""
+    return cast(
+        LedgerActionPorts,
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
+    )
 
 
 def _create_classified_transaction(
@@ -46,8 +64,7 @@ def _create_classified_transaction(
             iva_rate=Decimal("0.21"),
             iva_amount=Decimal("21.00"),
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=_ledger_ports(transaction_repository, event_repository),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -74,8 +91,7 @@ def test_update_manual_transaction_fields_reaffirmation_noop_returns_stored_tran
         actor="operator-C",
         source_command="aeat app ledger classify",
         reaffirm=False,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=_ledger_ports(transaction_repository, event_repository),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -107,8 +123,7 @@ def test_update_manual_transaction_fields_reaffirm_true_bypasses_outer_guard_but
             actor="operator-C",
             source_command="aeat app ledger classify",
             reaffirm=True,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=_ledger_ports(transaction_repository, event_repository),
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -131,8 +146,7 @@ def test_update_manual_transaction_fields_reaffirm_true_with_net_change_emits_ev
         actor="operator-C",
         source_command="aeat app ledger classify",
         reaffirm=True,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=_ledger_ports(transaction_repository, event_repository),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -158,8 +172,7 @@ def test_update_manual_transaction_fields_different_classification_bypasses_noop
         actor="operator-C",
         source_command="aeat app ledger classify",
         reaffirm=False,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=_ledger_ports(transaction_repository, event_repository),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 

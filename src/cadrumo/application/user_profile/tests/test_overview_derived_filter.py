@@ -28,6 +28,11 @@ from __future__ import annotations
 
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.classification.policies import SensitivityClass
 from ....domain.user_profile.schema import (
@@ -100,10 +105,11 @@ def _schema(*, derived: bool) -> ProfileSchemaDefinition:
 
 
 def _record() -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(UserProfileFact(path=_OPERATOR_PATH, value=False),),
+        context=_profile_creation_context_for_test(),
     )
 
 

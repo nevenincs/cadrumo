@@ -26,6 +26,9 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from cadrumo.application.auth.sessions import ClaveAuthFacts, clave_auth_facts_from_profile_values
@@ -53,10 +56,13 @@ _isolated_storage = isolated_profile_storage_fixture()
 
 def _read_active_profile_auth_facts() -> ClaveAuthFacts:
     """Read profile auth facts through public session-bound application doors."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         return ClaveAuthFacts()
-    session = profile_record_session_if_authenticated(bucket_id)
+    session = profile_record_session_if_authenticated(
+        bucket_id, profile_decode_context=_profile_decode_context_for_test
+    )
     if session is None:
         return ClaveAuthFacts()
     try:

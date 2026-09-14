@@ -19,6 +19,7 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -27,9 +28,11 @@ from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support im
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
+from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
     create_manual_transaction,
@@ -46,6 +49,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, derive_transaction_id
+from ....entrypoints.adapter_composition import build_ledger_evidence_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -81,13 +85,23 @@ def _revisions(profile: TestRuntimeProfile) -> CalculationRevisionCatalogueRepos
     return CalculationRevisionCatalogueRepository(objects=profile.repository)
 
 
+def _ledger_ports(profile: TestRuntimeProfile) -> LedgerActionPorts:
+    return cast(
+        LedgerActionPorts,
+        ledger_ports_for_test(
+            bucket_id=profile.bucket_id,
+            transaction_repository=_transactions(profile),
+            bucket_event_repository=_events(profile),
+            work_unit_repository=_work_units(profile),
+            calculation_repository=_revisions(profile),
+        ),
+    )
+
+
 def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:
     """Register a PDF through the real evidence service and return its evidence id."""
-    service = PurchaseInvoiceEvidenceService(
-        settings=profile.settings,
-        bucket_event_repository=_events(profile),
-    )
-    return service.add(bucket_id=_BUCKET, source_path=pdf_file).record.evidence_id
+    service = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=profile.bucket_id))
+    return service.add(bucket_id=profile.bucket_id, source_path=pdf_file).record.evidence_id
 
 
 def _deductible_expense_row(profile: TestRuntimeProfile, *, idempotency_key: str) -> str:
@@ -106,8 +120,7 @@ def _deductible_expense_row(profile: TestRuntimeProfile, *, idempotency_key: str
             iva_amount=Decimal("105.00"),
             idempotency_key=idempotency_key,
         ),
-        transaction_repository=_transactions(profile),
-        bucket_event_repository=_events(profile),
+        ports=_ledger_ports(profile),
         occurred_at=datetime(2026, 2, 11, 8, 0, tzinfo=UTC),
     )
     return created.ref.transaction_id
@@ -138,10 +151,7 @@ def test_attach_evidence_proceeds_under_finalized_revision(
         transaction_id=transaction_id,
         purchase_invoice_evidence_id=evidence_id,
         actor="operator-A",
-        transaction_repository=_transactions(profile),
-        bucket_event_repository=_events(profile),
-        work_unit_repository=_work_units(profile),
-        calculation_repository=_revisions(profile),
+        ports=_ledger_ports(profile),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -171,10 +181,7 @@ def test_attach_leaves_the_finalized_revision_untouched(
         transaction_id=transaction_id,
         purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
         actor="operator-A",
-        transaction_repository=_transactions(profile),
-        bucket_event_repository=_events(profile),
-        work_unit_repository=_work_units(profile),
-        calculation_repository=_revisions(profile),
+        ports=_ledger_ports(profile),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -196,10 +203,7 @@ def test_value_affecting_update_still_refuses_under_finalized_revision(
             patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
             actor="operator-A",
             source_command="aeat app ledger classify",
-            transaction_repository=_transactions(profile),
-            bucket_event_repository=_events(profile),
-            work_unit_repository=_work_units(profile),
-            calculation_repository=_revisions(profile),
+            ports=_ledger_ports(profile),
         )
 
     persisted = _transactions(profile).load().get(transaction_id)
@@ -227,10 +231,7 @@ def test_evidence_attachment_bundled_with_a_value_change_still_refuses(
             ),
             actor="operator-A",
             source_command="aeat app ledger attach",
-            transaction_repository=_transactions(profile),
-            bucket_event_repository=_events(profile),
-            work_unit_repository=_work_units(profile),
-            calculation_repository=_revisions(profile),
+            ports=_ledger_ports(profile),
             _evidence_authority=True,
         )
 
@@ -254,10 +255,7 @@ def test_attach_without_a_finalized_revision_reports_no_stale_revisions(
         transaction_id=transaction_id,
         purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
         actor="operator-A",
-        transaction_repository=_transactions(profile),
-        bucket_event_repository=_events(profile),
-        work_unit_repository=_work_units(profile),
-        calculation_repository=_revisions(profile),
+        ports=_ledger_ports(profile),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
@@ -324,10 +322,7 @@ def test_evidence_fields_are_not_transaction_identity_or_tax_facts(
         transaction_id=transaction_id,
         purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
         actor="operator-A",
-        transaction_repository=_transactions(profile),
-        bucket_event_repository=_events(profile),
-        work_unit_repository=_work_units(profile),
-        calculation_repository=_revisions(profile),
+        ports=_ledger_ports(profile),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
     after = _transactions(profile).load().get(transaction_id)

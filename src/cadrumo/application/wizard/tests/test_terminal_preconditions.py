@@ -11,13 +11,15 @@ from typing import override
 
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...user_profile.registration import ProfileRegistrationError
 from ...workflow.state_models import WorkflowState
 from .. import commands as commands_module
 from .. import status as status_module
-from ..catalogue import SETUP_FLOW
 from ..commands import (
     _missing_filing_baseline_flags,
     _require_filing_baseline,
@@ -381,9 +383,11 @@ def test_missing_active_tax_id_has_an_exact_application_state_operator_decision_
     )
 
 
-def test_missing_profile_name_has_an_exact_runtime_operator_decision_verdict() -> None:
+def test_missing_profile_name_has_an_exact_runtime_operator_decision_verdict(
+    *, registry_setup_flow: WizardFlow
+) -> None:
     with pytest.raises(WizardMissingFlagError) as raised:
-        _require_profile_name(SETUP_FLOW, None)
+        _require_profile_name(registry_setup_flow, None)
 
     _assert_terminal_contract(
         raised.value,
@@ -394,13 +398,15 @@ def test_missing_profile_name_has_an_exact_runtime_operator_decision_verdict() -
     )
 
 
-def test_quiet_missing_required_flags_has_an_exact_runtime_operator_decision_verdict() -> None:
-    missing = commands_module._missing_required_flags(SETUP_FLOW, {})
+def test_quiet_missing_required_flags_has_an_exact_runtime_operator_decision_verdict(
+    *, registry_setup_flow: WizardFlow
+) -> None:
+    missing = commands_module._missing_required_flags(registry_setup_flow, {})
     assert missing
 
     with pytest.raises(WizardMissingFlagError) as raised:
         _run_full_flow(
-            SETUP_FLOW,
+            registry_setup_flow,
             {},
             quiet=True,
             accept_defaults=False,
@@ -418,13 +424,15 @@ def test_quiet_missing_required_flags_has_an_exact_runtime_operator_decision_ver
     )
 
 
-def test_missing_filing_baseline_has_an_exact_runtime_operator_decision_verdict() -> None:
-    answers = SETUP_FLOW.answers_model.model_validate({"tax_id": "00000000T"})
-    missing = _missing_filing_baseline_flags(SETUP_FLOW, answers)
+def test_missing_filing_baseline_has_an_exact_runtime_operator_decision_verdict(
+    *, registry_setup_flow: WizardFlow
+) -> None:
+    answers = registry_setup_flow.answers_model.model_validate({"tax_id": "00000000T"})
+    missing = _missing_filing_baseline_flags(registry_setup_flow, answers)
     assert missing
 
     with pytest.raises(WizardMissingFlagError) as raised:
-        _require_filing_baseline(SETUP_FLOW, answers)
+        _require_filing_baseline(registry_setup_flow, answers)
 
     _assert_terminal_contract(
         raised.value,
@@ -435,10 +443,12 @@ def test_missing_filing_baseline_has_an_exact_runtime_operator_decision_verdict(
     )
 
 
-def test_taken_profile_label_has_an_exact_application_state_operator_decision_verdict() -> None:
+def test_taken_profile_label_has_an_exact_application_state_operator_decision_verdict(
+    *, registry_setup_flow: WizardFlow
+) -> None:
     with pytest.raises(WizardValidationError) as raised:
         _require_profile_label_available(
-            SETUP_FLOW,
+            registry_setup_flow,
             "Taken profile",
             label_is_registered=True,
         )
@@ -452,18 +462,20 @@ def test_taken_profile_label_has_an_exact_application_state_operator_decision_ve
     )
 
 
-def test_unregistered_profile_label_passes_the_application_state_gate() -> None:
+def test_unregistered_profile_label_passes_the_application_state_gate(*, registry_setup_flow: WizardFlow) -> None:
     _require_profile_label_available(
-        SETUP_FLOW,
+        registry_setup_flow,
         "Unregistered profile",
         label_is_registered=False,
     )
 
 
-def test_edit_without_an_interactive_console_has_an_exact_runtime_safety_verdict() -> None:
+def test_edit_without_an_interactive_console_has_an_exact_runtime_safety_verdict(
+    *, registry_setup_flow: WizardFlow
+) -> None:
     with pytest.raises(WizardEditUnsupportedConsoleError) as raised:
         _run_full_flow(
-            SETUP_FLOW,
+            registry_setup_flow,
             {},
             quiet=False,
             accept_defaults=False,
@@ -481,11 +493,13 @@ def test_edit_without_an_interactive_console_has_an_exact_runtime_safety_verdict
     )
 
 
-def test_interactive_profile_create_remains_custody_refused_before_console_handling() -> None:
+def test_interactive_profile_create_remains_custody_refused_before_console_handling(
+    *, registry_setup_flow: WizardFlow
+) -> None:
     """Current custody rejects create; neither status nor wizard offers it as recovery."""
     with pytest.raises(ProfileRegistrationError):
         _run_full_flow(
-            SETUP_FLOW,
+            registry_setup_flow,
             {},
             quiet=False,
             accept_defaults=False,

@@ -28,12 +28,17 @@ from functools import lru_cache
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..profile_binding import ProfileBindingResolutionError, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -54,7 +59,7 @@ def _snapshot() -> RegistrySnapshot:
 
 def _resolved(*descendientes: DescendantInfo) -> dict[str, Decimal]:
     """Resolve the profile-sourced bindings for a record carrying *descendientes*."""
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=tuple(
@@ -62,6 +67,7 @@ def _resolved(*descendientes: DescendantInfo) -> dict[str, Decimal]:
         ),
         created_at=_T0,
         updated_at=_T0,
+        context=_profile_creation_context_for_test(),
     )
     resolution = resolve_profile_sourced_bindings(_snapshot(), bucket_id=_BUCKET, profile_record=record)
     return dict(resolution.binding_values)
@@ -212,7 +218,7 @@ def test_an_unparseable_stored_birth_date_still_refuses_by_index() -> None:
     operator can fix once told where it is, and skipping the row instead would
     silently under-count the cap population and drop that child's spend.
     """
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=(
@@ -221,6 +227,7 @@ def test_an_unparseable_stored_birth_date_still_refuses_by_index() -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
+        context=_profile_creation_context_for_test(),
     )
 
     with pytest.raises(ProfileBindingResolutionError, match=re.escape("renta_family.descendiente.0.birth_date")):

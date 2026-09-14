@@ -31,6 +31,9 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.persistence.storage.custody.acceleration_receipt import (
@@ -85,11 +88,16 @@ def _bucket_id_or_none(label: str = _LABEL) -> str | None:
 
 def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
     """Register one current credential capsule and return its immutable UUID."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.user_profile.registration import register_profile_with_credentials
 
     del tax_id  # Current registration creates the initial incomplete fact record.
     created = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=_PASSPHRASE
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label=label,
+        passphrase=_PASSPHRASE,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     close_active_bucket_session()
     assert _bucket_id_or_none(label) == created.bucket_id
@@ -98,9 +106,10 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
 
 def _login() -> None:
     """Establish the persisted session through the application login door."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.user_profile.login_session import login_profile
 
-    login_profile(passphrase_callback=lambda: _PASSPHRASE)
+    login_profile(passphrase_callback=lambda: _PASSPHRASE, profile_decode_context=_profile_decode_context_for_test)
 
 
 def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
@@ -121,9 +130,10 @@ def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
 
 def _resume(bucket_id: str) -> ProfileSessionRefusalReason | None:
     """Drive the shared resume authority the root callback itself calls."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.user_profile.login_session import bind_resumed_profile_session
 
-    return bind_resumed_profile_session(bucket_id=bucket_id)
+    return bind_resumed_profile_session(bucket_id=bucket_id, profile_decode_context=_profile_decode_context_for_test)
 
 
 def _invoke_decrypting_verb_without_the_secret_channel():
@@ -175,6 +185,7 @@ class TestSilentResume:
         assert "rows" in output
 
     def test_resume_advances_the_idle_deadline(self, _isolated_root: Path) -> None:
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         require_os_credential_store()
         bucket_id = _create_profile()
         _login_and_require_persistence(_isolated_root, bucket_id)
@@ -190,7 +201,10 @@ class TestSilentResume:
         from ....application.user_profile.login_session import bind_resumed_profile_session
 
         close_active_bucket_session()
-        assert bind_resumed_profile_session(bucket_id=bucket_id) is None
+        assert (
+            bind_resumed_profile_session(bucket_id=bucket_id, profile_decode_context=_profile_decode_context_for_test)
+            is None
+        )
         resumed = current_active_bucket_session()
         assert resumed is not None
         # The sliding window rolled forward, while the absolute cap - fixed at

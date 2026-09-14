@@ -8,7 +8,11 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from .....adapters.persistence.storage.custody.records import (
@@ -26,7 +30,7 @@ from .....application.workflow.profile_health import assess_active_profile_healt
 from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
 from .....core.config import override_settings
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -35,6 +39,7 @@ _PROFILE_DEK = bytes(range(32))
 
 def _current_profile_session(profile_id: str, *, root: Path, label: str) -> ProfileRecordSession:
     """Create one real committed current capsule and return its live record session."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     identity = UUID(profile_id)
     seed = identity.bytes + identity.bytes
     envelope = ProfileCustodyEnvelope.create(
@@ -56,7 +61,9 @@ def _current_profile_session(profile_id: str, *, root: Path, label: str) -> Prof
             tag_b64=b64encode(seed[:16]).decode("ascii"),
         ),
     )
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_PROFILE_DEK)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=_PROFILE_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
     ProfileCapsuleLifecycle(root=root).create(
         label=label,
         profile_id=identity,
@@ -68,10 +75,11 @@ def _current_profile_session(profile_id: str, *, root: Path, label: str) -> Prof
             dek=_PROFILE_DEK,
             dek_epoch=envelope.dek_epoch,
         ),
-        initial_record=UserProfileRecord(
+        initial_record=_create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=str(identity),
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            context=_profile_create_context_for_test,
         ),
         record_session=session,
     )

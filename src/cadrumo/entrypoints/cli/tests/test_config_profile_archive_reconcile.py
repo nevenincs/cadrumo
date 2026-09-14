@@ -19,6 +19,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.bundle_export import prepare_profile_export
@@ -88,13 +91,16 @@ def _first_row(rows: object) -> dict[str, object]:
 
 
 def test_the_verb_clears_an_abandoned_crash_orphan_and_its_cleartext_staged_file(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     # The case the pre-flight trigger cannot reach: the operator crashed and
     # never exported again. Only this verb clears the bundle bytes.
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
         destination = tmp_path / "portable.json"
 
-        prepared = prepare_profile_export(_request(destination))
+        prepared = prepare_profile_export(
+            _request(destination), profile_decode_context=_profile_decode_context_for_test
+        )
         staged = Path(prepared.staged_path)
         # The staged temp really is the readable bundle, not an empty placeholder.
         staged_bundle = UserProfilePortableExport.model_validate_json(staged.read_text(encoding="utf-8"))
@@ -116,13 +122,16 @@ def test_the_verb_clears_an_abandoned_crash_orphan_and_its_cleartext_staged_file
 
 
 def test_the_verb_reports_an_isolated_failure_without_dropping_its_journal(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     # A journal the sweep cannot read must be reported to the operator, not
     # silently skipped: it may still describe cleartext bytes on disk. It is
     # kept for a later attempt rather than deleted.
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
         repository = ProfileBundleExportJournalRepository()
-        prepare_profile_export(_request(tmp_path / "portable.json"))
+        prepare_profile_export(
+            _request(tmp_path / "portable.json"), profile_decode_context=_profile_decode_context_for_test
+        )
         corrupt_id = "d" * 64
         corrupt_path = repository.path_for(corrupt_id)
         corrupt_path.write_text("{not valid json", encoding="utf-8")
@@ -156,12 +165,15 @@ def test_the_verb_reports_a_clean_sweep_rather_than_staying_silent(tmp_path: Pat
 
 
 def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     # Severity is the operator's signal that bundle bytes may still be on disk,
     # so it must track the outcome rather than being constant.
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
         repository = ProfileBundleExportJournalRepository()
-        prepare_profile_export(_request(tmp_path / "portable.json"))
+        prepare_profile_export(
+            _request(tmp_path / "portable.json"), profile_decode_context=_profile_decode_context_for_test
+        )
         repository.path_for("e" * 64).write_text("{not valid json", encoding="utf-8")
 
         failed_run = invoke_cached_cli(list(_RECONCILE_ARGV))

@@ -19,6 +19,7 @@ from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import (
     ModeloDraft,
@@ -88,14 +89,11 @@ def _schema_version(modelo: str = "130", period: Period = _PERIOD) -> str:
     return registry_schema_version(modelo=modelo, revision_id=_snapshot_ref(modelo, period).revision_id)
 
 
-def _case_profile_id(index: int) -> str:
-    return f"23232323-2323-4232-8232-232323232{index:03d}"
-
-
 def _draft_items(
     settings: Settings,
     draft: ModeloDraft,
     *,
+    operation: PinnedAuthorityOperation,
     bucket_id: str = _PROFILE_ID,
 ) -> tuple[FindingReviewItem, ...]:
     """Project one draft through an inward fake port bundle."""
@@ -103,15 +101,16 @@ def _draft_items(
         settings,
         bucket_id=bucket_id,
         ports=draft_review_ports(drafts=(draft,)),
+        operation=operation,
     )
 
 
-def test_adapters_return_empty_when_source_missing(tmp_path: Path) -> None:
+def test_adapters_return_empty_when_source_missing(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     settings = _build_settings(tmp_path)
     ports = draft_review_ports()
     assert transactions_pending(ports=ports) == ()
     assert invoices_pending(ports=ports) == ()
-    assert drafts_pending(settings, bucket_id=_PROFILE_ID, ports=ports) == ()
+    assert drafts_pending(settings, bucket_id=_PROFILE_ID, ports=ports, operation=operation) == ()
 
 
 # ── transactions adapter ──────────────────────────────────────────
@@ -156,7 +155,6 @@ def _transaction(
 
 
 def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions(
         (
             _transaction(source_row_index=1),  # NOT_YET_PROCESSED
@@ -175,7 +173,6 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
 
 
 def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
     items = transactions_pending(
         ports=draft_review_ports(transactions=catalogue),
@@ -188,7 +185,6 @@ def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: 
 
 
 def test_transactions_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     other_bucket_catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
     other_items = transactions_pending(
         ports=draft_review_ports(transactions=other_bucket_catalogue),
@@ -199,14 +195,12 @@ def test_transactions_pending_reads_only_requested_bucket(tmp_path: Path) -> Non
 
 
 def test_transactions_pending_severity_mapping(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     cases = (
         (BusinessClassification.NOT_YET_PROCESSED, ReviewSeverity.NORMAL),
         (BusinessClassification.PROCESSED_UNCLASSIFIED, ReviewSeverity.HIGH),
         (BusinessClassification.FAILED_VALIDATION, ReviewSeverity.CRITICAL),
     )
     for index, (state, expected_severity) in enumerate(cases, start=1):
-        bucket_id = _case_profile_id(index)
         catalogue = TransactionCatalogue.from_transactions(
             (_transaction(source_row_index=index, classification=state),),
         )
@@ -219,7 +213,6 @@ def test_transactions_pending_severity_mapping(tmp_path: Path) -> None:
 
 def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
     """``SKIPPED_BY_RULE`` rows have a final disposition and must not appear."""
-    settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions(
         (
             _transaction(
@@ -241,7 +234,6 @@ def test_transactions_pending_skips_reviewed_excluded(tmp_path: Path) -> None:
     The operator reviewed the row and deliberately excluded it from filing, so
     the review queue must drop it.
     """
-    settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions(
         (
             _transaction(
@@ -303,7 +295,6 @@ def _invoice(
 
 
 def test_invoices_pending_severity_mapping(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     cases = (
         (PaymentStatus.PENDING, (), ReviewSeverity.HIGH),  # unmatched dominates
         (PaymentStatus.OVERDUE, ("a" * 64,), ReviewSeverity.HIGH),
@@ -311,7 +302,6 @@ def test_invoices_pending_severity_mapping(tmp_path: Path) -> None:
         (PaymentStatus.PARTIALLY_PAID, ("a" * 64,), ReviewSeverity.NORMAL),
     )
     for index, (payment_status, linked, expected_severity) in enumerate(cases, start=10):
-        bucket_id = _case_profile_id(index)
         catalogue = InvoiceCatalogue.from_invoices(
             (
                 _invoice(
@@ -329,7 +319,6 @@ def test_invoices_pending_severity_mapping(tmp_path: Path) -> None:
 
 
 def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     catalogue = InvoiceCatalogue.from_invoices(
         (
             _invoice(
@@ -348,7 +337,6 @@ def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
 
 
 def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
     items = invoices_pending(
         ports=draft_review_ports(invoices=catalogue),
@@ -358,7 +346,6 @@ def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
 
 
 def test_invoices_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     other_catalogue = InvoiceCatalogue.from_invoices((_invoice(invoice_number="INV-OTHER"),))
     other_items = invoices_pending(
         ports=draft_review_ports(invoices=other_catalogue),
@@ -369,7 +356,6 @@ def test_invoices_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
 
 
 def test_invoices_pending_load_failure_context_omits_raw_storage_error(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
     ports = draft_review_ports(invoice_error=ValueError("not-json"))
     with pytest.raises(ReviewSourceLoadError) as exc_info:
         invoices_pending(ports=ports)
@@ -420,18 +406,24 @@ def _draft(
     )
 
 
-def test_drafts_pending_load_failure_context_omits_raw_storage_error(tmp_path: Path) -> None:
+def test_drafts_pending_load_failure_context_omits_raw_storage_error(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings = _build_settings(tmp_path)
     ports = draft_review_ports(draft_error=ValueError("not-json"))
     with pytest.raises(ReviewSourceLoadError) as exc_info:
-        drafts_pending(settings, bucket_id=_PROFILE_ID, ports=ports)
+        drafts_pending(settings, bucket_id=_PROFILE_ID, ports=ports, operation=operation)
 
     assert exc_info.value.translated_message == "review.adapters.errors.drafts_load_failed"
     assert exc_info.value.context == {"error_type": "ValueError"}
     assert "not-json" not in str(exc_info.value)
 
 
-def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
+def test_drafts_pending_emits_one_finding_per_finding(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings = _build_settings(tmp_path)
     findings = (
         ModeloValidationFinding(
@@ -454,7 +446,7 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
         ),
     )
     draft = _draft(findings=findings)
-    items = _draft_items(settings, draft)
+    items = _draft_items(settings, draft, operation=operation)
     assert len(items) == 3
     severities = {item.severity for item in items}
     assert severities == {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH, ReviewSeverity.INFO}
@@ -463,10 +455,13 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
         assert item.draft_id == draft.draft_id
 
 
-def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> None:
+def test_drafts_pending_emits_placeholder_for_draft_status(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """`status=DRAFT` with no findings must emit the same placeholder as VALIDATED."""
     settings = _build_settings(tmp_path)
-    items = _draft_items(settings, _draft(status=ModeloDraftStatus.BORRADOR))
+    items = _draft_items(settings, _draft(status=ModeloDraftStatus.BORRADOR), operation=operation)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
@@ -474,19 +469,25 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
     assert summary_key == "review.filing.draft_placeholder_summary"
 
 
-def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
+def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings = _build_settings(tmp_path)
-    items = _draft_items(settings, _draft(status=ModeloDraftStatus.VALIDADO))
+    items = _draft_items(settings, _draft(status=ModeloDraftStatus.VALIDADO), operation=operation)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
 
 
-def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -> None:
+def test_drafts_pending_emits_high_severity_for_approval_stale(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """`status=APPROVAL_STALE` must surface as a HIGH-severity finding row."""
     settings = _build_settings(tmp_path)
     draft = _draft(status=ModeloDraftStatus.APROBACION_CADUCADA)
-    items = _draft_items(settings, draft)
+    items = _draft_items(settings, draft, operation=operation)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.HIGH
@@ -496,12 +497,18 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     assert items[0].drill_command.startswith("aeat app review view ")
 
 
-def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:
+def test_drafts_pending_skips_ready_drafts_with_no_findings(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings = _build_settings(tmp_path)
-    assert _draft_items(settings, _draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR)) == ()
+    assert _draft_items(settings, _draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR), operation=operation) == ()
 
 
-def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None:
+def test_drafts_pending_dedups_identical_finding_triples(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings = _build_settings(tmp_path)
     finding = ModeloValidationFinding(
         casilla_id=_REVIEW_FINDING_CASILLA,
@@ -510,5 +517,5 @@ def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None
         message=_summary("dup"),
     )
     # Same finding repeated twice — dedup should collapse to one.
-    items = _draft_items(settings, _draft(findings=(finding, finding)))
+    items = _draft_items(settings, _draft(findings=(finding, finding)), operation=operation)
     assert len(items) == 1

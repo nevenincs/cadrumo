@@ -20,19 +20,22 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.errors import AggregationValidationError
-from ....application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from ....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -43,7 +46,8 @@ from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentag
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....entrypoints.adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -94,7 +98,7 @@ def _professional_services_invoice(
 
 def _seed_ready_profile(root: Path) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -117,6 +121,7 @@ def _seed_ready_profile(root: Path) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
+            context=_profile_creation_context_for_test(),
         ),
         root=root,
         label="M111 invoice retención routing",
@@ -138,14 +143,12 @@ def _calculate_m111(objects: SecureObjectRepository, period: Period) -> dict[str
         ),
         clock=_T0,
     )
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-        invoice_repository=InvoiceCatalogueRepository(objects=objects),
-        clock=_T1,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            clock=_T1,
+        )
     return dict(result.revision.casilla_values)
 
 
@@ -185,7 +188,7 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path)
         # The CLI resolves the active bucket independently of the injected
         # ``objects`` handle; reading back through the real store confirms the
         # write landed in the same encrypted namespace the calculate path reads.
-        stored = RetencionObservationRepository(objects=objects).load_observations(
+        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",
             Period.from_year_and_code(2026, "1T"),
         )
@@ -237,7 +240,7 @@ def test_excluded_invoice_retencion_is_not_routed_and_surfaces_a_notice(tmp_path
         assert "not_a_retenedor_liability" in result.output
         assert issued.invoice_id in result.output
 
-        stored = RetencionObservationRepository(objects=objects).load_observations(
+        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",
             Period.from_year_and_code(2026, "1T"),
         )
@@ -268,8 +271,9 @@ def _producer_created_invoice(
     category) -- a separate, already-tracked gap, not
     something this test's producer is responsible for.
     """
-    result = create_catalogue_invoice(
-        invoice=build_catalogue_invoice(
+    catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+    with bundled_indexed_authority().operation() as operation:
+        invoice = build_catalogue_invoice(
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Asesoría Profesional SL",
@@ -283,9 +287,10 @@ def _producer_created_invoice(
             iva_category=IvaCategory("domestic_general"),
             retention_rate=retention_rate,
             retention_amount=retention_amount,
-        ),
-        repository=InvoiceCatalogueRepository(objects=objects),
-    )
+            rate_provider=catalogue_ports.rate_provider,
+            operation=operation,
+        )
+    result = create_catalogue_invoice(invoice=invoice, ports=catalogue_ports)
     return result.invoice
 
 
@@ -327,7 +332,7 @@ def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(tmp_pat
         )
         assert result.exit_code == 0, result.output
 
-        stored = RetencionObservationRepository(objects=objects).load_observations(
+        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",
             Period.from_year_and_code(2026, "1T"),
         )
@@ -391,7 +396,7 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
         assert "no_retencion_declared" in result.output
         assert invoice.invoice_id in result.output
 
-        stored = RetencionObservationRepository(objects=objects).load_observations(
+        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",
             Period.from_year_and_code(2026, "1T"),
         )

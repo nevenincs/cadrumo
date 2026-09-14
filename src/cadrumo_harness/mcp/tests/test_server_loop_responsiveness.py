@@ -51,6 +51,9 @@ import pytest
 from mcp.server import Server
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.application.user_profile.login_session import close_profile_session_artefacts
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
@@ -194,6 +197,7 @@ def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
     the warm runtime then starts against that real encrypted state. Both resolve
     the same environment-backed storage and secret-store configuration.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with (
         temporary_env(
             CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
@@ -208,6 +212,8 @@ def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
             passphrase=PROFILE_PASSPHRASE,
             facts=READY_PROFILE_FACTS,
             recovery_handover=verify_recovery_handover,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         assert created.recovery_enrolled is True
         channel = tmp_path / "profile-secret.json"

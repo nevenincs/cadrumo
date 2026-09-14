@@ -19,6 +19,11 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
@@ -48,12 +53,13 @@ def _fact(path: str, value: object) -> UserProfileFact:
 
 def _record(facts: tuple[UserProfileFact, ...]) -> UserProfileRecord:
     """Build a real record so the production fact index actually reads it."""
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         profile_id=_BUCKET,
         setup_state=ProfileSetupState.COMPLETE,
         facts=facts,
         created_at=_T0,
         updated_at=_T0,
+        context=_profile_creation_context_for_test(),
     )
 
 

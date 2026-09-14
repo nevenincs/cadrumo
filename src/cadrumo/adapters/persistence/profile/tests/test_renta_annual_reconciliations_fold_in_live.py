@@ -59,6 +59,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -66,14 +69,18 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
+)
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -102,6 +109,7 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -109,7 +117,8 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -159,7 +168,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_ready_profile() -> None:
     """Persist a filing-ready withholding-operator profile for annual summaries."""
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -186,6 +195,7 @@ def _seed_ready_profile() -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
@@ -257,6 +267,7 @@ def _calculate_annual(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=_YEAR, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -264,17 +275,19 @@ def _calculate_annual(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
         revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bucket_event_repo,
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
 
@@ -290,6 +303,7 @@ def _calculate_periodic(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -297,17 +311,19 @@ def _calculate_periodic(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bucket_event_repo,
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
 
@@ -545,21 +561,18 @@ def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggr
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     result = _calculate_periodic(secure_objects, modelo="111", period="1T")
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        actor="test-operator",
-        workflow_profile=workflow_profile(),
-        settings=ready_clave_settings("12345678Z"),
-        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
-        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        clock=_T1,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="test-operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings("12345678Z"),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert report.granted_verificado_completo is True, report.findings
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID)
@@ -568,29 +581,31 @@ def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggr
     assert work_unit is not None
     verified_revision = cr_repo.load().get(result.revision.calculation_revision_id)
     assert verified_revision is not None
-    persist_filed_revision(
-        target=verified_revision,
-        work_unit=work_unit,
-        work_units=work_units,
-        notes=None,
-        actor="test-operator",
-        now=_T1,
-        calculation_repository=cr_repo,
-        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        work_unit_repository=wu_repo,
-        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
-        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
-        participation_index_repository=TransactionParticipationIndexRepository(
-            bucket_id=_BUCKET_ID,
-            objects=secure_objects,
-        ),
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=_BUCKET_ID,
-            objects=secure_objects,
-        ),
-        taxpayer_nif=workflow_profile().tax_id,
-        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        persist_filed_revision(
+            target=verified_revision,
+            work_unit=work_unit,
+            work_units=work_units,
+            notes=None,
+            actor="test-operator",
+            now=_T1,
+            calculation_repository=cr_repo,
+            filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+            work_unit_repository=wu_repo,
+            bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+            participation_index_repository=TransactionParticipationIndexRepository(
+                bucket_id=_BUCKET_ID,
+                objects=secure_objects,
+            ),
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=_BUCKET_ID,
+                objects=secure_objects,
+            ),
+            taxpayer_nif=workflow_profile().tax_id,
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            operation=operation,
+        )
     return result
 
 
@@ -658,21 +673,18 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
     _seed_m190_withholding_detail(secure_objects)
 
     result = _calculate_annual(secure_objects, modelo="190")
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        actor="test-operator",
-        workflow_profile=workflow_profile(),
-        settings=ready_clave_settings("12345678Z"),
-        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
-        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        clock=_T1,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="test-operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings("12345678Z"),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_COUNT]) == Decimal("1")
     assert report.granted_verificado_completo is False
@@ -720,21 +732,18 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
     assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == expected_retenciones
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
 
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        actor="test-operator",
-        workflow_profile=workflow_profile(),
-        settings=ready_clave_settings("12345678Z"),
-        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
-        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
-        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        clock=_T1,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="test-operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings("12345678Z"),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert report.granted_verificado_completo is True, report.findings
     blocking_cross_period = tuple(

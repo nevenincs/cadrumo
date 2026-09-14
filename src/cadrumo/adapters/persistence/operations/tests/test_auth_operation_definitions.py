@@ -16,6 +16,9 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
@@ -83,10 +86,13 @@ def _supervisor(
 
 
 def _register_profile() -> UUID:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     registered = register_profile_with_credentials(
         label="S39 Auth Operation Subject",
         passphrase=_CURRENT,
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     return UUID(registered.profile_id)
 
@@ -120,9 +126,14 @@ def _run_secret_operation(
 
 
 def test_profile_login_uses_a_requirement_bound_secret_without_durable_secret_bytes(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
-        login_profile(name=str(profile_id), passphrase_callback=lambda: _CURRENT)
+        login_profile(
+            name=str(profile_id),
+            passphrase_callback=lambda: _CURRENT,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         assert logout_active_profile() == str(profile_id)
         terminal = _run_secret_operation(
             supervisor=_supervisor(root),
@@ -179,9 +190,14 @@ def test_profile_login_secret_wait_rejects_mismatch_and_settles_cancel_or_restar
 
 
 def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
-        login_profile(name=str(profile_id), passphrase_callback=lambda: _CURRENT)
+        login_profile(
+            name=str(profile_id),
+            passphrase_callback=lambda: _CURRENT,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         secret = json.dumps(
             {
                 "current_passphrase": _CURRENT,

@@ -23,6 +23,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CENSO_SOURCE_TAG
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.projections import record_to_effective_facts
@@ -47,9 +51,12 @@ def _decide(*, apply: bool):
 
 def test_applied_censal_review_lands_adopted_values_with_censo_provenance(tmp_path: Path) -> None:
     """Adopted values reach the durable record carrying the censo source tag."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     cleanup = _CloseWitness()
     with _runtime(tmp_path / "censal-apply", cleanup=cleanup) as (driver, _registry, profile_id):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         before_facts = record_to_effective_facts(before)
         decide, seen = _decide(apply=True)
@@ -103,9 +110,12 @@ def test_applied_censal_review_lands_adopted_values_with_censo_provenance(tmp_pa
 
 def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(tmp_path: Path) -> None:
     """A rejected review neither writes values nor stamps censo provenance."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     cleanup = _CloseWitness()
     with _runtime(tmp_path / "censal-reject", cleanup=cleanup) as (driver, _registry, profile_id):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         decide, seen = _decide(apply=False)
 
@@ -130,11 +140,14 @@ def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(t
 
 def test_each_censal_acquisition_publishes_exactly_one_answerable_review(tmp_path: Path) -> None:
     """Two runs each review once; neither reuses the other's interaction."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     first_cleanup = _CloseWitness()
     second_cleanup = _CloseWitness()
 
     with _runtime(tmp_path / "censal-first", cleanup=first_cleanup) as (driver, _registry, profile_id):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         decide_first, first_seen = _decide(apply=True)
         first = asyncio.run(
             run_censal_review_through_services(

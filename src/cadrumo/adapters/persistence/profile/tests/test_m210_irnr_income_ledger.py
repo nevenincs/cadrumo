@@ -12,6 +12,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -45,6 +46,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.irnr import M210GrossIncomeSourceMode
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.row_models import Modelo210AgrupacionRentaRow
@@ -110,8 +112,11 @@ def _create_income(
             m210_income_classification=classification,
             idempotency_key=f"m210-irnr-{label}",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=_CLOCK,
     )
     return result.ref.transaction_id
@@ -204,7 +209,7 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
                 clock=_CLOCK,
             )
 
-            with compiled_bundled_authority().operation() as operation:
+            with bundled_indexed_authority().operation() as operation:
                 revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                     work_unit.work_unit_id,
                     ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -275,6 +280,8 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             revision=revision,
+            modelo="210",
+            target_casilla_id="rendimientos_integros",
             selected_official_tipo_renta_code="01",
             transaction_repository=transaction_repository,
         )
@@ -284,14 +291,19 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
             patch=ManualLedgerTransactionPatch(source_jurisdiction="ES"),
             actor="operator",
             source_command="aeat app ledger classify",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
             occurred_at=_CLOCK,
         )
         after_mutation = aggregate_irnr_income_ledger_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             revision=revision,
+            modelo="210",
+            target_casilla_id="rendimientos_integros",
             selected_official_tipo_renta_code="01",
             transaction_repository=transaction_repository,
         )
@@ -347,11 +359,14 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             filing_year=2025,
             period=_PERIOD,
             revision_id=snapshot.revision.id,
-            repository=work_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repository,
+                bucket_event_repository=event_repository,
+            ),
             clock=_CLOCK,
         )
 
-        with compiled_bundled_authority().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             manual_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -364,69 +379,64 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
                 clock=_CLOCK,
             )
         manual = manual_result.revision
-        with pytest.raises(ModeloAggregationBindingError):
-            with compiled_bundled_authority().operation() as operation:
-                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                    work_unit.work_unit_id,
-                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                    actor="operator",
-                    casilla_inputs={"rendimientos_integros": Decimal("777.00")},
-                    text_casilla_inputs={"tipo_renta": "pension"},
-                    m210_official_tipo_renta_code="01",
-                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.MANUAL,
-                    detail_rows=(_annual_evidence_row(),),
-                    clock=_CLOCK,
-                )
-        with pytest.raises(ModeloAggregationBindingError):
-            with compiled_bundled_authority().operation() as operation:
-                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                    work_unit.work_unit_id,
-                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                    actor="operator",
-                    casilla_inputs={"rendimientos_integros": Decimal("777.00")},
-                    text_casilla_inputs={"tipo_renta": "general"},
-                    m210_official_tipo_renta_code="01",
-                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                    detail_rows=(_annual_evidence_row(),),
-                    clock=_CLOCK,
-                )
-        with pytest.raises(ModeloAggregationBindingError):
-            with compiled_bundled_authority().operation() as operation:
-                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                    work_unit.work_unit_id,
-                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                    actor="operator",
-                    casilla_inputs={},
-                    text_casilla_inputs={"tipo_renta": "general"},
-                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                    clock=_CLOCK,
-                )
-        with pytest.raises(ModeloAggregationBindingError):
-            with compiled_bundled_authority().operation() as operation:
-                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                    work_unit.work_unit_id,
-                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                    actor="operator",
-                    casilla_inputs={},
-                    text_casilla_inputs={"tipo_renta": "pension"},
-                    m210_official_tipo_renta_code="01",
-                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                    clock=_CLOCK,
-                )
-        with pytest.raises(ModeloAggregationBindingError):
-            with compiled_bundled_authority().operation() as operation:
-                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                    work_unit.work_unit_id,
-                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                    actor="operator",
-                    casilla_inputs={},
-                    text_casilla_inputs={"tipo_renta": "general"},
-                    m210_official_tipo_renta_code="01",
-                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                    detail_rows=(_annual_evidence_row(),),
-                    clock=_CLOCK,
-                )
-        with compiled_bundled_authority().operation() as operation:
+        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator",
+                casilla_inputs={"rendimientos_integros": Decimal("777.00")},
+                text_casilla_inputs={"tipo_renta": "pension"},
+                m210_official_tipo_renta_code="01",
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.MANUAL,
+                detail_rows=(_annual_evidence_row(),),
+                clock=_CLOCK,
+            )
+        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator",
+                casilla_inputs={"rendimientos_integros": Decimal("777.00")},
+                text_casilla_inputs={"tipo_renta": "general"},
+                m210_official_tipo_renta_code="01",
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                detail_rows=(_annual_evidence_row(),),
+                clock=_CLOCK,
+            )
+        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator",
+                casilla_inputs={},
+                text_casilla_inputs={"tipo_renta": "general"},
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                clock=_CLOCK,
+            )
+        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator",
+                casilla_inputs={},
+                text_casilla_inputs={"tipo_renta": "pension"},
+                m210_official_tipo_renta_code="01",
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                clock=_CLOCK,
+            )
+        with pytest.raises(ModeloAggregationBindingError), bundled_indexed_authority().operation() as operation:
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator",
+                casilla_inputs={},
+                text_casilla_inputs={"tipo_renta": "general"},
+                m210_official_tipo_renta_code="01",
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                detail_rows=(_annual_evidence_row(),),
+                clock=_CLOCK,
+            )
+        with bundled_indexed_authority().operation() as operation:
             ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -459,10 +469,13 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             filing_year=2025,
             period=_PERIOD,
             revision_id=snapshot.revision.id,
-            repository=work_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repository,
+                bucket_event_repository=event_repository,
+            ),
             clock=_CLOCK,
         )
-        with compiled_bundled_authority().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             ledger_code_35 = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 code_35_work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -491,8 +504,11 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             ),
             actor="operator",
             source_command="aeat app ledger classify",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
             occurred_at=_CLOCK,
         )
         classification_staleness = evaluate_ledger_filing_staleness(ledger_snapshot, transaction_repository.load())
@@ -507,8 +523,11 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             patch=ManualLedgerTransactionPatch(source_jurisdiction="FR"),
             actor="operator",
             source_command="aeat app ledger classify",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
             occurred_at=_CLOCK,
         )
         jurisdiction_staleness = evaluate_ledger_filing_staleness(jurisdiction_snapshot, transaction_repository.load())
@@ -588,10 +607,13 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
             filing_year=2025,
             period=_PERIOD,
             revision_id=snapshot.revision.id,
-            repository=work_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repository,
+                bucket_event_repository=event_repository,
+            ),
             clock=_CLOCK,
         )
-        with compiled_bundled_authority().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -603,16 +625,18 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
                 clock=_CLOCK,
             ).revision
 
-        verification = verify_modelo_revision(
-            ledger.calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="operator",
-            workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=_IVA_REGIME),
-            settings=ready_clave_settings("12345678Z"),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            verification = verify_modelo_revision(
+                ledger.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=build_test_verification_repository_bundle(),
+                actor="operator",
+                workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=_IVA_REGIME),
+                settings=ready_clave_settings("12345678Z"),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         verified_ledger = calculation_repository.load().get(ledger.calculation_revision_id)
 
     assert verification.granted_verificado_completo is True

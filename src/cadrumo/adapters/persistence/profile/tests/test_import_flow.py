@@ -18,6 +18,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     _IMPORT_EXPENSE_CASILLA,
     _IMPORT_INCOME_CASILLA,
+    _PROFILE_ID,
     _T1,
     _T2,
     _TAX_ID,
@@ -34,9 +35,16 @@ from cadrumo.application.modelo.filing_actions import get_filing_record
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
+from cadrumo.entrypoints.adapter_composition import (
+    build_amendment_action_ports,
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_work_lifecycle_ports,
+)
 
 __all__ = ["repos"]
 
@@ -73,7 +81,11 @@ _IMPORTED_REVISION_CASILLAS = (
 def test_import_persists_filed_calculation_revision(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, cr_repo, _, _, _ = repos
-    revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
+    with bundled_indexed_authority().operation() as operation:
+        revision = get_calculation_revision(
+            outcome.filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
     assert revision.state is CalculationRevisionState.PRESENTADO
     assert revision.amendment_identity is None  # import is not an amendment
 
@@ -81,7 +93,11 @@ def test_import_persists_filed_calculation_revision(repos: _Repos) -> None:
 def test_import_persists_registry_grounded_casilla_observations(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, cr_repo, _, _, _ = repos
-    revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
+    with bundled_indexed_authority().operation() as operation:
+        revision = get_calculation_revision(
+            outcome.filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
     observations = {obs.casilla_id: obs for obs in revision.observations}
 
     assert set(observations) == {_IMPORT_INCOME_CASILLA, _IMPORT_EXPENSE_CASILLA}
@@ -99,14 +115,21 @@ def test_import_persists_registry_grounded_casilla_observations(repos: _Repos) -
 def test_import_persists_casilla_value(repos: _Repos, casilla_id: CasillaId, expected: Decimal) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, cr_repo, _, _, _ = repos
-    revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
+    with bundled_indexed_authority().operation() as operation:
+        revision = get_calculation_revision(
+            outcome.filing.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
     assert revision.casilla_values[casilla_id] == expected
 
 
 def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     wu_repo, _, _, _, _ = repos
-    refreshed_wu = get_work_unit(outcome.work_unit.work_unit_id, repository=wu_repo)
+    refreshed_wu = get_work_unit(
+        outcome.work_unit.work_unit_id,
+        ports=build_work_lifecycle_ports(bucket_id=outcome.work_unit.bucket_id),
+    )
     assert refreshed_wu.filed_calculation_revision_id == outcome.filing.calculation_revision_id
     assert refreshed_wu.current_filing_record_id == outcome.filing.filing_record_id
 
@@ -149,7 +172,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
     via ``supersedes_filing_record_id``."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, bv_repo)
     _persist_matching_justificante(
         "JUSTFIRST01",
         work_unit,
@@ -179,11 +202,18 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
         clock=_T2,
     )
 
-    refreshed_first = get_filing_record(first.filing_record_id, filing_repository=fr_repo)
+    refreshed_first = get_filing_record(
+        first.filing_record_id,
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+    )
     assert refreshed_first.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_first.superseded_by_filing_record_id == second.filing_record_id
 
-    refreshed_first_revision = get_calculation_revision(first.calculation_revision_id, calculation_repository=cr_repo)
+    with bundled_indexed_authority().operation() as operation:
+        refreshed_first_revision = get_calculation_revision(
+            first.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+        )
     assert refreshed_first_revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
 
     assert second.status is ModeloRecordStatus.VIGENTE
@@ -207,7 +237,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
     locally with the corrected casilla values."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, bv_repo)
     _persist_matching_justificante(
         "JUSTBASELINE1",
         work_unit,
@@ -224,21 +254,22 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
     )
     assert imported.external_evidence is not None
 
-    amended = amend_modelo_revision(
-        from_filing_record_id=imported.filing_record_id,
-        overrides={_IMPORT_INCOME_CASILLA: Decimal("1650")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        reason="under-reported revenue discovered in subsequent audit",
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T2,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        amended = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            from_filing_record_id=imported.filing_record_id,
+            overrides={_IMPORT_INCOME_CASILLA: Decimal("1650")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="under-reported revenue discovered in subsequent audit",
+            actor="operator-A",
+            clock=_T2,
+        )
 
     assert amended.amends_filing_record_id == imported.filing_record_id
-    refreshed_baseline = get_filing_record(imported.filing_record_id, filing_repository=fr_repo)
+    refreshed_baseline = get_filing_record(
+        imported.filing_record_id,
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+    )
     assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_baseline.superseded_by_filing_record_id == amended.filing_record_id
 

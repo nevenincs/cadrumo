@@ -14,6 +14,10 @@ from textwrap import dedent
 from typing import Any
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment, export_profile_recovery_artifact
@@ -558,6 +562,7 @@ def _register(
     label: str = "s13-operator",
     recovery: bool = False,
 ):
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     captured: list[ProfileRecoveryEnrollment] = []
     phrases: list[str] = []
 
@@ -573,6 +578,8 @@ def _register(
             label=label,
             passphrase=_PROFILE_SECRET,
             recovery_handover=handover,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         close_active_bucket_session()
     return outcome, captured, phrases

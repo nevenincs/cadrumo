@@ -23,9 +23,16 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....domain.user_profile.values import ProfileSetupState, UserProfileRecord
@@ -37,7 +44,10 @@ _BUCKET_ID = "6f1f7d4e-9d64-4a1a-9a2f-2c0d4e5b7a10"
 
 
 def _loaded(bucket_id: str) -> UserProfileRecord:
-    return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    return ProfileRecordRepository.for_current_session(
+        bucket_id, profile_decode_context=_profile_decode_context_for_test
+    ).load(bucket_id)
 
 
 def test_a_profile_seeded_complete_loads_back_complete(tmp_path: Path) -> None:
@@ -49,10 +59,11 @@ def test_a_profile_seeded_complete_loads_back_complete(tmp_path: Path) -> None:
         )
 
         seeded = seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=_complete_facts(),
+                context=_profile_creation_context_for_test(),
             ),
         )
 
@@ -70,10 +81,11 @@ def test_the_seeded_facts_survive_alongside_the_promoted_state(tmp_path: Path) -
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         facts = _complete_facts()
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=facts,
+                context=_profile_creation_context_for_test(),
             ),
         )
 
@@ -90,10 +102,11 @@ def test_a_profile_seeded_incomplete_is_left_incomplete(tmp_path: Path) -> None:
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=profile.bucket_id,
                 facts=_complete_facts(),
+                context=_profile_creation_context_for_test(),
             ),
         )
 

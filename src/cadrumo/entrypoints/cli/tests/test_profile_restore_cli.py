@@ -38,6 +38,9 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.cli_envelope import unwrap_envelope_notices
@@ -158,6 +161,7 @@ def test_an_artifact_restore_warns_that_the_credential_did_not_come_back(tmp_pat
     ABSENT, which passes identically whether the advisory is correct or gone
     altogether. Absence was proven and presence was not.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from uuid import UUID as _UUID
 
     from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
@@ -191,6 +195,8 @@ def test_an_artifact_restore_warns_that_the_credential_did_not_come_back(tmp_pat
             label="artifact-subject",
             passphrase=_test_passphrase(),
             recovery_handover=_hand_over,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         assert len(phrases[0].split()) == 24, "the phrase was read after its buffer was wiped"
         material = load_committed_profile_password_material(_UUID(outcome.profile_id))

@@ -22,6 +22,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.capsule_record import ProfileRecordSession
@@ -39,7 +40,7 @@ from ......application.user_profile.recovery_custody import (
     mint_profile_creation_recovery,
 )
 from ......application.user_profile.registration import register_profile_with_credentials
-from ......domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ......domain.user_profile.values import ProfileSetupState
 from ..capsule import load_committed_profile_password_material
 from ..errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 from ..records import ProfileCustodyEnvelope
@@ -99,9 +100,10 @@ class _EnrolledProfile:
                 password_envelope=self.envelope,
                 sentinel=self.sentinel,
                 data_files={},
-                initial_record=UserProfileRecord(
+                initial_record=_create_profile_record_for_test(
                     profile_id=str(self.profile_id),
                     setup_state=ProfileSetupState.INCOMPLETE,
+                    context=_profile_create_context_for_test,
                 ),
                 record_session=session,
                 recovery_envelope=self.enrollment.envelope,

@@ -35,6 +35,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.ledger.actions_manual import create_manual_transaction, ledger_transaction_payload
@@ -47,6 +48,7 @@ from ....core.observability.capture import capture_envelopes
 from ....core.observability.fingerprint import compute_db_sha256
 from ....core.time.clock import frozen_clock
 from ....domain.transactions.enums import TransactionDirection
+from ....entrypoints.adapter_composition import build_ledger_evidence_ports
 from ....tests.env_scope import scoped_cwd
 from ....tests.golden_comparison import canonicalise, differing_field_names, differing_paths, mask_document
 from .._ledger_payloads import LedgerAddResult
@@ -112,8 +114,11 @@ def _emit_ledger_add(profile: TestRuntimeProfile) -> dict[str, object]:
     events = BucketEventHistoryRepository(objects=profile.repository)
     result = create_manual_transaction(
         _idempotent_command(),
-        transaction_repository=repo,
-        bucket_event_repository=events,
+        ports=ledger_ports_for_test(
+            bucket_id=profile.bucket_id,
+            transaction_repository=repo,
+            bucket_event_repository=events,
+        ),
         occurred_at=_INSTANT,
     )
     payload = LedgerAddResult.model_validate(
@@ -149,10 +154,7 @@ def _emit_evidence_add(storage_root: Path, pdf: Path) -> dict[str, object]:
     ``frozen_clock`` block.
     """
     with isolated_runtime_profile(tmp_path=storage_root, bucket_id=_BUCKET) as profile, frozen_clock(_INSTANT):
-        service = PurchaseInvoiceEvidenceService(
-            settings=profile.settings,
-            bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
-        )
+        service = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=profile.bucket_id))
         result = service.add(
             bucket_id=profile.bucket_id,
             source_path=pdf,
@@ -191,16 +193,22 @@ class TestEnrolledCommandDeterminism:
             command = _idempotent_command()
             create_manual_transaction(
                 command,
-                transaction_repository=repo,
-                bucket_event_repository=events,
+                ports=ledger_ports_for_test(
+                    bucket_id=profile.bucket_id,
+                    transaction_repository=repo,
+                    bucket_event_repository=events,
+                ),
                 occurred_at=_INSTANT,
             )
             db_after_create = _committed_db_fingerprint(profile, tmp_path / "db-snap-create")
 
             second = create_manual_transaction(
                 command,
-                transaction_repository=repo,
-                bucket_event_repository=events,
+                ports=ledger_ports_for_test(
+                    bucket_id=profile.bucket_id,
+                    transaction_repository=repo,
+                    bucket_event_repository=events,
+                ),
                 occurred_at=_INSTANT,
             )
             assert second.bucket_event_ids == ()  # the guarded-idempotent no-op signal
@@ -258,10 +266,7 @@ class TestEnrolledCommandDeterminism:
                 isolated_runtime_profile(tmp_path=storage_root, bucket_id=_BUCKET) as profile,
                 frozen_clock(_INSTANT),
             ):
-                service = PurchaseInvoiceEvidenceService(
-                    settings=profile.settings,
-                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
-                )
+                service = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=profile.bucket_id))
                 result = service.add(
                     bucket_id=profile.bucket_id,
                     source_path=Path("receipt.pdf"),

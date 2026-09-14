@@ -17,6 +17,7 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     M130_NET_RESULT_CASILLA,
     T0,
     Repos,
+    calculation_ports_for_test,
     verify_revision,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -34,6 +35,7 @@ from cadrumo.application.modelo.work_review import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -140,16 +142,17 @@ def test_review_projects_resolvable_work_without_a_calculation_from_real_storage
     work_unit = _persist_work_unit(repos)
     authority = compiled_bundled_authority()
 
-    review = build_modelo_work_review(
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        authority=authority,
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        verification_repository=verification_repo,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
 
     assert isinstance(review, ModeloWorkReview)
     assert (
@@ -227,16 +230,17 @@ def test_review_progress_is_undefined_without_a_revision_manifest(repos: Repos) 
         period_code="0A",
     )
 
-    review = build_modelo_work_review(
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        authority=compiled_bundled_authority(),
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        verification_repository=verification_repo,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
 
     assert review.progress.state is ModeloWorkProgressState.UNDEFINED
     assert review.progress.materialised_count is None
@@ -324,16 +328,17 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
     )
     verification_repo.save(upsert_verification_report(verification_repo.load(), report))
 
-    review = build_modelo_work_review(
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        authority=compiled_bundled_authority(),
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        verification_repository=verification_repo,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
 
     assert review.progress.state is ModeloWorkProgressState.BLOCKED
     assert review.progress.materialised_count == 1
@@ -405,21 +410,25 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
         work_unit.work_unit_id,
         casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
         binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        bucket_event_repository=bucket_event_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=bucket_event_repo,
+        ),
     )
 
-    review = build_modelo_work_review(
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        authority=compiled_bundled_authority(),
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        verification_repository=verification_repo,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
     rows = {row.casilla_id: row for row in review.casillas}
 
     assert review.calculation_revision_id == revision.calculation_revision_id
@@ -441,20 +450,24 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
         work_unit.work_unit_id,
         casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
         binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("10000")},
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        bucket_event_repository=bucket_event_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=bucket_event_repo,
+        ),
     )
-    equal_value_review = build_modelo_work_review(
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        authority=compiled_bundled_authority(),
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        verification_repository=verification_repo,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        equal_value_review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
     equal_value_income = next(row for row in equal_value_review.casillas if row.casilla_id == M130_INCOME_CASILLA)
     assert equal_value_review.calculation_revision_id == equal_value_revision.calculation_revision_id
     assert equal_value_income.realised_kind is ModeloValueKind.INHERITED
@@ -472,16 +485,17 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
         bucket_event_repository=bucket_event_repo,
         clock=equal_value_revision.updated_at,
     )
-    verified_review = build_modelo_work_review(
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        authority=compiled_bundled_authority(),
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        verification_repository=verification_repo,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        verified_review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
     assert verification.completeness_status is VerificationCompletenessStatus.COMPLETE
     assert verified_review.progress.state is ModeloWorkProgressState.COMPLETE
     assert verified_review.progress.materialised_count == verified_review.progress.target_count
@@ -494,9 +508,12 @@ def test_real_review_projects_only_fingerprint_for_persisted_row_identity(repos:
         work_unit.work_unit_id,
         casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        bucket_event_repository=bucket_event_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=bucket_event_repo,
+        ),
     )
     raw_identity = "opaque-review-row-canary"
     fingerprint = "d" * 64
@@ -525,16 +542,17 @@ def test_real_review_projects_only_fingerprint_for_persisted_row_identity(repos:
         ),
     )
 
-    review = build_modelo_work_review(
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        authority=compiled_bundled_authority(),
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        verification_repository=verification_repo,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
 
     assert [item.model_dump(mode="json") for item in review.row_source_fingerprints] == [
         {
@@ -595,15 +613,16 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
         ),
     )
 
-    review = build_modelo_work_review(
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-        authority=compiled_bundled_authority(),
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        verification_repository=verification_repo,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
 
     assert review.calculation_revision_id == revision_id

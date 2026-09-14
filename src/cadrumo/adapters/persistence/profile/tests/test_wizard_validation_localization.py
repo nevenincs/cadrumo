@@ -28,8 +28,9 @@ import typer
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.wizard.catalogue import SETUP_FLOW
 from cadrumo.application.wizard.commands import build_wizard_command
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 
@@ -48,7 +49,7 @@ _SEED_FACTS = {
 }
 
 
-def _refusal_message(args: Sequence[str], tmp_path: Path) -> str:
+def _refusal_message(args: Sequence[str], tmp_path: Path, *, registry_setup_flow: WizardFlow) -> str:
     """Drive the non-interactive edit patch and return the localized refusal body.
 
     The storage root is pytest's ``tmp_path`` rather than a self-cleaning
@@ -61,16 +62,18 @@ def _refusal_message(args: Sequence[str], tmp_path: Path) -> str:
     ):
         register_cli_profile(label="operator", facts=_SEED_FACTS)
         app = typer.Typer()
-        app.command()(build_wizard_command(SETUP_FLOW, mode="edit"))
+        app.command()(build_wizard_command(registry_setup_flow, mode="edit"))
         command = typer.main.get_command(app)
         with pytest.raises(typer.BadParameter) as caught:
             command.main(args=list(args), standalone_mode=False)
         return caught.value.format_message()
 
 
-def test_bad_date_answer_maps_to_localized_invalid_date_key(tmp_path: Path) -> None:
+def test_bad_date_answer_maps_to_localized_invalid_date_key(tmp_path: Path, *, registry_setup_flow: WizardFlow) -> None:
     """A malformed ISO date surfaces the ``wizard.errors.invalid_date`` rendering."""
-    message = _refusal_message((*_BASE_EDIT_ARGS, "--taxpayer-marriage-date", "31/12/2020"), tmp_path)
+    message = _refusal_message(
+        (*_BASE_EDIT_ARGS, "--taxpayer-marriage-date", "31/12/2020"), tmp_path, registry_setup_flow=registry_setup_flow
+    )
     expected = tr(
         "wizard.errors.invalid_date",
         flag="--taxpayer-marriage-date",
@@ -83,9 +86,13 @@ def test_bad_date_answer_maps_to_localized_invalid_date_key(tmp_path: Path) -> N
     assert "ISO-8601 date (YYYY-MM-DD), got" not in message
 
 
-def test_bad_decimal_answer_maps_to_localized_invalid_decimal_key(tmp_path: Path) -> None:
+def test_bad_decimal_answer_maps_to_localized_invalid_decimal_key(
+    tmp_path: Path, *, registry_setup_flow: WizardFlow
+) -> None:
     """A malformed decimal surfaces the ``wizard.errors.invalid_decimal`` rendering."""
-    message = _refusal_message((*_BASE_EDIT_ARGS, "--incn-prior-12-months", "1.2.3"), tmp_path)
+    message = _refusal_message(
+        (*_BASE_EDIT_ARGS, "--incn-prior-12-months", "1.2.3"), tmp_path, registry_setup_flow=registry_setup_flow
+    )
     expected = tr(
         "wizard.errors.invalid_decimal",
         flag="--incn-prior-12-months",
@@ -97,9 +104,13 @@ def test_bad_decimal_answer_maps_to_localized_invalid_decimal_key(tmp_path: Path
     assert "must be a decimal number" not in message
 
 
-def test_joint_taxation_missing_spouse_maps_to_localized_cross_field_key(tmp_path: Path) -> None:
+def test_joint_taxation_missing_spouse_maps_to_localized_cross_field_key(
+    tmp_path: Path, *, registry_setup_flow: WizardFlow
+) -> None:
     """Joint taxation without a spouse tax id surfaces its cross-field key."""
-    message = _refusal_message((*_BASE_EDIT_ARGS, "--taxation-type", "2"), tmp_path)
+    message = _refusal_message(
+        (*_BASE_EDIT_ARGS, "--taxation-type", "2"), tmp_path, registry_setup_flow=registry_setup_flow
+    )
     expected = tr(
         "wizard.errors.spouse_tax_id_required_joint",
         flag="--spouse-tax-id",

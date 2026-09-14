@@ -640,6 +640,56 @@ class CasillaMemberPosition(RegistryModel):
     position: int = Field(ge=0)
 
 
+class FamilyStorageSelector(RegistryModel):
+    """Address one keyed-family member in the immediate predecessor."""
+
+    revision: RevisionId
+    id: str = Field(min_length=1)
+
+
+class FamilyFieldOverride(RegistryModel):
+    """Patch only the changed fields of one inherited keyed-family member."""
+
+    family: str = Field(min_length=1)
+    selector: FamilyStorageSelector
+    fields: Annotated[Mapping[str, object], FROZEN_MAPPING] = Field(default_factory=dict)
+    removed_fields: tuple[str, ...] = ()
+    restate_identity: bool = False
+
+    @model_validator(mode="after")
+    def _validate_patch(self) -> FamilyFieldOverride:
+        from .keyed_families import family_spec
+
+        spec = family_spec(self.family)
+        if spec is None or not spec.keyed:
+            raise RegistryValidationError(
+                f"family field override requires an inherited keyed family, got {self.family!r}"
+            )
+        if not self.fields and not self.removed_fields and not self.restate_identity:
+            raise RegistryValidationError("family field override must set or remove at least one field")
+        overlap = sorted(set(self.fields) & set(self.removed_fields))
+        if overlap:
+            raise RegistryValidationError(f"family field override both sets and removes fields {overlap!r}")
+        if spec.identity in self.fields or spec.identity in self.removed_fields:
+            raise RegistryValidationError(f"family identity {spec.identity!r} cannot be patched")
+        return self
+
+
+class FamilyMemberRemoval(RegistryModel):
+    """Explicitly remove one member inherited from a keyed family."""
+
+    family: str = Field(min_length=1)
+    selector: FamilyStorageSelector
+
+
+class FamilyMemberPosition(RegistryModel):
+    """Place one effective keyed-family member without restating its payload."""
+
+    family: str = Field(min_length=1)
+    id: str = Field(min_length=1)
+    position: int = Field(ge=0)
+
+
 class ModeloRevision(RegistryRevisionDeclaration):
     """A single versioned form layout and calculation ruleset for one modelo.
 
@@ -829,6 +879,21 @@ class ModeloRevision(RegistryRevisionDeclaration):
         default=(), exclude_if=lambda value: not value
     )
     casilla_positions: Annotated[tuple[CasillaMemberPosition, ...], MANIFEST_ONLY] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
+    family_storage_baseline: Annotated[RevisionId | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Immediate revision whose effective keyed families supply storage defaults.",
+    )
+    cleared_families: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(default=(), exclude_if=lambda value: not value)
+    family_overrides: Annotated[tuple[FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
+    family_removals: Annotated[tuple[FamilyMemberRemoval, ...], MANIFEST_ONLY] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
+    family_positions: Annotated[tuple[FamilyMemberPosition, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
@@ -1051,6 +1116,29 @@ class ModeloRevision(RegistryRevisionDeclaration):
                     f"revision {self.id!r} declares family {entry.family!r} restated in full but declares no "
                     f"{entry.family!r} at all; drop the restatement or state the family",
                 )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_family_storage_delta(self) -> ModeloRevision:
+        """Keep generic storage declarations on one explicit keyed-family vocabulary."""
+        from .keyed_families import KEYED_FAMILY_SPECS
+
+        keyed = {spec.section for spec in KEYED_FAMILY_SPECS}
+        named = [
+            *self.cleared_families,
+            *(item.family for item in self.family_overrides),
+            *(item.family for item in self.family_removals),
+            *(item.family for item in self.family_positions),
+        ]
+        unknown = sorted(set(named) - keyed)
+        if unknown:
+            raise RegistryValidationError(f"family storage delta names non-keyed families {unknown!r}")
+        if named and self.family_storage_baseline is None and self.predecessor is None:
+            raise RegistryValidationError(
+                "family storage delta requires family_storage_baseline or a named predecessor"
+            )
+        if len(set(self.cleared_families)) != len(self.cleared_families):
+            raise RegistryValidationError("cleared families must be unique")
         return self
 
     @model_validator(mode="after")

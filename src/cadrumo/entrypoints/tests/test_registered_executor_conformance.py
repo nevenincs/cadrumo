@@ -16,6 +16,9 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 
 from ...adapters.persistence.operations.financial_operand_custody import (
@@ -683,6 +686,7 @@ def _payload(
     definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path
 ) -> tuple[str, BaseModel, bytes | None]:
     """Use only the exact request type exported by the registered definition."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     values: dict[str, object]
     secret: bytes | None = None
     subject_ref = f"profile:{profile_id}"
@@ -731,7 +735,9 @@ def _payload(
             values = {"profile_id": profile_id, "modelo": "130", "filing_year": 2025, "period": "1T", "dry_run": False}
         case "user-profile.censo-review":
             subject_ref = str(profile_id)
-            record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+            record = ProfileRecordRepository.for_current_session(
+                profile_id, profile_decode_context=_profile_decode_context_for_test
+            ).load(profile_id)
             values = {
                 "baseline": CensalProfileBaseline.from_record(record),
                 "field_intents": tuple(
@@ -826,6 +832,7 @@ def _runtime(
     execution_timeout: timedelta = timedelta(hours=1),
 ) -> Generator[tuple[_ExecutionDriver, OperationRegistry, UUID]]:
     """Fresh production profile, inventory, journal, lease, and operand custody per case."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
     async def acquire_censo() -> CensalOperationAcquisition:
         return CensalOperationAcquisition(observation=_observation(), resource=cleanup)
@@ -836,9 +843,15 @@ def _runtime(
             passphrase=_PASSPHRASE,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         profile_id = UUID(enrolled.profile_id)
-        initial_login = login_profile(name=enrolled.profile_id, passphrase_callback=lambda: _PASSPHRASE)
+        initial_login = login_profile(
+            name=enrolled.profile_id,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         registry = build_production_operation_registry(
             auth_definitions=build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login),
             censal_definition=build_censal_operation_definition(
@@ -883,9 +896,12 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
     apply: bool,
 ) -> None:
     """The public frontend driver answers the encrypted exact proposal once."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     cleanup = _CloseWitness()
     with _runtime(tmp_path / f"frontend-{apply}", cleanup=cleanup) as (driver, _registry, profile_id):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         decisions: list[tuple[str | None, ...]] = []
 

@@ -213,18 +213,22 @@ def _supported_filing_year(
 def _eligible_authored_years(
     revision: _SelectableRevision,
     *,
-    support: SupportedFilingYearsCatalogue,
+    requested_year: int,
     period: str | None,
 ) -> tuple[int, ...]:
-    """Return authored support coordinates compatible with one revision branch."""
+    """Return authored coordinates compatible with one revision branch."""
+    selector = revision.period_selector
+    if selector.years:
+        years = selector.years
+    elif selector.year_from is None:
+        years = ()
+    else:
+        last = selector.year_to if selector.year_to is not None else max(requested_year, selector.year_from)
+        years = tuple(range(selector.year_from, last + 1))
     return tuple(
         year
-        for year in support.years
-        if revision.period_selector.includes_year(year)
-        and (
-            period is None
-            or selector_token_for_request(revision.period_selector.periods_for_year(year), period) is not None
-        )
+        for year in years
+        if (period is None or selector_token_for_request(selector.periods_for_year(year), period) is not None)
     )
 
 
@@ -255,7 +259,7 @@ def _nearest_authored_candidates[RevisionT: _SelectableRevision](
         (year, revision)
         for revision in revisions
         if revision_id is None or revision.id == revision_id
-        for year in _eligible_authored_years(revision, support=support, period=period)
+        for year in _eligible_authored_years(revision, requested_year=filing_year, period=period)
     ]
     if not anchors:
         return [], filing_year

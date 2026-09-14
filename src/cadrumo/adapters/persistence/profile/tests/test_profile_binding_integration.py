@@ -16,20 +16,26 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.modelos.errors import ModeloError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -71,7 +77,7 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -95,6 +101,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
 
@@ -125,7 +132,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
             filing_year=_YEAR,
             period=_TYPED_PERIOD,
             revision_id="2025",
-            repository=work_repo,
+            ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
         )
         revision = calculate_modelo_revision(
@@ -134,9 +141,12 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
             casilla_inputs={},
             binding_values=_non_ccaa_decimal_binding_values(snapshot),
             relation_values=_zero_relation_values(snapshot),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ),
             clock=_CLOCK,
         )
         assert "0512" in revision.casilla_values
@@ -157,7 +167,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
             filing_year=_YEAR,
             period=_TYPED_PERIOD,
             revision_id="2025",
-            repository=work_repo,
+            ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
         )
         decimal_bindings = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}
@@ -168,9 +178,12 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
                 casilla_inputs={},
                 binding_values=decimal_bindings,
                 relation_values=_zero_relation_values(snapshot),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    work_unit_repository=work_repo,
+                    calculation_repository=calc_repo,
+                    bucket_event_repository=event_repo,
+                ),
                 clock=_CLOCK,
             )
         assert calc_repo.load().revisions == {}
@@ -190,7 +203,7 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
             filing_year=_YEAR,
             period=_TYPED_PERIOD,
             revision_id="2025",
-            repository=work_repo,
+            ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
         )
         revision = calculate_modelo_revision(
@@ -199,9 +212,12 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
             casilla_inputs={},
             binding_values=_non_ccaa_decimal_binding_values(snapshot),
             relation_values=_zero_relation_values(snapshot),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ),
             clock=_CLOCK,
         )
         assert Decimal(revision.binding_overrides[_ESTIMACION_BINDING]) == Decimal("0")
@@ -221,7 +237,7 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
             filing_year=_YEAR,
             period=_TYPED_PERIOD,
             revision_id="2025",
-            repository=work_repo,
+            ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
         )
         with pytest.raises(ModeloError):
@@ -232,9 +248,12 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
                 binding_values=_non_ccaa_decimal_binding_values(snapshot),
                 enum_binding_values={_ESTIMACION_BINDING: "normal"},
                 relation_values=_zero_relation_values(snapshot),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    work_unit_repository=work_repo,
+                    calculation_repository=calc_repo,
+                    bucket_event_repository=event_repo,
+                ),
                 clock=_CLOCK,
             )
         assert calc_repo.load().revisions == {}

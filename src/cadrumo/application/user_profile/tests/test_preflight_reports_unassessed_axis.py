@@ -18,6 +18,11 @@ from __future__ import annotations
 
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
@@ -39,7 +44,12 @@ _PERIOD = Period.from_year_and_code(2024, "1T")
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts)
+    return _create_profile_record_for_test(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=facts,
+        context=_profile_creation_context_for_test(),
+    )
 
 
 def _schema_with_selector(selector: str) -> ProfileSchemaDefinition:

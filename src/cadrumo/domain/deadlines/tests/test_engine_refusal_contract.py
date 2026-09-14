@@ -20,6 +20,8 @@ import pytest
 from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 
 from ....core.period import Period
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.schema_verification import ProfilePredicateDefinition
 from .. import engine as _engine_module
 from ..engine import (
@@ -46,6 +48,7 @@ _EXPECTED_RAISING_FUNCTIONS = frozenset(
         "DeadlineEngine.explain",
         "DeadlineEngine._deadline_windows",
         "DeadlineEngine._evaluate_conditions",
+        "_indexed_deadline_windows",
     },
 )
 
@@ -53,23 +56,24 @@ assert _engine_module.__file__ is not None
 _ENGINE_SOURCE = Path(_engine_module.__file__)
 
 
-def _profile() -> TaxpayerProfile:
-    return TaxpayerProfile.model_validate(
-        {
-            "tax_id": "X1234567L",
-            "iva_regime": IVARegime("GENERAL"),
-            "iva": ModeloIVAProfile(
-                tax_territory=M303TaxTerritory._from_registry("common_regime"),
-                regime_composition=M303RegimeComposition._from_registry("general"),
-                redeme_enrolled=False,
-                cash_accounting_regime_enrolled=False,
-                voluntary_sii_enrolled=False,
-                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-            ),
-            "professional_income_withholding_ge_70pct": False,
-            "art109_activity_income_withholding_ge_70pct": False,
-        },
-    )
+def _profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
+    with validating_governed_facts(operation):
+        return TaxpayerProfile.model_validate(
+            {
+                "tax_id": "X1234567L",
+                "iva_regime": IVARegime("GENERAL"),
+                "iva": ModeloIVAProfile(
+                    tax_territory=M303TaxTerritory._from_registry("common_regime"),
+                    regime_composition=M303RegimeComposition._from_registry("general"),
+                    redeme_enrolled=False,
+                    cash_accounting_regime_enrolled=False,
+                    voluntary_sii_enrolled=False,
+                    hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+                ),
+                "professional_income_withholding_ge_70pct": False,
+                "art109_activity_income_withholding_ge_70pct": False,
+            },
+        )
 
 
 class TestMessageKeysMatchTheRegistry:
@@ -85,21 +89,21 @@ class TestMessageKeysMatchTheRegistry:
 class TestRefusalsCarryNoAuthoredSentence:
     """Every reachable refusal renders as its key, never as English."""
 
-    def test_compute_without_registered_windows_renders_the_key(self) -> None:
+    def test_compute_without_registered_windows_renders_the_key(self, operation: PinnedAuthorityOperation) -> None:
         with pytest.raises(NoDeadlineWindowsError) as excinfo:
-            DeadlineEngine().compute(_profile(), 1999)
+            DeadlineEngine(authority=operation).compute(_profile(operation), 1999)
 
         assert str(excinfo.value) == "errors.error.error_deadlines_missing_windows"
         assert excinfo.value.context == {"filing_year": 1999}
 
-    def test_explain_without_registered_windows_renders_the_key(self) -> None:
+    def test_explain_without_registered_windows_renders_the_key(self, operation: PinnedAuthorityOperation) -> None:
         with pytest.raises(NoDeadlineWindowsError) as excinfo:
-            DeadlineEngine().explain(_profile(), "999", year=1999)
+            DeadlineEngine(authority=operation).explain(_profile(operation), "999", year=1999)
 
         assert str(excinfo.value) == "errors.error.error_deadlines_missing_windows"
         assert excinfo.value.context == {"modelo": "999", "filing_year": 1999}
 
-    def test_unresolvable_profile_condition_renders_the_key(self) -> None:
+    def test_unresolvable_profile_condition_renders_the_key(self, operation: PinnedAuthorityOperation) -> None:
         condition = ProfilePredicateDefinition(
             field="no_such_declared_profile_fact",
             op="equals",
@@ -110,7 +114,7 @@ class TestRefusalsCarryNoAuthoredSentence:
         )
 
         with pytest.raises(ScheduleComputationError) as excinfo:
-            DeadlineEngine().evaluate_conditions(_profile(), (condition,), mode="all")
+            DeadlineEngine(authority=operation).evaluate_conditions(_profile(operation), (condition,), mode="all")
 
         assert str(excinfo.value) == "errors.error.error_deadlines_schedule_computation"
         assert excinfo.value.context is not None
@@ -189,9 +193,9 @@ class TestEveryPinnedRaiseSiteIsStructurallyClean:
 class TestPeriodBoundariesStayCanonical:
     """The refused year is the canonical filing year, not a re-derived span."""
 
-    def test_reported_filing_year_matches_the_canonical_period_year(self) -> None:
+    def test_reported_filing_year_matches_the_canonical_period_year(self, operation: PinnedAuthorityOperation) -> None:
         with pytest.raises(NoDeadlineWindowsError) as excinfo:
-            DeadlineEngine().compute(_profile(), 1999)
+            DeadlineEngine(authority=operation).compute(_profile(operation), 1999)
 
         assert excinfo.value.context is not None
         reported = excinfo.value.context["filing_year"]

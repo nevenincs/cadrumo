@@ -17,10 +17,14 @@ from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....core.bucket_pointer import BucketPointer, write_pointer
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -78,11 +82,14 @@ def build_envelope() -> ProfileCustodyEnvelope:
 
 def publish_capsule_and_pointer(root: Path) -> None:
     """Publish one complete capsule at *root* and point the active selector at it."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from .....application.user_profile.capsule_record import ProfileRecordSession
     from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
     envelope = build_envelope()
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=DEK)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=DEK, profile_decode_context=_profile_decode_context_for_test
+    )
     try:
         ProfileCapsuleLifecycle(root=root).create(
             label=PROFILE_LABEL,
@@ -93,8 +100,11 @@ def publish_capsule_and_pointer(root: Path) -> None:
             recovery_envelope=mint_test_profile_recovery_envelope(
                 UUID(PROFILE_ID), dek=DEK, dek_epoch=envelope.dek_epoch
             ),
-            initial_record=UserProfileRecord(
-                setup_state=ProfileSetupState.COMPLETE, profile_id=PROFILE_ID, facts=READY_FACTS
+            initial_record=_create_profile_record_for_test(
+                setup_state=ProfileSetupState.COMPLETE,
+                profile_id=PROFILE_ID,
+                facts=READY_FACTS,
+                context=_profile_create_context_for_test,
             ),
             record_session=session,
         )

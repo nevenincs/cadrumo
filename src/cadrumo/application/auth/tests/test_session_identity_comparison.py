@@ -35,6 +35,10 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from .. import sessions as sessions
@@ -88,6 +92,7 @@ def _expectation_for(kind: AuthProviderKind) -> str | None:
     incompleteness refusal, which would be a refusal for the wrong reason and
     would let these tests pass without exercising what they claim to.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     facts = ClaveAuthFacts(
         tax_id=_TAX_ID,
         dni_nie=_TAX_ID,
@@ -100,7 +105,9 @@ def _expectation_for(kind: AuthProviderKind) -> str | None:
         credentials = resolve_clave_credentials(kind, settings=settings, facts=facts)
     if credentials is None:
         return facts.tax_id or None
-    return sessions._assert_active_profile_identity_matches_provider(credentials)
+    return sessions._assert_active_profile_identity_matches_provider(
+        credentials, profile_decode_context=_profile_decode_context_for_test
+    )
 
 
 def test_a_session_bound_to_another_taxpayer_is_refused() -> None:
@@ -299,10 +306,12 @@ class TestClaveIdentityIsComparedCanonically:
         )
 
     def _assert_guard(self, *, profile_tax_id: str, dni_nie: str):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         from ..sessions import _assert_active_profile_identity_matches_provider
 
         return _assert_active_profile_identity_matches_provider(
             self._credentials(profile_tax_id=profile_tax_id, dni_nie=dni_nie),
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
     @pytest.mark.parametrize(
@@ -346,9 +355,15 @@ class TestClaveIdentityIsComparedCanonically:
 
     def test_absent_credentials_and_blank_profile_identity_keep_their_behaviour(self) -> None:
         """The pre-existing empty-value contract is unchanged by the normalisation."""
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         from ..sessions import _assert_active_profile_identity_matches_provider
 
-        assert _assert_active_profile_identity_matches_provider(None) is None
+        assert (
+            _assert_active_profile_identity_matches_provider(
+                None, profile_decode_context=_profile_decode_context_for_test
+            )
+            is None
+        )
         with pytest.raises(AuthProfileIdentityMismatchError):
             self._assert_guard(profile_tax_id="", dni_nie=self._CANONICAL)
 
