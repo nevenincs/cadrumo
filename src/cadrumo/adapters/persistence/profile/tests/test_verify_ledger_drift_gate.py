@@ -230,8 +230,7 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
             patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
             actor="operator",
             source_command="test",
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo, event_repo),
             occurred_at=_AT,
         )
 
@@ -286,16 +285,14 @@ def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
         repos: _Repos = (wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo)
 
         evidence = PurchaseInvoiceEvidenceService(
-            settings=profile.settings,
-            bucket_event_repository=event_repo,
+            ports=build_ledger_evidence_ports(bucket_id=BUCKET_ID),
         ).add(bucket_id=BUCKET_ID, source_path=_write_invoice(tmp_path))
         attach_manual_transaction_evidence(
             bucket_id=BUCKET_ID,
             transaction_id=purchase.transaction_id,
             purchase_invoice_evidence_id=evidence.record.evidence_id,
             actor="operator",
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo, event_repo),
             occurred_at=_AT,
         )
 
