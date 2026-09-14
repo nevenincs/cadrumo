@@ -91,13 +91,12 @@ LLM_EXTRA = OptionalExtra(extra="llm", import_name="pynvml", feature="local-infe
 OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA, OFX_EXTRA, LLM_EXTRA)
 
 
-class MissingOptionalExtraError(CoreError, ImportError):
+class MissingOptionalExtraError(CoreError):
     """Raised when a feature is reached but its optional extra is not installed.
 
     Descends from :class:`~core.errors.CoreError` so the project-wide
-    :class:`~core.errors.CadrumoError` boundary sees the refusal, and from
-    :class:`ImportError` so adapters that already catch import failures keep
-    working. Application probes report the same missing package as a
+    :class:`~core.errors.CadrumoError` boundary sees the refusal. Application
+    probes report the same missing package as a
     :class:`application.provisioning.DependencyStatus`; feature guards raise
     this exception only when the operator reaches the guarded boundary.
 

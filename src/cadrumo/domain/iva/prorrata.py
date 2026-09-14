@@ -85,7 +85,7 @@ from pydantic import (
 )
 from pydantic_core import CoreSchema, core_schema
 
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents
 from ...core.percentage import Percentage
@@ -295,6 +295,7 @@ class ProrrataResult(_ProrrataStrictFrozen):
     ] = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_period_matches_kind(self) -> ProrrataResult:
         # The selected facts variant owns whether a lifecycle kind requires a
         # sub-period or is annual-only.  The period grammar itself remains a
@@ -335,6 +336,7 @@ class ProrrataReference(_ProrrataStrictFrozen):
         return value.strip()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reference_id_matches_fields(self) -> ProrrataReference:
         expected = _canonical_prorrata_reference_id(
             year=self.year,

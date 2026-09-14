@@ -659,6 +659,7 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
+    canonical_internal_invariant: An internal application invariant was violated.
     canonical_tui_search_host: The TUI search palette requires a workbench root host.
     canonical_authority_cache_cycle: The authority component loader detected a
       recursive load cycle.

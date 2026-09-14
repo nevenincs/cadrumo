@@ -97,8 +97,8 @@ class LLMClassifierError(TransactionError):
     """Raised when an LLM classification attempt fails."""
 
 
-class TransactionValidationError(TransactionError, ValueError):
-    """Raised on invalid transaction field values. Inherits from ValueError for Pydantic."""
+class TransactionValidationError(TransactionError):
+    """Raised on invalid transaction field values."""
 
 
 class LedgerLinkError(TransactionError):
@@ -113,9 +113,9 @@ class LedgerPreflightError(TransactionError):
     """Raised when ledger preflight rejects a modelo run as un-fileable."""
 
 
-class ClassificationRuleError(TransactionError, ValueError):
+class ClassificationRuleError(TransactionError):
     """Raised when a ledger classification rule is invalid.
 
-    Inherits from :exc:`ValueError` so Pydantic field validators can
-    raise it directly from ``@field_validator`` without wrapping.
+    Pydantic field validators translate this registered failure to
+    ``ValueError`` at their narrow protocol boundary.
     """

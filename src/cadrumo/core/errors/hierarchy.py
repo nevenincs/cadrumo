@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from enum import StrEnum
+from functools import wraps
 from typing import TYPE_CHECKING, ClassVar, Protocol, TypeVar, cast, runtime_checkable
 
 if TYPE_CHECKING:
@@ -168,6 +169,29 @@ class CadrumoError(Exception):
         self.translated_message: str | None = translated_message
 
 
+def pydantic_validation_boundary[**PydanticArgs, PydanticResultT](
+    function: Callable[PydanticArgs, PydanticResultT],
+) -> Callable[PydanticArgs, PydanticResultT]:
+    """Translate registered failures for Pydantic's validator protocol.
+
+    Pydantic turns ``ValueError`` and ``TypeError`` raised by validators into
+    structured ``ValidationError`` instances, but it lets arbitrary exception
+    classes escape. Cadrumo validation failures stay registered internally;
+    this small decorator is applied only to validator callbacks that cross
+    that protocol boundary and preserves the registered failure as
+    ``__cause__`` of the required builtin ``ValueError``.
+    """
+
+    @wraps(function)
+    def wrapped(*args: PydanticArgs.args, **kwargs: PydanticArgs.kwargs) -> PydanticResultT:
+        try:
+            return function(*args, **kwargs)
+        except CadrumoError as registered_error:
+            raise ValueError(str(registered_error)) from registered_error
+
+    return wrapped
+
+
 class AuthError(CadrumoError):
     """Base class for every AEAT authentication boundary failure."""
 
@@ -208,6 +232,10 @@ class CoreError(CadrumoError):
     """Base error for internal framework and core-primitive failures."""
 
 
+class InternalInvariantError(CoreError):
+    """Raised when composed production state violates an internal invariant."""
+
+
 class DecimalFormatError(CoreError):
     """Raised when :func:`core.decimal.formatting.format_decimal` receives an invalid argument.
 
@@ -226,11 +254,11 @@ class RedactionError(CoreError):
     """
 
 
-class CoreValidationError(CoreError, ValueError):
+class CoreValidationError(CoreError):
     """Raised when core primitives or configuration violate invariants.
 
-    Inherits from ValueError to maintain compatibility with Pydantic
-    validators.
+    Pydantic validators translate this registered failure to ``ValueError``
+    at their narrow protocol boundary.
     """
 
 

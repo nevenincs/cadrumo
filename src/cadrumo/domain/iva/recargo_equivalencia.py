@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.errors import RegistryValidationError
@@ -55,6 +56,7 @@ class RecargoRateRecord(BaseModel):
     notes: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> RecargoRateRecord:
         if self.effective_until is not None and self.effective_from > self.effective_until:
             raise IvaValidationError(

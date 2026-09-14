@@ -19,7 +19,7 @@ class BucketsError(CadrumoError):
     """Base error for the bucket-event-history domain."""
 
 
-class BucketEventValidationError(BucketsError, ValueError):
+class BucketEventValidationError(BucketsError):
     """Raised when a bucket event fails validation."""
 
 

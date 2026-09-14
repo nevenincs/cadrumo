@@ -18,6 +18,7 @@ from uuid import uuid4
 from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, field_validator, model_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import canonical_json_bytes, content_hash_hex
 from ...core.identity.digest import ContentDigest, ContentDigestOrAbsent
@@ -260,6 +261,7 @@ class UserProfileFact(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> UserProfileFact:
         if self.valid_from is not None and self.valid_to is not None and self.valid_from > self.valid_to:
             raise UserProfileValidationError(f"{self.path}: valid_from is after valid_to")
@@ -329,6 +331,7 @@ class UserProfileRecord(BaseModel):
     updated_at: UtcInstant = Field(default_factory=_utc_now)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_payload_schema(self, info: ValidationInfo) -> UserProfileRecord:
         schema = _schema_from_context(info, surface="user profile record")
         validate_profile_schema_identity(
@@ -342,6 +345,7 @@ class UserProfileRecord(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_current_record(self) -> UserProfileRecord:
         if self.created_at > self.updated_at:
             raise UserProfileValidationError("created_at must be before or equal to updated_at")
@@ -371,6 +375,7 @@ class UserProfileSnapshot(BaseModel):
     canonical_hash: ContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_payload_schema(self, info: ValidationInfo) -> UserProfileSnapshot:
         schema = _schema_from_context(info, surface="user profile snapshot")
         validate_profile_schema_identity(
@@ -384,6 +389,7 @@ class UserProfileSnapshot(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _canonical_hash_matches_facts(self) -> UserProfileSnapshot:
         """Re-derive ``canonical_hash`` from the facts and reject drift.
 

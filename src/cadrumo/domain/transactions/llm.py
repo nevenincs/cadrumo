@@ -48,6 +48,7 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.render import tr as _tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
@@ -87,6 +88,7 @@ class LLMClassificationResponse(BaseModel):
 
     @field_validator("confidence")
     @classmethod
+    @pydantic_validation_boundary
     def _check_confidence_range(cls, value: Decimal) -> Decimal:
         """Restrict confidence to the inclusive 0..1 range."""
         if not is_unit_proportion(value):
@@ -95,6 +97,7 @@ class LLMClassificationResponse(BaseModel):
 
     @field_validator("business_pct")
     @classmethod
+    @pydantic_validation_boundary
     def _check_business_pct_range(cls, value: Decimal | None) -> Decimal | None:
         """Restrict the proposed MIXED business percentage to the inclusive 0..1 range.
 
@@ -108,6 +111,7 @@ class LLMClassificationResponse(BaseModel):
 
     @field_validator("reason")
     @classmethod
+    @pydantic_validation_boundary
     def _strip_reason(cls, value: str) -> str:
         """Trim whitespace and reject empty reasons."""
         trimmed = value.strip()
@@ -135,6 +139,7 @@ class LLMSplitChild(BaseModel):
 
     @field_validator("proportion")
     @classmethod
+    @pydantic_validation_boundary
     def _check_proportion(cls, value: Decimal) -> Decimal:
         """Restrict each child proportion to the half-open (0, 1] range."""
         if not (UNIT_PROPORTION_MIN < value <= UNIT_PROPORTION_MAX):
@@ -163,6 +168,7 @@ class LLMSplitResponse(BaseModel):
 
     @field_validator("children")
     @classmethod
+    @pydantic_validation_boundary
     def _check_children(cls, value: tuple[LLMSplitChild, ...]) -> tuple[LLMSplitChild, ...]:
         """Require at least one child whose proportions sum to ~1.0.
 
@@ -179,6 +185,7 @@ class LLMSplitResponse(BaseModel):
 
     @field_validator("reason")
     @classmethod
+    @pydantic_validation_boundary
     def _strip_reason(cls, value: str) -> str:
         """Trim whitespace and reject empty reasons."""
         trimmed = value.strip()

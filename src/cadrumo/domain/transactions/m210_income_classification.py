@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
@@ -168,6 +169,7 @@ class M210IncomeClassification(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _project_payer_mode(cls, data: object) -> object:
         if not isinstance(data, Mapping):
             return data
@@ -177,6 +179,7 @@ class M210IncomeClassification(BaseModel):
 
     @field_validator("official_tipo_renta_code")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_official_tipo_renta_code(cls, value: str) -> str:
         code = value.strip()
         if not code.isdecimal():
@@ -190,6 +193,7 @@ class M210IncomeClassification(BaseModel):
 
     @field_validator("payer_mode", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_payer_mode(cls, value: object) -> object:
         return resolve_m210_payer_mode(value)
 
@@ -202,6 +206,7 @@ class M210IncomeClassification(BaseModel):
         return trimmed or None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_registry_payer_applicability(self) -> M210IncomeClassification:
         _, multiple_payer_codes, required_mode = _registry_m210_declarations()
         if self.official_tipo_renta_code in multiple_payer_codes and self.payer_mode != required_mode:

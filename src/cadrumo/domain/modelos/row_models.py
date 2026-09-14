@@ -50,16 +50,16 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.irnr import M210PayerMode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
-from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema_base import DateAxis
 from ..transactions.m210_income_classification import resolve_m210_payer_mode
 
@@ -79,6 +79,7 @@ def _registry_detail_catalogue(
     effective_date: date,
     filing_year: int | None = None,
     period: str | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[Mapping[str, str], frozenset[str]]:
     """Resolve detail-row declarations and an explicitly selected M349 revision.
 
@@ -88,21 +89,24 @@ def _registry_detail_catalogue(
     mapping fact and leave the M349 projection absent.
     """
     as_of = effective_date
-    authority = bundled_authority()
-    service = RegistryQueryService(authority)
+    authority: GovernedFactSource | None = operation or governed_facts_in_scope()
+    if authority is None:
+        raise ValueError("detail-row registry resolution requires a generation-pinned authority operation or scope")
     if (filing_year is None) != (period is None):
         raise ValueError("M349 registry selection requires both filing_year and period")
     periods: frozenset[str] = frozenset()
     if filing_year is not None and period is not None:
-        m349_report = service.describe_modelo_for_scope(
+        if not isinstance(authority, PinnedAuthorityOperation):
+            raise ValueError("M349 registry selection requires a generation-pinned authority operation")
+        m349_revision = authority.revision_for_context(
             "349",
             filing_year=filing_year,
             period=period,
-            as_of=as_of,
+            on=as_of,
         )
-        if not m349_report.revision or not m349_report.periods:
+        if not m349_revision.period_selector.declared_periods:
             raise ValueError("selected M349 registry revision must declare detail-row scope")
-        periods = frozenset(str(candidate) for candidate in m349_report.periods)
+        periods = frozenset(str(candidate) for candidate in m349_revision.period_selector.declared_periods)
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="detail-m349-m210-catalogues",
@@ -423,10 +427,10 @@ Modelo349ClaveOperacionValue = Annotated[
     StringConstraints(strip_whitespace=True, min_length=1, max_length=1),
 ]
 """Typed one-character operation-key shell; the selected registry owns its values."""
-# RegistryQueryService and MappingFactQuery consume the selected detail/M349/M210 declarations.
+# MappingFactQuery consumes the selected detail/M349/M210 declarations.
 
 
-class Modelo349CountryPrefixContextError(CadrumoError, ValueError):
+class Modelo349CountryPrefixContextError(CadrumoError):
     """A Modelo 349 country prefix is invalid for the filing context."""
 
     def __init__(
@@ -746,6 +750,7 @@ class Modelo210AgrupacionRentaRow(BaseModel):
 
     @field_validator("pagador_mode", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _project_pagador_mode(cls, value: object) -> M210PayerMode:
         """Project the row's payer mode through the selected detail catalogue."""
         return resolve_m210_payer_mode(value)
@@ -768,7 +773,7 @@ class Modelo210AgrupacionRentaRow(BaseModel):
         return self
 
 
-class Modelo210AgrupacionRentaRowsError(CadrumoError, ValueError):
+class Modelo210AgrupacionRentaRowsError(CadrumoError):
     """A Modelo 210 annual grouped-renta set violates row compatibility."""
 
     def __init__(self, *, reason: str, detail: str) -> None:
@@ -895,7 +900,7 @@ ModeloDetailRow = (
 # ---------------------------------------------------------------------------
 
 
-class Modelo347ThresholdError(CadrumoError, ValueError):
+class Modelo347ThresholdError(CadrumoError):
     """A Modelo 347 contraparte row falls at or below the declarability threshold."""
 
     def __init__(self, *, nif: str, total: Decimal, threshold: ResolvedScalarFact) -> None:
@@ -909,7 +914,7 @@ class Modelo347ThresholdError(CadrumoError, ValueError):
         )
 
 
-class Modelo184ShareSumError(CadrumoError, ValueError):
+class Modelo184ShareSumError(CadrumoError):
     """Modelo 184 member share percentages do not sum to exactly 100%."""
 
     def __init__(self, *, total: Decimal, count: int) -> None:

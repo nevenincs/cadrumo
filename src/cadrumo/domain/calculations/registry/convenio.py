@@ -20,7 +20,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, cast
 
 from pydantic import Field, field_validator, model_validator
 
@@ -32,7 +32,7 @@ from .ids import LegalRefId
 from .schema_base import DateAxis, RegistryModel
 
 if TYPE_CHECKING:
-    from .authority import PinnedAuthorityOperation
+    from .authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
     from .facts.resolution import ResolvedOverrideFact
     from .governed_fact_scope import GovernedFactSource
 
@@ -113,10 +113,16 @@ class ConvenioOverrideRow(RegistryModel):
     @model_validator(mode="after")
     def _validate_override_row(self) -> ConvenioOverrideRow:
         if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError("convenio override valid_to must be on or after valid_from")
-        _validated_override_rate(self.kind, self.rate, tipo_renta=self.tipo_renta)
+            raise ValueError("convenio override valid_to must be on or after valid_from")
+        try:
+            _validated_override_rate(self.kind, self.rate, tipo_renta=self.tipo_renta)
+        except RegistryValidationError as exc:
+            # Pydantic validators must expose malformed authored rows as a
+            # ValidationError.  The pure rate resolver deliberately retains
+            # RegistryValidationError for runtime callers.
+            raise ValueError(str(exc)) from exc
         if self.legal_ref_anchor not in self.legal_refs:
-            raise RegistryValidationError("convenio override legal_ref_anchor must be included in legal_refs")
+            raise ValueError("convenio override legal_ref_anchor must be included in legal_refs")
         return self
 
     @property
@@ -145,7 +151,7 @@ class ConvenioTreaty(RegistryModel):
         for row in self.overrides:
             key = (row.tipo_renta, row.valid_from)
             if key in seen:
-                raise RegistryValidationError(
+                raise ValueError(
                     f"convenio treaty {self.country_code!r} declares a duplicate override for "
                     f"tipo_renta {row.tipo_renta.value!r} from {row.valid_from.isoformat()}",
                 )
@@ -277,7 +283,7 @@ def resolve_convenio_override(
     from .irnr_tipo_renta import require_tipo_renta_irnr
 
     if operation is None and authority is not None and hasattr(authority, "pin"):
-        operation = authority  # type: ignore[assignment]
+        operation = cast("PinnedAuthorityOperation", authority)
         authority = None
     if authority is not None and operation is not None:
         raise TypeError("convenio resolution accepts either authority or operation, not both")
@@ -312,13 +318,15 @@ def resolve_convenio_override(
         fact = None
     else:
         if operation is None:
-            fact = selected.catalogues.facts.facts.get(CONVENIO_OVERRIDE_FACT_ID)  # type: ignore[attr-defined]
+            validated = cast("ValidatedRegistryAuthority", selected)
+            fact = validated.catalogues.facts.facts.get(CONVENIO_OVERRIDE_FACT_ID)
         else:
             fact = operation.governed_fact(CONVENIO_OVERRIDE_FACT_ID)
         if fact is None:
             raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} is not registered")
         if not any(
             variant.date_axis is DateAxis.DEVENGO_DATE
+            and variant.valid_from is not None
             and variant.valid_from <= devengo_date
             and (variant.valid_to is None or devengo_date <= variant.valid_to)
             and frozenset((selector.name, type(selector.value), selector.value) for selector in variant.selectors)
@@ -354,7 +362,8 @@ def resolve_convenio_override(
         raise RegistryValidationError(f"convenio override fact {resolved.fact_id!r} lacks legal provenance")
     try:
         if operation is None:
-            document_id = selected.catalogues.legal[resolved.legal_refs[0]].document_id  # type: ignore[attr-defined]
+            validated = cast("ValidatedRegistryAuthority", selected)
+            document_id = validated.catalogues.legal[resolved.legal_refs[0]].document_id
         else:
             document_id = operation.legal_reference(str(resolved.legal_refs[0])).document_id
     except KeyError as exc:

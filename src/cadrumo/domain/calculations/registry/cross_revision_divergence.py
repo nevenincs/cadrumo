@@ -88,7 +88,6 @@ def _pair_field_divergences(
     right_sig: tuple[object, ...],
 ) -> Iterator[CrossRevisionCasillaDivergence]:
     revisions_overlap = _revisions_overlap(left_revision, right_revision)
-    evolution = _matching_evolution(left_revision, right_revision, left_casilla, right_casilla)
     for field, left_value, right_value in zip(
         _CROSS_REVISION_CASILLA_FIELDS,
         left_sig,
@@ -97,6 +96,7 @@ def _pair_field_divergences(
     ):
         if left_value == right_value:
             continue
+        evolution = _matching_evolution(left_revision, right_revision, left_casilla, right_casilla, field)
         yield CrossRevisionCasillaDivergence(
             modelo_id=modelo.id,
             casilla_id=casilla_id,
@@ -110,7 +110,7 @@ def _pair_field_divergences(
             right_continuidad_id=right_casilla.continuidad_id,
             evolution_id=evolution.id if evolution is not None else None,
             evolution_kind=evolution.evolution_kind if evolution is not None else None,
-            evolution_covers_field=_evolution_covers_field(evolution, field),
+            evolution_covers_field=evolution is not None and field in evolution.evolution_kind.covered_fields,
         )
 
 
@@ -140,6 +140,7 @@ def _casilla_divergences_for_occurrences(
 def iter_cross_revision_casilla_divergences(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[CrossRevisionCasillaDivergence, ...]:
+    """Compare repeated casillas while retaining their field-specific attestations."""
     divergences: list[CrossRevisionCasillaDivergence] = []
     for modelo in modelos:
         by_id = _group_casillas_by_id(modelo)
@@ -155,27 +156,19 @@ def _matching_evolution(
     right_revision: ModeloRevision,
     left_casilla: CasillaDefinition,
     right_casilla: CasillaDefinition,
+    field: str,
 ) -> CasillaContinuidadEvolutionDefinition | None:
     continuidad_ids = {left_casilla.continuidad_id, right_casilla.continuidad_id} - {None}
     if len(continuidad_ids) != 1:
         return None
     continuidad_id = next(iter(continuidad_ids))
+    fallback = None
     for revision in (left_revision, right_revision):
         for evolution in revision.casilla_continuidad_evolutions:
             if evolution.continuidad_id != continuidad_id:
                 continue
             if {evolution.from_revision, evolution.to_revision} == {left_revision.id, right_revision.id}:
-                return evolution
-    return None
-
-
-def _evolution_covers_field(evolution: CasillaContinuidadEvolutionDefinition | None, field: str) -> bool:
-    if evolution is None:
-        return False
-    if evolution.evolution_kind == "label_evolved":
-        return field == "label"
-    if evolution.evolution_kind == "legal_refs_evolved":
-        return field == "legal_refs"
-    if evolution.evolution_kind == "label_and_legal_refs_evolved":
-        return field in {"label", "legal_refs"}
-    return evolution.evolution_kind == "repurposed"
+                if field in evolution.evolution_kind.covered_fields:
+                    return evolution
+                fallback = evolution
+    return fallback

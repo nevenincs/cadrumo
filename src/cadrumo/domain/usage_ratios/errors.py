@@ -35,11 +35,11 @@ class UsageRatioPersistenceError(UsageRatioError):
     """
 
 
-class UsageRatioValidationError(UsageRatioError, ValueError):
+class UsageRatioValidationError(UsageRatioError):
     """Raised when usage-ratio profiles violate domain invariants.
 
-    Inherits from ValueError to maintain compatibility with Pydantic
-    validators.
+    Pydantic validators translate this registered failure to ``ValueError``
+    at their narrow protocol boundary.
     """
 
 

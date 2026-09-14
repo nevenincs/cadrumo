@@ -68,6 +68,9 @@ class KeyedFamilySpec:
     section: str
     identity: str | None
     identity_fields: tuple[str, ...] = ()
+    #: Identity fields that name edition-local casillas; compare their declared
+    #: continuity rather than mistaking a printed-number change for repurposing.
+    casilla_identity_fields: tuple[str, ...] = ()
     period_scoped: bool = False
     inheritance: FamilyInheritanceMode = FamilyInheritanceMode.KEYED
     #: Whether a typed ``restated_families`` declaration is meaningful.  The
@@ -88,6 +91,8 @@ class KeyedFamilySpec:
         """Reject an internally contradictory policy at import time."""
         if not self.section:
             raise ValueError("a family specification needs a section")
+        if not set(self.casilla_identity_fields).issubset(self.identity_fields):
+            raise ValueError(f"casilla identity fields must be identity fields: {self.section!r}")
         if self.inheritance in {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED} and not self.identity:
             raise ValueError(f"inherited family {self.section!r} needs an identity")
         if self.period_scoped and self.inheritance is not FamilyInheritanceMode.KEYED:
@@ -158,6 +163,7 @@ CANONICAL_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = (
         section="formulas",
         identity="id",
         identity_fields=("target_casilla_id",),
+        casilla_identity_fields=("target_casilla_id",),
         source_default_key="formula_source_refs",
         drop_eligible=True,
     ),

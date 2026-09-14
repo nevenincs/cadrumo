@@ -18,7 +18,7 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -163,6 +163,7 @@ class Attachment(BaseModel):
 
     @field_validator("source_reference", "mime_type")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_required_text(cls, value: str) -> str:
         """Trim required text fields, rejecting whitespace-only values."""
         trimmed = value.strip()
@@ -172,6 +173,7 @@ class Attachment(BaseModel):
 
     @field_validator("mime_type")
     @classmethod
+    @pydantic_validation_boundary
     def _reject_link_only_mime_type(cls, value: str) -> str:
         """Reject manifests that claim to store a link instead of document bytes."""
         if is_link_only_mime_type(value):
@@ -180,6 +182,7 @@ class Attachment(BaseModel):
 
     @field_validator("bucket_id", "captured_by", "source_command")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_optional_text(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -196,6 +199,7 @@ class Attachment(BaseModel):
 
     @field_validator("captured_at", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_captured_at(cls, value: object) -> datetime:
         """Parse ISO-8601 strings into aware datetimes and reject naive values."""
         if isinstance(value, str):
@@ -211,6 +215,7 @@ class Attachment(BaseModel):
 
     @field_validator("linked_transaction_ids", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_linked_transactions(cls, value: object) -> tuple[str, ...]:
         """Normalize linked-transaction tuples with dedup and trimming."""
         if value is None:
@@ -223,6 +228,7 @@ class Attachment(BaseModel):
 
     @field_validator("linked_invoice_ids", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_linked_invoices(cls, value: object) -> tuple[str, ...]:
         """Normalize linked-invoice tuples with dedup and trimming."""
         if value is None:
@@ -235,6 +241,7 @@ class Attachment(BaseModel):
 
     @field_validator("metadata", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_metadata(cls, value: object) -> Mapping[str, str]:
         """Validate the ``metadata`` escape hatch: strings only, non-empty keys."""
         if value is None:
@@ -261,6 +268,7 @@ class Attachment(BaseModel):
         return dict(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_attachment_id_matches_sha256(self) -> Self:
         """Ensure ``attachment_id`` is the SHA-256 of the stored bytes."""
         if self.attachment_id != self.sha256:

@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import sys
 
+from .errors.hierarchy import InternalInvariantError
 from .logging import get_logger
 
 _log = get_logger(__name__)
@@ -65,7 +66,7 @@ def _pid_is_alive_windows(pid: int) -> bool:
         # Narrowed on sys.platform rather than os.name: the ctypes Windows API
         # below does not exist in the POSIX stubs, so a checker running on Linux
         # reports every reference unresolved unless the platform is established.
-        raise RuntimeError("the Windows liveness probe is not available on this platform")
+        raise InternalInvariantError("the Windows liveness probe is not available on this platform")
 
     import ctypes
     from ctypes import wintypes

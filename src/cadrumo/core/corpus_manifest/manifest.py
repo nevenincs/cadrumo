@@ -33,7 +33,12 @@ from pathlib import Path, PurePosixPath
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...core.directory_scan import scan_directory
-from ..errors.hierarchy import CoreValidationError as _CoreValidationError
+from ..errors.hierarchy import (
+    CoreValidationError as _CoreValidationError,
+)
+from ..errors.hierarchy import (
+    pydantic_validation_boundary as _pydantic_validation_boundary,
+)
 from ..hashing import canonical_json_bytes as _canonical_json_bytes
 from ..hashing import hash_file as _hash_file
 from ..hashing import sha256_hex as _sha256_hex
@@ -79,6 +84,7 @@ class CorpusEntry(BaseModel):
 
     @field_validator("relative_path")
     @classmethod
+    @_pydantic_validation_boundary
     def _validate_relative_path(cls, value: str) -> str:
         if value in {".", "..", ""}:
             raise CorpusManifestError(
@@ -138,6 +144,7 @@ class CorpusManifest(BaseModel):
 
     @field_validator("generated_at")
     @classmethod
+    @_pydantic_validation_boundary
     def _require_aware(cls, value: datetime) -> datetime:
         try:
             return validate_utc_aware(value)

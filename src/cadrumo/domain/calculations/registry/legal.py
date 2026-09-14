@@ -8,13 +8,15 @@ checks whether the artifact's selected citation is eligible for filing.
 
 from __future__ import annotations
 
+from datetime import date
+
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 from .citation_blocklist import find_known_bad
 from .errors import RegistryValidationError
 from .schema_references import LegalReference
 
 
-def verify_legal_reference(reference: LegalReference) -> None:
+def verify_legal_reference(reference: LegalReference, *, filing_date: date | None = None) -> None:
     """Reject an artifact citation that is not eligible for filing.
 
     This deliberately does not open ``corpus_ref``. Publication has already
@@ -26,10 +28,10 @@ def verify_legal_reference(reference: LegalReference) -> None:
             f"legal reference {reference.id!r} is {reference.review_status.value!r}; "
             "filing-grade authority requires a reviewed status",
         )
-    _validate_known_bad_citation(reference)
+    _validate_known_bad_citation(reference, filing_date=filing_date)
 
 
-def _validate_known_bad_citation(reference: LegalReference) -> None:
+def _validate_known_bad_citation(reference: LegalReference, *, filing_date: date | None = None) -> None:
     if reference.article is None:
         return
     from .setup_profile_bindings import legal_source_kind_declarations
@@ -43,7 +45,7 @@ def _validate_known_bad_citation(reference: LegalReference) -> None:
             source,
             reference.article,
             role_text,
-            effective_date=reference.effective_from,
+            effective_date=filing_date or reference.effective_from,
         )
     ):
         raise RegistryValidationError(

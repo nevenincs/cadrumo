@@ -22,6 +22,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, GetCoreSchemaHandler, field_v
 from pydantic_core import CoreSchema, core_schema
 
 from ...core.citation_grounding import CitationGrounding
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import load_external_constants
 from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -190,6 +191,7 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
 
     @field_validator("url", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_authoritative_url(cls, value: AnyHttpUrl) -> AnyHttpUrl:
         """Refuse a citation that does not resolve to an official origin.
 
@@ -537,6 +539,7 @@ class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_label(self) -> StatutoryCapVariant:
         _require_translatable_text(self.label, "statutory cap variant label")
         declared = (self.statutory_cap_eur_per_day is not None, self.statutory_cap_eur is not None)
@@ -771,6 +774,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     notes: tr = Field(description="Translation key for the notes describing the rule.")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_shape(self) -> ProportionalityRule:
         if not self.citations:
             raise CategoryValidationError("proportionality rules require at least one citation")

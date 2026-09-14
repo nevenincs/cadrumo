@@ -124,7 +124,7 @@ def _known_bad_citations(
 
 
 def find_known_bad(
-    source: CitationSource,
+    source: str,
     article: str,
     role_text: str,
     *,
@@ -154,6 +154,8 @@ def find_known_bad(
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("known-bad citation lookup requires an explicit authority operation or scope")
+    if source not in _CITATION_SOURCE_VALUES:
+        raise RegistryValidationError(f"known-bad citation lookup has unknown source {source!r}")
     folded = _fold_diacritics(role_text)
     for entry in _known_bad_citations(authority=authority, effective_date=effective_date):
         if entry.source == source and entry.article == article and _fold_diacritics(entry.role_substring) in folded:

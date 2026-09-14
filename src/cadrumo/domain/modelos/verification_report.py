@@ -31,6 +31,7 @@ from typing import Annotated, override
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
@@ -147,7 +148,7 @@ if set(OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND) != set(ModeloVerific
         for finding_kind in set(ModeloVerificationFindingKind)
         - set(OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND)
     )
-    raise RuntimeError(
+    raise InternalInvariantError(
         f"every ModeloVerificationFindingKind must declare an OperatorActionAxis; missing={missing}",
     )
 

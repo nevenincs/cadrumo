@@ -717,6 +717,7 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
+    canonical_internal_invariant: Se infringió una invariancia interna de la aplicación.
     canonical_tui_search_host: La paleta de búsqueda del TUI requiere un anfitrión raíz
       del espacio de trabajo.
     canonical_authority_cache_cycle: El cargador de componentes de autoridad detectó

@@ -16,6 +16,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -64,6 +65,7 @@ class LedgerClassificationRule(BaseModel):
 
     @field_validator("description_pattern")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_regex(cls, value: str) -> str:
         try:
             re.compile(value)

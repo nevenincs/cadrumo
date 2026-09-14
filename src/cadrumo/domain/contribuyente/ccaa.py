@@ -24,6 +24,8 @@ class _CCAAType(type):
         return iter(resolve_ccaa_catalogue().choices)
 
     def __getattr__(cls, name: str) -> CCAA:
+        if name.startswith("__") and name.endswith("__"):
+            raise AttributeError(name)
         from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 
         try:
@@ -43,6 +45,7 @@ class CCAA(str, metaclass=_CCAAType):
     __slots__ = ()
 
     def __new__(cls, value: object, *, _registry_validated: bool = False) -> Self:
+        """Construct only registry-projected CCAA tokens."""
         if _registry_validated:
             if not isinstance(value, str) or not value:
                 raise ValueError("CCAA token must be a non-empty string")
@@ -51,7 +54,7 @@ class CCAA(str, metaclass=_CCAAType):
         from ..calculations.registry.errors import RegistryValidationError
 
         try:
-            return resolve_ccaa_catalogue().require(value)
+            return cls._from_registry(str(resolve_ccaa_catalogue().require(value)))
         except RegistryValidationError as exc:
             raise ValueError(str(exc)) from exc
 
@@ -84,7 +87,7 @@ class CCAA(str, metaclass=_CCAAType):
         """Resolve one of the registry-declared three-letter aliases."""
         from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 
-        return resolve_ccaa_catalogue().from_iso_code(code)
+        return cls._from_registry(str(resolve_ccaa_catalogue().from_iso_code(code)))
 
     @classmethod
     def from_label(cls, label: str) -> Self:
@@ -93,7 +96,7 @@ class CCAA(str, metaclass=_CCAAType):
         from ..calculations.registry.errors import RegistryValidationError
 
         try:
-            return resolve_ccaa_catalogue().from_label(label)
+            return cls._from_registry(str(resolve_ccaa_catalogue().from_label(label)))
         except (KeyError, RegistryValidationError) as exc:
             raise ProfileAnswerTypeError(str(exc)) from exc
 

@@ -9,10 +9,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
-from ...calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldDefinition, ProfileFieldType
 
-_PLACEHOLDER_TAX_ID = f"12345678{runtime_nif_check_letter(12345678)}"
+# This is a stable, schema-valid test identifier.  Keep test data independent
+# of the registry authority so importing schema-only fixtures remains pure.
+_PLACEHOLDER_TAX_ID = "12345678Z"
 _PLACEHOLDER_DATE = "1990-01-01"
 _PLACEHOLDER_BOOLEAN = "false"
 

@@ -63,7 +63,7 @@ def test_currency_error_is_a_value_error_so_pydantic_reports_it() -> None:
     SUPPORTING. Pins the base-class contract the Pydantic delegation relies
     on; it cannot flip under a normaliser-logic mutation.
     """
-    assert issubclass(CoreValidationError, ValueError)
+    assert not issubclass(CoreValidationError, ValueError)
 
 
 @pytest.mark.parametrize(

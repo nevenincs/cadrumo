@@ -51,11 +51,11 @@ class UserProfileSchemaLoadError(UserProfileError):
         )
 
 
-class UserProfileValidationError(UserProfileError, ValueError):
-    """Raised on invalid user profile values. Inherits from ValueError for Pydantic."""
+class UserProfileValidationError(UserProfileError):
+    """Raised on invalid user profile values."""
 
 
-class UserProfileNotFoundError(UserProfileError, KeyError):
+class UserProfileNotFoundError(UserProfileError):
     """Raised when a requested user profile section or field is missing."""
 
 

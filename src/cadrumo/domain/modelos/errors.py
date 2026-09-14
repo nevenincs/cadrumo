@@ -30,7 +30,7 @@ class PensionReduccionError(CoreValidationError):
     """
 
 
-class ModeloValidationError(ModeloError, ValueError):
+class ModeloValidationError(ModeloError):
     """Raised when a modelo code violates shape invariants."""
 
 

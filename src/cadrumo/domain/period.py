@@ -37,7 +37,7 @@ class RegistryPeriodError(CadrumoError):
     """Base class for errors raised by this bare registry-token helper module."""
 
 
-class PeriodValidationError(RegistryPeriodError, ValueError):
+class PeriodValidationError(RegistryPeriodError):
     """Raised when a bare registry token cannot be mapped to helper dates."""
 
 

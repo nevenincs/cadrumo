@@ -82,6 +82,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+from .errors.hierarchy import InternalInvariantError
 from .fsync import fsync_parent_dir
 from .logging import get_logger
 
@@ -482,7 +483,7 @@ class StagedPublication:
                 first call already consumed.
         """
         if self._published:
-            raise RuntimeError("staged publication has already been published")
+            raise InternalInvariantError("staged publication has already been published")
         _replace_and_fsync(self._staging_path, self._target_path)
         self._published = True
 

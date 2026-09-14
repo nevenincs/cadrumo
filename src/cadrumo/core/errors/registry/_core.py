@@ -49,6 +49,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.core.errors.hierarchy.InternalInvariantError",
+        ErrorCode(
+            code="INTERNAL_INVARIANT",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_internal_invariant",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core.config_state_root.FormerProductStateError",
         ErrorCode(
             code="REFUSED_FORMER_PRODUCT_STATE",

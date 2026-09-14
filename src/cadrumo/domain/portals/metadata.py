@@ -12,6 +12,7 @@ from functools import lru_cache
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import load_external_constants
 from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -80,6 +81,7 @@ class PortalMetadata(BaseModel):
 
     @field_validator("purpose")
     @classmethod
+    @pydantic_validation_boundary
     def _purpose_not_blank(cls, value: tr) -> tr:
         """Reject whitespace-only purpose keys."""
         if not value.strip():
@@ -88,6 +90,7 @@ class PortalMetadata(BaseModel):
 
     @field_validator("label")
     @classmethod
+    @pydantic_validation_boundary
     def _label_not_blank(cls, value: tr) -> tr:
         """Reject whitespace-only label keys."""
         if not value.strip():
@@ -96,6 +99,7 @@ class PortalMetadata(BaseModel):
 
     @field_validator("url")
     @classmethod
+    @pydantic_validation_boundary
     def _url_is_https(cls, value: HttpUrl) -> HttpUrl:
         """Reject non-HTTPS URLs."""
         if value.scheme != "https":
@@ -103,6 +107,7 @@ class PortalMetadata(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_invariants(self) -> PortalMetadata:
         """Enforce cross-field invariants on a single entry."""
         _validate_auth_method_exclusivity(self)

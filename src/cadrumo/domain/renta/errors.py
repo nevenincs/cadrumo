@@ -9,8 +9,8 @@ class RentaError(CadrumoError):
     """Base error for every :mod:`cadrumo.domain.renta` failure mode."""
 
 
-class RentaValidationError(RentaError, ValueError):
-    """Raised on invalid Renta field values. Inherits from ValueError for Pydantic."""
+class RentaValidationError(RentaError):
+    """Raised on invalid Renta field values."""
 
 
 __all__ = [

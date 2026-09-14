@@ -725,6 +725,7 @@ errors:
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
   internal:
+    canonical_internal_invariant: S'ha infringit una invariant interna de l'aplicació.
     canonical_tui_search_host: La paleta de cerca del TUI requereix l'amfitrió arrel de
       l'espai de treball.
     canonical_authority_cache_cycle: El carregador de components d'autoritat ha

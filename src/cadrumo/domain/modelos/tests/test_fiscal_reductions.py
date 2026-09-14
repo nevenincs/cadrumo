@@ -263,13 +263,13 @@ class TestPensionReduccionErrorEnvelope:
     """PensionReduccionError carries structured context, registry code, and ancestry.
 
     All guard raises in the relocated formulas raise PensionReduccionError. The
-    error is a CoreValidationError / ValueError subclass, carries structured
+    error is a canonical CoreValidationError, carries structured
     context, and maps to a stable registry code.
     """
 
     def test_pension_reduccion_error_is_core_validation_error(self) -> None:
         assert issubclass(PensionReduccionError, CoreValidationError)
-        assert issubclass(PensionReduccionError, ValueError)
+        assert not issubclass(PensionReduccionError, ValueError)
 
     def test_pension_reduccion_error_code_is_registered(self) -> None:
         try:

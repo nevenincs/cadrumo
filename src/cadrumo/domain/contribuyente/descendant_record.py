@@ -9,6 +9,7 @@ from typing import Literal, cast
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.descendant_relacion import DescendantRelacion
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.text_bounds import CalendarMonth, is_calendar_month, is_canonical_month_set
 from ...core.time.clock import today_madrid
@@ -229,6 +230,7 @@ class DescendantRecordBase(DescendantRecordFields):
         return coerce_iso_date_field(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_death_date(self) -> DescendantRecordBase:
         """A death cannot precede the birth.
 
@@ -308,6 +310,7 @@ class DescendantRecordBase(DescendantRecordFields):
         return {key: value for key, value in raw.items() if key != "relacion"}
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_guarderia_spend(self) -> DescendantRecordBase:
         """One spend authority per child, and a coherent monthly map.
 
@@ -368,6 +371,7 @@ class DescendantRecordBase(DescendantRecordFields):
 
     @field_validator("meses_madre_trabajo")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_meses_madre_trabajo(cls, value: tuple[int, ...]) -> tuple[int, ...]:
         """Refuse a month outside 1-12, a repeat, or an unsorted set.
 
@@ -399,6 +403,7 @@ class DescendantRecordBase(DescendantRecordFields):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_alta_posterior_coherence(self) -> DescendantRecordBase:
         """Refuse an alta-posterior month incoherent with the declared working months.
 
@@ -487,6 +492,7 @@ class DescendantRecordBase(DescendantRecordFields):
 
     @field_validator("nif")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_nif(cls, value: str | None) -> str | None:
         if value is None:
             return None

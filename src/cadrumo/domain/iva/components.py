@@ -18,6 +18,7 @@ from typing import Any, Literal
 
 from pydantic import Field, ValidationInfo, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import (
     GovernedFactSource,
@@ -321,6 +322,7 @@ class IvaCategoryComponents(IvaStrictFrozen):
     pending_legal_refs: tuple[_RegistryLegalRef, ...] = Field(default=())
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_row(self, info: ValidationInfo) -> IvaCategoryComponents:
         """Enforce the internal coherence the table's readers rely on."""
         label = f"IvaCategoryComponents[{self.category.value}/{self.kind.value}]"

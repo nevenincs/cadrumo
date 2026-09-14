@@ -245,12 +245,11 @@ def _validate_registry_selector_period(value: str) -> str:
 RegistrySelectorPeriodCode = Annotated[str, BeforeValidator(_validate_registry_selector_period)]
 
 
-class PeriodError(CadrumoError, ValueError):
+class PeriodError(CadrumoError):
     """Raised when a :class:`Period` is constructed from an invalid year/code.
 
-    Subclasses :class:`ValueError` so pydantic validation and existing callers
-    retain value-error compatibility while still routing through the registered
-    :class:`CadrumoError` hierarchy required for production exceptions.
+    Pydantic boundaries translate this registered failure to ``ValueError``
+    when they need Pydantic's structured validation envelope.
     """
 
 

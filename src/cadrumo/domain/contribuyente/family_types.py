@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CalendarMonth, NonNegativeDecimal
@@ -142,6 +143,7 @@ class _RentaPersonProfileBase(BaseModel):
 
     @field_validator("tax_id", "display_name", "disability_grade")
     @classmethod
+    @pydantic_validation_boundary
     def _optional_text_not_blank(cls, value: str | None) -> str | None:
         if value is None:
             return None

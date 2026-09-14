@@ -29,6 +29,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 from types import MappingProxyType
 
+from .errors.hierarchy import InternalInvariantError
 from .operator_action_enums import OperatorActionAxis
 
 __all__ = [
@@ -119,7 +120,7 @@ if set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON) != set(ConfirmationBlockRea
     stale = sorted(
         str(reason) for reason in set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON) - set(ConfirmationBlockReason)
     )
-    raise RuntimeError(
+    raise InternalInvariantError(
         f"every ConfirmationBlockReason must declare an OperatorActionAxis; missing={missing}; stale={stale}",
     )
 

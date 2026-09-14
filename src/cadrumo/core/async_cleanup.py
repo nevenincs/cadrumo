@@ -31,7 +31,7 @@ class _AutoPrimaryException:
 _AUTO_PRIMARY_EXCEPTION = _AutoPrimaryException()
 
 
-class AsyncResourceCleanupError(CoreError, RuntimeError):
+class AsyncResourceCleanupError(CoreError):
     """Retain asynchronous resource owners whose close attempts failed."""
 
     def __init__(
