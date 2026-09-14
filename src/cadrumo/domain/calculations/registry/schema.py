@@ -131,6 +131,7 @@ __all__ = [
     "ModeloRevision",
     "RegistryCatalogues",
     "RegistrySnapshot",
+    "SnapshotGlobalCatalogues",
     "SociedadesAnnualManualCoverageCatalogue",
     "SociedadesAnnualManualCoverageDisposition",
     "SociedadesAnnualManualCoverageStatus",
@@ -1285,6 +1286,24 @@ class RegistryCatalogues(RegistryModel):
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
     sociedades_annual_manual_coverage: SociedadesAnnualManualCoverageCatalogue | None = None
     runtime: RuntimeRegistryCatalogues = Field(default_factory=RuntimeRegistryCatalogues)
+
+
+class SnapshotGlobalCatalogues(RegistryModel):
+    """Small registry-wide values required while assembling a point snapshot."""
+
+    convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
+    supplementary_ordenes: Annotated[Mapping[Modelo, M303AnnualOrdenAuthority], FROZEN_MAPPING] = Field(
+        default_factory=dict[Modelo, M303AnnualOrdenAuthority],
+        validate_default=True,
+    )
+
+    @classmethod
+    def from_catalogues(cls, catalogues: RegistryCatalogues) -> SnapshotGlobalCatalogues:
+        """Project only globals consumed by snapshot construction."""
+        return cls(
+            convenio=catalogues.convenio,
+            supplementary_ordenes=catalogues.supplementary_ordenes,
+        )
 
 
 class RegistrySnapshot(RegistryModel):

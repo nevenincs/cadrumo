@@ -1,105 +1,59 @@
-"""Unit tests for the closed IRNR treaty-surface enums.
+"""Contract tests for registry-projected IRNR wire tokens.
 
-The value tokens are asserted against the TRLIRNR / treaty vocabulary the
-registry stores (``tipo_renta`` casilla tokens and the override-kind tokens the
-``irnr.convenio.override`` fact carries); a drift in a stored token would be a
-boundary-hydration break, so the tests pin the exact strings.
-
-See Also:
-    :mod:`~core.irnr`
-        Core closed-axis declarations for IRNR income type and treaty override
-        semantics.
-    :class:`~core.TipoRentaIrnr`
-        Typed income-category axis hydrated from registry ``tipo_renta`` tokens.
-    :class:`~core.ConvenioOverrideKind`
-        Typed treaty override-kind axis whose ``carries_rate`` partition is
-        asserted here.
-    :class:`~domain.calculations.registry.ConvenioAuthority`
-        Cross-cutting treaty authority that consumes these enum members.
-    :func:`~domain.calculations.registry._formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
-        IRNR rate-resolution path that hydrates and branches on the same axes.
+Core owns the distinct string types, not their value sets. Membership is
+therefore exercised through the validated registry projections that publish
+each token family, while direct construction remains closed to consumers.
 """
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from ..irnr import ConvenioOverrideKind, TipoRentaIrnr
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.convenio import resolve_convenio_override
+from ...domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
+from ...domain.transactions.m210_income_classification import resolve_m210_payer_mode
+from ..irnr import ConvenioOverrideKind, M210PayerMode, TipoRentaIrnr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_TIPO_RENTA_IRNR_CASES = (
-    pytest.param("general", TipoRentaIrnr.GENERAL, id="general"),
-    pytest.param("ue_residente", TipoRentaIrnr.UE_RESIDENTE, id="ue-residente"),
-    pytest.param("pension", TipoRentaIrnr.PENSION, id="pension"),
-    pytest.param("dividend", TipoRentaIrnr.DIVIDEND, id="dividend"),
-    pytest.param("interest", TipoRentaIrnr.INTEREST, id="interest"),
-    pytest.param("ganancia_patrimonial", TipoRentaIrnr.GANANCIA_PATRIMONIAL, id="ganancia-patrimonial"),
-    pytest.param("inmobiliaria", TipoRentaIrnr.INMOBILIARIA, id="inmobiliaria"),
-    pytest.param("canones", TipoRentaIrnr.CANONES, id="canones"),
-)
-_TIPO_RENTA_IRNR_TOKENS = frozenset(
-    {
-        "general",
-        "ue_residente",
-        "pension",
-        "dividend",
-        "interest",
-        "ganancia_patrimonial",
-        "inmobiliaria",
-        "canones",
-    },
-)
-
-_CONVENIO_OVERRIDE_CASES = (
-    pytest.param("flat", ConvenioOverrideKind.FLAT, True, id="flat"),
-    pytest.param("ceiling", ConvenioOverrideKind.CEILING, True, id="ceiling"),
-    pytest.param(
-        "allocation_domestic_tariff",
-        ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF,
-        False,
-        id="allocation-domestic-tariff",
-    ),
-    pytest.param("exempt", ConvenioOverrideKind.EXEMPT, False, id="exempt"),
-)
-_CONVENIO_OVERRIDE_TOKENS = frozenset(
-    {
-        "flat",
-        "ceiling",
-        "allocation_domestic_tariff",
-        "exempt",
-    },
-)
+_EFFECTIVE_DATE = date(2025, 1, 1)
 
 
-def test_tipo_renta_irnr_tokens_match_registry_vocabulary() -> None:
-    """The income-type axis carries exactly the TRLIRNR-declarable tokens."""
-    assert {member.value for member in TipoRentaIrnr} == _TIPO_RENTA_IRNR_TOKENS
+def test_tipo_renta_tokens_are_published_by_the_validated_catalogue() -> None:
+    catalogue = resolve_tipo_renta_irnr_catalogue(effective_date=_EFFECTIVE_DATE)
+
+    assert catalogue.definitions
+    assert catalogue.all_tokens == frozenset(definition.token for definition in catalogue.definitions)
+    assert all(isinstance(token, TipoRentaIrnr) for token in catalogue.all_tokens)
+    assert all(catalogue.require(token) is token for token in catalogue.all_tokens)
 
 
-@pytest.mark.parametrize(("token", "member"), _TIPO_RENTA_IRNR_CASES)
-def test_tipo_renta_irnr_token_hydrates_to_member(token: str, member: TipoRentaIrnr) -> None:
-    assert TipoRentaIrnr(token) is member
-    assert member == token
-    assert str(member) == token
+def test_payer_mode_is_projected_by_the_selected_detail_catalogue() -> None:
+    payer_mode = resolve_m210_payer_mode(effective_date=_EFFECTIVE_DATE)
+
+    assert isinstance(payer_mode, M210PayerMode)
+    assert payer_mode.value == str(payer_mode)
 
 
-def test_convenio_override_kind_tokens_and_rate_bearing_partition() -> None:
-    """The override-kind axis carries the four decided treaty precedence kinds."""
-    assert {member.value for member in ConvenioOverrideKind} == _CONVENIO_OVERRIDE_TOKENS
+def test_convenio_kind_is_projected_by_the_validated_fact_authority() -> None:
+    convenio = bundled_authority().catalogues.convenio
+    treaty = next(iter(convenio.treaties.values()))
+    row = treaty.overrides[0]
+    override = resolve_convenio_override(
+        country_code=treaty.country_code,
+        tipo_renta=row.tipo_renta,
+        devengo_date=row.valid_from,
+    )
+
+    assert override is not None
+    assert isinstance(override.kind, ConvenioOverrideKind)
+    assert override.kind.value == str(override.kind)
 
 
-@pytest.mark.parametrize(("token", "kind", "carries_rate"), _CONVENIO_OVERRIDE_CASES)
-def test_convenio_override_kind_token_hydrates_to_member(
-    token: str,
-    kind: ConvenioOverrideKind,
-    carries_rate: bool,
-) -> None:
-    assert ConvenioOverrideKind(token) is kind
-    assert kind == token
-    assert kind.carries_rate is carries_rate
-
-
-def test_convenio_override_kind_rejects_unknown_token() -> None:
-    with pytest.raises(ValueError, match="not a valid ConvenioOverrideKind"):
-        ConvenioOverrideKind("stacking")
+@pytest.mark.parametrize("token_type", (TipoRentaIrnr, M210PayerMode, ConvenioOverrideKind))
+def test_registry_owned_token_types_reject_direct_construction(token_type: type[str]) -> None:
+    with pytest.raises(TypeError, match="projected from"):
+        token_type("consumer-authored-token")

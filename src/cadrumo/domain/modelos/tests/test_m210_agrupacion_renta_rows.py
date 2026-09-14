@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.irnr import M210PayerMode
+from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ..row_models import (
     Modelo210AgrupacionRentaRow,
     Modelo210AgrupacionRentaRowsError,
@@ -16,6 +18,13 @@ from ..row_models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_M210_EFFECTIVE_DATE = date(2025, 1, 1)
+_SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
+_MULTIPLE_PAYERS_CODE_35 = resolve_m210_payer_mode(
+    "multiple_payers_code_35",
+    effective_date=_M210_EFFECTIVE_DATE,
+)
+
 
 def _lease_row(
     source_id: str,
@@ -23,7 +32,7 @@ def _lease_row(
     importe: str = "100.00",
     tipo_renta_code: str = "01",
     tipo_gravamen: str = "0.24",
-    pagador_mode: M210PayerMode = M210PayerMode.SINGLE_PAYER,
+    pagador_mode: M210PayerMode = _SINGLE_PAYER,
     pagador_id: str | None = "ES-PAGADOR-1",
     bien_derecho_id: str = "ES-INMUEBLE-1",
 ) -> Modelo210AgrupacionRentaRow:
@@ -46,7 +55,7 @@ def test_annual_group_accepts_compatible_single_payer_lease_rows() -> None:
         _lease_row("manual-renta-feb", importe="550.00"),
     )
 
-    validate_m210_agrupacion_renta_rows(rows)
+    validate_m210_agrupacion_renta_rows(rows, effective_date=_M210_EFFECTIVE_DATE)
 
 
 def test_annual_group_accepts_explicit_code_35_multiple_payer_exception() -> None:
@@ -55,18 +64,18 @@ def test_annual_group_accepts_explicit_code_35_multiple_payer_exception() -> Non
         _lease_row(
             "manual-renta-jan",
             tipo_renta_code="35",
-            pagador_mode=M210PayerMode.MULTIPLE_PAYERS_CODE_35,
+            pagador_mode=_MULTIPLE_PAYERS_CODE_35,
             pagador_id=None,
         ),
         _lease_row(
             "manual-renta-feb",
             tipo_renta_code="35",
-            pagador_mode=M210PayerMode.MULTIPLE_PAYERS_CODE_35,
+            pagador_mode=_MULTIPLE_PAYERS_CODE_35,
             pagador_id=None,
         ),
     )
 
-    validate_m210_agrupacion_renta_rows(rows)
+    validate_m210_agrupacion_renta_rows(rows, effective_date=_M210_EFFECTIVE_DATE)
 
 
 @pytest.mark.parametrize(
@@ -78,7 +87,7 @@ def test_annual_group_accepts_explicit_code_35_multiple_payer_exception() -> Non
                 _lease_row(
                     "manual-renta-feb",
                     tipo_renta_code="35",
-                    pagador_mode=M210PayerMode.MULTIPLE_PAYERS_CODE_35,
+                    pagador_mode=_MULTIPLE_PAYERS_CODE_35,
                     pagador_id=None,
                 ),
             ),
@@ -113,7 +122,7 @@ def test_annual_group_refuses_each_incompatible_statutory_key(
 ) -> None:
     """The group check fails on the real Article 2 compatibility key that drifts."""
     with pytest.raises(Modelo210AgrupacionRentaRowsError) as exc_info:
-        validate_m210_agrupacion_renta_rows(rows)
+        validate_m210_agrupacion_renta_rows(rows, effective_date=_M210_EFFECTIVE_DATE)
 
     assert exc_info.value.reason == reason
 
@@ -123,8 +132,11 @@ def test_row_contract_refuses_negative_offset_and_code_35_without_explicit_mode(
     with pytest.raises(ValidationError, match="greater than or equal to 0"):
         _lease_row("manual-renta-negative", importe="-0.01")
 
-    with pytest.raises(ValidationError, match="requires the explicit multiple-payers code-35 mode"):
-        _lease_row("manual-renta-code-35", tipo_renta_code="35")
+    with pytest.raises(Modelo210AgrupacionRentaRowsError, match="selected registry declaration"):
+        validate_m210_agrupacion_renta_rows(
+            (_lease_row("manual-renta-code-35", tipo_renta_code="35"),),
+            effective_date=_M210_EFFECTIVE_DATE,
+        )
 
     with pytest.raises(ValidationError, match="less than or equal to 1"):
         _lease_row("manual-renta-percent-scale", tipo_gravamen="24")
@@ -133,7 +145,10 @@ def test_row_contract_refuses_negative_offset_and_code_35_without_explicit_mode(
 def test_annual_group_refuses_non_lease_code_and_duplicate_source_identity() -> None:
     """0A is lease/sublease-only and each persisted component has stable identity."""
     with pytest.raises(Modelo210AgrupacionRentaRowsError) as code_exc:
-        validate_m210_agrupacion_renta_rows((_lease_row("manual-renta-jan", tipo_renta_code="03"),))
+        validate_m210_agrupacion_renta_rows(
+            (_lease_row("manual-renta-jan", tipo_renta_code="03"),),
+            effective_date=_M210_EFFECTIVE_DATE,
+        )
     assert code_exc.value.reason == "annual_code_not_lease_or_sublease"
 
     with pytest.raises(Modelo210AgrupacionRentaRowsError) as identity_exc:
@@ -141,6 +156,7 @@ def test_annual_group_refuses_non_lease_code_and_duplicate_source_identity() -> 
             (
                 _lease_row("manual-renta-duplicate"),
                 _lease_row("manual-renta-duplicate"),
-            )
+            ),
+            effective_date=_M210_EFFECTIVE_DATE,
         )
     assert identity_exc.value.reason == "duplicate_source_id"

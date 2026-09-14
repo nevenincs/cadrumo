@@ -15,12 +15,13 @@ from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...domain.buckets.event import BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.models import InvoiceCatalogue
 
 
-class CatalogueInvoicePersistenceError(RuntimeError):
+class CatalogueInvoicePersistenceError(CadrumoError):
     """Translated failure from the invoice or event persistence capability."""
 
     def __init__(self, operation: str) -> None:
@@ -29,7 +30,7 @@ class CatalogueInvoicePersistenceError(RuntimeError):
         super().__init__(f"catalogue invoice persistence operation failed: {operation}")
 
 
-class CatalogueInvoiceRateError(RuntimeError):
+class CatalogueInvoiceRateError(CadrumoError):
     """Translated failure from the catalogue invoice rate capability."""
 
     def __init__(self, operation: str) -> None:

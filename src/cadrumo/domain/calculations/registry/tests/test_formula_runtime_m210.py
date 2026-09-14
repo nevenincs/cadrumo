@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
+from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args, _m210_allows_art_24_6_expenses
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
@@ -15,12 +15,12 @@ from ..formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
     resolve_keyed_bracket,
 )
-from ..schema import RegistrySnapshot
+from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue, tipo_renta_ue_residente_token
+from ..schema import FormulaDefinition, RegistrySnapshot
 from ..schema_formula import FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_M210_RATE_FORMULA_ID = "m210-tipo-gravamen-2025-resolve"
 _M210_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _M210_TIPO_RENTA_CASILLA = "tipo_renta"
 _M210_RENDIMIENTOS_INTEGROS_CASILLA = "rendimientos_integros"
@@ -29,13 +29,43 @@ _M210_RETENCION_PRACTICADA_CASILLA = "retencion_practicada"
 _M210_TIPO_GRAVAMEN_CASILLA = "tipo_gravamen"
 
 
-def _current_m210_rate_expression() -> FormulaExpression:
-    revision = bundled_authority().modelo("210").revisions["2025"]
-    return next(formula.expression for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
-
-
 def _current_m210_snapshot() -> RegistrySnapshot:
     return bundled_authority().snapshot("210", filing_year=2025, period="EVENT-1")
+
+
+def _current_m210_rate_formula() -> FormulaDefinition:
+    revision = _current_m210_snapshot().revision
+    return next(
+        formula
+        for formula in revision.formulas
+        if formula.target_casilla_id == _M210_TIPO_GRAVAMEN_CASILLA
+        and formula.expression.op == "irnr_resolve_tipo_gravamen"
+    )
+
+
+def _current_m210_rate_expression() -> FormulaExpression:
+    return _current_m210_rate_formula().expression
+
+
+def test_art_24_6_expense_branch_uses_the_registry_declared_resident_token() -> None:
+    effective_date = date(2025, 1, 1)
+    resident_token = tipo_renta_ue_residente_token(effective_date=effective_date)
+    other_token = next(
+        token
+        for token in resolve_tipo_renta_irnr_catalogue(effective_date=effective_date).all_tokens
+        if token != resident_token
+    )
+
+    assert _m210_allows_art_24_6_expenses(
+        tipo_renta=resident_token,
+        country_code="ZW",
+        effective_date=effective_date,
+    )
+    assert not _m210_allows_art_24_6_expenses(
+        tipo_renta=other_token,
+        country_code="ZW",
+        effective_date=effective_date,
+    )
 
 
 def test_irnr_resolve_tipo_gravamen_args_accepts_current_five_arg_contract() -> None:
@@ -95,7 +125,7 @@ def test_irnr_resolve_tipo_gravamen_reports_unresolved_rate_as_typed_outcome() -
     outcome = result.unresolved_outcomes[0]
     assert outcome.casilla_id == _M210_TIPO_GRAVAMEN_CASILLA
     assert outcome.reason is RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING
-    assert outcome.formula_id == _M210_RATE_FORMULA_ID
+    assert outcome.formula_id == _current_m210_rate_formula().id
     assert outcome.operand_refs == (
         _M210_TIPO_RENTA_CASILLA,
         "m210-tipo-gravamen",

@@ -80,12 +80,8 @@ def _resolve_catalogue(
 
 @cache_governed_projection(maxsize=64)
 def _bundled_catalogue(effective_date: date) -> ConceptoIngresoCatalogue:
-    from .authority import bundled_authority
-
-    return _resolve_catalogue(
-        effective_date=effective_date,
-        authority=governed_facts_in_scope() or bundled_authority(),
-    )
+    del effective_date
+    raise RegistryValidationError("income-concept catalogue requires an explicit authority operation or scope")
 
 
 def resolve_concepto_ingreso_catalogue(

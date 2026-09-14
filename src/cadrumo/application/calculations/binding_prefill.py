@@ -50,7 +50,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -93,7 +93,6 @@ from ...domain.calculations.registry.runtime_graph import expression_casilla_ref
 from ...domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
@@ -440,11 +439,15 @@ def _gather_observations(
 
 def observation_from_iva_compensation_history(
     state: IvaCompensationPeriodState,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("303").value)
-    revision = select_revision(
-        modelo,
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return observation_from_iva_compensation_history(state, operation=indexed_operation)
+    revision = operation.revision_for_context(
+        Modelo("303").value,
         filing_year=state.filing_year,
         period=state.period.registry_token,
     )

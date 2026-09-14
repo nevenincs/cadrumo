@@ -20,16 +20,14 @@ from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.filed_derivation import (
     CompensationCasillaDeclarations,
     M303CompensationAvailableDerivation,
@@ -56,17 +54,22 @@ def _required_registry_value(entries: Mapping[str, str], key: str) -> str:
     return value
 
 
-def m303_declaration_type_header_key(*, filing_year: int, period: str) -> str:
+def m303_declaration_type_header_key(
+    *, filing_year: int, period: str, operation: PinnedAuthorityOperation | None = None
+) -> str:
     """Resolve the declaration-type header key for one governed M303 filing scope."""
     entries = _selected_registry_mapping(
         modelo="303",
         filing_year=filing_year,
         period=period,
+        operation=operation,
     )
     return _required_registry_value(entries, "disposition.header_key")
 
 
-def _selected_registry_mapping(*, modelo: str, filing_year: int, period: str) -> dict[str, str]:
+def _selected_registry_mapping(
+    *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation | None = None
+) -> dict[str, str]:
     """Resolve the dated carry declaration through the validated registry."""
     normalized_modelo = modelo.strip() if isinstance(modelo, str) else ""
     normalized_period = period.strip() if isinstance(period, str) else ""
@@ -75,31 +78,29 @@ def _selected_registry_mapping(*, modelo: str, filing_year: int, period: str) ->
             translated_message=_translated_error(None, "registry_scope_invalid"),
             context={"modelo": modelo, "filing_year": filing_year, "period": period},
         )
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _selected_registry_mapping(
+                modelo=normalized_modelo,
+                filing_year=filing_year,
+                period=normalized_period,
+                operation=indexed_operation,
+            )
     try:
-        authority = bundled_authority()
         effective_date = date(filing_year, 12, 31)
-        query_service = RegistryQueryService(authority)
-        model_report = query_service.describe_modelo_for_scope(
+        revision = operation.revision_for_context(
             normalized_modelo,
             filing_year=filing_year,
             period=normalized_period,
-            as_of=effective_date,
+            on=effective_date,
         )
-        if (
-            str(model_report.code) != normalized_modelo
-            or model_report.filing_year is None
-            or int(model_report.filing_year) != filing_year
-            or model_report.period is None
-            or str(model_report.period) != normalized_period
-            or not isinstance(model_report.revision, str)
-            or not model_report.revision.strip()
-        ):
-            raise ValueError("selected M303 modelo report does not match the filing scope")
+        if str(revision.id).strip() == "":
+            raise ValueError("selected M303 modelo revision does not match the filing scope")
 
         # This fact is revision/date-scoped and declares no period_selector, so
         # the fact resolver's supported coordinate is the effective date. The
         # filing year and period are still validated above by the model report.
-        resolved = authority.resolve_governed_fact(
+        resolved = operation.resolve_governed_fact(
             MappingFactQuery(
                 fact_id="modelo-303-carry-disposition-verification-mapping",
                 date_axis=DateAxis.FILING_PERIOD,
@@ -136,9 +137,9 @@ def _selected_registry_mapping(*, modelo: str, filing_year: int, period: str) ->
             "casilla.result",
         ):
             _required_registry_value(entries, key)
-        if _required_registry_value(entries, "modelo") != str(model_report.code):
+        if _required_registry_value(entries, "modelo") != normalized_modelo:
             raise ValueError("M303 carry mapping does not match the selected modelo")
-        if _required_registry_value(entries, "revision") != model_report.revision:
+        if _required_registry_value(entries, "revision") != str(revision.id):
             raise ValueError("M303 carry mapping does not match the selected modelo revision")
         _validate_disposition_code_mapping(entries)
         return entries
@@ -263,6 +264,8 @@ class M303CarryIngressError(_M303CarryIngressErrorMixin, CoreValidationError):
 
 def normalize_m303_carry_observation_envelope(
     envelope: ObservationEnvelopePayload,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ObservationEnvelopePayload:
     """Resolve and persist the sole disposition-aware M303 carry projection.
 
@@ -272,6 +275,9 @@ def normalize_m303_carry_observation_envelope(
     projection, and the normalized available/generated pair are checked before
     a later reader can treat the observation as carry evidence.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return normalize_m303_carry_observation_envelope(envelope, operation=indexed_operation)
     if str(envelope.observation.modelo) != Modelo("303").value:
         return envelope
 
@@ -279,6 +285,7 @@ def normalize_m303_carry_observation_envelope(
         modelo=str(envelope.observation.modelo),
         filing_year=envelope.observation.filing_year,
         period=str(envelope.observation.period),
+        operation=operation,
     )
     disposition_projection = _resolve_result_disposition(envelope, registry_mapping)
     _validate_disposition_result_sign(envelope, disposition_projection.disposition, registry_mapping)
@@ -287,6 +294,7 @@ def normalize_m303_carry_observation_envelope(
         disposition_projection.disposition,
         prior_basis=envelope.m303_compensation_basis,
         registry_mapping=registry_mapping,
+        operation=operation,
     )
     return envelope.model_copy(
         update={
@@ -299,6 +307,8 @@ def normalize_m303_carry_observation_envelope(
 
 def validate_normalized_m303_carry_observation_envelope(
     envelope: ObservationEnvelopePayload,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ObservationEnvelopePayload:
     """Require an envelope to already carry the canonical M303 pair.
 
@@ -314,7 +324,7 @@ def validate_normalized_m303_carry_observation_envelope(
             translated_message=_translated_error(None, "non_target_modelo_envelope"),
             context={"modelo": envelope.observation.modelo},
         )
-    normalized = normalize_m303_carry_observation_envelope(envelope)
+    normalized = normalize_m303_carry_observation_envelope(envelope, operation=operation)
     if normalized != envelope:
         raise M303CarryIngressError(
             translated_message=_translated_error(None, "envelope_not_normalized"),
@@ -488,6 +498,7 @@ def _normalize_carry_observation(
     *,
     prior_basis: str | None,
     registry_mapping: Mapping[str, str],
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[RegistryModeloObservation, str]:
     """Normalize the available/generated pair while preserving casilla-only storage."""
     if not isinstance(observation, RegistryModeloObservation):
@@ -535,9 +546,17 @@ def _normalize_carry_observation(
         registry_mapping=registry_mapping,
     )
 
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("303").value)
-    revision = select_revision(
-        modelo,
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _normalize_carry_observation(
+                observation,
+                disposition,
+                prior_basis=prior_basis,
+                registry_mapping=registry_mapping,
+                operation=indexed_operation,
+            )
+    revision = operation.revision_for_context(
+        Modelo("303").value,
         filing_year=observation.filing_year,
         period=observation.period,
     )

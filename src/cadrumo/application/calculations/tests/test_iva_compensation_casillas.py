@@ -147,10 +147,7 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
     # The provider module is the one canonical Python authority for the token
     # names used by registry declarations and their calculation consumers.
     authority_names = {*_SHARED_M303_CONSTANTS, *_SHARED_M390_CONSTANTS}
-    authority_by_name = {
-        name: getattr(_casilla_authority, name)
-        for name in authority_names
-    }
+    authority_by_name = {name: getattr(_casilla_authority, name) for name in authority_names}
     discovered: dict[str, ModuleType] = {}
     for package in _SWEPT_PACKAGES:
         root = Path(package.__file__).parent
@@ -189,7 +186,9 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
                 token_values = [
                     node.value
                     for node in ast.walk(value)
-                    if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in authority_by_token
+                    if isinstance(node, ast.Constant)
+                    and isinstance(node.value, str)
+                    and node.value in authority_by_token
                 ]
                 if not token_values:
                     continue

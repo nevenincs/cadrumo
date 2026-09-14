@@ -46,10 +46,10 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import ClassVar
 
 from pydantic import BaseModel
 
+from .errors.hierarchy import CoreError
 from .models import STRICT_FROZEN_CONFIG
 from .product_identity import PRODUCT_IDENTITY
 from .storage_taxonomy import StorageCategory
@@ -74,18 +74,12 @@ PRODUCT_DATABASE_FILENAME = storage_location(StorageCategory.ROOT_FALLBACK_DATAB
 FORMER_PRODUCT_DATABASE_FILENAME = "aeat.db"
 
 
-class FormerProductStateError(RuntimeError):
+class FormerProductStateError(CoreError):
     """Raised when installed Cadrumo detects a retired ``aeat`` state root.
 
     Detection is refusal-only. The resolver does not open, read, move, re-key,
     delete, or adopt anything below the retired ``aeat`` application directory.
     """
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "raised from inside Settings/pydantic validation during bootstrap, before the CadrumoError "
-        "registry can be relied upon; the CLI boundary explicitly catches it ahead of the "
-        "CadrumoError arm and translates it into a registered CliRefusedBoundaryError"
-    )
 
 
 def refuse_former_product_database(storage_root: Path, *, bucket_id: str | None = None) -> None:

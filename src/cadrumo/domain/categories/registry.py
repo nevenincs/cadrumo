@@ -36,7 +36,8 @@ from .spending_category import SpendingCategory
 from .spending_category_catalogue import require_spending_category, spending_category_tokens
 
 if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 CATEGORY_PROFILE_FACT_ID = "categories.profile"
 CATEGORY_STATUTORY_CAP_FACT_ID = "categories.statutory-cap"
 CATEGORY_FACT_PROVIDER_ID = "category-profiles"
@@ -45,19 +46,25 @@ _CAP_VARIANT_PREFIX = "statutory_cap_variant."
 _CAP_VARIANT_FIELDS = {"label": "label", "eur_per_day": "statutory_cap_eur_per_day", "eur": "statutory_cap_eur"}
 
 
-def load_category_profiles() -> Mapping[SpendingCategory, CategoryProfile]:
+def load_category_profiles(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Mapping[SpendingCategory, CategoryProfile]:
     """Return the latest profiles while retaining each declared dated cap schedule."""
-    years = category_profile_years()
+    years = category_profile_years(operation=operation)
     if not years:
         raise CategoryValidationError("installed authority has no complete category profile coverage")
-    return _resolve_profiles(max(years), materialise_schedule=False)
+    return _resolve_profiles(max(years), materialise_schedule=False, operation=operation)
 
 
-def category_profile_years() -> frozenset[int]:
+def category_profile_years(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> frozenset[int]:
     """Return filing years fully covered by every authored category profile."""
-    from ..calculations.registry.authority import bundled_authority
-
-    fact = bundled_authority().catalogues.facts.facts.get(CATEGORY_PROFILE_FACT_ID)
+    if operation is None:
+        raise CategoryValidationError("category profile years require an explicit pinned authority operation")
+    fact = operation.governed_fact(CATEGORY_PROFILE_FACT_ID)
     grouped: dict[str, set[int]] = {}
     for variant in () if fact is None else fact.variants:
         category = next((str(s.value) for s in variant.selectors if s.name == "category"), None)
@@ -69,15 +76,35 @@ def category_profile_years() -> frozenset[int]:
     return frozenset[int](covered)
 
 
-def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
+def resolve_category_profiles(
+    year: int,
+    *,
+    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Mapping[SpendingCategory, CategoryProfile]:
     """Resolve every category profile for one exact filing year."""
-    return _resolve_profiles(year, materialise_schedule=True)
+    if authority is not None and operation is not None:
+        raise TypeError("category profile resolution accepts either authority or operation, not both")
+    return _resolve_profiles(year, materialise_schedule=True, authority=authority, operation=operation)
 
 
-def _resolve_profiles(year: int, *, materialise_schedule: bool) -> Mapping[SpendingCategory, CategoryProfile]:
-    from ..calculations.registry.authority import bundled_authority
+def _resolve_profiles(
+    year: int,
+    *,
+    materialise_schedule: bool,
+    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Mapping[SpendingCategory, CategoryProfile]:
+    if authority is not None and operation is not None:
+        raise TypeError("category profile resolution accepts either authority or operation, not both")
+    if operation is not None:
+        authority = operation
+    elif authority is None:
+        from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
 
-    authority = bundled_authority()
+        authority = governed_facts_in_scope()
+        if authority is None:
+            raise CategoryValidationError("category profiles require an explicit operation or scoped fact source")
     profiles: dict[SpendingCategory, CategoryProfile] = {}
     for category in spending_category_tokens(
         effective_date=date(year, 12, 31),
@@ -99,7 +126,11 @@ def _resolve_profiles(year: int, *, materialise_schedule: bool) -> Mapping[Spend
         if not isinstance(fact, ResolvedMappingFact):
             raise CategoryValidationError("category profile authority returned a non-mapping fact")
         profiles[category] = _profile_from_authority_fact(
-            fact, authority=authority, year=year, materialise_schedule=materialise_schedule
+            fact,
+            authority=authority,
+            operation=operation,
+            year=year,
+            materialise_schedule=materialise_schedule,
         )
     return MappingProxyType(profiles)
 
@@ -107,7 +138,8 @@ def _resolve_profiles(year: int, *, materialise_schedule: bool) -> Mapping[Spend
 def _profile_from_authority_fact(
     resolved: ResolvedMappingFact,
     *,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
+    operation: PinnedAuthorityOperation | None = None,
     year: int,
     materialise_schedule: bool = True,
 ) -> CategoryProfile:
@@ -165,7 +197,7 @@ def _profile_from_authority_fact(
             raise CategoryValidationError(f"category cap authority returned a non-scalar fact for {category}")
         cap = resolved_cap.payload.value
         if not materialise_schedule:
-            schedule = _declared_cap_schedule(authority, category=category)
+            schedule = _declared_cap_schedule(authority, category=category, operation=operation)
             cap = None
     cap_period = values.get("statutory_cap_period")
     rule = {
@@ -209,9 +241,16 @@ def _profile_from_authority_fact(
     )
 
 
-def _declared_cap_schedule(authority: ValidatedRegistryAuthority, *, category: str) -> tuple[StatutoryCapAmount, ...]:
+def _declared_cap_schedule(
+    authority: GovernedFactSource,
+    *,
+    category: str,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[StatutoryCapAmount, ...]:
     """Return every dated amount declared for one category cap."""
-    fact = authority.catalogues.facts.facts.get(CATEGORY_STATUTORY_CAP_FACT_ID)
+    if operation is None:
+        raise CategoryValidationError("category cap schedules require an explicit pinned authority operation")
+    fact = operation.governed_fact(CATEGORY_STATUTORY_CAP_FACT_ID)
     if fact is None:
         raise CategoryValidationError(f"category authority has no dated statutory cap for {category}")
     schedule: list[StatutoryCapAmount] = []

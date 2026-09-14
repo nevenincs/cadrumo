@@ -128,15 +128,16 @@ def config_profile_view(
         status.
         """
     _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....application.user_profile.projections import record_to_path_values
     from ....application.user_profile.validation import ProfileValidationService
-    from ....domain.user_profile.loader import load_user_profile_schema
 
     pointer = _resolve_show_pointer(name, ctx=ctx, resolve_active_profile_pointer=resolve_active_profile_pointer)
     record = _read_record_for_show(ctx, pointer)
     from ..config_payloads import ConfigProfileViewResult, ProfileFactPayload, ProfileIssuePayload
 
-    report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
+    profile_session = ProfileRecordRepository.for_current_session(record.profile_id).session
+    report = ProfileValidationService(schema=profile_session.profile_decode_context.schema).validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     values = record_to_path_values(record)
     result = ConfigProfileViewResult(
@@ -219,10 +220,11 @@ def _profile_validation_issues(
 ) -> tuple[_ProfileValidationReport, tuple[_ProfileValidationIssue, ...]]:
     """Run canonical schema validation and append distinct filing-baseline issues."""
     from ....application.modelo.profile_readiness_gate import modelo_work_profile_baseline_validation_issues
+    from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....application.user_profile.validation import ProfileValidationService
-    from ....domain.user_profile.loader import load_user_profile_schema
 
-    report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
+    profile_session = ProfileRecordRepository.for_current_session(record.profile_id).session
+    report = ProfileValidationService(schema=profile_session.profile_decode_context.schema).validate_record(record)
     issues = list(report.issues)
     seen_issues = {(issue.code, issue.path) for issue in issues}
     for issue in modelo_work_profile_baseline_validation_issues(record):

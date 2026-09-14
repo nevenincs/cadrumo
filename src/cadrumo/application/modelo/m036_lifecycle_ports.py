@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
     from .m036_lifecycle import M036DeclarationResult
 
 
-class M036DeclarationPersistenceError(RuntimeError):
+class M036DeclarationPersistenceError(CadrumoError):
     """Translated failure from a declaration persistence capability."""
 
     def __init__(self, operation: str) -> None:

@@ -288,5 +288,7 @@ def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloE
         Every modelo's :class:`~domain.calculations.registry.ModeloEntry`,
         sorted by ``modelo_id``.
     """
-    entries = (_entry_for_modelo(modelo) for modelo in authority.modelos)
+    from .queries import RegistryQueryService
+
+    entries = (_entry_for_modelo(modelo) for modelo in RegistryQueryService(authority).iter_modelo_definitions())
     return tuple(sorted(entries, key=lambda entry: entry.modelo_id))

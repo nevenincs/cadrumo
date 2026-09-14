@@ -19,8 +19,8 @@ from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalcula
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.renta.rental_reduction import RentalReductionArt232Tier
-from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.authority import compiled_bundled_authority
 from ._modelo_100_registry_support import (

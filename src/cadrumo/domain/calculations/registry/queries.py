@@ -1,10 +1,16 @@
-"""Typed read API for modelo registry introspection surfaces.
+"""Typed read API for the legacy validated-model introspection surfaces.
 
 ``RegistryQueryService`` wraps a :class:`ValidatedRegistryAuthority` and exposes
 structured report objects for the CLI list, describe, casillas, formulas, and
 bindings commands. Queries narrow to a single :class:`ModeloDefinition` and
 then to one :class:`ModeloRevision` selected by filing year, period, and
 optional revision id.
+
+This service is intentionally not the indexed runtime bridge. Production
+operations that hold a :class:`~.authority.PinnedAuthorityOperation` call its
+typed ``modelo_directory``/``revision_for_context`` methods directly. The
+explicit enumeration methods below remain available only for diagnostic
+surfaces whose contract genuinely requires the complete validated graph.
 """
 
 from __future__ import annotations
@@ -14,6 +20,7 @@ from collections import Counter, defaultdict
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
@@ -28,7 +35,12 @@ from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from .authority import ValidatedRegistryAuthority
 from .binding_selector_utils import boolean_binding_encoded_values
 from .binding_temporal import binding_applies_to_period
-from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
+from .errors import (
+    RegistryFailureClassification,
+    RegistryFailureCondition,
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from .ids import BindingId
 from .period_selector_match import registry_period_for_request, selector_token_for_request
 from .query_reports import (
@@ -61,7 +73,40 @@ from .schema_base import filing_period_from_scope
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 from .support_matrix import build_support_matrix
-from .temporal import select_revision_for_year
+from .temporal import select_revision, select_revision_for_year
+
+if TYPE_CHECKING:
+    from .authority_artifact import AuthorityComponentReader, AuthorityGenerationPin
+
+
+def load_modelo_revision_component(
+    reader: AuthorityComponentReader,
+    *,
+    pin: AuthorityGenerationPin,
+    modelo_id: str | Modelo,
+    revision_id: str,
+) -> ModeloRevision:
+    """Load one typed modelo revision from an operation's pinned generation.
+
+    The component reader owns generation and storage validation.  This helper
+    only normalizes the public modelo identifier, sends the exact point query,
+    and rejects a reader that returns a component of another family.  Callers
+    must create and retain one pin for their enclosing operation.
+    """
+    from .authority_artifact import ModeloRevisionComponentQuery
+
+    normalized_modelo_id = Modelo(modelo_id).value
+    component = reader.load(
+        ModeloRevisionComponentQuery(modelo_id=normalized_modelo_id, revision_id=str(revision_id)),
+        pin=pin,
+    )
+    if not isinstance(component, ModeloRevision):
+        raise RegistryValidationError(
+            f"authority component reader returned an invalid modelo revision for "
+            f"{normalized_modelo_id!r}/{revision_id!r}",
+        )
+    return component
+
 
 _PUBLIC_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(
     dict[object, object],
@@ -101,6 +146,7 @@ class ResolvedRegistryQueryContext(BaseModel):
 
     definition: ModeloDefinition
     revision: ModeloRevision
+    revision_ids: tuple[str, ...] = ()
     filing_year: int | None = None
     registry_period: RegistrySelectorPeriodCode | None = None
 
@@ -175,11 +221,136 @@ def _resolve_declared_period_revision(
 
 
 class RegistryQueryService:
-    """Stable Python facade over the validated modelo registry authority."""
+    """Legacy introspection facade over the eager validated authority graph.
+
+    The constructor deliberately accepts only ``ValidatedRegistryAuthority``.
+    It must not be widened to accept an indexed reader: indexed consumers use
+    the already-pinned operation directly, keeping eager traversal visible and
+    preventing a second selection implementation from drifting from the
+    canonical runtime contract.
+    """
 
     def __init__(self, authority: ValidatedRegistryAuthority) -> None:
         """Bind this read-only query service to one validated authority."""
         self._authority = authority
+
+    def modelo_codes(self) -> tuple[str, ...]:
+        """Return deterministic modelo identifiers from the authority index.
+
+        This is the explicit bulk-enumeration seam for callers that need a
+        catalogue of model identifiers.  It deliberately does not expose the
+        authority's eager ``modelos`` graph; a subsequent operation must ask
+        for the revision it actually needs.
+        """
+        return tuple(row.code for row in self.list_modelos().modelos)
+
+    def revision_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.APPLICABILITY,
+    ) -> ModeloRevision:
+        """Return exactly the revision selected for one explicit operation scope.
+
+        The report path owns canonical temporal and grade selection; callers
+        that need revision payload fields consume this selected result instead
+        of walking every revision in an authority-wide model graph.
+        """
+        normalized_modelo = modelo.strip()
+        definition = self._authority.validate_modelo(normalized_modelo)
+        if grade is not RegistryAuthorityGrade.APPLICABILITY:
+            return self._resolve_revision_for_scope(
+                normalized_modelo,
+                filing_year=filing_year,
+                period=period,
+                as_of=as_of,
+                grade=grade,
+            ).revision
+        # A model/revision consumer needs the same temporal resolver as the
+        # existing selected-revision API, but does not claim snapshot-grade
+        # legal or filing authority. In particular, do not apply the
+        # supported-year envelope here: it can merge two historical designs
+        # for metadata-only coordinates and change the selected revision.
+        return select_revision(
+            definition,
+            filing_year=filing_year,
+            period=period,
+            on=as_of,
+        )
+
+    def revision_for_period(
+        self,
+        modelo: str,
+        *,
+        period: str | None = None,
+        as_of: date | None = None,
+    ) -> ModeloRevision:
+        """Return the revision selected by an unscoped inspection query."""
+        return self._resolve_revision(modelo, period=period, as_of=as_of).revision
+
+    def revision_for_year(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        as_of: date | None = None,
+    ) -> ModeloRevision:
+        """Return the canonical year-scoped revision for metadata consumers."""
+        definition = self._authority.validate_modelo(modelo.strip())
+        return select_revision_for_year(definition, filing_year=filing_year, on=as_of)
+
+    def revision_by_id(self, modelo: str, revision_id: str) -> ModeloRevision:
+        """Return one exact revision component by canonical identity."""
+        normalized = Modelo(modelo).value
+        revisions = self.iter_modelo_revisions(modelo_codes=(normalized,))
+        if not revisions:
+            raise RegistrySnapshotError(
+                f"modelo {normalized!r} is not present in the calculation registry",
+            )
+        for _modelo_id, revision in revisions:
+            if str(revision.id) == str(revision_id):
+                return revision
+        raise RegistryValidationError(
+            f"modelo {normalized!r} has no revision {revision_id!r}",
+        )
+
+    def source_exists(self, source_reference_id: str) -> bool:
+        """Return whether one source-reference metadata row is enrolled."""
+        return source_reference_id in self._authority.catalogues.sources
+
+    def iter_modelo_revisions(
+        self,
+        *,
+        modelo_codes: tuple[str, ...] | None = None,
+    ) -> tuple[tuple[str, ModeloRevision], ...]:
+        """Explicitly enumerate revision components for diagnostics.
+
+        Bulk walks are intentionally named and deterministic.  They are for
+        source inventories and other diagnostics that genuinely need every
+        revision; ordinary runtime consumers should use
+        :meth:`revision_for_scope` or :meth:`revision_for_period`.
+        """
+        selected = self._authority.modelos
+        if modelo_codes is not None:
+            allowed = frozenset(Modelo(code).value for code in modelo_codes)
+            selected = tuple(modelo for modelo in selected if modelo.id in allowed)
+        return tuple(
+            (str(modelo.id), revision)
+            for modelo in sorted(selected, key=lambda item: str(item.id))
+            for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+        )
+
+    def iter_modelo_definitions(self) -> tuple[ModeloDefinition, ...]:
+        """Explicitly enumerate complete model metadata for diagnostics.
+
+        This is intentionally separate from point lookup.  Support reports and
+        source inventories are declared bulk operations; ordinary calculation
+        consumers must use a selected revision method instead.
+        """
+        return tuple(sorted(self._authority.modelos, key=lambda item: str(item.id)))
 
     def list_modelos(
         self,
@@ -215,7 +386,7 @@ class RegistryQueryService:
                 tax_domain=modelo.tax_domain,
                 revision_count=len(modelo.revisions),
             )
-            for modelo in self._authority.modelos
+            for modelo in RegistryQueryService(self._authority).iter_modelo_definitions()
             if (year is None or _modelo_covers_year(modelo, year)) and (domain is None or modelo.tax_domain == domain)
         ]
         # Ordered into a pinned local first: pydantic's generated ``__init__``
@@ -243,17 +414,16 @@ class RegistryQueryService:
             sites are sorted by ``(modelo, revision_id)``.
         """
         sites_by_source: dict[BindingSourceKind, list[RegistrySourceSite]] = defaultdict(list)
-        for modelo in self._authority.modelos:
-            for revision in modelo.revisions.values():
-                counts: Counter[BindingSourceKind] = Counter(binding.source for binding in revision.bindings)
-                for source, count in counts.items():
-                    sites_by_source[source].append(
-                        RegistrySourceSite(
-                            modelo=str(modelo.id),
-                            revision_id=str(revision.id),
-                            binding_count=count,
-                        ),
-                    )
+        for modelo_id, revision in self.iter_modelo_revisions():
+            counts: Counter[BindingSourceKind] = Counter(binding.source for binding in revision.bindings)
+            for source, count in counts.items():
+                sites_by_source[source].append(
+                    RegistrySourceSite(
+                        modelo=modelo_id,
+                        revision_id=str(revision.id),
+                        binding_count=count,
+                    ),
+                )
         inventory: list[RegistrySourceInventoryRow] = []
         for source, sites in sites_by_source.items():
             ordered_sites: tuple[RegistrySourceSite, ...] = tuple(
@@ -565,10 +735,17 @@ class RegistryQueryService:
     ) -> ResolvedRegistryQueryContext:
         if as_of is not None:
             _raise_unscoped_as_of_query(modelo)
-        definition = self._authority.validate_modelo(modelo.strip())
+        normalized_modelo = modelo.strip()
+        definition = self._authority.validate_modelo(normalized_modelo)
+        revision_ids = self._revision_ids(normalized_modelo)
         if period is None:
-            return ResolvedRegistryQueryContext(definition=definition, revision=_latest_revision(definition))
-        return _resolve_declared_period_revision(definition, period=period)
+            return ResolvedRegistryQueryContext(
+                definition=definition,
+                revision=_latest_revision(definition),
+                revision_ids=revision_ids,
+            )
+        context = _resolve_declared_period_revision(definition, period=period)
+        return context.model_copy(update={"revision_ids": revision_ids})
 
     def _resolve_revision_for_scope(
         self,
@@ -577,8 +754,11 @@ class RegistryQueryService:
         filing_year: int,
         period: str,
         as_of: date | None,
+        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.APPLICABILITY,
     ) -> ResolvedRegistryQueryContext:
-        definition = self._authority.validate_modelo(modelo.strip())
+        normalized_modelo = modelo.strip()
+        definition = self._authority.validate_modelo(normalized_modelo)
+        revision_ids = self._revision_ids(normalized_modelo)
         requested_period = period.strip()
         declared_by_revision = tuple(
             token for revision in definition.revisions.values() for token in revision.period_selector.declared_periods
@@ -601,11 +781,12 @@ class RegistryQueryService:
             filing_year=filing_year,
             period=registry_period,
             on=as_of,
-            grade=RegistryAuthorityGrade.APPLICABILITY,
+            grade=grade,
         )
         return ResolvedRegistryQueryContext(
             definition=definition,
             revision=snapshot.revision,
+            revision_ids=revision_ids,
             filing_year=filing_year,
             registry_period=registry_period,
         )
@@ -617,7 +798,9 @@ class RegistryQueryService:
         filing_year: int,
         as_of: date | None,
     ) -> ResolvedRegistryQueryContext:
-        definition = self._authority.validate_modelo(modelo.strip())
+        normalized_modelo = modelo.strip()
+        definition = self._authority.validate_modelo(normalized_modelo)
+        revision_ids = self._revision_ids(normalized_modelo)
         revision = select_revision_for_year(
             definition,
             filing_year=filing_year,
@@ -632,9 +815,14 @@ class RegistryQueryService:
         return ResolvedRegistryQueryContext(
             definition=definition,
             revision=revision,
+            revision_ids=revision_ids,
             filing_year=filing_year,
             registry_period=year_periods[0],
         )
+
+    def _revision_ids(self, modelo: str) -> tuple[str, ...]:
+        """Return explicit revision metadata for a model-wide report."""
+        return tuple(str(revision.id) for _modelo_id, revision in self.iter_modelo_revisions(modelo_codes=(modelo,)))
 
 
 def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> ModeloDescribeReport:
@@ -651,13 +839,7 @@ def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> Mode
         cadence=definition.cadence,
         jurisdiction=definition.jurisdiction,
         revision=str(revision.id),
-        revision_ids=tuple(
-            str(item.id)
-            for item in sorted(
-                definition.revisions.values(),
-                key=lambda candidate: (candidate.valid_from, str(candidate.id)),
-            )
-        ),
+        revision_ids=context.revision_ids,
         filing_year=filing_year,
         filing_period=_query_filing_period(filing_year, registry_period),
         period=registry_period,
@@ -924,7 +1106,7 @@ def _operator_input_required_by_binding(
 ) -> dict[BindingId, bool]:
     """Return missing-input visibility for relation slots with period-scoped defaults."""
     required = {binding.id: True for binding in revision.bindings}
-    if modelo != Modelo("202").value or period is None:
+    if modelo is None or modelo != Modelo("202").value or period is None:
         return required
     for binding in revision.bindings:
         if _relation_prefill_is_period_default(binding, modelo=modelo, period=period):
@@ -986,4 +1168,5 @@ def _public_value(value: object) -> object:
 __all__ = [
     "RegistryQueryService",
     "ResolvedRegistryQueryContext",
+    "load_modelo_revision_component",
 ]

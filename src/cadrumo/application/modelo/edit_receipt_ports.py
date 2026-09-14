@@ -11,11 +11,12 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.secure_object_write import SecureObjectWrite
 from .edit_contract import ModeloEditMutationResultReceiptV1
 
 
-class ModeloEditReceiptPersistenceError(RuntimeError):
+class ModeloEditReceiptPersistenceError(CadrumoError):
     """Translated failure from the edit-receipt persistence capability."""
 
     def __init__(self, operation: str) -> None:

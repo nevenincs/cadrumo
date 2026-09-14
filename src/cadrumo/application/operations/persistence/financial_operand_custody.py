@@ -18,11 +18,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
+from ....core.errors.hierarchy import CadrumoError
+
 if TYPE_CHECKING:
     from ..financial_operand_custody import OperationFinancialOperandCustodyCheckpoint
 
 
-class OperationFinancialOperandCustodyConflictError(RuntimeError):
+class OperationFinancialOperandCustodyConflictError(CadrumoError):
     """Raised when a custody advance loses its compare-and-swap."""
 
 

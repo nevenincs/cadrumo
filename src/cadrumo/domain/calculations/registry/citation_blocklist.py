@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING, Literal, NamedTuple, cast
+from typing import Literal, NamedTuple, cast
 
 from ....core.i18n.translatable import Translatable as tr
 from ....core.text_fold import fold_diacritics
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
 
 CitationSource = Literal[
     "ley",
@@ -72,7 +70,7 @@ _CITATION_SOURCE_VALUES: frozenset[str] = frozenset(
 
 def _known_bad_citations(
     *,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
     effective_date: date,
 ) -> tuple[KnownBadCitation, ...]:
     """Resolve and type the dated known-bad citation catalogue.
@@ -131,7 +129,7 @@ def find_known_bad(
     role_text: str,
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> KnownBadCitation | None:
     """Return the first blocklist entry that matches the supplied citation, or ``None``.
 
@@ -153,10 +151,9 @@ def find_known_bad(
         The matching :class:`KnownBadCitation` entry, or ``None`` if the citation
         is not on the blocklist.
     """
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError("known-bad citation lookup requires an explicit authority operation or scope")
     folded = _fold_diacritics(role_text)
     for entry in _known_bad_citations(authority=authority, effective_date=effective_date):
         if entry.source == source and entry.article == article and _fold_diacritics(entry.role_substring) in folded:

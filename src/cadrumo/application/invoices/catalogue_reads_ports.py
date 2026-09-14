@@ -6,11 +6,12 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 
 
-class InvoiceCatalogueReadPersistenceError(RuntimeError):
+class InvoiceCatalogueReadPersistenceError(CadrumoError):
     """Translated failure while loading a catalogue for link verification."""
 
     def __init__(self, operation: str) -> None:

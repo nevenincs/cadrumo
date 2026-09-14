@@ -485,6 +485,7 @@ cache/
 /src/cadrumo/_data/registry/aeat/.*.lock.lock
 # The runtime authority publisher's destination lock; the artifact beside it is tracked.
 /src/cadrumo/_data/registry/authority/authority.json.lock
+/src/cadrumo/_data/registry/authority/authority.current.json.lock
 
 # Rendered generator scratch output never enters the tree.
 dev/registry/scratch*/

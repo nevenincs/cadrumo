@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING
 from ..core.i18n.render import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.operator_action_enums import NoRecoveryOutcome
-from ..core.package_version import PACKAGE_VERSION as __version__
+from ..core.package_version import PACKAGE_VERSION
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.requirement import Requirement, RequirementValue
 from .diagnostic_models import (
@@ -88,6 +88,7 @@ from .operator_actions.models import PreconditionVerdict
 # Importing them lazily inside the functions that actually run keeps the
 # version surface off the heavy import graph.
 if TYPE_CHECKING:
+    from ..domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from .wizard.status import WizardStatusReport
     from .workflow.profile_health import ActiveProfileHealth
     from .workflow.state_models import WorkflowState
@@ -99,7 +100,7 @@ def build_cli_version_report() -> _CliVersionReport:
     """Return package identity for the CLI version surfaces."""
     return _CliVersionReport(
         package_name="cadrumo",
-        package_version=__version__,
+        package_version=PACKAGE_VERSION,
     )
 
 
@@ -137,13 +138,16 @@ def _initial_config_repair_checks() -> list[_DiagnosticCheck]:
         _DiagnosticCheck(
             name="package.version",
             status=_DiagnosticStatus.OK,
-            summary=__version__,
+            summary=PACKAGE_VERSION,
         ),
         _logging_repair_check(log_parent_exists),
     ]
 
 
-def _readable_secure_state_repair_checks() -> tuple[list[_DiagnosticCheck], WizardStatusReport]:
+def _readable_secure_state_repair_checks(
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> tuple[list[_DiagnosticCheck], WizardStatusReport]:
     """Read secure workflow state and build its healthy diagnostic rows."""
     from .wizard.status import build_wizard_status
     from .workflow.persistence import workflow_state_repository
@@ -170,7 +174,14 @@ def _readable_secure_state_repair_checks() -> tuple[list[_DiagnosticCheck], Wiza
         build_wizard_status(state),
         active_profile_label=profile_health.active_profile_label,
     )
-    checks.append(build_profile_check(setup_report, profile_health=profile_health, state=state))
+    checks.append(
+        build_profile_check(
+            setup_report,
+            profile_health=profile_health,
+            state=state,
+            profile_decode_context=profile_decode_context,
+        ),
+    )
     checks.append(_auth_check(setup_report))
     return checks, setup_report
 
@@ -232,16 +243,23 @@ def _unreadable_secure_state_repair_checks(
 def _secure_state_repair_checks(
     *,
     ports: DiagnosticsPorts,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> tuple[list[_DiagnosticCheck], WizardStatusReport | None]:
     """Read secure workflow state, falling back to redacted health rows."""
     try:
-        checks, setup_report = _readable_secure_state_repair_checks()
+        checks, setup_report = _readable_secure_state_repair_checks(
+            profile_decode_context=profile_decode_context,
+        )
     except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
         return _unreadable_secure_state_repair_checks(exc, ports=ports), None
     return checks, setup_report
 
 
-def build_config_repair_report(*, ports: DiagnosticsPorts) -> _ConfigRepairReport:
+def build_config_repair_report(
+    *,
+    ports: DiagnosticsPorts,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> _ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface.
 
     Returns a :class:`ConfigRepairReport` enumerating every diagnostic
@@ -259,7 +277,10 @@ def build_config_repair_report(*, ports: DiagnosticsPorts) -> _ConfigRepairRepor
     """
     _ensure_models_rebuilt()
     checks = _initial_config_repair_checks()
-    secure_state_checks, setup_report = _secure_state_repair_checks(ports=ports)
+    secure_state_checks, setup_report = _secure_state_repair_checks(
+        ports=ports,
+        profile_decode_context=profile_decode_context,
+    )
     checks.extend(secure_state_checks)
 
     secure_objects = _probe_secure_objects_integrity(ports)
@@ -268,7 +289,7 @@ def build_config_repair_report(*, ports: DiagnosticsPorts) -> _ConfigRepairRepor
     return _ConfigRepairReport(
         overall=_overall_status(tuple(checks)),
         package_name="cadrumo",
-        package_version=__version__,
+        package_version=PACKAGE_VERSION,
         python_version=sys.version.split()[0],
         log_file=str(default_log_file_path()),
         setup=setup_report,
@@ -544,6 +565,7 @@ def build_profile_check(
     *,
     profile_health: ActiveProfileHealth | None = None,
     state: WorkflowState | None = None,
+    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> _DiagnosticCheck:
     """Render semantic profile readiness from wizard status plus workflow state.
 
@@ -596,7 +618,11 @@ def build_profile_check(
         )
     unset_findings = _unset_profile_key_findings(state)
     if not report.profile_ready:
-        return _profile_not_ready_check(report, unset_findings=unset_findings)
+        return _profile_not_ready_check(
+            report,
+            unset_findings=unset_findings,
+            profile_decode_context=profile_decode_context,
+        )
     return _DiagnosticCheck(
         name="profile.readiness",
         status=_DiagnosticStatus.OK,
@@ -613,6 +639,7 @@ def _profile_not_ready_check(
     report: WizardStatusReport,
     *,
     unset_findings: tuple[_DiagnosticFinding, ...],
+    profile_decode_context: ProfileDecodeContext | None,
 ) -> _DiagnosticCheck:
     """Render the readiness row for a profile still missing required keys.
 
@@ -621,7 +648,11 @@ def _profile_not_ready_check(
     names what is wrong rather than reporting an empty warning. Enrolment
     keys already named by a required finding are not repeated.
     """
-    findings = _profile_not_ready_findings(report, unset_findings)
+    findings = _profile_not_ready_findings(
+        report,
+        unset_findings,
+        profile_decode_context=profile_decode_context,
+    )
     return _DiagnosticCheck(
         name="profile.readiness",
         status=_DiagnosticStatus.WARN,
@@ -638,16 +669,24 @@ def _profile_not_ready_check(
 def _profile_not_ready_findings(
     report: WizardStatusReport,
     unset_findings: tuple[_DiagnosticFinding, ...],
+    *,
+    profile_decode_context: ProfileDecodeContext | None,
 ) -> tuple[_DiagnosticFinding, ...]:
     missing_required = tuple(f for f in unset_findings if f.requirement == "required")
     if not missing_required:
         missing_required = tuple(
-            _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement=Requirement.REQUIRED)
+            _DiagnosticFinding(
+                summary=_grounded_profile_key_summary(key, profile_decode_context=profile_decode_context),
+                requirement=Requirement.REQUIRED,
+            )
             for key in report.missing_required
         )
     already_named = {finding.summary.split(" — ", 1)[0] for finding in missing_required}
     enrolment_findings = tuple(
-        _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement=Requirement.REQUIRED)
+        _DiagnosticFinding(
+            summary=_grounded_profile_key_summary(key, profile_decode_context=profile_decode_context),
+            requirement=Requirement.REQUIRED,
+        )
         for key in report.missing_enrolment
         if key not in already_named
     )
@@ -676,7 +715,11 @@ def _profile_not_ready_verdict(
     )
 
 
-def _grounded_profile_key_summary(key: str) -> str:
+def _grounded_profile_key_summary(
+    key: str,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> str:
     """Render a bare profile key path as "path - label", or unchanged.
 
     The fallback branch above reads keys straight off the wizard report, which
@@ -692,10 +735,11 @@ def _grounded_profile_key_summary(key: str) -> str:
     A key the schema does not resolve is returned unchanged rather than
     guessed at.
     """
-    from ..domain.user_profile.loader import load_user_profile_schema
     from .user_profile.preflight import build_profile_preflight_requirement
 
-    schema = load_user_profile_schema()
+    if profile_decode_context is None:
+        return key
+    schema = profile_decode_context.schema
     requirement = build_profile_preflight_requirement(key, schema=schema)
     if requirement.label == key:
         return key

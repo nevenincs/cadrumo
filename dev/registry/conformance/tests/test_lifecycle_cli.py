@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -25,6 +26,14 @@ def _authority() -> SimpleNamespace:
         modelos=(SimpleNamespace(revisions={"2025": object()}),),
         catalogues=SimpleNamespace(legal={"legal-1": object()}),
     )
+
+
+def _indexed_authority() -> SimpleNamespace:
+    @contextmanager
+    def operation():
+        yield SimpleNamespace(modelo_ids=lambda: ("296",), revision_ids=lambda: (("296", "2025"),))
+
+    return SimpleNamespace(operation=operation, close=lambda: None)
 
 
 def test_valid_is_a_fail_closed_whole_registry_verdict(monkeypatch) -> None:
@@ -55,7 +64,7 @@ def test_valid_refuses_a_registry_validation_failure(monkeypatch) -> None:
 
 
 def test_runtime_load_reports_the_artifact_backed_authority_as_loadable(monkeypatch) -> None:
-    monkeypatch.setattr(cli, "load_bundled_runtime_authority", _authority)
+    monkeypatch.setattr(cli, "load_bundled_runtime_authority", _indexed_authority)
 
     result = CliRunner().invoke(cli.app, ["runtime-load", "--json"])
 
@@ -145,7 +154,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
     )
     monkeypatch.setattr(
         registry_status,
-        "authority_artifact_currency",
+        "authority_database_currency",
         lambda *_args, **_kwargs: SimpleNamespace(
             status=AuthorityArtifactCurrencyStatus.CURRENT,
             detail="",
@@ -156,13 +165,13 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
     monkeypatch.setattr(
         registry_status,
         "load_bundled_runtime_authority",
-        lambda: calls.append("load") or authority,
+        lambda: calls.append("load") or SimpleNamespace(close=lambda: None),
     )
 
     status = registry_status.collect_registry_status(
         registry_root=Path("registry"),
         source_root=Path("source"),
-        authority_artifact=Path("authority.json"),
+        authority_artifact=Path("authority.current.json"),
     )
 
     assert status.valid is True

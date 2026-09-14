@@ -14,16 +14,23 @@ from contextlib import contextmanager
 from contextvars import ContextVar, Token
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ...core.paths import effective_storage_root
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ...domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from .capsule_record import (
     ProfileRecordCommandEvent,
     ProfileRecordConflictError,
+    ProfileRecordIntegrityError,
     ProfileRecordSession,
     ProfileRecordStore,
 )
@@ -31,6 +38,9 @@ from .custody_ports import (
     profile_custody_record_session_material,
 )
 from .login_session_port import profile_current_bucket_session, profile_session_serves_bucket
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar(
     "active_profile_record_session", default=None
@@ -121,7 +131,11 @@ def close_active_profile_record_session() -> None:
     _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(False)
 
 
-def profile_record_session_if_authenticated(profile_id: str | UUID) -> ProfileRecordSession | None:
+def profile_record_session_if_authenticated(
+    profile_id: str | UUID,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> ProfileRecordSession | None:
     """Return the record authority serving this UUID, or ``None`` when none is live.
 
     This is the structural answer to "is this profile unlocked?", and callers
@@ -192,19 +206,27 @@ def profile_record_session_if_authenticated(profile_id: str | UUID) -> ProfileRe
         raise ProfileNotFoundError("profile identity is not a canonical UUID") from exc
     session = _ACTIVE_RECORD_SESSION.get()
     if session is not None and session.profile_id == identity and not session.closed:
+        if profile_decode_context is not None and profile_decode_context != session.profile_decode_context:
+            raise ProfileRecordIntegrityError(
+                "profile record access crossed the pinned authority generation boundary",
+            )
         if not _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.get():
             return session
         if _live_custody_session_backs(identity):
             return session
         return None
-    derived = _record_session_from_live_custody_session(identity)
+    derived = _record_session_from_live_custody_session(identity, profile_decode_context=profile_decode_context)
     if derived is None:
         return None
     activate_profile_record_session(derived)
     return derived
 
 
-def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSession:
+def require_profile_record_session(
+    profile_id: str | UUID,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> ProfileRecordSession:
     """Return the record authority that serves this exact UUID, or refuse.
 
     The authority resolution itself lives in
@@ -215,7 +237,7 @@ def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSessi
         ProfileNotFoundError: When no authenticated session serves this UUID,
             or when ``profile_id`` is not a canonical UUID.
     """
-    session = profile_record_session_if_authenticated(profile_id)
+    session = profile_record_session_if_authenticated(profile_id, profile_decode_context=profile_decode_context)
     if session is None:
         raise ProfileNotFoundError("profile facts require an authenticated session for this committed capsule")
     return session
@@ -239,12 +261,24 @@ def _live_custody_session_backs(profile_id: UUID) -> bool:
     return live is not None and profile_session_serves_bucket(live, str(profile_id)) and not live.sealed
 
 
-def _record_session_from_live_custody_session(profile_id: UUID) -> ProfileRecordSession | None:
+def _record_session_from_live_custody_session(
+    profile_id: UUID,
+    *,
+    profile_decode_context: ProfileDecodeContext | None,
+) -> ProfileRecordSession | None:
     """Derive record authority only from the exact already-open custody session."""
     material = profile_custody_record_session_material(profile_id)
     if material is None:
         return None
-    return ProfileRecordSession.from_envelope(envelope=material.envelope, dek=material.dek)
+    if profile_decode_context is None:
+        raise ProfileRecordIntegrityError(
+            "profile record session requires a ProfileDecodeContext from the enclosing PinnedAuthorityOperation",
+        )
+    return ProfileRecordSession.from_envelope(
+        envelope=material.envelope,
+        dek=material.dek,
+        profile_decode_context=profile_decode_context,
+    )
 
 
 class ProfileRecordRepository:
@@ -256,9 +290,18 @@ class ProfileRecordRepository:
         self._root = effective_storage_root(root)
 
     @classmethod
-    def for_current_session(cls, profile_id: str | UUID, *, root: Path | None = None) -> ProfileRecordRepository:
+    def for_current_session(
+        cls,
+        profile_id: str | UUID,
+        *,
+        root: Path | None = None,
+        profile_decode_context: ProfileDecodeContext | None = None,
+    ) -> ProfileRecordRepository:
         """Create a repository using the authenticated session for this profile."""
-        return cls(session=require_profile_record_session(profile_id), root=root)
+        return cls(
+            session=require_profile_record_session(profile_id, profile_decode_context=profile_decode_context),
+            root=root,
+        )
 
     @property
     def profile_id(self) -> UUID:
@@ -314,17 +357,21 @@ class ProfileRecordRepository:
             raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
         if current.setup_state is ProfileSetupState.COMPLETE:
             return current
-        reject_invalid_profile_facts(str(identity), current.facts, require_complete=True)
+        profile_context = self.session.profile_decode_context
+        reject_invalid_profile_facts(
+            str(identity),
+            current.facts,
+            require_complete=True,
+            schema=profile_context.schema,
+        )
         occurred_at = (now or _utc_now()).astimezone(UTC)
-        replacement = UserProfileRecord(
-            schema_id=current.schema_id,
-            schema_version=current.schema_version,
-            profile_id=current.profile_id,
+        replacement = create_user_profile_record(
+            context=self.session.create_context(),
+            profile_id=str(current.profile_id),
             facts=current.facts,
             setup_state=ProfileSetupState.COMPLETE,
             record_revision=current.record_revision + 1,
             previous_record_digest=current.content_digest,
-            content_digest="",
             created_at=current.created_at,
             updated_at=occurred_at,
         )
@@ -385,15 +432,13 @@ class ProfileRecordRepository:
         if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
             raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
         occurred_at = (now or _utc_now()).astimezone(UTC)
-        replacement = UserProfileRecord(
-            schema_id=current.schema_id,
-            schema_version=current.schema_version,
-            profile_id=current.profile_id,
+        replacement = create_user_profile_record(
+            context=self.session.create_context(),
+            profile_id=str(current.profile_id),
             facts=facts,
             setup_state=current.setup_state,
             record_revision=current.record_revision + 1,
             previous_record_digest=current.content_digest,
-            content_digest="",
             created_at=current.created_at,
             updated_at=occurred_at,
         )

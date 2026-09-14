@@ -183,9 +183,10 @@ def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> 
 
 @cache_governed_projection(maxsize=64)
 def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    from .authority import bundled_authority
-
-    return _resolve_entries(effective_date=effective_date, authority=(governed_facts_in_scope() or bundled_authority()))
+    del effective_date
+    raise RegistryValidationError(
+        "invoice legal-classification catalogue requires an explicit authority operation or scope"
+    )
 
 
 def _selected_mapping_entries(

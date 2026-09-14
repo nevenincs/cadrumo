@@ -256,13 +256,13 @@ class KeyedBracketEntry(RegistryModel):
     """One row of a string-keyed rate-lookup table.
 
     Sister shape to :class:`BracketEntry` for parameters that dispatch on
-    a categorical enum value rather than a piecewise-linear numeric
+    a categorical registry token rather than a piecewise-linear numeric
     interval. Each row binds a ``key`` (e.g. an IRNR ``tipo_renta`` code:
     ``general`` / ``ue_residente`` / ``ganancia_patrimonial`` /
     ``inmobiliaria``) to a ``value`` (typically a Decimal rate) within a
     ``valid_from``/``valid_to`` window. Lookup is exact-match on
     ``(key, year)`` — there is no notion of interval overlap because the
-    domain is enum-discrete, not numeric-continuous.
+    domain is token-discrete, not numeric-continuous.
 
     First consumer: M210 IRNR ``m210-tipo-gravamen-2025``.
     """

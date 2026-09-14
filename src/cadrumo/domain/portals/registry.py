@@ -12,10 +12,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
-from ..calculations.registry.authority import bundled_authority
-from ..calculations.registry.errors import RegistryError, RegistrySnapshotError
+from ..calculations.registry.authority import bundled_indexed_authority
+from ..calculations.registry.errors import RegistryError
 from ..calculations.registry.ids import RevisionId
 from ..modelos.codes import ModeloCode
 from ..modelos.errors import ModeloValidationError
@@ -70,6 +71,9 @@ from .errors import (
     portal_integrity_error,
     unknown_modelo_error,
 )
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 from .metadata import PortalMetadata
 
 _LOG = get_logger(__name__)
@@ -282,23 +286,26 @@ def get_portal(portal: Portal | str) -> PortalMetadata:
         raise UnknownPortalError(member.value) from exc
 
 
-def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
+def _registry_portal_bindings_for_modelo(
+    code: ModeloCode,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> frozenset[Portal]:
     """Return portal ids bound to ``code`` by validated registry data."""
     try:
-        try:
-            modelo = bundled_authority().validate_modelo(str(code))
-        except RegistrySnapshotError:
-            _LOG.debug(
-                "portals: registry snapshot unavailable for modelo %s; no portal bindings",
-                code,
-            )
-            return frozenset[Portal]()
         bound: set[Portal] = set()
-        for revision in modelo.revisions.values():
+        if operation is None:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return _registry_portal_bindings_for_modelo(code, operation=indexed_operation)
+        directory = operation.modelo_directory(str(code))
+        revisions = tuple(
+            (str(code), operation.revision(str(code), str(metadata.id))) for metadata in directory.revisions
+        )
+        for modelo_id, revision in revisions:
             for link in revision.application_links:
                 if link.surface != "portal":
                     continue
-                portal = _portal_consumer_binding(modelo.id, revision.id, link.consumer)
+                portal = _portal_consumer_binding(modelo_id, revision.id, link.consumer)
                 if portal is not None:
                     bound.add(portal)
         return frozenset(bound)
@@ -313,7 +320,11 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
         ) from exc
 
 
-def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
+def portals_for_modelo(
+    code: ModeloCode | str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[PortalMetadata, ...]:
     """Return every FILING or BORRADOR portal linked to ``code``.
 
     CENSO portals are intentionally excluded: ``portals_for_modelo``
@@ -323,6 +334,8 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
 
     Args:
         code: A :class:`~ModeloCode` member or its string value.
+        operation: Optional generation-pinned operation used for revision
+            point loads; omitted callers use the compatibility authority.
 
     Returns:
         A tuple of matching :class:`PortalMetadata` entries declared by
@@ -339,7 +352,7 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
             member = ModeloCode(code)
         except ModeloValidationError as exc:
             raise unknown_modelo_error(str(code)) from exc
-    bound_portals = _registry_portal_bindings_for_modelo(member)
+    bound_portals = _registry_portal_bindings_for_modelo(member, operation=operation)
     matches = [
         metadata
         for metadata in PORTAL_REGISTRY.values()

@@ -37,14 +37,15 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import Enum, StrEnum
 from pathlib import Path, PurePath
 from threading import Lock, local
-from typing import Final, cast, get_args
+from typing import TYPE_CHECKING, Final, Protocol, cast, get_args
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....core.atomic_write import hardened_staged_publication
+from ....core.errors.hierarchy import CadrumoError
 from ....core.file_change_time import file_change_time_ns
 from ....core.frozen_mapping import FrozenMapping
 from ....core.hashing import (
@@ -59,6 +60,7 @@ from .errors import RegistryValidationError
 from .facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
     FactAtomField,
+    GovernedFact,
     GovernedFactCatalogue,
     OptionalFactAtomField,
     tagged_fact_atom_json,
@@ -66,8 +68,14 @@ from .facts.schema import (
 from .governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from .provenance import NormativeCorpusProvenance
 from .revision_contracts import DeclaredPredecessor, NoPredecessor
-from .schema import ModeloDefinition, RegistryCatalogues
+from .runtime_catalogues import RuntimeRegistryCatalogues
+from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, SnapshotGlobalCatalogues
+from .schema_exports import ExportLayoutDefinition
 from .tax_id_format import tax_id_format_from_catalogue
+from .temporal import ModeloRevisionDirectory
+
+if TYPE_CHECKING:
+    from ...user_profile.schema import ProfileSchemaDefinition
 
 __all__ = [
     "AuthorityArtifact",
@@ -76,9 +84,29 @@ __all__ = [
     "AuthorityArtifactIntegrityError",
     "AuthorityArtifactUnavailableError",
     "AuthorityBuildIdentity",
+    "AuthorityComponentCodecError",
+    "AuthorityComponentKind",
+    "AuthorityComponentQuery",
+    "AuthorityComponentReader",
     "AuthorityEvidenceProjection",
+    "AuthorityGenerationPin",
+    "EvidenceComponentQuery",
+    "ExportLayoutComponentQuery",
+    "GovernedFactComponentQuery",
+    "ModeloDirectoryComponentQuery",
+    "ModeloRevisionComponentQuery",
+    "ProfileCreateContext",
+    "ProfileDecodeContext",
+    "ProfileSchemaComponentQuery",
     "PublishedLegalEvidence",
     "PublishedSourceEvidence",
+    "ReferenceComponentQuery",
+    "RuntimeCatalogueComponentQuery",
+    "SnapshotGlobalsComponentQuery",
+    "authority_component_identity",
+    "authority_query_from_identity",
+    "decode_authority_component",
+    "encode_authority_component",
     "read_authority_artifact",
     "read_shared_authority_artifact",
     "write_authority_artifact",
@@ -95,7 +123,311 @@ _TAGGED_DECODE_CONTEXT: Final = {TAGGED_FACT_ATOM_CONTEXT: True}
 _IDENTITY_DIGEST = re.compile(r"[0-9a-f]{64}")
 
 
-class AuthorityArtifactError(RuntimeError):
+class AuthorityComponentKind(StrEnum):
+    """Closed component families addressable in one authority generation."""
+
+    MODELO_REVISION = "modelo_revision"
+    MODELO_DIRECTORY = "modelo_directory"
+    GOVERNED_FACT = "governed_fact"
+    PROFILE_SCHEMA = "profile_schema"
+    RUNTIME_CATALOGUE = "runtime_catalogue"
+    LEGAL_REFERENCE = "legal_reference"
+    SOURCE_REFERENCE = "source_reference"
+    LEGAL_EVIDENCE = "legal_evidence"
+    SOURCE_EVIDENCE = "source_evidence"
+    EXPORT_LAYOUT = "export_layout"
+    SNAPSHOT_GLOBALS = "snapshot_globals"
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorityGenerationPin:
+    """Immutable identity of the reader incarnation used by one operation."""
+
+    logical_generation: str
+    reader_incarnation: str
+
+    def __post_init__(self) -> None:
+        """Refuse identities that cannot name accepted generation content."""
+        if _IDENTITY_DIGEST.fullmatch(self.logical_generation) is None:
+            raise ValueError("authority generation pin requires a lowercase SHA-256 logical generation")
+        if _IDENTITY_DIGEST.fullmatch(self.reader_incarnation) is None:
+            raise ValueError("authority generation pin requires a lowercase SHA-256 reader incarnation")
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloRevisionComponentQuery:
+    """Retrieve one complete modelo revision by its canonical identity."""
+
+    modelo_id: str
+    revision_id: str
+    kind: Final[AuthorityComponentKind] = AuthorityComponentKind.MODELO_REVISION
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloDirectoryComponentQuery:
+    """Retrieve complete canonical selection metadata for one modelo."""
+
+    modelo_id: str
+    kind: Final[AuthorityComponentKind] = AuthorityComponentKind.MODELO_DIRECTORY
+
+
+@dataclass(frozen=True, slots=True)
+class GovernedFactComponentQuery:
+    """Retrieve one governed fact declaration and all its resolved variants."""
+
+    fact_id: str
+    kind: Final[AuthorityComponentKind] = AuthorityComponentKind.GOVERNED_FACT
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileSchemaComponentQuery:
+    """Retrieve the complete public profile declaration for a pinned operation."""
+
+    schema_id: str = "cadrumo.user_profile"
+    kind: Final[AuthorityComponentKind] = AuthorityComponentKind.PROFILE_SCHEMA
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeCatalogueComponentQuery:
+    """Retrieve one named runtime catalogue without hydrating sibling families."""
+
+    family: str
+    kind: Final[AuthorityComponentKind] = AuthorityComponentKind.RUNTIME_CATALOGUE
+
+
+@dataclass(frozen=True, slots=True)
+class SnapshotGlobalsComponentQuery:
+    """Retrieve the small registry-wide values needed by point snapshots."""
+
+    key: Final[str] = "snapshot"
+    kind: Final[AuthorityComponentKind] = AuthorityComponentKind.SNAPSHOT_GLOBALS
+
+
+@dataclass(frozen=True, slots=True)
+class ReferenceComponentQuery:
+    """Retrieve one legal or public-source declaration by canonical id."""
+
+    reference_id: str
+    kind: AuthorityComponentKind
+
+    def __post_init__(self) -> None:
+        """Keep reference queries inside their two declaration families."""
+        if self.kind not in (AuthorityComponentKind.LEGAL_REFERENCE, AuthorityComponentKind.SOURCE_REFERENCE):
+            raise ValueError("reference queries require a legal_reference or source_reference component kind")
+
+
+@dataclass(frozen=True, slots=True)
+class ExportLayoutComponentQuery:
+    """Retrieve one substantial export layout separated from its revision."""
+
+    modelo_id: str
+    revision_id: str
+    layout_id: str
+    kind: Final[AuthorityComponentKind] = AuthorityComponentKind.EXPORT_LAYOUT
+
+
+@dataclass(frozen=True, slots=True)
+class EvidenceComponentQuery:
+    """Retrieve one legal or public-source evidence projection by canonical id."""
+
+    reference_id: str
+    kind: AuthorityComponentKind
+
+    def __post_init__(self) -> None:
+        """Keep the generic evidence query inside its two closed families."""
+        if self.kind not in (AuthorityComponentKind.LEGAL_EVIDENCE, AuthorityComponentKind.SOURCE_EVIDENCE):
+            raise ValueError("evidence queries require a legal_evidence or source_evidence component kind")
+
+
+type AuthorityComponentQuery = (
+    ModeloRevisionComponentQuery
+    | ModeloDirectoryComponentQuery
+    | GovernedFactComponentQuery
+    | ProfileSchemaComponentQuery
+    | RuntimeCatalogueComponentQuery
+    | SnapshotGlobalsComponentQuery
+    | ReferenceComponentQuery
+    | EvidenceComponentQuery
+    | ExportLayoutComponentQuery
+)
+
+
+class AuthorityComponentReader(Protocol):
+    """Generation-pinned typed component access used by runtime consumers."""
+
+    def pin(self) -> AuthorityGenerationPin:
+        """Pin the currently published reader incarnation for one operation."""
+
+    def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
+        """Load one component from exactly ``pin`` or refuse a stale/cross-reader pin."""
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCreateContext:
+    """Schema authority required when creating taxpayer profile values."""
+
+    schema: ProfileSchemaDefinition
+    generation: AuthorityGenerationPin
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileDecodeContext:
+    """Schema authority required when decoding encrypted persisted profile values."""
+
+    schema: ProfileSchemaDefinition
+    generation: AuthorityGenerationPin
+
+
+class AuthorityComponentCodecError(CadrumoError):
+    """One addressed component failed canonical encoding or strict decoding."""
+
+
+def encode_authority_component(query: AuthorityComponentQuery, value: object) -> bytes:
+    """Encode one typed component with the canonical authority value vocabulary."""
+    try:
+        payload: object
+        if isinstance(value, PublishedLegalEvidence):
+            payload = {
+                "legal_reference_id": value.legal_reference_id,
+                "anchored_text": value.anchored_text,
+                "text_sha256": value.text_sha256,
+                "provenance": value.provenance.value,
+            }
+        elif isinstance(value, PublishedSourceEvidence):
+            payload = {
+                "source_reference_id": value.source_reference_id,
+                "payload_base64": b64encode(value.payload).decode("ascii"),
+                "payload_sha256": value.payload_sha256,
+            }
+        else:
+            payload = _json_value(value)
+        return canonical_json_bytes(
+            {"codec": "cadrumo-authority-component-v1", "kind": query.kind.value, "payload": payload}
+        )
+    except (TypeError, ValueError) as exc:
+        raise AuthorityComponentCodecError(f"authority component {query!r} could not be encoded") from exc
+
+
+def decode_authority_component(
+    query: AuthorityComponentQuery,
+    payload: bytes,
+    *,
+    dependencies: tuple[object, ...] = (),
+) -> object:
+    """Strictly decode one addressed component using only declared dependencies."""
+    try:
+        frame = _decode_json_object(payload, subject="authority component")
+        _require_members(frame, {"codec", "kind", "payload"}, "component")
+        if _required_string(frame, "codec") != "cadrumo-authority-component-v1":
+            raise AuthorityComponentCodecError("authority component uses an unsupported codec")
+        if _required_string(frame, "kind") != query.kind.value:
+            raise AuthorityComponentCodecError("authority component kind does not match its query")
+        document = frame["payload"]
+        if isinstance(query, ProfileSchemaComponentQuery):
+            from ...user_profile.schema import ProfileSchemaDefinition
+
+            return ProfileSchemaDefinition.model_validate(document, strict=False)
+        if isinstance(query, GovernedFactComponentQuery):
+            return GovernedFact.model_validate(document, strict=False, context=_TAGGED_DECODE_CONTEXT)
+        if isinstance(query, ModeloRevisionComponentQuery):
+            facts = tuple(item for item in dependencies if isinstance(item, GovernedFact))
+            fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
+            tax_id_format = tax_id_format_from_catalogue(fact_catalogue)
+            context = {**_TAGGED_DECODE_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format}
+            with validating_governed_facts(CandidateFactAuthority(fact_catalogue)):
+                return ModeloRevision.model_validate(document, strict=False, context=context)
+        if isinstance(query, ModeloDirectoryComponentQuery):
+            return ModeloRevisionDirectory.model_validate(document, strict=False)
+        if isinstance(query, RuntimeCatalogueComponentQuery):
+            field = RuntimeRegistryCatalogues.model_fields.get(query.family)
+            if field is None or field.annotation is None:
+                raise AuthorityComponentCodecError(f"unknown runtime catalogue family {query.family!r}")
+            return TypeAdapter(field.annotation).validate_python(document, strict=False)
+        if isinstance(query, SnapshotGlobalsComponentQuery):
+            return SnapshotGlobalCatalogues.model_validate(document, strict=False)
+        if isinstance(query, ReferenceComponentQuery):
+            from .schema_references import LegalReference, SourceReference
+
+            model = LegalReference if query.kind is AuthorityComponentKind.LEGAL_REFERENCE else SourceReference
+            return model.model_validate(document, strict=False)
+        if isinstance(query, EvidenceComponentQuery):
+            row = _mapping_item(document, "payload")
+            if query.kind is AuthorityComponentKind.LEGAL_EVIDENCE:
+                return PublishedLegalEvidence(
+                    legal_reference_id=_required_string(row, "legal_reference_id"),
+                    anchored_text=_required_string(row, "anchored_text"),
+                    text_sha256=_required_string(row, "text_sha256"),
+                    provenance=NormativeCorpusProvenance(_required_string(row, "provenance")),
+                )
+            return PublishedSourceEvidence(
+                source_reference_id=_required_string(row, "source_reference_id"),
+                payload=_decode_base64(_required_string(row, "payload_base64")),
+                payload_sha256=_required_string(row, "payload_sha256"),
+            )
+        if isinstance(query, ExportLayoutComponentQuery):
+            return ExportLayoutDefinition.model_validate(document, strict=False)
+        raise AuthorityComponentCodecError(f"unsupported authority component query {query!r}")
+    except AuthorityComponentCodecError:
+        raise
+    except (ValidationError, TypeError, ValueError) as exc:
+        raise AuthorityComponentCodecError(f"authority component {query!r} failed typed decoding") from exc
+
+
+def authority_component_identity(query: AuthorityComponentQuery) -> tuple[AuthorityComponentKind, str]:
+    """Return the stable database identity for one public typed query."""
+    if isinstance(query, ModeloRevisionComponentQuery):
+        return query.kind, f"{query.modelo_id}\x1f{query.revision_id}"
+    if isinstance(query, ModeloDirectoryComponentQuery):
+        return query.kind, query.modelo_id
+    if isinstance(query, GovernedFactComponentQuery):
+        return query.kind, query.fact_id
+    if isinstance(query, ProfileSchemaComponentQuery):
+        return query.kind, query.schema_id
+    if isinstance(query, RuntimeCatalogueComponentQuery):
+        return query.kind, query.family
+    if isinstance(query, SnapshotGlobalsComponentQuery):
+        return query.kind, query.key
+    if isinstance(query, ReferenceComponentQuery):
+        return query.kind, query.reference_id
+    if isinstance(query, EvidenceComponentQuery):
+        return query.kind, query.reference_id
+    if isinstance(query, ExportLayoutComponentQuery):
+        return query.kind, f"{query.modelo_id}\x1f{query.revision_id}\x1f{query.layout_id}"
+    raise TypeError(f"unsupported authority component query {query!r}")
+
+
+def authority_query_from_identity(kind: str, key: str) -> AuthorityComponentQuery:
+    """Reconstruct a public typed query from one validated component directory row."""
+    try:
+        component_kind = AuthorityComponentKind(kind)
+        if component_kind is AuthorityComponentKind.MODELO_REVISION:
+            modelo_id, revision_id = key.split("\x1f", 1)
+            return ModeloRevisionComponentQuery(modelo_id, revision_id)
+        if component_kind is AuthorityComponentKind.MODELO_DIRECTORY:
+            return ModeloDirectoryComponentQuery(key)
+        if component_kind is AuthorityComponentKind.GOVERNED_FACT:
+            return GovernedFactComponentQuery(key)
+        if component_kind is AuthorityComponentKind.PROFILE_SCHEMA:
+            return ProfileSchemaComponentQuery(key)
+        if component_kind is AuthorityComponentKind.RUNTIME_CATALOGUE:
+            return RuntimeCatalogueComponentQuery(key)
+        if component_kind is AuthorityComponentKind.SNAPSHOT_GLOBALS:
+            if key != "snapshot":
+                raise AuthorityComponentCodecError(f"invalid snapshot globals key {key!r}")
+            return SnapshotGlobalsComponentQuery()
+        if component_kind in (AuthorityComponentKind.LEGAL_REFERENCE, AuthorityComponentKind.SOURCE_REFERENCE):
+            return ReferenceComponentQuery(key, component_kind)
+        if component_kind in (AuthorityComponentKind.LEGAL_EVIDENCE, AuthorityComponentKind.SOURCE_EVIDENCE):
+            return EvidenceComponentQuery(key, component_kind)
+        if component_kind is AuthorityComponentKind.EXPORT_LAYOUT:
+            modelo_id, revision_id, layout_id = key.split("\x1f", 2)
+            return ExportLayoutComponentQuery(modelo_id, revision_id, layout_id)
+    except (ValueError, TypeError) as exc:
+        raise AuthorityComponentCodecError(f"invalid authority component identity {kind!r}/{key!r}") from exc
+    raise AuthorityComponentCodecError(f"unknown authority component identity {kind!r}/{key!r}")
+
+
+class AuthorityArtifactError(CadrumoError):
     """Base refusal raised when a published authority cannot be consumed."""
 
 
@@ -299,6 +631,7 @@ class AuthorityArtifact:
     identity_digest: str
     build_identity: AuthorityBuildIdentity
     evidence: AuthorityEvidenceProjection = AuthorityEvidenceProjection()
+    profile_schema: ProfileSchemaDefinition | None = None
 
     def __post_init__(self) -> None:
         """Reject partial or untyped content before publication."""
@@ -316,6 +649,11 @@ class AuthorityArtifact:
             raise ValueError("authority generation identity does not match its build receipts")
         if not isinstance(self.evidence, AuthorityEvidenceProjection):
             raise TypeError("authority artifact evidence must be an AuthorityEvidenceProjection")
+        if self.profile_schema is not None:
+            from ...user_profile.schema import ProfileSchemaDefinition
+
+            if not isinstance(self.profile_schema, ProfileSchemaDefinition):
+                raise TypeError("authority artifact profile_schema must be a ProfileSchemaDefinition")
         modelo_ids = tuple(modelo.id for modelo in self.modelos)
         if len(modelo_ids) != len(set(modelo_ids)):
             raise ValueError("authority artifact modelo identities must be unique")
@@ -494,7 +832,7 @@ def _require_current_artifact_format(frame: Mapping[str, object]) -> None:
 
 def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
     """Project all schema fields, including non-rendered identities, into JSON."""
-    return {
+    document = {
         "modelos": [_json_value(modelo) for modelo in artifact.modelos],
         "catalogues": _json_value(artifact.catalogues),
         "identity_digest": artifact.identity_digest,
@@ -523,12 +861,17 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
             ],
         },
     }
+    if artifact.profile_schema is not None:
+        document["profile_schema"] = _json_value(artifact.profile_schema)
+    return document
 
 
 def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
     """Rebuild a fresh typed authority graph from digest-checked JSON data."""
     try:
-        _require_members(payload, {"modelos", "catalogues", "identity_digest", "build_identity", "evidence"}, "payload")
+        required_members = {"modelos", "catalogues", "identity_digest", "build_identity", "evidence"}
+        if set(payload) not in (required_members, required_members | {"profile_schema"}):
+            raise AuthorityArtifactFormatError("published authority artifact payload has unexpected or missing members")
         modelos_document = _required_sequence(payload, "modelos")
         catalogues_document = _required_mapping(payload, "catalogues")
         identity_digest = _required_string(payload, "identity_digest")
@@ -604,12 +947,18 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
             )
             for item in _required_sequence(evidence_document, "sources")
         )
+        profile_schema = None
+        if "profile_schema" in payload:
+            from ...user_profile.schema import ProfileSchemaDefinition
+
+            profile_schema = ProfileSchemaDefinition.model_validate(payload["profile_schema"], strict=False)
         artifact = AuthorityArtifact(
             modelos=modelos,
             catalogues=catalogues,
             identity_digest=identity_digest,
             build_identity=build_identity,
             evidence=AuthorityEvidenceProjection(legal=legal_evidence, sources=source_evidence),
+            profile_schema=profile_schema,
         )
         artifact.catalogues.runtime.require_complete()
         artifact.require_evidence_closure()

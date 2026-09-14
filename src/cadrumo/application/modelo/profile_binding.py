@@ -79,8 +79,7 @@ from ...domain.contribuyente.family_types import MinimoDescendientesThresholds
 from ...domain.contribuyente.marriage_facts import marriage_full_year, marriage_month_start
 from ...domain.contribuyente.renta_codes import RentaMaritalStatus
 from ...domain.modelos.errors import ModeloError
-from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.loader import load_user_profile_schema
+from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileValidationError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
 from ...domain.user_profile.values import UserProfileFactValue
@@ -405,7 +404,9 @@ def resolve_maternidad_meses(
     mínimo aggregate makes, for the same reason — and the caller discloses it
     rather than letting a declared figure vanish.
     """
-    fact_index = profile_fact_index(record, schema if schema is not None else load_user_profile_schema())
+    if schema is None:
+        raise UserProfileValidationError("maternidad profile resolution requires a pinned profile schema")
+    fact_index = profile_fact_index(record, schema)
     return _resolve_maternidad_meses_from_fact_index(
         fact_index,
         snapshot,
@@ -1543,7 +1544,9 @@ def _load_profile_facts(
         except ProfileNotFoundError:
             return None
     profile_record_fingerprint = _profile_record_fingerprint(record)
-    resolved_schema = schema if schema is not None else load_user_profile_schema()
+    if schema is None:
+        raise UserProfileValidationError("profile binding resolution requires a pinned profile schema")
+    resolved_schema = schema
     fact_index = profile_fact_index(record, resolved_schema)
     family_context = _family_fact_context(snapshot)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
@@ -1712,7 +1715,7 @@ def resolve_profile_sourced_bindings(
         diagnostics=_derived_binding_diagnostics(
             selection.bindings,
             facts.fact_index,
-            schema if schema is not None else load_user_profile_schema(),
+            schema,
             bucket_id=bucket_id,
         ),
         provenance=tuple(

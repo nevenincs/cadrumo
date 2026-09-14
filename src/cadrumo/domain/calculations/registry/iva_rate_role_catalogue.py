@@ -170,9 +170,7 @@ def resolve_iva_rate_role_catalogue(
     coordinate = effective_date or date.today()
     selected = authority or governed_facts_in_scope()
     if selected is None:
-        from .authority import bundled_authority
-
-        selected = bundled_authority()
+        raise RegistryValidationError("IVA rate-role catalogue requires an explicit authority operation or scope")
     return _catalogue_from_entries(_resolve_entries(effective_date=coordinate, authority=selected))
 
 

@@ -7,7 +7,11 @@ given a filing year, period, and optional date constraint.
 from __future__ import annotations
 
 from calendar import monthrange
+from collections.abc import Sequence
 from datetime import date
+from typing import Literal, Protocol
+
+from pydantic import Field
 
 from .errors import (
     AmbiguousRevisionSelectionError,
@@ -15,8 +19,129 @@ from .errors import (
     NoRevisionForPeriodError,
 )
 from .ids import RevisionId
+from .modelo_inception import ModeloInceptionField
+from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
 from .period_selector_match import selector_token_for_request
-from .schema import ModeloDefinition, ModeloRevision, SupportedFilingYearsCatalogue
+from .schema import ModeloCadence, ModeloDefinition, ModeloRevision, SupportedFilingYearsCatalogue
+from .schema_base import (
+    CalculationClass,
+    CalculationClassField,
+    LegalRefs,
+    ModeloFilingCapabilities,
+    RegistryModel,
+    SensitivityClassField,
+    SourceRefs,
+)
+from .schema_deadlines import DeadlineWindowDefinition
+from .schema_references import PeriodSelector
+
+
+class RevisionSelectionMetadata(RegistryModel):
+    """Complete immutable metadata required by the canonical revision selector."""
+
+    id: RevisionId
+    valid_from: date
+    valid_to: date | None = None
+    period_selector: PeriodSelector
+    deadline_windows: tuple[DeadlineWindowDefinition, ...] = ()
+
+    def contains_date(self, coordinate: date) -> bool:
+        """Return whether the coordinate lies inside the governed period window."""
+        return coordinate >= self.valid_from and (self.valid_to is None or coordinate <= self.valid_to)
+
+    @classmethod
+    def from_revision(cls, revision: ModeloRevision) -> RevisionSelectionMetadata:
+        """Project exactly the fields consumed by temporal selection."""
+        return cls(
+            id=revision.id,
+            valid_from=revision.valid_from,
+            valid_to=revision.valid_to,
+            period_selector=revision.period_selector,
+            deadline_windows=revision.deadline_windows,
+        )
+
+
+class ModeloDirectoryMetadata(RegistryModel):
+    """Complete modelo-level metadata without duplicating revision payloads."""
+
+    id: str
+    title_localization_key: str
+    official_name_localization_key: str
+    tax_domain: str
+    cadence: ModeloCadence
+    jurisdiction: Literal["ES-AEAT"]
+    calculation_class: CalculationClassField = CalculationClass.FILING
+    output_sensitivity: SensitivityClassField
+    capabilities: ModeloFilingCapabilities = ()
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+    inception: ModeloInceptionField | None = None
+    pending_ejercicio_ordenes: PendingEjercicioOrdenes = ()
+
+    @classmethod
+    def from_modelo(cls, modelo: ModeloDefinition) -> ModeloDirectoryMetadata:
+        """Capture every modelo field needed to reconstruct a selected snapshot."""
+        return cls(
+            id=str(modelo.id),
+            title_localization_key=modelo.title_localization_key,
+            official_name_localization_key=modelo.official_name_localization_key,
+            tax_domain=str(modelo.tax_domain),
+            cadence=modelo.cadence,
+            jurisdiction=modelo.jurisdiction,
+            calculation_class=modelo.calculation_class,
+            output_sensitivity=modelo.output_sensitivity,
+            capabilities=modelo.capabilities,
+            legal_refs=modelo.legal_refs,
+            source_refs=modelo.source_refs,
+            inception=modelo.inception,
+            pending_ejercicio_ordenes=modelo.pending_ejercicio_ordenes,
+        )
+
+    def materialize(self, revision: ModeloRevision) -> ModeloDefinition:
+        """Reconstruct one immutable modelo view around the selected revision."""
+        return ModeloDefinition(
+            **self.model_dump(),
+            revisions={revision.id: revision},
+        )
+
+
+class ModeloRevisionDirectory(RegistryModel):
+    """Point-addressed revision selection metadata for one modelo."""
+
+    modelo_id: str
+    modelo: ModeloDirectoryMetadata
+    revisions: tuple[RevisionSelectionMetadata, ...] = Field(min_length=1)
+    pending_ejercicio_ordenes: tuple[PendingEjercicioOrden, ...] = ()
+    supported_filing_years: SupportedFilingYearsCatalogue | None = None
+
+    @classmethod
+    def from_modelo(
+        cls,
+        modelo: ModeloDefinition,
+        *,
+        support: SupportedFilingYearsCatalogue | None = None,
+    ) -> ModeloRevisionDirectory:
+        """Build a deterministic directory without embedding revision payloads."""
+        return cls(
+            modelo_id=str(modelo.id),
+            modelo=ModeloDirectoryMetadata.from_modelo(modelo),
+            revisions=tuple(
+                RevisionSelectionMetadata.from_revision(revision)
+                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+            ),
+            pending_ejercicio_ordenes=modelo.pending_ejercicio_ordenes,
+            supported_filing_years=support,
+        )
+
+
+class _SelectableRevision(Protocol):
+    id: RevisionId
+    valid_from: date
+    valid_to: date | None
+    period_selector: PeriodSelector
+    deadline_windows: tuple[DeadlineWindowDefinition, ...]
+
+    def contains_date(self, coordinate: date) -> bool: ...
 
 
 def _supported_filing_year(
@@ -39,7 +164,7 @@ def _project_reference_date(on: date | None, *, requested_year: int, selection_y
 
 
 def _declared_filing_window_covers(
-    revision: ModeloRevision,
+    revision: _SelectableRevision,
     *,
     on: date,
     filing_year: int,
@@ -62,18 +187,18 @@ def _declared_filing_window_covers(
     return False
 
 
-def _revision_governs_period_on(revision: ModeloRevision, on: date) -> bool:
+def _revision_governs_period_on(revision: _SelectableRevision, on: date) -> bool:
     """Return whether ``on`` falls inside the tax periods a revision governs."""
     return revision.contains_date(on)
 
 
-def _effective_candidates(
-    matching: list[ModeloRevision],
+def _effective_candidates[RevisionT: _SelectableRevision](
+    matching: list[RevisionT],
     *,
     on: date | None,
     filing_year: int,
     period: str | None,
-) -> list[ModeloRevision]:
+) -> list[RevisionT]:
     """Narrow selector-matched revisions to those applicable on ``on``, in tiers.
 
     ``valid_from``/``valid_to`` delimit the TAX PERIODS a revision governs, not
@@ -117,12 +242,12 @@ def _effective_candidates(
     ]
 
 
-def _year_revision_candidates(
-    modelo: ModeloDefinition,
+def _year_revision_candidates[RevisionT: _SelectableRevision](
+    revisions: Sequence[RevisionT],
     *,
     filing_year: int,
     on: date | None,
-) -> list[ModeloRevision]:
+) -> list[RevisionT]:
     """Return year-matching revisions applicable on ``on``, in the declared order.
 
     ``period`` is ``None`` here because the question is not period-scoped: the
@@ -131,14 +256,14 @@ def _year_revision_candidates(
     above -- not a period filter this caller cannot supply -- is what keeps a
     design boundary unambiguous.
     """
-    matching = [
-        revision for revision in modelo.revisions.values() if revision.period_selector.includes_year(filing_year)
-    ]
+    matching = [revision for revision in revisions if revision.period_selector.includes_year(filing_year)]
     return _effective_candidates(matching, on=on, filing_year=filing_year, period=None)
 
 
 def _absence_refusal(
-    modelo: ModeloDefinition,
+    modelo_id: str,
+    revisions: Sequence[_SelectableRevision],
+    pending_ordenes: Sequence[PendingEjercicioOrden],
     *,
     filing_year: int,
     period: str,
@@ -152,11 +277,11 @@ def _absence_refusal(
     Absent a declaration the plain absence refusal stands, so a modelo that has
     simply not been authored cannot borrow the excuse.
     """
-    available = tuple(str(declared) for declared in modelo.revisions)
-    pending = modelo.pending_orden_for(filing_year)
+    available = tuple(str(revision.id) for revision in revisions)
+    pending = next((entry for entry in pending_ordenes if entry.filing_year == filing_year), None)
     if pending is not None:
         return EjercicioOrdenNotYetPublishedError(
-            modelo_id=modelo.id,
+            modelo_id=modelo_id,
             filing_year=filing_year,
             period=period,
             revision_id=revision_id,
@@ -165,7 +290,7 @@ def _absence_refusal(
             expected_publication_year=pending.expected_publication_year,
         )
     return NoRevisionForPeriodError(
-        modelo_id=modelo.id,
+        modelo_id=modelo_id,
         filing_year=filing_year,
         period=period,
         revision_id=revision_id,
@@ -173,15 +298,24 @@ def _absence_refusal(
     )
 
 
-def _select_single_year_revision(
-    modelo: ModeloDefinition,
-    candidates: list[ModeloRevision],
+def _select_single_year_revision[RevisionT: _SelectableRevision](
+    modelo_id: str,
+    revisions: Sequence[RevisionT],
+    pending_ordenes: Sequence[PendingEjercicioOrden],
+    candidates: list[RevisionT],
     *,
     filing_year: int,
-) -> ModeloRevision:
+) -> RevisionT:
     """Resolve year candidates, refusing both absence and mid-year ambiguity."""
     if not candidates:
-        raise _absence_refusal(modelo, filing_year=filing_year, period="year", revision_id=None)
+        raise _absence_refusal(
+            modelo_id,
+            revisions,
+            pending_ordenes,
+            filing_year=filing_year,
+            period="year",
+            revision_id=None,
+        )
     if len(candidates) > 1:
         # A year-only answer for a year covered by more than one revision is wrong
         # in whichever direction it is given, so this refuses rather than picking.
@@ -189,7 +323,7 @@ def _select_single_year_revision(
         # period-scoped selector raises the same error, and telling that caller to
         # supply a period would send it to redo what it already did.
         raise AmbiguousRevisionSelectionError(
-            modelo_id=modelo.id,
+            modelo_id=modelo_id,
             candidate_ids=tuple(revision.id for revision in candidates),
             filing_year=filing_year,
             reason=(
@@ -232,11 +366,42 @@ def select_revision_for_year(
         if selection_year is None
         else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
     )
+    revisions = tuple(modelo.revisions.values())
     return _select_single_year_revision(
-        modelo,
+        str(modelo.id),
+        revisions,
+        modelo.pending_ejercicio_ordenes,
         []
         if selection_year is None
-        else _year_revision_candidates(modelo, filing_year=selection_year, on=selection_on),
+        else _year_revision_candidates(revisions, filing_year=selection_year, on=selection_on),
+        filing_year=filing_year,
+    )
+
+
+def select_revision_metadata_for_year(
+    directory: ModeloRevisionDirectory,
+    *,
+    filing_year: int,
+    on: date | None = None,
+    support: SupportedFilingYearsCatalogue | None = None,
+) -> RevisionSelectionMetadata:
+    """Select metadata with the exact canonical year-scoped rules."""
+    selection_year = _supported_filing_year(
+        filing_year,
+        directory.supported_filing_years if support is None else support,
+    )
+    selection_on = (
+        None
+        if selection_year is None
+        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+    )
+    return _select_single_year_revision(
+        directory.modelo_id,
+        directory.revisions,
+        directory.pending_ejercicio_ordenes,
+        []
+        if selection_year is None
+        else _year_revision_candidates(directory.revisions, filing_year=selection_year, on=selection_on),
         filing_year=filing_year,
     )
 
@@ -293,7 +458,59 @@ def select_revision(
         period=period,
     )
     return _select_single_revision(
-        modelo,
+        str(modelo.id),
+        tuple(modelo.revisions.values()),
+        modelo.pending_ejercicio_ordenes,
+        candidates,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+    )
+
+
+def select_revision_metadata(
+    directory: ModeloRevisionDirectory,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+    revision_id: RevisionId | None = None,
+    support: SupportedFilingYearsCatalogue | None = None,
+) -> RevisionSelectionMetadata:
+    """Select complete revision metadata through the canonical period rules."""
+    selection_year = _supported_filing_year(
+        filing_year,
+        directory.supported_filing_years if support is None else support,
+    )
+    matching = (
+        []
+        if selection_year is None
+        else [
+            revision
+            for revision in directory.revisions
+            if _revision_matches_request(
+                revision,
+                filing_year=selection_year,
+                period=period,
+                revision_id=revision_id,
+            )
+        ]
+    )
+    selection_on = (
+        None
+        if selection_year is None
+        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+    )
+    candidates = _effective_candidates(
+        matching,
+        on=selection_on,
+        filing_year=filing_year if selection_year is None else selection_year,
+        period=period,
+    )
+    return _select_single_revision(
+        directory.modelo_id,
+        directory.revisions,
+        directory.pending_ejercicio_ordenes,
         candidates,
         filing_year=filing_year,
         period=period,
@@ -302,7 +519,7 @@ def select_revision(
 
 
 def _revision_matches_request(
-    revision: ModeloRevision,
+    revision: _SelectableRevision,
     *,
     filing_year: int,
     period: str,
@@ -330,19 +547,28 @@ def _revision_matches_request(
     return selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period) is not None
 
 
-def _select_single_revision(
-    modelo: ModeloDefinition,
-    candidates: list[ModeloRevision],
+def _select_single_revision[RevisionT: _SelectableRevision](
+    modelo_id: str,
+    revisions: Sequence[RevisionT],
+    pending_ordenes: Sequence[PendingEjercicioOrden],
+    candidates: list[RevisionT],
     *,
     filing_year: int,
     period: str,
     revision_id: RevisionId | None,
-) -> ModeloRevision:
+) -> RevisionT:
     if not candidates:
-        raise _absence_refusal(modelo, filing_year=filing_year, period=period, revision_id=revision_id)
+        raise _absence_refusal(
+            modelo_id,
+            revisions,
+            pending_ordenes,
+            filing_year=filing_year,
+            period=period,
+            revision_id=revision_id,
+        )
     if len(candidates) > 1:
         raise AmbiguousRevisionSelectionError(
-            modelo_id=modelo.id,
+            modelo_id=modelo_id,
             candidate_ids=tuple(revision.id for revision in candidates),
         )
     return candidates[0]

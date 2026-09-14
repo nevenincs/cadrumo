@@ -50,9 +50,11 @@ def profile_archive_reconcile(
 ) -> None:
     """Resolve crash-interrupted portable profile-bundle publications."""
     from ....application.user_profile.bundle_export import reconcile_prepared_exports
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     _activate_subcommand_output_language(ctx, output_language)
-    outcome = reconcile_prepared_exports()
+    with bundled_indexed_authority().operation() as operation:
+        outcome = reconcile_prepared_exports(profile_decode_context=operation.profile_decode_context())
 
     result = ProfileBundleReconcileResult(
         reconciled_count=len(outcome.reconciled),

@@ -25,6 +25,7 @@ from .binding_selector_utils import (
     provider_member,
 )
 from .errors import RegistryValidationError
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
 
@@ -81,13 +82,19 @@ while someone maintained both. It is now one declaration and two views of it."""
 _RETENCION_CLAVE_FACT_ID: Final[str] = "m111-m115-m123-withholding-scheme-catalogue"
 
 
-def _retencion_clave_declarations(effective_date: date) -> dict[str, str]:
+def _retencion_clave_declarations(
+    effective_date: date,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> dict[str, str]:
     """Resolve the complete clave vocabulary and projections from the catalogue."""
-    from .authority import bundled_authority
     from .facts.resolution import MappingFactQuery, ResolvedMappingFact
     from .schema_base import DateAxis
 
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError("retencion clave catalogue requires an explicit authority operation or scope")
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_RETENCION_CLAVE_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -111,6 +118,7 @@ def resolve_retencion_clave(
     effective_date: date,
     *,
     modelo: str | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> RetencionClave:
     """Project one raw clave through the selected registry vocabulary.
 
@@ -124,7 +132,7 @@ def resolve_retencion_clave(
     if not isinstance(effective_date, date):
         raise RegistryValidationError("retencion clave requires a filing-period date")
 
-    declarations = _retencion_clave_declarations(effective_date)
+    declarations = _retencion_clave_declarations(effective_date, authority=authority)
     order_text = declarations.get("clave_order")
     if order_text is None:
         raise RegistryValidationError("retencion clave catalogue is missing clave_order")
@@ -578,13 +586,19 @@ def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
     )
 
 
-def _withholding_role_declarations(effective_date: date) -> dict[str, tuple[str, ...]]:
+def _withholding_role_declarations(
+    effective_date: date,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> dict[str, tuple[str, ...]]:
     """Resolve the selected withholding role mapping without Python facts."""
-    from .authority import bundled_authority
     from .facts.resolution import MappingFactQuery, ResolvedMappingFact
     from .schema_base import DateAxis
 
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError("withholding role catalogue requires an explicit authority operation or scope")
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-190-193-withholding-binding-catalogue",
             date_axis=DateAxis.FILING_PERIOD,
@@ -667,6 +681,8 @@ def retencion_total(observations: Iterable[WithholdingObservation]) -> Decimal:
 def resolve_withholding_binding_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> dict[BindingId, Decimal]:
     """Resolve scalar withholding-source bindings into Decimal aggregates.
 
@@ -693,7 +709,7 @@ def resolve_withholding_binding_values(
             resolved[binding.id] = retencion_total(scope_filtered)
         elif selector.fact == "retenciones_ingresadas_sum":
             if role_declarations is None:
-                role_declarations = _withholding_role_declarations(revision.valid_from)
+                role_declarations = _withholding_role_declarations(revision.valid_from, authority=authority)
             resolved[binding.id] = _retenciones_ingresadas_total(
                 scope_filtered,
                 payment_claves=_required_withholding_role(

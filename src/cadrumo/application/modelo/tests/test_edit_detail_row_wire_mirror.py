@@ -15,13 +15,13 @@ rejects.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import Annotated
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ....core.irnr import M210PayerMode
 from ....domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
@@ -30,6 +30,7 @@ from ....domain.modelos.row_models import (
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
 )
+from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ...operations.registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 from ..edit_models import ModeloEditDetailRowIntentKind
 from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
@@ -45,6 +46,9 @@ from ..operation_definitions import (
     ModeloEditApplyOperationRequestV1,
     ModeloEditApplySubmissionV1,
 )
+
+_M210_EFFECTIVE_DATE = date(2025, 1, 1)
+_SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -189,7 +193,7 @@ def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210Agrupacion
         tipo_renta_code="01",
         importe="7500.00",
         tipo_gravamen="0.19",
-        pagador_mode=M210PayerMode.SINGLE_PAYER,
+        pagador_mode=_SINGLE_PAYER,
         pagador_id="11111111H",
         deriva_de_bien_derecho=True,
         bien_derecho_id="inmueble-1",
@@ -199,7 +203,7 @@ def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210Agrupacion
         tipo_renta_code="01",
         importe=Decimal("7500.00"),
         tipo_gravamen=Decimal("0.19"),
-        pagador_mode=M210PayerMode.SINGLE_PAYER,
+        pagador_mode=_SINGLE_PAYER,
         pagador_id="11111111H",
         deriva_de_bien_derecho=True,
         bien_derecho_id="inmueble-1",

@@ -21,8 +21,7 @@ from collections.abc import Mapping, Sequence
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
-from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.loader import load_user_profile_schema
+from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileValidationError
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
@@ -222,7 +221,9 @@ def resolve_export_identity(
     record = _load_profile_record(bucket_id=bucket_id, profile_record=profile_record)
     if record is None:
         return None
-    resolved_schema = schema if schema is not None else load_user_profile_schema()
+    if schema is None:
+        raise UserProfileValidationError("profile export resolution requires a pinned profile schema")
+    resolved_schema = schema
     return _identity_from_profile_facts(profile_fact_index(record, resolved_schema))
 
 
@@ -265,7 +266,9 @@ def resolve_declaration_contact(
     record = _load_profile_record(bucket_id=bucket_id, profile_record=profile_record)
     if record is None:
         return DeclarationContactFacts()
-    resolved_schema = schema if schema is not None else load_user_profile_schema()
+    if schema is None:
+        raise UserProfileValidationError("profile export resolution requires a pinned profile schema")
+    resolved_schema = schema
     facts = profile_fact_index(record, resolved_schema)
     phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
     full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
@@ -334,7 +337,9 @@ def _resolve_profile_export_values(
             record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return {}
-    resolved_schema = schema if schema is not None else load_user_profile_schema()
+    if schema is None:
+        raise UserProfileValidationError("profile export resolution requires a pinned profile schema")
+    resolved_schema = schema
     fact_index = profile_fact_index(record, resolved_schema)
 
     values: dict[str, UserProfileFactValue] = {}

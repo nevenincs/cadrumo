@@ -176,6 +176,7 @@ def _login_through_the_prompt(
     from ....adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
     from ....application.user_profile.authentication import ProfileAuthenticationRefusedError
     from ....application.user_profile.login_session import login_profile
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ..errors import CliRefusedBoundaryError
     from .secure_input import prompt_secret_no_echo, read_machine_secret_payload, terminal_can_prompt_for_secrets
 
@@ -199,7 +200,12 @@ def _login_through_the_prompt(
         )
 
     try:
-        return login_profile(name=name, passphrase_callback=passphrase_callback)
+        with bundled_indexed_authority().operation() as operation:
+            return login_profile(
+                name=name,
+                passphrase_callback=passphrase_callback,
+                profile_decode_context=operation.profile_decode_context(),
+            )
     except (ProfileAuthenticationRefusedError, ProfileCustodyPasswordError):
         # The target could not be unlocked (a wrong passphrase, a corrupt
         # bucket DEK); render the refusal in the target's own output

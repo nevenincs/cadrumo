@@ -16,10 +16,13 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+from typing import TYPE_CHECKING
+
 from ...core.modelo import Modelo
 from ...core.period import StandardPeriodCode
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.temporal import select_revision
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import (
@@ -34,6 +37,9 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def validate_m210_agrupacion_renta_rows_for_calculation(
@@ -75,7 +81,10 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
             },
         )
     try:
-        validate_m210_agrupacion_renta_rows(m210_rows)
+        validate_m210_agrupacion_renta_rows(
+            m210_rows,
+            effective_date=date(work_unit.filing_year, 12, 31),
+        )
     except Modelo210AgrupacionRentaRowsError as exc:
         raise ModeloError(
             str(exc),
@@ -102,6 +111,7 @@ def m210_agrupacion_renta_verification_findings(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return a blocking finding when persisted annual-group evidence is invalid.
 
@@ -121,12 +131,18 @@ def m210_agrupacion_renta_verification_findings(
             m210_official_tipo_renta_code=revision.m210_official_tipo_renta_code,
         )
     except ModeloError as exc:
-        modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("210").value)
-        selected_revision = select_revision(
-            modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-        )
+        if operation is None:
+            selected_revision = RegistryQueryService(bundled_authority()).revision_for_scope(
+                Modelo("210").value,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            )
+        else:
+            selected_revision = operation.revision_for_context(
+                Modelo("210").value,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            )
         return (
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,

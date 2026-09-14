@@ -32,6 +32,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -109,11 +110,11 @@ class M036DeclarationCommand(BaseModel):
     note: str | None = Field(default=None, max_length=512)
 
 
-class M036DeclarationNotFoundError(KeyError):
+class M036DeclarationNotFoundError(CadrumoError):
     """Raised when a requested M036 declaration does not exist."""
 
 
-class M036DeclarationAmbiguousError(KeyError):
+class M036DeclarationAmbiguousError(CadrumoError):
     """Raised when an M036 declaration prefix addresses multiple records."""
 
 

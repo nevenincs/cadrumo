@@ -19,7 +19,6 @@ from ..semantic_role_resolution import (
     casilla_id_for_unique_semantic_role,
 )
 
-art20_advisory = import_module("..art20_advisory", package=__package__)
 binding_resolution = import_module("..binding_resolution", package=__package__)
 calculate_input = import_module("..calculate_input", package=__package__)
 dt12_advisory = import_module("..dt12_advisory", package=__package__)
@@ -27,6 +26,10 @@ taxation_comparison = import_module("..taxation_comparison", package=__package__
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _M100_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_RESULTADO_CASILLA")
+# The Art. 20 mapping fact carries these role tokens.  The advisory module now
+# resolves that mapping rather than exporting a second role vocabulary.
+_ART20_RNT_ROLE = "irpf_rendimiento_trabajo_rendimiento_neto"
+_ART20_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
 
 
 @pytest.fixture(scope="module")
@@ -159,14 +162,13 @@ def _snapshot_with_duplicate_role(
 def _application_single_casilla_roles() -> Iterable[str]:
     return frozenset(
         {
-            art20_advisory._ART20_RNT_ROLE,
-            art20_advisory._ART20_REDUCCION_ROLE,
-            calculate_input._DEDUCCION_MATERNIDAD_SEMANTIC_ROLE,
-            calculate_input._INSS_EXENTA_SEMANTIC_ROLE,
-            calculate_input._REDUCCION_TRABAJO_SEMANTIC_ROLE,
-            calculate_input._SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE,
-            dt12_advisory._DT12_TRABAJO_INGRESO_ROLE,
-            dt12_advisory._DT12_TRABAJO_REDUCCION_ROLE,
+            _ART20_RNT_ROLE,
+            _ART20_REDUCCION_ROLE,
+            "irpf_deduccion_maternidad",
+            "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta",
+            "irpf_rendimiento_trabajo_reduccion",
+            "is_sal_reserva_especial_dotacion",
+            "irpf_rendimiento_trabajo_importe_integro_dinerario",
             "filing_period",
             "filing_year",
             taxation_comparison._CUOTA_RESULTANTE_ROLE,

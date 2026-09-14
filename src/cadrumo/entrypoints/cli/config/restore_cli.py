@@ -145,6 +145,7 @@ def profile_archive_import(
         restore_profile_capsule_with_password,
         restore_profile_capsule_with_recovery_artifact,
     )
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ..config_payloads import ConfigProfileArchiveImportResult
     from .secure_input import select_machine_secret_channel
 
@@ -160,19 +161,23 @@ def profile_archive_import(
     capsule = _read_capsule_source(file)
 
     notices: list[Notice] = []
-    if artifact is None:
-        outcome = restore_profile_capsule_with_password(
-            label=label,
-            capsule=capsule,
-            password=_collect_passphrase(selection=selection),
-        )
-    else:
-        outcome = restore_profile_capsule_with_recovery_artifact(
-            label=label,
-            capsule=capsule,
-            artifact_source=artifact,
-            recovery_secret=_collect_recovery_secret(selection=selection),
-        )
+    with bundled_indexed_authority().operation() as operation:
+        profile_decode_context = operation.profile_decode_context()
+        if artifact is None:
+            outcome = restore_profile_capsule_with_password(
+                label=label,
+                capsule=capsule,
+                password=_collect_passphrase(selection=selection),
+                profile_decode_context=profile_decode_context,
+            )
+        else:
+            outcome = restore_profile_capsule_with_recovery_artifact(
+                label=label,
+                capsule=capsule,
+                artifact_source=artifact,
+                recovery_secret=_collect_recovery_secret(selection=selection),
+                profile_decode_context=profile_decode_context,
+            )
         # The records are back; the credential is not. Saying so here is
         # the difference between an operator who knows to rotate and one
         # who finds out at the login prompt.

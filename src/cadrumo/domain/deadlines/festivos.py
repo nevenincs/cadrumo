@@ -40,7 +40,6 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date, timedelta
 from enum import StrEnum
-from functools import lru_cache
 from typing import TYPE_CHECKING, Annotated, Self
 
 from pydantic import BaseModel, Field, GetCoreSchemaHandler, NonNegativeInt, StringConstraints
@@ -57,7 +56,8 @@ HOLIDAY_EVENT_FACT_ID = "deadlines.public-holiday"
 HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID = "deadlines.holiday-calendar-publication"
 
 if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
+    from ..calculations.registry.authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 # ---------------------------------------------------------------------------
 # CCAA enumeration (ISO 3166-2:ES codes).
@@ -99,6 +99,7 @@ class CalendarCCAA(str, metaclass=_CalendarCCAAType):
     __slots__ = ()
 
     def __new__(cls, value: object, *, _registry_validated: bool = False) -> Self:
+        """Construct a token only from a registry projection or selected fact authority."""
         if _registry_validated:
             if not isinstance(value, str) or not value:
                 raise ValueError("calendar CCAA code must be a non-empty string")
@@ -249,23 +250,22 @@ MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo("369"),)
 # ---------------------------------------------------------------------------
 
 
-@lru_cache(maxsize=64)
-def load_holiday_calendar(year: int) -> HolidayCalendar:
-    """Return the published calendar from the installed authority artifact.
-
-    A calendar is usable only when the published artifact carries its publication
-    event.  Runtime never parses an authoring TOML tree or treats an absent file
-    as a holiday-free year.
-    """
-    from ..calculations.registry.authority import bundled_authority
-
-    return holiday_calendar_from_authority(year, authority=bundled_authority())
+def load_holiday_calendar(
+    year: int,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> HolidayCalendar:
+    """Load a calendar through the caller's pinned operation."""
+    if operation is None:
+        raise DeadlineValidationError("holiday calendar requires an explicit pinned authority operation")
+    return holiday_calendar_from_authority(year, authority=operation, operation=operation)
 
 
 def holiday_calendar_from_authority(
     year: int,
     *,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> HolidayCalendar:
     """Resolve one complete published calendar from the governed-fact authority.
 
@@ -274,9 +274,12 @@ def holiday_calendar_from_authority(
     unpublished calendar year.  All individual holiday values are then read
     through exact event queries, retaining the authority's provenance.
     """
+    if operation is None:
+        raise DeadlineValidationError("holiday calendar resolution requires an explicit pinned authority operation")
     coordinate = date(year, 7, 1)
+    selected = operation
     try:
-        publication = authority.resolve_governed_fact(
+        publication = selected.resolve_governed_fact(
             EventFactQuery(
                 fact_id=HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
                 date_axis=DateAxis.SUBMISSION_DATE,
@@ -295,7 +298,7 @@ def holiday_calendar_from_authority(
     if not isinstance(boe_url, str) or not boe_url:
         raise DeadlineValidationError(f"holiday calendar publication for {year} has no BOE URL")
 
-    fact = authority.catalogues.facts.facts.get(HOLIDAY_EVENT_FACT_ID)
+    fact = operation.governed_fact(HOLIDAY_EVENT_FACT_ID)
     if fact is None:
         raise DeadlineValidationError(f"published holiday calendar for {year} has no holiday event fact")
     national: list[Holiday] = []
@@ -303,7 +306,7 @@ def holiday_calendar_from_authority(
     for variant in fact.variants:
         if variant.valid_from.year != year:
             continue
-        resolved = authority.resolve_governed_fact(
+        resolved = selected.resolve_governed_fact(
             EventFactQuery(
                 fact_id=HOLIDAY_EVENT_FACT_ID,
                 date_axis=DateAxis.SUBMISSION_DATE,
@@ -330,7 +333,7 @@ def holiday_calendar_from_authority(
                 require_calendar_ccaa(
                     ccaa_value,
                     effective_date=variant.valid_from,
-                    authority=authority,
+                    authority=selected,
                 )
                 if isinstance(ccaa_value, str)
                 else None

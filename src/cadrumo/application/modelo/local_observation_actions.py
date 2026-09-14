@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ValidationError
 
@@ -51,8 +51,8 @@ from ...domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.temporal import select_revision
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     ObservationSourceKind,
@@ -60,6 +60,9 @@ from ..calculations.observations_repository import (
 )
 from ._registry_helpers import NUMERIC_CASILLA_DATA_TYPES
 from .action_errors import ModeloLocalObservationError
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND: Final = ObservationSourceKind.OPERATOR_MANUAL
 """Non-official source kind for operator-supplied local observations."""
@@ -94,6 +97,7 @@ def record_operator_local_observation[CasillaKey](
     repository: CalculationObservationRepositoryProtocol,
     clock: datetime | None = None,
     replace_official_evidence: bool = False,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloLocalObservationResult:
     """Persist an operator-supplied local observation for later calculation prefill.
 
@@ -117,7 +121,7 @@ def record_operator_local_observation[CasillaKey](
             "Modelo 303 observations require canonical filed or official evidence with a result disposition",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         )
-    revision = _load_revision(modelo=modelo, filing_year=filing_year, period=period)
+    revision = _load_revision(modelo=modelo, filing_year=filing_year, period=period, operation=operation)
     canonical_values = _canonical_casilla_values(revision=revision, casilla_values=casilla_values)
     observations = _observation_rows(revision=revision, casilla_values=canonical_values)
     observation = RegistryModeloObservation(
@@ -158,11 +162,22 @@ def record_operator_local_observation[CasillaKey](
     )
 
 
-def _load_revision(*, modelo: str, filing_year: int, period: Period) -> ModeloRevision:
+def _load_revision(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation | None = None,
+) -> ModeloRevision:
     try:
-        modelo_definition = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo)
-        return select_revision(
-            modelo_definition,
+        if operation is not None:
+            return operation.revision_for_context(
+                modelo,
+                filing_year=filing_year,
+                period=period.registry_token,
+            )
+        return RegistryQueryService(bundled_authority()).revision_for_scope(
+            modelo,
             filing_year=filing_year,
             period=period.registry_token,
         )

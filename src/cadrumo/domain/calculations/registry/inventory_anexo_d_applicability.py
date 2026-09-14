@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING
 
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "inventory-anexo-d-applicability"
 _FILING_YEAR_UNIT = "filing_year"
@@ -20,13 +16,14 @@ _FILING_YEAR_UNIT = "filing_year"
 def resolve_inventory_anexo_d_filing_year(
     *,
     filing_year: int,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> int:
     """Resolve the applicable Anexo D filing year, failing closed if absent."""
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError(
+            "inventory Anexo D applicability requires an explicit authority operation or scope"
+        )
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
             fact_id=_FACT_ID,

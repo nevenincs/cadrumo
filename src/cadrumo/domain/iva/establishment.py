@@ -78,7 +78,7 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final, NamedTuple
+from typing import TYPE_CHECKING, Final, NamedTuple
 
 from ...core.identity.nif_iva import normalise_nif_iva
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
@@ -90,6 +90,10 @@ from .classification import (
     iva_territorial_scope_alias,
     require_iva_territorial_scope,
 )
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 __all__ = [
     "SPAIN_COUNTRY_CODE",
@@ -117,11 +121,11 @@ twice is the drift this codebase keeps closing.
 """
 
 
-def _eu_member_codes() -> frozenset[str]:
+def _eu_member_codes(*, authority: GovernedFactSource | None = None) -> frozenset[str]:
     """Return non-Spanish EU codes projected from fact 0131."""
     return frozenset(
         str(member).upper()
-        for member in resolve_eu_member_state_catalogue().all_states
+        for member in resolve_eu_member_state_catalogue(authority=authority).all_states
         if str(member).upper() != SPAIN_COUNTRY_CODE
     )
 
@@ -240,7 +244,10 @@ class _CarveOut(NamedTuple):
     establishes_nothing: bool
 
 
-def _territory_carve_outs() -> dict[str, _CarveOut]:
+def _territory_carve_outs(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> dict[str, _CarveOut]:
     """Return every territory whose IVA treatment its country code does not give.
 
     Read from the published runtime authority, where the compiler has already
@@ -253,19 +260,40 @@ def _territory_carve_outs() -> dict[str, _CarveOut]:
         IvaCatalogueError: When a published scope cannot be adapted into the
             operational closed set.
     """
-    from ..calculations.registry.authority import bundled_authority
+    if operation is None:
+        from .errors import IvaCatalogueError
+
+        raise IvaCatalogueError("territory carve-outs require an explicit pinned authority operation")
+    else:
+        from collections.abc import Mapping
+
+        from ..calculations.registry.runtime_catalogues import TerritoryCarveOut
+
+        loaded = operation.runtime_catalogue("territory_carve_outs")
+        if not isinstance(loaded, Mapping) or not all(
+            isinstance(value, TerritoryCarveOut) for value in loaded.values()
+        ):
+            from .errors import IvaCatalogueError
+
+            raise IvaCatalogueError("indexed authority territory component has an invalid shape")
+        records = loaded.items()
 
     return {
         code: _CarveOut(
             assimilated_to=record.assimilated_to,
-            scope=require_iva_territorial_scope(record.scope) if record.scope is not None else None,
+            scope=require_iva_territorial_scope(record.scope, authority=operation)
+            if record.scope is not None
+            else None,
             establishes_nothing=record.establishes_nothing,
         )
-        for code, record in bundled_authority().catalogues.runtime.territory_carve_outs.items()
+        for code, record in records
     }
 
 
-def _catalogued_country_codes() -> frozenset[str]:
+def _catalogued_country_codes(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> frozenset[str]:
     """Return every alpha-2 code a bounded catalogue in this codebase names.
 
     The union of the catalogues that already exist, and deliberately not a new
@@ -290,14 +318,18 @@ def _catalogued_country_codes() -> frozenset[str]:
             its one-name-one-country invariant.
     """
     return (
-        frozenset(_country_vocabulary.country_codes_by_printed_name().values())
-        | _eu_member_codes()
+        frozenset(_country_vocabulary.country_codes_by_printed_name(operation=operation).values())
+        | _eu_member_codes(authority=operation)
         | {SPAIN_COUNTRY_CODE}
-        | frozenset(_territory_carve_outs())
+        | frozenset(_territory_carve_outs(operation=operation))
     )
 
 
-def stated_country_code_status(stated_code: str | None) -> StatedCountryCodeStatus | None:
+def stated_country_code_status(  # noqa: D417
+    stated_code: str | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> StatedCountryCodeStatus | None:
     """Return what a stated alpha-2 code is, or ``None`` when it is not one.
 
     The diagnostic half of the country axis. :func:`territorial_scope_for_country`
@@ -325,7 +357,7 @@ def stated_country_code_status(stated_code: str | None) -> StatedCountryCodeStat
     candidate = stated_code.strip().upper()
     if len(candidate) != _ALPHA2_LENGTH or not candidate.isalpha():
         return None
-    if candidate in _catalogued_country_codes():
+    if candidate in _catalogued_country_codes(operation=operation):
         return StatedCountryCodeStatus.CATALOGUED
     if candidate in _USER_ASSIGNED_ALPHA2:
         return StatedCountryCodeStatus.UNASSIGNED
@@ -342,7 +374,11 @@ def _normalise_country_code_for_scope(country_code: str | None) -> str | None:
     return normalise_iso_3166_alpha2_jurisdiction(candidate)
 
 
-def _scope_for_carve_out(carve_out: _CarveOut) -> IvaTerritorialScope | None:
+def _scope_for_carve_out(
+    carve_out: _CarveOut,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> IvaTerritorialScope | None:
     """Resolve one carve-out's direct scope, refusal, or assimilation parent."""
     if carve_out.establishes_nothing:
         return None
@@ -352,22 +388,30 @@ def _scope_for_carve_out(carve_out: _CarveOut) -> IvaTerritorialScope | None:
     # rather than reading a scope off the row. The article fixes what a territory
     # is treated as and never what that parent establishes, so following the
     # pointer keeps the answer true as the parent's own status changes.
-    return territorial_scope_for_country(carve_out.assimilated_to)
+    return territorial_scope_for_country(carve_out.assimilated_to, operation=operation)
 
 
-def _scope_for_catalogued_country(country_code: str) -> IvaTerritorialScope | None:
+def _scope_for_catalogued_country(
+    country_code: str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> IvaTerritorialScope | None:
     """Return the scope for a known code, applying statutory carve-outs first."""
-    carve_out = _territory_carve_outs().get(country_code)
+    carve_out = _territory_carve_outs(operation=operation).get(country_code)
     if carve_out is not None:
-        return _scope_for_carve_out(carve_out)
+        return _scope_for_carve_out(carve_out, operation=operation)
     if country_code == SPAIN_COUNTRY_CODE:
         return None
-    if country_code in _eu_member_codes():
+    if country_code in _eu_member_codes(authority=operation):
         return iva_territorial_scope_alias("eu_member")
     return iva_territorial_scope_alias("third_country")
 
 
-def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialScope | None:
+def territorial_scope_for_country(  # noqa: D417
+    country_code: str | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> IvaTerritorialScope | None:
     """Return the territorial scope a country code establishes, via the closed vocabulary.
 
     **The rung is a match against a bounded vocabulary, never a shape check.** A
@@ -435,12 +479,16 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
             a corrupt bundled table is a defect, not an unestablished party.
     """
     normalised = _normalise_country_code_for_scope(country_code)
-    if normalised is None or normalised not in _catalogued_country_codes():
+    if normalised is None or normalised not in _catalogued_country_codes(operation=operation):
         return None
-    return _scope_for_catalogued_country(normalised)
+    return _scope_for_catalogued_country(normalised, operation=operation)
 
 
-def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> str | None:
+def country_code_for_printed_tax_identifier(  # noqa: D417
+    printed_identifier: str | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> str | None:
     """Return the alpha-2 code a printed tax IDENTIFIER names, or ``None``.
 
     The first rung of the establishment ladder. An intra-community IVA number
@@ -484,7 +532,7 @@ def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> s
     if len(normalised) < _ALPHA2_LENGTH:
         return None
     candidate = normalised[:_ALPHA2_LENGTH]
-    catalogue = resolve_nif_iva_catalogue()
+    catalogue = resolve_nif_iva_catalogue(authority=operation)
     prefix = catalogue.prefix_for_country(candidate)
     if prefix is None:
         return None
@@ -498,7 +546,10 @@ _POSTAL_PREFIX_LENGTH: Final[int] = 2
 _POSTAL_CODE_LENGTH: Final[int] = 5
 
 
-def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
+def _excluded_territories_by_prefix(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> dict[str, IvaTerritorialScope]:
     """Return the postal prefixes that name a territory OUTSIDE the TAI.
 
     Read from the published runtime authority because a territorial boundary is
@@ -515,15 +566,32 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
         IvaCatalogueError: When a published scope cannot be adapted into the
             operational closed set.
     """
-    from ..calculations.registry.authority import bundled_authority
+    if operation is None:
+        from .errors import IvaCatalogueError
 
-    return {
-        prefix: require_iva_territorial_scope(record.scope)
-        for prefix, record in bundled_authority().catalogues.runtime.spanish_postal_territories.items()
-    }
+        raise IvaCatalogueError("Spanish postal territories require an explicit pinned authority operation")
+    else:
+        from collections.abc import Mapping
+
+        from ..calculations.registry.runtime_catalogues import SpanishPostalTerritory
+
+        loaded = operation.runtime_catalogue("spanish_postal_territories")
+        if not isinstance(loaded, Mapping) or not all(
+            isinstance(value, SpanishPostalTerritory) for value in loaded.values()
+        ):
+            from .errors import IvaCatalogueError
+
+            raise IvaCatalogueError("indexed authority postal-territory component has an invalid shape")
+        records = loaded.items()
+
+    return {prefix: require_iva_territorial_scope(record.scope, authority=operation) for prefix, record in records}
 
 
-def territorial_scope_for_spanish_postal_code(postal_code: str | None) -> IvaTerritorialScope | None:
+def territorial_scope_for_spanish_postal_code(  # noqa: D417
+    postal_code: str | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> IvaTerritorialScope | None:
     """Return the Spanish IVA territory a printed postal code establishes.
 
     The sub-national half of the establishment question, and the reason the
@@ -558,11 +626,15 @@ def territorial_scope_for_spanish_postal_code(postal_code: str | None) -> IvaTer
     candidate = postal_code.strip()
     if len(candidate) != _POSTAL_CODE_LENGTH or not candidate.isdigit():
         return None
-    excluded = _excluded_territories_by_prefix()
+    excluded = _excluded_territories_by_prefix(operation=operation)
     return excluded.get(candidate[:_POSTAL_PREFIX_LENGTH], iva_territorial_scope_alias("mainland"))
 
 
-def country_code_for_stated_country_code(stated_code: str | None) -> str | None:
+def country_code_for_stated_country_code(  # noqa: D417
+    stated_code: str | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> str | None:
     """Return the alpha-2 code a STRUCTURED record's country element states.
 
     The structured counterpart of :func:`country_code_for_printed_country_name`,
@@ -631,15 +703,19 @@ def country_code_for_stated_country_code(stated_code: str | None) -> str | None:
         # is asked separately so the two questions stay separable and neither
         # authority is asked for the other's answer.
         normalised = normalise_iso_3166_alpha2_jurisdiction(candidate)
-        if normalised is None or normalised not in _catalogued_country_codes():
+        if normalised is None or normalised not in _catalogued_country_codes(operation=operation):
             return None
         return normalised
     if len(candidate) == _ALPHA3_LENGTH:
-        return _country_vocabulary.country_codes_by_alpha3().get(candidate)
+        return _country_vocabulary.country_codes_by_alpha3(operation=operation).get(candidate)
     return None
 
 
-def record_country_code_status(stated_code: str | None) -> StatedCountryCodeStatus | None:
+def record_country_code_status(  # noqa: D417
+    stated_code: str | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> StatedCountryCodeStatus | None:
     """Return what a country code a RECORD states is, in either ISO spelling.
 
     The structured sibling of :func:`stated_country_code_status`, and here for
@@ -712,9 +788,9 @@ def record_country_code_status(stated_code: str | None) -> StatedCountryCodeStat
     candidate = stated_code.strip().upper()
     if not candidate:
         return None
-    if country_code_for_stated_country_code(candidate) is not None:
+    if country_code_for_stated_country_code(candidate, operation=operation) is not None:
         return StatedCountryCodeStatus.CATALOGUED
-    alpha2_status = stated_country_code_status(candidate)
+    alpha2_status = stated_country_code_status(candidate, operation=operation)
     if alpha2_status is not None:
         return alpha2_status
     if candidate in _USER_ASSIGNED_ALPHA3:
@@ -728,7 +804,11 @@ def record_country_code_status(stated_code: str | None) -> StatedCountryCodeStat
     return None
 
 
-def country_code_for_printed_country_name(printed_name: str | None) -> str | None:
+def country_code_for_printed_country_name(  # noqa: D417
+    printed_name: str | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> str | None:
     """Return the alpha-2 code a printed country NAME establishes, or ``None``.
 
     The second rung of the establishment ladder, and the reason it exists: a
@@ -770,4 +850,4 @@ def country_code_for_printed_country_name(printed_name: str | None) -> str | Non
     candidate = _country_vocabulary.normalise_printed_country_name(printed_name)
     if not candidate:
         return None
-    return _country_vocabulary.country_codes_by_printed_name().get(candidate)
+    return _country_vocabulary.country_codes_by_printed_name(operation=operation).get(candidate)

@@ -12,6 +12,7 @@ from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, SpanishTaxIdForma
 from ....core.identity.tax_id import validate_spanish_tax_id
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .facts.schema import GovernedFactCatalogue, GovernedFactFamily, MappingFactPayload
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 TAX_ID_FORMAT_FACT_ID: Final = "spanish-tax-identifier-format"
@@ -112,11 +113,17 @@ def validate_authoritative_spanish_tax_id(value: str, authority: _FactAuthority,
     return validate_spanish_tax_id(value, tax_id_format(authority, effective_date=effective_date))
 
 
-def tax_id_format_value(key: str, *, effective_date: date | None = None) -> str:
+def tax_id_format_value(
+    key: str,
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> str:
     """Resolve one declaration through the established runtime authority."""
-    from .authority import bundled_authority
-
-    resolved = tax_id_format(bundled_authority(), effective_date=effective_date or date.today())
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise ValueError("Spanish tax-ID format requires an explicit authority operation or scope")
+    resolved = tax_id_format(selected_authority, effective_date=effective_date or date.today())
     values = {
         "tax_id.width": str(resolved.width),
         "tax_id.country_prefix": resolved.country_prefix,
@@ -137,11 +144,16 @@ def tax_id_format_value(key: str, *, effective_date: date | None = None) -> str:
         raise ValueError(f"Spanish tax-ID format declaration is missing: {key}") from exc
 
 
-def runtime_tax_id_format(*, effective_date: date | None = None) -> SpanishTaxIdFormat:
-    """Resolve the format from the established bundled runtime authority."""
-    from .authority import bundled_authority
-
-    return tax_id_format(bundled_authority(), effective_date=effective_date or date.today())
+def runtime_tax_id_format(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> SpanishTaxIdFormat:
+    """Resolve the format from the established authority operation or scope."""
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise ValueError("Spanish tax-ID format requires an explicit authority operation or scope")
+    return tax_id_format(selected_authority, effective_date=effective_date or date.today())
 
 
 def _validate_subject_tax_id(value: str) -> str:

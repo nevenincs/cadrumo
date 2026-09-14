@@ -17,6 +17,7 @@ from uuid import UUID
 
 from textual.app import App
 
+from ...core.errors.hierarchy import CadrumoError
 from .components.theme import toggle_appearance
 from .navigation import TuiScreenContextV1
 from .profile.overview import ProfileManagerScreen
@@ -43,7 +44,7 @@ type AccountLanguageFactoryV1 = Callable[[ProfileManagerScreen], None]
 type AccountSignOutFactoryV1 = Callable[[], Awaitable[OperationController]]
 
 
-class AccountSessionExpiredError(Exception):
+class AccountSessionExpiredError(CadrumoError):
     """Signal that the current non-secret account session must be recomposed."""
 
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
     from .m145_communication_records import M145CommunicationRecord
 
 
-class M145CommunicationRecordPersistenceError(RuntimeError):
+class M145CommunicationRecordPersistenceError(CadrumoError):
     """Translated failure from a communication-record persistence capability."""
 
     def __init__(self, operation: str) -> None:

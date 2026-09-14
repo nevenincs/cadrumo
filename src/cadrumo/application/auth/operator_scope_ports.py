@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
+
 
 @dataclass(frozen=True, slots=True)
 class OperatorScopeBucketPaths:
@@ -66,7 +68,7 @@ class OperatorScopePorts:
     session: OperatorScopeSessionPort
 
 
-class OperatorScopeStorageError(RuntimeError):
+class OperatorScopeStorageError(CadrumoError):
     """Translated failure from bucket path or lock persistence."""
 
     def __init__(self, *, operation: str, bucket_id: str, failure_kind: str) -> None:
@@ -77,7 +79,7 @@ class OperatorScopeStorageError(RuntimeError):
         super().__init__(f"operator auth storage operation {operation!r} failed")
 
 
-class OperatorScopeSessionError(RuntimeError):
+class OperatorScopeSessionError(CadrumoError):
     """Translated failure while observing the active custody session."""
 
 

@@ -13,6 +13,7 @@ from typing import Protocol
 
 from ...core.config import Settings
 from ...core.config_support import LLMProvider
+from ...core.errors.hierarchy import CadrumoError
 from ...core.image_media_type import ImageMediaType
 from ...domain.iva.supply_nature import SupplyNature
 from .document_transcription import DocumentTranscription
@@ -38,11 +39,11 @@ class VisionImage:
     media_type: ImageMediaType
 
 
-class StructuredInvoiceReadError(Exception):
+class StructuredInvoiceReadError(CadrumoError):
     """A structured document could not be read by the selected exact reader."""
 
 
-class InvoiceDraftReaderUnavailableError(Exception):
+class InvoiceDraftReaderUnavailableError(CadrumoError):
     """Selected reader or its runtime was unavailable; preserve its cause."""
 
     def __init__(self, cause: Exception) -> None:

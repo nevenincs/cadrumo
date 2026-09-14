@@ -12,10 +12,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, ClassVar, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import TypeAdapter
 
+from .errors.hierarchy import CoreValidationError
 from .text_fold import ascii_slug
 
 if TYPE_CHECKING:
@@ -61,10 +62,8 @@ DIFFICULT_JUSTIFICATION_RE = re.compile(
 _SPACE_RE = re.compile(r"\s+")
 
 
-class OrdenAnualHtmlParseError(ValueError):
+class OrdenAnualHtmlParseError(CoreValidationError):
     """Raised when an annual IVA authority source is structurally malformed."""
-
-    __bare_base_rationale__: ClassVar[str] = "internal-orden-anual-html-structural-parser-carrier"
 
 
 @dataclass(frozen=True, slots=True)
@@ -280,7 +279,7 @@ def orden_anual_iva_authority_units(authority: OrdenAnualIvaAuthority) -> tuple[
         reduction = authority.lorca_2022_reduction
         units.append(
             OrdenAnualIvaAuthorityUnit(
-                anchor=(f"#m303-annual-reduction-{_semantic_slug(reduction.municipality)}-{reduction.ejercicio}"),
+                anchor=(f"#m303-da-4-{_semantic_slug(reduction.municipality)}-{reduction.ejercicio}-reduction"),
                 title=f"Reducción {reduction.municipality} {reduction.ejercicio} de cuota devengada IVA",
                 section=(f"{reduction.required_text[0].split('Reducción', maxsplit=1)[0].rstrip('. ')} · IVA"),
                 text="\n".join(reduction.required_text),

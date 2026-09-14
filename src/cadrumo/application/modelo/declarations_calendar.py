@@ -15,6 +15,7 @@ from typing import Final, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -38,7 +39,7 @@ from ..overview.home import HomeAvailability, HomeZoneState
 DECLARATIONS_CALENDAR_CONTRACT_VERSION: Final[int] = 1
 
 
-class DeclarationsCalendarProjectionError(ValueError):
+class DeclarationsCalendarProjectionError(CadrumoError):
     """The supplied calendar authorities cannot form one coherent safe view."""
 
 

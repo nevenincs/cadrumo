@@ -9,7 +9,8 @@ access. It reconstructs the published, validated authority artifact into typed
 from __future__ import annotations
 
 import hmac
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -17,16 +18,34 @@ from secrets import token_bytes
 from threading import RLock
 
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.hashing import content_hash_hex
+from ....core.hashing import content_hash_hex, sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.modelo import Modelo
 from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ....core.tax_domain import TaxDomain
+from ...user_profile.schema import ProfileSchemaDefinition
 from .authority_artifact import (
     AuthorityArtifact,
+    AuthorityComponentKind,
+    AuthorityComponentQuery,
     AuthorityEvidenceProjection,
+    AuthorityGenerationPin,
+    EvidenceComponentQuery,
+    ExportLayoutComponentQuery,
+    GovernedFactComponentQuery,
+    ModeloDirectoryComponentQuery,
+    ModeloRevisionComponentQuery,
+    ProfileCreateContext,
+    ProfileDecodeContext,
+    ProfileSchemaComponentQuery,
+    PublishedLegalEvidence,
+    PublishedSourceEvidence,
+    ReferenceComponentQuery,
+    RuntimeCatalogueComponentQuery,
+    SnapshotGlobalsComponentQuery,
     read_shared_authority_artifact,
 )
+from .authority_store import SQLiteAuthorityReader
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .facts.resolution import (
     GovernedFactQuery,
@@ -35,6 +54,7 @@ from .facts.resolution import (
     ResolvedMappingFact,
     resolve_governed_fact,
 )
+from .facts.schema import GovernedFact, GovernedFactCatalogue
 from .governed_fact_scope import validating_governed_facts
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .provenance import NormativeCorpusProvenance
@@ -43,14 +63,15 @@ from .schema import (
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
+    SnapshotGlobalCatalogues,
 )
 from .schema_base import DateAxis
 from .schema_deadlines import DeadlineWindowDefinition
-from .schema_references import SourceReference
+from .schema_references import LegalReference, SourceReference
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
-from .snapshot import build_validated_snapshot
+from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
 from .static_inspection import RegistryRevisionInspection
-from .temporal import select_revision
+from .temporal import ModeloRevisionDirectory, select_revision, select_revision_metadata
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGrade]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
@@ -138,6 +159,7 @@ class ValidatedRegistryAuthority:
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _identity_digest: str = ""
     evidence: AuthorityEvidenceProjection = field(default_factory=AuthorityEvidenceProjection)
+    _profile_schema: ProfileSchemaDefinition | None = field(default=None, repr=False)
     _capture_comparison_domain: ContentDigest | None = field(default=None, init=False, repr=False)
     _state_lock: RLock = field(default_factory=RLock, init=False, repr=False)
     _fact_resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
@@ -152,6 +174,7 @@ class ValidatedRegistryAuthority:
         catalogues: RegistryCatalogues,
         identity_digest: str,
         evidence: AuthorityEvidenceProjection | None = None,
+        profile_schema: ProfileSchemaDefinition | None = None,
     ) -> ValidatedRegistryAuthority:
         """Construct an immutable runtime projection after development validation.
 
@@ -165,9 +188,16 @@ class ValidatedRegistryAuthority:
             _snapshots={},
             _identity_digest=identity_digest,
             evidence=AuthorityEvidenceProjection() if evidence is None else evidence,
+            _profile_schema=profile_schema,
         )
         authority._bind_published_artifact_incarnation()
         return authority
+
+    def profile_schema(self) -> ProfileSchemaDefinition:
+        """Return the profile declaration captured in this authority generation."""
+        if self._profile_schema is None:
+            raise RegistryValidationError("published authority generation contains no profile schema component")
+        return self._profile_schema
 
     def _bind_published_artifact_incarnation(self) -> None:
         """Bind a fresh artifact graph to this process without a mutable root slot."""
@@ -580,9 +610,261 @@ def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tup
     return resultado, tipo_renta
 
 
+@dataclass(frozen=True, slots=True, weakref_slot=True)
+class PinnedAuthorityOperation:
+    """Typed component access confined to one leased authority generation."""
+
+    _reader: SQLiteAuthorityReader
+    generation: AuthorityGenerationPin
+
+    def pin(self) -> AuthorityGenerationPin:
+        """Return this operation's already-leased generation pin."""
+        return self.generation
+
+    def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
+        """Load an addressed component only through this operation's generation."""
+        if pin != self.generation:
+            raise RegistrySnapshotError("authority component query crossed an operation generation boundary")
+        return self._reader.load(query, pin=self.generation)
+
+    def governed_fact(self, fact_id: str) -> GovernedFact:
+        """Load one raw governed fact by canonical identity."""
+        value = self.load(GovernedFactComponentQuery(fact_id), pin=self.generation)
+        if not isinstance(value, GovernedFact):
+            raise RegistryValidationError("governed fact component decoded to an unexpected type")
+        return value
+
+    def profile_schema(self, schema_id: str = "cadrumo.user_profile") -> ProfileSchemaDefinition:
+        """Load the profile declaration used by this exact operation generation."""
+        value = self._reader.load(ProfileSchemaComponentQuery(schema_id), pin=self.generation)
+        if not isinstance(value, ProfileSchemaDefinition):
+            raise RegistryValidationError("profile schema component decoded to an unexpected type")
+        return value
+
+    def profile_create_context(self) -> ProfileCreateContext:
+        """Return the required context for constructing new taxpayer profile values."""
+        return ProfileCreateContext(self.profile_schema(), self.generation)
+
+    def profile_decode_context(self) -> ProfileDecodeContext:
+        """Return the required context for decoding encrypted taxpayer profile values."""
+        return ProfileDecodeContext(self.profile_schema(), self.generation)
+
+    def revision(self, modelo_id: str | Modelo, revision_id: str) -> ModeloRevision:
+        """Load one complete typed revision by canonical identity."""
+        normalized = Modelo(modelo_id).value
+        value = self._reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
+        if not isinstance(value, ModeloRevision):
+            raise RegistryValidationError("modelo revision component decoded to an unexpected type")
+        return value
+
+    def modelo_directory(self, modelo_id: str | Modelo) -> ModeloRevisionDirectory:
+        """Load the small selector-complete directory for one modelo."""
+        normalized = Modelo(modelo_id).value
+        value = self.load(ModeloDirectoryComponentQuery(normalized), pin=self.generation)
+        if not isinstance(value, ModeloRevisionDirectory):
+            raise RegistryValidationError("modelo directory component decoded to an unexpected type")
+        return value
+
+    def modelo_ids(self) -> tuple[str, ...]:
+        """Return deterministic modelo identities without hydrating directories."""
+        return tuple(
+            query.modelo_id
+            for query in self._reader.component_queries()
+            if isinstance(query, ModeloDirectoryComponentQuery)
+        )
+
+    def revision_ids(self) -> tuple[tuple[str, str], ...]:
+        """Return deterministic modelo/revision identities without hydrating payloads."""
+        return tuple(
+            (query.modelo_id, query.revision_id)
+            for query in self._reader.component_queries()
+            if isinstance(query, ModeloRevisionComponentQuery)
+        )
+
+    def revision_for_context(
+        self,
+        modelo_id: str | Modelo,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        revision_id: RevisionId | None = None,
+    ) -> ModeloRevision:
+        """Select by complete metadata, then load exactly one complete revision."""
+        normalized = Modelo(modelo_id).value
+        selected = select_revision_metadata(
+            self.modelo_directory(normalized),
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+        )
+        return self.revision(normalized, str(selected.id))
+
+    def snapshot(
+        self,
+        modelo_id: str | Modelo,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        revision_id: RevisionId | None = None,
+        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    ) -> RegistrySnapshot:
+        """Build one validated snapshot from same-generation point components."""
+        normalized = Modelo(modelo_id).value
+        directory = self.modelo_directory(normalized)
+        selected = select_revision_metadata(
+            directory,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+        )
+        revision = self.revision(normalized, str(selected.id))
+        modelo = directory.modelo.materialize(revision)
+        legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
+        globals_value = self.load(SnapshotGlobalsComponentQuery(), pin=self.generation)
+        if not isinstance(globals_value, SnapshotGlobalCatalogues):
+            raise RegistryValidationError("snapshot globals component decoded to an unexpected type")
+        catalogues = RegistryCatalogues(
+            legal={reference_id: self.legal_reference(reference_id) for reference_id in sorted(legal_ids)},
+            sources={reference_id: self.source_reference(reference_id) for reference_id in sorted(source_ids)},
+            convenio=globals_value.convenio,
+            supplementary_ordenes=globals_value.supplementary_ordenes,
+            supported_filing_years=directory.supported_filing_years,
+        )
+        return build_validated_snapshot(
+            modelo,
+            catalogues,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+        )
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        """Resolve one fact without hydrating the whole governed catalogue."""
+        value = self.governed_fact(str(query.fact_id))
+        return resolve_governed_fact(
+            GovernedFactCatalogue(facts={value.fact_id: value}),
+            query,
+            authority_digest=self.generation.logical_generation,
+        )
+
+    def runtime_catalogue(self, family: str) -> object:
+        """Load one named runtime catalogue family."""
+        return self._reader.load(RuntimeCatalogueComponentQuery(family), pin=self.generation)
+
+    def legal_reference(self, reference_id: str) -> LegalReference:
+        """Load one legal declaration by canonical identity."""
+        value = self.load(
+            ReferenceComponentQuery(reference_id, AuthorityComponentKind.LEGAL_REFERENCE),
+            pin=self.generation,
+        )
+        if not isinstance(value, LegalReference):
+            raise RegistryValidationError("legal reference component decoded to an unexpected type")
+        return value
+
+    def source_reference(self, reference_id: str) -> SourceReference:
+        """Load one public-source declaration by canonical identity."""
+        value = self.load(
+            ReferenceComponentQuery(reference_id, AuthorityComponentKind.SOURCE_REFERENCE),
+            pin=self.generation,
+        )
+        if not isinstance(value, SourceReference):
+            raise RegistryValidationError("source reference component decoded to an unexpected type")
+        return value
+
+    def export_layout(self, modelo_id: str | Modelo, revision_id: str, layout_id: str) -> object:
+        """Load one separately addressable export layout."""
+        return self._reader.load(
+            ExportLayoutComponentQuery(Modelo(modelo_id).value, revision_id, layout_id),
+            pin=self.generation,
+        )
+
+    def legal_evidence(self, legal_reference_id: str) -> PublishedLegalEvidence:
+        """Load one publisher-captured legal evidence projection."""
+        value = self._reader.load(
+            EvidenceComponentQuery(legal_reference_id, AuthorityComponentKind.LEGAL_EVIDENCE),
+            pin=self.generation,
+        )
+        if not isinstance(value, PublishedLegalEvidence):
+            raise RegistryValidationError("legal evidence component decoded to an unexpected type")
+        return value
+
+    def source_evidence(self, source_reference_id: str) -> PublishedSourceEvidence:
+        """Load one publisher-captured public source payload."""
+        value = self._reader.load(
+            EvidenceComponentQuery(source_reference_id, AuthorityComponentKind.SOURCE_EVIDENCE),
+            pin=self.generation,
+        )
+        if not isinstance(value, PublishedSourceEvidence):
+            raise RegistryValidationError("source evidence component decoded to an unexpected type")
+        return value
+
+
+class IndexedRegistryAuthority:
+    """Own the admitted SQLite reader and issue generation-pinned operation leases."""
+
+    def __init__(self, descriptor_path: Path) -> None:
+        """Open one descriptor-selected generation without hydrating components."""
+        self._descriptor_path = descriptor_path.resolve()
+        self._reader = SQLiteAuthorityReader(self._descriptor_path)
+        self._descriptor_digest = sha256_hex(self._descriptor_path.read_bytes())
+        self._retired_readers: list[SQLiteAuthorityReader] = []
+        self._reader_lock = RLock()
+
+    @contextmanager
+    def operation(self) -> Generator[PinnedAuthorityOperation]:
+        """Pin one reader incarnation for a complete application operation."""
+        reader = self._reader_for_operation()
+        try:
+            with reader.lease() as generation:
+                operation = PinnedAuthorityOperation(reader, generation)
+                with validating_governed_facts(operation):
+                    yield operation
+        finally:
+            self._close_retired_readers()
+
+    def close(self) -> None:
+        """Close the reader after every operation lease has ended."""
+        with self._reader_lock:
+            self._reader.close()
+            for reader in self._retired_readers:
+                reader.close()
+            self._retired_readers.clear()
+
+    def _reader_for_operation(self) -> SQLiteAuthorityReader:
+        """Admit a descriptor change for subsequent operations only."""
+        with self._reader_lock:
+            descriptor_digest = sha256_hex(self._descriptor_path.read_bytes())
+            if descriptor_digest == self._descriptor_digest:
+                return self._reader
+            replacement = SQLiteAuthorityReader(self._descriptor_path)
+            self._retired_readers.append(self._reader)
+            self._reader = replacement
+            self._descriptor_digest = descriptor_digest
+            return replacement
+
+    def _close_retired_readers(self) -> None:
+        """Close old generations once their last in-flight operation releases."""
+        with self._reader_lock:
+            still_leased: list[SQLiteAuthorityReader] = []
+            for reader in self._retired_readers:
+                if reader.active_leases:
+                    still_leased.append(reader)
+                else:
+                    reader.close()
+            self._retired_readers = still_leased
+
+
 _BUNDLED_AUTHORITY_ARTIFACT_PARTS = ("registry", "authority", "authority.json")
+_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS = ("registry", "authority", "authority.current.json")
 _published_authorities_lock = RLock()
 _published_authorities: dict[str, tuple[AuthorityArtifact, ValidatedRegistryAuthority]] = {}
+_bundled_indexed_authority: IndexedRegistryAuthority | None = None
 
 
 def bundled_authority() -> ValidatedRegistryAuthority:
@@ -591,6 +873,15 @@ def bundled_authority() -> ValidatedRegistryAuthority:
     See :func:`published_authority` for the sharing and refusal contract.
     """
     return published_authority(bundled_authority_artifact_path())
+
+
+def bundled_indexed_authority() -> IndexedRegistryAuthority:
+    """Return the process-shared descriptor-following indexed authority owner."""
+    global _bundled_indexed_authority
+    with _published_authorities_lock:
+        if _bundled_indexed_authority is None:
+            _bundled_indexed_authority = IndexedRegistryAuthority(bundled_authority_descriptor_path())
+        return _bundled_indexed_authority
 
 
 def published_authority(artifact_path: Path) -> ValidatedRegistryAuthority:
@@ -628,6 +919,11 @@ def bundled_authority_artifact_path() -> Path:
     return _bundled_path(*_BUNDLED_AUTHORITY_ARTIFACT_PARTS)
 
 
+def bundled_authority_descriptor_path() -> Path:
+    """Return the installed selector for the content-addressed SQLite generation."""
+    return _bundled_path(*_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS)
+
+
 def _authority_from_published_artifact(
     artifact: AuthorityArtifact,
     *,
@@ -644,4 +940,5 @@ def _authority_from_published_artifact(
         catalogues=artifact.catalogues,
         identity_digest=artifact.identity_digest,
         evidence=artifact.evidence,
+        profile_schema=artifact.profile_schema,
     )

@@ -32,6 +32,7 @@ from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
@@ -210,9 +211,7 @@ async def capture_expedientes_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = (
-        modelos if modelos is not None else tuple(str(modelo.id) for modelo in bundled_authority().modelos)
-    )
+    resolved_modelos = modelos if modelos is not None else RegistryQueryService(bundled_authority()).modelo_codes()
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,

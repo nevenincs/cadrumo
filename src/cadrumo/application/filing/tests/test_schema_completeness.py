@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ....domain.filing.errors import ModeloBuilderError
@@ -13,7 +14,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
-    provider = build_runtime_schema_provider()
+    period = Period.from_year_and_code(2026, "1T")
+    provider = build_runtime_schema_provider(filing_year=period.filing_year, period=period)
 
     collection = provider.get_collection("130")
 
@@ -46,7 +48,8 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
 
 
 def test_runtime_schema_provider_rejects_unknown_modelo() -> None:
-    provider = build_runtime_schema_provider()
+    period = Period.from_year_and_code(2026, "1T")
+    provider = build_runtime_schema_provider(filing_year=period.filing_year, period=period)
 
     # Assert the translated key rather than English prose: these refusals are
     # localized, so matching the rendered sentence tracks the catalogue's wording

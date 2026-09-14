@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Protocol
 
 from ...core.aggregation import AggregationCaptureKind
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.i18n.translatable import Translatable as t
@@ -81,7 +82,7 @@ def percepcion_observation_key(
     return f"{modelo}:{filing_year}:{period_token}:{_hashed_tax_id_token(perceptor_tax_id)}:{clave}:{subclave_token}"
 
 
-class PercepcionObservationPersistenceError(RuntimeError):
+class PercepcionObservationPersistenceError(CadrumoError):
     """Translated failure from the perceptor-observation persistence port."""
 
     def __init__(self, operation: str) -> None:

@@ -16,6 +16,7 @@ already performs:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -24,6 +25,7 @@ from ...core.corpus_text import normalise_corpus_text
 from ...core.errors.severity import BaseSeverity
 from ...core.logging import get_logger
 from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from .errors import IvaCatalogueError
 from .schema import (
     IvaCatalogue,
     IvaCitation,
@@ -34,21 +36,32 @@ from .schema import (
 _logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
+    from ..calculations.registry.schema_references import LegalReference
 
 
 def verify_catalogue_against_legal(
     catalogue: IvaCatalogue,
+    *,
+    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+    legal: Mapping[str, LegalReference] | None = None,
 ) -> IvaVerificationReport:
     """Verify one catalogue against signed, published legal evidence."""
-    from ..calculations.registry.authority import bundled_authority
-
-    authority = bundled_authority()
+    if authority is not None and operation is not None:
+        raise TypeError("IVA catalogue verification accepts either authority or operation, not both")
+    if operation is not None:
+        selected = operation
+    elif authority is not None:
+        selected = authority
+    else:
+        raise IvaCatalogueError("IVA catalogue verification requires an explicit operation or governed source")
     issues: list[IvaVerificationIssue] = []
     present = set(catalogue.regulations.keys())
     declared_categories = resolve_iva_category_catalogue(
         effective_date=date.today(),
-        authority=authority,
+        authority=selected,
     ).all_categories
     missing = [member for member in declared_categories if member not in present]
     for member in missing:
@@ -76,7 +89,9 @@ def verify_catalogue_against_legal(
                 _citation_issues(
                     citation,
                     category_id=regulation.category.value,
-                    authority=authority,
+                    authority=selected,
+                    operation=operation,
+                    legal=legal,
                 ),
             )
     _logger.debug("verify_catalogue_against_legal produced %d issue(s)", len(issues))
@@ -87,7 +102,9 @@ def _citation_issues(
     citation: IvaCitation,
     *,
     category_id: str,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
+    operation: PinnedAuthorityOperation | None = None,
+    legal: Mapping[str, LegalReference] | None = None,
 ) -> list[IvaVerificationIssue]:
     """Run every registry and corpus check for one citation, in refusal order.
 
@@ -110,8 +127,26 @@ def _citation_issues(
                 category_id=category_id,
             ),
         )
-    legal = authority.catalogues.legal
-    reference = legal.get(citation.legal_reference)
+    if legal is None:
+        if operation is None:
+            legal = authority.catalogues.legal  # type: ignore[attr-defined]
+        else:
+            try:
+                reference = operation.legal_reference(citation.legal_reference)
+            except Exception as exc:
+                issues.append(
+                    IvaVerificationIssue(
+                        level=BaseSeverity.ERROR,
+                        code="unknown_legal_reference",
+                        message=(
+                            f"citation legal_reference {citation.legal_reference!r} is absent from the registry "
+                            f"legal catalogue: {exc}"
+                        ),
+                        category_id=category_id,
+                    ),
+                )
+                return issues
+    reference = legal.get(citation.legal_reference) if legal is not None else reference
     if reference is None:
         issues.append(
             IvaVerificationIssue(
@@ -135,7 +170,10 @@ def _citation_issues(
         )
         return issues
     try:
-        authority.legal_evidence_text(citation.legal_reference)
+        if operation is None:
+            authority.legal_evidence_text(citation.legal_reference)  # type: ignore[attr-defined]
+        else:
+            operation.legal_evidence(citation.legal_reference)
     except Exception as exc:
         issues.append(
             IvaVerificationIssue(
@@ -152,9 +190,11 @@ def _citation_issues(
     if citation.grounding is not CitationGrounding.VERIFIED:
         return issues
     try:
-        quoted = normalise_corpus_text(citation.quoted_text) in normalise_corpus_text(
-            authority.legal_evidence_text(citation.legal_reference)
-        )
+        if operation is None:
+            anchored_text = authority.legal_evidence_text(citation.legal_reference)  # type: ignore[attr-defined]
+        else:
+            anchored_text = operation.legal_evidence(citation.legal_reference).anchored_text
+        quoted = normalise_corpus_text(citation.quoted_text) in normalise_corpus_text(anchored_text)
     except Exception as exc:
         issues.append(
             IvaVerificationIssue(

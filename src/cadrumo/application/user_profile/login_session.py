@@ -96,6 +96,7 @@ from .profile_record_repository import (
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ..workflow.profile_bucket_models import ProfileBucketPointer
 
 _log = get_logger(__name__)
@@ -467,6 +468,7 @@ def bind_resumed_profile_session(
     *,
     bucket_id: str,
     now: datetime | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileSessionRefusalReason | None:
     """Resume ``bucket_id``'s persisted session and bind it to this process.
 
@@ -490,6 +492,9 @@ def bind_resumed_profile_session(
     Args:
         bucket_id: Identifier of the profile whose session to resume.
         now: UTC evaluation instant; the canonical clock when omitted.
+        profile_decode_context: Decode context supplied by the enclosing
+            pinned authority operation. Resuming a record without it is
+            refused; no bundled-schema fallback exists.
 
     Returns:
         ``None`` when the session resumed and is now the active
@@ -528,7 +533,12 @@ def bind_resumed_profile_session(
 
     session.touch(instant)
     _profile_login_sessions().bind_session(session)
-    _activate_record_authority(bucket_id=bucket_id, dek=session.dek, storage_root=storage_root)
+    _activate_record_authority(
+        bucket_id=bucket_id,
+        dek=session.dek,
+        storage_root=storage_root,
+        profile_decode_context=profile_decode_context,
+    )
     _persist_advanced_idle_deadline(
         storage_root=storage_root,
         profile_id=record.profile_id,
@@ -538,7 +548,13 @@ def bind_resumed_profile_session(
     return None
 
 
-def _activate_record_authority(*, bucket_id: str, dek: bytes, storage_root: Path) -> None:
+def _activate_record_authority(
+    *,
+    bucket_id: str,
+    dek: bytes,
+    storage_root: Path,
+    profile_decode_context: ProfileDecodeContext,
+) -> None:
     """Bind the record codec to the same live custody session as the bucket.
 
     A profile record is authenticated with envelope-bound AAD, not merely with
@@ -547,7 +563,13 @@ def _activate_record_authority(*, bucket_id: str, dek: bytes, storage_root: Path
     the exact capsule it reads.
     """
     material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
-    activate_profile_record_session(ProfileRecordSession.from_envelope(envelope=material.envelope, dek=dek))
+    activate_profile_record_session(
+        ProfileRecordSession.from_envelope(
+            envelope=material.envelope,
+            dek=dek,
+            profile_decode_context=profile_decode_context,
+        )
+    )
 
 
 def _resume_acceleration_receipt(
@@ -710,12 +732,17 @@ def _resume_idempotent_login_if_allowed(
     *,
     attempt: _LoginAttempt,
     now: datetime,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfilePersistedSessionPort | None:
     """Resume only when the durable pointer and local binding already agree."""
     live_before = _profile_login_sessions().current_session()
     if not _can_resume_idempotent_login(attempt=attempt, live_session=live_before):
         return None
-    return _resume_for_idempotent_login(bucket_id=attempt.target.bucket_id, now=now)
+    return _resume_for_idempotent_login(
+        bucket_id=attempt.target.bucket_id,
+        now=now,
+        profile_decode_context=profile_decode_context,
+    )
 
 
 def _idempotent_login_outcome(
@@ -741,6 +768,7 @@ def login_profile(
     name: str | None = None,
     now: datetime | None = None,
     passphrase_callback: Callable[[], str] | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileLoginOutcome:
     """Authenticate B before replacing an active A session.
 
@@ -759,7 +787,11 @@ def login_profile(
             storage_root=storage_root,
             pointer_transaction=pointer_transaction,
         )
-        resumed = _resume_idempotent_login_if_allowed(attempt=attempt, now=instant)
+        resumed = _resume_idempotent_login_if_allowed(
+            attempt=attempt,
+            now=instant,
+            profile_decode_context=profile_decode_context,
+        )
         if resumed is not None:
             return _idempotent_login_outcome(target=attempt.target, resumed=resumed)
 
@@ -767,6 +799,7 @@ def login_profile(
             attempt=attempt,
             now=instant,
             passphrase_callback=passphrase_callback,
+            profile_decode_context=profile_decode_context,
         )
         return _finish_candidate_login(attempt=attempt, candidate=candidate)
 
@@ -775,6 +808,7 @@ def _resume_for_idempotent_login(
     *,
     bucket_id: str,
     now: datetime,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfilePersistedSessionPort | None:
     """Return the resumed record when the idempotent-login guard applies.
 
@@ -805,7 +839,14 @@ def _resume_for_idempotent_login(
             now=now,
         )
         return peeked.record if peeked.resumed else None
-    if bind_resumed_profile_session(bucket_id=bucket_id, now=now) is not None:
+    if (
+        bind_resumed_profile_session(
+            bucket_id=bucket_id,
+            now=now,
+            profile_decode_context=profile_decode_context,
+        )
+        is not None
+    ):
         return None
     peeked, _ = _resume_acceleration_receipt(
         storage_root=effective_storage_root(),
@@ -830,6 +871,7 @@ def _authenticate_login_candidate(
     attempt: _LoginAttempt,
     now: datetime,
     passphrase_callback: Callable[[], str] | None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> _CandidateProfileLogin:
     """Apply the throttle gate before authenticating the candidate profile."""
     evaluation = _profile_login_sessions().evaluate_throttle(
@@ -844,6 +886,7 @@ def _authenticate_login_candidate(
         storage_root=attempt.storage_root,
         now=now,
         passphrase_callback=passphrase_callback,
+        profile_decode_context=profile_decode_context,
     )
 
 
@@ -879,6 +922,7 @@ def _authenticate_candidate_or_record_failure(
     storage_root: Path,
     now: datetime,
     passphrase_callback: Callable[[], str] | None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> _CandidateProfileLogin:
     """Authenticate B into unbound candidate memory and nothing else."""
     material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
@@ -906,7 +950,11 @@ def _authenticate_candidate_or_record_failure(
             storage_root=storage_root,
         )
         try:
-            record_session = ProfileRecordSession.from_envelope(envelope=material.envelope, dek=bytes(dek_buffer))
+            record_session = ProfileRecordSession.from_envelope(
+                envelope=material.envelope,
+                dek=bytes(dek_buffer),
+                profile_decode_context=profile_decode_context,
+            )
         except BaseException:
             session.close()
             raise

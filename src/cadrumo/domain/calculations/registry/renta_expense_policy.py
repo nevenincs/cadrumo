@@ -4,17 +4,24 @@ from __future__ import annotations
 
 from datetime import date
 
-from .authority import bundled_authority
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _RENTA_EXPENSE_POLICY_FACT_ID = "renta-expense-residence-policy"
 
 
-def renta_expense_policy_declarations(profile_year: int) -> dict[str, str]:
+def renta_expense_policy_declarations(
+    profile_year: int,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> dict[str, str]:
     """Resolve the dated territorial-policy declarations for a filing year."""
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError("Renta expense policy requires an explicit authority operation or scope")
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_RENTA_EXPENSE_POLICY_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,

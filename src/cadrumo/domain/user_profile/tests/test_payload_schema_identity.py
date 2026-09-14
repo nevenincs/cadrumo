@@ -21,9 +21,9 @@ the default a freshly constructed record carries to the canonical version.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
-from ..loader import load_user_profile_schema
 from ..values import (
     ProfileSetupState,
     UserProfileFact,

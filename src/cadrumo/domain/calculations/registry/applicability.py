@@ -862,8 +862,11 @@ def resolve_applicability_rule_from_authority(
         RegistryValidationError: No declared revision carries an
             ``applicability`` rule, or the rule fails to hydrate.
     """
-    definition = authority.modelo(modelo.value)
-    for revision in definition.revisions.values():
+    from .queries import RegistryQueryService
+
+    for _modelo_id, revision in RegistryQueryService(authority).iter_modelo_revisions(
+        modelo_codes=(modelo.value,),
+    ):
         if revision.applicability:
             return hydrate_applicability_rule(modelo, revision.applicability[0])
     raise RegistryValidationError(

@@ -35,6 +35,7 @@ from ...domain.calculations.registry.invoice_bindings import (
     M347ThirdPartyOperationProvider,
     PayableInvoiceProvider,
 )
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.modelos.codes import ModeloCode
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
@@ -50,7 +51,7 @@ from .modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .retenciones import RetencionesAggregation, RetencionObservation
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.schema import BindingDefinition, ModeloDefinition
+    from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 
 LOGGER = get_logger(__name__)
 
@@ -284,16 +285,19 @@ def _counterpart_binding(binding: BindingDefinition) -> bool:
     return provider.grouping in {"operator_clave", "operator_clave_period"}
 
 
-def _provider_for_modelo_definition(modelo: ModeloDefinition) -> PerModeloAggregationContributor | None:
-    """Classify a modelo from its registered aggregation implementation and binding sources."""
-    bindings = tuple(binding for revision in modelo.revisions.values() for binding in revision.bindings)
+def _provider_for_modelo_revisions(
+    modelo_id: str,
+    revisions: tuple[ModeloRevision, ...],
+) -> PerModeloAggregationContributor | None:
+    """Classify one modelo from selected, explicitly enumerated revisions."""
+    bindings = tuple(binding for revision in revisions for binding in revision.bindings)
     providers: set[PerModeloAggregationContributor] = set()
     # The retenciones resolver is itself the canonical aggregation registration:
     # some annual forms consume ``withholding`` or relation-prefill bindings
     # rather than a direct ``retenciones_aggregation`` binding, so source shape
     # alone would silently drop M123 and M190. Its registered typed dispatch is
     # therefore the authority for this application-owned provider family.
-    if RetencionesAggregationSourceResolver.supports_modelo(modelo.id):
+    if RetencionesAggregationSourceResolver.supports_modelo(modelo_id):
         providers.add(PerModeloAggregationContributor.RETENCIONES)
     if any(_counterpart_binding(binding) for binding in bindings):
         providers.add(PerModeloAggregationContributor.COUNTERPART)
@@ -302,7 +306,7 @@ def _provider_for_modelo_definition(modelo: ModeloDefinition) -> PerModeloAggreg
     if len(providers) > 1:
         raise AggregationConfigError(
             translated_message="aggregation.service.errors.per_modelo_modelos_not_unique",
-            context={"modelo": modelo.id, "providers": ",".join(sorted(provider.value for provider in providers))},
+            context={"modelo": modelo_id, "providers": ",".join(sorted(provider.value for provider in providers))},
         )
     return next(iter(providers), None)
 
@@ -322,9 +326,12 @@ def _registered_per_modelo_provider_modelos() -> Mapping[PerModeloAggregationCon
     grouped: dict[PerModeloAggregationContributor, list[str]] = {
         contributor: [] for contributor in PerModeloAggregationContributor
     }
-    for modelo in authority.modelos:
-        if provider := _provider_for_modelo_definition(modelo):
-            grouped[provider].append(modelo.id)
+    revisions_by_modelo: dict[str, list[ModeloRevision]] = {}
+    for modelo_id, revision in RegistryQueryService(authority).iter_modelo_revisions():
+        revisions_by_modelo.setdefault(modelo_id, []).append(revision)
+    for modelo_id, revisions in revisions_by_modelo.items():
+        if provider := _provider_for_modelo_revisions(modelo_id, tuple(revisions)):
+            grouped[provider].append(modelo_id)
     return {contributor: tuple(sorted(modelos)) for contributor, modelos in grouped.items()}
 
 
@@ -471,10 +478,16 @@ def _aggregate_counterpart(
 ) -> CounterpartAggregation:
     from ...domain.calculations.registry.authority import bundled_authority
 
-    definition = bundled_authority().modelo(modelo)
+    revisions = tuple(
+        revision
+        for modelo_id, revision in RegistryQueryService(bundled_authority()).iter_modelo_revisions(
+            modelo_codes=(modelo,),
+        )
+        if modelo_id == modelo
+    )
     if any(
         binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION
-        for revision in definition.revisions.values()
+        for revision in revisions
         for binding in revision.bindings
     ):
         return aggregate_counterpart_347(observations, period=period)

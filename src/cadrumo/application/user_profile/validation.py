@@ -1,7 +1,7 @@
 """Schema-driven validation service for user-profile lifecycle commands.
 
 :class:`ProfileValidationService` validates a :class:`UserProfileRecord`
-against a loaded schema definition and returns structured
+against an operation-pinned schema definition and returns structured
 :class:`ProfileValidationIssue` entries for every constraint violation.
 """
 
@@ -11,6 +11,7 @@ from collections.abc import Iterable
 from typing import Final
 
 from ...core.errors.severity import BaseSeverity
+from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileSchemaDefinition,
@@ -19,7 +20,12 @@ from ...domain.user_profile.schema import (
     derived_selector_for_path,
     profile_value_refusal,
 )
-from ...domain.user_profile.values import UserProfileFact, UserProfileRecord, section_field_key
+from ...domain.user_profile.values import (
+    UserProfileFact,
+    UserProfileRecord,
+    section_field_key,
+    validate_profile_fact,
+)
 from .commands import (
     ProfileValidationIssue,
     ProfileValidationReport,
@@ -267,6 +273,17 @@ class ProfileValidationService:
         inert as one recorded on a valued fact, and the operator is owed the
         same warning either way.
         """
+        try:
+            validate_profile_fact(fact, schema=self._schema)
+        except UserProfileValidationError as exc:
+            return (
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code=UNKNOWN_FIELD_ISSUE_CODE,
+                    path=fact.path,
+                    message=str(exc),
+                ),
+            )
         binding = self._field_index.get(section_field_key(fact.path))
         if fact.value is None:
             if binding is None:
@@ -525,7 +542,7 @@ def reject_invalid_profile_facts(
     facts: Iterable[UserProfileFact],
     *,
     require_complete: bool,
-    schema: ProfileSchemaDefinition | None = None,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """Refuse a fact set on blocking schema issues, or return silently.
 
@@ -554,9 +571,8 @@ def reject_invalid_profile_facts(
             the refused paths and why.
     """
     from ...domain.user_profile.errors import ProfileSchemaValidationError
-    from ...domain.user_profile.loader import load_user_profile_schema
 
-    service = ProfileValidationService(schema=schema or load_user_profile_schema())
+    service = ProfileValidationService(schema=schema)
     report = service.validate_facts(profile_id, facts)
     blocking = _blocking_profile_issues(report, require_complete=require_complete)
     if not blocking:

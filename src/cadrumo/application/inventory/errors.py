@@ -17,7 +17,7 @@ class InventoryActividadConflictError(CadrumoError):
     """Raised when a create attempt collides with an existing actividad / year."""
 
 
-class InventoryClosingAuthorityConflictError(RuntimeError):
+class InventoryClosingAuthorityConflictError(CadrumoError):
     """Raised when a different immutable closing authority already exists.
 
     This is an application repository capability error, translated by

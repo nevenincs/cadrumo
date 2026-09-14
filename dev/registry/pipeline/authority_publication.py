@@ -24,6 +24,7 @@ digest identifies the build; the artifact frame separately hashes its output.
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -46,7 +47,11 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     read_authority_artifact,
     write_authority_artifact,
 )
-from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
+from cadrumo.domain.calculations.registry.authority_store import (
+    AuthorityDescriptor,
+    AuthorityStoreError,
+    SQLiteAuthorityReader,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
@@ -72,7 +77,9 @@ __all__ = [
     "ValidatedAuthorityCandidate",
     "authority_artifact_currency",
     "authority_candidate_identity",
+    "authority_database_currency",
     "install_validated_authority_database",
+    "promote_accepted_authority_database",
     "publish_authority_candidate",
     "publish_sqlite_authority_candidate",
     "publish_validated_authority_candidate",
@@ -390,6 +397,58 @@ def authority_artifact_currency(
     )
 
 
+def authority_database_currency(
+    descriptor_path: Path,
+    *,
+    registry_root: Path,
+    source_root: Path,
+    profile_schema_path: Path | None = None,
+) -> AuthorityArtifactCurrency:
+    """Compare an admitted indexed generation with the exact live compiler receipt."""
+    roots = canonical_authoring_root_pair(registry_root, source_root)
+    receipt = _capture_receipt(*roots, profile_schema_path=profile_schema_path)
+    candidate_build = AuthorityBuildIdentity(
+        receipt.source_identity_digest,
+        receipt.compiler_identity_digest,
+        receipt.component_dependency_digest,
+    )
+    try:
+        reader = SQLiteAuthorityReader(descriptor_path)
+        try:
+            recorded_identity = reader.pin().logical_generation
+        finally:
+            reader.close()
+    except (AuthorityStoreError, OSError, ValueError) as exc:
+        return AuthorityArtifactCurrency(
+            artifact_path=descriptor_path,
+            status=AuthorityArtifactCurrencyStatus.UNREADABLE,
+            candidate_identity_digest=receipt.identity_digest,
+            recorded_identity_digest=None,
+            candidate_build_identity=candidate_build,
+            recorded_build_identity=None,
+            detail=f"{type(exc).__name__}: {exc}",
+        )
+    status = (
+        AuthorityArtifactCurrencyStatus.CURRENT
+        if recorded_identity == receipt.identity_digest
+        else AuthorityArtifactCurrencyStatus.STALE
+    )
+    detail = (
+        "the indexed generation matches the live source manifest, compiler build, and component dependencies"
+        if status is AuthorityArtifactCurrencyStatus.CURRENT
+        else "the indexed generation logical identity differs from the live complete-authority receipt"
+    )
+    return AuthorityArtifactCurrency(
+        artifact_path=descriptor_path,
+        status=status,
+        candidate_identity_digest=receipt.identity_digest,
+        recorded_identity_digest=recorded_identity,
+        candidate_build_identity=candidate_build,
+        recorded_build_identity=None,
+        detail=detail,
+    )
+
+
 def _publish_candidate(
     candidate: ValidatedAuthorityCandidate,
     *,
@@ -545,7 +604,102 @@ def install_validated_authority_database(
                 reader.close()
             require_current()
             publication.publish()
+        _cleanup_retired_authority_databases(
+            resolved_destination,
+            current_database=descriptor.database,
+        )
         return descriptor
+
+
+def _cleanup_retired_authority_databases(destination: Path, *, current_database: str) -> None:
+    """Best-effort retirement after cutover, deferring files held by readers.
+
+    Windows refuses deletion while SQLite still holds a generation open.  That
+    refusal is the lease signal available across processes: leave the exact
+    content-addressed file in place and let a later successful publication try
+    again.  Unrelated files and the newly selected database are never targets.
+    """
+    for candidate in destination.glob("authority-*.sqlite3"):
+        if candidate.name == current_database:
+            continue
+        if re.fullmatch(r"authority-[0-9a-f]{64}\.sqlite3", candidate.name) is None:
+            continue
+        try:
+            candidate.unlink()
+        except OSError:
+            continue
+
+
+def promote_accepted_authority_database(
+    candidate_descriptor_path: Path,
+    *,
+    destination: Path,
+) -> AuthorityDescriptor:
+    """Promote exact already-accepted bytes without recompiling the generation."""
+    candidate_descriptor = candidate_descriptor_path.resolve(strict=True)
+    descriptor = AuthorityDescriptor.read(candidate_descriptor)
+    candidate_database = (candidate_descriptor.parent / descriptor.database).resolve(strict=True)
+    if candidate_descriptor.parent != candidate_database.parent:
+        raise RegistryValidationError("accepted authority database escapes its candidate directory")
+    payload = candidate_database.read_bytes()
+    if len(payload) != descriptor.database_size or sha256_hex(payload) != descriptor.database_sha256:
+        raise RegistryValidationError("accepted authority database bytes disagree with their descriptor")
+
+    resolved_destination = destination.resolve()
+    resolved_destination.mkdir(parents=True, exist_ok=True)
+    descriptor_path = resolved_destination / "authority.current.json"
+    with exclusive_file_lock(
+        descriptor_path,
+        timeout=_PUBLICATION_LOCK_TIMEOUT,
+        retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
+    ):
+        return _promote_accepted_authority_bytes(
+            candidate_descriptor,
+            candidate_database,
+            descriptor,
+            destination=resolved_destination,
+        )
+
+
+def _promote_accepted_authority_bytes(
+    candidate_descriptor: Path,
+    candidate_database: Path,
+    descriptor: AuthorityDescriptor,
+    *,
+    destination: Path,
+) -> AuthorityDescriptor:
+    """Copy one already-verified candidate while holding its destination lock."""
+    payload = candidate_database.read_bytes()
+    if len(payload) != descriptor.database_size or sha256_hex(payload) != descriptor.database_sha256:
+        raise RegistryValidationError("accepted authority database changed before locked promotion")
+
+    resolved_destination = destination.resolve()
+    installed_database = resolved_destination / descriptor.database
+    if installed_database.exists():
+        existing = installed_database.read_bytes()
+        if len(existing) != descriptor.database_size or sha256_hex(existing) != descriptor.database_sha256:
+            raise RegistryValidationError(
+                f"content-addressed authority collision at {installed_database}; existing bytes differ"
+            )
+    else:
+        with installed_database.open("xb") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+
+    descriptor_path = resolved_destination / "authority.current.json"
+    with hardened_staged_publication(descriptor_path) as publication:
+        publication.path.write_bytes(candidate_descriptor.read_bytes())
+        reader = SQLiteAuthorityReader(publication.path)
+        try:
+            if reader.pin().logical_generation != descriptor.logical_generation:
+                raise RegistryValidationError("promoted authority logical generation changed")
+        finally:
+            reader.close()
+        publication.publish()
+    if installed_database.read_bytes() != payload or descriptor_path.read_bytes() != candidate_descriptor.read_bytes():
+        raise RegistryValidationError("promoted authority bytes differ from the accepted candidate")
+    return descriptor
 
 
 def _registry_content_digests(registry_root: Path) -> list[list[str]]:

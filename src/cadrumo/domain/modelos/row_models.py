@@ -40,7 +40,15 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    StringConstraints,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.irnr import M210PayerMode
@@ -68,16 +76,33 @@ _M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=T
 
 def _registry_detail_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
+    filing_year: int | None = None,
+    period: str | None = None,
 ) -> tuple[Mapping[str, str], frozenset[str]]:
-    """Resolve detail-row declarations and selected M349/M210 revisions."""
-    as_of = effective_date or date.today()
+    """Resolve detail-row declarations and an explicitly selected M349 revision.
+
+    The mapping fact is date-scoped, while M349 period membership belongs to the
+    selected filing coordinate.  Callers validating M349 therefore provide both
+    ``filing_year`` and ``period``; M210 grouping callers only need the dated
+    mapping fact and leave the M349 projection absent.
+    """
+    as_of = effective_date
     authority = bundled_authority()
     service = RegistryQueryService(authority)
-    m349_report = service.describe_modelo("349", as_of=as_of)
-    m210_report = service.describe_modelo("210", as_of=as_of)
-    if not m349_report.revision or not m210_report.revision or not m349_report.periods:
-        raise ValueError("selected M349/M210 registry revisions must declare detail-row scope")
+    if (filing_year is None) != (period is None):
+        raise ValueError("M349 registry selection requires both filing_year and period")
+    periods: frozenset[str] = frozenset()
+    if filing_year is not None and period is not None:
+        m349_report = service.describe_modelo_for_scope(
+            "349",
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        )
+        if not m349_report.revision or not m349_report.periods:
+            raise ValueError("selected M349 registry revision must declare detail-row scope")
+        periods = frozenset(str(candidate) for candidate in m349_report.periods)
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="detail-m349-m210-catalogues",
@@ -88,7 +113,7 @@ def _registry_detail_catalogue(
     if not isinstance(resolved, ResolvedMappingFact):
         raise ValueError("detail M349/M210 catalogue must resolve as a mapping fact")
     declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
-    return declarations, frozenset(str(period) for period in m349_report.periods)
+    return declarations, periods
 
 
 def _required_detail_declaration(declarations: Mapping[str, str], key: str) -> str:
@@ -102,6 +127,30 @@ def _detail_values(declarations: Mapping[str, str], key: str) -> frozenset[str]:
     return frozenset(
         value.strip() for value in _required_detail_declaration(declarations, key).split(",") if value.strip()
     )
+
+
+def resolve_detail_row_owning_modelos(*, effective_date: date) -> Mapping[str, str]:
+    """Project registry-declared ownership for every typed detail-row token."""
+    declarations, _ = _registry_detail_catalogue(effective_date=effective_date)
+    prefix = "detail_row."
+    suffix = ".owning_modelo"
+    ownership: dict[str, str] = {}
+    for key, value in declarations.items():
+        if not key.startswith(prefix) or not key.endswith(suffix):
+            continue
+        row_type = key[len(prefix) : -len(suffix)]
+        if not row_type or not value.strip():
+            raise ValueError(f"detail registry declaration has invalid row ownership: {key!r}")
+        ownership[row_type] = value.strip()
+    if not ownership:
+        raise ValueError("detail registry declaration is missing row ownership")
+    return ownership
+
+
+def resolve_detail_bearing_modelos(*, effective_date: date) -> frozenset[str]:
+    """Project the registry's repeated-detail modelo membership declaration."""
+    declarations, _ = _registry_detail_catalogue(effective_date=effective_date)
+    return _detail_values(declarations, "detail_bearing_modelos")
 
 
 # ---------------------------------------------------------------------------
@@ -478,10 +527,19 @@ class Modelo349RectificacionRow(BaseModel):
 
     @field_validator("periodo", mode="before")
     @classmethod
-    def _periodo_uppercase(cls, value: object) -> object:
+    def _periodo_uppercase(cls, value: object, info: ValidationInfo) -> object:
         if isinstance(value, str):
             normalised = value.strip().upper()
-            _, periods = _registry_detail_catalogue()
+            ejercicio = info.data.get("ejercicio")
+            if not isinstance(ejercicio, str) or not ejercicio.isdigit():
+                # Let the ejercicio validator report its own malformed year;
+                # period membership cannot be selected without that coordinate.
+                return normalised
+            _, periods = _registry_detail_catalogue(
+                effective_date=date(int(ejercicio), 12, 31),
+                filing_year=int(ejercicio),
+                period=normalised,
+            )
             if normalised not in periods:
                 accepted = ", ".join(repr(member) for member in sorted(periods))
                 raise ValueError(f"periodo must be one of {accepted}; got {value!r}")
@@ -526,7 +584,11 @@ def validate_m349_country_prefix_context(
     rectified_period: str | None = None,
 ) -> None:
     """Resolve the selected registry's M349 country-prefix applicability."""
-    declarations, periods = _registry_detail_catalogue()
+    declarations, periods = _registry_detail_catalogue(
+        effective_date=date(filing_year, 12, 31),
+        filing_year=filing_year,
+        period=period,
+    )
     operation_keys = _detail_values(declarations, "m349.operation_keys")
     _required_detail_declaration(declarations, "m349.country_prefixes")
     _required_detail_declaration(declarations, "m349.service_keys")
@@ -743,8 +805,8 @@ def _resolve_single_agrupacion_tipo_renta_code(rows: Sequence[Modelo210Agrupacio
     return next(iter(codes))
 
 
-def _require_annual_agrupacion_code(code: str) -> None:
-    declarations, _ = _registry_detail_catalogue()
+def _require_annual_agrupacion_code(code: str, *, effective_date: date) -> None:
+    declarations, _ = _registry_detail_catalogue(effective_date=effective_date)
     if code not in _detail_values(declarations, "m210.annual_grouping_codes"):
         raise Modelo210AgrupacionRentaRowsError(
             reason="unknown_grouping_code",
@@ -775,8 +837,13 @@ def _require_shared_agrupacion_bien_derecho(rows: Sequence[Modelo210AgrupacionRe
         )
 
 
-def _validate_agrupacion_payer_grouping(rows: Sequence[Modelo210AgrupacionRentaRow], code: str) -> None:
-    declarations, _ = _registry_detail_catalogue()
+def _validate_agrupacion_payer_grouping(
+    rows: Sequence[Modelo210AgrupacionRentaRow],
+    code: str,
+    *,
+    effective_date: date,
+) -> None:
+    declarations, _ = _registry_detail_catalogue(effective_date=effective_date)
     _required_detail_declaration(declarations, "m210.grouping_period")
     payer_mode_declarations = {
         key.removeprefix("m210.code").removesuffix(".payer_mode"): value
@@ -791,15 +858,19 @@ def _validate_agrupacion_payer_grouping(rows: Sequence[Modelo210AgrupacionRentaR
         )
 
 
-def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
-    """Validate the typed shape of an annual grouped-renta row set."""
+def validate_m210_agrupacion_renta_rows(
+    rows: Sequence[Modelo210AgrupacionRentaRow],
+    *,
+    effective_date: date,
+) -> None:
+    """Validate a grouped-renta row set against one dated registry catalogue."""
     _require_nonempty_agrupacion(rows)
     _require_unique_agrupacion_source_ids(rows)
     code = _resolve_single_agrupacion_tipo_renta_code(rows)
-    _require_annual_agrupacion_code(code)
+    _require_annual_agrupacion_code(code, effective_date=effective_date)
     _require_single_agrupacion_tipo_gravamen(rows)
     _require_shared_agrupacion_bien_derecho(rows)
-    _validate_agrupacion_payer_grouping(rows, code)
+    _validate_agrupacion_payer_grouping(rows, code, effective_date=effective_date)
 
 
 # ---------------------------------------------------------------------------
@@ -914,6 +985,8 @@ __all__ = [
     "Modelo349RectificacionRow",
     "ModeloDetailRow",
     "m349_nif_number_for_export",
+    "resolve_detail_bearing_modelos",
+    "resolve_detail_row_owning_modelos",
     "validate_m184_member_share_sum",
     "validate_m210_agrupacion_renta_rows",
     "validate_m347_threshold",

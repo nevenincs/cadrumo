@@ -14,9 +14,11 @@ from datetime import datetime
 from decimal import Decimal
 from typing import NamedTuple
 
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_verification import VerificationExpectationDefinition
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -51,7 +53,7 @@ class _ReconciliationContract(NamedTuple):
 
 def _selected_registry_reconciliation_context(
     work_unit: WorkUnit,
-) -> tuple[object, tuple[VerificationExpectationDefinition, ...]]:
+) -> tuple[RegistrySnapshot, tuple[VerificationExpectationDefinition, ...]]:
     """Return the pinned snapshot and its selected reconciliation expectations.
 
     ``describe_modelo_for_scope`` is deliberately checked against the
@@ -135,8 +137,12 @@ def _selected_reconciliation_contract(work_unit: WorkUnit) -> _ReconciliationCon
     matches: list[_ReconciliationContract] = []
     for expectation in expectations:
         counterpart_matches: list[tuple[str, VerificationExpectationDefinition]] = []
-        for modelo_definition in authority.modelos:
-            sibling_modelo = str(modelo_definition.id)
+        # This is a deliberate registry-wide metadata inventory: the
+        # counterpart is not a hard-coded model relationship.  Enumerate only
+        # canonical model identifiers, then point-select each candidate's
+        # revision for the work-unit coordinate; never hydrate or traverse a
+        # sibling's complete revision graph here.
+        for sibling_modelo in query_service.modelo_codes():
             if sibling_modelo == selected_modelo:
                 continue
             try:
@@ -145,7 +151,7 @@ def _selected_reconciliation_contract(work_unit: WorkUnit) -> _ReconciliationCon
                     filing_year=work_unit.filing_year,
                     period=work_unit.period.registry_token,
                 )
-                sibling_snapshot = authority.snapshot(
+                sibling_revision = query_service.revision_for_scope(
                     sibling_modelo,
                     filing_year=work_unit.filing_year,
                     period=work_unit.period.registry_token,
@@ -153,7 +159,7 @@ def _selected_reconciliation_contract(work_unit: WorkUnit) -> _ReconciliationCon
             except (RegistrySnapshotError, RegistryValidationError):
                 continue
             if (
-                str(sibling_report.revision) != str(sibling_snapshot.revision.id)
+                str(sibling_report.revision) != str(sibling_revision.id)
                 or sibling_report.filing_year is None
                 or int(sibling_report.filing_year) != int(work_unit.filing_year)
                 or sibling_report.period is None
@@ -162,7 +168,7 @@ def _selected_reconciliation_contract(work_unit: WorkUnit) -> _ReconciliationCon
                 continue
             counterpart_matches.extend(
                 (sibling_modelo, sibling_expectation)
-                for sibling_expectation in sibling_snapshot.revision.verification_expectations
+                for sibling_expectation in sibling_revision.verification_expectations
                 if _expectations_are_counterparts(expectation, sibling_expectation)
             )
         if len(counterpart_matches) == 1:
@@ -174,15 +180,15 @@ def _selected_reconciliation_contract(work_unit: WorkUnit) -> _ReconciliationCon
     return matches[0] if len(matches) == 1 else None
 
 
-def _casilla_decimal(values: Mapping[object, Decimal], casilla: object) -> Decimal:
+def _casilla_decimal(values: Mapping[CasillaId, Decimal], casilla: CasillaId) -> Decimal:
     """Read a persisted Decimal, using only the neutral arithmetic identity for absence."""
     value = values.get(casilla)
     return value if value is not None else Decimal("0")
 
 
 def _sum_declared_casillas(
-    values: Mapping[object, Decimal],
-    casilla_ids: tuple[object, ...],
+    values: Mapping[CasillaId, Decimal],
+    casilla_ids: tuple[CasillaId, ...],
 ) -> Decimal:
     """Aggregate the registry-declared operand casillas with generic addition."""
     return sum((_casilla_decimal(values, casilla) for casilla in casilla_ids), Decimal("0"))

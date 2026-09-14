@@ -79,22 +79,14 @@ CROSS_DOMAIN_FACT_PROBES = (
     CrossDomainFactProbe(
         domain="modelo-347-threshold",
         query=ScalarFactQuery(
-            fact_id="declarations.m347.counterparty-annual-threshold",
+            fact_id="m347-counterparty-declaration-threshold",
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=date(2025, 12, 31),
-            selectors=(
-                FactSelector(name="modelo", value="347"),
-                FactSelector(name="parameter_id", value="modelo-347-tercero-anual-threshold-eur"),
-            ),
         ),
         unsupported_query=ScalarFactQuery(
-            fact_id="declarations.m347.counterparty-annual-threshold",
+            fact_id="m347-counterparty-declaration-threshold",
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=date(1900, 1, 1),
-            selectors=(
-                FactSelector(name="modelo", value="347"),
-                FactSelector(name="parameter_id", value="modelo-347-tercero-anual-threshold-eur"),
-            ),
         ),
     ),
     CrossDomainFactProbe(

@@ -17,9 +17,9 @@ from ..domain.calculations.registry.foreign_asset_obligation_catalogue import (
     resolve_foreign_asset_obligation_catalogue,
 )
 from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ..domain.calculations.registry.queries import RegistryQueryService
 from ..domain.calculations.registry.schema import ModeloRevision
 from ..domain.calculations.registry.schema_formula import ParameterDefinition
-from ..domain.calculations.registry.temporal import select_revision
 
 _ANNUAL_PERIOD = "0A"
 _INITIAL_PARAMETER_IDS = {
@@ -81,9 +81,8 @@ def foreign_asset_declaration_thresholds(
     responsible for publication; this consumer never resolves a raw registry
     tree or chooses a source root.
     """
-    definition = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo)
-    selected = select_revision(
-        definition,
+    selected = RegistryQueryService(bundled_authority()).revision_for_scope(
+        modelo,
         filing_year=filing_year,
         period=_ANNUAL_PERIOD,
         on=date(filing_year, 12, 31),

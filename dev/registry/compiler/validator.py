@@ -422,10 +422,13 @@ class RegistryValidator:
             )
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
-        from cadrumo.domain.user_profile.loader import load_user_profile_schema
         from cadrumo.domain.user_profile.registry_contract import validate_user_profile_registry_contract
 
-        schema = self._user_profile_schema or load_user_profile_schema()
+        schema = self._user_profile_schema
+        if schema is None:
+            raise RegistryValidationError(
+                "registry validation requires the profile schema captured in the compiler source set"
+            )
         report = validate_user_profile_registry_contract(modelos, schema)
         return tuple(
             f"modelo {issue.modelo_id} revision {issue.revision_id}: user-profile schema {schema.id} "

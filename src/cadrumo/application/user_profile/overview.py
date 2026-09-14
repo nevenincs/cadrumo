@@ -50,7 +50,6 @@ from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
 from ...domain.user_profile.labels import profile_field_label, profile_section_title
-from ...domain.user_profile.loader import load_user_profile_schema
 
 # ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
@@ -59,7 +58,7 @@ from ...domain.user_profile.schema import ProfileFieldType, derived_selector_for
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState
 from .completeness import missing_required_field_paths, profile_section_rows, profile_value_is_present
-from .projections import record_to_path_values
+from .projections import profile_schema_for_record, record_to_path_values
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -692,7 +691,7 @@ def build_profile_overview(
         operator change language must rebuild the overview rather than
         re-render the existing one, or the table keeps the old language.
     """
-    resolved_schema = schema if schema is not None else load_user_profile_schema()
+    resolved_schema = profile_schema_for_record(record, schema=schema)
     values = record_to_path_values(record)
 
     sections: list[ProfileSectionView] = []

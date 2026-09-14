@@ -6,7 +6,7 @@ from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import NoReturn
+from typing import TYPE_CHECKING, NoReturn
 from uuid import UUID
 
 from ....application.user_profile.authentication import ProfilePasswordProofOperation
@@ -168,6 +168,9 @@ from .runtime_repository import (
 from .secure_object_namespaces import USER_PROFILE_SNAPSHOT_NAMESPACE, USER_PROFILE_VALUE_NAMESPACE
 from .sql.secure_objects import SecureObjectRepository
 
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
+
 
 def _capsule_relative(category: StorageCategory) -> Path:
     """Return the capsule-relative subpath the storage taxonomy declares for ``category``.
@@ -267,6 +270,7 @@ class _PersistenceProfileSnapshotStore:
         bucket_id: str,
         object_key: Callable[[str, str], str],
         objects: SecureObjectRepository | None,
+        profile_decode_context: ProfileDecodeContext,
     ) -> None:
         def not_found(snapshot_id: str) -> Exception:
             return ProfileSnapshotNotFoundError(context={"snapshot_id": snapshot_id})
@@ -314,6 +318,7 @@ class _PersistenceProfileSnapshotStore:
             enforce_payload_identity=False,
             classification_error_factory=classification_error,
             version_error_factory=version_error,
+            payload_validation_context=profile_decode_context,
         )
 
     def exists(self, snapshot_id: str) -> bool:
@@ -776,6 +781,7 @@ class _PersistenceProfileCustody:
         *,
         bucket_id: str,
         profile: StorageCustodyProfile,
+        profile_decode_context: ProfileDecodeContext,
     ) -> ProfileCustodyCarryMaterial:
         # Carry reaches the ledger, invoice and workflow graphs, which in turn
         # reach the authenticated profile aggregate.  Importing it at module
@@ -783,7 +789,11 @@ class _PersistenceProfileCustody:
         # listing -- pay for all of it, so it is loaded only when carry runs.
         from ._profile_custody_carry import collect_profile_custody_carry
 
-        return collect_profile_custody_carry(bucket_id=bucket_id, profile=profile)
+        return collect_profile_custody_carry(
+            bucket_id=bucket_id,
+            profile=profile,
+            profile_decode_context=profile_decode_context,
+        )
 
     def profile_snapshot_persistence(
         self,
@@ -791,6 +801,7 @@ class _PersistenceProfileCustody:
         *,
         object_key: Callable[[str, str], str],
         objects: ProfileCustodySecureObjectRepositoryPort | None = None,
+        profile_decode_context: ProfileDecodeContext,
     ) -> ProfileSnapshotPersistencePort:
         resolved = (
             None if objects is None else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
@@ -799,6 +810,7 @@ class _PersistenceProfileCustody:
             bucket_id=bucket_id,
             object_key=object_key,
             objects=resolved,
+            profile_decode_context=profile_decode_context,
         )
 
     def record_crypto(self) -> ProfileRecordCryptoPort:

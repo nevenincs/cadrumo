@@ -40,7 +40,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
@@ -70,7 +70,6 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
     M390_COMPENSATION_LAST_PERIOD_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationPeriodState,
@@ -172,6 +171,7 @@ def iva_compensation_period_key(period: Period) -> str:
 
 
 def require_iva_compensation_period_coordinates_current(state: IvaCompensationPeriodState) -> None:
+    """Refuse persisted compensation state whose registry coordinate is stale."""
     outcome = revision_carry_outcome(state.registry_snapshot_ref)
     if outcome.refused:
         raise IvaCompensationModeloError(
@@ -184,15 +184,22 @@ _SEED_SOURCE_OBS_PREFIX = "303:seed"
 _CORRECTED_SOURCE_OBS_PREFIX = "303:correction"
 
 
-def _registry_snapshot_ref_for_m303_period(period: Period) -> RegistrySnapshotRef:
-    inspection = bundled_authority().inspect_revision(
+def _registry_snapshot_ref_for_m303_period(
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> RegistrySnapshotRef:
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _registry_snapshot_ref_for_m303_period(period, operation=indexed_operation)
+    revision = operation.revision_for_context(
         Modelo("303").value,
         filing_year=period.filing_year,
         period=period.registry_token,
     )
     return RegistrySnapshotRef(
         modelo=Modelo("303").value,
-        revision_id=inspection.revision_id,
+        revision_id=str(revision.id),
         modelo_year=period.filing_year,
         period=period.registry_token,
     )
@@ -550,10 +557,17 @@ def _iva_compensation_decimal_refusal(
     )
 
 
-def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProtocol) -> None:
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == observation.modelo)
-    revision = select_revision(
-        modelo,
+def _validate_observed_casilla_ids(
+    observation: FiledDeclaracionObservationProtocol,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> None:
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            _validate_observed_casilla_ids(observation, operation=indexed_operation)
+        return
+    revision = operation.revision_for_context(
+        observation.modelo,
         filing_year=observation.ejercicio,
         period=observation.period.registry_token,
     )

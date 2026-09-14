@@ -6,16 +6,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ....domain.renta.rental_reduction import RentalReductionArt232Tier
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "renta-rental-reduccion-art-23-2-tier-catalogue"
 _ORDER_KEY = "tier_order"
@@ -89,13 +85,12 @@ def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
 def resolve_rental_reduction_art232_tier_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> RentalReductionArt232TierCatalogue:
     """Resolve the dated rental-reduction tier catalogue through authority."""
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError("rental reduction catalogue requires an explicit authority operation or scope")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_FACT_ID,
@@ -130,7 +125,7 @@ def require_rental_reduction_art232_tier(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> RentalReductionArt232Tier:
     """Return one registry-declared opaque tier token or refuse it."""
     return resolve_rental_reduction_art232_tier_catalogue(

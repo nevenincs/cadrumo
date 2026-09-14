@@ -30,10 +30,10 @@ from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from .._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from .._models import ExitCodeScenario

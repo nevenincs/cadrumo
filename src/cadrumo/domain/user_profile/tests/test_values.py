@@ -6,19 +6,37 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord, UserProfileSnapshot
+from ....core.hashing import content_hash_hex
+from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    UserProfileSnapshot,
+    create_user_profile_record,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PROFILE_ID = "8d87424d-0b5a-469e-b802-02ffdad316f1"
 _ACTIVE_PROFILE_ID = "503a9d70-8308-4cf8-9f56-0dd357f88594"
+_SCHEMA = load_user_profile_schema()
+_CREATE_CONTEXT = ProfileCreateContext(
+    schema=_SCHEMA,
+    generation=AuthorityGenerationPin(
+        content_hash_hex({"generation": "profile-values-fixture"}),
+        content_hash_hex({"reader": "profile-values-fixture"}),
+    ),
+)
 
 
 def test_profile_record_is_strict_frozen_and_carries_setup_state() -> None:
     created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
-    profile = UserProfileRecord(
+    profile = create_user_profile_record(
+        context=_CREATE_CONTEXT,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         setup_state=ProfileSetupState.COMPLETE,
@@ -123,7 +141,8 @@ def test_json_restoration_still_recovers_canonical_decimal_and_zero(
 
 def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
     created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
-    profile = UserProfileRecord(
+    profile = create_user_profile_record(
+        context=_CREATE_CONTEXT,
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -134,9 +153,15 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
         updated_at=created_at,
     )
 
-    first = UserProfileSnapshot.from_profile(profile, snapshot_id="snapshot-1", created_at=created_at)
+    first = UserProfileSnapshot.from_profile(
+        profile,
+        context=_CREATE_CONTEXT,
+        snapshot_id="snapshot-1",
+        created_at=created_at,
+    )
     second = UserProfileSnapshot.from_profile(
         profile.model_copy(update={"facts": tuple(reversed(profile.facts))}),
+        context=_CREATE_CONTEXT,
         snapshot_id="snapshot-2",
         created_at=created_at,
     )
@@ -147,6 +172,7 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
     with pytest.raises(ValueError, match="cannot snapshot an incomplete profile record"):
         UserProfileSnapshot.from_profile(
             profile.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}),
+            context=_CREATE_CONTEXT,
             snapshot_id="snapshot-3",
         )
 
@@ -157,7 +183,8 @@ def test_snapshot_hash_is_canonical_for_duplicate_same_window_facts() -> None:
         UserProfileFact(path="identity.name", value="Ada", source="manual_cli"),
         UserProfileFact(path="identity.name", value="Babbage", source="modelo_036_import"),
     )
-    profile = UserProfileRecord(
+    profile = create_user_profile_record(
+        context=_CREATE_CONTEXT,
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=facts,
@@ -165,9 +192,15 @@ def test_snapshot_hash_is_canonical_for_duplicate_same_window_facts() -> None:
         updated_at=created_at,
     )
 
-    first = UserProfileSnapshot.from_profile(profile, snapshot_id="snapshot-1", created_at=created_at)
+    first = UserProfileSnapshot.from_profile(
+        profile,
+        context=_CREATE_CONTEXT,
+        snapshot_id="snapshot-1",
+        created_at=created_at,
+    )
     second = UserProfileSnapshot.from_profile(
         profile.model_copy(update={"facts": tuple(reversed(facts))}),
+        context=_CREATE_CONTEXT,
         snapshot_id="snapshot-2",
         created_at=created_at,
     )

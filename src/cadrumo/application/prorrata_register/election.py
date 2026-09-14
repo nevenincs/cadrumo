@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.prorrata_register import ProrrataProvisionalProvenance
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     prorrata_electable_provenances,
@@ -31,7 +32,7 @@ class ProrrataElectionRefusal(StrEnum):
     REFERENCE_NOT_PERMITTED = "reference_not_permitted"
 
 
-class ProrrataElectionError(ValueError):
+class ProrrataElectionError(CadrumoError):
     """Raised when a declared election does not satisfy art. 105.
 
     Carries the discriminated reason rather than only prose, so an interface

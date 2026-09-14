@@ -47,22 +47,33 @@ if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local
     # imports below exist to avoid. The registry's binding modules consume the
     # public IVA facade, and these loaders are part of that facade.
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
+    from ..calculations.registry.authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
     from ..calculations.registry.schema_references import LegalReference, SourceReference
 
 
-def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
-    """Return catalogues from the published runtime authority, or from the compilation in progress.
+def registry_catalogues(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
+    """Reject bulk catalogue access; callers must use pinned point components.
 
-    Source trees are compiler input, never a product-time verification source.
+    The indexed authority deliberately exposes legal and source declarations by
+    identifier.  Returning a whole catalogue here would reintroduce the eager
+    authority path that this module is meant to keep out of runtime consumers.
     """
-    from ..calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
-
-    authority = bundled_authority()
-    return authority.catalogues.legal, authority.catalogues.sources, bundled_authority_artifact_path()
+    del operation
+    raise IvaCatalogueError("bulk IVA grounding catalogues are unavailable; use pinned point lookups")
 
 
-def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[str]]]) -> None:
+def verify_table_legal_refs(  # noqa: D417
+    table: str,
+    citations: Sequence[tuple[str, Sequence[str]]],
+    *,
+    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+    legal: Mapping[str, LegalReference] | None = None,
+) -> None:
     """Verify every citation a registry table's rows carry, or refuse the table.
 
     Outside a compilation, each cited provision must be catalogued in the published
@@ -85,20 +96,29 @@ def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[
             one of its declared clauses. The message enumerates every failure
             rather than the first.
     """
+    if authority is not None and operation is not None:
+        raise TypeError("IVA grounding verification accepts either authority or operation, not both")
     compiling = compiling_catalogues_in_scope()
+    evidence: ValidatedRegistryAuthority | None = None
     if compiling is not None:
-        legal, evidence = compiling[0], None
+        selected_legal, evidence = compiling[0], None
     else:
         # Local import keeps the public IVA facade outside the registry's
         # binding import cycle.
-        from ..calculations.registry.authority import bundled_authority
-
-        evidence = bundled_authority()
-        legal = evidence.catalogues.legal
+        if legal is not None:
+            selected_legal = legal
+        elif operation is not None:
+            selected_legal = {}
+        elif authority is not None:
+            selected_legal = authority.catalogues.legal  # type: ignore[attr-defined]
+        else:
+            raise IvaCatalogueError(
+                "IVA grounding verification requires an explicit operation, scoped authority, or legal catalogue",
+            )
     checked: set[str] = set()
     failures: list[str] = []
     for row, reference_ids in citations:
-        failures.extend(_citation_failures(row, reference_ids, legal, evidence, checked))
+        failures.extend(_citation_failures(row, reference_ids, selected_legal, evidence, checked, operation=operation))
     if failures:
         raise IvaCatalogueError(
             f"{table}: legal grounding verification failed:\n" + "\n".join(f" - {failure}" for failure in failures),
@@ -111,6 +131,8 @@ def _citation_failures(
     legal: Mapping[str, LegalReference],
     evidence: ValidatedRegistryAuthority | None,
     checked: set[str],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> list[str]:
     """Return one message per citation of ``row`` that fails, memoising the ids that pass."""
     from ...core.corpus_text import normalise_corpus_text
@@ -120,13 +142,23 @@ def _citation_failures(
     for ref_id in reference_ids:
         if ref_id in checked:
             continue
-        reference = legal.get(ref_id)
+        if operation is None:
+            reference = legal.get(ref_id)
+        else:
+            try:
+                reference = operation.legal_reference(ref_id)
+            except Exception:
+                reference = None
         if reference is None:
             failures.append(f"{row}: unknown legal_ref {ref_id!r}")
             continue
-        if evidence is not None:
+        if evidence is not None or operation is not None:
             try:
-                anchored_text = evidence.legal_evidence_text(ref_id)
+                anchored_text = (
+                    evidence.legal_evidence_text(ref_id)
+                    if evidence is not None
+                    else operation.legal_evidence(ref_id).anchored_text
+                )
             except AuthorityArtifactFormatError as exc:
                 failures.append(f"{row}: legal_ref {ref_id!r} has no published evidence: {exc}")
                 continue

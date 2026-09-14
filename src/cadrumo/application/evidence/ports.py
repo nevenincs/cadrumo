@@ -11,10 +11,11 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from .models import EvidenceBundle
 
 
-class EvidenceBundlePersistenceError(RuntimeError):
+class EvidenceBundlePersistenceError(CadrumoError):
     """Translated failure from an evidence-bundle persistence capability."""
 
     def __init__(self, operation: str) -> None:

@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from ..core.errors.hierarchy import CadrumoError
 from ..domain.user_profile.values import UserProfileRecord
 from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 
@@ -52,7 +53,7 @@ class StateProjectionProfileReadPort(Protocol):
         ...
 
 
-class StateProjectionReadError(RuntimeError):
+class StateProjectionReadError(CadrumoError):
     """Stable application error raised when a projection read cannot complete."""
 
     def __init__(self, operation: str) -> None:

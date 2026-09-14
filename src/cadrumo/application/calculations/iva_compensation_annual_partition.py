@@ -22,7 +22,7 @@ from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.bindings import (
     IvaCompensationAnnualPartitionRequirement,
@@ -48,7 +48,6 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import (
     IvaCompensationPeriodState,
     build_iva_compensation_carry_forward_report,
@@ -79,10 +78,17 @@ def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) 
     return values.get(casilla_id)
 
 
-def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == observation.modelo)
-    revision = select_revision(
-        modelo,
+def _validate_303_observation_casilla_ids(
+    observation: RegistryModeloObservation,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> None:
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            _validate_303_observation_casilla_ids(observation, operation=indexed_operation)
+        return
+    revision = operation.revision_for_context(
+        observation.modelo,
         filing_year=observation.filing_year,
         period=observation.period,
     )
@@ -100,11 +106,15 @@ def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation
         )
 
 
-def period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> IvaCompensationPeriodState:
+def period_state_from_303_envelope(
+    envelope: ObservationEnvelopePayload,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> IvaCompensationPeriodState:
     """Build one FIFO state from a validated filed Modelo 303 envelope."""
     validated = validate_normalized_m303_carry_observation_envelope(envelope)
     observation = validated.observation
-    _validate_303_observation_casilla_ids(observation)
+    _validate_303_observation_casilla_ids(observation, operation=operation)
     values = observation.casilla_values
     generated = _observed_value(values, _303_GENERADA_ID)
     if generated is None:
@@ -148,6 +158,7 @@ def resolve_iva_compensation_annual_partition_binding_values(
     envelopes: tuple[ObservationEnvelopePayload, ...],
     *,
     filing_year: int,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> dict[BindingId, Decimal]:
     """Resolve Modelo 390 annual compensation bindings from filed M303 states.
 
@@ -159,12 +170,14 @@ def resolve_iva_compensation_annual_partition_binding_values(
             records used to reconstruct the compensation FIFO state.
         filing_year: Annual filing year used to select same-year Modelo 303
             observations.
+        operation: Optional generation-pinned authority operation used to
+            validate the source revisions.
     """
     requirement = iva_compensation_annual_partition_requirement(revision)
     if requirement is None:
         return {}
     states = tuple(
-        period_state_from_303_envelope(envelope)
+        period_state_from_303_envelope(envelope, operation=operation)
         for envelope in envelopes
         if envelope.observation.modelo == Modelo("303").value and envelope.observation.filing_year == filing_year
     )
@@ -241,17 +254,17 @@ def _unresolved_diagnostics(
 def _select_partition_revision(
     registry_snapshot: RegistrySnapshot | None,
     context: CalculationSourceContext,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloRevision:
-    """Use the bound snapshot revision or select the canonical bundled one."""
+    """Use the bound snapshot or the caller's selected indexed revision."""
     revision = registry_snapshot.revision if registry_snapshot is not None else None
     if revision is not None:
         return revision
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == context.modelo)
-    return select_revision(
-        modelo,
-        filing_year=context.filing_year,
-        period=context.period.registry_token,
-    )
+    # The source-mesh context already carries the exact selected revision.
+    # Avoid a second temporal selection when no snapshot was supplied.
+    del operation
+    return context.revision
 
 
 def _partition_repository(

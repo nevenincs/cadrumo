@@ -23,11 +23,11 @@ from ....application.modelo.m303_regimen_simplificado_scope import active_taxpay
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_plazo import calculated_m210_plazo_resolution
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....core.irnr import M210PayerMode
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
+from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ....tests.cli_envelope import unwrap_envelope_notices
 from .cli_runner import invoke_cached_cli
 
@@ -86,7 +86,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             tipo_renta_code="01",
             importe=Decimal("100.00"),
             tipo_gravamen=Decimal("0.24"),
-            pagador_mode=M210PayerMode.SINGLE_PAYER,
+            pagador_mode=resolve_m210_payer_mode("single_payer", effective_date=_CLOCK.date()),
             pagador_id="ES-PAGADOR-1",
             deriva_de_bien_derecho=True,
             bien_derecho_id="ES-INMUEBLE-1",
@@ -96,7 +96,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             tipo_renta_code="01",
             importe=Decimal("200.00"),
             tipo_gravamen=Decimal("0.24"),
-            pagador_mode=M210PayerMode.SINGLE_PAYER,
+            pagador_mode=resolve_m210_payer_mode("single_payer", effective_date=_CLOCK.date()),
             pagador_id="ES-PAGADOR-1",
             deriva_de_bien_derecho=True,
             bien_derecho_id="ES-INMUEBLE-1",
@@ -246,10 +246,9 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
                         tipo_renta_code=tipo_renta_code,
                         importe=casilla_inputs["rendimientos_integros"],
                         tipo_gravamen=Decimal("0.24"),
-                        pagador_mode=(
-                            M210PayerMode.MULTIPLE_PAYERS_CODE_35
-                            if tipo_renta_code == "35"
-                            else M210PayerMode.SINGLE_PAYER
+                        pagador_mode=resolve_m210_payer_mode(
+                            "multiple_payers_code_35" if tipo_renta_code == "35" else "single_payer",
+                            effective_date=_CLOCK.date(),
                         ),
                         pagador_id=None if tipo_renta_code == "35" else "ES-PAGADOR-1",
                         deriva_de_bien_derecho=True,

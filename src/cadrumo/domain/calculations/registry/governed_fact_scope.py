@@ -111,9 +111,12 @@ def cache_governed_projection[**P, R](
 
         @wraps(function)
         def projected(*args: P.args, **kwargs: P.kwargs) -> R:
-            from .authority import bundled_authority
-
-            owner = governed_facts_in_scope() or bundled_authority()
+            owner = governed_facts_in_scope()
+            if owner is None:
+                raise RuntimeError(
+                    f"{getattr(function, '__qualname__', type(function).__name__)} requires an explicit "
+                    "generation-pinned governed-fact scope"
+                )
             key = (id(owner), args, tuple(sorted(kwargs.items())))
             with lock:
                 cached = cache.get(key)

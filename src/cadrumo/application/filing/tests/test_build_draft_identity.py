@@ -102,7 +102,10 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=build_runtime_schema_provider(
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+        ),
     )
 
     assert draft.subject_tax_id is not None

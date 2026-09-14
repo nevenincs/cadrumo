@@ -1,15 +1,13 @@
 """The derived live-tree operation-exposure census.
 
-This is a census, not a sample. Its denominator is the set of files git
-actually tracks under ``src/cadrumo`` — resolved by asking git, never by
-walking the filesystem, because a filesystem walk silently absorbs
-untracked scratch files, a peer's in-flight rename, and build output, and
-a census whose denominator is contaminated proves nothing about the tree
-anyone else will see.
+This is a census, not a sample. Its denominator is the repository-visible
+source tree under ``src/cadrumo``. The shared enumerator applies checked-in
+ignore rules without consulting version-control state, so ignored scratch and
+build output stay out while a peer's new source file enters the census immediately.
 
 Every join below is derived from two independent readings that must agree:
 the live production registry, built through the one production composition
-seam, and a static scan of those tracked sources. A claim that appears in
+seam, and a static scan of those source files. A claim that appears in
 one reading and not the other is the finding.
 
 No aggregate count is ever a pass condition. Counts appear only inside
@@ -22,13 +20,13 @@ constant.
 from __future__ import annotations
 
 import ast
-import subprocess
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.source_tree import repository_files
 
 from ...application.operations.registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
 from ..operation_composition import build_production_operation_registry
@@ -83,29 +81,18 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
 
 
 @cache
-def _tracked_sources() -> tuple[str, ...]:
-    """Every Python file git tracks under the package, as repo-relative paths."""
-    completed = subprocess.run(
-        ["git", "ls-files", "--", "src/cadrumo/*.py", "src/cadrumo/**/*.py"],  # noqa: S607
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    paths = tuple(
-        sorted(
-            path for line in completed.stdout.splitlines() if (path := line.strip()) and (_REPO_ROOT / path).is_file()
-        ),
-    )
+def _source_files() -> tuple[str, ...]:
+    """Every repository-visible Python file under the package, as repo-relative paths."""
+    paths = tuple(path for path in repository_files(_REPO_ROOT, under=("src/cadrumo",)) if path.endswith(".py"))
     if not paths:
-        message = "git tracks no package sources; the census denominator is empty"
+        message = "the repository contains no visible package sources; the census denominator is empty"
         raise AssertionError(message)
     return paths
 
 
 def _production_sources() -> tuple[str, ...]:
-    """The tracked sources excluding test packages, which declare nothing live."""
-    return tuple(path for path in _tracked_sources() if "/tests/" not in path)
+    """The source files excluding test packages, which declare nothing live."""
+    return tuple(path for path in _source_files() if "/tests/" not in path)
 
 
 @cache
@@ -141,7 +128,7 @@ def _definitions() -> tuple[OperationDefinition, ...]:
 
 @cache
 def _references_by_package() -> Mapping[str, frozenset[str]]:
-    """Which declared operation ids each tracked production file names.
+    """Which declared operation ids each production source file names.
 
     A file names an operation either by its string id or by the constant
     that carries it, and both readings are collected: a surface that
@@ -220,16 +207,16 @@ def _paths_under(prefix: str) -> Iterable[str]:
     return (path for path in _production_sources() if path.startswith(prefix))
 
 
-def test_the_census_denominator_is_the_tracked_tree() -> None:
-    """The census reads git's file list, and that list covers the package."""
-    tracked = _tracked_sources()
-    assert all(path.startswith(_PACKAGE_PREFIX) for path in tracked)
+def test_the_census_denominator_is_the_repository_visible_tree() -> None:
+    """The census reads the repository-visible tree and covers the package."""
+    sources = _source_files()
+    assert all(path.startswith(_PACKAGE_PREFIX) for path in sources)
     # The denominator must reach the operation platform and every frontend
     # package the projection map names, or a join below could pass by
     # scanning nothing at all.
-    assert any(path.startswith("src/cadrumo/application/operations/") for path in tracked)
-    assert any(path.startswith("src/cadrumo/entrypoints/tui/") for path in tracked)
-    assert any(path.startswith("src/cadrumo/entrypoints/cli/") for path in tracked)
+    assert any(path.startswith("src/cadrumo/application/operations/") for path in sources)
+    assert any(path.startswith("src/cadrumo/entrypoints/tui/") for path in sources)
+    assert any(path.startswith("src/cadrumo/entrypoints/cli/") for path in sources)
 
 
 def test_every_declared_operation_id_joins_exactly_one_registered_definition() -> None:
@@ -241,7 +228,7 @@ def test_every_declared_operation_id_joins_exactly_one_registered_definition() -
     assert not unregistered, (
         f"declared but absent from the production registry: {[(item, declared[item]) for item in unregistered]}"
     )
-    assert not undeclared, f"registered but declared nowhere in the tracked tree: {undeclared}"
+    assert not undeclared, f"registered but declared nowhere in the source tree: {undeclared}"
 
 
 def test_every_registered_definition_carries_a_matching_executor_factory() -> None:
@@ -282,7 +269,7 @@ def _shared_seam_exposures() -> frozenset[str]:
 
 
 def _exposures_for(projection: OperationFrontendProjection) -> frozenset[str]:
-    """Every operation a projection can actually reach in the tracked tree."""
+    """Every operation a projection can actually reach in the source tree."""
     references = _references_by_package()
     prefix = _FRONTEND_PACKAGES[projection]
     own: set[str] = set()
@@ -300,8 +287,8 @@ def test_every_claimed_projection_joins_a_real_surface() -> None:
         if definition.definition_id not in _exposures_for(projection)
     )
     assert not unreached, (
-        f"{len(unreached)} projection claims join no surface in the tracked tree "
-        f"(denominator: {len(_production_sources())} tracked production sources, "
+        f"{len(unreached)} projection claims join no surface in the source tree "
+        f"(denominator: {len(_production_sources())} production sources, "
         f"{len(_definitions())} registered operations): {unreached}"
     )
 
@@ -320,7 +307,7 @@ def test_every_surface_reference_joins_a_definition_that_claims_it() -> None:
 
 
 def _asyncio_run_sites(prefix: str) -> tuple[str, ...]:
-    """Tracked production files under ``prefix`` that own an event loop."""
+    """Production files under ``prefix`` that own an event loop."""
     found: list[str] = []
     for path in _paths_under(prefix):
         for node in ast.walk(_parsed(path)):

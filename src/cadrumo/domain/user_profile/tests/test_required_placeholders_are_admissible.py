@@ -23,8 +23,8 @@ know what should have been chosen instead.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ..loader import load_user_profile_schema
 from ..schema import ProfileFieldDefinition
 from .schema_value_support import REQUIRED_PROFILE_PLACEHOLDERS
 

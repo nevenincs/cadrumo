@@ -358,9 +358,8 @@ def _resolve_entries(
 
 @cache_governed_projection(maxsize=64)
 def _bundled_entries(effective_date: date) -> Mapping[str, str]:
-    from .authority import bundled_authority
-
-    return _resolve_entries(effective_date=effective_date, authority=(governed_facts_in_scope() or bundled_authority()))
+    del effective_date
+    raise RegistryValidationError("IVA schema vocabulary requires an explicit authority operation or scope")
 
 
 def _selected_entries(

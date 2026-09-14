@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
@@ -22,6 +23,11 @@ from ....domain.modelos.calculation_revision_m303_handoff import (
     M303RegimenSimplificadoFilingEvidence,
 )
 from ..m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+
+
+def _m303_scope_for_composition(composition: str) -> M303RegimenSimplificadoScope:
+    """Project one fixture composition through the canonical 0098 vocabulary."""
+    return m303_regime_composition_simplified_scope(composition)
 
 
 def regimen_simplificado_filing_evidence(
@@ -52,7 +58,7 @@ def regimen_simplificado_filing_evidence(
 def general_m303_filing_evidence(period: Period, *, reference: str) -> FilingInstanceEvidence:
     """Build explicit not-claimed evidence bound to the exact registry snapshot."""
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=_m303_scope_for_composition("general"),
     )
     snapshot = bundled_authority().snapshot(
         "303",
@@ -95,7 +101,7 @@ def general_m303_filing_evidence_from_regimen_snapshot(
 ) -> FilingInstanceEvidence:
     """Build real general-scope evidence from an already validated static authority coordinate."""
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=_m303_scope_for_composition("general"),
     )
     return FilingInstanceEvidence(
         m303=M303FilingInstanceEvidence(

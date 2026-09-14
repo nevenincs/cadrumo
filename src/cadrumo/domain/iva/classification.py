@@ -772,7 +772,6 @@ def _registry_iva_classification_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> ResolvedMappingFact:
     """Resolve the dated IVA catalogue consumed by the generic evaluator."""
-    from ...domain.calculations.registry.authority import bundled_authority
     from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
     from ...domain.calculations.registry.schema_base import DateAxis
 
@@ -780,7 +779,8 @@ def _registry_iva_classification_catalogue(
         from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 
         authority = governed_facts_in_scope()
-    authority = authority or bundled_authority()
+    if authority is None:
+        raise IvaValidationError("IVA classification catalogue requires an explicit operation or scoped fact source")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-invoice-classification-catalogue",
@@ -812,6 +812,7 @@ def classify_iva(
     rules: Iterable[IvaClassificationRule] | None = None,
     rate_categories: Mapping[IvaRateKind, IvaCategory] | None = None,
     rate_territories: frozenset[IvaTerritorialScope] | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaClassificationResult:
     """Evaluate registry-projected rows in their supplied order.
 
@@ -820,7 +821,7 @@ def classify_iva(
     when a matched row derives a category from a rate tier, provide the
     registry-owned ``rate_categories`` and ``rate_territories`` mappings.
     """
-    _registry_iva_classification_catalogue(criteria.transaction_date)
+    _registry_iva_classification_catalogue(criteria.transaction_date, authority=authority)
     if rules is None:
         raise IvaValidationError("IVA classification rows must be supplied by registry authority")
     projected_rules = tuple(rules)
@@ -840,6 +841,7 @@ def classify_iva(
             category,
             rate_categories=rate_categories,
             rate_territories=rate_territories,
+            authority=authority,
         )
         return IvaClassificationResult(
             category=category,
@@ -859,6 +861,7 @@ def _resolve_rate_for_category(
     *,
     rate_categories: Mapping[IvaRateKind, IvaCategory] | None,
     rate_territories: frozenset[IvaTerritorialScope] | None,
+    authority: GovernedFactSource | None,
 ) -> IvaRateRecord | None:
     """Resolve a rate through caller-supplied registry mappings."""
     if rate_categories is None or rate_territories is None:
@@ -868,9 +871,9 @@ def _resolve_rate_for_category(
         return None
     if criteria.issuer_residency not in rate_territories:
         return None
-    member_state = spanish_eu_member_state(effective_date=criteria.transaction_date)
+    member_state = spanish_eu_member_state(effective_date=criteria.transaction_date, authority=authority)
     try:
-        return lookup_rate(member_state, tier, criteria.transaction_date)
+        return lookup_rate(member_state, tier, criteria.transaction_date, authority=authority)
     except IvaRateNotFoundError:
         _logger.debug(
             "classify_iva: lookup_rate(%s, %s, %s) failed; returning rate=None",

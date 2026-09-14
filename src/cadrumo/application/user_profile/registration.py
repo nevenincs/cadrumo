@@ -42,7 +42,11 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as _utc_now
-from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, new_profile_id
+from ...domain.user_profile.values import (
+    ProfileSetupState,
+    create_user_profile_record,
+    new_profile_id,
+)
 from ..evidence.profile_legal_hold import try_record_legal_hold_snapshot
 from ..filing.retention import try_record_filing_retention_snapshot
 from .capsule_record import ProfileRecordSession
@@ -60,6 +64,7 @@ from .validation import reject_invalid_profile_facts
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from ...domain.calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
     from ...domain.user_profile.values import UserProfileFact
     from .recovery_custody import ProfileRecoveryEnrollment
 
@@ -128,6 +133,8 @@ def register_profile_with_credentials(
     passphrase: str,
     facts: tuple[UserProfileFact, ...] = (),
     recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+    profile_create_context: ProfileCreateContext,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRegistrationOutcome:
     """Create a profile from a label and a passphrase, and unlock it.
 
@@ -175,6 +182,10 @@ def register_profile_with_credentials(
             a wrapper nobody received. A caller with no interactive terminal
             must provide a bounded two-way secret channel; it cannot create a
             password-only profile.
+        profile_create_context: Schema context pinned for the new record.
+        profile_decode_context: Schema context pinned for the authenticated
+            record session. It must share the authority generation with
+            ``profile_create_context``.
 
     Returns:
         A :class:`ProfileRegistrationOutcome` for the newly-live profile.
@@ -188,6 +199,13 @@ def register_profile_with_credentials(
             Missing filing fields are not refused: the profile is born
             incomplete on purpose.
     """
+    if (
+        profile_create_context.schema != profile_decode_context.schema
+        or profile_create_context.generation != profile_decode_context.generation
+    ):
+        raise ProfileRegistrationError(
+            "profile registration requires create and decode contexts from one authority generation",
+        )
     resolved_label = label.strip()
     if not resolved_label:
         raise ProfileRegistrationError(
@@ -206,6 +224,7 @@ def register_profile_with_credentials(
         )
 
     identity = UUID(new_profile_id())
+
     dek = token_bytes(32)
     dek_epoch = b64encode(token_bytes(16)).decode("ascii")
     custody_material = create_profile_custody_registration_material(
@@ -217,12 +236,21 @@ def register_profile_with_credentials(
     )
     envelope = custody_material.envelope
     sentinel = custody_material.sentinel
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope,
+        dek=dek,
+        profile_decode_context=profile_decode_context,
+    )
     # A profile is born incomplete, so missing filing fields are legitimate
     # here -- but an unknown path, an engine-derived path, or a mis-shaped
     # value is not, and refusing them only on later edits would let the create
     # door plant exactly what every edit afterwards is forbidden to write.
-    reject_invalid_profile_facts(str(identity), facts, require_complete=False)
+    reject_invalid_profile_facts(
+        str(identity),
+        facts,
+        require_complete=False,
+        schema=profile_create_context.schema,
+    )
     with ExitStack() as recovery_scope:
         # Minted ahead of the transaction, and entered on the scope so the
         # 24 words are zeroised on every exit -- the successful one, the
@@ -264,7 +292,8 @@ def register_profile_with_credentials(
                     password_envelope=envelope,
                     sentinel=sentinel,
                     data_files={},
-                    initial_record=UserProfileRecord(
+                    initial_record=create_user_profile_record(
+                        context=profile_create_context,
                         profile_id=str(identity),
                         facts=facts,
                         setup_state=ProfileSetupState.INCOMPLETE,

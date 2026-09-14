@@ -22,7 +22,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
 from ...domain.deadlines.models import IVARegime, TaxpayerProfile
 from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
-from ...domain.user_profile.loader import load_user_profile_schema
+from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import (
     UserProfileFact,
@@ -39,14 +39,26 @@ stated one, so a windowed fact supersedes an unwindowed one at the same
 path. Matches the sentinel the record resolvers already sort on.
 """
 
-_default_schema_cache: ProfileSchemaDefinition | None = None
+
+def _schema_for_record(
+    record: UserProfileRecord | UserProfileSnapshot,
+    schema: ProfileSchemaDefinition | None,
+) -> ProfileSchemaDefinition:
+    """Require the schema pinned by the enclosing authority operation."""
+    if not isinstance(schema, ProfileSchemaDefinition):
+        raise UserProfileValidationError(
+            "profile projection requires the schema pinned to the authority operation",
+        )
+    return schema
 
 
-def _default_schema() -> ProfileSchemaDefinition:
-    global _default_schema_cache
-    if _default_schema_cache is None:
-        _default_schema_cache = load_user_profile_schema()
-    return _default_schema_cache
+def profile_schema_for_record(
+    record: UserProfileRecord | UserProfileSnapshot,
+    *,
+    schema: ProfileSchemaDefinition | None = None,
+) -> ProfileSchemaDefinition:
+    """Return the schema explicitly supplied by the authority operation."""
+    return _schema_for_record(record, schema)
 
 
 def _render_fact_value(value: object) -> str:
@@ -89,7 +101,9 @@ def facts_to_values(
     ``tax.id``. Facts whose path is not in the schema fall through
     untranslated.
     """
-    selector_index = _selector_index(schema or _default_schema())
+    if schema is None:
+        raise UserProfileValidationError("facts projection requires an explicit pinned profile schema")
+    selector_index = _selector_index(schema)
     values: dict[str, str] = {}
     for fact in facts:
         if fact.value is None:
@@ -110,9 +124,9 @@ def record_to_values(
 
     Args:
         record: The :class:`UserProfileRecord` to project.
-        schema: Optional profile schema definition override.
+        schema: Profile schema definition supplied by the authority operation.
     """
-    return facts_to_values(record.facts, schema=schema)
+    return facts_to_values(record.facts, schema=_schema_for_record(record, schema))
 
 
 def snapshot_to_values(
@@ -121,7 +135,7 @@ def snapshot_to_values(
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, str]:
     """Project an immutable filing snapshot into the selector-keyed flat values mapping."""
-    return facts_to_values(snapshot.facts, schema=schema)
+    return facts_to_values(snapshot.facts, schema=_schema_for_record(snapshot, schema))
 
 
 def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact, ...]:
@@ -265,13 +279,13 @@ def projection_for_taxpayer(
             :class:`UserProfileSnapshot`, or a pre-projected flat mapping.
         tax_id_default: Fallback NIF when the profile carries none.
         iva_regime_default: Fallback IVA regime when the profile carries none.
-        schema: Optional profile schema definition override.
+        schema: Profile schema definition supplied by the authority operation.
 
     The single coercion path goes through :func:`taxpayer_profile_from_mapping`
     so canonical-token semantics stay in lockstep with the wizard descriptor.
     """
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
-        mapping = _merged_taxpayer_values(facts, schema=schema)
+        mapping = _merged_taxpayer_values(facts, schema=_schema_for_record(facts, schema))
     else:
         mapping = {str(key): str(value) for key, value in facts.items() if value is not None}
     return taxpayer_profile_from_mapping(
@@ -339,6 +353,7 @@ __all__ = [
     "facts_to_values",
     "profile_fact_index",
     "profile_path_values_for_bucket",
+    "profile_schema_for_record",
     "projection_for_taxpayer",
     "record_to_path_values",
     "record_to_values",

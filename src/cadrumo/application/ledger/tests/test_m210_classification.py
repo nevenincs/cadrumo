@@ -26,6 +26,7 @@ import pytest
 from ....core.irnr import M210PayerMode
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
+from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ....domain.transactions.models import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
@@ -41,6 +42,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "13131313-1313-4313-8313-131313131313"
 _CODE = "01"
+_M210_EFFECTIVE_DATE = date(2025, 1, 1)
+_SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
 
 
 def _transaction(*, provider_id: str, direction: TransactionDirection) -> Transaction:
@@ -166,7 +169,7 @@ def _complete(**overrides: object) -> _Answers:
         "tipo_renta_code": _CODE,
         "gross_income_amount": Decimal("1000.00"),
         "applicable_rate": Decimal("0.19"),
-        "payer_mode": M210PayerMode.SINGLE_PAYER,
+        "payer_mode": _SINGLE_PAYER,
         # Required by the domain model: a non-35 income code declared under a
         # single payer must name that payer. Omitting it makes the "complete"
         # fixture incomplete and every refusal below untestable.
@@ -206,7 +209,8 @@ def test_a_complete_declaration_on_an_incoming_row_is_built() -> None:
     assert result is not None
     assert result.official_tipo_renta_code == _CODE
     assert result.gross_income_amount == Decimal("1000.00")
-    assert result.payer_mode is M210PayerMode.SINGLE_PAYER
+    assert isinstance(result.payer_mode, M210PayerMode)
+    assert result.payer_mode == _SINGLE_PAYER
 
 
 @pytest.mark.parametrize("omitted", ["tipo_renta_code", "gross_income_amount", "applicable_rate", "payer_mode"])

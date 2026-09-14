@@ -5,10 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 
 
-class TaxationComparisonPersistenceError(RuntimeError):
+class TaxationComparisonPersistenceError(CadrumoError):
     """Translated failure while loading work units for taxation comparison."""
 
     def __init__(self, operation: str) -> None:

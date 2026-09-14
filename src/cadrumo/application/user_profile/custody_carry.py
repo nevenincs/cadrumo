@@ -8,10 +8,15 @@ custody port.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ...core.storage_taxonomy import StorageCustodyProfile
 from ...domain.user_profile.errors import ProfileExportError
 from ...domain.user_profile.portable_export import CarriedSecureObject, CoverageManifest
 from .custody_ports import ProfileCustodyCarryMaterial, profile_custody_port
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 
 def normalize_storage_custody_profile(
@@ -30,10 +35,12 @@ def _carry_material(
     *,
     bucket_id: str,
     profile: StorageCustodyProfile,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileCustodyCarryMaterial:
     return profile_custody_port().collect_profile_custody_carry(
         bucket_id=bucket_id,
         profile=profile,
+        profile_decode_context=profile_decode_context,
     )
 
 
@@ -41,9 +48,14 @@ def build_secure_object_custody_payload(
     *,
     bucket_id: str,
     custody_profile: StorageCustodyProfile,
+    profile_decode_context: ProfileDecodeContext,
 ) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
     """Build generic custody rows and their exact namespace-coverage fact."""
-    material = _carry_material(bucket_id=bucket_id, profile=custody_profile)
+    material = _carry_material(
+        bucket_id=bucket_id,
+        profile=custody_profile,
+        profile_decode_context=profile_decode_context,
+    )
     if custody_profile is StorageCustodyProfile.FULL and material.unclassified_namespaces:
         raise ProfileExportError(
             context={

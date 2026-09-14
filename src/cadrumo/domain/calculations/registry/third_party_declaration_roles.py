@@ -174,10 +174,12 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
 def _bundled_catalogue(effective_date: date) -> ThirdPartyDeclarationRoleCatalogue:
     from .authority import bundled_authority
 
-    return _catalogue(_resolve_entries(
-        effective_date=effective_date,
-        authority=governed_facts_in_scope() or bundled_authority(),
-    ))
+    return _catalogue(
+        _resolve_entries(
+            effective_date=effective_date,
+            authority=governed_facts_in_scope() or bundled_authority(),
+        )
+    )
 
 
 def _selected_catalogue(

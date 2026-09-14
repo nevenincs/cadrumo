@@ -7,12 +7,16 @@ operator-supplied tokens with :func:`parse_scope_tokens`.
 
 from __future__ import annotations
 
-from typing import Annotated
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.models import STRICT_FROZEN_CONFIG
+
+if TYPE_CHECKING:
+    from ...calculations.registry.authority import PinnedAuthorityOperation
 
 ALL_TOKEN = "ALL"
 
@@ -68,15 +72,38 @@ class ApoderamientosCatalogue(BaseModel):
         return None
 
 
-def load_default_catalogue() -> ApoderamientosCatalogue:
-    """Adapt the scope catalogue from the bundled published authority.
+def load_default_catalogue(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> ApoderamientosCatalogue:
+    """Adapt the scope catalogue from the caller's pinned published authority.
 
     Returns:
         The validated :class:`ApoderamientosCatalogue` with all registered scopes.
     """
-    from ...calculations.registry.authority import bundled_authority
+    if operation is None:
+        raise UnknownScopeError(
+            translated_message="errors.refused.refused_apoderado_unknown_scope",
+            context={"validation_rule": "explicit_pinned_authority_operation_required"},
+        )
+    from ...calculations.registry.runtime_catalogues import ApoderamientoScopeRecord
 
-    runtime = bundled_authority().catalogues.runtime
+    loaded = operation.runtime_catalogue("apoderamientos_scopes")
+    if not isinstance(loaded, Mapping) or not all(
+        isinstance(value, ApoderamientoScopeRecord) for value in loaded.values()
+    ):
+        raise UnknownScopeError(
+            translated_message="errors.refused.refused_apoderado_unknown_scope",
+            context={"validation_rule": "invalid_indexed_authority_component"},
+        )
+    version_value = operation.runtime_catalogue("apoderamientos_version")
+    if not isinstance(version_value, str) or not version_value.strip():
+        raise UnknownScopeError(
+            translated_message="errors.refused.refused_apoderado_unknown_scope",
+            context={"validation_rule": "invalid_indexed_authority_component"},
+        )
+    entries = loaded.values()
+    version = version_value
     scopes = tuple(
         ApoderadoScope(
             code=entry.code,
@@ -84,10 +111,10 @@ def load_default_catalogue() -> ApoderamientosCatalogue:
             name_en=entry.name_en,
             modelo_codes=entry.modelo_codes,
         )
-        for entry in runtime.apoderamientos_scopes.values()
+        for entry in entries
     )
     return ApoderamientosCatalogue(
-        catalogue_version=runtime.apoderamientos_version,
+        catalogue_version=version,
         scopes=scopes,
     )
 

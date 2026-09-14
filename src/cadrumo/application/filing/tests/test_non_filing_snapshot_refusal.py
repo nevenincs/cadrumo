@@ -65,7 +65,11 @@ def test_named_non_filing_modelo_keeps_the_registry_grade_refusal() -> None:
     refusal names the modelo, the revision and both grades.
     """
     with pytest.raises(RegistryValidationError) as exc_info:
-        build_runtime_schema_provider(modelos=(_MODELO,))
+        build_runtime_schema_provider(
+            modelos=(_MODELO,),
+            filing_year=_PERIOD.filing_year,
+            period=_PERIOD,
+        )
 
     _assert_names_modelo_revision_and_both_grades(str(exc_info.value))
 

@@ -5,12 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.profile_schema import capture_profile_schema
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
 from ...calculations.registry.authority import bundled_authority
-from ..errors import SCHEMA_LOAD_MESSAGE_KEY, UserProfileNotFoundError, UserProfileSchemaLoadError
-from ..loader import CONDITION_SCHEMA_PATH_STAT, CONDITION_SCHEMA_TABLE_PRESENT, load_user_profile_schema
+from ...calculations.registry.errors import RegistryValidationError
+from ..errors import UserProfileNotFoundError
 from ..schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -51,39 +53,21 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
     } <= {section.key for section in schema.sections}
 
 
-def test_missing_user_profile_schema_path_raises_typed_localized_error(tmp_path: Path) -> None:
+def test_missing_user_profile_schema_path_is_refused_by_development_capture(tmp_path: Path) -> None:
     missing = tmp_path / "missing-schema.toml"
 
-    with pytest.raises(UserProfileSchemaLoadError) as exc_info:
-        load_user_profile_schema(missing)
+    with pytest.raises(RegistryValidationError, match="unavailable") as exc_info:
+        capture_profile_schema(missing)
 
     assert isinstance(exc_info.value.__cause__, FileNotFoundError)
-    assert exc_info.value.translated_message == SCHEMA_LOAD_MESSAGE_KEY
-    assert str(exc_info.value) == SCHEMA_LOAD_MESSAGE_KEY
-    assert exc_info.value.context == {
-        "operation": "stat",
-        "condition": CONDITION_SCHEMA_PATH_STAT,
-        "path": str(missing),
-        "schema": "user_profile",
-    }
 
 
-def test_user_profile_schema_missing_tables_raises_structured_domain_error(tmp_path: Path) -> None:
+def test_user_profile_schema_missing_tables_are_refused_by_development_parser(tmp_path: Path) -> None:
     schema_path = tmp_path / "schema.toml"
     schema_path.write_text("[not_schema]\nid = 'wrong'\n", encoding="utf-8")
 
-    with pytest.raises(UserProfileSchemaLoadError) as exc_info:
-        load_user_profile_schema(schema_path)
-
-    assert exc_info.value.__cause__ is None
-    assert exc_info.value.translated_message == SCHEMA_LOAD_MESSAGE_KEY
-    assert str(exc_info.value) == SCHEMA_LOAD_MESSAGE_KEY
-    assert exc_info.value.context == {
-        "operation": "validate",
-        "condition": CONDITION_SCHEMA_TABLE_PRESENT,
-        "path": str(schema_path),
-        "schema": "user_profile",
-    }
+    with pytest.raises(RegistryValidationError, match="invalid envelope"):
+        capture_profile_schema(schema_path)
 
 
 def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None:

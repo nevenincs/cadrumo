@@ -8,13 +8,14 @@ imports do not enter ``sys.modules`` at user-profile package init.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, field_validator, model_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
@@ -27,7 +28,10 @@ from ...core.parsing.utils import parse_bool
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
 from .errors import UserProfileValidationError
-from .loader import load_user_profile_schema
+from .schema import ProfileSchemaDefinition
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
 
 _SnapshotId = Annotated[
     str,
@@ -45,14 +49,52 @@ _FieldPath = Annotated[
 _Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
 
 
-def declared_provenance_sources() -> frozenset[str]:
-    """Return the provenance tokens the user-profile schema declares.
+def declared_provenance_sources(schema: ProfileSchemaDefinition) -> frozenset[str]:
+    """Return the provenance tokens declared by *schema*.
 
-    Read through the schema loader rather than cached here, so a caller
-    that swaps the schema sees its declared set rather than a stale copy;
-    the loader owns the caching.
+    The schema is an explicit input now.  This helper deliberately performs
+    no authority or filesystem lookup; callers that need a profile schema
+    must obtain it from their pinned authority generation first.
     """
-    return frozenset(load_user_profile_schema().field("provenance.source").enum_values)
+    return frozenset(schema.field("provenance.source").enum_values)
+
+
+if TYPE_CHECKING:
+    type ProfileContext = ProfileCreateContext | ProfileDecodeContext
+else:
+    ProfileContext = object
+
+
+def _authority_context_types() -> tuple[type[ProfileCreateContext], type[ProfileDecodeContext]]:
+    """Resolve the frozen authority context classes after package import."""
+    from ..calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
+
+    return ProfileCreateContext, ProfileDecodeContext
+
+
+def _schema_from_context(info: ValidationInfo, *, surface: str) -> ProfileSchemaDefinition:
+    """Extract a pinned profile schema from pydantic validation context.
+
+    Pydantic's direct constructor API cannot carry a context.  Domain value
+    records therefore use the explicit factory functions below for authority-
+    bound creation and decoding.  Fact-level construction remains useful for
+    building a pending edit; the record factory supplies the context when it
+    validates the complete payload.
+    """
+    context = info.context
+    if isinstance(context, _authority_context_types()):
+        return context.schema
+    raise UserProfileValidationError(f"{surface}: validation requires an explicit pinned profile context")
+
+
+def _context_for_schema(context: object) -> ProfileContext:
+    """Validate the small context contract before entering pydantic."""
+    if not isinstance(context, _authority_context_types()):
+        raise TypeError("profile operations require ProfileCreateContext or ProfileDecodeContext")
+    schema = context.schema
+    if not isinstance(schema, ProfileSchemaDefinition):
+        raise TypeError("profile context schema must be a ProfileSchemaDefinition")
+    return context
 
 
 def section_field_key(path: str) -> str:
@@ -210,20 +252,11 @@ class UserProfileFact(BaseModel):
     @field_validator("source")
     @classmethod
     def _validate_declared_source(cls, value: str) -> str:
-        """Refuse a provenance token the schema does not declare.
+        """Keep standalone fact construction free of authority I/O.
 
-        The schema declares the provenance set as a closed enum, so a
-        length-constrained string bound nothing and a typo persisted
-        silently as a new, unqueryable origin. A token that is genuinely
-        in use belongs in the declared set; widening the schema is the
-        way to add one, not stamping it and hoping.
+        Schema membership is checked by :func:`validate_profile_fact` while
+        validating a complete record against its pinned schema.
         """
-        declared = declared_provenance_sources()
-        if value not in declared:
-            raise UserProfileValidationError(
-                f"provenance source {value!r} is not declared by the profile schema; "
-                f"declared sources are {', '.join(sorted(declared))}",
-            )
         return value
 
     @model_validator(mode="after")
@@ -233,19 +266,13 @@ class UserProfileFact(BaseModel):
         return self
 
 
-def _canonical_payload_schema_version() -> int:
-    """Return the version the loaded user-profile schema declares.
-
-    Read through the loader on every call rather than captured at import,
-    for the same reason :func:`declared_provenance_sources` is: the schema
-    is the authority for its own version, and a module-level copy would be
-    a second one that goes stale the moment the schema advances. The loader
-    owns the caching, keyed on the schema file's stat fingerprint.
-    """
-    return load_user_profile_schema().version
-
-
-def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, surface: str) -> None:
+def validate_profile_schema_identity(
+    schema_id: str,
+    schema_version: int,
+    *,
+    schema: ProfileSchemaDefinition,
+    surface: str,
+) -> None:
     """Refuse payload schema metadata that is not exactly the current schema.
 
     ``schema_id`` and ``schema_version`` name the authority a persisted
@@ -255,7 +282,7 @@ def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, su
     unknown authority is not a value with a typo in it -- it is a record
     asserting a contract nothing in this codebase defines.
 
-    Both halves are pinned to exactly what the loaded schema declares, so the
+    Both halves are pinned to exactly what the supplied schema declares, so the
     two failure directions refuse alike. A FUTURE version was written by
     something newer than this code, so reading it as current understates what
     the payload means. A PRE-CURRENT version was written under a contract this
@@ -265,7 +292,6 @@ def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, su
     is repaired on the read path: the refusal names the claimed version and the
     canonical one so the payload can be rewritten under the current schema.
     """
-    schema = load_user_profile_schema()
     if schema_id != schema.id:
         raise UserProfileValidationError(
             f"{surface}: schema_id {schema_id!r} is not the canonical profile schema {schema.id!r}",
@@ -276,17 +302,23 @@ def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, su
         )
 
 
+def validate_profile_fact(fact: UserProfileFact, *, schema: ProfileSchemaDefinition) -> None:
+    """Validate schema-dependent provenance for one already-typed fact."""
+    declared = declared_provenance_sources(schema)
+    if fact.source not in declared:
+        raise UserProfileValidationError(
+            f"provenance source {fact.source!r} is not declared by the profile schema; "
+            f"declared sources are {', '.join(sorted(declared))}",
+        )
+
+
 class UserProfileRecord(BaseModel):
     """The current typed fact record, without label or removal projections."""
 
     model_config = _STRICT_FROZEN
 
-    schema_id: str = "cadrumo.user_profile"
-    # Read from the loaded schema rather than pinned to a literal. A literal
-    # default is a second authority for the schema's own version, and the
-    # moment it falls behind, every record written without an explicit version
-    # is itself a pre-current payload the identity guard has to refuse.
-    schema_version: PayloadSchemaVersion = Field(default_factory=_canonical_payload_schema_version)
+    schema_id: str
+    schema_version: PayloadSchemaVersion
     profile_id: _ProfileId
     facts: tuple[UserProfileFact, ...] = Field(default=())
     setup_state: ProfileSetupState
@@ -297,8 +329,16 @@ class UserProfileRecord(BaseModel):
     updated_at: UtcInstant = Field(default_factory=_utc_now)
 
     @model_validator(mode="after")
-    def _validate_payload_schema(self) -> UserProfileRecord:
-        _validate_payload_schema_identity(self.schema_id, self.schema_version, surface="user profile record")
+    def _validate_payload_schema(self, info: ValidationInfo) -> UserProfileRecord:
+        schema = _schema_from_context(info, surface="user profile record")
+        validate_profile_schema_identity(
+            self.schema_id,
+            self.schema_version,
+            schema=schema,
+            surface="user profile record",
+        )
+        for fact in self.facts:
+            validate_profile_fact(fact, schema=schema)
         return self
 
     @model_validator(mode="after")
@@ -324,15 +364,23 @@ class UserProfileSnapshot(BaseModel):
 
     snapshot_id: _SnapshotId
     profile_id: _ProfileId
-    schema_id: str = "cadrumo.user_profile"
-    schema_version: int = Field(ge=1)
+    schema_id: str
+    schema_version: PayloadSchemaVersion
     created_at: UtcInstant = Field(default_factory=_utc_now)
     facts: tuple[UserProfileFact, ...]
     canonical_hash: ContentDigest
 
     @model_validator(mode="after")
-    def _validate_payload_schema(self) -> UserProfileSnapshot:
-        _validate_payload_schema_identity(self.schema_id, self.schema_version, surface="user profile snapshot")
+    def _validate_payload_schema(self, info: ValidationInfo) -> UserProfileSnapshot:
+        schema = _schema_from_context(info, surface="user profile snapshot")
+        validate_profile_schema_identity(
+            self.schema_id,
+            self.schema_version,
+            schema=schema,
+            surface="user profile snapshot",
+        )
+        for fact in self.facts:
+            validate_profile_fact(fact, schema=schema)
         return self
 
     @model_validator(mode="after")
@@ -367,6 +415,7 @@ class UserProfileSnapshot(BaseModel):
         cls,
         profile: UserProfileRecord,
         *,
+        context: ProfileCreateContext,
         snapshot_id: str | None = None,
         created_at: datetime | None = None,
     ) -> UserProfileSnapshot:
@@ -374,6 +423,7 @@ class UserProfileSnapshot(BaseModel):
 
         Args:
             profile: The :class:`UserProfileRecord` to snapshot.
+            context: The pinned schema context for this creation operation.
             snapshot_id: Optional explicit snapshot identifier; when ``None``
                 a deterministic id is derived from the profile state.
             created_at: Optional UTC timestamp stamped on the snapshot;
@@ -382,34 +432,11 @@ class UserProfileSnapshot(BaseModel):
         Returns:
             An immutable :class:`UserProfileSnapshot` for the given profile.
         """
-        if profile.setup_state is not ProfileSetupState.COMPLETE:
-            raise UserProfileValidationError("cannot snapshot an incomplete profile record")
-        instant = created_at or _utc_now()
-        facts = tuple(
-            sorted(
-                profile.facts,
-                key=lambda fact: (
-                    fact.path,
-                    fact.valid_from or date.min,
-                    fact.valid_to or date.max,
-                    canonical_json_bytes(fact.model_dump(mode="json")),
-                ),
-            ),
-        )
-        digest = _derive_canonical_hash(
-            schema_id=profile.schema_id,
-            schema_version=profile.schema_version,
-            profile_id=profile.profile_id,
-            facts=facts,
-        )
-        return cls(
-            snapshot_id=snapshot_id or new_profile_snapshot_id(profile.profile_id, created_at=instant),
-            profile_id=profile.profile_id,
-            schema_id=profile.schema_id,
-            schema_version=profile.schema_version,
-            created_at=instant,
-            facts=facts,
-            canonical_hash=digest,
+        return create_user_profile_snapshot(
+            profile,
+            context=context,
+            snapshot_id=snapshot_id,
+            created_at=created_at,
         )
 
 
@@ -448,3 +475,167 @@ def _derive_canonical_hash(
             "facts": [fact.model_dump(mode="json") for fact in facts],
         },
     )
+
+
+def _typed_profile_facts(
+    facts: Iterable[object],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> tuple[UserProfileFact, ...]:
+    """Materialise and schema-check facts for an authority-bound operation."""
+    typed: list[UserProfileFact] = []
+    for raw in facts:
+        fact = raw if isinstance(raw, UserProfileFact) else UserProfileFact.model_validate(raw)
+        validate_profile_fact(fact, schema=schema)
+        typed.append(fact)
+    return tuple(typed)
+
+
+def create_user_profile_record(
+    *,
+    context: ProfileCreateContext,
+    profile_id: str,
+    facts: tuple[UserProfileFact, ...] | list[UserProfileFact] | tuple[object, ...] = (),
+    setup_state: ProfileSetupState,
+    record_revision: int = 1,
+    previous_record_digest: ContentDigest | None = None,
+    content_digest: ContentDigestOrAbsent = "",
+    created_at: datetime | None = None,
+    updated_at: datetime | None = None,
+) -> UserProfileRecord:
+    """Create a profile record under one pinned compiled schema.
+
+    This is the only production creation door.  It stamps the schema
+    identity supplied by the authority and validates every fact against that
+    same immutable declaration.  It never consults the bundled TOML loader.
+    """
+    checked = _context_for_schema(context)
+    create_context_type, _ = _authority_context_types()
+    if not isinstance(checked, create_context_type):
+        raise TypeError("creating a profile record requires ProfileCreateContext")
+    schema = checked.schema
+    typed_facts = _typed_profile_facts(tuple(facts), schema=schema)
+    instant_created = created_at or _utc_now()
+    instant_updated = updated_at or instant_created
+    payload: dict[str, object] = {
+        "schema_id": schema.id,
+        "schema_version": schema.version,
+        "profile_id": profile_id,
+        "facts": typed_facts,
+        "setup_state": setup_state,
+        "record_revision": record_revision,
+        "previous_record_digest": previous_record_digest,
+        "content_digest": content_digest,
+        "created_at": instant_created,
+        "updated_at": instant_updated,
+    }
+    return UserProfileRecord.model_validate(payload, context=checked)
+
+
+def decode_user_profile_record(
+    payload: bytes | str | Mapping[str, object],
+    *,
+    context: ProfileDecodeContext,
+) -> UserProfileRecord:
+    """Decode a secure profile record against the operation-pinned schema."""
+    checked = _context_for_schema(context)
+    _, decode_context_type = _authority_context_types()
+    if not isinstance(checked, decode_context_type):
+        raise TypeError("decoding a profile record requires ProfileDecodeContext")
+    if isinstance(payload, Mapping):
+        record = UserProfileRecord.model_validate(payload, context=checked)
+    else:
+        record = UserProfileRecord.model_validate_json(payload, context=checked)
+    return record
+
+
+def create_user_profile_snapshot(
+    profile: UserProfileRecord,
+    *,
+    context: ProfileCreateContext,
+    snapshot_id: str | None = None,
+    created_at: datetime | None = None,
+) -> UserProfileSnapshot:
+    """Create an immutable encrypted-persistence snapshot under one schema."""
+    checked = _context_for_schema(context)
+    create_context_type, _ = _authority_context_types()
+    if not isinstance(checked, create_context_type):
+        raise TypeError("creating a profile snapshot requires ProfileCreateContext")
+    if profile.setup_state is not ProfileSetupState.COMPLETE:
+        raise UserProfileValidationError("cannot snapshot an incomplete profile record")
+    validate_profile_schema_identity(
+        profile.schema_id,
+        profile.schema_version,
+        schema=checked.schema,
+        surface="user profile record",
+    )
+    typed_facts = _typed_profile_facts(tuple(profile.facts), schema=checked.schema)
+    instant = created_at or _utc_now()
+    facts = tuple(
+        sorted(
+            typed_facts,
+            key=lambda fact: (
+                fact.path,
+                fact.valid_from or date.min,
+                fact.valid_to or date.max,
+                canonical_json_bytes(fact.model_dump(mode="json")),
+            ),
+        ),
+    )
+    digest = _derive_canonical_hash(
+        schema_id=checked.schema.id,
+        schema_version=checked.schema.version,
+        profile_id=profile.profile_id,
+        facts=facts,
+    )
+    snapshot = UserProfileSnapshot.model_validate(
+        {
+            "snapshot_id": snapshot_id or new_profile_snapshot_id(profile.profile_id, created_at=instant),
+            "profile_id": profile.profile_id,
+            "schema_id": checked.schema.id,
+            "schema_version": checked.schema.version,
+            "created_at": instant,
+            "facts": facts,
+            "canonical_hash": digest,
+        },
+        context=checked,
+    )
+    return snapshot
+
+
+def decode_user_profile_snapshot(
+    payload: bytes | str | Mapping[str, object],
+    *,
+    context: ProfileDecodeContext,
+) -> UserProfileSnapshot:
+    """Decode a secure profile snapshot against the pinned schema."""
+    checked = _context_for_schema(context)
+    _, decode_context_type = _authority_context_types()
+    if not isinstance(checked, decode_context_type):
+        raise TypeError("decoding a profile snapshot requires ProfileDecodeContext")
+    if isinstance(payload, Mapping):
+        snapshot = UserProfileSnapshot.model_validate(payload, context=checked)
+    else:
+        snapshot = UserProfileSnapshot.model_validate_json(payload, context=checked)
+    return snapshot
+
+
+__all__ = [
+    "PayloadSchemaVersion",
+    "ProfileContext",
+    "ProfileSetupState",
+    "UserProfileFact",
+    "UserProfileFactValue",
+    "UserProfileRecord",
+    "UserProfileSnapshot",
+    "create_user_profile_record",
+    "create_user_profile_snapshot",
+    "declared_provenance_sources",
+    "decode_user_profile_record",
+    "decode_user_profile_snapshot",
+    "new_profile_id",
+    "new_profile_snapshot_id",
+    "section_field_key",
+    "validate_profile_fact",
+    "validate_profile_schema_identity",
+]

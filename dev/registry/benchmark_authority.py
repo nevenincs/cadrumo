@@ -1,205 +1,244 @@
-"""Measure the installed authority API in independent Python processes."""
+"""Measure paired authority workloads in independent Python processes."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import statistics
-from datetime import date
+from collections.abc import Callable
 from multiprocessing import get_context
 from pathlib import Path
 from time import perf_counter
+from typing import cast
+
+_MODEL_WORKLOADS = {
+    "modelo-100": ("100", 2025, "0A", "applicability"),
+    "modelo-200": ("200", 2025, "0A", "applicability"),
+    "modelo-303": ("303", 2025, "4T", "filing"),
+}
+_AUXILIARY_WORKLOADS = ("fact", "profile", "evidence", "enumeration")
+_WORKLOADS = (*_MODEL_WORKLOADS, *_AUXILIARY_WORKLOADS)
 
 
-def _measure_sample(specification: tuple[str, str | None]) -> dict[str, object]:
-    """Measure one backend inside a freshly spawned worker process."""
-    backend, descriptor = specification
+def _measure_sample(specification: tuple[str, str | None, str]) -> dict[str, object]:
+    """Measure one workload/backend pair inside one fresh worker process."""
+    backend, resource, workload = specification
     if backend == "sqlite":
-        if descriptor is None:
+        if resource is None:
             raise ValueError("sqlite benchmark sample requires a descriptor")
-        return measure_sqlite_authority(Path(descriptor))
-    return measure_json_authority()
+        return measure_sqlite_authority(Path(resource), workload=workload)
+    return measure_json_authority(None if resource is None else Path(resource), workload=workload)
 
 
-def measure_json_authority() -> dict[str, object]:
-    """Measure import, hydration, representative queries, and process memory."""
-    import psutil
+def _median(samples: list[dict[str, object]], member: str) -> float:
+    return statistics.median(cast(float, sample[member]) for sample in samples)
 
-    started = perf_counter()
-    from cadrumo.core.authority_grade import RegistryAuthorityGrade
-    from cadrumo.domain.calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
-    from cadrumo.domain.calculations.registry.authority_artifact import read_shared_authority_artifact
 
-    imported = perf_counter()
-    authority = bundled_authority()
-    loaded = perf_counter()
-    observations: list[dict[str, object]] = []
-    for modelo, year, period, grade in (
-        ("100", 2025, "0A", RegistryAuthorityGrade.APPLICABILITY),
-        ("200", 2025, "0A", RegistryAuthorityGrade.APPLICABILITY),
-        ("303", 2025, "4T", RegistryAuthorityGrade.FILING),
-    ):
-        before = perf_counter()
-        snapshot = authority.snapshot(modelo, filing_year=year, period=period, grade=grade)
-        first = perf_counter() - before
-        timings: list[float] = []
-        for _ in range(100):
-            before = perf_counter()
-            repeated = authority.snapshot(modelo, filing_year=year, period=period, grade=grade)
-            timings.append(perf_counter() - before)
-            if repeated is not snapshot:
-                raise AssertionError("a repeated immutable snapshot was not shared")
-        observations.append(
-            {"modelo": modelo, "first_seconds": first, "warm_median_seconds": statistics.median(timings)}
-        )
-    public_query_timings: list[float] = []
-    for _ in range(100):
-        before = perf_counter()
-        repeated = bundled_authority().snapshot("303", filing_year=2025, period="4T")
-        public_query_timings.append(perf_counter() - before)
-        if repeated is not snapshot:
-            raise AssertionError("the bundled entry point did not share the current snapshot")
-    before = perf_counter()
-    revisions = tuple(revision for modelo in authority.modelos for revision in modelo.revisions.values())
-    casillas = sum(len(revision.casillas) for revision in revisions)
-    enumeration = perf_counter() - before
-    memory = psutil.Process().memory_info()
+def _summary(samples: list[dict[str, object]]) -> dict[str, object]:
+    """Keep workload medians separate so no failing modelo can be averaged away."""
+    by_workload: dict[str, list[dict[str, object]]] = {}
+    for sample in samples:
+        by_workload.setdefault(str(sample["workload"]), []).append(sample)
+    workloads: dict[str, object] = {}
+    for workload, rows in sorted(by_workload.items()):
+        summary: dict[str, object] = {
+            "runs": len(rows),
+            "post_import_admission_and_first_median_seconds": _median(rows, "post_import_admission_and_first_seconds"),
+            "incremental_authority_rss_median_bytes": _median(rows, "incremental_authority_rss_bytes"),
+        }
+        if workload in _MODEL_WORKLOADS:
+            summary["warm_context_median_seconds"] = _median(rows, "warm_context_median_seconds")
+        workloads[workload] = summary
     return {
-        "backend": "json",
-        "date": date.today().isoformat(),
-        "identity_digest": read_shared_authority_artifact(bundled_authority_artifact_path()).identity_digest,
-        "import_seconds": imported - started,
-        "load_seconds_after_import": loaded - imported,
-        "import_and_load_seconds": loaded - started,
-        "rss_bytes_after_queries": memory.rss,
-        "peak_working_set_bytes": getattr(memory, "peak_wset", None),
-        "modelos": len(authority.modelos),
-        "revisions": len(revisions),
-        "casillas": casillas,
-        "enumeration_seconds": enumeration,
-        "bundled_m303_query_median_seconds": statistics.median(public_query_timings),
-        "snapshots": observations,
+        "backend": str(samples[0]["backend"]),
+        "fresh_processes": len(samples),
+        "workloads": workloads,
     }
 
 
-def measure_sqlite_authority(descriptor_path: Path) -> dict[str, object]:
-    """Measure full admission and independent on-demand component workloads."""
+def _timed[T](operation: Callable[[], T]) -> tuple[T, float]:
+    started = perf_counter()
+    return operation(), perf_counter() - started
+
+
+def measure_json_authority(artifact_path: Path | None = None, *, workload: str) -> dict[str, object]:
+    """Measure one eager-JSON baseline workload from the captured generation."""
     import psutil
 
     process = psutil.Process()
     started = perf_counter()
+    from cadrumo.core.authority_grade import RegistryAuthorityGrade
+    from cadrumo.domain.calculations.registry.authority import bundled_authority_artifact_path, published_authority
+    from cadrumo.domain.calculations.registry.authority_artifact import read_shared_authority_artifact
+
+    imported = perf_counter()
+    rss_before = process.memory_info().rss
+    selected_artifact = artifact_path or bundled_authority_artifact_path()
+    authority, admission = _timed(lambda: published_authority(selected_artifact))
+    first_started = perf_counter()
+    warm_context = 0.0
+    detail: dict[str, object] = {}
+    if workload in _MODEL_WORKLOADS:
+        modelo, year, period, grade_name = _MODEL_WORKLOADS[workload]
+        grade = RegistryAuthorityGrade(grade_name)
+        snapshot = authority.snapshot(modelo, filing_year=year, period=period, grade=grade)
+        timings: list[float] = []
+        for _ in range(100):
+            repeated, elapsed = _timed(lambda: authority.snapshot(modelo, filing_year=year, period=period, grade=grade))
+            if repeated is not snapshot:
+                raise AssertionError("a repeated immutable snapshot was not shared")
+            timings.append(elapsed)
+        warm_context = statistics.median(timings)
+        detail = {"modelo": modelo, "revision": str(snapshot.revision.id)}
+    elif workload == "fact":
+        fact_id = sorted(authority.catalogues.facts.facts)[0]
+        detail = {"fact_id": str(authority.catalogues.facts.facts[fact_id].fact_id)}
+    elif workload == "profile":
+        detail = {"profile_schema": authority.profile_schema().id}
+    elif workload == "evidence":
+        detail = {"legal_evidence": authority.evidence.legal[0].legal_reference_id}
+    elif workload == "enumeration":
+        revisions = tuple(revision for modelo in authority.modelos for revision in modelo.revisions.values())
+        detail = {"modelos": len(authority.modelos), "revisions": len(revisions)}
+    else:
+        raise ValueError(f"unknown benchmark workload {workload!r}")
+    first = perf_counter() - first_started
+    return {
+        "backend": "json",
+        "workload": workload,
+        "import_seconds": imported - started,
+        "admission_seconds_after_import": admission,
+        "first_operation_seconds": first,
+        "post_import_admission_and_first_seconds": admission + first,
+        "incremental_authority_rss_bytes": process.memory_info().rss - rss_before,
+        "warm_context_median_seconds": warm_context,
+        "identity_digest": read_shared_authority_artifact(selected_artifact).identity_digest,
+        "detail": detail,
+    }
+
+
+def measure_sqlite_authority(descriptor_path: Path, *, workload: str) -> dict[str, object]:
+    """Measure one independently admitted on-demand SQLite workload."""
+    import psutil
+
+    process = psutil.Process()
+    started = perf_counter()
+    from cadrumo.core.authority_grade import RegistryAuthorityGrade
+    from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
     from cadrumo.domain.calculations.registry.authority_artifact import (
         AuthorityComponentKind,
         EvidenceComponentQuery,
         GovernedFactComponentQuery,
-        ModeloRevisionComponentQuery,
-        ProfileSchemaComponentQuery,
     )
     from cadrumo.domain.calculations.registry.authority_store import SQLiteAuthorityReader
 
     imported = perf_counter()
     rss_before = process.memory_info().rss
-    reader = SQLiteAuthorityReader(descriptor_path)
-    admitted = perf_counter()
-    rss_after_admission = process.memory_info().rss
-    observations: list[dict[str, object]] = []
+    reader, admission = _timed(lambda: SQLiteAuthorityReader(descriptor_path))
+    warm_context = 0.0
+    detail: dict[str, object] = {}
     try:
+        first_started = perf_counter()
         with reader.lease() as pin:
-            for modelo, revision in (("100", "2025"), ("200", "2025-y-siguientes"), ("303", "2025")):
-                query = ModeloRevisionComponentQuery(modelo, revision)
-                before = perf_counter()
-                selected = reader.load(query, pin=pin)
-                first = perf_counter() - before
+            operation = PinnedAuthorityOperation(reader, pin)
+            if workload in _MODEL_WORKLOADS:
+                modelo, year, period, grade_name = _MODEL_WORKLOADS[workload]
+                snapshot = operation.snapshot(
+                    modelo,
+                    filing_year=year,
+                    period=period,
+                    grade=RegistryAuthorityGrade(grade_name),
+                )
+                first = perf_counter() - first_started
                 timings: list[float] = []
                 for _ in range(100):
-                    before = perf_counter()
-                    repeated = reader.load(query, pin=pin)
-                    timings.append(perf_counter() - before)
-                    if repeated is not selected:
-                        raise AssertionError("a repeated immutable component was not shared")
-                observations.append(
-                    {
-                        "modelo": modelo,
-                        "first_seconds": first,
-                        "warm_median_seconds": statistics.median(timings),
-                    }
+                    _selected, elapsed = _timed(
+                        lambda: operation.revision_for_context(modelo, filing_year=year, period=period)
+                    )
+                    timings.append(elapsed)
+                warm_context = statistics.median(timings)
+                detail = {"modelo": modelo, "revision": str(snapshot.revision.id)}
+            elif workload == "fact":
+                query = next(
+                    query for query in reader.component_queries() if isinstance(query, GovernedFactComponentQuery)
                 )
-            directory = reader.component_queries()
-            workload_queries = {
-                "profile": next(query for query in directory if isinstance(query, ProfileSchemaComponentQuery)),
-                "fact": next(query for query in directory if isinstance(query, GovernedFactComponentQuery)),
-                "evidence": next(
+                fact = operation.governed_fact(query.fact_id)
+                first = perf_counter() - first_started
+                detail = {"fact_id": str(fact.fact_id)}
+            elif workload == "profile":
+                profile = operation.profile_schema()
+                first = perf_counter() - first_started
+                detail = {"profile_schema": profile.id}
+            elif workload == "evidence":
+                query = next(
                     query
-                    for query in directory
+                    for query in reader.component_queries()
                     if isinstance(query, EvidenceComponentQuery) and query.kind is AuthorityComponentKind.LEGAL_EVIDENCE
-                ),
-            }
-            workloads: dict[str, float] = {}
-            for name, query in workload_queries.items():
-                before = perf_counter()
-                reader.load(query, pin=pin)
-                workloads[name] = perf_counter() - before
-            before = perf_counter()
-            component_count = len(reader.component_queries())
-            enumeration = perf_counter() - before
-        memory = process.memory_info()
+                )
+                evidence = operation.legal_evidence(query.reference_id)
+                first = perf_counter() - first_started
+                detail = {"legal_evidence": evidence.legal_reference_id}
+            elif workload == "enumeration":
+                detail = {
+                    "modelos": len(operation.modelo_ids()),
+                    "revisions": len(operation.revision_ids()),
+                }
+                first = perf_counter() - first_started
+            else:
+                raise ValueError(f"unknown benchmark workload {workload!r}")
         telemetry = reader.telemetry()
         return {
             "backend": "sqlite",
-            "date": date.today().isoformat(),
-            "identity_digest": reader.pin().logical_generation,
+            "workload": workload,
             "import_seconds": imported - started,
-            "admission_seconds_after_import": admitted - imported,
-            "import_and_admission_seconds": admitted - started,
-            "rss_bytes_before_admission": rss_before,
-            "rss_bytes_after_admission": rss_after_admission,
-            "incremental_rss_bytes": memory.rss - rss_before,
-            "rss_bytes_after_queries": memory.rss,
-            "peak_working_set_bytes": getattr(memory, "peak_wset", None),
-            "component_count": component_count,
-            "enumeration_seconds": enumeration,
-            "workloads": workloads,
+            "admission_seconds_after_import": admission,
+            "first_operation_seconds": first,
+            "post_import_admission_and_first_seconds": admission + first,
+            "incremental_authority_rss_bytes": process.memory_info().rss - rss_before,
+            "warm_context_median_seconds": warm_context,
+            "identity_digest": reader.pin().logical_generation,
+            "detail": detail,
             "cache": {
                 "budget": telemetry.budget,
                 "retained_weight": telemetry.retained_weight,
                 "entries": telemetry.entries,
             },
-            "snapshots": observations,
         }
     finally:
         reader.close()
 
 
 def main() -> None:
-    """Print JSON measurements; each sample imports and loads in a fresh process."""
+    """Print raw independent samples and release-relevant workload medians."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--backend", choices=("json", "sqlite"), default="json")
     parser.add_argument("--descriptor", type=Path)
+    parser.add_argument("--artifact", type=Path, help="JSON baseline artifact from the same validated generation")
+    parser.add_argument("--workload", choices=_WORKLOADS)
     parser.add_argument("--sample", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
-    if args.sample:
-        if args.backend == "sqlite":
-            if args.descriptor is None:
-                parser.error("--backend sqlite requires --descriptor")
-            measured = measure_sqlite_authority(args.descriptor)
-        else:
-            measured = measure_json_authority()
-        print(json.dumps(measured, sort_keys=True))
-        return
-    if args.runs < 1:
-        parser.error("--runs must be positive")
     if args.backend == "sqlite" and args.descriptor is None:
         parser.error("--backend sqlite requires --descriptor")
-    descriptor = None if args.descriptor is None else str(args.descriptor.resolve())
-    specifications = [(args.backend, descriptor)] * args.runs
+    workloads = (args.workload,) if args.workload else _WORKLOADS
+    if args.sample:
+        if len(workloads) != 1:
+            parser.error("--sample requires --workload")
+        measured = (
+            measure_sqlite_authority(args.descriptor, workload=workloads[0])
+            if args.backend == "sqlite"
+            else measure_json_authority(args.artifact, workload=workloads[0])
+        )
+        print(json.dumps(measured, sort_keys=True))
+        return
+    if args.runs < 10:
+        parser.error("release comparison requires at least 10 fresh processes per workload")
+    selected_path = args.descriptor if args.backend == "sqlite" else args.artifact
+    resource = None if selected_path is None else str(selected_path.resolve())
+    specifications = [(args.backend, resource, workload) for workload in workloads for _ in range(args.runs)]
     with get_context("spawn").Pool(processes=1, maxtasksperchild=1) as workers:
-        # ``Pool.map`` otherwise batches several samples into one task.  Since
-        # ``maxtasksperchild`` counts batches rather than individual iterable
-        # members, the default chunksize silently reused one interpreter for
-        # multiple measurements and turned most "cold" samples warm.
         samples = workers.map(_measure_sample, specifications, chunksize=1)
-    print(json.dumps({"samples": samples}, indent=2, sort_keys=True))
+    print(json.dumps({"samples": samples, "summary": _summary(samples)}, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

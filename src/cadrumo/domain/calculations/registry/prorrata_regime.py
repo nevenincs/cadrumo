@@ -91,9 +91,7 @@ def resolve_prorrata_regime_catalogue(
     """Resolve the dated prorrata regime vocabulary through facts authority."""
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError("prorrata regime catalogue requires an explicit authority operation or scope")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_FACT_ID,

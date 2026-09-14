@@ -29,6 +29,7 @@ from ...core.storage_taxonomy_locations import storage_location
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import CarriedSecureObject
     from ...domain.user_profile.values import UserProfileSnapshot
     from .recovery_contracts import ProfileCustodyRecoveryArtifactWarning
@@ -1135,6 +1136,7 @@ class ProfileCustodyPort(Protocol):
         *,
         bucket_id: str,
         profile: StorageCustodyProfile,
+        profile_decode_context: ProfileDecodeContext,
     ) -> ProfileCustodyCarryMaterial:
         """Project portable rows and namespace coverage through persistence."""
         ...
@@ -1145,6 +1147,7 @@ class ProfileCustodyPort(Protocol):
         *,
         object_key: Callable[[str, str], str],
         objects: ProfileCustodySecureObjectRepositoryPort | None = None,
+        profile_decode_context: ProfileDecodeContext,
     ) -> ProfileSnapshotPersistencePort:
         """Return immutable profile-snapshot persistence for one bucket."""
         ...

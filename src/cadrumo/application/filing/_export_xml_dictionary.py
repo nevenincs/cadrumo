@@ -37,7 +37,6 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.export_parse import (
     SINO_DICTIONARY_TYPE,
     XML_DICTIONARY_BOOLEAN_TYPES,
@@ -45,7 +44,7 @@ from ...domain.calculations.registry.export_parse import (
     xml_dictionary_entries,
 )
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
@@ -147,15 +146,16 @@ def render_xml_dictionary_layout(
     _append_declaration_aux(root, layout)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     modelo_100_declarations = _registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
-    unfiled_paths: frozenset[str] = (
-        _modelo_100_unfiled_comunidad_paths(
+    unfiled_paths = frozenset[str]()
+    if draft.modelo == Modelo("100"):
+        declarations = modelo_100_declarations
+        if declarations is None:
+            raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
+        unfiled_paths = _modelo_100_unfiled_comunidad_paths(
             entries,
             casilla_values,
-            declarations=modelo_100_declarations,
+            declarations=declarations,
         )
-        if draft.modelo == Modelo("100")
-        else frozenset[str]()
-    )
     for entry in entries:
         if entry.path in unfiled_paths:
             continue
@@ -457,8 +457,11 @@ def _record_xsd_child_order(
 
 def _registry_modelo_100_xml_declarations() -> Mapping[str, str]:
     """Resolve the selected XML export declarations without a Python copy."""
-    authority = bundled_authority()
-    model_report = RegistryQueryService(authority).describe_modelo("100")
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise FilingExportValidationError(
+            "Modelo 100 XML export declarations require a generation-pinned authority operation"
+        )
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-100-xml-export-declarations-mapping",
@@ -468,7 +471,6 @@ def _registry_modelo_100_xml_declarations() -> Mapping[str, str]:
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise FilingExportValidationError("selected Modelo 100 XML declarations must be a mapping fact")
-    del model_report
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
@@ -497,7 +499,12 @@ def _xml_dictionary_rendered_value(
         if not callable(converter):
             raise FilingExportValidationError(f"registry-selected XML converter {converter_name!r} is not available")
         try:
-            return converter(rendered)
+            converted = converter(rendered)
+            if not isinstance(converted, str):
+                raise FilingExportValidationError(
+                    f"registry-selected XML converter {converter_name!r} returned a non-string value"
+                )
+            return converted
         except ValueError as exc:
             raise FilingExportValidationError(str(exc)) from exc
     return rendered
@@ -539,6 +546,7 @@ def _modelo_100_unfiled_comunidad_paths(
     Args:
         entries: Every dictionary row for the layout being rendered.
         casilla_values: Casilla values the draft carries.
+        declarations: Generation-pinned XML routing declarations.
 
     Returns:
         Paths belonging to a comunidad the draft does not file, plus the shared
@@ -637,6 +645,7 @@ def _modelo_100_sign_branch_value(
     Args:
         entry: Dictionary row being rendered.
         raw: Value resolved for the row's casilla.
+        declarations: Generation-pinned XML sign-branch declarations.
 
     Returns:
         ``raw`` when the row's branch matches its sign, ``Decimal("0")`` when the

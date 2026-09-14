@@ -271,15 +271,19 @@ class ProfileBundleExportOperationExecutor:
             try:
                 await context.events.effect(OperationEffect.UNKNOWN)
                 await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[2])
-                result = export_profile_bundle(
-                    ProfileBundleExportRequest(
-                        profile_name=None,
-                        destination=payload.destination,
-                        purpose=payload.purpose,
-                        transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
-                        passphrase=SecretStr(passphrase),
+                from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+                with bundled_indexed_authority().operation() as authority_operation:
+                    result = export_profile_bundle(
+                        ProfileBundleExportRequest(
+                            profile_name=None,
+                            destination=payload.destination,
+                            purpose=payload.purpose,
+                            transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
+                            passphrase=SecretStr(passphrase),
+                        ),
+                        profile_decode_context=authority_operation.profile_decode_context(),
                     )
-                )
             finally:
                 passphrase = ""
         result_ref = await _result_reference(result, context)

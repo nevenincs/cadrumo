@@ -19,13 +19,24 @@ See Also:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.modelos.errors import ModeloError
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
-def reject_unknown_revision(*, modelo: str, revision_id: RevisionId) -> None:
+
+def reject_unknown_revision(
+    *,
+    modelo: str,
+    revision_id: RevisionId,
+    operation: PinnedAuthorityOperation | None = None,
+) -> None:
     """Refuse a work-unit create that names an undeclared revision id.
 
     The central :class:`ValidatedRegistryAuthority` first resolves the modelo
@@ -36,18 +47,32 @@ def reject_unknown_revision(*, modelo: str, revision_id: RevisionId) -> None:
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     try:
-        modelo_def = bundled_authority().modelo(modelo)
-    except RegistrySnapshotError as exc:
+        if operation is not None:
+            revisions = operation.modelo_directory(modelo).revisions
+        else:
+            revisions = tuple(
+                revision
+                for _modelo_id, revision in RegistryQueryService(bundled_authority()).iter_modelo_revisions(
+                    modelo_codes=(modelo,),
+                )
+            )
+    except (RegistrySnapshotError, ValueError) as exc:
         raise ModeloError(str(exc)) from exc
-    if revision_id in modelo_def.revisions:
+    if any(revision.id == revision_id for revision in revisions):
         return
-    available = ", ".join(sorted(modelo_def.revisions))
+    available = ", ".join(sorted(str(revision.id) for revision in revisions))
     raise ModeloError(
         f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. Available revisions: {available}",
     )
 
 
-def reject_unknown_period_for_revision(*, modelo: str, revision_id: RevisionId, period: Period) -> None:
+def reject_unknown_period_for_revision(
+    *,
+    modelo: str,
+    revision_id: RevisionId,
+    period: Period,
+    operation: PinnedAuthorityOperation | None = None,
+) -> None:
     """Refuse a work-unit create whose :class:`Period` is absent from the revision schedules.
 
     The guard inspects the named revision's filing schedules and compares the
@@ -59,10 +84,21 @@ def reject_unknown_period_for_revision(*, modelo: str, revision_id: RevisionId, 
     from ...domain.calculations.registry.period_selector_match import selector_period_matches_request
 
     try:
-        modelo_def = bundled_authority().modelo(modelo)
-    except RegistrySnapshotError as exc:
+        if operation is not None:
+            revision = operation.revision(modelo, str(revision_id))
+        else:
+            revision = next(
+                (
+                    candidate
+                    for _modelo_id, candidate in RegistryQueryService(bundled_authority()).iter_modelo_revisions(
+                        modelo_codes=(modelo,),
+                    )
+                    if candidate.id == revision_id
+                ),
+                None,
+            )
+    except (RegistrySnapshotError, ValueError) as exc:
         raise ModeloError(str(exc)) from exc
-    revision = modelo_def.revisions.get(revision_id)
     if revision is None:
         return
     declared: set[str] = set()

@@ -56,10 +56,13 @@ def declared_modelo_period_tokens(modelo: str | None) -> tuple[str, ...]:
     """Return every period token declared by any revision of one modelo."""
     if not modelo or not modelo.strip():
         return ()
-    definition = bundled_authority().validate_modelo(modelo.strip())
     return tuple(
         sorted(
-            {token for revision in definition.revisions.values() for token in revision.period_selector.declared_periods}
+            {
+                token
+                for _modelo_id, revision in _service().iter_modelo_revisions(modelo_codes=(modelo.strip(),))
+                for token in revision.period_selector.declared_periods
+            },
         ),
     )
 

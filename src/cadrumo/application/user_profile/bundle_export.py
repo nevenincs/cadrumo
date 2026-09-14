@@ -66,6 +66,7 @@ from .bundle_export_operation import (
 from .custody_ports import default_profile_bucket_event_history_repository
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import UserProfilePortableExport
     from ..workflow.profile_bucket_models import ProfileBucketPointer
 
@@ -109,21 +110,38 @@ class ProfileBundleExportReconciliation:
     failures: tuple[ProfileBundleExportReconcileFailure, ...]
 
 
-def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleExportResult:
+def export_profile_bundle(
+    request: ProfileBundleExportRequest,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileBundleExportResult:
     """Resolve, serialize, atomically publish, and record one profile export.
 
-    Reconciles any crash-interrupted prior publication BEFORE taking this
+    ``profile_decode_context`` must come from the caller's pinned authority
+    operation; no schema is discovered while exporting. Reconciles any
+    crash-interrupted prior publication BEFORE taking this
     export's target lock (see :func:`_reconcile_crash_orphans_before_publication`),
     then holds one exclusive lock on the resolved target for the whole
     publication so a concurrent export to the same file is excluded, and
     composes :func:`prepare_profile_export` and :func:`publish_prepared_export`.
     """
     journal = ProfileBundleExportJournalRepository()
-    reconcile_failures = _reconcile_crash_orphans_before_publication(journal)
+    reconcile_failures = _reconcile_crash_orphans_before_publication(
+        journal,
+        profile_decode_context=profile_decode_context,
+    )
     try:
         with exclusive_file_lock(request.destination):
-            prepared = prepare_profile_export(request, journal=journal)
-            published = publish_prepared_export(prepared, journal=journal)
+            prepared = prepare_profile_export(
+                request,
+                journal=journal,
+                profile_decode_context=profile_decode_context,
+            )
+            published = publish_prepared_export(
+                prepared,
+                journal=journal,
+                profile_decode_context=profile_decode_context,
+            )
             return published.model_copy(update={"reconcile_failures": reconcile_failures})
     except ProfileExportError:
         raise
@@ -136,6 +154,8 @@ def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleE
 
 def _reconcile_crash_orphans_before_publication(
     journal: ProfileBundleExportJournalRepository,
+    *,
+    profile_decode_context: ProfileDecodeContext,
 ) -> tuple[ProfileBundleExportReconcileFailure, ...]:
     """Sweep crash-interrupted prior publications before this export begins.
 
@@ -168,7 +188,10 @@ def _reconcile_crash_orphans_before_publication(
     verb is not the path they are on.
     """
     try:
-        return reconcile_prepared_exports(journal=journal).failures
+        return reconcile_prepared_exports(
+            journal=journal,
+            profile_decode_context=profile_decode_context,
+        ).failures
     except Exception:
         get_logger(__name__).warning(
             "profile export could not reconcile a crash-interrupted prior publication",
@@ -181,8 +204,13 @@ def prepare_profile_export(
     request: ProfileBundleExportRequest,
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> PreparedProfileExport:
     """Record the PREPARED journal, THEN stage the bundle to a restrictive temp.
+
+    ``profile_decode_context`` is required because preparing the export reads
+    the encrypted profile record and must not rediscover its schema through a
+    process-global or filesystem fallback.
 
     The journal is written BEFORE any cleartext reaches disk, naming the staged
     path it is about to write. That ordering is the whole crash contract: the
@@ -205,8 +233,8 @@ def prepare_profile_export(
     target = ProfileBundleExportTarget(destination=request.destination)
     pointer = _resolve_export_profile(request.profile_name)
     _refuse_link_target(request.destination)
-    require_profile_record_session(pointer.bucket_id)
-    bundle = _serialize_export_bundle(pointer.bucket_id)
+    require_profile_record_session(pointer.bucket_id, profile_decode_context=profile_decode_context)
+    bundle = _serialize_export_bundle(pointer.bucket_id, profile_decode_context=profile_decode_context)
     payload = _render_export_payload(bundle, request=request)
     payload_bytes = payload.encode(UTF_8_ENCODING)
     categories = bundle_data_categories(bundle)
@@ -254,6 +282,7 @@ def publish_prepared_export(
     prepared: PreparedProfileExport,
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileBundleExportResult:
     """Atomically replace the target, mark COMPLETED, then emit the event.
 
@@ -281,7 +310,7 @@ def publish_prepared_export(
     )
     repository.save(completed)
     try:
-        _emit_export_event(completed)
+        _emit_export_event(completed, profile_decode_context=profile_decode_context)
     except Exception as exc:
         raise ProfileExportError(
             translated_message="errors.fail.profile_export",
@@ -312,6 +341,7 @@ def _result_from_operation(operation: ProfileBundleExportOperation) -> ProfileBu
 def reconcile_prepared_exports(
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileBundleExportReconciliation:
     """Reconcile crash-interrupted exports honestly in a fresh process.
 
@@ -362,7 +392,11 @@ def reconcile_prepared_exports(
     ]
     for operation in scan.operations:
         try:
-            current = _reconcile_one_operation(repository, operation)
+            current = _reconcile_one_operation(
+                repository,
+                operation,
+                profile_decode_context=profile_decode_context,
+            )
         except Exception as exc:
             get_logger(__name__).warning(
                 "profile export reconciliation could not finalise one operation",
@@ -384,6 +418,8 @@ def reconcile_prepared_exports(
 def _reconcile_one_operation(
     repository: ProfileBundleExportJournalRepository,
     operation: ProfileBundleExportOperation,
+    *,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileBundleExportOperation | None:
     """Reconcile exactly one operation, or return ``None`` when it is skipped.
 
@@ -397,7 +433,12 @@ def _reconcile_one_operation(
         # no target lock is needed. A COMPLETED operation was durably
         # published before the target was later moved away and still owes its
         # audit event; a PREPARED one never published and is a bare orphan.
-        _finalise_reconciled_operation(repository, operation, published=_is_completed(operation))
+        _finalise_reconciled_operation(
+            repository,
+            operation,
+            published=_is_completed(operation),
+            profile_decode_context=profile_decode_context,
+        )
         return operation
     try:
         with exclusive_file_lock(destination, timeout=_RECONCILE_LOCK_TIMEOUT_S):
@@ -408,7 +449,12 @@ def _reconcile_one_operation(
                 destination,
                 current.content_sha256,
             )
-            _finalise_reconciled_operation(repository, current, published=published)
+            _finalise_reconciled_operation(
+                repository,
+                current,
+                published=published,
+                profile_decode_context=profile_decode_context,
+            )
             return current
     except LockAcquisitionError:
         return None
@@ -423,6 +469,7 @@ def _finalise_reconciled_operation(
     operation: ProfileBundleExportOperation,
     *,
     published: bool,
+    profile_decode_context: ProfileDecodeContext,
 ) -> None:
     """Emit the pending event for a published operation, or clear an orphan.
 
@@ -434,7 +481,7 @@ def _finalise_reconciled_operation(
     (``sensitive-financial-data-secure-storage-only``).
     """
     if published:
-        _emit_export_event(operation)
+        _emit_export_event(operation, profile_decode_context=profile_decode_context)
     _remove_orphan_staged_temp(operation)
     repository.delete(operation.operation_id)
 
@@ -479,10 +526,14 @@ def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
     return pointer
 
 
-def _serialize_export_bundle(bucket_id: str) -> UserProfilePortableExport:
+def _serialize_export_bundle(
+    bucket_id: str,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> UserProfilePortableExport:
     from .bundle import serialize_profile_bundle
 
-    return serialize_profile_bundle(bucket_id=bucket_id)
+    return serialize_profile_bundle(bucket_id=bucket_id, profile_decode_context=profile_decode_context)
 
 
 def _render_export_payload(
@@ -622,7 +673,11 @@ def _safe_delete_journal(repository: ProfileBundleExportJournalRepository, opera
         get_logger(__name__).debug("profile export journal cleanup failed", exc_info=True)
 
 
-def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
+def _emit_export_event(
+    operation: ProfileBundleExportOperation,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> None:
     """Emit the ``PROFILE_EXPORTED`` event for one operation, idempotently.
 
     Derives the event solely from the durable operation record, including its
@@ -635,7 +690,10 @@ def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
     from ...domain.buckets.event_repository import emit_bucket_event
     from .profile_record_repository import require_profile_record_session
 
-    require_profile_record_session(operation.profile_id)
+    require_profile_record_session(
+        operation.profile_id,
+        profile_decode_context=profile_decode_context,
+    )
     emit_bucket_event(
         repository=default_profile_bucket_event_history_repository(),
         bucket_id=operation.profile_id,

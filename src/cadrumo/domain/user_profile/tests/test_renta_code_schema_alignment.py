@@ -17,12 +17,12 @@ without a failure that names the field.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.renta_declaracion_type import RentaDeclaracionType
 from ....domain import contribuyente
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus, RentaSexCode
 from ..errors import UserProfileNotFoundError
-from ..loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

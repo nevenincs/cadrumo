@@ -12,7 +12,7 @@ had no check at all.
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -30,9 +30,12 @@ from ....domain.modelos.row_models import (
     ModeloDetailRow,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from .._calculation_modelo_adjustments import require_detail_rows_declared_for_their_owning_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_M210_EFFECTIVE_DATE = date(2025, 1, 1)
 
 _BUCKET_ID = "detail-row-membership-bucket"
 _CLOCK = datetime(2026, 1, 10, tzinfo=UTC)
@@ -100,14 +103,12 @@ def _m347_row() -> Modelo347ContraparteRow:
 
 
 def _m210_row() -> Modelo210AgrupacionRentaRow:
-    from ....core.irnr import M210PayerMode
-
     return Modelo210AgrupacionRentaRow(
         source_id="manual-renta-jan",
         tipo_renta_code="01",
         importe=Decimal("100.00"),
         tipo_gravamen=Decimal("0.24"),
-        pagador_mode=M210PayerMode.SINGLE_PAYER,
+        pagador_mode=resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE),
         pagador_id="ES-PAGADOR-1",
         deriva_de_bien_derecho=True,
         bien_derecho_id="ES-INMUEBLE-1",

@@ -1,4 +1,4 @@
-"""Prove exact built-wheel parity for tracked runtime data.
+"""Prove exact built-wheel parity for runtime data in the source tree.
 
 The corpus-registry packaging contract
 relocates both data trees under ``src/cadrumo/_data/`` so the existing
@@ -14,8 +14,8 @@ This test verifies that contract end-to-end by driving the real build pipeline:
 
 1. ``uv build --wheel`` is invoked into a temporary output directory.
 2. The resulting wheel archive is opened as a zip.
-3. Every path reported by ``git ls-files`` under the shipped data
-   tree, except the excluded corpus source binaries and tests, is asserted to
+3. Every repository-visible path under the shipped data tree, except the
+   excluded corpus source binaries and tests, is asserted to
    appear in the archive at the corresponding ``cadrumo/_data/<relative-path>``
    prefix.
 4. The corpus source binaries are asserted absent from the root wheel; the two
@@ -38,6 +38,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.source_tree import repository_files
 
 from ..core.directory_scan import scan_directory
 from .inventory import REPO_ROOT, SRC_CADRUMO
@@ -74,7 +75,14 @@ def _wheel_excludes(source_relative: str) -> bool:
     """
 
     source_path = Path(source_relative)
-    return any(source_path.match(pattern) for pattern in _wheel_exclusion_patterns())
+    for pattern in _wheel_exclusion_patterns():
+        if pattern.endswith("/**"):
+            directory = pattern.removesuffix("/**")
+            if source_relative == directory or source_relative.startswith(f"{directory}/"):
+                return True
+        elif source_path.match(pattern):
+            return True
+    return False
 
 
 def _is_corpus_source_binary(source_relative: str) -> bool:
@@ -85,30 +93,16 @@ def _is_corpus_source_binary(source_relative: str) -> bool:
     )
 
 
-def _git_ls_files_data() -> list[str]:
-    """Return git-tracked paths under ``src/cadrumo/_data`` relative to the project root."""
+def _source_data_files() -> tuple[str, ...]:
+    """Return repository-visible files under the runtime data root."""
 
-    completed = subprocess.run(
-        [
-            "git",
-            "ls-files",
-            "src/cadrumo/_data",
-        ],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    tracked = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
-    if not tracked:
-        raise AssertionError(
-            "git ls-files reported no tracked files under the shipped data trees; "
-            "the data packaging contract has regressed or the worktree is detached",
-        )
-    return tracked
+    files = repository_files(REPO_ROOT, under=("src/cadrumo/_data",))
+    if not files:
+        raise AssertionError("the source tree contains no runtime data; the packaging contract has regressed")
+    return files
 
 
-def _expected_archive_paths(tracked: list[str]) -> set[str]:
+def _expected_archive_paths(source_files: tuple[str, ...]) -> set[str]:
     """Translate worktree paths to their expected wheel-archive locations.
 
     Excludes any ``tests/`` subtree under the shipped data root: the build
@@ -128,9 +122,9 @@ def _expected_archive_paths(tracked: list[str]) -> set[str]:
 
     prefix = "src/cadrumo/_data/"
     expected: set[str] = set()
-    for path in tracked:
+    for path in source_files:
         if not path.startswith(prefix):
-            raise AssertionError(f"git ls-files returned a path outside src/cadrumo/_data/: {path!r}")
+            raise AssertionError(f"source enumeration returned a path outside src/cadrumo/_data/: {path!r}")
         if _is_corpus_source_binary(path) or _wheel_excludes(path):
             continue
         relative = path[len(prefix) :]
@@ -182,11 +176,10 @@ def test_wheel_filename_matches_distribution(built_wheel: Path) -> None:
     )
 
 
-def test_wheel_archive_contains_every_tracked_data_file(built_wheel: Path) -> None:
-    """The wheel's complete data payload equals the tracked runtime set."""
+def test_wheel_archive_contains_every_runtime_data_file(built_wheel: Path) -> None:
+    """The wheel's complete data payload equals the policy-projected source tree."""
 
-    tracked = _git_ls_files_data()
-    expected = _expected_archive_paths(tracked)
+    expected = _expected_archive_paths(_source_data_files())
     with zipfile.ZipFile(built_wheel) as archive:
         actual = {
             info.filename
@@ -196,8 +189,7 @@ def test_wheel_archive_contains_every_tracked_data_file(built_wheel: Path) -> No
     missing = sorted(expected - actual)
     unexpected = sorted(actual - expected)
     assert not missing and not unexpected, (
-        f"wheel data payload differs from tracked runtime data: missing={missing[:10]!r}, "
-        f"unexpected={unexpected[:10]!r}"
+        f"wheel data payload differs from source runtime data: missing={missing[:10]!r}, unexpected={unexpected[:10]!r}"
     )
 
 
@@ -222,6 +214,18 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
         f"the slim wheel still ships Renta corpus source PDFs the wheel-split excludes: {leaked!r}; "
         "they belong in the cadrumo-data-manuals companion distribution"
     )
+
+
+def test_wheel_keeps_renta_page_annotations_beside_extracted_text(built_wheel: Path) -> None:
+    """Small semantic selectors stay in the main wheel while their PDFs stay split."""
+    expected = {
+        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part1/source.pdf.annotation.json",
+        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf.annotation.json",
+    }
+    with zipfile.ZipFile(built_wheel) as archive:
+        names = {info.filename for info in archive.infolist()}
+
+    assert expected <= names
 
 
 def test_wheel_ships_no_corpus_source_binaries(built_wheel: Path) -> None:

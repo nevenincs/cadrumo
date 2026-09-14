@@ -222,6 +222,7 @@ def apply_cotejo[StateT](
     profile_id = require_active_bucket_id()
     repository = ProfileRecordRepository.for_current_session(profile_id)
     record = repository.load(profile_id)
+    profile_context = repository.session.profile_decode_context
     if reviewed_proposal is not None:
         if adopted is not None or divergences is not None:
             raise ValueError("a reviewed censal proposal cannot be combined with direct cotejo effects")
@@ -238,6 +239,7 @@ def apply_cotejo[StateT](
         profile_id,
         next_facts,
         require_complete=record.setup_state is not ProfileSetupState.INCOMPLETE,
+        schema=profile_context.schema,
     )
     replacement = repository.apply_fact_changes(
         profile_id,

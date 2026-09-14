@@ -1,9 +1,9 @@
 """Strict profile authority for Modelo 303 tax-territory production."""
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ...user_profile.errors import UserProfileNotFoundError
-from ...user_profile.loader import load_user_profile_schema
 from ..errors import ProfileError
 from ..models import M303TaxTerritory
 from ..profiles import taxpayer_profile_from_mapping

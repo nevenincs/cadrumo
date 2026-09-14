@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "source_sha256": "88a12fbe5ce9de01fc6a04941db498cd30ef959c85bf6106bfdc3611c13f3481",
+  "selections": [
+    {"anchor": "madrid-nacimiento-adopcion", "pages": [403]},
+    {"anchor": "madrid-nacimiento-adopcion-limites", "pages": [404]}
+  ]
+}

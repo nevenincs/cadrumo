@@ -294,6 +294,7 @@ def register_profile_from_scripted_invocation(
     from ....application.wizard.commands import scripted_profile_facts
     from ....application.wizard.results import ConfigProfileCreateResult, ProfileWizardStatus
     from ....core.wizard_catalogue import get_setup_flow
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     supplied = kwargs.get("profile_name")
     label = supplied.strip() if isinstance(supplied, str) else ""
@@ -318,14 +319,34 @@ def register_profile_from_scripted_invocation(
         verification_fd=raw_verification_fd if isinstance(raw_verification_fd, int) else None,
     )
     try:
-        outcome = _run_scripted_profile_creation(
-            register_profile=register_profile_with_credentials,
-            label=label,
-            facts=facts,
-            secrets_stdin=bool(kwargs.get("secrets_stdin")),
-            secrets_fd=secrets_fd,
-            recovery_descriptors=recovery_descriptors,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            profile_create_context = operation.profile_create_context()
+            profile_decode_context = operation.profile_decode_context()
+
+            def register_profile_with_pinned_context(
+                *,
+                label: str,
+                passphrase: str,
+                facts: tuple[UserProfileFact, ...],
+                recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+            ) -> ProfileRegistrationOutcome:
+                return register_profile_with_credentials(
+                    label=label,
+                    passphrase=passphrase,
+                    facts=facts,
+                    recovery_handover=recovery_handover,
+                    profile_create_context=profile_create_context,
+                    profile_decode_context=profile_decode_context,
+                )
+
+            outcome = _run_scripted_profile_creation(
+                register_profile=register_profile_with_pinned_context,
+                label=label,
+                facts=facts,
+                secrets_stdin=bool(kwargs.get("secrets_stdin")),
+                secrets_fd=secrets_fd,
+                recovery_descriptors=recovery_descriptors,
+            )
     finally:
         _close_recovery_descriptors(recovery_descriptors)
 

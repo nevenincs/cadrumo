@@ -13,6 +13,7 @@ from datetime import date
 
 import pytest
 
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ..runtime import RegistryModeloSubview, build_runtime_schema_provider, subview_from_snapshot
 
@@ -32,7 +33,8 @@ def test_subview_projects_revision_completeness_manifest() -> None:
 
 
 def test_build_runtime_schema_provider_subview_carries_manifest() -> None:
-    provider = build_runtime_schema_provider(modelos=("130",))
+    period = Period.from_year_and_code(2025, "1T")
+    provider = build_runtime_schema_provider(modelos=("130",), filing_year=period.filing_year, period=period)
 
     subview = provider.get_subview("130")
 

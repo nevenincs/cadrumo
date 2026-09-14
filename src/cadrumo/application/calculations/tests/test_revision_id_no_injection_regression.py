@@ -12,8 +12,8 @@ parameter*: legitimate only for (i) registry-derived enumeration and
 scenario replay is exercised by the test harness, which the scan skips along
 with every other module under a ``tests/`` directory.
 
-The three benign exemptions confirmed by the registry call-site sweep are pinned
-here as named constants.  Any new call site passing a ``revision_id`` into
+The benign exemption confirmed by the registry call-site sweep is pinned here
+as a named constant.  Any new call site passing a ``revision_id`` into
 ``authority.snapshot()`` outside these exemptions is a defect and this test
 will FAIL.
 
@@ -33,7 +33,7 @@ from ....core.directory_scan import scan_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # ---------------------------------------------------------------------------
-# Named exemptions confirmed by the registry call-site review
+# Named exemption confirmed by the registry call-site review
 # ---------------------------------------------------------------------------
 # Paths relative to the ``aeat`` package root (``src/cadrumo/``).  The path
 # separator is ``/`` regardless of host OS so the set comparison is portable.
@@ -44,18 +44,11 @@ _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
         #    filtered by year/period coverage; the narrowing is
         #    consistent-by-construction with the resolver.
         "application/calculations/cross_period_clean_state.py",
-        # 2. Contextless schema-browse fallback: synthesises a representative
-        #    (year, period) from the latest open revision's own selector and
-        #    narrows to that same revision; consistent-by-construction, and NOT
-        #    a calculation-on-a-filing path.
-        "application/filing/runtime.py",
-        # 3. Registry-derived enumeration: the referential-integrity preflight
-        #    probe builds a snapshot for EVERY revision of EVERY bundled modelo,
-        #    pinning each revision.id to itself while iterating
-        #    authority.modelos / modelo.revisions.values() directly. The pin is
-        #    consistent-by-construction (it names the very revision the loop is
-        #    on), never a stored/operator-supplied value.
-        "application/preflight.py",
+        # 2. Secure persistence override migration: the persisted revision id
+        #    is an assertion used to inspect the binding vocabulary while
+        #    translating legacy relation keys. It never selects a filing
+        #    revision or grants filing capability.
+        "adapters/persistence/profile/calculation_revision_override_migration.py",
     },
 )
 
@@ -115,7 +108,7 @@ def _find_snapshot_revision_id_injections(root: Path) -> list[tuple[str, int]]:
 
 
 def test_no_new_snapshot_revision_id_injection_outside_named_exemptions() -> None:
-    """No production ``authority.snapshot(revision_id=...)`` call may exist outside the three named exemptions.
+    """No production ``authority.snapshot(revision_id=...)`` call may exist outside the named exemption.
 
     If this test fails a new call site has been added that passes a
     stored/literal/operator-supplied ``revision_id`` into resolution.  That is
@@ -153,7 +146,7 @@ def test_no_new_snapshot_revision_id_injection_outside_named_exemptions() -> Non
     # No new violations are allowed.
     assert not violations, (
         "Production code injects a stored/literal/operator-supplied revision_id "
-        "into authority.snapshot() outside the three named exemptions. "
+        "into authority.snapshot() outside the named exemption. "
         "The revision_id parameter on snapshot()/select_revision() is an assertion "
         "parameter, not a selector: production calculation, verification, filing, "
         "export, and projection paths MUST resolve from (modelo, filing_year, period) "

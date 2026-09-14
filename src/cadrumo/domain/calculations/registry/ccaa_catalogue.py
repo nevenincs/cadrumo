@@ -238,10 +238,12 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
 def _bundled_catalogue(effective_date: date) -> CcaaCatalogue:
     from .authority import bundled_authority
 
-    return _catalogue(_resolve_entries(
-        effective_date=effective_date,
-        authority=governed_facts_in_scope() or bundled_authority(),
-    ))
+    return _catalogue(
+        _resolve_entries(
+            effective_date=effective_date,
+            authority=governed_facts_in_scope() or bundled_authority(),
+        )
+    )
 
 
 def resolve_ccaa_catalogue(

@@ -31,9 +31,8 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.protocols import ModeloInputs
 from ....domain.filing.schema import ModeloDraft
-from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.submission.models import ModeloDraftStatus
-from ....domain.transactions.models import TransactionCatalogue
+from ...review.tests._fakes import draft_review_ports
 from ..draft_construction import build_draft
 from ..draft_review import approve_draft
 from ..runtime import build_runtime_schema_provider
@@ -122,8 +121,7 @@ def build_registry_filing_draft(
             bucket_id=_REGISTRY_TEST_BUCKET_ID,
             approved_by="registry",
             schema_provider=schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
-            invoice_catalogue=InvoiceCatalogue(),
+            ports=draft_review_ports(),
             prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
             profile_activity_fingerprint=empty_profile_activity_fingerprint(),
         )

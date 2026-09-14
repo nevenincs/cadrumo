@@ -22,9 +22,9 @@ import ast
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.directory_scan import scan_directory
-from ..loader import load_user_profile_schema
 from ..values import section_field_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
