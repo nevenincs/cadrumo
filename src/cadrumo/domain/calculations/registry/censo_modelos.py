@@ -9,6 +9,7 @@ authority for event periods and ownership rules.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from functools import lru_cache
 
@@ -17,10 +18,10 @@ from pydantic import BaseModel, Field, field_validator
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .authority import ValidatedRegistryAuthority, bundled_authority
+from .authority import PinnedAuthorityOperation, ValidatedRegistryAuthority, bundled_indexed_authority
 from .errors import RegistrySnapshotError, RegistryValidationError
-from .queries import RegistryQueryService
 from .schema import ModeloRevision
+from .temporal import select_revision
 
 CENSO_MODELO_SERVICE_OWNER = "cadrumo.domain.calculations.registry"
 CENSO_MODELO_EVENT_KINDS: tuple[str, ...] = ("alta", "modificacion", "baja")
@@ -140,31 +141,53 @@ def _require_modelo_string(modelo: object) -> str:
 def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
     """Return the :class:`CensoModeloOwnership` record for an exact string modelo code."""
     modelo = _require_modelo_string(modelo)
-    authority = bundled_authority()
-    if modelo == _ACTIVE_CENSO_MODELO:
-        return _active_036_ownership_from_registry(authority)
-    if modelo == _HISTORICAL_CENSO_MODELO:
-        return _historical_037_ownership_from_registry(authority)
-    raise RegistryValidationError(f"unknown censo modelo code {modelo!r}; expected '036' or '037'")
+    with bundled_indexed_authority().operation() as operation:
+        if modelo == _ACTIVE_CENSO_MODELO:
+            return _active_036_ownership_from_registry(operation)
+        if modelo == _HISTORICAL_CENSO_MODELO:
+            return _historical_037_ownership_from_registry(operation)
+        raise RegistryValidationError(f"unknown censo modelo code {modelo!r}; expected '036' or '037'")
 
 
-def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -> CensoModeloOwnership:
-    query_service = RegistryQueryService(authority)
-    try:
-        revisions = tuple(
-            revision
-            for _modelo_id, revision in query_service.iter_modelo_revisions(
-                modelo_codes=(_ACTIVE_CENSO_MODELO,),
+def _active_036_ownership_from_registry(
+    authority: PinnedAuthorityOperation | ValidatedRegistryAuthority,
+) -> CensoModeloOwnership:
+    if isinstance(authority, PinnedAuthorityOperation):
+        try:
+            directory = authority.modelo_directory(_ACTIVE_CENSO_MODELO)
+            revisions = tuple(
+                authority.revision(_ACTIVE_CENSO_MODELO, str(metadata.id)) for metadata in directory.revisions
             )
-        )
-    except RegistrySnapshotError as exc:
-        raise RegistryValidationError("active censo modelo 036 registry definition is missing") from exc
+            tax_domain = directory.modelo.tax_domain
+            cadence = directory.modelo.cadence
+        except (RegistrySnapshotError, ValueError) as exc:
+            raise RegistryValidationError("active censo modelo 036 registry definition is missing") from exc
 
-    try:
-        model_row = next(row for row in query_service.list_modelos().modelos if row.code == _ACTIVE_CENSO_MODELO)
-    except (RegistrySnapshotError, StopIteration) as exc:
-        raise RegistryValidationError("active censo modelo 036 registry definition is missing") from exc
-    if model_row.tax_domain != "censo" or model_row.cadence != "ad_hoc":
+        def select_revision_for_event(*, filing_year: int, period: str, on: date) -> ModeloRevision:
+            return authority.revision_for_context(
+                _ACTIVE_CENSO_MODELO,
+                filing_year=filing_year,
+                period=period,
+                on=on,
+            )
+    else:
+        try:
+            modelo_definition = authority.validate_modelo(_ACTIVE_CENSO_MODELO)
+            revisions = tuple(modelo_definition.revisions.values())
+            tax_domain = modelo_definition.tax_domain
+            cadence = modelo_definition.cadence
+        except RegistrySnapshotError as exc:
+            raise RegistryValidationError("active censo modelo 036 registry definition is missing") from exc
+
+        def select_revision_for_event(*, filing_year: int, period: str, on: date) -> ModeloRevision:
+            return select_revision(
+                modelo_definition,
+                filing_year=filing_year,
+                period=period,
+                on=on,
+            )
+
+    if tax_domain != "censo" or cadence != "ad_hoc":
         raise RegistryValidationError("active censo modelo 036 must be an ad_hoc censo registry definition")
     try:
         revision = max(revisions, key=lambda item: (item.valid_from, str(item.id)))
@@ -194,11 +217,10 @@ def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -
         # event metadata rather than a filing snapshot. Pinning ``as_of`` to
         # the latest revision's effective date disambiguates a mid-year
         # revision boundary without changing the declared foundation year.
-        selected = query_service.revision_for_scope(
-            _ACTIVE_CENSO_MODELO,
+        selected = select_revision_for_event(
             filing_year=foundation_year,
             period=event_kind,
-            as_of=revision.valid_from,
+            on=revision.valid_from,
         )
         if selected.id != revision.id:
             raise RegistryValidationError(
@@ -226,11 +248,23 @@ def _foundation_year_from_latest_revision(revision: ModeloRevision) -> int:
     return foundation_year
 
 
-def _historical_037_ownership_from_registry(authority: ValidatedRegistryAuthority) -> CensoModeloOwnership:
-    if _HISTORICAL_CENSO_MODELO in RegistryQueryService(authority).modelo_codes():
-        raise RegistryValidationError("historical censo modelo 037 must not have an active registry definition")
-    if not RegistryQueryService(authority).source_exists(_HISTORICAL_037_SOURCE_REF):
-        raise RegistryValidationError("historical censo modelo 037 suppression source metadata is missing")
+def _historical_037_ownership_from_registry(
+    authority: PinnedAuthorityOperation | ValidatedRegistryAuthority,
+) -> CensoModeloOwnership:
+    if isinstance(authority, PinnedAuthorityOperation):
+        if _HISTORICAL_CENSO_MODELO in authority.modelo_ids():
+            raise RegistryValidationError("historical censo modelo 037 must not have an active registry definition")
+        try:
+            authority.source_reference(_HISTORICAL_037_SOURCE_REF)
+        except (RegistrySnapshotError, ValueError):
+            raise RegistryValidationError(
+                "historical censo modelo 037 suppression source metadata is missing"
+            ) from None
+    else:
+        if any(str(modelo.id) == _HISTORICAL_CENSO_MODELO for modelo in authority.modelos):
+            raise RegistryValidationError("historical censo modelo 037 must not have an active registry definition")
+        if _HISTORICAL_037_SOURCE_REF not in authority.catalogues.sources:
+            raise RegistryValidationError("historical censo modelo 037 suppression source metadata is missing")
     return CensoModeloOwnership(
         modelo=_HISTORICAL_CENSO_MODELO,
         role=CensoModeloRole.HISTORICAL_METADATA,

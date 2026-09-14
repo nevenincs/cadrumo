@@ -15,9 +15,10 @@ renders a setup value.
 from __future__ import annotations
 
 from datetime import date
-from functools import cache
 
 from .errors import RegistryValidationError
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_references import LegalReferenceKind
 
 _SETUP_FACT_ID = "-".join(
@@ -25,19 +26,19 @@ _SETUP_FACT_ID = "-".join(
 )
 
 
-@cache
-def mapping_fact_entries(fact_id: str) -> dict[str, str]:
+def mapping_fact_entries(fact_id: str, *, authority: GovernedFactSource | None = None) -> dict[str, str]:
     """Resolve one string mapping fact and return its exact entries.
 
-    The returned mapping is copied at the boundary and cached by fact ID; the
-    authority remains the only source of the declarations and no Python
-    fallback is retained when a required entry is absent.
+    The returned mapping is copied at the boundary; the authority remains the
+    only source of the declarations and no Python fallback is retained when a
+    required entry is absent.
     """
-    from .authority import bundled_authority
-    from .facts.resolution import MappingFactQuery, ResolvedMappingFact
     from .schema_base import DateAxis
 
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError("setup mapping fact requires an explicit authority operation or scope")
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=fact_id,
             date_axis=DateAxis.FILING_PERIOD,
@@ -56,11 +57,14 @@ def mapping_fact_entries(fact_id: str) -> dict[str, str]:
     return entries
 
 
-def setup_answer_declarations() -> dict[str, tuple[str, type[str] | type[bool], str | None]]:
+def setup_answer_declarations(
+    *,
+    authority: GovernedFactSource | None = None,
+) -> dict[str, tuple[str, type[str] | type[bool], str | None]]:
     """Return answer-field profile bindings from the setup catalogue."""
     declarations: dict[str, tuple[str, type[str] | type[bool], str | None]] = {}
     prefix = "setup.field."
-    for key, encoded in mapping_fact_entries(_SETUP_FACT_ID).items():
+    for key, encoded in mapping_fact_entries(_SETUP_FACT_ID, authority=authority).items():
         if not key.startswith(prefix):
             continue
         parts = encoded.split("|", 2)
@@ -79,21 +83,21 @@ def setup_answer_declarations() -> dict[str, tuple[str, type[str] | type[bool], 
     return declarations
 
 
-def profile_field_bindings() -> dict[str, str]:
+def profile_field_bindings(*, authority: GovernedFactSource | None = None) -> dict[str, str]:
     """Return profile-field names and their canonical persisted paths."""
     prefix = "profile.field."
     return {
         key.removeprefix(prefix): value
-        for key, value in mapping_fact_entries(_SETUP_FACT_ID).items()
+        for key, value in mapping_fact_entries(_SETUP_FACT_ID, authority=authority).items()
         if key.startswith(prefix)
     }
 
 
-def wizard_page_declarations() -> dict[str, dict[str, str]]:
+def wizard_page_declarations(*, authority: GovernedFactSource | None = None) -> dict[str, dict[str, str]]:
     """Return page format/widget declarations keyed by page ID."""
     prefix = "wizard.page."
     pages: dict[str, dict[str, str]] = {}
-    for key, value in mapping_fact_entries(_SETUP_FACT_ID).items():
+    for key, value in mapping_fact_entries(_SETUP_FACT_ID, authority=authority).items():
         if not key.startswith(prefix):
             continue
         page_key, _, attribute = key.removeprefix(prefix).rpartition(".")
@@ -103,11 +107,14 @@ def wizard_page_declarations() -> dict[str, dict[str, str]]:
     return pages
 
 
-def wizard_option_declarations() -> dict[str, tuple[str, str, str]]:
+def wizard_option_declarations(
+    *,
+    authority: GovernedFactSource | None = None,
+) -> dict[str, tuple[str, str, str]]:
     """Return question option declarations as ``flag, kind, help`` tuples."""
     prefix = "wizard.option."
     options: dict[str, tuple[str, str, str]] = {}
-    for key, value in mapping_fact_entries(_SETUP_FACT_ID).items():
+    for key, value in mapping_fact_entries(_SETUP_FACT_ID, authority=authority).items():
         if not key.startswith(prefix):
             continue
         parts = value.split("|", 2)
@@ -117,12 +124,12 @@ def wizard_option_declarations() -> dict[str, tuple[str, str, str]]:
     return options
 
 
-def legal_source_kind_declarations() -> dict[str, str]:
+def legal_source_kind_declarations(*, authority: GovernedFactSource | None = None) -> dict[str, str]:
     """Return legal-reference kind to citation-source mappings."""
     prefix = "legal.source_kind."
     return {
         key.removeprefix(prefix): value
-        for key, value in mapping_fact_entries("legal-reference-schema-vocabulary").items()
+        for key, value in mapping_fact_entries("legal-reference-schema-vocabulary", authority=authority).items()
         if key.startswith(prefix)
     }
 

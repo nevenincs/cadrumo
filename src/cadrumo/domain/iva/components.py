@@ -607,11 +607,14 @@ def _cuota_settlement_catalogue_from_entries(
 @cache_governed_projection(maxsize=64)
 def _bundled_cuota_settlement_catalogue(effective_date: date) -> IvaCuotaSettlementCatalogue:
     """Cache the immutable 0084 cuota-settlement projection."""
-    from ..calculations.registry.authority import bundled_authority
-
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise IvaValidationError(
+            "IVA cuota-settlement catalogue requires an explicit authority operation or scope",
+        )
     entries = _resolve_component_catalogue_entries(
         effective_date=effective_date,
-        authority=(governed_facts_in_scope() or bundled_authority()),
+        authority=authority,
     )
     return _cuota_settlement_catalogue_from_entries(entries)
 
@@ -625,7 +628,9 @@ def registry_cuota_settlement_catalogue(
     selected_date = date.today() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        return _bundled_cuota_settlement_catalogue(selected_date)
+        raise IvaValidationError(
+            "IVA cuota-settlement catalogue requires an explicit authority operation or scope",
+        )
     entries = _resolve_component_catalogue_entries(
         effective_date=selected_date,
         authority=authority,
@@ -732,11 +737,14 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
 @cache_governed_projection(maxsize=64)
 def _bundled_component_vocabulary(effective_date: date) -> IvaComponentVocabulary:
     """Cache the immutable 0084 component-axis vocabulary."""
-    from ..calculations.registry.authority import bundled_authority
-
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise IvaValidationError(
+            "IVA component vocabulary requires an explicit authority operation or scope",
+        )
     entries = _resolve_component_catalogue_entries(
         effective_date=effective_date,
-        authority=(governed_facts_in_scope() or bundled_authority()),
+        authority=authority,
     )
     return _component_vocabulary_from_entries(entries)
 
@@ -750,7 +758,9 @@ def registry_component_vocabulary(
     selected_date = date.today() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        return _bundled_component_vocabulary(selected_date)
+        raise IvaValidationError(
+            "IVA component vocabulary requires an explicit authority operation or scope",
+        )
     entries = _resolve_component_catalogue_entries(
         effective_date=selected_date,
         authority=authority,
@@ -851,18 +861,21 @@ def _bundled_category_projection(
     projection: CategoryProjectionName,
 ) -> frozenset[IvaCategory]:
     """Cache one immutable category projection from the bundled authority."""
-    from ..calculations.registry.authority import bundled_authority
-
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise IvaValidationError(
+            "IVA category projection requires an explicit authority operation or scope",
+        )
     entries = _resolve_component_catalogue_entries(
         effective_date=effective_date,
-        authority=(governed_facts_in_scope() or bundled_authority()),
+        authority=authority,
     )
     return _category_projection_from_entries(
         entries,
         projection,
         resolve_iva_category_catalogue(
             effective_date=effective_date,
-            authority=governed_facts_in_scope() or bundled_authority(),
+            authority=authority,
         ),
     )
 
@@ -882,7 +895,9 @@ def registry_category_projection(
     selected_date = date.today() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        return _bundled_category_projection(selected_date, projection)
+        raise IvaValidationError(
+            "IVA category projection requires an explicit authority operation or scope",
+        )
     entries = _resolve_component_catalogue_entries(
         effective_date=selected_date,
         authority=authority,
@@ -974,11 +989,14 @@ def _project_component_catalogue(
 @cache_governed_projection(maxsize=64)
 def _bundled_component_catalogue(effective_date: date) -> ComponentCatalogue:
     """Cache the immutable bundled projection by its legal effective date."""
-    from ..calculations.registry.authority import bundled_authority
-
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise IvaValidationError(
+            "IVA component catalogue requires an explicit authority operation or scope",
+        )
     return _project_component_catalogue(
         effective_date=effective_date,
-        authority=governed_facts_in_scope() or bundled_authority(),
+        authority=authority,
     )
 
 
@@ -989,15 +1007,16 @@ def registry_component_catalogue(
 ) -> ComponentCatalogue:
     """Return the Axis-A catalogue projected by the validated registry authority.
 
-    Production callers may omit both arguments and receive the current bundled
-    filing-period projection. Tests and review tooling can pass an explicit
-    effective date or an isolated validated authority to inspect another
+    Callers must provide an operation or run inside its governed-fact scope;
+    tests and review tooling can pass an isolated generation to inspect another
     governed projection without introducing a second source of row data.
     """
     selected_date = date.today() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        return _bundled_component_catalogue(selected_date)
+        raise IvaValidationError(
+            "IVA component catalogue requires an explicit authority operation or scope",
+        )
     return _project_component_catalogue(effective_date=selected_date, authority=authority)
 
 

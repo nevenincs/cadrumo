@@ -12,7 +12,6 @@ canonical matcher.
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from ...core.modelo import Modelo
@@ -22,6 +21,7 @@ from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_project
 from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate
     from ..calculations.registry.schema import ModeloRevision
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
@@ -29,7 +29,13 @@ if TYPE_CHECKING:
     type DeadlineWindowProjection = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 
 
-def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> date | None:
+def resolve_filing_closes_on(
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    *,
+    authority: PinnedAuthorityOperation | None = None,
+) -> date | None:
     """Return the close date of the plazo voluntario for a modelo+year+period.
 
     Queries the validated registry authority for ``filing_year`` through
@@ -70,16 +76,16 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> d
         filing_year: Tax year for which the work unit was created.
         period: ``WorkUnit`` bare registry period token (e.g. ``"1T"``,
             ``"0A"``, ``"01"``).
+        authority: Optional generation-pinned authority operation.
 
     Returns:
         The :class:`~datetime.date` on which the filing window closes,
         or ``None`` if not found.
     """
-    window = resolve_filing_window(modelo, filing_year, period)
+    window = resolve_filing_window(modelo, filing_year, period, authority=authority)
     return None if window is None else window.closes_on
 
 
-@lru_cache(maxsize=256, typed=True)
 def resolve_filing_window(
     modelo: str,
     filing_year: int,
@@ -87,6 +93,7 @@ def resolve_filing_window(
     *,
     resultado: ResultDisposition | None = None,
     tipo_renta_code: str | None = None,
+    authority: PinnedAuthorityOperation | None = None,
 ) -> DeadlineWindowDefinition | None:
     """Return the registry deadline window for a modelo+year+period, or ``None``.
 
@@ -125,6 +132,7 @@ def resolve_filing_window(
         period: The typed filing period to match.
         resultado: Optional canonical post-calculation result disposition.
         tipo_renta_code: Optional official two-digit Modelo 210 tipo-renta code.
+        authority: Optional generation-pinned authority operation.
 
     Returns:
         The matching
@@ -137,18 +145,53 @@ def resolve_filing_window(
         DeadlineValidationError: More than one window matches the atomic request
             coordinate. Ambiguous registry authority is never treated as absence.
     """
-    from ..calculations.registry.authority import bundled_authority
+    selected_authority = authority
+    if selected_authority is None:
+        from ..calculations.registry.authority import bundled_indexed_authority
 
+        with bundled_indexed_authority().operation() as operation:
+            return _resolve_filing_window_with_operation(
+                operation,
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                resultado=resultado,
+                tipo_renta_code=tipo_renta_code,
+            )
+    return _resolve_filing_window_with_operation(
+        selected_authority,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        resultado=resultado,
+        tipo_renta_code=tipo_renta_code,
+    )
+
+
+def _resolve_filing_window_with_operation(
+    operation: PinnedAuthorityOperation,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    resultado: ResultDisposition | None,
+    tipo_renta_code: str | None,
+) -> DeadlineWindowDefinition | None:
+    """Resolve one filing window from a single generation-pinned operation."""
     if tipo_renta_code is not None and (
-        modelo != Modelo("210") or tipo_renta_code not in m210_tipo_renta_code_projection()
+        modelo != Modelo("210")
+        or tipo_renta_code
+        not in m210_tipo_renta_code_projection(
+            effective_date=date(filing_year, 12, 31),
+            authority=operation,
+        )
     ):
         raise DeadlineValidationError(
             f"filing window tipo_renta_code {tipo_renta_code!r} is not a canonical official Modelo 210 code",
         )
+    from .engine import _indexed_deadline_windows
 
-    authority = bundled_authority()
-
-    windows = authority.deadline_windows(filing_year, modelos=(modelo,))
+    windows = tuple(item for item in _indexed_deadline_windows(operation, filing_year) if item[0] == modelo)
     return _resolve_projected_filing_window(
         windows,
         modelo=modelo,

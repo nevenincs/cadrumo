@@ -15,18 +15,17 @@ See Also:
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from ...core.concepto_ingreso import ConceptoIngreso
 from ..calculations.registry.concepto_ingreso import resolve_concepto_ingreso_catalogue
+from ..calculations.registry.errors import RegistryError
 from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError
 
 __all__ = ["counts_toward_art_109_activity_income", "counts_toward_volumen_de_ingresos"]
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 _ART_110_EXCLUDED_CONCEPTS_FACT_ID: Final[str] = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"
 _ART_109_EXCLUDED_CONCEPTS_FACT_ID: Final[str] = "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria"
@@ -36,22 +35,19 @@ def _excluded_concepts(
     fact_id: str,
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> frozenset[ConceptoIngreso]:
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from ..calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+        raise TransactionValidationError(
+            "income-concept fact resolution requires an explicit authority operation or scope",
+        )
     try:
         resolved = authority.resolve_governed_fact(
             EntitySetFactQuery(fact_id=fact_id, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date)
         )
-    except Exception as exc:
-        from ..calculations.registry.errors import RegistryError
-
-        if isinstance(exc, RegistryError):
-            raise TransactionValidationError(f"failed to resolve income-concept fact {fact_id!r}: {exc}") from exc
-        raise
+    except RegistryError as exc:
+        raise TransactionValidationError(f"failed to resolve income-concept fact {fact_id!r}: {exc}") from exc
     if not isinstance(resolved, ResolvedEntitySetFact):
         raise TransactionValidationError(f"income-concept fact {fact_id!r} did not resolve to an entity set")
     catalogue = resolve_concepto_ingreso_catalogue(
@@ -70,7 +66,7 @@ def counts_toward_volumen_de_ingresos(
     concepto: ConceptoIngreso | None,
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return whether a receipt of this concept belongs in the volumen de ingresos.
 
@@ -106,7 +102,7 @@ def counts_toward_art_109_activity_income(
     concepto: ConceptoIngreso | None,
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return whether a receipt belongs in the Art. 109 retention-coverage base.
 

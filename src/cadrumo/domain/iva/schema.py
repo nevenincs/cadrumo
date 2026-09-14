@@ -34,6 +34,7 @@ from ...core.errors.severity import BaseSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.validity_window import ValidityWindow
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .errors import IvaValidationError
 
 
@@ -187,11 +188,19 @@ class IvaExemptionArticle(str):
         """Return the opaque token for string-oriented serialization."""
         return str(self)
 
-    def registry_declarations(self, on_date: date | None = None) -> Mapping[str, str]:
+    def registry_declarations(
+        self,
+        on_date: date | None = None,
+        *,
+        authority: GovernedFactSource | None = None,
+    ) -> Mapping[str, str]:
         """Return this token's registry-owned description and legal references."""
         from ..calculations.registry.iva_schema_vocabulary import resolve_iva_exemption_article_catalogue
 
-        definition = resolve_iva_exemption_article_catalogue(effective_date=on_date).definition(self)
+        definition = resolve_iva_exemption_article_catalogue(
+            effective_date=on_date,
+            authority=authority,
+        ).definition(self)
         return {
             "value": definition.token.value,
             "description": definition.description,
@@ -216,11 +225,19 @@ class IvaArt69DosService(str):
         """Return the opaque token for string-oriented serialization."""
         return str(self)
 
-    def registry_declarations(self, on_date: date | None = None) -> Mapping[str, str]:
+    def registry_declarations(
+        self,
+        on_date: date | None = None,
+        *,
+        authority: GovernedFactSource | None = None,
+    ) -> Mapping[str, str]:
         """Return this token's registry-owned description and legal references."""
         from ..calculations.registry.iva_schema_vocabulary import resolve_iva_art69_dos_service_catalogue
 
-        definition = resolve_iva_art69_dos_service_catalogue(effective_date=on_date).definition(self)
+        definition = resolve_iva_art69_dos_service_catalogue(
+            effective_date=on_date,
+            authority=authority,
+        ).definition(self)
         return {
             "value": definition.token.value,
             "description": definition.description,
@@ -270,7 +287,7 @@ def require_eu_member_state(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: object | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> EUMemberState:
     """Project one EU member-state token through fact 0131."""
     from ..calculations.registry.eu_member_state_catalogue import (
@@ -293,7 +310,11 @@ def require_registry_declared_eu_member_state(value: object, *, effective_date: 
     return _require_registry_declared_eu_member_state(value, effective_date=effective_date)
 
 
-def spanish_eu_member_state(*, effective_date: date | None = None, authority: object | None = None) -> EUMemberState:
+def spanish_eu_member_state(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> EUMemberState:
     """Return the registry-declared Spain token for domestic IVA projections."""
     return require_eu_member_state("ES", effective_date=effective_date, authority=authority)
 
@@ -319,13 +340,21 @@ class IvaRateKind(str):
 _IVA_STATUTORY_SCHEMA_VOCABULARY_FACT_ID = "iva-statutory-schema-vocabulary"
 
 
-def iva_statutory_schema_vocabulary(on_date: date | None = None) -> Mapping[str, str]:
+def iva_statutory_schema_vocabulary(
+    on_date: date | None = None,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> Mapping[str, str]:
     """Resolve statutory IVA schema vocabulary from the dated registry fact."""
-    from ..calculations.registry.authority import bundled_authority
     from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
     from ..calculations.registry.schema_base import DateAxis
 
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise IvaValidationError(
+            "IVA statutory schema vocabulary requires an explicit authority operation or scope",
+        )
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_IVA_STATUTORY_SCHEMA_VOCABULARY_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -337,29 +366,37 @@ def iva_statutory_schema_vocabulary(on_date: date | None = None) -> Mapping[str,
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
-def default_iva_cash_accounting_treatment(on_date: date | None = None) -> IvaCashAccountingTreatment:
+def default_iva_cash_accounting_treatment(
+    on_date: date | None = None,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> IvaCashAccountingTreatment:
     """Return the registry-declared ordinary cash-accounting treatment."""
     from ..calculations.registry.iva_schema_vocabulary import default_iva_cash_accounting_treatment as resolve_default
 
-    return resolve_default(effective_date=on_date)
+    return resolve_default(effective_date=on_date, authority=authority)
 
 
 def is_iva_cash_accounting_none(
     treatment: IvaCashAccountingTreatment,
     on_date: date | None = None,
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return whether a treatment is the registry-declared ordinary token."""
-    return treatment == default_iva_cash_accounting_treatment(on_date)
+    return treatment == default_iva_cash_accounting_treatment(on_date, authority=authority)
 
 
 def is_iva_cash_accounting_supplier_regime(
     treatment: IvaCashAccountingTreatment,
     on_date: date | None = None,
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return whether a treatment is the registry-declared supplier token."""
     from ..calculations.registry.iva_schema_vocabulary import resolve_iva_cash_accounting_catalogue
 
-    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=on_date)
+    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=on_date, authority=authority)
     return treatment == catalogue.supplier_regime_token
 
 

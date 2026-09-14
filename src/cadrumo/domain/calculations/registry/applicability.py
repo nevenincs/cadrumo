@@ -96,7 +96,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
+    from .authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
 
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -470,11 +470,15 @@ _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS: tuple[LegalRefId, ...] = (
 _APPLICABILITY_VERDICT_REASON_FACT_ID = "modelo-applicability-verdict-reason-catalogue"
 
 
-def _registry_applicability_reason(key: str) -> str:
+def _registry_applicability_reason(key: str, *, operation: PinnedAuthorityOperation | None = None) -> str:
     """Resolve an operator-facing verdict reason from the authored catalogue."""
-    from .authority import bundled_authority
+    if operation is None:
+        from .authority import bundled_indexed_authority
 
-    resolved = bundled_authority().resolve_governed_fact(
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _registry_applicability_reason(key, operation=indexed_operation)
+
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_APPLICABILITY_VERDICT_REASON_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -855,8 +859,8 @@ def resolve_applicability_rule_from_authority(
     Split out from :func:`_resolve_registry_applicability_rule` so the real
     logic takes its authority as a parameter and is testable against a
     scratch :class:`ValidatedRegistryAuthority` without touching the bundled
-    tree or monkeypatching anything; the production wrapper is the only
-    caller that hardcodes :func:`~._authority.bundled_authority`.
+    tree or monkeypatching anything; the production wrapper leases the indexed
+    generation only when a caller has not already supplied an operation.
 
     Raises:
         RegistryValidationError: No declared revision carries an
@@ -875,41 +879,61 @@ def resolve_applicability_rule_from_authority(
     )
 
 
+def resolve_applicability_rule_from_operation(
+    operation: PinnedAuthorityOperation,
+    modelo: Modelo,
+) -> ModeloApplicabilityRule:
+    """Resolve one modelo's applicability rule from a generation-pinned directory."""
+    directory = operation.modelo_directory(modelo.value)
+    for metadata in directory.revisions:
+        revision = operation.revision(modelo.value, str(metadata.id))
+        if revision.applicability:
+            return hydrate_applicability_rule(modelo, revision.applicability[0])
+    raise RegistryValidationError(
+        f"modelo {modelo.value!r} is declared in REGISTRY_RESOLVED_APPLICABILITY_MODELOS but no "
+        "declared revision carries an applicability rule",
+    )
+
+
 def _resolve_registry_applicability_rule(
     modelo: Modelo,
     *,
     authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloApplicabilityRule:
-    """Resolve one modelo's applicability rule from the bundled registry authoring tree.
+    """Resolve one modelo's applicability rule from the pinned registry generation.
 
     The import is function-local by necessity, not preference: ``_authority``
     transitively imports THIS module already, through the build-validation
     dispatch chain (``_authority`` -> ``_snapshot`` -> ``_validate`` ->
     ``_validate_revision_sections`` -> ``validate_applicability_section`` ->
-    here), so a module-level import of :func:`~._authority.bundled_authority`
-    would close a real cycle. Resolving on first call, long after both
+    here), so a module-level authority import would close a real cycle.
+    Resolving on first call, long after both
     modules have finished importing, is the same discipline
     used by the shared-catalogue compiler -- module-body evaluation is the
     hazard, first-call resolution is not.
 
-    No local cache sits in front of this call: :func:`~._authority.bundled_authority`
-    is itself fingerprint-bounded, so calling it here costs one
-    O(1) cache-key hash, not a re-parse, and a tree edit is seen on the very
-    next call. Caching here would re-introduce the path-only registry cache
-    the authority-flow rule forbids -- exactly the defect that consolidation removed.
+    No local cache sits in front of this call: the indexed operation already
+    owns generation pinning and storage validation. Caching here would bypass
+    the caller's generation boundary and re-introduce a path-only registry
+    cache, exactly the defect that consolidation removed.
     """
     if authority is not None:
         return resolve_applicability_rule_from_authority(authority, modelo)
+    if operation is not None:
+        return resolve_applicability_rule_from_operation(operation, modelo)
 
-    from .authority import bundled_authority
+    from .authority import bundled_indexed_authority
 
-    return resolve_applicability_rule_from_authority(bundled_authority(), modelo)
+    with bundled_indexed_authority().operation() as indexed_operation:
+        return resolve_applicability_rule_from_operation(indexed_operation, modelo)
 
 
 def _modelo_applicability_rule(
     modelo: str,
     *,
     authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloApplicabilityRule | None:
     """Return ``modelo``'s applicability rule, resolved from the registry or the literal table.
 
@@ -921,7 +945,7 @@ def _modelo_applicability_rule(
     error to ask about an unruled modelo.
     """
     if modelo in REGISTRY_RESOLVED_APPLICABILITY_MODELOS:
-        return _resolve_registry_applicability_rule(Modelo(modelo), authority=authority)
+        return _resolve_registry_applicability_rule(Modelo(modelo), authority=authority, operation=operation)
     return MODELO_APPLICABILITY_RULES.get(modelo)
 
 
@@ -1003,6 +1027,7 @@ def derive_modelo_applicability(
     *,
     today: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloApplicability:
     """Derive a modelo's applicability from the taxpayer model.
 
@@ -1026,6 +1051,9 @@ def derive_modelo_applicability(
             date in tests so results are deterministic.
         authority: Already-resolved validated authority to reuse. Omitting it
             preserves the standalone fingerprint-bounded bundled-tree lookup.
+        operation: Already-pinned indexed operation to reuse for point-loaded
+            applicability facts. Omitting it leases the bundled indexed
+            generation for this call.
 
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
@@ -1068,10 +1096,10 @@ def derive_modelo_applicability(
         return ModeloApplicability(
             modelo=Modelo("720"),
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
-            reason=_registry_applicability_reason("impatriado_m720_exempt.reason"),
+            reason=_registry_applicability_reason("impatriado_m720_exempt.reason", operation=operation),
             legal_refs=_IMPATRIADO_M720_LEGAL_REFS,
         )
-    rule = _modelo_applicability_rule(modelo, authority=authority)
+    rule = _modelo_applicability_rule(modelo, authority=authority, operation=operation)
     if rule is None:
         return _incomplete_applicability(modelo, unruled=True)
     return rule.evaluate(profile)

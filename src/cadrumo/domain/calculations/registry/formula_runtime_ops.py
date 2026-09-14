@@ -41,6 +41,7 @@ from .schema_rounding import RegistryRoundingCode
 if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
+    from .authority import PinnedAuthorityOperation
     from .authority_artifact import AuthorityComponentReader, AuthorityGenerationPin
     from .formula_runtime import EvalContext as _EvalContext
     from .schema import ModeloRevision
@@ -514,6 +515,7 @@ def read_parameter(
     parameter_id: str,
     *,
     date_context: Mapping[str, date],
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Decimal:
     """Read a registry parameter through :class:`ValidatedRegistryAuthority`.
 
@@ -522,16 +524,25 @@ def read_parameter(
     :class:`~domain.calculations.registry.ModeloRevision`, and delegates the
     dated value lookup to :func:`resolve_parameter`.
 
-    Values are always read from the immutable bundled authority. The helper has
-    no registry-root override, cache, or raw-tree loading path.
+    When no operation is supplied, the helper leases one indexed authority
+    generation for the point lookup; it never traverses a whole authority graph.
     """
-    from .authority import bundled_authority
-    from .queries import RegistryQueryService
+    if operation is None:
+        from .authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return read_parameter(
+                modelo_id,
+                revision_id,
+                parameter_id,
+                date_context=date_context,
+                operation=indexed_operation,
+            )
 
     try:
-        revision = RegistryQueryService(bundled_authority()).revision_by_id(modelo_id, str(revision_id))
+        revision = operation.revision(modelo_id, str(revision_id))
     except RegistrySnapshotError as exc:
-        raise RegistryValidationError(f"modelo {modelo_id!r} is not registered in the bundled authority") from exc
+        raise RegistryValidationError(f"modelo {modelo_id!r} is not registered in the indexed authority") from exc
     parameter = next((p for p in revision.parameters if p.id == parameter_id), None)
     if parameter is None:
         raise RegistryValidationError(

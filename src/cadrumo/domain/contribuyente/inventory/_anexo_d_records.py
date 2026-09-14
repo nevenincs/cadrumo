@@ -20,8 +20,7 @@ from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents as _quantize
-from ...calculations.registry.authority import bundled_authority
-from ...calculations.registry.queries import RegistryQueryService
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from .closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingConflictDiagnostic,
@@ -39,16 +38,21 @@ from .records import (
 )
 
 
-def _resolve_anexo_d_registry_declarations(*, filing_year: int) -> tuple[object, object]:
+def _resolve_anexo_d_registry_declarations(
+    *, filing_year: int, authority: PinnedAuthorityOperation | None = None
+) -> tuple[object, object]:
     """Resolve the selected M100 record and inventory-binding surfaces."""
-    query_service = RegistryQueryService(bundled_authority())
-    model_report = query_service.describe_modelo("100")
-    bindings_report = query_service.bindings_for_year(
+    if authority is None:
+        raise InventoryValidationError(
+            "inventory Anexo D registry resolution requires an explicit pinned authority operation",
+        )
+    revision = authority.revision_for_context(
         "100",
         filing_year=filing_year,
-        as_of=date(filing_year, 12, 31),
+        period="0A",
+        on=date(filing_year, 12, 31),
     )
-    return model_report, bindings_report
+    return revision, revision.bindings
 
 
 def _validate_anexo_d_quantised_values(result: InventoryAnexoDResult) -> None:
@@ -218,9 +222,10 @@ def resolve_inventory_authoritative_closing(
     decision: InventoryClosingAuthorityDecision,
     physical_observation: PhysicalClosingObservation | None,
     prior_closing_link: PriorAuthoritativeClosingLink | None,
+    authority: PinnedAuthorityOperation | None = None,
 ) -> InventoryClosingResolution:
     """Resolve closing authority while retaining any physical/movement conflict."""
-    _resolve_anexo_d_registry_declarations(filing_year=int(ledger.year))
+    _resolve_anexo_d_registry_declarations(filing_year=int(ledger.year), authority=authority)
     _validate_closing_decision_coordinate(ledger, decision)
     derived = _derive_inventory_closing_value(ledger)
     prior_closing_link = _require_prior_closing_continuity(ledger, prior_closing_link)

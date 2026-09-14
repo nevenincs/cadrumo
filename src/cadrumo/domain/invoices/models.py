@@ -32,9 +32,9 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.time.utc import UtcInstant
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from ..calculations.registry.schema_base import DateAxis
@@ -81,9 +81,17 @@ product, for the same reason.
 _SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID = "invoice-simplificada-counterparty-tax-id-applicability"
 
 
-def _simplificada_mandatory_tax_id_categories() -> frozenset[IvaCategory]:
+def _simplificada_mandatory_tax_id_categories(
+    *,
+    authority: GovernedFactSource | None = None,
+) -> frozenset[IvaCategory]:
     """Resolve the dated simplified-invoice applicability catalogue."""
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError(
+            "invoice simplified-tax-ID applicability requires an explicit authority operation or scope",
+        )
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -98,7 +106,11 @@ def _simplificada_mandatory_tax_id_categories() -> frozenset[IvaCategory]:
     except KeyError as exc:
         raise RegistryValidationError("invoice applicability is missing mandatory_tax_id_categories") from exc
     try:
-        return frozenset(require_iva_category(token.strip()) for token in encoded.split(",") if token.strip())
+        return frozenset(
+            require_iva_category(token.strip(), authority=selected_authority)
+            for token in encoded.split(",")
+            if token.strip()
+        )
     except ValueError as exc:
         raise RegistryValidationError("invoice applicability contains an unknown IVA category") from exc
 

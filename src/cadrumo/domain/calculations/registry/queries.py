@@ -72,10 +72,11 @@ from .schema import BindingDefinition, ModeloDefinition, ModeloRevision
 from .schema_base import filing_period_from_scope
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
-from .support_matrix import build_support_matrix
-from .temporal import select_revision, select_revision_for_year
+from .support_matrix import build_support_matrix, build_support_matrix_from_modelos
+from .temporal import ModeloRevisionDirectory, select_revision, select_revision_for_year
 
 if TYPE_CHECKING:
+    from .authority import PinnedAuthorityOperation
     from .authority_artifact import AuthorityComponentReader, AuthorityGenerationPin
 
 
@@ -825,6 +826,335 @@ class RegistryQueryService:
         return tuple(str(revision.id) for _modelo_id, revision in self.iter_modelo_revisions(modelo_codes=(modelo,)))
 
 
+class PinnedRegistryQueryService:
+    """Report facade over one generation-pinned component operation.
+
+    The legacy :class:`RegistryQueryService` remains the explicit eager
+    diagnostic facade.  Application discovery uses this point-loaded variant:
+    selector-complete directories provide metadata and each report hydrates
+    only the revision selected for that query.
+    """
+
+    def __init__(self, operation: PinnedAuthorityOperation) -> None:
+        """Bind the facade to one already-leased authority operation."""
+        self._operation = operation
+
+    def modelo_codes(self) -> tuple[str, ...]:
+        """Return deterministic model identities from the pinned index."""
+        return self._operation.modelo_ids()
+
+    def iter_modelo_revisions(
+        self,
+        *,
+        modelo_codes: tuple[str, ...] | None = None,
+    ) -> tuple[tuple[str, ModeloRevision], ...]:
+        """Explicitly enumerate point-loaded revisions for diagnostics."""
+        allowed = None if modelo_codes is None else frozenset(Modelo(code).value for code in modelo_codes)
+        rows: list[tuple[str, ModeloRevision]] = []
+        for modelo_id in sorted(self._operation.modelo_ids()):
+            if allowed is not None and modelo_id not in allowed:
+                continue
+            directory = self._operation.modelo_directory(modelo_id)
+            for metadata in directory.revisions:
+                rows.append((modelo_id, self._operation.revision(modelo_id, str(metadata.id))))
+        return tuple(rows)
+
+    def iter_modelo_definitions(self) -> tuple[ModeloDefinition, ...]:
+        """Materialize one latest revision view per modelo for diagnostics."""
+        definitions: list[ModeloDefinition] = []
+        for modelo_id in sorted(self._operation.modelo_ids()):
+            directory = self._operation.modelo_directory(modelo_id)
+            metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
+            definitions.append(
+                directory.modelo.materialize(self._operation.revision(modelo_id, str(metadata.id))),
+            )
+        return tuple(definitions)
+
+    def list_modelos(
+        self,
+        *,
+        year: int | None = None,
+        domain: TaxDomain | None = None,
+    ) -> ModeloListReport:
+        """Return a metadata catalogue backed by point-loaded directory views."""
+        rows: list[ModeloListRow] = []
+        for definition in self.iter_modelo_definitions():
+            if year is not None and not _modelo_covers_year(definition, year):
+                continue
+            if domain is not None and definition.tax_domain != domain:
+                continue
+            rows.append(
+                ModeloListRow(
+                    code=str(definition.id),
+                    title=definition.title,
+                    cadence=definition.cadence,
+                    tax_domain=definition.tax_domain,
+                    revision_count=len(definition.revisions),
+                ),
+            )
+        return ModeloListReport(modelos=tuple(sorted(rows, key=lambda row: row.code)))
+
+    def support_matrix(self) -> ModeloSupportMatrixReport:
+        """Build the explicit bulk support inventory from point-loaded views."""
+        return ModeloSupportMatrixReport(entries=build_support_matrix_from_modelos(self.iter_modelo_definitions()))
+
+    def describe_modelo(
+        self,
+        modelo: str,
+        *,
+        period: str | None = None,
+        as_of: date | None = None,
+    ) -> ModeloDescribeReport:
+        """Return one unscoped modelo description report."""
+        return _build_modelo_describe_report(self._resolve_revision(modelo, period=period, as_of=as_of))
+
+    def describe_modelo_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloDescribeReport:
+        """Return one filing-year-scoped modelo description report."""
+        return _build_modelo_describe_report(
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+        )
+
+    def casillas(
+        self,
+        modelo: str,
+        *,
+        period: str | None = None,
+        as_of: date | None = None,
+        input_kind: InputKind | None = None,
+        required: bool | None = None,
+        form_number: str | None = None,
+    ) -> ModeloCasillasReport:
+        """Return the filtered casilla report for one unscoped modelo query."""
+        return _build_modelo_casillas_report(
+            self._resolve_revision(modelo, period=period, as_of=as_of),
+            input_kind=input_kind,
+            required=required,
+            form_number=form_number,
+        )
+
+    def casillas_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+        input_kind: InputKind | None = None,
+        required: bool | None = None,
+        form_number: str | None = None,
+    ) -> ModeloCasillasReport:
+        """Return the filtered casilla report for one filing-year scope."""
+        return _build_modelo_casillas_report(
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            input_kind=input_kind,
+            required=required,
+            form_number=form_number,
+        )
+
+    def casilla(
+        self,
+        modelo: str,
+        casilla: str,
+        *,
+        period: str | None = None,
+        as_of: date | None = None,
+    ) -> ModeloCasillaDetailReport:
+        """Return one casilla detail from an unscoped modelo query."""
+        return _casilla_detail_report(self._resolve_revision(modelo, period=period, as_of=as_of), casilla)
+
+    def casilla_for_scope(
+        self,
+        modelo: str,
+        casilla: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloCasillaDetailReport:
+        """Return one casilla detail from a filing-year scope."""
+        return _casilla_detail_report(
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            casilla,
+        )
+
+    def bindings(
+        self,
+        modelo: str,
+        *,
+        period: str | None = None,
+        as_of: date | None = None,
+    ) -> ModeloBindingsReport:
+        """Return bindings for one unscoped modelo query."""
+        return _build_modelo_bindings_report(self._resolve_revision(modelo, period=period, as_of=as_of))
+
+    def bindings_for_year(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        as_of: date | None = None,
+    ) -> ModeloBindingsReport:
+        """Return bindings for one filing year."""
+        return _build_modelo_bindings_report(
+            self._resolve_revision_for_year(modelo, filing_year=filing_year, as_of=as_of),
+        )
+
+    def bindings_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloBindingsReport:
+        """Return bindings for one filing-year scope."""
+        return _build_modelo_bindings_report(
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+        )
+
+    def formulas(
+        self,
+        modelo: str,
+        *,
+        period: str | None = None,
+        as_of: date | None = None,
+    ) -> ModeloFormulasReport:
+        """Return formulas for one unscoped modelo query."""
+        return _build_modelo_formulas_report(self._resolve_revision(modelo, period=period, as_of=as_of))
+
+    def formulas_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloFormulasReport:
+        """Return formulas for one filing-year scope."""
+        return _build_modelo_formulas_report(
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+        )
+
+    def _revision_ids(self, directory: ModeloRevisionDirectory) -> tuple[str, ...]:
+        return tuple(str(metadata.id) for metadata in directory.revisions)
+
+    def _context(
+        self,
+        directory: ModeloRevisionDirectory,
+        revision: ModeloRevision,
+        *,
+        filing_year: int | None = None,
+        registry_period: RegistrySelectorPeriodCode | None = None,
+    ) -> ResolvedRegistryQueryContext:
+        return ResolvedRegistryQueryContext(
+            definition=directory.modelo.materialize(revision),
+            revision=revision,
+            revision_ids=self._revision_ids(directory),
+            filing_year=filing_year,
+            registry_period=registry_period,
+        )
+
+    def _resolve_revision(
+        self,
+        modelo: str,
+        *,
+        period: str | None,
+        as_of: date | None,
+    ) -> ResolvedRegistryQueryContext:
+        if as_of is not None:
+            _raise_unscoped_as_of_query(modelo)
+        directory = self._operation.modelo_directory(modelo.strip())
+        if period is None:
+            metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
+            return self._context(directory, self._operation.revision(directory.modelo_id, str(metadata.id)))
+        requested = period.strip()
+        declared = tuple(token for item in directory.revisions for token in item.period_selector.declared_periods)
+        if not (_BARE_PERIOD_RE.fullmatch(requested.upper()) or selector_token_for_request(declared, requested)):
+            raise RegistryValidationError(
+                f"period must be a bare registry token; pass the filing year separately; got {period!r}",
+            )
+        candidates = tuple(
+            item
+            for item in directory.revisions
+            if selector_token_for_request(item.period_selector.declared_periods, requested) is not None
+        )
+        if not candidates:
+            raise RegistryValidationError(
+                f"period {period!r} is not declared by any revision of modelo {directory.modelo_id}; "
+                f"declared periods: {', '.join(sorted(set(declared)))}",
+            )
+        metadata = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
+        registry_period = selector_token_for_request(metadata.period_selector.declared_periods, requested)
+        if registry_period is None:
+            raise RegistryValidationError(
+                f"period {period!r} is not declared by revision {metadata.id} of modelo {directory.modelo_id}",
+            )
+        return self._context(
+            directory,
+            self._operation.revision(directory.modelo_id, str(metadata.id)),
+            registry_period=registry_period,
+        )
+
+    def _resolve_revision_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None,
+    ) -> ResolvedRegistryQueryContext:
+        directory = self._operation.modelo_directory(modelo.strip())
+        requested = period.strip()
+        declared = tuple(token for item in directory.revisions for token in item.period_selector.declared_periods)
+        registry_period = registry_period_for_request(declared, requested) or requested.upper()
+        revision = self._operation.revision_for_context(
+            directory.modelo_id,
+            filing_year=filing_year,
+            period=registry_period,
+            on=as_of,
+        )
+        selected_token = selector_token_for_request(revision.period_selector.declared_periods, requested)
+        return self._context(
+            directory,
+            revision,
+            filing_year=filing_year,
+            registry_period=selected_token or registry_period,
+        )
+
+    def _resolve_revision_for_year(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        as_of: date | None,
+    ) -> ResolvedRegistryQueryContext:
+        directory = self._operation.modelo_directory(modelo.strip())
+        candidates = tuple(
+            item
+            for item in directory.revisions
+            if item.period_selector.periods_for_year(filing_year) and (as_of is None or item.contains_date(as_of))
+        )
+        if not candidates:
+            raise RegistryValidationError(
+                f"modelo {directory.modelo_id} has no revision for filing year {filing_year}",
+            )
+        metadata = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
+        revision = self._operation.revision(directory.modelo_id, str(metadata.id))
+        return self._context(
+            directory,
+            revision,
+            filing_year=filing_year,
+            registry_period=metadata.period_selector.periods_for_year(filing_year)[0],
+        )
+
+
 def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> ModeloDescribeReport:
     """Assemble a :class:`ModeloDescribeReport` from a resolved query context."""
     definition = context.definition
@@ -1166,6 +1496,7 @@ def _public_value(value: object) -> object:
 
 
 __all__ = [
+    "PinnedRegistryQueryService",
     "RegistryQueryService",
     "ResolvedRegistryQueryContext",
     "load_modelo_revision_component",

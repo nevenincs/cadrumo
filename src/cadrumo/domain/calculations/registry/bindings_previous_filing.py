@@ -23,12 +23,13 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, ClassVar, Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import CadrumoError
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import RegistrySelectorPeriodCode
 from .binding_aggregation import binding_aggregation_op
@@ -349,7 +350,7 @@ def _observed_casilla_values(
     return values
 
 
-class _PreviousFilingObservationAbsentError(Exception):
+class _PreviousFilingObservationAbsentError(CadrumoError):
     """Internal signal: the required source filing was simply never observed.
 
     Raised by :func:`_resolve_anchor_values` for the ZERO-MATCH case only,
@@ -366,16 +367,6 @@ class _PreviousFilingObservationAbsentError(Exception):
     ``None`` (unsatisfied — the caller's existing "nothing to add" shape)
     rather than letting the raise propagate.
     """
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "A private control-flow signal, never an operator-facing failure: it is "
-        "raised and caught inside this module and resolves the binding to "
-        "unsatisfied. Binding it to the error registry would give an outcome no "
-        "operator can observe a code and a locale key, and deriving it from "
-        "CadrumoError would make a broad domain-error except swallow it — the "
-        "exact confusion with the sibling structural defects this class exists "
-        "to keep separate."
-    )
 
 
 def _resolve_anchor_values(

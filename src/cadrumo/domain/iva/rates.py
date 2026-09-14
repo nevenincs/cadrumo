@@ -10,12 +10,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from ..calculations.registry.facts.resolution import ResolvedMappingFact
 from ..calculations.registry.facts.schema import MappingFactPayload
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from .errors import IvaCatalogueError
 from .schema import EUMemberState, IvaRateRecord, require_eu_member_state
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 IVA_RATE_FACT_ID = "iva-rate-schedule"
 """Jurisdictions that must carry rate rows.
@@ -26,28 +31,41 @@ gate.
 """
 
 
-def load_iva_rate_table() -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
+def load_iva_rate_table(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
     """Return IVA rates projected from the installed authority artifact.
 
     Rate TOML is authoring input.  A caller cannot redirect the shipped runtime
     at an arbitrary source tree: publication is the only route to changed rates.
     """
-    from ..calculations.registry.authority import bundled_authority
-
-    fact = bundled_authority().catalogues.facts.facts.get(IVA_RATE_FACT_ID)
-    if fact is None:
-        raise IvaCatalogueError("installed authority has no IVA rate facts")
+    if operation is None:
+        raise IvaCatalogueError("IVA rate table requires an explicit pinned authority operation")
+    fact = operation.governed_fact(IVA_RATE_FACT_ID)
     table: dict[EUMemberState, list[IvaRateRecord]] = {}
     for variant in fact.variants:
         if not isinstance(variant.payload, MappingFactPayload):
             raise IvaCatalogueError("IVA rate fact contains a non-mapping variant")
         selectors = {selector.name: selector.value for selector in variant.selectors}
-        member_state = require_eu_member_state(str(selectors["member_state"]), effective_date=variant.valid_from)
+        if "member_state" not in selectors or "kind" not in selectors:
+            continue
+        if variant.valid_from is None:
+            raise IvaCatalogueError("IVA rate variant has no effective start date")
+        member_state = require_eu_member_state(
+            str(selectors["member_state"]),
+            effective_date=variant.valid_from,
+            authority=operation,
+        )
         payload = {str(entry.key): entry.value for entry in variant.payload.entries}
         table.setdefault(member_state, []).append(
             IvaRateRecord(
                 member_state=member_state,
-                kind=require_iva_rate_kind(str(selectors["kind"]), effective_date=variant.valid_from),
+                kind=require_iva_rate_kind(
+                    str(selectors["kind"]),
+                    effective_date=variant.valid_from,
+                    authority=operation,
+                ),
                 pct=Decimal(str(payload["pct"])),
                 effective_from=variant.valid_from,
                 effective_until=variant.valid_to,
@@ -59,13 +77,25 @@ def load_iva_rate_table() -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
     return MappingProxyType({state: tuple(records) for state, records in table.items()})
 
 
-def iva_rate_record_from_fact(resolved: ResolvedMappingFact) -> IvaRateRecord:
+def iva_rate_record_from_fact(
+    resolved: ResolvedMappingFact,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> IvaRateRecord:
     """Project an authority result onto the retained public record."""
     selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
     payload = {str(entry.key): entry.value for entry in resolved.payload.entries}
     return IvaRateRecord(
-        member_state=require_eu_member_state(str(selectors["member_state"]), effective_date=resolved.valid_from),
-        kind=require_iva_rate_kind(str(selectors["kind"]), effective_date=resolved.valid_from),
+        member_state=require_eu_member_state(
+            str(selectors["member_state"]),
+            effective_date=resolved.valid_from,
+            authority=authority,
+        ),
+        kind=require_iva_rate_kind(
+            str(selectors["kind"]),
+            effective_date=resolved.valid_from,
+            authority=authority,
+        ),
         pct=Decimal(str(payload["pct"])),
         effective_from=resolved.valid_from,
         effective_until=resolved.valid_to,

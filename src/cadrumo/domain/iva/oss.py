@@ -133,9 +133,9 @@ def resolve_oss_ioss_regime_catalogue(
     """Resolve the complete OSS / IOSS regime catalogue through facts authority."""
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        from ..calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError(
+            "OSS/IOSS regime catalogue requires an explicit authority operation or scope",
+        )
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_FACT_ID,

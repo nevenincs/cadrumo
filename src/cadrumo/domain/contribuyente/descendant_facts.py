@@ -52,7 +52,7 @@ import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Final, TypedDict
+from typing import Final, Literal, TypedDict, cast
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
@@ -61,7 +61,6 @@ from ...core.identity.tax_id import tax_id_identity_token
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.text_bounds import is_calendar_month
-from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_default_token,
     descendant_relacion_tokens,
@@ -69,6 +68,7 @@ from ..calculations.registry.descendant_relacion_catalogue import (
 )
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .descendant import DescendantInfo
 from .family_types import GuarderiaMonthSpend
@@ -142,9 +142,12 @@ familiar at all.
 """
 
 
-def _disability_band_declarations() -> Mapping[str, str]:
+def _disability_band_declarations(*, authority: GovernedFactSource | None = None) -> Mapping[str, str]:
     """Resolve descendant disability-grade vocabulary from the dated registry fact."""
-    resolved = bundled_authority().resolve_governed_fact(
+    authority = authority or governed_facts_in_scope()
+    if authority is None:
+        raise ProfileAnswerTypeError("descendant facts require an explicit authority operation or scope")
+    resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_DISABILITY_BAND_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -156,26 +159,38 @@ def _disability_band_declarations() -> Mapping[str, str]:
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
-def _accepted_disability_grades() -> frozenset[int]:
-    declarations = _disability_band_declarations()
+type _DisabilityGrade = Literal[0, 33, 65]
+
+
+def _accepted_disability_grades(*, authority: GovernedFactSource | None = None) -> frozenset[_DisabilityGrade]:
+    declarations = _disability_band_declarations(authority=authority)
     try:
         accepted = declarations["accepted_grades"]
     except KeyError as exc:
         raise ProfileAnswerTypeError("descendant disability catalogue is missing accepted_grades") from exc
     try:
-        return frozenset(int(token.strip()) for token in accepted.split(",") if token.strip())
+        parsed = frozenset(int(token.strip()) for token in accepted.split(",") if token.strip())
     except ValueError as exc:
         raise ProfileAnswerTypeError("descendant disability catalogue has invalid accepted_grades") from exc
+    if not parsed.issubset({0, 33, 65}):
+        raise ProfileAnswerTypeError("descendant disability catalogue declares unsupported accepted_grades")
+    return frozenset(cast(_DisabilityGrade, grade) for grade in parsed)
 
 
-def _discapacidad_grade(value: int | None) -> int | None:
+def _discapacidad_grade(
+    value: int | None,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> _DisabilityGrade | None:
     if value is None:
         return None
-    return value if value in _accepted_disability_grades() else None
+    return value if value in _accepted_disability_grades(authority=authority) else None
 
 
 def descendant_facts_from_list(
     descendientes: Sequence[DescendantInfo],
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> list[tuple[str, str]]:
     """Return a list of (path, canonical-value-string) tuples for all DescendantInfo entries.
 
@@ -186,7 +201,7 @@ def descendant_facts_from_list(
     for idx, descendant in enumerate(descendientes):
         prefix = f"{_DESCENDANT_FACT_PREFIX}.{idx}"
         facts.append((f"{prefix}.birth_date", descendant.birth_date.isoformat()))
-        _append_present_facts(facts, prefix, _identity_fact_values(descendant))
+        _append_present_facts(facts, prefix, _identity_fact_values(descendant, authority=authority))
         _append_present_facts(facts, prefix, _family_fact_values(descendant))
         _append_present_facts(facts, prefix, _maternity_fact_values(descendant))
     facts.append((_COUNT_PATH, str(len(descendientes))))
@@ -201,12 +216,18 @@ def _append_present_facts(
     facts.extend((f"{prefix}.{field}", value) for field, value in values if value is not None)
 
 
-def _identity_fact_values(descendant: DescendantInfo) -> tuple[tuple[str, str | None], ...]:
+def _identity_fact_values(
+    descendant: DescendantInfo,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> tuple[tuple[str, str | None], ...]:
     """Serialise relationship evidence, omitting the ordinary default relation."""
     return (
         (
             "relacion",
-            None if descendant.relacion == descendant_relacion_default_token() else descendant.relacion.value,
+            None
+            if descendant.relacion == descendant_relacion_default_token(authority=authority)
+            else descendant.relacion.value,
         ),
         (
             "inscripcion_registro_civil",
@@ -304,7 +325,7 @@ class _CivilFields(TypedDict):
     inscripcion_registro_civil_date: date | None
     acogimiento_resolucion_date: date | None
     death_date: date | None
-    discapacidad_grado: int | None
+    discapacidad_grado: _DisabilityGrade | None
 
 
 class _FamilyFields(TypedDict):
@@ -339,7 +360,12 @@ def relacion_kwarg(relacion: DescendantRelacion | None) -> RelacionKwarg:
     return {} if relacion is None else {"relacion": relacion}
 
 
-def _stored_relacion(raw: str | None, *, index: int) -> DescendantRelacion | None:
+def _stored_relacion(
+    raw: str | None,
+    *,
+    index: int,
+    authority: GovernedFactSource | None = None,
+) -> DescendantRelacion | None:
     """Read one descendant's stored relación, refusing a token outside the registry catalogue.
 
     Returns ``None`` for an absent token — UNSTATED, not "ordinary". The two
@@ -359,16 +385,23 @@ def _stored_relacion(raw: str | None, *, index: int) -> DescendantRelacion | Non
     """
     if raw is None:
         return None
+    authority = authority or governed_facts_in_scope()
+    if authority is None:
+        raise ProfileAnswerTypeError("descendant facts require an explicit authority operation or scope")
     try:
-        return require_descendant_relacion(raw.strip().lower(), authority=bundled_authority())
+        return require_descendant_relacion(raw.strip().lower(), authority=authority)
     except (RegistryValidationError, ValueError):
-        accepted = ", ".join(member.value for member in descendant_relacion_tokens(authority=bundled_authority()))
+        accepted = ", ".join(member.value for member in descendant_relacion_tokens(authority=authority))
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.relacion must be one of {accepted}; got {raw!r}.",
         ) from None
 
 
-def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, ...]:
+def descendant_list_from_facts(
+    facts: dict[str, str],
+    *,
+    authority: GovernedFactSource | None = None,
+) -> tuple[DescendantInfo, ...]:
     """Reconstruct a tuple of DescendantInfo from a flat profile-fact dict.
 
     ``facts`` is a ``{path: canonical-value-string}`` mapping. Only
@@ -389,10 +422,19 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         field = m.group(2)
         rows.setdefault(idx, {})[field] = value
 
-    return tuple(_descendant_from_stored_row(idx, row) for idx, row in sorted(rows.items()) if row.get("birth_date"))
+    return tuple(
+        _descendant_from_stored_row(idx, row, authority=authority)
+        for idx, row in sorted(rows.items())
+        if row.get("birth_date")
+    )
 
 
-def _descendant_from_stored_row(index: int, row: dict[str, str]) -> DescendantInfo:
+def _descendant_from_stored_row(
+    index: int,
+    row: dict[str, str],
+    *,
+    authority: GovernedFactSource | None = None,
+) -> DescendantInfo:
     """Hydrate one complete descendant record from its canonical fact row."""
     birth_raw = row["birth_date"]
     birth_date = parse_iso8601_date(birth_raw)
@@ -402,30 +444,34 @@ def _descendant_from_stored_row(index: int, row: dict[str, str]) -> DescendantIn
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.birth_date carries no readable date; got {birth_raw!r}.",
         )
-    relacion = _stored_relacion(row.get("relacion"), index=index)
+    relacion = _stored_relacion(row.get("relacion"), index=index, authority=authority)
     return DescendantInfo(
         birth_date=birth_date,
         **relacion_kwarg(relacion),
-        **_stored_civil_fields(row),
+        **_stored_civil_fields(row, authority=authority),
         **_stored_family_fields(row, index=index),
         **_stored_maternity_fields(row, index=index),
         nif=row.get("nif"),
     )
 
 
-def _stored_civil_fields(row: dict[str, str]) -> _CivilFields:
+def _stored_civil_fields(
+    row: dict[str, str],
+    *,
+    authority: GovernedFactSource | None = None,
+) -> _CivilFields:
     inscripcion_raw = row.get("inscripcion_registro_civil")
     acogimiento_raw = row.get("acogimiento_resolucion")
     fallecimiento_raw = row.get("fallecimiento")
     discapacidad_raw = row.get("discapacidad")
     disc_val = int(discapacidad_raw) if discapacidad_raw is not None else None
-    if disc_val is not None and disc_val not in _accepted_disability_grades():
+    if disc_val is not None and disc_val not in _accepted_disability_grades(authority=authority):
         raise ProfileAnswerTypeError(f"DISCAPACIDAD carries an unsupported governed grade: {disc_val!r}")
     return {
         "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None,
         "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None,
         "death_date": parse_iso8601_date(fallecimiento_raw) if fallecimiento_raw else None,
-        "discapacidad_grado": _discapacidad_grade(disc_val),
+        "discapacidad_grado": _discapacidad_grade(disc_val, authority=authority),
     }
 
 
@@ -663,7 +709,11 @@ def _flag_birth_date(parts: dict[str, str], *, raw: str) -> date:
     return birth_date
 
 
-def parse_descendiente_flag(raw: str) -> DescendantInfo:
+def parse_descendiente_flag(
+    raw: str,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> DescendantInfo:
     """Parse a ``--descendiente NACIMIENTO=YYYY-MM-DD,...`` flag value.
 
     Accepted keys (case-insensitive)::
@@ -735,9 +785,13 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     # path uses, so the flag door and the profile-read door refuse an unknown
     # value identically rather than each inventing a tolerance.
     relacion_raw = parts.get("RELACION")
-    relacion = _stored_relacion(relacion_raw.strip() or None if relacion_raw else None, index=0)
+    relacion = _stored_relacion(
+        relacion_raw.strip() or None if relacion_raw else None,
+        index=0,
+        authority=authority,
+    )
 
-    civil_fields = _flag_civil_fields(parts)
+    civil_fields = _flag_civil_fields(parts, authority=authority)
     family_fields = _flag_family_fields(parts)
     maternity_fields = _flag_maternity_fields(parts)
     nif_raw = parts.get("NIF")
@@ -752,13 +806,17 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     )
 
 
-def _flag_civil_fields(parts: dict[str, str]) -> _CivilFields:
+def _flag_civil_fields(
+    parts: dict[str, str],
+    *,
+    authority: GovernedFactSource | None = None,
+) -> _CivilFields:
     inscripcion_raw = parts.get("INSCRIPCION")
     acogimiento_raw = parts.get("ACOGIMIENTO")
     fallecimiento_raw = parts.get("FALLECIMIENTO")
     disc_raw = parts.get("DISCAPACIDAD")
     discapacidad_grado: int | None = int(disc_raw) if disc_raw is not None else None
-    if discapacidad_grado is not None and discapacidad_grado not in _accepted_disability_grades():
+    if discapacidad_grado is not None and discapacidad_grado not in _accepted_disability_grades(authority=authority):
         raise ProfileAnswerTypeError(
             f"DISCAPACIDAD carries an unsupported governed grade: {discapacidad_grado!r}",
         )
@@ -766,7 +824,7 @@ def _flag_civil_fields(parts: dict[str, str]) -> _CivilFields:
         "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None,
         "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None,
         "death_date": parse_iso8601_date(fallecimiento_raw) if fallecimiento_raw else None,
-        "discapacidad_grado": _discapacidad_grade(discapacidad_grado),
+        "discapacidad_grado": _discapacidad_grade(discapacidad_grado, authority=authority),
     }
 
 

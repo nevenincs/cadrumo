@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from ..calculations.registry.authority import ValidatedRegistryAuthority
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.schema_base import DateAxis
 
 _FAMILY_FACT_DATE_AXES: dict[str, DateAxis] = {
@@ -28,7 +28,7 @@ _FAMILY_FACT_DATE_AXES: dict[str, DateAxis] = {
 class FamilyFactResolutionContext:
     """Authority and explicit filing/devengo coordinates for family facts."""
 
-    authority: ValidatedRegistryAuthority
+    authority: GovernedFactSource
     filing_period: date
     devengo_date: date
 

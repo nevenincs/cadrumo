@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import Annotated, cast
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -20,16 +20,13 @@ from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
 )
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
-
 
 _CARRY_WINDOW_FACT_ID = "liva-art-99-compensation-carry-window-years"
 
@@ -64,6 +61,8 @@ class IvaWalletBalanceReport(BaseModel):
 
 def build_iva_wallet_balance_report(
     carry_forward: IvaCompensationCarryForwardReport,
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> IvaWalletBalanceReport:
     """Summarise a carry-forward report into a balance snapshot.
 
@@ -90,7 +89,7 @@ def build_iva_wallet_balance_report(
         active_balance=active_balance,
         expired_balance=expired_balance,
         lot_count=len(carry_forward.lots),
-        next_expiry_year=_next_expiry_year(active_lots_with_balance),
+        next_expiry_year=_next_expiry_year(active_lots_with_balance, authority=authority),
         unallocated_applied_amount=carry_forward.unallocated_applied_amount,
     )
 
@@ -122,13 +121,14 @@ def _sum_lot_balances(lots: Iterable[IvaCompensationCarryForwardLot]) -> Decimal
 def _resolve_carry_window_years(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> int:
     """Resolve the carry-window scalar through the validated registry authority."""
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from ..calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError(
+            "IVA compensation carry-window resolution requires an explicit authority operation or scope",
+        )
     resolved = cast(
         "ResolvedScalarFact",
         authority.resolve_governed_fact(
@@ -147,13 +147,18 @@ def _resolve_carry_window_years(
     return value
 
 
-def _next_expiry_year(lots: Iterable[IvaCompensationCarryForwardLot]) -> int | None:
+def _next_expiry_year(
+    lots: Iterable[IvaCompensationCarryForwardLot],
+    *,
+    authority: GovernedFactSource | None = None,
+) -> int | None:
     lot_list = tuple(lots)
     if not lot_list:
         return None
     earliest_source_year = min(int(lot.source_filing_year) for lot in lot_list)
     carry_window_years = _resolve_carry_window_years(
         effective_date=date(earliest_source_year, 1, 1),
+        authority=authority,
     )
     return min(int(lot.source_filing_year) + carry_window_years for lot in lot_list)
 
