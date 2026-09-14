@@ -31,9 +31,8 @@ from pydantic import BaseModel, Field
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.queries import RegistryQueryService
 
 M145_COMMUNICATION_SERVICE_OWNER = "cadrumo.application.modelo"
 
@@ -85,7 +84,9 @@ class M145CommunicationServiceContract(BaseModel):
     source_refs: tuple[str, ...]
 
 
-def build_m145_communication_service_contract(*, filing_year: int | None = None) -> M145CommunicationServiceContract:
+def build_m145_communication_service_contract(
+    *, filing_year: int | None = None, operation: PinnedAuthorityOperation | None = None
+) -> M145CommunicationServiceContract:
     """Return the registry-backed Modelo 145 local communication contract.
 
     Reads the law-selected Modelo 145 revision for the communication period
@@ -96,10 +97,20 @@ def build_m145_communication_service_contract(*, filing_year: int | None = None)
     through a filing-grade snapshot.
     """
     selected_filing_year = date.today().year if filing_year is None else filing_year
-    query_service = RegistryQueryService(bundled_authority())
-    year_revision = query_service.revision_for_year(
-        Modelo("145").value,
-        filing_year=selected_filing_year,
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return build_m145_communication_service_contract(
+                filing_year=filing_year,
+                operation=indexed_operation,
+            )
+    directory = operation.modelo_directory(Modelo("145").value)
+    year_revision = max(
+        (
+            operation.revision(Modelo("145").value, str(candidate.id))
+            for candidate in directory.revisions
+            if candidate.period_selector.periods_for_year(selected_filing_year)
+        ),
+        key=lambda revision: (revision.valid_from, str(revision.id)),
     )
     period_tokens = tuple(
         str(period) for period in year_revision.period_selector.periods_for_year(selected_filing_year)
@@ -107,7 +118,7 @@ def build_m145_communication_service_contract(*, filing_year: int | None = None)
     if len(period_tokens) != 1:
         raise ValueError("Modelo 145 communication contract requires one registry period token")
     period_token = period_tokens[0]
-    revision = query_service.revision_for_scope(
+    revision = operation.revision_for_context(
         Modelo("145").value,
         filing_year=selected_filing_year,
         period=period_token,

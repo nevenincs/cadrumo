@@ -35,7 +35,6 @@ from ...domain.calculations.registry.invoice_bindings import (
     M347ThirdPartyOperationProvider,
     PayableInvoiceProvider,
 )
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.modelos.codes import ModeloCode
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
@@ -51,6 +50,7 @@ from .modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .retenciones import RetencionesAggregation, RetencionObservation
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 
 LOGGER = get_logger(__name__)
@@ -311,43 +311,53 @@ def _provider_for_modelo_revisions(
     return next(iter(providers), None)
 
 
-@lru_cache(maxsize=1)
-def _registered_per_modelo_provider_modelos() -> Mapping[PerModeloAggregationContributor, tuple[str, ...]]:
-    """Project aggregation ownership from the validated registry binding authority.
+def _registered_per_modelo_provider_modelos(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Mapping[PerModeloAggregationContributor, tuple[str, ...]]:
+    """Project aggregation ownership from explicit indexed registry components.
 
     This is intentionally not a second static modelo catalogue: the binding
     sources and selector shapes that calculation consumes are the canonical
-    answer to which aggregation family can service a modelo.
+    answer to which aggregation family can service a modelo. The contract is
+    one of the few genuine bulk inventories, so it walks only the compact
+    modelo directories and their addressed revision components.
     """
-    from ...domain.calculations.registry.authority import bundled_authority
+    if operation is None:
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
 
-    authority = bundled_authority()
-    authority.validate_registry()
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _registered_per_modelo_provider_modelos(operation=indexed_operation)
     grouped: dict[PerModeloAggregationContributor, list[str]] = {
         contributor: [] for contributor in PerModeloAggregationContributor
     }
-    revisions_by_modelo: dict[str, list[ModeloRevision]] = {}
-    for modelo_id, revision in RegistryQueryService(authority).iter_modelo_revisions():
-        revisions_by_modelo.setdefault(modelo_id, []).append(revision)
-    for modelo_id, revisions in revisions_by_modelo.items():
+    for modelo_id in operation.modelo_ids():
+        directory = operation.modelo_directory(modelo_id)
+        revisions = tuple(operation.revision(modelo_id, str(metadata.id)) for metadata in directory.revisions)
         if provider := _provider_for_modelo_revisions(modelo_id, tuple(revisions)):
             grouped[provider].append(modelo_id)
     return {contributor: tuple(sorted(modelos)) for contributor, modelos in grouped.items()}
 
 
-def _supported_per_modelo_modelos() -> tuple[str, ...]:
+def _supported_per_modelo_modelos(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[str, ...]:
     """Return the exact accepted modelo ids in canonical registry order."""
-    grouped = _registered_per_modelo_provider_modelos()
+    grouped = _registered_per_modelo_provider_modelos(operation=operation)
     return tuple(sorted(modelo for modelos in grouped.values() for modelo in modelos))
 
 
-def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
+def build_per_modelo_aggregation_contract(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> PerModeloAggregationContract:
     """Build the immutable backend-owned aggregation contract.
 
     Returns a :class:`PerModeloAggregationContract` enumerating every
     registered provider, accepted source kinds, and known error codes.
     """
-    registered = _registered_per_modelo_provider_modelos()
+    registered = _registered_per_modelo_provider_modelos(operation=operation)
     providers = (
         PerModeloAggregationContributorContract(
             provider=PerModeloAggregationContributor.RETENCIONES,
@@ -390,13 +400,17 @@ def get_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     return build_per_modelo_aggregation_contract()
 
 
-def provider_for_modelo(modelo: str) -> PerModeloAggregationContributor:
+def provider_for_modelo(
+    modelo: str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> PerModeloAggregationContributor:
     """Return the provider family for a supported modelo.
 
     Returns a :class:`PerModeloAggregationContributor` member identifying
     the aggregation family that owns the given modelo number.
     """
-    supported = _supported_per_modelo_modelos()
+    supported = _supported_per_modelo_modelos(operation=operation)
     if modelo != modelo.strip():
         raise AggregationUnsupportedModeloError(
             t("aggregation.per_modelo.errors.unsupported_modelo"),
@@ -406,7 +420,7 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationContributor:
                 facts={"modelo": modelo, "supported_modelos": "|".join(supported)},
             ),
         )
-    for provider, modelos in _registered_per_modelo_provider_modelos().items():
+    for provider, modelos in _registered_per_modelo_provider_modelos(operation=operation).items():
         if modelo in modelos:
             return provider
     raise AggregationUnsupportedModeloError(
@@ -419,12 +433,21 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationContributor:
     )
 
 
-def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggregationResult:
+def aggregate_per_modelo(
+    command: PerModeloAggregationCommand,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> PerModeloAggregationResult:
     """Run the central application aggregation service for one modelo.
 
     Returns a :class:`PerModeloAggregationResult`.
     """
-    provider = provider_for_modelo(command.modelo)
+    if operation is None:
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_per_modelo(command, operation=indexed_operation)
+    provider = provider_for_modelo(command.modelo, operation=operation)
     # `command.modelo` is deliberately a loose `str` so an unsupported code earns
     # the late refusal above, which names the accepted set. `provider_for_modelo`
     # has now proven the code is one of those supported members, so this is the
@@ -435,7 +458,12 @@ def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggre
     if provider is PerModeloAggregationContributor.RETENCIONES:
         aggregation = _aggregate_retenciones(command.modelo, command.period, command.retencion_observations)
     elif provider is PerModeloAggregationContributor.COUNTERPART:
-        aggregation = _aggregate_counterpart(command.modelo, command.period, command.counterpart_observations)
+        aggregation = _aggregate_counterpart(
+            command.modelo,
+            command.period,
+            command.counterpart_observations,
+            operation=operation,
+        )
     else:
         aggregation = aggregate_foreign_assets_720(command.foreign_asset_observations, period=command.period)
 
@@ -475,16 +503,21 @@ def _aggregate_counterpart(
     modelo: str,
     period: Period,
     observations: tuple[CounterpartObservation, ...],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> CounterpartAggregation:
-    from ...domain.calculations.registry.authority import bundled_authority
+    if operation is None:
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
 
-    revisions = tuple(
-        revision
-        for modelo_id, revision in RegistryQueryService(bundled_authority()).iter_modelo_revisions(
-            modelo_codes=(modelo,),
-        )
-        if modelo_id == modelo
-    )
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _aggregate_counterpart(
+                modelo,
+                period,
+                observations,
+                operation=indexed_operation,
+            )
+    directory = operation.modelo_directory(modelo)
+    revisions = tuple(operation.revision(modelo, str(metadata.id)) for metadata in directory.revisions)
     if any(
         binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION
         for revision in revisions

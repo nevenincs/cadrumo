@@ -10,7 +10,7 @@ navigate and cannot invoke a business action.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import ClassVar, Final, Protocol, override, runtime_checkable
+from typing import Final, Protocol, override, runtime_checkable
 
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 
@@ -22,6 +22,7 @@ from ...application.search.workbench import (
     WorkbenchSearchSource,
     WorkbenchSearchStatus,
 )
+from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
 from .navigation import (
     DestinationUnavailableError,
@@ -65,13 +66,8 @@ class TuiSearchHostV1(Protocol):
         ...
 
 
-class TuiSearchHostError(RuntimeError):
+class TuiSearchHostError(CadrumoError):
     """Raised when a palette provider is mounted outside the workbench root."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "entrypoint-local search-host admission signal; `_host_or_none` catches it at the "
-        "command-palette provider boundary and withholds entries outside `TuiSearchHostV1`"
-    )
 
 
 def _require_host(app: object) -> TuiSearchHostV1:

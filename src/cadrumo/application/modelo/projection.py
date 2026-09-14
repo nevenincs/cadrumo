@@ -30,7 +30,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -45,7 +45,6 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
@@ -308,11 +307,14 @@ def _relation_id(value: object, *, surface: str) -> RelationId:
         raise RegistryValidationError(f"{surface} must be a canonical relation id: {value!r}") from exc
 
 
-def _registry_projection_declaration(year: int) -> ResolvedMappingFact:
+def _registry_projection_declaration(
+    year: int, *, operation: PinnedAuthorityOperation | None = None
+) -> ResolvedMappingFact:
     """Resolve the dated cross-model projection declaration from the registry."""
-    authority = bundled_authority()
-    model_report = RegistryQueryService(authority).describe_modelo("100")
-    resolved = authority.resolve_governed_fact(
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _registry_projection_declaration(year, operation=indexed_operation)
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-100-m130-projection-mapping",
             date_axis=DateAxis.FILING_PERIOD,
@@ -321,12 +323,11 @@ def _registry_projection_declaration(year: int) -> ResolvedMappingFact:
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise TypeError("selected projection declaration must resolve as a mapping fact")
-    del model_report
     return resolved
 
 
-# fact-relocation: selected M130/M100 projection declarations are consumed through
-# RegistryQueryService and the dated mapping fact.
+# fact-relocation: selected M130/M100 projection declarations are consumed
+# through the pinned operation and the dated mapping fact.
 def _m130_quarter_revisions(year: int) -> dict[Period, CalculationRevision]:
     """Leave source-model selection at the registry boundary."""
     _registry_projection_declaration(year)
@@ -556,10 +557,15 @@ def _comparison_static_revisions(
             period=period_a,
         )
         return rev_a_static, rev_b_static
-    query_service = RegistryQueryService(bundled_authority())
-    rev_b_static = query_service.revision_for_scope(modelo, filing_year=year_b, period=period_b)
-    rev_a_static = query_service.revision_for_scope(modelo, filing_year=year_a, period=period_a)
-    return rev_a_static, rev_b_static
+    with bundled_indexed_authority().operation() as indexed_operation:
+        return _comparison_static_revisions(
+            modelo=modelo,
+            year_a=year_a,
+            year_b=year_b,
+            period_a=period_a,
+            period_b=period_b,
+            operation=indexed_operation,
+        )
 
 
 def _comparison_casilla_metadata(

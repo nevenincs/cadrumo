@@ -3,25 +3,32 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.binding_temporal import binding_applies_to_period
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.formula_initial_values import (
     binding_values_with_absent_by_design_defaults,
 )
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.schema import ModeloRevision
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
-# fact-relocation: selected M202 relation and absent-by-design default declarations are consumed through RegistryQueryService
+
+# fact-relocation: selected M202 relation and absent-by-design defaults are
+# consumed through the registry query boundary.
 def _registry_relation_prefill_binding_ids(
     revision: ModeloRevision,
     *,
     modelo: str,
     filing_year: int,
     period: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> frozenset[BindingId]:
     """Resolve period-default relation slots for one selected filing scope.
 
@@ -31,26 +38,32 @@ def _registry_relation_prefill_binding_ids(
     fallback relation slot.
     """
     try:
-        report = RegistryQueryService(bundled_authority()).bindings_for_scope(
+        if operation is None:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return _registry_relation_prefill_binding_ids(
+                    revision,
+                    modelo=modelo,
+                    filing_year=filing_year,
+                    period=period,
+                    operation=indexed_operation,
+                )
+        selected_revision = operation.revision_for_context(
             modelo,
             filing_year=filing_year,
             period=period,
         )
     except (RegistrySnapshotError, RegistryValidationError):
-        return frozenset()
-    if (
-        str(report.code) != str(modelo)
-        or report.filing_year is None
-        or int(report.filing_year) != int(filing_year)
-        or report.period is None
-        or str(report.period) != period
-        or str(report.revision) != str(revision.id)
-    ):
-        return frozenset()
+        return frozenset[BindingId]()
+    if str(selected_revision.id) != str(revision.id):
+        return frozenset[BindingId]()
     return frozenset(
-        row.binding_id
-        for row in report.rows
-        if row.provider.kind is BindingSourceKind.RELATION_PREFILL and not row.operator_input_required
+        binding.id
+        for binding in selected_revision.bindings
+        if binding.source is BindingSourceKind.RELATION_PREFILL
+        and isinstance(binding.provider, RelationPrefillProvider)
+        and binding.provider.relation_kind == "previous_period"
+        and str(binding.provider.source_modelo) == modelo
+        and not binding_applies_to_period(binding.applicability, period)
     )
 
 

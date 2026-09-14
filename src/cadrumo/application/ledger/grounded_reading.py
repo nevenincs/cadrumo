@@ -41,6 +41,7 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
@@ -60,6 +61,9 @@ from .party_colocation import (
     party_attribution_findings,
     resolve_party_attribution_by_colocation,
 )
+
+if TYPE_CHECKING:
+    from ...domain.iva.regime_legend import RegimeLegend
 
 __all__ = [
     "GROUNDABLE_ORIGINS",
@@ -176,6 +180,7 @@ def ground_draft_against_transcription(
     *,
     draft: InvoiceDraft,
     transcription: DocumentTranscription,
+    legends: tuple[RegimeLegend, ...],
     taxpayer_tax_id: str | None = None,
 ) -> InvoiceDraft:
     """Return *draft* with its provenance verified and its findings attached.
@@ -188,6 +193,9 @@ def ground_draft_against_transcription(
         draft: The draft a reader produced.
         transcription: The independently produced document text the anchors are
             checked against.
+        legends: The dated registry declarations selected by the enclosing
+            pinned authority operation. They are passed to the deterministic
+            regime check without resolving an ambient vocabulary here.
         taxpayer_tax_id: The filer's own identifier, when known. Supplied only
             so it can be EXCLUDED from counterparty candidacy; role resolution
             is skipped entirely when it is unknown, because resolving without it
@@ -200,7 +208,7 @@ def ground_draft_against_transcription(
     findings: list[DraftDiscrepancyFinding] = list(draft.discrepancies)
     # Through the shared list rather than naming the checks here, so a check
     # added later cannot reach this path and miss the structured reader's.
-    findings.extend(deterministic_findings(draft))
+    findings.extend(deterministic_findings(draft, legends=legends))
     # Named here rather than in that shared list because it is the one check
     # that needs the TRANSCRIPTION as well as the draft: co-location is a fact
     # about where a value is printed, which a draft alone cannot answer. The

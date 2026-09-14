@@ -51,7 +51,7 @@ from ...core.decimal.constants import MONEY_ZERO
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -862,19 +862,11 @@ def _revision_for_context(
     revision = registry_snapshot.revision if registry_snapshot is not None else None
     if revision is not None:
         return revision
-    query_service = RegistryQueryService(bundled_authority())
-    prorrata_registry_declarations(
-        query_service,
-        modelo=context.modelo,
-        filing_year=context.filing_year,
-        period=context.period.registry_token,
-    )
-    return query_service._resolve_revision_for_scope(
-        context.modelo,
-        filing_year=context.filing_year,
-        period=context.period.registry_token,
-        as_of=None,
-    ).revision
+    # The source mesh already selected this exact revision before invoking the
+    # resolver.  Re-selecting through a process-wide catalogue could cross a
+    # generation boundary and would make a persisted calculation depend on a
+    # later authority edition.
+    return context.revision
 
 
 def _merge_current_year_values(
@@ -1262,9 +1254,12 @@ def buildprorrata_regularizacion_advisory(
 _PRORRATA_SPECIAL_LEGAL_REF_KEY: Final = "prorrata_especial_mandatory.legal_ref"
 
 
-def _resolve_prorrata_special_legal_ref(*, ejercicio: int) -> str:
+def _resolve_prorrata_special_legal_ref(*, ejercicio: int, operation: PinnedAuthorityOperation | None = None) -> str:
     """Resolve the mandatory-special advisory's legal reference from registry data."""
-    resolved = bundled_authority().resolve_governed_fact(
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _resolve_prorrata_special_legal_ref(ejercicio=ejercicio, operation=indexed_operation)
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="renta-iva-deduction-ratio-policy",
             date_axis=DateAxis.FILING_PERIOD,
@@ -1289,6 +1284,7 @@ def build_prorrata_especial_mandatory_advisory(
     deduction_under_especial: Decimal,
     ejercicio: int,
     parameters: ProrrataEspecialMandatoryParameters,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Notice | None:
     """Build the LIVA art. 103.Dos.2.º mandatory-especial settlement advisory.
 
@@ -1315,6 +1311,8 @@ def build_prorrata_especial_mandatory_advisory(
         ejercicio: The filing year being settled (for the message and context).
         parameters: The registry-resolved LIVA art-103.Dos.2 margin and its
             comparison direction for that ejercicio.
+        operation: Optional generation-pinned authority operation used to
+            resolve the advisory's legal reference.
     """
     if not is_especial_mandatory(
         deduction_under_general,
@@ -1346,7 +1344,7 @@ def build_prorrata_especial_mandatory_advisory(
             # the envelope can tell which redaction produced the obligation.
             "margin_percentage": str(rule.margin_percentage),
             "margin_inclusive": "true" if rule.inclusive else "false",
-            "legal_refs": _resolve_prorrata_special_legal_ref(ejercicio=ejercicio),
+            "legal_refs": _resolve_prorrata_special_legal_ref(ejercicio=ejercicio, operation=operation),
         },
     )
 

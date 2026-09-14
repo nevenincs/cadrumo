@@ -19,9 +19,9 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from functools import lru_cache
+from collections.abc import Iterable, Mapping
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from ...core.modelo import Modelo as _Modelo
 from ...core.period import Period as _Period
@@ -32,7 +32,7 @@ from ...domain.calculations.registry.applicability import (
     modelo_requires_iva_regime as _modelo_requires_iva_regime,
 )
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_simplificado_token
 from ...domain.deadlines.models import IVARegime as _IVARegime
@@ -47,6 +47,10 @@ from .calendar_models import (
     OverviewCensoEnrolmentState,
 )
 from .next_actions import declare_next_action
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema import ModeloRevision
 
 #: Every profile-fact gap this module reports is answered by one surface, so the
 #: warnings name that surface's catalogue action rather than nine copies of a
@@ -121,22 +125,80 @@ def _record_gating_field(
     key_to_meta[profile_key] = meta
 
 
-@lru_cache(maxsize=1)
-def _deadline_window_profile_keys_by_modelo() -> MappingProxyType[str, tuple[str, ...]]:
-
+def _collect_deadline_window_profile_keys(
+    revisions: Iterable[tuple[str, ModeloRevision]],
+) -> MappingProxyType[str, tuple[str, ...]]:
     keys_by_modelo: dict[str, set[str]] = {}
-    for modelo_definition in bundled_authority().modelos:
-        modelo = str(modelo_definition.id)
-        for revision in modelo_definition.revisions.values():
-            for window in revision.deadline_windows:
-                for condition in window.applicability_conditions:
-                    if condition.field in _PROFILE_FIELD_WARNING_META:
-                        keys_by_modelo.setdefault(modelo, set()).add(condition.field)
+    for modelo, revision in revisions:
+        for window in revision.deadline_windows:
+            for condition in window.applicability_conditions:
+                if condition.field in _PROFILE_FIELD_WARNING_META:
+                    keys_by_modelo.setdefault(modelo, set()).add(condition.field)
     return MappingProxyType({modelo: tuple(sorted(keys)) for modelo, keys in sorted(keys_by_modelo.items())})
 
 
-@lru_cache(maxsize=1)
-def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
+def _deadline_window_profile_keys_by_modelo(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
+    modelo: str | None = None,
+) -> MappingProxyType[str, tuple[str, ...]]:
+    """Return deadline condition keys from explicit metadata or point loads.
+
+    A pinned operation can answer one modelo by walking its compact directory
+    and loading each revision component. Whole-registry callers must provide an
+    explicit revision inventory; the compatibility path opens the indexed
+    bundled operation at this boundary.
+    """
+    if revision_inventory is not None:
+        return _collect_deadline_window_profile_keys(revision_inventory)
+    if operation is not None:
+        if modelo is None:
+            raise ValueError("calendar deadline metadata requires modelo or an explicit revision inventory")
+        directory = operation.modelo_directory(modelo)
+        return _collect_deadline_window_profile_keys(
+            (modelo, operation.revision(modelo, str(metadata.id))) for metadata in directory.revisions
+        )
+    if modelo is None:
+        raise ValueError("calendar deadline metadata requires a pinned operation or explicit revision inventory")
+    with bundled_indexed_authority().operation() as indexed_operation:
+        return _deadline_window_profile_keys_by_modelo(modelo=modelo, operation=indexed_operation)
+
+
+def _default_calendar_metadata_modelos() -> tuple[str, ...]:
+    """Return the explicit model inventory needed by calendar warning projection."""
+    modelos = {str(rule.modelo) for rule in _iter_modelo_applicability_rules()}
+    modelos.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS)
+    return tuple(sorted(modelos))
+
+
+def _operation_revision_inventory(
+    operation: PinnedAuthorityOperation,
+    modelos: Iterable[str],
+) -> Iterable[tuple[str, ModeloRevision]]:
+    """Enumerate only the revision components named by the warning surface."""
+    for modelo in modelos:
+        directory = operation.modelo_directory(modelo)
+        for metadata in directory.revisions:
+            yield modelo, operation.revision(modelo, str(metadata.id))
+
+
+def _gating_fields(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
+    modelos: Iterable[str] | None = None,
+) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
+    if operation is None and revision_inventory is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _gating_fields(
+                operation=indexed_operation,
+                modelos=_default_calendar_metadata_modelos(),
+            )
+    if revision_inventory is None:
+        if operation is None or modelos is None:
+            raise ValueError("calendar gating fields require an operation and explicit modelo metadata")
+        revision_inventory = _operation_revision_inventory(operation, modelos)
     key_to_modelos: dict[str, set[str]] = {}
     key_to_meta: dict[str, tuple[str, str]] = {}
 
@@ -168,7 +230,11 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
                 key_to_meta=key_to_meta,
             )
 
-    for modelo, profile_keys in _deadline_window_profile_keys_by_modelo().items():
+    deadline_keys = _deadline_window_profile_keys_by_modelo(
+        operation=operation,
+        revision_inventory=revision_inventory,
+    )
+    for modelo, profile_keys in deadline_keys.items():
         for profile_key in profile_keys:
             _record_gating_field(
                 profile_key=profile_key,
@@ -214,7 +280,12 @@ _M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simpl
 _M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
 
 
-def calendar_applicability_profile_keys_for_modelo(modelo: str) -> tuple[str, ...]:
+def calendar_applicability_profile_keys_for_modelo(
+    modelo: str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
+) -> tuple[str, ...]:
     """Return profile keys that can influence calendar applicability for ``modelo``.
 
     The result combines registry applicability rules, IVA-regime coverage, and
@@ -235,7 +306,13 @@ def calendar_applicability_profile_keys_for_modelo(modelo: str) -> tuple[str, ..
         if rule.required_payer_fact is not None:
             keys.update(payer_fact_profile_keys(rule.required_payer_fact))
         break
-    keys.update(_deadline_window_profile_keys_by_modelo().get(modelo, ()))
+    keys.update(
+        _deadline_window_profile_keys_by_modelo(
+            operation=operation,
+            revision_inventory=revision_inventory,
+            modelo=modelo,
+        ).get(modelo, ()),
+    )
     if _modelo_requires_iva_regime(modelo):
         keys.add("iva.regime")
     keys.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS.get(modelo, frozenset()))
@@ -270,11 +347,22 @@ def _calendar_censo_enrolment_state(
     *,
     modelo: str,
     live_censo_verified_profile_keys: tuple[str, ...] | None,
+    operation: PinnedAuthorityOperation | None = None,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
 ) -> OverviewCensoEnrolmentState:
     """Classify whether censo-stamped profile paths witness ``modelo`` enrolment."""
     if live_censo_verified_profile_keys is None:
         return OverviewCensoEnrolmentState.NOT_CHECKED
-    required = set(calendar_applicability_profile_keys_for_modelo(modelo)) & _CENSO_ENROLMENT_PROFILE_KEYS
+    required = (
+        set(
+            calendar_applicability_profile_keys_for_modelo(
+                modelo,
+                operation=operation,
+                revision_inventory=revision_inventory,
+            ),
+        )
+        & _CENSO_ENROLMENT_PROFILE_KEYS
+    )
     if "taxpayer_type.irpf_income_categories" in required:
         required.add("activities.iae_epigraph")
     if not required:
@@ -427,6 +515,9 @@ def _single_fix_action_or_unscoped_pull(actions: list[DeclaredNextAction]) -> De
 def _build_completeness_and_warnings(
     raw_values: Mapping[str, object] | None,
     entries: tuple[OverviewCalendarEntry, ...],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
 ) -> tuple[CalendarCompleteness, tuple[CalendarWarning, ...]]:
     """Build explicit/defaulted profile completeness and related warnings.
 
@@ -440,7 +531,10 @@ def _build_completeness_and_warnings(
     defaulted: list[str] = []
     warnings: list[CalendarWarning] = []
     defaulted_modelos: set[str] = set()
-    for key, (affected_modelos, message_key, action_id) in _gating_fields().items():
+    for key, (affected_modelos, message_key, action_id) in _gating_fields(
+        operation=operation,
+        revision_inventory=revision_inventory,
+    ).items():
         raw = raw_values.get(key)
         if raw is not None and str(raw).strip():
             explicitly_set.append(key)

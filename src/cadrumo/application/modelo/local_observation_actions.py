@@ -35,7 +35,7 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -51,7 +51,6 @@ from ...domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
@@ -170,17 +169,15 @@ def _load_revision(
     operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloRevision:
     try:
-        if operation is not None:
-            return operation.revision_for_context(
-                modelo,
-                filing_year=filing_year,
-                period=period.registry_token,
-            )
-        return RegistryQueryService(bundled_authority()).revision_for_scope(
-            modelo,
-            filing_year=filing_year,
-            period=period.registry_token,
-        )
+        if operation is None:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return _load_revision(
+                    modelo=modelo,
+                    filing_year=filing_year,
+                    period=period,
+                    operation=indexed_operation,
+                )
+        return operation.revision_for_context(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError as exc:
         raise ModeloLocalObservationError(
             (

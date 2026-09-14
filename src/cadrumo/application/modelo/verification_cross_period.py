@@ -10,9 +10,10 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal_strict
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -35,6 +36,9 @@ from ..calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
 )
 from .verification_repository_ports import CalculationObservationRepositoryProtocol
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def cross_period_expected_member_sets_from_profile(
@@ -72,22 +76,38 @@ def cross_period_verification_declarations(
     filing_year: int | None = None,
     period: str | None = None,
     as_of: date | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[object, ...]:
     """Return relation and verification declarations for one selected revision."""
     if snapshot is not None:
         revision = snapshot.revision
-    else:
+    elif operation is not None:
         if modelo is None or filing_year is None or period is None:
             raise ValueError("cross-period declarations require a selected registry coordinate")
-        authority = bundled_authority()
-        service = query_service or RegistryQueryService(authority)
-        report = service.describe_modelo_for_scope(
+        revision = operation.revision_for_context(
             modelo,
             filing_year=filing_year,
             period=period,
-            as_of=as_of,
+            on=as_of,
         )
-        revision = authority.modelo(modelo).revisions[report.revision]
+    else:
+        if modelo is None or filing_year is None or period is None:
+            raise ValueError("cross-period declarations require a selected registry coordinate")
+        if query_service is not None:
+            revision = query_service.revision_for_scope(
+                modelo,
+                filing_year=filing_year,
+                period=period,
+                as_of=as_of,
+            )
+        else:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                revision = indexed_operation.revision_for_context(
+                    modelo,
+                    filing_year=filing_year,
+                    period=period,
+                    on=as_of,
+                )
     return (
         *revision.bindings,
         *revision.verification_expectations,
@@ -112,8 +132,28 @@ def cross_period_clean_state_verdict_for_work_unit(
     not_applicable_source_modelos: frozenset[str] | None = None,
     zero_value_previous_filing_binding_ids: frozenset[str] | None = None,
     period_overrides: frozenset[tuple[int, str]] | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Resolve the selected declarations before the generic clean-state seam."""
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return cross_period_clean_state_verdict_for_work_unit(
+                work_unit,
+                observation_repository=observation_repository,
+                filing_repository=filing_repository,
+                calculation_repository=calculation_repository,
+                verification_repository=verification_repository,
+                expected_member_sets=expected_member_sets,
+                taxpayer_tax_id=taxpayer_tax_id,
+                activity_start_date=activity_start_date,
+                modelo_202_modality=modelo_202_modality,
+                taxpayer_files_economic_activity=taxpayer_files_economic_activity,
+                workflow_profile=workflow_profile,
+                not_applicable_source_modelos=not_applicable_source_modelos,
+                zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
+                period_overrides=period_overrides,
+                operation=indexed_operation,
+            )
     del (
         observation_repository,
         filing_repository,
@@ -130,7 +170,7 @@ def cross_period_clean_state_verdict_for_work_unit(
         period_overrides,
     )
     try:
-        snapshot = bundled_authority().snapshot(
+        snapshot = operation.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
@@ -213,6 +253,7 @@ def require_cross_period_clean_state(
     workflow_profile: TaxpayerProfile | None = None,
     target_revision: CalculationRevision | None = None,
     subject_leaf_key: str = "modelo.work.verify",
+    operation: PinnedAuthorityOperation | None = None,
 ) -> None:
     """Resolve the selected registry declarations at the application gate."""
     del subject_leaf_key
@@ -229,6 +270,7 @@ def require_cross_period_clean_state(
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
         workflow_profile=workflow_profile,
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target_revision),
+        operation=operation,
     )
 
 

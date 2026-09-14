@@ -106,6 +106,8 @@ from .invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.iva.regime_legend import RegimeLegend
     from .confirm_establishment import ConfirmedEstablishment
     from .confirmation_gate import ConfirmationBlocker, FindingResolution
     from .confirmation_record import InvoiceConfirmationRecord
@@ -503,6 +505,8 @@ def _prepare_invoice_confirmation(
     retention_amount: Decimal | None,
     recargo_amount: Decimal | None,
     extraction_ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
 ) -> _InvoiceConfirmationPreparation:
     """Extract, gate, and resolve the document-side confirmation authorities."""
     from .confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
@@ -518,6 +522,8 @@ def _prepare_invoice_confirmation(
         attachment_id=attachment_id,
         settings=resolved_settings,
         ports=extraction_ports,
+        operation=operation,
+        legends=legends,
     )
     # A contradiction is a normal blocker, so it must be stamped before the gate.
     draft = _with_direction_contradiction(draft, kind=kind)
@@ -537,6 +543,7 @@ def _prepare_invoice_confirmation(
     classification_date = invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date)
     establishment = resolve_confirmed_establishment(
         bucket_id=bucket_id,
+        legends=legends,
         draft=draft,
         kind=kind,
         invoice_date=classification_date,
@@ -807,6 +814,8 @@ def confirm_invoice_draft_from_evidence(
     counterparty_establishment_repository: CounterpartyEstablishmentRepositoryProtocol,
     evidence_ports: LedgerEvidencePorts,
     extraction_ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
 ) -> InvoiceConfirmationResult:
     """Re-extract one evidence reference and confirm it into a real :class:`Invoice`.
 
@@ -901,6 +910,15 @@ def confirm_invoice_draft_from_evidence(
             for the active bucket.  The composition root binds its encrypted
             implementation; this application service only sees the public
             attachment protocol.
+        evidence_ports: Secure evidence and attachment lookup capabilities for
+            the active bucket.
+        extraction_ports: Application-owned structured, text and vision reader
+            capabilities used to re-extract the document.
+        operation: Caller-owned pinned authority operation retained through
+            extraction, confirmation and catalogue persistence.
+        legends: The dated regime declarations resolved from ``operation`` by
+            the enclosing composition boundary and shared by extraction,
+            grounding and establishment checks.
 
     Returns:
         :class:`InvoiceConfirmationResult`: The persisted (or pre-existing)
@@ -942,6 +960,8 @@ def confirm_invoice_draft_from_evidence(
         retention_amount=retention_amount,
         recargo_amount=recargo_amount,
         extraction_ports=extraction_ports,
+        operation=operation,
+        legends=legends,
     )
     candidate = _build_confirmed_invoice_candidate(
         bucket_id=bucket_id,

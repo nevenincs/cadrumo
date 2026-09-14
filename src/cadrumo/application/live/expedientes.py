@@ -23,7 +23,7 @@ exception class names, secure-object storage layout, and per-call
 from __future__ import annotations
 
 from datetime import datetime
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, Field
 
@@ -31,8 +31,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
@@ -46,6 +45,9 @@ from .snapshot_base import (
     StatelessSnapshotService,
 )
 from .snapshot_identity import derive_snapshot_id as _derive_snapshot_id
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class ExpedientesSnapshotNotFoundError(SnapshotNotFoundError):
@@ -204,6 +206,7 @@ async def capture_expedientes_bulk(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ExpedientesBulkCaptureReport:
     """Capture each requested declaration-register view while reporting isolated failures."""
     if year_from > year_to:
@@ -211,7 +214,20 @@ async def capture_expedientes_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = modelos if modelos is not None else RegistryQueryService(bundled_authority()).modelo_codes()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return await capture_expedientes_bulk(
+                bucket_id=bucket_id,
+                year_from=year_from,
+                year_to=year_to,
+                modelos=modelos,
+                ports=ports,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                browser_session_factory=browser_session_factory,
+                operator_scope_ports=operator_scope_ports,
+                operation=indexed_operation,
+            )
+    resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,

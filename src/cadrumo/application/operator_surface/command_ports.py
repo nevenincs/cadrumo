@@ -13,10 +13,11 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, ClassVar, Literal, Protocol
+from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.json_contract import RegisteredSchema
 from .manifest import CommandSchemaRef
 
@@ -395,14 +396,8 @@ class VerbInputSchema(BaseModel):
         }
 
 
-class SchemaResolutionError(RuntimeError):
+class SchemaResolutionError(CadrumoError):
     """Raised by an outer adapter when its live schema projection is incomplete."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal-schema-coverage-assertion-carrier: assert_schema_coverage raises this when the "
-        "command graph and the declared verb schemas disagree, which is a build-time consistency "
-        "failure for a developer, never a condition an operator can act on"
-    )
 
     def __init__(self, failures: tuple[VerbLeafResolutionFailure, ...]) -> None:
         """Store every unresolved leaf so an adapter can report them together."""

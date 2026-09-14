@@ -91,14 +91,6 @@ class _SourceTuiClass:
     bases: tuple[str, ...]
     assigned_attributes: frozenset[str]
 
-    @property
-    def __module__(self) -> str:
-        return self.module
-
-    @property
-    def __qualname__(self) -> str:
-        return self.qualname
-
 
 def _source_class_catalogue(root: Path, package_name: str) -> tuple[_SourceTuiClass, ...]:
     """Parse module-level class declarations below *root* without importing them."""
@@ -279,7 +271,11 @@ def test_no_screen_or_widget_rebinds_a_private_textual_attribute() -> None:
     )
 
     collisions = {
-        f"{cls.__module__}.{cls.__qualname__}": sorted(reserved)
+        (
+            f"{cls.module}.{cls.qualname}"
+            if isinstance(cls, _SourceTuiClass)
+            else f"{cls.__module__}.{cls.__qualname__}"
+        ): sorted(reserved)
         for cls in classes
         if (reserved := _private(_self_assigned_attributes(cls)) & _textual_private_surface(cls))
     }

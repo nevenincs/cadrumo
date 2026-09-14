@@ -15,9 +15,8 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.casilla_id import CasillaId
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_verification import VerificationExpectationDefinition
 from ...domain.modelos.calculation_revision import (
@@ -53,6 +52,8 @@ class _ReconciliationContract(NamedTuple):
 
 def _selected_registry_reconciliation_context(
     work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[RegistrySnapshot, tuple[VerificationExpectationDefinition, ...]]:
     """Return the pinned snapshot and its selected reconciliation expectations.
 
@@ -60,25 +61,23 @@ def _selected_registry_reconciliation_context(
     work-unit snapshot.  A divergent query result is a closed result rather
     than permission to use an unselected registry revision.
     """
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from ._calculation_helpers import assert_snapshot_matches_work_unit_revision
 
-    snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
-    query_service = RegistryQueryService(bundled_authority())
+    snapshot = operation.snapshot(
+        str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    assert_snapshot_matches_work_unit_revision(work_unit, snapshot)
     try:
-        model_report = query_service.describe_modelo_for_scope(
+        selected_revision = operation.revision_for_context(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
         )
     except (RegistrySnapshotError, RegistryValidationError):
         return snapshot, ()
-    if (
-        str(model_report.revision) != str(snapshot.revision.id)
-        or model_report.filing_year is None
-        or int(model_report.filing_year) != int(work_unit.filing_year)
-        or model_report.period is None
-        or str(model_report.period) != work_unit.period.registry_token
-    ):
+    if str(selected_revision.id) != str(snapshot.revision.id):
         return snapshot, ()
     expectations = tuple(
         expectation
@@ -90,9 +89,11 @@ def _selected_registry_reconciliation_context(
 
 def _selected_registry_reconciliation_expectations(
     work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[VerificationExpectationDefinition, ...]:
     """Read reconciliation declarations from the work unit's selected registry snapshot."""
-    _snapshot, expectations = _selected_registry_reconciliation_context(work_unit)
+    _snapshot, expectations = _selected_registry_reconciliation_context(work_unit, operation=operation)
     return expectations
 
 
@@ -125,14 +126,16 @@ def _expectations_are_counterparts(
     return bool(frozenset(str(ref) for ref in left.source_refs) & frozenset(str(ref) for ref in right.source_refs))
 
 
-def _selected_reconciliation_contract(work_unit: WorkUnit) -> _ReconciliationContract | None:
+def _selected_reconciliation_contract(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> _ReconciliationContract | None:
     """Resolve the unique counterpart declared by the live registry."""
-    snapshot, expectations = _selected_registry_reconciliation_context(work_unit)
+    snapshot, expectations = _selected_registry_reconciliation_context(work_unit, operation=operation)
     if not expectations:
         return None
 
-    authority = bundled_authority()
-    query_service = RegistryQueryService(authority)
     selected_modelo = str(snapshot.modelo.id)
     matches: list[_ReconciliationContract] = []
     for expectation in expectations:
@@ -142,29 +145,16 @@ def _selected_reconciliation_contract(work_unit: WorkUnit) -> _ReconciliationCon
         # canonical model identifiers, then point-select each candidate's
         # revision for the work-unit coordinate; never hydrate or traverse a
         # sibling's complete revision graph here.
-        for sibling_modelo in query_service.modelo_codes():
+        for sibling_modelo in operation.modelo_ids():
             if sibling_modelo == selected_modelo:
                 continue
             try:
-                sibling_report = query_service.describe_modelo_for_scope(
-                    sibling_modelo,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                )
-                sibling_revision = query_service.revision_for_scope(
+                sibling_revision = operation.revision_for_context(
                     sibling_modelo,
                     filing_year=work_unit.filing_year,
                     period=work_unit.period.registry_token,
                 )
             except (RegistrySnapshotError, RegistryValidationError):
-                continue
-            if (
-                str(sibling_report.revision) != str(sibling_revision.id)
-                or sibling_report.filing_year is None
-                or int(sibling_report.filing_year) != int(work_unit.filing_year)
-                or sibling_report.period is None
-                or str(sibling_report.period) != work_unit.period.registry_token
-            ):
                 continue
             counterpart_matches.extend(
                 (sibling_modelo, sibling_expectation)
@@ -261,6 +251,7 @@ def m303_m349_intracom_reconcile_findings(
     target: CalculationRevision,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Compare the two registry-declared cross-model operand aggregates.
 
@@ -270,7 +261,16 @@ def m303_m349_intracom_reconcile_findings(
     stays a closed no-op.  A material gap produces the existing non-blocking
     reconciliation warning.
     """
-    contract = _selected_reconciliation_contract(work_unit)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return m303_m349_intracom_reconcile_findings(
+                work_unit=work_unit,
+                target=target,
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+                operation=indexed_operation,
+            )
+    contract = _selected_reconciliation_contract(work_unit, operation=operation)
     if contract is None:
         return []
 

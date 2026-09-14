@@ -1,8 +1,8 @@
 """Registry-backed work-unit guards shared by modelo application actions.
 
-Modelo application services access the packaged registry through the canonical
-:func:`~cadrumo.domain.calculations.registry.authority.bundled_authority`.
-This module owns work-unit revision and period guards.
+Modelo application services access the packaged registry through one
+generation-pinned indexed operation. This module owns work-unit revision and
+period guards.
 
 The revision and period guards are create-work-unit checks: they reject user
 input that names a modelo revision or filing period the committed registry does
@@ -22,9 +22,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.modelos.errors import ModeloError
 
 if TYPE_CHECKING:
@@ -50,12 +49,8 @@ def reject_unknown_revision(
         if operation is not None:
             revisions = operation.modelo_directory(modelo).revisions
         else:
-            revisions = tuple(
-                revision
-                for _modelo_id, revision in RegistryQueryService(bundled_authority()).iter_modelo_revisions(
-                    modelo_codes=(modelo,),
-                )
-            )
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return reject_unknown_revision(modelo=modelo, revision_id=revision_id, operation=indexed_operation)
     except (RegistrySnapshotError, ValueError) as exc:
         raise ModeloError(str(exc)) from exc
     if any(revision.id == revision_id for revision in revisions):
@@ -87,16 +82,13 @@ def reject_unknown_period_for_revision(
         if operation is not None:
             revision = operation.revision(modelo, str(revision_id))
         else:
-            revision = next(
-                (
-                    candidate
-                    for _modelo_id, candidate in RegistryQueryService(bundled_authority()).iter_modelo_revisions(
-                        modelo_codes=(modelo,),
-                    )
-                    if candidate.id == revision_id
-                ),
-                None,
-            )
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return reject_unknown_period_for_revision(
+                    modelo=modelo,
+                    revision_id=revision_id,
+                    period=period,
+                    operation=indexed_operation,
+                )
     except (RegistrySnapshotError, ValueError) as exc:
         raise ModeloError(str(exc)) from exc
     if revision is None:

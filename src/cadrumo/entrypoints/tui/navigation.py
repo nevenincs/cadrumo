@@ -11,7 +11,7 @@ import inspect
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import ClassVar, Final, Literal, Protocol, Self, cast, get_args, runtime_checkable
+from typing import Final, Literal, Protocol, Self, cast, get_args, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 from textual.screen import Screen
@@ -21,6 +21,7 @@ from ...application.search.workbench import (
     WorkbenchDestinationAdmissionState,
     WorkbenchSearchResult,
 )
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -46,13 +47,8 @@ type TuiDestinationLabelKeyV1 = Literal[
 type TuiDestinationZoneV1 = Literal["primary", "account"]
 
 
-class NavigationContractError(ValueError):
+class NavigationContractError(CadrumoError):
     """Base error for an invalid or non-admittable navigation contract."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "entrypoint-local TUI navigation contract root; `CadrumoTuiApp.navigate_to` catches "
-        "runtime route failures at the TUI root boundary and renders the fail-closed refusal"
-    )
 
 
 class UnknownDestinationError(NavigationContractError):

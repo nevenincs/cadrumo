@@ -11,13 +11,12 @@ from types import MappingProxyType
 from ..core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ..core.modelo import Modelo
 from ..core.revision_review import RevisionReviewStatus
-from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..domain.calculations.registry.errors import RegistryValidationError
 from ..domain.calculations.registry.foreign_asset_obligation_catalogue import (
     resolve_foreign_asset_obligation_catalogue,
 )
 from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from ..domain.calculations.registry.queries import RegistryQueryService
 from ..domain.calculations.registry.schema import ModeloRevision
 from ..domain.calculations.registry.schema_formula import ParameterDefinition
 
@@ -67,6 +66,7 @@ def foreign_asset_declaration_thresholds(
     *,
     modelo: str,
     filing_year: int,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold]:
     """Resolve foreign-asset thresholds from the selected bundled registry revision.
 
@@ -76,12 +76,18 @@ def foreign_asset_declaration_thresholds(
     obligation unanswerable rather than merely unfilable. The filing path
     builds its own filing-grade snapshot when it files.
 
-    Reads definitions from the immutable bundled authority, then selects the
-    non-filing revision needed for this obligation question. The authority is
-    responsible for publication; this consumer never resolves a raw registry
-    tree or chooses a source root.
+    Reads the selected revision through the caller's generation-pinned
+    operation. When no operation is supplied, the indexed bundled authority is
+    opened at this public boundary for backwards-compatible callers.
     """
-    selected = RegistryQueryService(bundled_authority()).revision_for_scope(
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return foreign_asset_declaration_thresholds(
+                modelo=modelo,
+                filing_year=filing_year,
+                operation=indexed_operation,
+            )
+    selected = operation.revision_for_context(
         modelo,
         filing_year=filing_year,
         period=_ANNUAL_PERIOD,
