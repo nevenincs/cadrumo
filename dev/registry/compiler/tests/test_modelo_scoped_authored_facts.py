@@ -16,7 +16,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelo(modelo_id: str):
-    sources = {source.modelo_id: source for source in discover_modelo_sources(bundled_path("registry", "aeat", "modelos"))}
+    sources = {
+        source.modelo_id: source
+        for source in discover_modelo_sources(bundled_path("registry", "aeat", "modelos"))
+    }
     return load_modelo_source(sources[modelo_id])
 
 
