@@ -4190,6 +4190,7 @@ legal_refs = ["ley-35-2006:art-49"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "0456"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-nif"
 number = "0456"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -4198,6 +4199,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "0457"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-nif-ausente"
 number = "0457"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -4206,6 +4208,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "0458"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-nif"
 number = "0458"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -4214,6 +4217,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "0459"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-nif-ausente"
 number = "0459"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -4793,6 +4797,7 @@ legal_refs = ["ley-35-2006:art-7"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "0527"
+continuidad_id = "irpf-anualidades-alimentos-total"
 number = "0527"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_total"
@@ -15637,6 +15642,7 @@ legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1741"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-importe"
 number = "1741"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15644,6 +15650,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1742"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-otro-progenitor-nif"
 number = "1742"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15652,6 +15659,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1743"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-otro-progenitor-nif-ausente"
 number = "1743"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15660,6 +15668,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1744"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-importe"
 number = "1744"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15667,6 +15676,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1745"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-otro-progenitor-nif"
 number = "1745"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15675,6 +15685,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1746"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-otro-progenitor-nif-ausente"
 number = "1746"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15683,6 +15694,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1747"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-nif"
 number = "1747"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15691,6 +15703,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1748"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-nif-ausente"
 number = "1748"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15699,6 +15712,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1749"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-importe"
 number = "1749"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15706,6 +15720,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1750"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-otro-progenitor-nif"
 number = "1750"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15714,6 +15729,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1751"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-otro-progenitor-nif-ausente"
 number = "1751"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15722,6 +15738,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1752"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-nif"
 number = "1752"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15730,6 +15747,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1753"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-nif-ausente"
 number = "1753"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15738,6 +15756,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1754"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-importe"
 number = "1754"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15745,6 +15764,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1755"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-otro-progenitor-nif"
 number = "1755"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15753,6 +15773,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1756"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-otro-progenitor-nif-ausente"
 number = "1756"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15761,6 +15782,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1757"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-nif"
 number = "1757"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15769,6 +15791,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1758"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-nif-ausente"
 number = "1758"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15777,6 +15800,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1759"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-importe"
 number = "1759"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15784,6 +15808,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1760"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-otro-progenitor-nif"
 number = "1760"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15792,6 +15817,7 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
 id = "1761"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-otro-progenitor-nif-ausente"
 number = "1761"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
