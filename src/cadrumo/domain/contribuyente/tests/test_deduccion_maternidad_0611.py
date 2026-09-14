@@ -565,11 +565,15 @@ class TestMaternidadContributingMeses:
     """
 
     def test_an_eligible_child_contributes_its_declared_months(self) -> None:
-        assert _hijo_menor_3("1-9").maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 9
+        assert (
+            _hijo_menor_3("1-9").maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 9
+        )
 
     def test_a_child_over_three_contributes_nothing(self) -> None:
         """Art. 81.1 runs only "hasta que el menor alcance los tres años de edad"."""
-        assert _hijo_no_menor_3().maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 0
+        assert (
+            _hijo_no_menor_3().maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 0
+        )
 
     def test_a_non_cohabiting_child_contributes_nothing(self) -> None:
         """The mínimo por descendientes the deduction keys on needs the household limb."""
@@ -733,7 +737,9 @@ class TestMesesMaternidadPorDescendiente:
         """
         profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3("1-6")))
 
-        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == (("1", 6),)
+        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == (
+            ("1", 6),
+        )
 
     def test_a_profile_with_no_contributing_descendants_pairs_nothing(self) -> None:
         profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(),))
@@ -761,5 +767,7 @@ class TestMesesMaternidadPorDescendiente:
             anualidades_alimentos_euros=Decimal("1200"),
         )
 
-        assert assimilated.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == (("0", 12),)
+        assert assimilated.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == (
+            ("0", 12),
+        )
         assert suppressed.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == ()
