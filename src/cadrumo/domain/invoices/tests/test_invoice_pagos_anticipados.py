@@ -22,9 +22,12 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.invoice_legal_classification import require_invoice_operation_date_role
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ..enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
+from ..enums import PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -39,7 +42,7 @@ def _rated_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
         iva_amount=_CUOTA,
     )
 
@@ -50,7 +53,7 @@ def _exempt_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.EXEMPT,
+        iva_rate=resolve_iva_rate_token("exempt", date.today()),
         iva_amount=Decimal("0"),
     )
 
@@ -70,7 +73,7 @@ def _invoice(**overrides: Any) -> Invoice:
         "lines": (_rated_line(),),
         "payment_status": PaymentStatus.PAID,
         "operation_date": date(2026, 6, 10),
-        "operation_date_role": InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED,
+        "operation_date_role": require_invoice_operation_date_role("advance_payment_received"),
     }
     payload.update(overrides)
     return Invoice(**payload)  # type: ignore[arg-type]
@@ -81,7 +84,7 @@ def test_a_fully_collected_advance_payment_devengues_on_collection() -> None:
     invoice = _invoice()
 
     assert invoice.operation_date == date(2026, 6, 10)
-    assert invoice.operation_date_role is InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED
+    assert invoice.operation_date_role == require_invoice_operation_date_role("advance_payment_received")
 
 
 def test_a_partially_collected_advance_payment_is_also_permitted() -> None:
@@ -112,7 +115,7 @@ def test_the_article_25_exclusion_refuses_an_advance_payment_devengo() -> None:
             lines=(_exempt_line(),),
             iva_total=Decimal("0"),
             grand_total=_BASE,
-            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            iva_category=IvaCategory("intra_community_supply"),
         )
 
 
@@ -128,8 +131,8 @@ def test_the_same_amounts_devengue_normally_without_the_advance_payment_role() -
         lines=(_exempt_line(),),
         iva_total=Decimal("0"),
         grand_total=_BASE,
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        operation_date_role=InvoiceOperationDateRole.OPERATION_PERFORMED,
+        iva_category=IvaCategory("intra_community_supply"),
+        operation_date_role=require_invoice_operation_date_role("operation_performed"),
     )
 
-    assert invoice.operation_date_role is InvoiceOperationDateRole.OPERATION_PERFORMED
+    assert invoice.operation_date_role == require_invoice_operation_date_role("operation_performed")

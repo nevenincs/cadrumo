@@ -370,9 +370,9 @@ def test_a_category_the_catalogue_names_a_service_derives_services() -> None:
 @pytest.mark.parametrize(
     "category",
     [
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory("intra_community_supply"),
+        IvaCategory("intra_community_acquisition_reverse_charge"),
+        IvaCategory("export_third_country_zero_rated"),
     ],
 )
 def test_the_goods_categories_still_derive_goods(category: IvaCategory) -> None:

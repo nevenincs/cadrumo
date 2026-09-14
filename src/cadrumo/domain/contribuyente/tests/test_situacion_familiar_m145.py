@@ -27,17 +27,17 @@ def test_three_form_numbered_values() -> None:
 
 def test_familia_1_eligible_for_supplementary_reduction() -> None:
     """RIRPF art. 81.1.1° viudo/separado with descendientes -> eligible."""
-    assert SituacionFamiliarM145.FAMILIA_1.is_eligible_for_supplementary_reduction()
+    assert SituacionFamiliarM145._from_registry("familia_1").is_eligible_for_supplementary_reduction()
 
 
 def test_familia_2_eligible_for_supplementary_reduction() -> None:
     """RIRPF art. 81.1.2° casado with low-income spouse -> eligible."""
-    assert SituacionFamiliarM145.FAMILIA_2.is_eligible_for_supplementary_reduction()
+    assert SituacionFamiliarM145._from_registry("familia_2").is_eligible_for_supplementary_reduction()
 
 
 def test_familia_3_not_eligible_for_supplementary_reduction() -> None:
     """Default option -> no supplementary withholding reduction."""
-    assert not SituacionFamiliarM145.FAMILIA_3.is_eligible_for_supplementary_reduction()
+    assert not SituacionFamiliarM145._from_registry("familia_3").is_eligible_for_supplementary_reduction()
 
 
 def test_disjoint_from_situacion_familiar_art82() -> None:

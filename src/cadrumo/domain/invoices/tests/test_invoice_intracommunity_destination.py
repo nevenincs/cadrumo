@@ -50,7 +50,7 @@ def _exempt_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.EXEMPT,
+        iva_rate=IvaRate._from_registry("EXEMPT"),
         iva_amount=Decimal("0"),
     )
 
@@ -63,14 +63,14 @@ def _invoice(**overrides: Any) -> Invoice:
         "counterparty_name": "Cliente DE",
         "counterparty_tax_id": "DE123456789",
         "counterparty_country": "DE",
-        "counterparty_identification_state": EUMemberState.DE,
+        "counterparty_identification_state": EUMemberState._from_registry("de"),
         "base_total": _BASE,
         "iva_total": Decimal("0"),
         "grand_total": _BASE,
         "currency": "EUR",
         "lines": (_exempt_line(),),
         "payment_status": PaymentStatus.PAID,
-        "iva_category": IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        "iva_category": IvaCategory("intra_community_supply"),
     }
     payload.update(overrides)
     return Invoice(**payload)  # type: ignore[arg-type]
@@ -80,8 +80,8 @@ def test_a_genuine_entrega_intracomunitaria_names_a_foreign_identification() -> 
     """The truthful case: an acquirer identified in another Member State is accepted."""
     invoice = _invoice()
 
-    assert invoice.counterparty_identification_state is EUMemberState.DE
-    assert invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert invoice.counterparty_identification_state is EUMemberState._from_registry("de")
+    assert invoice.iva_category == IvaCategory("intra_community_supply")
 
 
 def test_an_intracommunity_supply_to_a_spanish_identified_acquirer_is_refused() -> None:
@@ -92,7 +92,7 @@ def test_an_intracommunity_supply_to_a_spanish_identified_acquirer_is_refused() 
     country check behind a new name.
     """
     with pytest.raises(ValidationError, match=_REFUSAL):
-        _invoice(counterparty_identification_state=EUMemberState.ES)
+        _invoice(counterparty_identification_state=EUMemberState._from_registry("es"))
 
 
 def test_a_spanish_established_acquirer_identified_abroad_is_accepted() -> None:
@@ -106,11 +106,11 @@ def test_a_spanish_established_acquirer_identified_abroad_is_accepted() -> None:
     invoice = _invoice(
         counterparty_country="ES",
         counterparty_tax_id="B12345674",
-        counterparty_identification_state=EUMemberState.FR,
+        counterparty_identification_state=EUMemberState._from_registry("fr"),
     )
 
     assert invoice.counterparty_country == "ES"
-    assert invoice.counterparty_identification_state is EUMemberState.FR
+    assert invoice.counterparty_identification_state is EUMemberState._from_registry("fr")
 
 
 def test_northern_ireland_is_not_refused_despite_not_being_an_eu_member_state() -> None:
@@ -118,10 +118,10 @@ def test_northern_ireland_is_not_refused_despite_not_being_an_eu_member_state() 
     invoice = _invoice(
         counterparty_country="XI",
         counterparty_tax_id="XI123456789",
-        counterparty_identification_state=EUMemberState.XI,
+        counterparty_identification_state=EUMemberState._from_registry("xi"),
     )
 
-    assert invoice.counterparty_identification_state is EUMemberState.XI
+    assert invoice.counterparty_identification_state is EUMemberState._from_registry("xi")
 
 
 def test_an_unrecorded_identification_is_not_refused_by_this_guard() -> None:
@@ -154,5 +154,5 @@ def test_the_recorded_identification_governs_over_the_printed_number() -> None:
         _invoice(
             counterparty_country="DE",
             counterparty_tax_id="DE123456789",
-            counterparty_identification_state=EUMemberState.ES,
+            counterparty_identification_state=EUMemberState._from_registry("es"),
         )

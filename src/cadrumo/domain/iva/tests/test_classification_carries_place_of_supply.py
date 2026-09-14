@@ -155,7 +155,7 @@ def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> 
     services = classify_iva(_services_b2b_eu_outbound())
     goods = classify_iva(_distance_sale_b2c())
 
-    assert services.category is goods.category is IvaCategory.DOMESTIC_NOT_SUBJECT
+    assert services.category is goods.category is IvaCategory("domestic_not_subject")
     assert services.matched_rule_id != goods.matched_rule_id
 
     services_grounding = services.place_of_supply
@@ -210,7 +210,7 @@ def test_the_fallthrough_carries_the_row_that_says_it_grounds_nothing() -> None:
     )
     result = classify_iva(unclassifiable)
 
-    assert result.category is IvaCategory.UNKNOWN
+    assert result.category == IvaCategory("unknown")
     grounding = result.place_of_supply
     assert grounding is not None
     assert grounding.rule_id == "R99_fallthrough"

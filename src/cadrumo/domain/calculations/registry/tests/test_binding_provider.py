@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _PROVIDER_ADAPTER: TypeAdapter[object] = TypeAdapter(BindingProvider)
 
 _LEDGER_IVA_PROVIDER = LedgerIvaProvider(
-    categories=(IvaCategory.DOMESTIC_GENERAL,),
+    categories=(IvaCategory("domestic_general"),),
     rate_kinds=(IvaRateKind.GENERAL,),
     flow_direction=IvaFlowDirection.REPERCUTIDO,
     observation_roles=(IvaLedgerObservationRole.SETTLEMENT,),

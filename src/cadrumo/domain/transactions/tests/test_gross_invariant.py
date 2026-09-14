@@ -572,7 +572,7 @@ def test_minorista_purchase_under_recargo_reconstitutes_the_cash_it_paid() -> No
             "iva_rate": Decimal("0.21"),
             "iva_amount": _RECARGO_IVA,
             "recargo_amount": _RECARGO_CUOTA,
-            "iva_category": IvaCategory.RECARGO_EQUIVALENCIA,
+            "iva_category": IvaCategory("recargo_equivalencia"),
         },
     )
 
@@ -688,7 +688,7 @@ def test_self_assessed_acquisition_keeps_recargo_out_of_its_gross() -> None:
             "iva_rate": Decimal("0.21"),
             "iva_amount": _RECARGO_IVA,
             "recargo_amount": _RECARGO_CUOTA,
-            "iva_category": IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            "iva_category": IvaCategory("intra_community_acquisition_reverse_charge"),
         },
     )
 

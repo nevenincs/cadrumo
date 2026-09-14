@@ -31,9 +31,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 SPANISH_SCOPES = frozenset(
     {
-        IvaTerritorialScope.ES_MAINLAND,
-        IvaTerritorialScope.ES_CANARIAS,
-        IvaTerritorialScope.ES_CEUTA_MELILLA,
+        IvaTerritorialScope._from_registry("es_mainland"),
+        IvaTerritorialScope._from_registry("es_canarias"),
+        IvaTerritorialScope._from_registry("es_ceuta_melilla"),
     },
 )
 
@@ -88,18 +88,18 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
 
     @pytest.mark.parametrize("printed", ["DE", "de", " fr ", "IT", "XI"])
     def test_another_member_state_resolves_to_the_eu_scope(self, printed: str) -> None:
-        assert territorial_scope_for_country(printed) is IvaTerritorialScope.EU_MEMBER
+        assert territorial_scope_for_country(printed) is IvaTerritorialScope._from_registry("eu_member")
 
     @pytest.mark.parametrize("printed", ["US", "CH", "JP", "GB"])
     def test_a_well_formed_non_member_resolves_to_the_third_country_scope(self, printed: str) -> None:
         """Not domestic, and not silently absent either: outside is a real answer."""
-        assert territorial_scope_for_country(printed) is IvaTerritorialScope.THIRD_COUNTRY
+        assert territorial_scope_for_country(printed) is IvaTerritorialScope._from_registry("third_country")
 
     def test_every_member_state_except_spain_resolves_to_the_eu_scope(self) -> None:
         """Derived from the catalogue, so a State joining or leaving is covered."""
         for member in EUMemberState:
             code = member.value.upper()
-            expected = None if code == SPAIN_COUNTRY_CODE else IvaTerritorialScope.EU_MEMBER
+            expected = None if code == SPAIN_COUNTRY_CODE else IvaTerritorialScope._from_registry("eu_member")
 
             assert territorial_scope_for_country(code) is expected, code
 
@@ -117,5 +117,5 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
         country outside the EU. A real third country is what the branch has to
         be discriminated against.
         """
-        assert territorial_scope_for_country("NO") is IvaTerritorialScope.THIRD_COUNTRY
-        assert territorial_scope_for_country("BR") is IvaTerritorialScope.THIRD_COUNTRY
+        assert territorial_scope_for_country("NO") is IvaTerritorialScope._from_registry("third_country")
+        assert territorial_scope_for_country("BR") is IvaTerritorialScope._from_registry("third_country")

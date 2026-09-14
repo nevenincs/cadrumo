@@ -24,8 +24,10 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
 from ...iva.errors import IvaRateNotFoundError
-from ..enums import IvaRate, iva_rate_percentage
+from ..enums import iva_rate_percentage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -37,7 +39,7 @@ _COVERED_BUT_OUT_OF_WINDOW = date(2024, 6, 1)
 def test_not_in_force_refusal_carries_no_authored_sentence() -> None:
     """A covered date with an out-of-window rate takes the legality branch."""
     with pytest.raises(IvaRateNotFoundError) as caught:
-        iva_rate_percentage(IvaRate.RATE_2, _COVERED_BUT_OUT_OF_WINDOW)
+        iva_rate_percentage(resolve_iva_rate_token("rate_2", date.today()), _COVERED_BUT_OUT_OF_WINDOW)
 
     assert str(caught.value) == "errors.iva.rate_slot_not_in_force"
 

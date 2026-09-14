@@ -443,7 +443,7 @@ def check_snapshot_filing_review_tier(
 #: deduction limits, thresholds -- as opposed to procedural/administrative
 #: instruments. Substantive-law kinds are anchored to the tax period's own
 #: devengo date (``revision.valid_to``), never the presentation-extended
-#: window: see :func:`_legal_window_covers_devengo`.
+#: window: see :func:`legal_window_covers_devengo`.
 SUBSTANTIVE_LAW_KINDS = frozenset(
     {
         "ley",
@@ -511,7 +511,7 @@ def _check_revision_scoped_legal_windows(
     Modelo-level legal refs describe the modelo's cross-year authority corpus and
     remain exempt. A ref collected only because the selected revision or one of
     its nested records cites it is a filing-specific grounding claim, checked by
-    :func:`_legal_window_covers_devengo` -- devengo-anchored for substantive law,
+    :func:`legal_window_covers_devengo` -- devengo-anchored for substantive law,
     presentation-window-tolerant for procedural/administrative kinds.
     """
     revision_legal_ids, _revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
@@ -988,5 +988,6 @@ __all__ = [
     "check_snapshot_filing_capability",
     "check_snapshot_filing_review_tier",
     "collect_snapshot_ref_ids",
+    "legal_window_covers_devengo",
     "validate_materialized_export_record_families",
 ]

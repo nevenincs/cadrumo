@@ -77,10 +77,10 @@ def test_response_carries_iva_category_and_business_pct() -> None:
         classification=BusinessClassification.MIXED,
         confidence=Decimal("0.8"),
         reason="part business, part personal use",
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
         business_pct=Decimal("0.6"),
     )
-    assert response.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert response.iva_category == IvaCategory("domestic_general")
     assert response.business_pct == Decimal("0.6")
 
 
@@ -149,7 +149,7 @@ def test_saturation_spec_allow_list_matches_every_category() -> None:
 def test_rendered_prompt_requests_iva_category_without_numbers() -> None:
     prompt = prompt_spec_with_saturation_fields(year=2025).render(_transaction())
     assert "iva_category" in prompt
-    assert IvaCategory.DOMESTIC_GENERAL.value in prompt
+    assert IvaCategory("domestic_general").value in prompt
     # Explicitly instructs the model not to compute a figure.
     assert "do NOT compute" in prompt
     # The schema line offers iva_category as a selection, never a rate field.
@@ -169,7 +169,7 @@ def test_parse_accepts_grounded_iva_category() -> None:
         '"category": "manutencion_dietas_nacional", "iva_category": "domestic_reduced"}'
     )
     response = parse_response(stdout, spec=spec)
-    assert response.iva_category is IvaCategory.DOMESTIC_REDUCED
+    assert response.iva_category == IvaCategory("domestic_reduced")
 
 
 def test_parse_rejects_hallucinated_iva_category() -> None:
