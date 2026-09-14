@@ -12,11 +12,16 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.config import Settings
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.citation_blocklist import find_known_bad
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, SourceCitation
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_references import (
+    LegalReference,
+    LegalReferenceKind,
+    SourceReference,
+)
 
 from ..compiler.corpus_catalogue import (
     verify_source_catalogue,
@@ -46,7 +51,7 @@ def _legal_reference(
     return reference.model_copy(
         update={
             "id": ref_id,
-            "kind": kind,
+            "kind": LegalReferenceKind(kind),
             "article": article,
             "notes": reference.notes if notes is None else notes,
         },
@@ -70,6 +75,12 @@ def _write_extracted_unit(corpus_path: Path, *, anchor: str, text: str) -> None:
         json.dumps({"units": [{"anchor": anchor, "text": text}]}),
         encoding="utf-8",
     )
+
+
+def _write_boe_corpus(corpus_path: Path, text: str) -> None:
+    """Write synthetic corpus bytes carrying the fixture reference's BOE identity."""
+    document_id = _legal_reference().document_id
+    corpus_path.write_text(f"{document_id}\n{text}", encoding="utf-8")
 
 
 def test_verify_source_file_checks_hash_and_size(tmp_path: Path) -> None:
@@ -138,7 +149,7 @@ def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="known-bad citation"):
-        verify_legal_catalogue({reference.id: reference})
+        verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
 @pytest.mark.parametrize(
@@ -163,20 +174,32 @@ def test_verify_legal_catalogue_rejects_known_bad_roles(
     )
     text = " ".join(part for part in (reference.section, reference.notes) if part)
 
-    assert find_known_bad(source, article, text) is not None
+    assert find_known_bad(source, article, text, effective_date=reference.effective_from) is not None
     with pytest.raises(RegistryValidationError, match="known-bad citation"):
-        verify_legal_catalogue({reference.id: reference})
+        verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
 def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
-    blocked = find_known_bad("ley", "77", "cuota integra autonomica")
+    reference = _legal_reference()
+    blocked = find_known_bad(
+        "ley", "77", "cuota integra autonomica", effective_date=reference.effective_from
+    )
 
     assert blocked is not None
     assert blocked.role_substring == "cuota íntegra autonómica"
 
 
 def test_known_bad_citation_matching_allows_different_role_for_same_article() -> None:
-    assert find_known_bad("ley", "77", "cuota líquida autonómica total") is None
+    reference = _legal_reference()
+    assert (
+        find_known_bad(
+            "ley",
+            "77",
+            "cuota líquida autonómica total",
+            effective_date=reference.effective_from,
+        )
+        is None
+    )
 
 
 def test_known_bad_citation_matching_preserves_non_decomposable_characters() -> None:
@@ -191,7 +214,13 @@ def test_known_bad_citation_matching_preserves_non_decomposable_characters() -> 
     browser-rendered text, so it carries no soft-hyphen or decorative-glyph
     exposure.
     """
-    blocked = find_known_bad("ley", "103", "la cuota diferencial – recalculada")
+    reference = _legal_reference()
+    blocked = find_known_bad(
+        "ley",
+        "103",
+        "la cuota diferencial – recalculada",
+        effective_date=reference.effective_from,
+    )
 
     assert blocked is not None
     assert blocked.article == "103"
@@ -201,14 +230,14 @@ def test_verify_legal_catalogue_rejects_key_mismatch() -> None:
     reference = _legal_reference()
 
     with pytest.raises(RegistryValidationError, match="does not match reference id"):
-        verify_legal_catalogue({"other-id": reference})
+        verify_legal_catalogue({"other-id": reference}, source_root=bundled_path())
 
 
 def test_verify_legal_catalogue_accepts_reviewed_reference() -> None:
     reference = _legal_reference()
 
     assert reference.id, "reference must have an id for verification to be meaningful"
-    result = verify_legal_catalogue({reference.id: reference})
+    result = verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
     assert result is None
 
 
@@ -251,7 +280,7 @@ def test_legal_reference_rejects_blank_reviewer() -> None:
 def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>other legal text</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>other legal text</p>")
     _write_extracted_unit(corpus_path, anchor="a110", text="other legal text")
     reference = _legal_reference().model_copy(
         update={
@@ -267,7 +296,7 @@ def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path
 def test_verify_legal_catalogue_checks_required_text_when_article_is_absent(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "orden-hfp-1359-2023-da-5.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>official text without the disposition phrase</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>official text without the disposition phrase</p>")
     _write_extracted_unit(corpus_path, anchor="da5", text="official text without the disposition phrase")
     reference = _legal_reference(
         ref_id="orden-hfp-1359-2023:da-5",
@@ -287,7 +316,7 @@ def test_verify_legal_catalogue_checks_required_text_when_article_is_absent(tmp_
 def test_verify_legal_catalogue_checks_required_text_for_treaty_refs(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "convenio-es-gb-2013-art-6.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>official treaty text without the property-income phrase</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>official treaty text without the property-income phrase</p>")
     _write_extracted_unit(corpus_path, anchor="art-6", text="official treaty text without the property-income phrase")
     reference = _legal_reference(
         ref_id="convenio-es-gb-2013:art-6",
@@ -318,7 +347,7 @@ def test_verify_legal_catalogue_refuses_a_corpus_file_with_no_extracted_sidecar(
     """
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "no-sidecar.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>20 por ciento del rendimiento neto</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>20 por ciento del rendimiento neto</p>")
     reference = _legal_reference(ref_id="rd-439-2007:art-110-no-sidecar").model_copy(
         update={
             "corpus_ref": "corpus/normatives/html/no-sidecar.html#a110",
@@ -337,7 +366,7 @@ def test_verify_legal_catalogue_refuses_sidecar_symlink_outside_corpus_root(tmp_
     """A corpus-local sidecar name cannot make external evidence authoritative."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "symlinked-sidecar.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>official source</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>official source</p>")
     external_sidecar = tmp_path.parent / "external-sidecar.extracted.json"
     external_sidecar.write_text(
         json.dumps({"units": [{"anchor": "a1", "text": "external evidence"}]}), encoding="utf-8"
@@ -360,10 +389,7 @@ def test_verify_legal_catalogue_refuses_sidecar_symlink_outside_corpus_root(tmp_
 def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text(
-        "<p>20 por ciento del rendimiento neto</p>",
-        encoding="utf-8",
-    )
+    _write_boe_corpus(corpus_path, "<p>20 por ciento del rendimiento neto</p>")
     _write_extracted_unit(corpus_path, anchor="a110", text="20 por ciento del rendimiento neto")
     reference = _legal_reference().model_copy(
         update={
@@ -382,6 +408,7 @@ def test_verify_legal_catalogue_refuses_an_anchor_that_would_widen_to_another_un
     """Required text in a sibling unit cannot validate an absent cited anchor."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
+    _write_boe_corpus(corpus_path, "<p>article fixtures</p>")
     corpus_path.with_name(corpus_path.name + ".extracted.json").write_text(
         json.dumps(
             {
@@ -410,8 +437,8 @@ def test_legal_corpus_text_cache_is_path_scoped_for_same_size_files(tmp_path: Pa
     bravo_path = tmp_path / "corpus" / "normatives" / "bravo" / "same-size-cache-collision.html"
     alpha_path.parent.mkdir(parents=True)
     bravo_path.parent.mkdir(parents=True)
-    alpha_path.write_text("<p>alpha required</p>", encoding="utf-8")
-    bravo_path.write_text("<p>bravo required</p>", encoding="utf-8")
+    _write_boe_corpus(alpha_path, "<p>alpha required</p>")
+    _write_boe_corpus(bravo_path, "<p>bravo required</p>")
     _write_extracted_unit(alpha_path, anchor="a", text="alpha required")
     _write_extracted_unit(bravo_path, anchor="b", text="bravo required")
 
@@ -444,7 +471,7 @@ def test_legal_corpus_text_rereads_same_size_timestamp_restored_sidecar(tmp_path
     """
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "same-mtime-sidecar.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>article 1 official</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>article 1 official</p>")
     _write_extracted_unit(corpus_path, anchor="a1", text="article 1 official")
     reference = _legal_reference(ref_id="rd-439-2007:art-110-sidecar-digest").model_copy(
         update={
@@ -476,7 +503,7 @@ def test_legal_corpus_text_accepts_valid_sidecar_after_metadata_preserving_rewri
     """
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "same-mtime-unchanged.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>article 2 official</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>article 2 official</p>")
     _write_extracted_unit(corpus_path, anchor="a2", text="article 2 official")
     reference = _legal_reference(ref_id="rd-439-2007:art-110-sidecar-unchanged").model_copy(
         update={
@@ -499,7 +526,7 @@ def test_legal_corpus_text_cache_is_anchor_scoped_within_one_sidecar(tmp_path: P
     """Sibling anchors must never reuse the first selected extracted unit."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "two-articles.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>two legal units</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>two legal units</p>")
     corpus_path.with_name(corpus_path.name + ".extracted.json").write_text(
         json.dumps(
             {
@@ -644,10 +671,7 @@ def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp
     """Legal catalogue verification always enforces required_text against corpus."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text(
-        "<p>other legal text without the phrase</p>",
-        encoding="utf-8",
-    )
+    _write_boe_corpus(corpus_path, "<p>other legal text without the phrase</p>")
     _write_extracted_unit(corpus_path, anchor="a110", text="other legal text without the phrase")
     reference = _legal_reference().model_copy(
         update={
@@ -669,10 +693,7 @@ def test_verify_legal_catalogue_rejects_forbidden_text_present_in_corpus(tmp_pat
     """
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text(
-        "<p>current text carrying the current phrase and the repealed phrase</p>",
-        encoding="utf-8",
-    )
+    _write_boe_corpus(corpus_path, "<p>current text carrying the current phrase and the repealed phrase</p>")
     _write_extracted_unit(
         corpus_path,
         anchor="a110",
@@ -698,7 +719,7 @@ def test_verify_legal_catalogue_accepts_forbidden_text_genuinely_absent_from_cor
     """
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>current text carrying only the current phrase</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>current text carrying only the current phrase</p>")
     _write_extracted_unit(corpus_path, anchor="a110", text="current text carrying only the current phrase")
     reference = _legal_reference().model_copy(
         update={
@@ -718,7 +739,7 @@ def test_verify_legal_catalogue_distinguishes_missing_required_from_present_forb
     """
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text("<p>text missing the sought phrase</p>", encoding="utf-8")
+    _write_boe_corpus(corpus_path, "<p>text missing the sought phrase</p>")
     _write_extracted_unit(corpus_path, anchor="a110", text="text missing the sought phrase")
     missing_required = _legal_reference(ref_id="rd-439-2007:art-110-missing").model_copy(
         update={
@@ -778,10 +799,7 @@ def test_registry_validator_rejects_missing_required_text(tmp_path: Path) -> Non
     """RegistryValidator must not admit a legal reference whose required_text is absent."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
-    corpus_path.write_text(
-        "<p>other legal text without the phrase</p>",
-        encoding="utf-8",
-    )
+    _write_boe_corpus(corpus_path, "<p>other legal text without the phrase</p>")
     _write_extracted_unit(corpus_path, anchor="a110", text="other legal text without the phrase")
     reference = _legal_reference().model_copy(
         update={
@@ -798,8 +816,8 @@ def test_registry_validator_rejects_missing_required_text(tmp_path: Path) -> Non
         RegistryValidator(minimal_catalogues, source_root=tmp_path).validate_registry(())
 
 
-def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
-    """verify_source_file must fail if a manual_pdf source reference points to an invalid manual structure."""
+def test_verify_source_file_does_not_require_authored_manual_structure(tmp_path: Path) -> None:
+    """A PDF identity is valid before anyone authors a structured manual view."""
     pdf_path = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "source.pdf"
     pdf_path.parent.mkdir(parents=True)
     payload = b"%PDF-1.4 manual structure sample bytes"
@@ -818,8 +836,7 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
         review_status="pending_review",
     )
 
-    with pytest.raises(RegistryValidationError, match="manual structure check failed"):
-        verify_source_file(tmp_path, source)
+    assert verify_source_file(tmp_path, source) == pdf_path
 
     structure_dir = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "structure"
     structure_dir.mkdir(parents=True)

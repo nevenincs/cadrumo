@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, Final, Protocol
+from typing import Final
 
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
@@ -22,39 +22,27 @@ from cadrumo.domain.calculations.registry.artifact_catalogue import (
     registry_source_identity,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
 from .legal_grounding import PROVISION_SUFFIXED_FILENAME
-
-if TYPE_CHECKING:
-    from cadrumo.core.config import Settings
-    from cadrumo.domain.manuals.ids import ManualId, ManualPart
-    from cadrumo.domain.manuals.schema import Manual
-
-
-class ManualLoader(Protocol):
-    """Call signature of the manual loader used by the manual-structure check."""
-
-    def __call__(self, *, manual_id: ManualId, year: int, part: ManualPart, settings: Settings) -> Manual:
-        """Load one manual volume, or raise the manual loader's own error."""
-        ...
-
 
 _NORMATIVES_TREE_PREFIX: Final = "corpus/normatives/"
 _SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 10000
 
 
 def verify_source_file(root: Path, source: GeneratedArtifactSource) -> Path:
-    """Verify a source declaration against the publication corpus bytes."""
+    """Verify source bytes independently of optional authored manual structures.
+
+    Structured manual citations are validated by their legal-reference owner;
+    their availability does not establish or invalidate an acquired PDF's identity.
+    """
     repo_root = root.resolve()
     path = _resolve_corpus_path(repo_root, source)
     if repo_root not in path.parents and path != repo_root:
         raise RegistryValidationError(f"source {source.id!r} escapes repository root")
     if path.is_file():
         present_path = path
-        _verify_manual_structure(repo_root, source)
     else:
         companion_path = resolve_companion_binary(*source.corpus_path.split("/"))
         if companion_path is None:
@@ -70,6 +58,7 @@ def verify_source_file(root: Path, source: GeneratedArtifactSource) -> Path:
 
 
 def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> None:
+    """Verify every distinct declared source identity against the corpus."""
     verified: set[tuple[Path, int, str]] = set()
     for source in sources.values():
         key = ((root / source.corpus_path).resolve(), source.bytes, source.sha256)
@@ -79,6 +68,7 @@ def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) 
 
 
 def verify_catalogue_identity_bindings(catalogue: ArtifactCatalogue, sources: Mapping[str, SourceReference]) -> None:
+    """Require registry source identities to match the official artifact catalogue."""
     failures = [
         f"artifact catalog diagnostic {d.kind.value} for {d.path!s}: {d.message}" for d in catalogue.diagnostics
     ]
@@ -91,7 +81,8 @@ def verify_catalogue_identity_bindings(catalogue: ArtifactCatalogue, sources: Ma
             or not _same_payload_identity(catalogued, identity)
         ):
             failures.append(
-                f"source {source.id!r} does not exactly bind an official artifact catalog identity for {source.corpus_path!r}"
+                f"source {source.id!r} does not exactly bind an official artifact catalog identity "
+                f"for {source.corpus_path!r}"
             )
     if failures:
         raise RegistryValidationError("; ".join(sorted(failures)))
@@ -100,6 +91,7 @@ def verify_catalogue_identity_bindings(catalogue: ArtifactCatalogue, sources: Ma
 def compile_record_design_manifest_catalogue(
     root: Path, sources: Mapping[str, SourceReference]
 ) -> tuple[ArtifactCatalogue, Mapping[str, SourceReference]] | None:
+    """Compile acquisition identities for the declared record-design sources."""
     record_design_sources = {
         source_id: source
         for source_id, source in sources.items()
@@ -139,65 +131,22 @@ def _validate_source_corpus_tier_declaration(source: GeneratedArtifactSource, pa
         return
     if not source.corpus_path.startswith(_NORMATIVES_TREE_PREFIX):
         raise RegistryValidationError(
-            f"source {source.id!r} declares corpus_tier={source.corpus_tier!r} but corpus_path {source.corpus_path!r} is not under {_NORMATIVES_TREE_PREFIX!r}"
+            f"source {source.id!r} declares corpus_tier={source.corpus_tier!r} "
+            f"but corpus_path {source.corpus_path!r} is not under {_NORMATIVES_TREE_PREFIX!r}"
         )
     provision_suffixed = bool(PROVISION_SUFFIXED_FILENAME.search(path.name))
     if source.corpus_tier == "full_consolidated" and (
         provision_suffixed or path.stat().st_size < _SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR
     ):
         raise RegistryValidationError(
-            f"source {source.id!r} declares corpus_tier='full_consolidated' but {path.name!r} is not a full consolidated text"
+            f"source {source.id!r} declares corpus_tier='full_consolidated' "
+            f"but {path.name!r} is not a full consolidated text"
         )
     if source.corpus_tier == "provision_excerpt" and not provision_suffixed:
         raise RegistryValidationError(
-            f"source {source.id!r} declares corpus_tier='provision_excerpt' but {path.name!r} carries no provision-suffixed filename"
+            f"source {source.id!r} declares corpus_tier='provision_excerpt' "
+            f"but {path.name!r} carries no provision-suffixed filename"
         )
-
-
-def _manual_structure_error(source: GeneratedArtifactSource, detail: object) -> RegistryValidationError:
-    return RegistryValidationError(
-        f"source {source.id!r} manual structure check failed for path {source.corpus_path!r}: {detail}"
-    )
-
-
-def _verify_manual_structure(
-    repo_root: Path, source: GeneratedArtifactSource, *, load: ManualLoader | None = None
-) -> None:
-    """Prove a practical-manual source is addressable by the manual loader.
-
-    Only two failures belong to this check: a ``corpus_path`` that is not
-    shaped ``corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf``, and a
-    manual the loader itself rejects. Every other exception propagates
-    untouched so its own subject is reported.
-    """
-    if source.kind is not RegistrySourceKind.MANUAL_PDF or not source.corpus_path.startswith("corpus/manuals/"):
-        return
-    parts = source.corpus_path.split("/")
-    if len(parts) < 5:
-        raise _manual_structure_error(
-            source, "a practical-manual source must live at 'corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf'"
-        )
-
-    from cadrumo.core.config import Settings
-    from cadrumo.domain.manuals.errors import ManualError
-    from cadrumo.domain.manuals.ids import ManualId, ManualPart
-    from cadrumo.domain.manuals.loader import load_manual
-
-    try:
-        manual_id = ManualId(parts[2])
-        year = int(parts[3])
-        part = ManualPart.SINGLE if parts[4] == "source.pdf" else ManualPart(parts[4])
-    except ValueError as exc:
-        raise _manual_structure_error(source, exc) from exc
-
-    manuals_dir = repo_root / "corpus" / "manuals"
-    if not manuals_dir.is_dir():
-        manuals_dir = repo_root / "src" / "cadrumo" / "_data" / "corpus" / "manuals"
-    settings = Settings(aeat_manuals_root=manuals_dir)
-    try:
-        (load or load_manual)(manual_id=manual_id, year=year, part=part, settings=settings)
-    except ManualError as exc:
-        raise _manual_structure_error(source, exc) from exc
 
 
 def _resolve_corpus_path(root: Path, source: GeneratedArtifactSource) -> Path:
