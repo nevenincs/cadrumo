@@ -81,7 +81,14 @@ def collect_source_evidence_fingerprints(
 def _walk_source_evidence(roots: tuple[Path, ...]) -> SourceEvidenceFingerprint:
     fingerprints: list[tuple[str, int, int]] = []
     for root in roots:
-        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES):
+        for path in scan_directory(
+            root,
+            recursive=True,
+            select=DirectoryEntryKind.FILES,
+            prune_directories=("__pycache__", ".pytest_cache"),
+        ):
+            if path.suffix.casefold() == ".pyc":
+                continue
             stat = path.stat()
             fingerprints.append((str(path), stat.st_size, stat.st_mtime_ns))
     return tuple(fingerprints)

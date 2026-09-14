@@ -58,6 +58,8 @@ HTML_EXTRACTOR_ID = "normatives-html"
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
 HTML_EXTRACTOR_VERSION = "1.4"
+XML_EXTRACTOR_ID = "boe-legal-xml"
+XML_EXTRACTOR_VERSION = "1.0"
 _UTF_8: Final[str] = UTF_8
 
 #: Standing BOE/AEAT attribution used when no canonical link pins a permalink.
@@ -446,6 +448,31 @@ def legal_markup_units(markup: str) -> list[PreprocessUnit]:
     return units
 
 
+def build_xml_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
+    """Extract a BOE response envelope or an already-sliced version document."""
+    from .boe_article_xml import article_response_units, article_version_units
+
+    markup = source.read_text(encoding=_UTF_8)
+    stripped = markup.lstrip()
+    if stripped.startswith("<?xml"):
+        stripped = stripped.split("?>", 1)[1].lstrip() if "?>" in stripped else stripped
+    extractor = article_version_units if stripped.startswith("<version") else article_response_units
+    units = extractor(markup, segment=legal_markup_units)
+    return [
+        PreprocessOutput(
+            source_kind=SourceDocumentKind.NORMATIVES_XML,
+            status=ExtractionStatus.OK,
+            source_relpath=source.resolve().relative_to(repo_root.resolve()).as_posix(),
+            source_sha256=sha256_of(source),
+            preprocessor_id=XML_EXTRACTOR_ID,
+            preprocessor_version=XML_EXTRACTOR_VERSION,
+            attribution="Source: Boletin Oficial del Estado (BOE), versioned legal XML.",
+            units=tuple(group),
+        )
+        for group in split_units_by_budget(list(units))
+    ]
+
+
 def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     """Extract a BOE normatives HTML file into one or more records.
 
@@ -465,21 +492,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     """
     markup = source.read_text(encoding=_UTF_8)
     if re.match(r"\s*(?:<\?xml\b|<response(?:\s|>)|<!DOCTYPE\s+response\b)", markup):
-        from .boe_article_xml import article_response_units
-
-        return [
-            PreprocessOutput(
-                source_kind=SourceDocumentKind.NORMATIVES_XML,
-                status=ExtractionStatus.OK,
-                source_relpath=source.resolve().relative_to(repo_root.resolve()).as_posix(),
-                source_sha256=sha256_of(source),
-                preprocessor_id=HTML_EXTRACTOR_ID,
-                preprocessor_version=HTML_EXTRACTOR_VERSION,
-                attribution="Source: Boletin Oficial del Estado (BOE), article API response.",
-                units=tuple(group),
-            )
-            for group in split_units_by_budget(list(article_response_units(markup, segment=legal_markup_units)))
-        ]
+        return build_xml_outputs(source, repo_root=repo_root)
     boe_url = _document_boe_url(markup)
     markup, container_anchor = _clip_to_content(markup)
     markup = _SCRIPT.sub(" ", markup)

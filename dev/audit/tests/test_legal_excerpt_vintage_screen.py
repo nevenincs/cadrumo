@@ -29,6 +29,7 @@ from dev.corpus.fetch_boe_normative import (
     article_redaction_markup,
     assert_serves_the_article_in_force,
 )
+from dev.docs.preprocess.normatives_html import build_xml_outputs
 
 from ..legal_catalogue import LEGAL_DIR, load_legal_entries, required_text_by_entry
 from ..legal_excerpt_vintage_screen import (
@@ -43,7 +44,6 @@ from ..legal_excerpt_vintage_screen import (
     confirms_citation,
     norm_root,
     ordinal_spellings,
-    readable_units,
     screen,
     structural_key,
     summarise,
@@ -378,7 +378,9 @@ def test_a_superset_excerpt_no_longer_hides_inside_matches() -> None:
     The classification is the real one; only the pairing is supplied.
     """
     corpus = _REPO_ROOT / "src/cadrumo/_data/corpus/normatives/html"
-    excerpt_units = readable_units(corpus / "rd-1065-2007-art-25.html.extracted.json")
+    xml_source = corpus.parent / "xml" / "rd-1065-2007-art-25.xml"
+    xml_units = tuple(unit for output in build_xml_outputs(xml_source, repo_root=_REPO_ROOT) for unit in output.units)
+    excerpt_units = ({"anchor": "", "title": "", "text": "\n".join(unit.text for unit in xml_units)},)
     assert len(excerpt_units) == 1
     rendered = resolve_anchored_extracted_unit(
         corpus / "rd-1065-2007.html.extracted.json", anchor="a25", include_title=True
@@ -622,7 +624,7 @@ def test_every_bundled_article_payload_states_one_redaction_in_force() -> None:
     whose block id drifts from its filename, would otherwise be discovered as a
     silent ``oracle_indeterminate`` in a published split.
     """
-    corpus = _REPO_ROOT / "src/cadrumo/_data/corpus/normatives/html"
+    corpus = _REPO_ROOT / "src/cadrumo/_data/corpus/normatives/xml"
     payloads = article_payloads(corpus)
     assert payloads
     for document_id, items in payloads.items():

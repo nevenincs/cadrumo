@@ -36,6 +36,7 @@ from ._validate_revision_sections import validate_revision_definition
 from .corpus_catalogue import (
     compile_record_design_manifest_catalogue,
     verify_catalogue_identity_bindings,
+    verify_manual_annotation_catalogue,
     verify_source_catalogue,
 )
 from .fact_validation import (
@@ -263,6 +264,7 @@ class RegistryValidator:
                     self._source_root,
                     self._sources,
                 )
+                verify_manual_annotation_catalogue(self._source_root, self._sources)
             except RegistryValidationError as exc:
                 failures.append(str(exc))
         # Deliberately NOT behind the source-root guard above: epoch uniqueness is a

@@ -79,6 +79,7 @@ def publish_authority_candidate_workflow(
     registry_root: Path,
     source_root: Path,
     artifact_path: Path,
+    profile_schema_path: Path | None = None,
 ) -> AuthorityArtifact:
     """Run the dev pipeline's complete authority publication workflow.
 
@@ -90,6 +91,7 @@ def publish_authority_candidate_workflow(
         registry_root=registry_root,
         source_root=source_root,
         artifact_path=artifact_path,
+        profile_schema_path=profile_schema_path,
     )
 
 
@@ -107,17 +109,30 @@ def publish_authority(
         Path | None,
         typer.Option("--artifact", help="Artifact to replace; defaults to the bundled runtime authority artifact."),
     ] = None,
+    profile_schema: Annotated[
+        Path | None,
+        typer.Option(
+            "--profile-schema",
+            help="Profile declaration captured with the candidate; required for custom source sets.",
+        ),
+    ] = None,
 ) -> None:
     """Validate the registry candidate and atomically republish the runtime authority artifact.
 
     A refused validation, or a candidate that changes while it is validated,
     leaves the previous artifact byte-for-byte in place.
     """
+    if profile_schema is None and (registry_root is not None or source_root is not None):
+        raise typer.BadParameter(
+            "custom authority candidates require an explicit --profile-schema source",
+            param_hint="--profile-schema",
+        )
     artifact_path = artifact or bundled_authority_artifact_path()
     published = publish_authority_candidate_workflow(
         registry_root=registry_root or bundled_path("registry", "aeat"),
         source_root=source_root or bundled_path(),
         artifact_path=artifact_path,
+        profile_schema_path=profile_schema or bundled_path("registry", "cadrumo", "user_profile", "schema.toml"),
     )
     typer.echo(
         "publish-authority"

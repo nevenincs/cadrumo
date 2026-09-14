@@ -23,6 +23,7 @@ from cadrumo.core.corpus_text import (
     resolve_anchored_extracted_unit,
 )
 from cadrumo.core.hashing import blake2b_hex
+from cadrumo.core.resources.bundled_data import resolve_companion_binary
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.schema_base import CorpusTier
@@ -292,7 +293,7 @@ def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Pa
         )
 
 
-_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int, str, str, tuple[str, ...]], str] = {}
+_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int, str, str, str, str, tuple[str, ...]], str] = {}
 
 
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
@@ -301,11 +302,12 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     path = (root / path_text).resolve()
     if root not in path.parents and path != root:
         raise RegistryValidationError(f"legal reference {reference.id!r} escapes repository root")
+    if path.suffix.casefold() == ".xml":
+        return _legal_xml_corpus_text(root, path, anchor=anchor, reference=reference)
+    annotation = path.with_name(path.name + ".annotation.json").resolve()
     sidecar = path.with_name(path.name + ".extracted.json").resolve()
-    if root not in sidecar.parents and sidecar != root:
-        raise RegistryValidationError(
-            f"legal reference {reference.id!r} extracted corpus sidecar escapes repository root"
-        )
+    if any(root not in candidate.parents and candidate != root for candidate in (annotation, sidecar)):
+        raise RegistryValidationError(f"legal reference {reference.id!r} corpus metadata escapes repository root")
     if not sidecar.is_file():
         raise RegistryValidationError(
             f"legal reference {reference.id!r} missing extracted corpus sidecar {path_text!r}"
@@ -318,19 +320,84 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} extracted corpus sidecar could not be fingerprinted: {exc}"
         ) from exc
-    key = (str(sidecar), stat.st_size, stat.st_mtime_ns, digest, anchor, reference.required_text)
+    annotation_digest = ""
+    source_digest = ""
+    source_path = path
+    if annotation.is_file():
+        if not source_path.is_file():
+            source_path = resolve_companion_binary(*Path(path_text).parts) or path
+        if not source_path.is_file():
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} missing annotated PDF source {path_text!r}"
+            )
+        try:
+            annotation_digest = blake2b_hex(annotation.read_bytes())
+            source_digest = blake2b_hex(source_path.read_bytes())
+        except OSError as exc:
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} PDF annotation could not be fingerprinted: {exc}"
+            ) from exc
+    key = (
+        str(sidecar),
+        stat.st_size,
+        stat.st_mtime_ns,
+        digest,
+        annotation_digest,
+        source_digest,
+        anchor,
+        reference.required_text,
+    )
     if key not in _LEGAL_CORPUS_CACHE:
         try:
-            _LEGAL_CORPUS_CACHE[key] = normalise_corpus_text(
-                resolve_anchored_extracted_unit(
+            if annotation.is_file():
+                from cadrumo.core.corpus_annotation import resolve_annotated_pdf_pages
+
+                selected = resolve_annotated_pdf_pages(
+                    source_path,
+                    anchor=anchor,
+                    annotation_path=annotation,
+                    extracted_path=sidecar,
+                    include_title=True,
+                )
+            else:
+                selected = resolve_anchored_extracted_unit(
                     sidecar, anchor=anchor, required_text=reference.required_text, include_title=True
                 )
-            )
+            _LEGAL_CORPUS_CACHE[key] = normalise_corpus_text(selected)
         except CorpusAnchorResolutionError as exc:
             raise RegistryValidationError(
                 f"legal reference {reference.id!r} cannot resolve one corpus unit for anchor {anchor!r}"
             ) from exc
     return _LEGAL_CORPUS_CACHE[key]
+
+
+def _legal_xml_corpus_text(root: Path, path: Path, *, anchor: str, reference: LegalReference) -> str:
+    """Resolve one BOE XML unit directly, without a duplicated corpus sidecar."""
+    if not path.is_file():
+        raise RegistryValidationError(f"legal reference {reference.id!r} missing XML corpus source {path}")
+    try:
+        from dev.docs.preprocess.normatives_html import build_xml_outputs
+
+        outputs = build_xml_outputs(path, repo_root=root)
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise RegistryValidationError(f"legal reference {reference.id!r} cannot parse XML corpus source") from exc
+    units = tuple(unit for output in outputs for unit in output.units)
+    redactions = corpus_redaction_marks(path.read_text(encoding="utf-8", errors="replace"))
+    if len(redactions) >= 2:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} points into {reference.corpus_ref.partition('#')[0]!r}, "
+            "a corpus document with "
+            f"{len(redactions)} dated redactions fused into {len(units)} extracted units; cite a consolidated "
+            "current-text document or one exact redaction in force"
+        )
+    matches = [unit for unit in units if unit.anchor is not None and unit.anchor.lstrip("#") == anchor.lstrip("#")]
+    if len(matches) != 1:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} cannot resolve one XML corpus unit for anchor {anchor!r}"
+        )
+    unit = matches[0]
+    rendered = f"# {unit.title}\n\n{unit.text}" if unit.title else unit.text
+    return normalise_corpus_text(rendered)
 
 
 def _assert_redactions_are_not_fused(document: Path, sidecar: Path, reference: LegalReference, path_text: str) -> None:

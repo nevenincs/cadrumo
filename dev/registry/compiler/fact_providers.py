@@ -15,7 +15,7 @@ import re
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, cast
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
@@ -53,6 +53,11 @@ __all__ = [
 
 
 _PROVIDER_ID = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
+_FACT_ENVELOPE = re.compile(rb"(?m)^\s*\[fact\]\s*(?:#.*)?$")
+_CAPTURED_IDENTITY_DOMAINS = frozenset({"modelos", "facts", "profile_schema", "source_evidence"})
+_LIFECYCLE_COMPONENTS = frozenset(
+    {"modelo_revision", "governed_fact", "profile_schema", "runtime_catalogue", "legal_evidence", "source_evidence"}
+)
 AUTHORED_FACT_PROVIDER_ID = "authored-facts"
 """The provider identity attached to directly authored fact declarations."""
 
@@ -109,20 +114,21 @@ def deterministic_fact_index(
     iterable is accepted for the authored loader.  In both forms, duplicate
     semantic identities and mismatched mapping keys fail closed.
     """
+    indexed: dict[str, GovernedFact] = {}
     if isinstance(facts, Mapping):
-        entries = tuple(facts.items())
-        for key, fact in entries:
+        mapped = cast(Mapping[str, GovernedFact], facts)
+        for key in sorted(mapped):
+            fact = mapped[key]
             if key != fact.fact_id:
                 raise RegistryValidationError(
                     f"governed fact catalogue key {key!r} does not match fact_id {fact.fact_id!r}",
                 )
+            indexed[key] = fact
     else:
-        entries = tuple((fact.fact_id, fact) for fact in facts)
-    indexed: dict[str, GovernedFact] = {}
-    for fact_id, fact in sorted(entries, key=lambda item: item[0]):
-        if fact_id in indexed:
-            raise RegistryValidationError(f"governed fact {fact_id!r} is declared more than once")
-        indexed[fact_id] = fact
+        for fact in sorted(facts, key=lambda item: item.fact_id):
+            if fact.fact_id in indexed:
+                raise RegistryValidationError(f"governed fact {fact.fact_id!r} is declared more than once")
+            indexed[fact.fact_id] = fact
     return indexed
 
 
@@ -163,16 +169,16 @@ def serialize_fact_catalogue(catalogue: GovernedFactCatalogue) -> bytes:
     indexed = deterministic_fact_index(catalogue.facts)
 
     def serialize_fact(fact: GovernedFact) -> dict[str, object]:
-        serialized = fact.model_dump(mode="json")
+        serialized = cast(dict[str, object], fact.model_dump(mode="json"))
+        variants = cast(list[dict[str, object]], serialized["variants"])
         for variant_index, variant in enumerate(fact.variants):
             if isinstance(variant.payload, EntitySetFactPayload):
                 # Entity-set members are semantically unordered, but the
                 # schema materialises them as a frozenset.  Canonical
                 # candidate bytes must impose an order before hashing or
                 # fresh processes can disagree.
-                serialized["variants"][variant_index]["payload"]["entities"] = sorted(
-                    serialized["variants"][variant_index]["payload"]["entities"],
-                )
+                payload = cast(dict[str, object], variants[variant_index]["payload"])
+                payload["entities"] = sorted(cast(list[str], payload["entities"]))
         return serialized
 
     return canonical_json_bytes(
@@ -208,6 +214,22 @@ def validate_fact_provider_registrations(
         if registration.project_modelos is not None and not registration.inherited_identity_domains:
             raise RegistryValidationError(
                 f"projection provider {registration.provider_id!r} must declare its inherited identity domains",
+            )
+        unknown_domains = sorted(set(registration.inherited_identity_domains) - _CAPTURED_IDENTITY_DOMAINS)
+        if unknown_domains:
+            raise RegistryValidationError(
+                f"governed fact provider {registration.provider_id!r} declares unknown identity domains "
+                f"{unknown_domains!r}"
+            )
+        if len(set(registration.inherited_identity_domains)) != len(registration.inherited_identity_domains):
+            raise RegistryValidationError(
+                f"governed fact provider {registration.provider_id!r} repeats an inherited identity domain"
+            )
+        unknown_components = sorted(set(registration.lifecycle_components) - _LIFECYCLE_COMPONENTS)
+        if unknown_components:
+            raise RegistryValidationError(
+                f"governed fact provider {registration.provider_id!r} declares unknown lifecycle components "
+                f"{unknown_components!r}"
             )
         local_directories: set[PurePosixPath] = set()
         for raw_directory in registration.owned_directories:
@@ -300,24 +322,12 @@ def validate_fact_provider_directory_ownership(registry_root: Path) -> None:
             None,
         )
 
-    for entry in scan_directory(root, select=DirectoryEntryKind.DIRECTORIES):
-        if any(
-            is_governed_fact_filename(path.name)
-            for path in scan_directory(entry, pattern="*.toml", select=DirectoryEntryKind.FILES)
-        ):
-            relative = PurePosixPath(*entry.relative_to(root).parts).as_posix()
-            if owner_for(relative) is None:
-                raise RegistryValidationError(f"governed fact directory {relative!r} has no registered provider")
-    for relative_directory in owned:
-        provider_root = root / Path(*PurePosixPath(relative_directory).parts)
-        if not provider_root.is_dir():
+    for path in scan_directory(root, pattern="*.toml", recursive=True, select=DirectoryEntryKind.FILES):
+        if not is_governed_fact_filename(path.name) or _FACT_ENVELOPE.search(path.read_bytes()) is None:
             continue
-        for entry in scan_directory(provider_root, select=DirectoryEntryKind.DIRECTORIES, recursive=True):
-            relative = PurePosixPath(*entry.relative_to(root).parts).as_posix()
-            if owner_for(relative) is None:
-                raise RegistryValidationError(
-                    f"governed fact directory {relative!r} has no registered provider",
-                )
+        relative = PurePosixPath(*path.parent.relative_to(root).parts).as_posix()
+        if owner_for(relative) is None:
+            raise RegistryValidationError(f"governed fact directory {relative!r} has no registered provider")
 
 
 def _validated_owned_directory(provider_id: str, raw_directory: str) -> PurePosixPath:

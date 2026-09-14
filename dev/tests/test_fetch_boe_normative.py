@@ -28,6 +28,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
+    _corpus_destination,
     assert_boe_holds_no_consolidated_text,
     assert_served_by_the_requested_endpoint,
     assert_serves_the_article_in_force,
@@ -40,6 +41,7 @@ from dev.corpus.fetch_boe_normative import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CORPUS: Final[Path] = REPO_ROOT / "src/cadrumo/_data/corpus/normatives/html"
+_XML_CORPUS: Final[Path] = REPO_ROOT / "src/cadrumo/_data/corpus/normatives/xml"
 _SINGLE_BLOCK: Final[str] = "ley-37-1992-art-90.html"
 _MULTI_BLOCK: Final[str] = "boe-a-2024-12944-rdl-4-2024-iva-alimentos.html"
 #: The as-published shape: BOE holds no consolidated text for a corrección
@@ -51,13 +53,29 @@ _AS_PUBLISHED: Final[str] = "correccion-errores-real-decreto-ley-6-2024.html"
 #: this payload was used. Still a bundled payload, not synthetic markup: the
 #: refusals below are driven by asking for a block this real document does
 #: not describe, or by changing exactly one token of it.
-_REDACCIONES: Final[str] = "boe-a-1972-1469-a1-2-redacciones.html"
+_REDACCIONES: Final[str] = "boe-a-1972-1469-a1-2-redacciones.xml"
+
+
+@pytest.mark.parametrize(
+    ("name", "suffix"),
+    [("wrong.xml", ".html"), ("wrong.html", ".xml"), ("nested/right.xml", ".xml")],
+)
+def test_corpus_destination_refuses_wrong_format_or_nested_names(name: str, suffix: str) -> None:
+    with pytest.raises(NormativeAcquisitionError, match="one filename ending"):
+        _corpus_destination(_CORPUS, name, suffix=suffix)
 
 
 def _payload(name: str) -> str:
     path = _CORPUS / name
     if not path.is_file():
         pytest.fail(f"bundled payload {name} is missing; this module's ground truth has moved")
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def _xml_payload(name: str) -> str:
+    path = _XML_CORPUS / name
+    if not path.is_file():
+        pytest.fail(f"bundled XML payload {name} is missing; this module's ground truth has moved")
     return path.read_text(encoding="utf-8", errors="replace")
 
 
@@ -329,7 +347,10 @@ def test_every_bundled_normative_is_already_canonical() -> None:
         "and this gate would report every normative canonical"
     )
 
-    walked = tuple(scan_directory(_CORPUS, pattern="*.html"))
+    walked = (
+        *scan_directory(_CORPUS, pattern="*.html"),
+        *scan_directory(_CORPUS.parent / "xml", pattern="*.xml"),
+    )
 
     assert len(walked) >= _MINIMUM_BUNDLED_NORMATIVES, (
         f"only {len(walked)} bundled normative(s) were walked; below this an empty finding "
@@ -347,7 +368,7 @@ def test_the_in_force_assertion_accepts_the_bundled_redactions_payload() -> None
     Without this the refusals below would prove only that the assertion rejects
     things, not that it accepts the shape BOE actually serves.
     """
-    payload = _payload(_REDACCIONES)
+    payload = _xml_payload(_REDACCIONES)
 
     redaction = assert_serves_the_article_in_force(payload, document_id="BOE-A-1972-1469", block="a1-2")
 
@@ -361,7 +382,7 @@ def test_a_payload_describing_another_block_is_refused() -> None:
     a1-2, so asking it for another block is a genuine mismatch rather than a
     constructed one.
     """
-    payload = _payload(_REDACCIONES)
+    payload = _xml_payload(_REDACCIONES)
 
     with pytest.raises(NormativeAcquisitionError, match=r"describes block .a1-2., not the requested"):
         assert_serves_the_article_in_force(payload, document_id="BOE-A-1972-1469", block="a99")
@@ -373,7 +394,7 @@ def test_an_envelope_reporting_a_non_200_code_is_refused() -> None:
     One token of the real payload is changed, so every other aspect of the
     shape stays as BOE emits it.
     """
-    payload = _payload(_REDACCIONES).replace("<code>200</code>", "<code>404</code>", 1)
+    payload = _xml_payload(_REDACCIONES).replace("<code>200</code>", "<code>404</code>", 1)
 
     with pytest.raises(NormativeAcquisitionError, match=r"envelope reports code .404., not 200"):
         assert_serves_the_article_in_force(payload, document_id="BOE-A-1972-1469", block="a1-2")

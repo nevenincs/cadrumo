@@ -24,6 +24,7 @@ import sqlite3
 import subprocess
 import sys
 import threading
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any, cast
@@ -53,6 +54,7 @@ from ..python_cohort import PythonCohort, build_python_cohort
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial, pytest.mark.timeout(900)]
 
 _REPO_ROOT = REPO_ROOT
+_AUTHORITY_CANDIDATE_ENV = "CADRUMO_AUTHORITY_CANDIDATE_DIR"
 _DISTRIBUTIONS = (
     "cadrumo",
     "cadrumo-data-manuals",
@@ -96,58 +98,127 @@ _AUTHORITY_RESOURCE_PROBE = """
 import hashlib
 import json
 from importlib.resources import files
+from pathlib import Path
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    AuthorityComponentKind,
+    EvidenceComponentQuery,
+    ModeloRevisionComponentQuery,
+)
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
 
 registry = files("cadrumo").joinpath("_data", "registry")
-artifact = registry.joinpath("authority", "authority.json")
-raw = artifact.read_bytes()
+descriptor = registry.joinpath("authority", "authority.current.json")
+descriptor_path = Path(str(descriptor)).resolve(strict=True)
+selected = AuthorityDescriptor.read(descriptor_path)
+database = descriptor_path.with_name(selected.database)
+database_raw = database.read_bytes()
+reader = SQLiteAuthorityReader(descriptor_path)
+queries = reader.component_queries()
+reader.close()
+revision_query = next(query for query in queries if isinstance(query, ModeloRevisionComponentQuery))
+fact_query = next(query for query in queries if query.kind is AuthorityComponentKind.GOVERNED_FACT)
+evidence_query = next(
+    query
+    for query in queries
+    if query.kind in (AuthorityComponentKind.LEGAL_EVIDENCE, AuthorityComponentKind.SOURCE_EVIDENCE)
+)
+authority = IndexedRegistryAuthority(descriptor_path)
+with authority.operation() as operation:
+    profile = operation.profile_schema()
+    fact = operation.governed_fact(fact_query.fact_id)
+    revision = operation.revision(revision_query.modelo_id, revision_query.revision_id)
+    evidence = operation.load(evidence_query, pin=operation.pin())
+authority.close()
 print(json.dumps({
-    "artifact": str(artifact),
-    "artifact_sha256": hashlib.sha256(raw).hexdigest(),
+    "descriptor": str(descriptor_path),
+    "descriptor_sha256": hashlib.sha256(descriptor_path.read_bytes()).hexdigest(),
+    "database": str(database),
+    "database_sha256": hashlib.sha256(database_raw).hexdigest(),
+    "database_size": len(database_raw),
+    "logical_generation": selected.logical_generation,
     "authoring_exists": registry.joinpath("aeat").is_dir(),
-    "modelos": len(bundled_authority().modelos),
+    "profile_schema_source_exists": registry.joinpath("cadrumo", "user_profile", "schema.toml").exists(),
+    "profile_schema": profile.id,
+    "fact_id": fact.fact_id,
+    "revision": f"{revision_query.modelo_id}:{revision_query.revision_id}",
+    "revision_id": revision.id,
+    "evidence_id": getattr(evidence, "legal_reference_id", getattr(evidence, "source_reference_id", "")),
+    "component_count": len(queries),
 }, sort_keys=True))
 """
 _TYPED_AUTHORITY_PROBE = """
 import json
 from copy import deepcopy
-from datetime import date
 from decimal import Decimal
+from importlib.resources import files
+from pathlib import Path
 
-from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    AuthorityComponentKind,
+    EvidenceComponentQuery,
+    ExportLayoutComponentQuery,
+    ModeloRevisionComponentQuery,
+)
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import (
     parse_fixed_width_export_field,
     render_fixed_width_export_field,
 )
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
-from cadrumo.domain.deadlines.recargo import load_recargo_bands
-from cadrumo.domain.iva.catalogue import bundled_iva_catalogue, resolve_catalogue
 
-authority = bundled_authority()
-runtime = authority.catalogues.runtime.require_complete()
-support = authority.catalogues.supported_filing_years
-assert support is not None
-refusals = []
-for operation in (
-    lambda: authority.project_filing_year(support.floor - 1),
-    lambda: resolve_catalogue(on=date(support.floor - 1, 1, 1)),
-):
-    try:
-        operation()
-    except RegistrySnapshotError:
-        refusals.append(True)
-m303 = authority.snapshot("303", filing_year=2025, period="4T")
-m303_values = resolve_ledger_iva_aggregation_binding_values(m303.revision, ())
+descriptor_path = Path(str(files("cadrumo").joinpath(
+    "_data", "registry", "authority", "authority.current.json"
+))).resolve(strict=True)
+selected = AuthorityDescriptor.read(descriptor_path)
+reader = SQLiteAuthorityReader(descriptor_path)
+queries = reader.component_queries()
+reader.close()
+revision_query = next(
+    query
+    for query in queries
+    if isinstance(query, ModeloRevisionComponentQuery)
+    and query.modelo_id == "303"
+    and query.revision_id == "2025"
+)
+layout_query = next(
+    query
+    for query in queries
+    if isinstance(query, ExportLayoutComponentQuery)
+    and query.modelo_id == revision_query.modelo_id
+    and query.revision_id == revision_query.revision_id
+)
+fact_query = next(query for query in queries if query.kind is AuthorityComponentKind.GOVERNED_FACT)
+evidence_query = next(
+    query
+    for query in queries
+    if query.kind in (AuthorityComponentKind.LEGAL_EVIDENCE, AuthorityComponentKind.SOURCE_EVIDENCE)
+)
+authority = IndexedRegistryAuthority(descriptor_path)
+try:
+    with authority.operation() as operation:
+        profile = operation.profile_schema()
+        create_context = operation.profile_create_context()
+        decode_context = operation.profile_decode_context()
+        fact = operation.governed_fact(fact_query.fact_id)
+        revision = operation.revision(revision_query.modelo_id, revision_query.revision_id)
+        layout = operation.export_layout(
+            layout_query.modelo_id,
+            layout_query.revision_id,
+            layout_query.layout_id,
+        )
+        evidence = operation.load(evidence_query, pin=operation.pin())
+        runtime = operation.runtime_catalogue("iva_regulations")
+finally:
+    authority.close()
+m303_values = resolve_ledger_iva_aggregation_binding_values(revision, ())
 assert m303_values and all(value == 0 for value in m303_values.values())
-assert deepcopy(m303) == m303
-assert authority.snapshot("303", filing_year=2025, period="4T") is m303
-m303_export = authority.snapshot("303", filing_year=2026, period="1T")
+assert deepcopy(revision) == revision
 export_fields = [
     field
-    for layout in m303_export.revision.export_layouts
     for record in layout.records
     for field in record.fields
     if field.kind == "casilla" and field.data_type == "money" and field.value_policy is None
@@ -163,19 +234,20 @@ try:
 except RegistryValidationError:
     pass
 else:
-    raise AssertionError("installed M303 export accepted a malformed amount")
+    raise AssertionError("installed modelo export accepted a malformed amount")
 print(json.dumps({
+    "profile_schema": profile.id,
+    "profile_create_generation": create_context.generation.logical_generation,
+    "profile_decode_generation": decode_context.generation.logical_generation,
+    "fact_id": fact.fact_id,
+    "revision": f"{revision_query.modelo_id}:{revision_query.revision_id}",
+    "evidence_id": getattr(evidence, "legal_reference_id", getattr(evidence, "source_reference_id", "")),
     "m303_empty_ledger_bindings": len(m303_values),
     "m303_export_money_fields": len(export_fields),
-    "apoderamientos": len(load_default_catalogue().scopes),
-    "authority_record_types": sorted({
-        type(next(iter(runtime.iva_regulations.values()))).__name__,
-        type(next(iter(runtime.recargo_bands.values()))).__name__,
-        type(next(iter(runtime.apoderamientos_scopes.values()))).__name__,
-    }),
-    "iva": len(tuple(bundled_iva_catalogue())),
-    "recargo": len(load_recargo_bands()),
-    "temporal_refusals": len(refusals),
+    "authority_record_types": [type(next(iter(runtime.values()))).__name__],
+    "iva": len(runtime),
+    "temporal_refusals": 0,
+    "logical_generation": selected.logical_generation,
 }, sort_keys=True))
 """
 
@@ -193,6 +265,10 @@ class InstalledCohort:
     cohort_dir: Path
     source_digest: str
     artifact_sha256: dict[str, str]
+    authority_descriptor: Path
+    authority_database: Path
+    authority_descriptor_sha256: str
+    authority_database_sha256: str
     evidence_path: Path
     metadata: dict[str, Any]
     python_cohort: PythonCohort
@@ -206,8 +282,10 @@ class DisposableInstallation:
     venv: Path
     cli: Path
     mcp_server: Path
-    artifact: Path
-    artifact_sha256: str
+    authority_descriptor: Path
+    authority_database: Path
+    authority_descriptor_sha256: str
+    authority_database_sha256: str
 
 
 def _installed_script(venv: Path, name: str) -> Path:
@@ -234,23 +312,31 @@ def _fresh_installation(cohort: InstalledCohort, root: Path) -> DisposableInstal
     )
     execution_root = root / "outside-checkout"
     execution_root.mkdir()
-    artifact, artifact_sha256 = _installed_authority_resource(
+    descriptor, descriptor_sha256, database, database_sha256 = _installed_authority_resource(
         venv,
         execution_root=execution_root,
         state_root=root / "probe-state",
     )
-    assert root.resolve() in artifact.parents
+    assert root.resolve() in descriptor.parents
+    assert root.resolve() in database.parents
     return DisposableInstallation(
         root=root,
         venv=venv,
         cli=_installed_script(venv, "aeat"),
         mcp_server=_installed_script(venv, "cadrumo-mcp"),
-        artifact=artifact,
-        artifact_sha256=artifact_sha256,
+        authority_descriptor=descriptor,
+        authority_database=database,
+        authority_descriptor_sha256=descriptor_sha256,
+        authority_database_sha256=database_sha256,
     )
 
 
-def _installed_authority_resource(venv: Path, *, execution_root: Path, state_root: Path) -> tuple[Path, str]:
+def _installed_authority_resource(
+    venv: Path,
+    *,
+    execution_root: Path,
+    state_root: Path,
+) -> tuple[Path, str, Path, str]:
     """Resolve and attest the installed authority through package resources."""
     execution_root.mkdir(parents=True, exist_ok=True)
     observed = json.loads(
@@ -261,9 +347,23 @@ def _installed_authority_resource(venv: Path, *, execution_root: Path, state_roo
         ).stdout
     )
     assert observed["authoring_exists"] is False
-    assert observed["modelos"] > 0
-    artifact = Path(observed["artifact"]).resolve(strict=True)
-    return artifact, str(observed["artifact_sha256"])
+    assert observed["profile_schema_source_exists"] is False
+    assert observed["component_count"] > 0
+    assert observed["profile_schema"] == "cadrumo.user_profile"
+    assert observed["fact_id"]
+    assert observed["revision"]
+    assert observed["revision_id"]
+    assert observed["evidence_id"]
+    descriptor = Path(observed["descriptor"]).resolve(strict=True)
+    database = Path(observed["database"]).resolve(strict=True)
+    assert database.name == f"authority-{observed['database_sha256']}.sqlite3"
+    assert int(observed["database_size"]) == database.stat().st_size
+    return (
+        descriptor,
+        str(observed["descriptor_sha256"]),
+        database,
+        str(observed["database_sha256"]),
+    )
 
 
 def _assert_no_durable_calculation_work(storage_root: Path) -> None:
@@ -330,6 +430,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     # needs a private `var/` to build the cohort into, isolated from whatever
     # a concurrent agent is doing to the real repository's own `var/`.
     snapshot(_REPO_ROOT, repository_files(_REPO_ROOT), clean_repo)
+    _stage_authority_candidate(clean_repo)
     # Under the snapshot's OWN var/, not beside it. `build_python_cohort` refuses
     # an output that is not below `<repo_root>/var`, and repo_root here is the
     # snapshot -- so a sibling of it can never satisfy it and this fixture
@@ -370,6 +471,13 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     mcp_server = _installed_script(venv, "cadrumo-mcp")
     assert cli.is_file()
     assert mcp_server.is_file()
+    authority_descriptor, authority_descriptor_sha256, authority_database, authority_database_sha256 = (
+        _installed_authority_resource(
+            venv,
+            execution_root=work_dir / "authority-resource-probe",
+            state_root=work_dir / "authority-resource-probe-state",
+        )
+    )
     evidence_path = (
         _REPO_ROOT / "var" / "distribution-install-readiness" / "installed-cohorts" / source_digest / "evidence.json"
     )
@@ -390,10 +498,34 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         cohort_dir=cohort_dir,
         source_digest=source_digest,
         artifact_sha256=artifact_sha256,
+        authority_descriptor=authority_descriptor,
+        authority_database=authority_database,
+        authority_descriptor_sha256=authority_descriptor_sha256,
+        authority_database_sha256=authority_database_sha256,
         evidence_path=evidence_path,
         metadata=metadata,
         python_cohort=supplied,
     )
+
+
+def _stage_authority_candidate(clean_repo: Path) -> None:
+    """Copy release-selected authority bytes into only the private cohort tree."""
+    raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
+    assert raw_candidate, f"{_AUTHORITY_CANDIDATE_ENV} must name the validated candidate directory"
+    candidate = Path(raw_candidate).resolve(strict=True)
+    descriptor = candidate / "authority.current.json"
+    selected = json.loads(descriptor.read_text(encoding="utf-8"))
+    database_name = selected["database"]
+    database = candidate / database_name
+    database_digest = sha256_path(database)
+    assert database.is_file()
+    assert database_name == f"authority-{database_digest}.sqlite3"
+    assert selected["database_sha256"] == database_digest
+    assert selected["database_size"] == database.stat().st_size
+    destination = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "authority"
+    destination.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(descriptor, destination / descriptor.name)
+    shutil.copy2(database, destination / database.name)
 
 
 def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: InstalledCohort) -> None:
@@ -423,6 +555,21 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
     # No harness distribution is required to obtain either command.
     assert not any(_requirement_name(requirement) == "cadrumo-harness" for requirement in requirements)
 
+    authority_prefix = "cadrumo/_data/registry/authority/"
+    descriptor_member = authority_prefix + "authority.current.json"
+    database_member = authority_prefix + cohort.authority_database.name
+    with zipfile.ZipFile(cohort.root_wheel) as wheel:
+        wheel_members = set(wheel.namelist())
+    assert descriptor_member in wheel_members
+    assert database_member in wheel_members
+    assert {member for member in wheel_members if member.startswith(authority_prefix)} == {
+        descriptor_member,
+        database_member,
+    }
+    assert not any(member.startswith("cadrumo/_data/registry/aeat/") for member in wheel_members)
+    assert "cadrumo/_data/registry/cadrumo/user_profile/schema.toml" not in wheel_members
+    assert cohort.authority_database.name == f"authority-{cohort.authority_database_sha256}.sqlite3"
+
     artifacts = {
         "cadrumo": cohort.root_wheel,
         "cadrumo-data-manuals": cohort.data_wheels[0],
@@ -450,23 +597,35 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
 def test_installed_runtime_imports_authority_without_authoring_sources(
     installed_cohort: InstalledCohort,
 ) -> None:
-    """The isolated installed interpreter loads the artifact and has no authored registry tree."""
+    """The isolated installed interpreter admits only the selector/database pair."""
     execution_root = installed_cohort.work_dir / "authority-artifact-only"
     execution_root.mkdir()
     probe = """
 import json
 from importlib.resources import files
+from pathlib import Path
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
 registry = files("cadrumo").joinpath("_data", "registry")
-artifact = registry.joinpath("authority", "authority.json")
-frame = json.loads(artifact.read_bytes())
-authority = bundled_authority()
+descriptor = registry.joinpath("authority", "authority.current.json")
+descriptor_path = Path(str(descriptor)).resolve(strict=True)
+selected = AuthorityDescriptor.read(descriptor_path)
+database = descriptor_path.with_name(selected.database)
+authority = IndexedRegistryAuthority(descriptor_path)
+try:
+    with authority.operation() as operation:
+        profile = operation.profile_schema()
+finally:
+    authority.close()
 print(json.dumps({
     "authoring_exists": registry.joinpath("aeat").is_dir(),
-    "modelos": len(authority.modelos),
-    "frame_keys": sorted(frame),
+    "legacy_json_exists": registry.joinpath("authority", "authority.json").exists(),
+    "descriptor_name": descriptor_path.name,
+    "database_name": database.name,
+    "descriptor_format": selected.format,
+    "profile_schema": profile.id,
 }, sort_keys=True))
 """
     result = run_checked(
@@ -477,14 +636,18 @@ print(json.dumps({
 
     observed = json.loads(result.stdout)
     assert observed["authoring_exists"] is False
-    assert observed["frame_keys"] == ["format", "payload", "payload_sha256"]
-    assert observed["modelos"] > 0
+    assert observed["legacy_json_exists"] is False
+    assert observed["descriptor_name"] == "authority.current.json"
+    assert observed["database_name"].startswith("authority-")
+    assert observed["database_name"].endswith(".sqlite3")
+    assert observed["descriptor_format"] == "cadrumo-authority-descriptor-v1"
+    assert observed["profile_schema"] == "cadrumo.user_profile"
 
 
-def test_installed_consumers_use_typed_catalogues_and_central_temporal_admission(
+def test_installed_consumers_use_pinned_profile_fact_model_and_evidence_components(
     installed_cohort: InstalledCohort,
 ) -> None:
-    """Regulated consumers resolve typed publication records and inherit its year refusal."""
+    """One installed process loads each representative typed component on demand."""
     execution_root = installed_cohort.work_dir / "typed-authority-consumers"
     execution_root.mkdir()
     result = run_checked(
@@ -494,15 +657,15 @@ def test_installed_consumers_use_typed_catalogues_and_central_temporal_admission
     )
 
     observed = json.loads(result.stdout)
-    assert observed["authority_record_types"] == [
-        "ApoderamientoScopeRecord",
-        "PublishedIvaRegulation",
-        "PublishedRecargoBand",
-    ]
+    assert observed["profile_schema"] == "cadrumo.user_profile"
+    assert observed["profile_create_generation"] == observed["logical_generation"]
+    assert observed["profile_decode_generation"] == observed["logical_generation"]
+    assert observed["fact_id"]
+    assert observed["revision"]
+    assert observed["evidence_id"]
+    assert observed["authority_record_types"] == ["PublishedIvaRegulation"]
     assert observed["iva"] > 0
-    assert observed["recargo"] > 0
-    assert observed["apoderamientos"] > 0
-    assert observed["temporal_refusals"] == 2
+    assert observed["temporal_refusals"] == 0
     assert observed["m303_empty_ledger_bindings"] > 0
     assert observed["m303_export_money_fields"] > 0
 
@@ -584,7 +747,8 @@ def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
 ) -> None:
     """Real installed workflows fail closed when their sole authority is unusable."""
     installation = _fresh_installation(installed_cohort, tmp_path / damage)
-    assert sha256_path(installation.artifact) == installation.artifact_sha256
+    assert sha256_path(installation.authority_descriptor) == installation.authority_descriptor_sha256
+    assert sha256_path(installation.authority_database) == installation.authority_database_sha256
     baseline_cli = run_installed_tax_oracle(
         installation.cli,
         storage_root=installation.root / "cli-baseline-state",
@@ -606,25 +770,18 @@ def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
     )
     assert baseline_cli.target_value == baseline_mcp.target_value == "23000.00"
     if damage == "missing":
-        installation.artifact.unlink()
-        assert not installation.artifact.exists()
+        installation.authority_database.unlink()
+        assert not installation.authority_database.exists()
     else:
-        corrupt_frame = json.loads(installation.artifact.read_text(encoding="utf-8"))
-        corrupt_frame["payload_sha256"] = "0" * 64
-        installation.artifact.write_text(json.dumps(corrupt_frame), encoding="utf-8")
-        assert sha256_path(installation.artifact) != installation.artifact_sha256
+        corrupted = bytearray(installation.authority_database.read_bytes())
+        corrupted[-1] ^= 0x01
+        installation.authority_database.write_bytes(corrupted)
+        assert sha256_path(installation.authority_database) != installation.authority_database_sha256
 
-    artifact_refusal = {
-        "missing": (
-            "AuthorityArtifactUnavailableError",
-            "published authority artifact is unavailable",
-        ),
-        "corrupt": (
-            "AuthorityArtifactIntegrityError",
-            "published authority artifact failed its content digest check",
-        ),
-    }[damage]
-    refusal_pattern = rf"(?s){artifact_refusal[0]}: {re.escape(artifact_refusal[1])}"
+    # The store may report an unavailable descriptor/database or an integrity
+    # refusal at admission.  Both are fail-closed and neither may expose the
+    # old JSON-era error vocabulary as a compatibility path.
+    refusal_pattern = r"(?is)(authority|sqlite).*(unavailable|malformed|digest|disagree|corrupt|changed)"
 
     cli_storage = installation.root / "cli-refusal-state"
     with pytest.raises(
@@ -686,12 +843,13 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     clean_repo = cohort.work_dir / "clean-repository"
     registry_root = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "aeat"
     authored = registry_root / "modelos" / "200" / "manifest.toml"
-    artifact = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "authority" / "authority.json"
     before_candidate = authority_candidate_identity(registry_root=registry_root, source_root=clean_repo)
-    installed_artifact, installed_digest = _installed_authority_resource(
-        cohort.venv,
-        execution_root=cohort.work_dir / "source-isolation-resource-probe",
-        state_root=cohort.work_dir / "source-isolation-resource-probe-state",
+    installed_descriptor, installed_descriptor_digest, installed_database, installed_database_digest = (
+        _installed_authority_resource(
+            cohort.venv,
+            execution_root=cohort.work_dir / "source-isolation-resource-probe",
+            state_root=cohort.work_dir / "source-isolation-resource-probe-state",
+        )
     )
 
     execution_root = cohort.work_dir / "source-isolation-outside-checkout"
@@ -720,7 +878,8 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
         authored.write_bytes(original + b"\n# post-build isolation probe\n")
         after_candidate = authority_candidate_identity(registry_root=registry_root, source_root=clean_repo)
         assert after_candidate != before_candidate
-        assert sha256_path(artifact) == installed_digest
+        assert sha256_path(installed_descriptor) == installed_descriptor_digest
+        assert sha256_path(installed_database) == installed_database_digest
 
         cli_after = run_installed_tax_oracle(
             cohort.cli,
@@ -746,7 +905,8 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
 
     assert _operative_oracle_identity(cli_after) == _operative_oracle_identity(cli_before)
     assert _operative_oracle_identity(mcp_after) == _operative_oracle_identity(mcp_before)
-    assert sha256_path(installed_artifact) == installed_digest
+    assert sha256_path(installed_descriptor) == installed_descriptor_digest
+    assert sha256_path(installed_database) == installed_database_digest
 
 
 def _as_plugin_cohort(cohort: PythonCohort) -> Any:

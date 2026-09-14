@@ -1,4 +1,4 @@
-"""Validate that every tracked shipped data file exists on disk."""
+"""Validate the repository-visible shipped-data source set."""
 
 from __future__ import annotations
 
@@ -8,23 +8,23 @@ from collections import Counter
 from pathlib import Path
 from typing import TypedDict
 
-from .lane_verification_core import TRACKED_DATA_ROOTS, find_repo_root, tracked_source_data_paths
+from .lane_verification_core import SOURCE_DATA_ROOTS, find_repo_root, source_data_paths
 
 
 class SourceDataSummary(TypedDict):
     """Machine-readable shipped-data preflight summary."""
 
     ok: bool
-    tracked_file_count: int
+    source_file_count: int
     roots: dict[str, int]
 
 
 def _root_for(path: str) -> str:
-    """Return the configured tracked data root that owns ``path``."""
-    for root in TRACKED_DATA_ROOTS:
+    """Return the configured source-data root that owns ``path``."""
+    for root in SOURCE_DATA_ROOTS:
         if path.startswith(f"{root}/") or path == root:
             return root
-    return "<outside-tracked-data-roots>"
+    return "<outside-source-data-roots>"
 
 
 def _summary(paths: set[str]) -> SourceDataSummary:
@@ -32,7 +32,7 @@ def _summary(paths: set[str]) -> SourceDataSummary:
     counts = Counter(_root_for(path) for path in paths)
     return {
         "ok": True,
-        "tracked_file_count": len(paths),
+        "source_file_count": len(paths),
         "roots": dict(sorted(counts.items())),
     }
 
@@ -44,13 +44,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo_root = find_repo_root()
-    paths = tracked_source_data_paths(repo_root)
+    paths = source_data_paths(repo_root)
     summary = _summary(paths)
     if args.json:
         print(json.dumps(summary, indent=2, sort_keys=True))
         return 0
 
-    print(f"tracked shipped-data files present: {summary['tracked_file_count']}")
+    print(f"source shipped-data files present: {summary['source_file_count']}")
     for root, count in summary["roots"].items():
         print(f"{root}\t{count}")
     print(f"repository\t{Path(repo_root).resolve()}")

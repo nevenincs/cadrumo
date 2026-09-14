@@ -135,7 +135,9 @@ _ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:  # pragma: no cover - import bootstrap
     sys.path.insert(0, str(_ROOT))
 
-_CORPUS: Final[Path] = _ROOT / "src/cadrumo/_data/corpus/normatives/html"
+_NORMATIVES: Final[Path] = _ROOT / "src/cadrumo/_data/corpus/normatives"
+_HTML_CORPUS: Final[Path] = _NORMATIVES / "html"
+_XML_CORPUS: Final[Path] = _NORMATIVES / "xml"
 _ACT_URL: Final[str] = "https://www.boe.es/buscar/act.php"
 _DOC_URL: Final[str] = "https://www.boe.es/buscar/doc.php"
 _ARTICLE_URL: Final[str] = (
@@ -221,6 +223,16 @@ def _write_verified(destination: Path, data: bytes) -> Path:
     if destination.read_bytes() != canonical:
         raise NormativeAcquisitionError(f"read-back of {destination} does not match the fetched bytes")
     return destination
+
+
+def _corpus_destination(root: Path, destination_name: str, *, suffix: str) -> Path:
+    """Return one format-correct direct child of a corpus namespace."""
+    name = Path(destination_name)
+    if name.name != destination_name or name.suffix.casefold() != suffix:
+        raise NormativeAcquisitionError(
+            f"destination_name must be one filename ending in {suffix!r}, got {destination_name!r}"
+        )
+    return root / name
 
 
 @dataclass(frozen=True)
@@ -373,6 +385,7 @@ def fetch_normative(
         NormativeAcquisitionError: If the payload is not the text in force, or a
             ``required_text`` phrase is absent, or the read-back does not match.
     """
+    destination = _corpus_destination(_HTML_CORPUS, destination_name, suffix=".html")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,
@@ -395,7 +408,7 @@ def fetch_normative(
     if missing:
         raise NormativeAcquisitionError(f"fetched {document_id} but these required phrases are absent: {missing}")
 
-    return _write_verified(_CORPUS / destination_name, data)
+    return _write_verified(destination, data)
 
 
 @dataclass(frozen=True)
@@ -619,7 +632,7 @@ def fetch_article(
     Args:
         document_id: The BOE identifier, e.g. ``BOE-A-1992-28740``.
         block: The article anchor, e.g. ``a90``.
-        destination_name: Filename under ``corpus/normatives/html/``.
+        destination_name: XML filename under ``corpus/normatives/xml/``.
         required_text: Phrases that must appear in the fetched bytes.
         client: Injected for testing; a real client is created when omitted.
 
@@ -630,6 +643,7 @@ def fetch_article(
         NormativeAcquisitionError: If the payload is not this article in force,
             or a ``required_text`` phrase is absent, or the read-back differs.
     """
+    destination = _corpus_destination(_XML_CORPUS, destination_name, suffix=".xml")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,
@@ -655,7 +669,7 @@ def fetch_article(
             f"fetched {document_id} block {block} but these required phrases are absent: {missing}"
         )
 
-    return _write_verified(_CORPUS / destination_name, data)
+    return _write_verified(destination, data)
 
 
 def fetch_article_redaction(
@@ -677,6 +691,7 @@ def fetch_article_redaction(
     response.  It is suitable for a fact's effective window only after the
     caller has established the next redaction or an in-force endpoint boundary.
     """
+    destination = _corpus_destination(_XML_CORPUS, destination_name, suffix=".xml")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,
@@ -702,7 +717,7 @@ def fetch_article_redaction(
             f"fetched {document_id} block {block} redaction {redaction.amending_norm}/{redaction.vigencia} "
             f"but these required phrases are absent from that exact redaction: {missing}"
         )
-    return _write_verified(_CORPUS / destination_name, captured.encode("utf-8"))
+    return _write_verified(destination, captured.encode("utf-8"))
 
 
 def assert_serves_the_published_document(payload: str, *, document_id: str) -> None:
@@ -805,10 +820,10 @@ def fetch_published_document(
 ) -> Path:
     """Fetch one as-published BOE document BOE holds no consolidated text for.
 
-    The shape for instruments that are published once and never amended -- a
-    ``corrección de errores`` is the canonical case, and a bilateral tax
-    convention is the other. For anything BOE consolidates, this refuses and
-    directs the caller to :func:`fetch_normative`.
+    The shape for instruments that are published once and never consolidated;
+    a ``corrección de errores`` and an annual modelo-approval order are the
+    canonical cases. For anything BOE consolidates, this refuses and directs
+    the caller to :func:`fetch_normative`.
 
     Args:
         document_id: The BOE identifier, e.g. ``BOE-A-2024-24097``.
@@ -825,6 +840,7 @@ def fetch_published_document(
             consolidates the id, a ``required_text`` phrase is absent, or the
             read-back does not match.
     """
+    destination = _corpus_destination(_HTML_CORPUS, destination_name, suffix=".html")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,
@@ -848,4 +864,4 @@ def fetch_published_document(
     if missing:
         raise NormativeAcquisitionError(f"fetched {document_id} but these required phrases are absent: {missing}")
 
-    return _write_verified(_CORPUS / destination_name, data)
+    return _write_verified(destination, data)

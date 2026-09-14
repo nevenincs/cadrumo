@@ -25,8 +25,8 @@ from functools import cache
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.user_profile.labels import profile_field_label_key, profile_section_title_key
-from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
+from dev.registry.compiler.profile_schema import capture_profile_schema
 
 _CATEGORY_LOCALE_PREFIX = "categories.registry."
 _CATEGORY_LOCALIZED_ENTRY_NAMES = frozenset({"display_label", "notes"})
@@ -175,8 +175,11 @@ def scan_profile_schema_keys() -> set[str]:
     Returns:
         The dotted section-title and field-label keys the schema declares.
     """
+    _payload, schema = capture_profile_schema(
+        bundled_path("registry", "cadrumo", "user_profile", "schema.toml").resolve(),
+    )
     keys: set[str] = set()
-    for section in load_user_profile_schema().sections:
+    for section in schema.sections:
         keys.add(profile_section_title_key(section.key))
         for field in section.fields:
             keys.add(profile_field_label_key(section.key, field.key))

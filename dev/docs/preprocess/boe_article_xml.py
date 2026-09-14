@@ -13,6 +13,19 @@ from defusedxml.ElementTree import fromstring
 from .schema import PreprocessUnit
 from .sidecar import PreprocessSidecarError
 
+_ORDINAL_ANCHOR = re.compile(
+    r"^(?P<ordinal>primero|segundo|tercero|cuarto|quinto|sexto|s[eé]ptimo|octavo|noveno|d[eé]cimo)\.",
+    re.IGNORECASE,
+)
+
+
+def _source_stated_ordinal_anchor(unit: PreprocessUnit) -> str | None:
+    """Derive a corpus fragment from an explicit ordinal-provision heading."""
+    match = _ORDINAL_ANCHOR.match(unit.title or "")
+    if match is None:
+        return None
+    return "#" + match.group("ordinal").casefold().replace("é", "e")
+
 
 def article_response_units(
     markup: str,
@@ -64,8 +77,57 @@ def article_response_units(
                         update={
                             "title": f"{unit_title} | {version_label}" if len(versions) > 1 else unit_title,
                             "section": f"{unit_title} | {version_label}",
-                            "anchor": unit.anchor or (f"#{block_id}" if len(version_units) == 1 else None),
+                            "anchor": (
+                                unit.anchor
+                                or _source_stated_ordinal_anchor(unit)
+                                or (f"#{block_id}" if len(version_units) == 1 else None)
+                            ),
                         }
                     ),
                 )
     return tuple(units)
+
+
+def article_version_units(
+    markup: str,
+    *,
+    segment: Callable[[str], list[PreprocessUnit]],
+) -> tuple[PreprocessUnit, ...]:
+    """Read one already-sliced BOE ``version`` without losing its identity."""
+    try:
+        version = fromstring(markup, forbid_dtd=True)
+    except (ParseError, DefusedXmlException) as exc:
+        raise PreprocessSidecarError("malformed BOE article version XML") from exc
+    if version.tag != "version":
+        raise PreprocessSidecarError("BOE article version XML must have a version root")
+    instrument = version.get("id_norma", "").strip()
+    effective = version.get("fecha_vigencia", "").strip()
+    published = version.get("fecha_publicacion", "").strip()
+    if (
+        re.fullmatch(r"BOE-A-\d{4}-\d+", instrument) is None
+        or re.fullmatch(r"\d{8}", effective) is None
+        or re.fullmatch(r"\d{8}", published) is None
+    ):
+        raise PreprocessSidecarError("BOE article version lacks instrument, publication or effective date")
+    try:
+        effective_date = datetime.strptime(effective, "%Y%m%d").date()
+        published_date = datetime.strptime(published, "%Y%m%d").date()
+    except ValueError as exc:
+        raise PreprocessSidecarError("BOE article version has an invalid date") from exc
+    version_markup = "".join(tostring(child, encoding="unicode") for child in version)
+    units = segment(version_markup)
+    if not units:
+        raise PreprocessSidecarError("BOE article version has no legal text")
+    label = (
+        f"{instrument} | fecha_publicacion={published_date.isoformat()} | fecha_vigencia={effective_date.isoformat()}"
+    )
+    return tuple(
+        unit.model_copy(
+            update={
+                "title": unit.title or label,
+                "section": f"{unit.title} | {label}" if unit.title else label,
+                "anchor": unit.anchor or _source_stated_ordinal_anchor(unit),
+            }
+        )
+        for unit in units
+    )

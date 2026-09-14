@@ -9,15 +9,20 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
-from typing import Final
+from typing import Final, cast
 
+from cadrumo.core.corpus_annotation import CORPUS_PAGE_ANNOTATION_SUFFIX, CorpusPageAnnotation
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
+from cadrumo.core.type_guards import is_object_dict
 from cadrumo.domain.calculations.registry.artifact_catalogue import (
     ArtifactCatalogue,
     ArtifactIdentity,
     ArtifactRole,
+    SemanticAnnotation,
     compile_artifact_catalogue,
+    manual_manifest_identity,
     record_design_manifest_identities,
     registry_source_identity,
 )
@@ -67,6 +72,72 @@ def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) 
             verified.add(key)
 
 
+def verify_manual_annotation_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> None:
+    """Catalog every authored PDF page selector against its source and manifest."""
+    bundle_root = _bundle_root(root).resolve()
+    corpus_root = bundle_root / "corpus"
+    annotation_files = scan_directory(
+        corpus_root,
+        pattern=f"*{CORPUS_PAGE_ANNOTATION_SUFFIX}",
+        recursive=True,
+        select=DirectoryEntryKind.FILES,
+    )
+    if not annotation_files:
+        return
+    sources_by_path: dict[PurePosixPath, list[SourceReference]] = {}
+    for source in sources.values():
+        sources_by_path.setdefault(PurePosixPath(source.corpus_path), []).append(source)
+    known_paths: list[PurePosixPath] = []
+    identities: list[ArtifactIdentity] = []
+    annotations: list[SemanticAnnotation] = []
+    for annotation_file in annotation_files:
+        relative = PurePosixPath(*annotation_file.resolve().relative_to(bundle_root).parts)
+        target = PurePosixPath(relative.as_posix()[: -len(CORPUS_PAGE_ANNOTATION_SUFFIX)])
+        declared_sources = sources_by_path.get(target, [])
+        if not declared_sources:
+            raise RegistryValidationError(
+                f"semantic annotation {relative.as_posix()!r} has no declared registry source target"
+            )
+        manifest_path = annotation_file.parent / "manifest.json"
+        try:
+            raw_manifest: object = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if not is_object_dict(raw_manifest):
+                raise TypeError("manifest must be a JSON object")
+            typed_manifest = cast(Mapping[str, object], raw_manifest)
+            identity = manual_manifest_identity(
+                typed_manifest,
+                manifest_path=(relative.parent / manifest_path.name).as_posix(),
+            )
+            annotation = CorpusPageAnnotation.model_validate_json(annotation_file.read_text(encoding="utf-8"))
+        except (OSError, TypeError, ValueError, json.JSONDecodeError) as error:
+            raise RegistryValidationError(
+                f"semantic annotation {relative.as_posix()!r} has invalid source metadata: {error}"
+            ) from error
+        if identity.path != target or annotation.source_sha256 != identity.sha256:
+            raise RegistryValidationError(
+                f"semantic annotation {relative.as_posix()!r} does not bind its manual manifest source"
+            )
+        for source in declared_sources:
+            if not _same_payload_identity(identity, registry_source_identity(source)):
+                raise RegistryValidationError(
+                    f"semantic annotation {relative.as_posix()!r} target disagrees with registry source {source.id!r}"
+                )
+        known_paths.extend((target, relative))
+        identities.append(identity)
+        annotations.append(SemanticAnnotation(path=relative, target_path=target))
+    catalogue = compile_artifact_catalogue(
+        known_paths=known_paths,
+        official_identities=identities,
+        semantic_annotations=annotations,
+    )
+    if catalogue.diagnostics:
+        rendered = "; ".join(
+            f"{diagnostic.kind.value} at {diagnostic.path}: {diagnostic.message}"
+            for diagnostic in catalogue.diagnostics
+        )
+        raise RegistryValidationError(f"semantic annotation catalogue is invalid: {rendered}")
+
+
 def verify_catalogue_identity_bindings(catalogue: ArtifactCatalogue, sources: Mapping[str, SourceReference]) -> None:
     """Require registry source identities to match the official artifact catalogue."""
     failures = [
@@ -104,15 +175,16 @@ def compile_record_design_manifest_catalogue(
     paths = {_record_design_manifest_path(source.corpus_path) for source in record_design_sources.values()}
     for manifest_path in sorted(path for path in paths if path is not None):
         try:
-            raw_manifest = json.loads(bundle_root.joinpath(*manifest_path.parts).read_text(encoding="utf-8"))
+            raw_manifest: object = json.loads(bundle_root.joinpath(*manifest_path.parts).read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
             raise RegistryValidationError(
                 f"record-design manifest {manifest_path.as_posix()!r} is unavailable: {error}"
             ) from error
-        if not isinstance(raw_manifest, Mapping):
+        if not is_object_dict(raw_manifest):
             raise RegistryValidationError(f"record-design manifest {manifest_path.as_posix()!r} must be a JSON object")
+        typed_manifest = cast(Mapping[str, object], raw_manifest)
         try:
-            identities.extend(record_design_manifest_identities(raw_manifest, manifest_path=manifest_path.as_posix()))
+            identities.extend(record_design_manifest_identities(typed_manifest, manifest_path=manifest_path.as_posix()))
         except (TypeError, ValueError) as error:
             raise RegistryValidationError(
                 f"record-design manifest {manifest_path.as_posix()!r} has invalid acquisition identity: {error}"

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.frozen_mapping import FrozenMapping
+from cadrumo.core.hashing import content_hash_hex, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.convenio import ConvenioAuthority
@@ -17,6 +18,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
+from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
 from . import fact_providers
 from .authority_state import (
@@ -31,6 +33,7 @@ from .convenio import convenio_authority_from_facts
 from .corpus_catalogue import (
     compile_record_design_manifest_catalogue,
     verify_catalogue_identity_bindings,
+    verify_manual_annotation_catalogue,
     verify_source_catalogue,
 )
 from .fact_providers import (
@@ -41,9 +44,28 @@ from .fact_providers import (
 from .identity import RegistryIdentity, resolve_registry_identity
 from .loader import load_registry_tree
 from .loader_fingerprints import collect_registry_tree_fingerprints
+from .profile_schema import capture_profile_schema
 from .runtime_catalogues import compile_runtime_catalogues
 from .source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
+
+
+@dataclass(frozen=True, slots=True)
+class AuthoritySourceSet:
+    """Complete explicit filesystem inputs captured by one authority compilation."""
+
+    registry_root: Path
+    source_evidence_root: Path
+    profile_schema_path: Path
+
+    @classmethod
+    def bundled(cls) -> AuthoritySourceSet:
+        """Resolve the three bundled defaults once at the development entrypoint."""
+        return cls(
+            registry_root=bundled_path("registry", "aeat"),
+            source_evidence_root=bundled_path(),
+            profile_schema_path=bundled_path("registry", "cadrumo", "user_profile", "schema.toml"),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +75,7 @@ class StructuralRegistryComponents:
     modelos: tuple[ModeloDefinition, ...]
     catalogues: RegistryCatalogues
     identity_digest: str
+    profile_schema: ProfileSchemaDefinition
 
 
 def compile_structural_authority(
@@ -60,13 +83,19 @@ def compile_structural_authority(
     source_root: Path,
     *,
     identity: RegistryIdentity | None = None,
+    profile_schema_path: Path | None = None,
 ) -> StructuralRegistryComponents:
     """Compile typed authority components without registry-wide conformance."""
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     if identity is None:
         identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
     modelos, catalogues = compile_registry_tree(root, sources_root, identity=identity)
+    _profile_bytes, profile_schema = capture_profile_schema(
+        profile_schema_path or sources_root / "registry" / "cadrumo" / "user_profile" / "schema.toml",
+        legal_reference_ids=frozenset(catalogues.legal),
+    )
     verify_source_catalogue(sources_root, catalogues.sources)
+    verify_manual_annotation_catalogue(sources_root, catalogues.sources)
     record_design_catalogue = compile_record_design_manifest_catalogue(sources_root, catalogues.sources)
     if record_design_catalogue is not None:
         catalogue, sources = record_design_catalogue
@@ -75,6 +104,7 @@ def compile_structural_authority(
         modelos=modelos,
         catalogues=catalogues,
         identity_digest=identity.digest,
+        profile_schema=profile_schema,
     )
 
 
@@ -83,6 +113,7 @@ def _compile_validated_authority_uncached(
     source_root: Path,
     *,
     identity: RegistryIdentity | None = None,
+    profile_schema_path: Path | None = None,
 ) -> ValidatedRegistryAuthority:
     """Compile and validate a source candidate; never used by product runtime.
 
@@ -93,7 +124,12 @@ def _compile_validated_authority_uncached(
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     if identity is None:
         identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
-    authority = compile_structural_authority(root, sources_root, identity=identity)
+    authority = compile_structural_authority(
+        root,
+        sources_root,
+        identity=identity,
+        profile_schema_path=profile_schema_path,
+    )
     modelos, catalogues = authority.modelos, authority.catalogues
     source_evidence_fingerprint = collect_source_evidence_fingerprints(sources_root, use_cache=False)
     # Scope validation re-validates typed members whose field validators read
@@ -112,11 +148,13 @@ def _compile_validated_authority_uncached(
             catalogues,
             source_root=sources_root,
             source_evidence_fingerprint=source_evidence_fingerprint,
+            user_profile_schema=authority.profile_schema,
         ).validate_registry(modelos)
     return ValidatedRegistryAuthority.from_validated_components(
         modelos=modelos,
         catalogues=catalogues,
         identity_digest=authority.identity_digest,
+        profile_schema=authority.profile_schema,
     )
 
 
@@ -125,6 +163,7 @@ def compile_validated_authority(
     source_root: Path,
     *,
     identity: RegistryIdentity | None = None,
+    profile_schema_path: Path | None = None,
 ) -> ValidatedRegistryAuthority:
     """Compile one mutable source candidate through the development cache.
 
@@ -138,7 +177,17 @@ def compile_validated_authority(
             pair.registry_root,
             collect_fingerprints=collect_registry_tree_fingerprints,
         )
-    source_receipt = source_evidence_receipt(collect_source_evidence_fingerprints(pair.source_root, use_cache=False))
+    profile_path = profile_schema_path or pair.source_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
+    profile_payload, _profile_schema = capture_profile_schema(profile_path)
+    source_receipt = content_hash_hex(
+        {
+            "evidence": source_evidence_receipt(
+                collect_source_evidence_fingerprints(pair.source_root, use_cache=False)
+            ),
+            "profile_path": profile_path.resolve().as_posix(),
+            "profile_sha256": sha256_hex(profile_payload),
+        }
+    )
     authority = cached_compilation(
         pair,
         registry_identity_digest=identity.digest,
@@ -148,6 +197,7 @@ def compile_validated_authority(
             pair.registry_root,
             pair.source_root,
             identity=identity,
+            profile_schema_path=profile_path,
         ),
     )
     register_authoring_authority(authority, source_root=pair.source_root)
@@ -235,12 +285,15 @@ def load_unvalidated_components(
     identity: RegistryIdentity,
 ) -> StructuralRegistryComponents:
     """Build a diagnostic-only projection without granting publication validity."""
-    root, _sources_root = canonical_authoring_root_pair(registry_root, source_root)
+    root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     modelos, catalogues = load_registry_tree(root, identity=identity)
     return StructuralRegistryComponents(
         modelos=modelos,
         catalogues=catalogues,
         identity_digest=identity.digest,
+        profile_schema=capture_profile_schema(
+            sources_root / "registry" / "cadrumo" / "user_profile" / "schema.toml",
+        )[1],
     )
 
 
@@ -254,3 +307,10 @@ def compiled_bundled_authority() -> ValidatedRegistryAuthority:
     """
     registry_root, source_root = canonical_authoring_root_pair(bundled_path("registry", "aeat"), bundled_path())
     return compile_validated_authority(registry_root, source_root)
+
+
+def compile_validated_source_set(source_set: AuthoritySourceSet) -> ValidatedRegistryAuthority:
+    """Compile a complete explicit source set, refusing an implicit profile source."""
+    roots = canonical_authoring_root_pair(source_set.registry_root, source_set.source_evidence_root)
+    expected_profile = source_set.profile_schema_path.resolve(strict=True)
+    return compile_validated_authority(*roots, profile_schema_path=expected_profile)

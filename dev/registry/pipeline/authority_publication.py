@@ -23,13 +23,16 @@ digest identifies the build; the artifact frame separately hashes its output.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import os
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import partial
 from pathlib import Path, PurePosixPath
+from tempfile import TemporaryDirectory
 from typing import Final
 
+from cadrumo.core.atomic_write import hardened_staged_publication
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import content_hash_hex, hash_file, sha256_hex
 from cadrumo.core.locks import exclusive_file_lock
@@ -43,9 +46,11 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     read_authority_artifact,
     write_authority_artifact,
 )
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
+from ..compiler.authority_database import build_authority_database
 from ..compiler.authority_state import canonical_authoring_root_pair
 from ..compiler.build_identity import authority_compiler_identity
 from ..compiler.corpus_provenance import classify_normative_corpus_provenance
@@ -67,7 +72,9 @@ __all__ = [
     "ValidatedAuthorityCandidate",
     "authority_artifact_currency",
     "authority_candidate_identity",
+    "install_validated_authority_database",
     "publish_authority_candidate",
+    "publish_sqlite_authority_candidate",
     "publish_validated_authority_candidate",
     "validate_authority_candidate",
 ]
@@ -120,6 +127,7 @@ class AuthorityPublicationReceipt:
     registry_identity_digest: str
     source_evidence_fingerprints: SourceEvidenceFingerprint
     source_evidence_content_digests: tuple[tuple[str, str], ...]
+    profile_schema_sha256: str
     source_identity_digest: str
     compiler_identity_digest: str
     component_dependency_digest: str
@@ -133,6 +141,7 @@ class ValidatedAuthorityCandidate:
 
     registry_root: Path
     source_root: Path
+    profile_schema_path: Path
     receipt: AuthorityPublicationReceipt
     artifact: AuthorityArtifact
 
@@ -142,6 +151,7 @@ def publish_authority_candidate(
     registry_root: Path,
     source_root: Path,
     artifact_path: Path,
+    profile_schema_path: Path | None = None,
 ) -> AuthorityArtifact:
     """Validate and atomically publish one development candidate.
 
@@ -155,17 +165,33 @@ def publish_authority_candidate(
         timeout=_PUBLICATION_LOCK_TIMEOUT,
         retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
     ):
-        candidate = validate_authority_candidate(registry_root=registry_root, source_root=source_root)
+        candidate = validate_authority_candidate(
+            registry_root=registry_root,
+            source_root=source_root,
+            profile_schema_path=profile_schema_path,
+        )
         return _publish_candidate(candidate, artifact_path=artifact_path)
 
 
-def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> ValidatedAuthorityCandidate:
+def validate_authority_candidate(
+    *,
+    registry_root: Path,
+    source_root: Path,
+    profile_schema_path: Path | None = None,
+) -> ValidatedAuthorityCandidate:
     """Compile and validate a candidate, refusing inputs that change mid-validation."""
     # Import at the compile boundary so tooling discovery does not load validators.
     from ..compiler.authority import compile_validated_authority
 
     resolved_registry_root, resolved_source_root = canonical_authoring_root_pair(registry_root, source_root)
-    receipt_before = _capture_receipt(resolved_registry_root, resolved_source_root)
+    resolved_profile_schema = (
+        profile_schema_path or resolved_source_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
+    ).resolve(strict=True)
+    receipt_before = _capture_receipt(
+        resolved_registry_root,
+        resolved_source_root,
+        profile_schema_path=resolved_profile_schema,
+    )
     identity = resolve_registry_identity(
         resolved_registry_root,
         collect_fingerprints=partial(collect_registry_tree_fingerprints, use_cache=False),
@@ -174,8 +200,13 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
         resolved_registry_root,
         resolved_source_root,
         identity=identity,
+        profile_schema_path=resolved_profile_schema,
     )
-    receipt_after = _capture_receipt(resolved_registry_root, resolved_source_root)
+    receipt_after = _capture_receipt(
+        resolved_registry_root,
+        resolved_source_root,
+        profile_schema_path=resolved_profile_schema,
+    )
     if receipt_after != receipt_before:
         raise RegistryValidationError(
             "registry candidate changed while it was being validated; authority publication is refused",
@@ -194,10 +225,12 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
             authority.catalogues.sources,
             source_root=resolved_source_root,
         ),
+        profile_schema=authority.profile_schema(),
     )
     return ValidatedAuthorityCandidate(
         registry_root=resolved_registry_root,
         source_root=resolved_source_root,
+        profile_schema_path=resolved_profile_schema,
         receipt=receipt_after,
         artifact=artifact,
     )
@@ -264,7 +297,12 @@ def publish_validated_authority_candidate(
         return _publish_candidate(candidate, artifact_path=artifact_path)
 
 
-def authority_candidate_identity(*, registry_root: Path, source_root: Path) -> str:
+def authority_candidate_identity(
+    *,
+    registry_root: Path,
+    source_root: Path,
+    profile_schema_path: Path | None = None,
+) -> str:
     """Return the content-addressed identity a publication of these inputs would record.
 
     Costs a content read of every registry and source-evidence file and no
@@ -272,7 +310,11 @@ def authority_candidate_identity(*, registry_root: Path, source_root: Path) -> s
     without publishing.
     """
     resolved_registry_root, resolved_source_root = canonical_authoring_root_pair(registry_root, source_root)
-    return _capture_receipt(resolved_registry_root, resolved_source_root).identity_digest
+    return _capture_receipt(
+        resolved_registry_root,
+        resolved_source_root,
+        profile_schema_path=profile_schema_path,
+    ).identity_digest
 
 
 def authority_artifact_currency(
@@ -354,7 +396,14 @@ def _publish_candidate(
     artifact_path: Path,
 ) -> AuthorityArtifact:
     def require_current_candidate() -> None:
-        if _capture_receipt(candidate.registry_root, candidate.source_root) != candidate.receipt:
+        if (
+            _capture_receipt(
+                candidate.registry_root,
+                candidate.source_root,
+                profile_schema_path=candidate.profile_schema_path,
+            )
+            != candidate.receipt
+        ):
             raise RegistryValidationError(
                 "registry candidate or source evidence changed after validation; authority publication is refused",
             )
@@ -364,7 +413,12 @@ def _publish_candidate(
     return candidate.artifact
 
 
-def _capture_receipt(registry_root: Path, source_root: Path) -> AuthorityPublicationReceipt:
+def _capture_receipt(
+    registry_root: Path,
+    source_root: Path,
+    *,
+    profile_schema_path: Path | None = None,
+) -> AuthorityPublicationReceipt:
     """Capture every mutable input the authority compiler uses for this candidate."""
     registry_identity = resolve_registry_identity(
         registry_root,
@@ -374,6 +428,11 @@ def _capture_receipt(registry_root: Path, source_root: Path) -> AuthorityPublica
     source_evidence_content_digests = tuple(
         (path, hash_file(Path(path))[0]) for path, _byte_count, _modified_ns in source_evidence
     )
+    profile_path = profile_schema_path or source_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
+    try:
+        profile_schema_sha256 = sha256_hex(profile_path.resolve(strict=True).read_bytes())
+    except OSError as exc:
+        raise RegistryValidationError(f"profile schema source is unavailable at {profile_path}") from exc
     source_identity_digest = content_hash_hex(
         {
             "schema": _CANDIDATE_IDENTITY_SCHEMA,
@@ -383,6 +442,7 @@ def _capture_receipt(registry_root: Path, source_root: Path) -> AuthorityPublica
                 for path, digest in source_evidence_content_digests
                 if _is_candidate_input(Path(path).relative_to(source_root))
             ),
+            "profile_schema": profile_schema_sha256,
         }
     )
     compiler_identity_digest = authority_compiler_identity()
@@ -391,11 +451,101 @@ def _capture_receipt(registry_root: Path, source_root: Path) -> AuthorityPublica
         registry_identity_digest=registry_identity.digest,
         source_evidence_fingerprints=source_evidence,
         source_evidence_content_digests=source_evidence_content_digests,
+        profile_schema_sha256=profile_schema_sha256,
         source_identity_digest=source_identity_digest,
         compiler_identity_digest=compiler_identity_digest,
         component_dependency_digest=build_identity.component_dependency_digest,
         identity_digest=build_identity.identity_digest,
     )
+
+
+def publish_sqlite_authority_candidate(
+    *,
+    registry_root: Path,
+    source_root: Path,
+    profile_schema_path: Path,
+    destination: Path,
+) -> AuthorityDescriptor:
+    """Validate, independently traverse, and atomically publish one SQLite generation."""
+    resolved_destination = destination.resolve()
+    resolved_destination.mkdir(parents=True, exist_ok=True)
+    descriptor_path = resolved_destination / "authority.current.json"
+    with exclusive_file_lock(
+        descriptor_path,
+        timeout=_PUBLICATION_LOCK_TIMEOUT,
+        retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
+    ):
+        candidate = validate_authority_candidate(
+            registry_root=registry_root,
+            source_root=source_root,
+            profile_schema_path=profile_schema_path,
+        )
+        return install_validated_authority_database(
+            candidate.artifact,
+            destination=resolved_destination,
+            require_current=lambda: _require_candidate_receipt(candidate),
+        )
+
+
+def _require_candidate_receipt(candidate: ValidatedAuthorityCandidate) -> None:
+    current = _capture_receipt(
+        candidate.registry_root,
+        candidate.source_root,
+        profile_schema_path=candidate.profile_schema_path,
+    )
+    if current != candidate.receipt:
+        raise RegistryValidationError(
+            "registry candidate changed after SQLite validation; descriptor publication is refused"
+        )
+
+
+def install_validated_authority_database(
+    artifact: AuthorityArtifact,
+    *,
+    destination: Path,
+    require_current: Callable[[], None],
+) -> AuthorityDescriptor:
+    """Install exact validated bytes and switch one descriptor only after complete traversal."""
+    resolved_destination = destination.resolve()
+    resolved_destination.mkdir(parents=True, exist_ok=True)
+    descriptor_path = resolved_destination / "authority.current.json"
+    with TemporaryDirectory(prefix="authority-candidate-", dir=resolved_destination) as temporary:
+        staged_database = Path(temporary) / "candidate.sqlite3"
+        compiled = build_authority_database(staged_database, artifact)
+        database_name = f"authority-{compiled.physical_sha256}.sqlite3"
+        installed = resolved_destination / database_name
+        payload = staged_database.read_bytes()
+        if installed.exists():
+            if (
+                installed.stat().st_size != compiled.byte_count
+                or sha256_hex(installed.read_bytes()) != compiled.physical_sha256
+            ):
+                raise RegistryValidationError(
+                    f"content-addressed authority collision at {installed}; existing bytes differ"
+                )
+        else:
+            with installed.open("xb") as handle:
+                handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
+        descriptor = AuthorityDescriptor(
+            database=database_name,
+            database_size=compiled.byte_count,
+            database_sha256=compiled.physical_sha256,
+            logical_generation=compiled.logical_generation,
+        )
+        with hardened_staged_publication(descriptor_path) as publication:
+            publication.path.write_bytes(descriptor.to_bytes())
+            reader = SQLiteAuthorityReader(publication.path)
+            try:
+                with reader.lease() as pin:
+                    for query in reader.component_queries():
+                        reader.load(query, pin=pin)
+            finally:
+                reader.close()
+            require_current()
+            publication.publish()
+        return descriptor
 
 
 def _registry_content_digests(registry_root: Path) -> list[list[str]]:

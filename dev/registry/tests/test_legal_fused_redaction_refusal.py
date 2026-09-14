@@ -2,12 +2,10 @@
 
 BOE's open-data article endpoint concatenates every historical redaction of an
 article into one response. That history is why the endpoint is worth reading,
-but the bundled extractor folds the whole response into a single undelimited
-unit with no ``fecha_vigencia`` attribution, so the text a ``required_text``
-clause is checked against is several successive statements of the same
-provision run together. A phrase surviving only in a redaction repealed decades
-ago is then *present*, the presence check passes, and the entry reads as
-grounded in current law while its evidence is a pile.
+but it is not an unambiguous legal citation target even when the extractor
+correctly preserves each ``fecha_vigencia`` version as a separate unit. A
+fragment identifies the provision, not one dated version, so a phrase surviving
+only in a repealed redaction can otherwise satisfy the presence check.
 
 These tests drive that refusal against the REAL bundled corpus rather than a
 synthetic fixture, because a detector that is correct on synthetic input and
@@ -36,26 +34,27 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev.docs.preprocess.normatives_html import build_xml_outputs
 
 from ..compiler.legal_grounding import verify_legal_reference, verify_legal_reference_grounding
 from .catalogue_verification_support import registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_NORMATIVES: Final = "corpus/normatives/html"
+_NORMATIVES: Final = "corpus/normatives/xml"
 
 #: A redaction-history capture whose stem announces itself. Measured: ten dated
 #: redactions of Ley 19/1991 art. 30 collapsed into one 15,802-character unit.
-_FUSED_BY_NAME: Final = f"{_NORMATIVES}/boe-a-1991-14392-a30-redacciones.html"
+_FUSED_BY_NAME: Final = f"{_NORMATIVES}/boe-a-1991-14392-a30-redacciones.xml"
 
 #: A redaction-history capture whose stem does NOT. This is the one the live
 #: catalogue actually cited, which is why the detection cannot rest on the
 #: naming convention: two dated redactions of RGAT art. 25 in one unit.
-_FUSED_BY_SHAPE: Final = f"{_NORMATIVES}/rd-1065-2007-art-25.html"
+_FUSED_BY_SHAPE: Final = f"{_NORMATIVES}/rd-1065-2007-art-25.xml"
 
 #: The consolidated whole-document RGAT, serving art. 25 as it stands in force.
 #: An independent bundled oracle for what the fused capture adds.
-_CONSOLIDATED_RGAT: Final = f"{_NORMATIVES}/rd-1065-2007.html"
+_CONSOLIDATED_RGAT: Final = "corpus/normatives/html/rd-1065-2007.html"
 
 #: The heading of RGAT art. 25. A provision states its own heading once; a
 #: document stating it twice is stating the provision twice.
@@ -73,7 +72,7 @@ _PATRIMONIO_CURRENT_DELEGATION: Final = "escala que haya sido aprobada por la Co
 #: A capture carrying the redaction-history stem whose article was never
 #: amended, so it declares a single redaction and is legitimate evidence.
 #: Art. 10 (Dividendos) of the Spain-Netherlands convention.
-_SINGLE_REDACTION_BY_NAME: Final = f"{_NORMATIVES}/boe-a-1972-1469-a1-2-redacciones.html"
+_SINGLE_REDACTION_BY_NAME: Final = f"{_NORMATIVES}/boe-a-1972-1469-a1-2-redacciones.xml"
 
 #: The deliberately year-vintaged excerpts, restated here rather than imported:
 #: they legitimately contain text current law does not, so a refusal that caught
@@ -94,6 +93,16 @@ def _redaction_count(document: Path) -> int:
 
 def _unit_text(document: Path, *, anchor: str) -> str:
     """Return the normalised unit a citation into ``document`` would be checked against."""
+    if document.suffix.casefold() == ".xml":
+        outputs = build_xml_outputs(document, repo_root=bundled_path())
+        rendered = [
+            f"# {unit.title}\n\n{unit.text}" if unit.title else unit.text
+            for output in outputs
+            for unit in output.units
+            if unit.anchor is not None and unit.anchor.lstrip("#") == anchor.lstrip("#")
+        ]
+        assert rendered, f"{document} has no XML unit for {anchor!r}"
+        return normalise_corpus_text("\n\n".join(rendered))
     sidecar = document.with_name(f"{document.name}.extracted.json")
     return normalise_corpus_text(resolve_anchored_extracted_unit(sidecar, anchor=anchor, include_title=True))
 
@@ -205,7 +214,7 @@ def test_a_single_redaction_capture_is_accepted_despite_the_redaction_history_st
     assert "redacciones" in document.name, "the control is only meaningful while it carries the stem"
 
     verify_legal_reference(
-        _reference(f"{_SINGLE_REDACTION_BY_NAME}#a10", required_text=("Dividendos",)),
+        _reference(f"{_SINGLE_REDACTION_BY_NAME}#a1-2", required_text=("Dividendos",)),
         source_root=root,
     )
 

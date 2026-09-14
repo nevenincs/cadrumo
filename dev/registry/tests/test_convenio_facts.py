@@ -6,7 +6,6 @@ from datetime import date
 
 import pytest
 
-from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.convenio import CONVENIO_OVERRIDE_FACT_ID
 from cadrumo.domain.calculations.registry.facts.resolution import (
@@ -15,6 +14,8 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
+from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.convenio import convenio_authority_from_facts
@@ -51,6 +52,14 @@ _EXPECTED_ROWS = {
 def _bundled_fact_catalogue() -> GovernedFactCatalogue:
     facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
     return GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
+
+
+def _bundled_tipo_renta_catalogue(facts: GovernedFactCatalogue):
+    """Resolve income tokens through the candidate fact authority under test."""
+    return resolve_tipo_renta_irnr_catalogue(
+        effective_date=date(2025, 6, 30),
+        authority=CandidateFactAuthority(facts),
+    )
 
 
 def test_authored_convenio_fact_preserves_every_row_and_its_legal_anchor() -> None:
@@ -92,12 +101,19 @@ def test_direct_fact_resolves_and_projects_the_existing_runtime_catalogue() -> N
     )
     _modelos, catalogues = load_registry_tree(root)
     convenio = convenio_authority_from_facts(catalogue, catalogues.legal)
+    tipo_renta_catalogue = _bundled_tipo_renta_catalogue(catalogue)
+    general = tipo_renta_catalogue.require("general")
+    interest = tipo_renta_catalogue.require("interest")
+    gb_row = convenio.treaties["GB"].overrides[0]
+    de_row = next(row for row in convenio.treaties["DE"].overrides if row.tipo_renta == interest)
 
     assert isinstance(resolved, ResolvedOverrideFact)
-    assert resolved.payload.override_code == ConvenioOverrideKind.FLAT.value
+    assert resolved.payload.override_code == gb_row.kind.value
     assert resolved.payload.value == "0.24"
-    assert convenio.resolve("GB", TipoRentaIrnr.GENERAL, 2025) is not None
-    assert convenio.resolve("DE", TipoRentaIrnr.INTEREST, 2025).kind is ConvenioOverrideKind.EXEMPT
+    assert convenio.resolve("GB", general, 2025) is not None
+    de_override = convenio.resolve("DE", interest, 2025)
+    assert de_override is not None
+    assert de_override.kind == de_row.kind
 
 
 def test_authored_convenio_fact_has_no_raw_treaty_provider_or_directory() -> None:

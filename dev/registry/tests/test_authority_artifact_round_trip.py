@@ -43,7 +43,6 @@ _MAX_COMPACT_AUTHORITY_BYTES = 64 * 1024 * 1024
 
 def test_the_full_bundled_registry_round_trips_through_a_publication(tmp_path: Path) -> None:
     registry_root = bundled_path("registry", "aeat")
-    tracked_artifact_path = bundled_path("registry", "authority", "authority.json")
     artifact_path = tmp_path / "authority.json"
 
     published = publish_authority_candidate_workflow(
@@ -67,13 +66,12 @@ def test_the_full_bundled_registry_round_trips_through_a_publication(tmp_path: P
     assert consumed.catalogues.facts.facts, "the publication must carry governed facts, or their atoms prove nothing"
     assert consumed.catalogues == published.catalogues
     assert consumed.evidence == published.evidence
+    assert consumed.profile_schema == published.profile_schema
+    assert consumed.profile_schema is not None
     assert consumed.identity_digest == published.identity_digest
     assert consumed == published
-    assert read_authority_artifact(tracked_artifact_path) == published, (
-        "the tracked runtime authority must be semantically equal to a fresh canonical publication"
-    )
-    assert tracked_artifact_path.stat().st_size <= _MAX_COMPACT_AUTHORITY_BYTES, (
-        f"the compact authority artifact is {tracked_artifact_path.stat().st_size:,} bytes; "
+    assert artifact_path.stat().st_size <= _MAX_COMPACT_AUTHORITY_BYTES, (
+        f"the compact authority artifact is {artifact_path.stat().st_size:,} bytes; "
         f"the budget is {_MAX_COMPACT_AUTHORITY_BYTES:,} bytes"
     )
     assert published.identity_digest == authority_candidate_identity(

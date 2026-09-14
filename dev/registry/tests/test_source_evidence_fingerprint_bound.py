@@ -54,6 +54,19 @@ def test_a_specimen_evidence_root_is_never_served_from_the_window(tmp_path: Path
     )
 
 
+def test_interpreter_caches_are_not_source_evidence(tmp_path: Path) -> None:
+    source_root = tmp_path / "specimen"
+    specimen = _write_specimen_evidence(source_root, payload="authority")
+    cache = specimen.parent / "__pycache__"
+    cache.mkdir()
+    (cache / "specimen.cpython-313.pyc").write_bytes(b"regenerable")
+    (specimen.parent / "loose.pyc").write_bytes(b"regenerable")
+
+    fingerprints = collect_source_evidence_fingerprints(source_root)
+
+    assert [Path(path).name for path, _size, _mtime in fingerprints] == [specimen.name]
+
+
 def test_the_bundled_evidence_root_is_served_from_the_window() -> None:
     """The bundled tree really is bounded, so the bound cannot be made inert.
 

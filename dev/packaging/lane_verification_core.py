@@ -2,13 +2,13 @@
 
 Every ``smoke_*`` lane proves one installation transport (uv wheel, plain pip,
 sdist, split cohort, extras, browser, Docker, dev checkout) against the SAME
-artifact contract: the wheel carries exactly the tracked shipped data, its
+artifact contract: the wheel carries exactly the repository-visible shipped data, its
 metadata preserves prod/optional/dev intent, and the installed product answers
 the CLI, storage, and bundled-data probes. This module owns that shared
 contract so a lane module owns only what is unique to its transport.
 
 It also serves the two cheap preflight commands (``dependency_surface``,
-``source_preflight``), which assert the dependency and tracked-data surfaces
+``source_preflight``), which assert the dependency and source-data surfaces
 without building anything.
 
 The public API below is the deliberate contract; names prefixed with an
@@ -56,7 +56,7 @@ from .proof_ledger import (
 from .python_cohort import digest_install_target
 
 __all__ = [
-    "TRACKED_DATA_ROOTS",
+    "SOURCE_DATA_ROOTS",
     "DependencySurfaces",
     "ProofContractError",
     "assert_attachment_and_llm_surfaces",
@@ -64,7 +64,7 @@ __all__ = [
     "assert_cli_smoke",
     "assert_installed_data",
     "assert_optional_extra_registry_matches_pyproject",
-    "assert_wheel_contains_tracked_data",
+    "assert_wheel_contains_source_data",
     "assert_wheel_metadata_matches_pyproject",
     "build_companion_wheels",
     "build_root_snapshot",
@@ -86,7 +86,7 @@ __all__ = [
     "requirement_name",
     "resolve_work_dir",
     "run_checked",
-    "tracked_source_data_paths",
+    "source_data_paths",
     "validate_frozen_exports",
     "venv_bin_dir",
     "venv_cadrumo_path",
@@ -102,12 +102,12 @@ _REPRESENTATIVE_DATA_LEAVES = (
     "registry/cadrumo/user_profile/schema.toml",
     "corpus/aeat_official/disenos_registro/modelo_100/manifest.json",
 )
-TRACKED_DATA_ROOTS = ("src/cadrumo/_data",)
+SOURCE_DATA_ROOTS = ("src/cadrumo/_data",)
 _SOURCE_DATA_PREFIX = "src/cadrumo/_data/"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
 # Corpus source binaries excluded from the compact command-bearing ``cadrumo`` wheel
 # by the build config; they ship in the two mandatory ``cadrumo-data-*`` distributions. A
-# tracked source path is one of these when it lives under ``_data/corpus`` and
+# source path is one of these when it lives under ``_data/corpus`` and
 # carries a binary suffix, so the wheel-bundling parity check must not expect it
 # in the
 # ``cadrumo`` archive.
@@ -514,14 +514,14 @@ def _validated_source_data_inventory(source_root: Path, inventory: set[str], *, 
     return inventory
 
 
-def tracked_source_data_paths(repo_root: Path) -> set[str]:
-    """Return tracked shipped-data source paths relative to the repository root."""
-    tracked = set(repository_files(repo_root, under=TRACKED_DATA_ROOTS))
-    tracked = _validated_source_data_inventory(repo_root, tracked, origin="the repository file enumeration")
-    missing_floor = sorted(_MANUAL_PDF_PRESENCE_FLOOR - tracked)
+def source_data_paths(repo_root: Path) -> set[str]:
+    """Return repository-visible shipped-data paths relative to the repository root."""
+    source_paths = set(repository_files(repo_root, under=SOURCE_DATA_ROOTS))
+    source_paths = _validated_source_data_inventory(repo_root, source_paths, origin="the repository file enumeration")
+    missing_floor = sorted(_MANUAL_PDF_PRESENCE_FLOOR - source_paths)
     if missing_floor:
-        raise SystemExit(f"tracked shipped data is missing required manual PDFs: {missing_floor!r}")
-    return tracked
+        raise SystemExit(f"source data is missing required manual PDFs: {missing_floor!r}")
+    return source_paths
 
 
 def build_source_data_paths(source_root: Path) -> set[str]:
@@ -535,7 +535,7 @@ def build_source_data_paths(source_root: Path) -> set[str]:
     build root (:func:`build_root_snapshot`) holds exactly the enumerated
     files, so reading either one this way answers the same question.
     """
-    inventory = set(repository_files(source_root, under=TRACKED_DATA_ROOTS))
+    inventory = set(repository_files(source_root, under=SOURCE_DATA_ROOTS))
     return _validated_source_data_inventory(source_root, inventory, origin="the repository file enumeration")
 
 
@@ -580,7 +580,7 @@ def _companion_corpus_ownership(repo_root: Path) -> dict[str, frozenset[str]]:
 
 
 def _is_corpus_source_binary(source_relative: str, suffixes: tuple[str, ...]) -> bool:
-    """Return True for a tracked ``_data/corpus`` path that is an excluded source binary."""
+    """Return True for a source ``_data/corpus`` path that is an excluded source binary."""
     return source_relative.startswith(_CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(suffixes)
 
 
@@ -610,13 +610,13 @@ def expected_wheel_data_paths(repo_root: Path) -> set[str]:
     data-budget wheel boundary (tests serve no installed consumer) and are
     likewise legitimately absent.
     """
-    tracked = tracked_source_data_paths(repo_root)
-    if not tracked:
+    source_paths = source_data_paths(repo_root)
+    if not source_paths:
         # The sealed-source sibling below already refuses this. A derivation
         # that found no shipped data cannot describe a payload, and comparing
         # an empty expectation against an empty archive would pass.
-        raise SystemExit(f"no tracked shipped data found under {repo_root}; the expectation would be empty")
-    return _expected_wheel_data_paths(repo_root, tracked)
+        raise SystemExit(f"no shipped source data found under {repo_root}; the expectation would be empty")
+    return _expected_wheel_data_paths(repo_root, source_paths)
 
 
 def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:
@@ -632,13 +632,13 @@ def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:
     return _expected_wheel_data_paths(source_root, build_source_data_paths(source_root))
 
 
-def _expected_wheel_data_paths(repo_root: Path, tracked: set[str]) -> set[str]:
+def _expected_wheel_data_paths(repo_root: Path, source_paths: set[str]) -> set[str]:
     """Project one already-sealed source-data inventory into wheel member paths."""
     suffixes = _configured_corpus_binary_suffixes(repo_root)
-    split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
+    split_owned = {path for path in source_paths if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     _assert_split_files_have_companion_owners(repo_root, split_owned)
     expected: set[str] = set()
-    for path in tracked:
+    for path in source_paths:
         if path in split_owned:
             continue
         if "/tests/" in path:
@@ -647,8 +647,8 @@ def _expected_wheel_data_paths(repo_root: Path, tracked: set[str]) -> set[str]:
     return expected
 
 
-def assert_wheel_contains_tracked_data(repo_root: Path, wheel: Path, expected: set[str] | None = None) -> None:
-    """Verify the wheel's complete data payload equals the tracked runtime set."""
+def assert_wheel_contains_source_data(repo_root: Path, wheel: Path, expected: set[str] | None = None) -> None:
+    """Verify the wheel's complete data payload equals the source runtime set."""
     expected_paths = expected_wheel_data_paths(repo_root) if expected is None else expected
     with zipfile.ZipFile(wheel) as archive:
         actual_paths = {
@@ -660,10 +660,10 @@ def assert_wheel_contains_tracked_data(repo_root: Path, wheel: Path, expected: s
     unexpected = sorted(actual_paths - expected_paths)
     if missing or unexpected:
         raise SystemExit(
-            "wheel data payload differs from the tracked runtime set: "
+            "wheel data payload differs from the source runtime set: "
             f"missing={_format_path_sample(missing)}, unexpected={_format_path_sample(unexpected)}"
         )
-    record_proof("wheel tracked shipped-data payload")
+    record_proof("wheel source shipped-data payload")
 
 
 def assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> None:
@@ -822,7 +822,7 @@ def build_wheel(repo_root: Path, work_dir: Path, uv: str, *, build_root: Path) -
     wheels = scan_directory(wheel_dir, pattern="cadrumo-*.whl")
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one Cadrumo wheel in {wheel_dir}; got {[wheel.name for wheel in wheels]!r}")
-    assert_wheel_contains_tracked_data(repo_root, wheels[0], expected_data_paths)
+    assert_wheel_contains_source_data(repo_root, wheels[0], expected_data_paths)
     return wheels[0]
 
 

@@ -11,7 +11,7 @@ searching for the first.
 ``presenter_tax_id`` name the same fact, established by two measurements rather
 than by similarity:
 
-* every occurrence of both, at HEAD, declares ``offset = 101`` and
+* every occurrence of both in the source corpus declares ``offset = 101`` and
   ``length = 9`` with ``kind = "header"``, ``data_type = "text"``,
   ``required = false``, ``padding = "right_space"`` and
   ``justification = "left"`` -- byte-identical field geometry, differing only
@@ -23,7 +23,7 @@ than by similarity:
   ``presenter_tax_id`` in 115/123 -- so this is one concept spelled two ways
   across modelo families, not a distinction the registry is drawing.
 
-**Why this reads the committed fragments and not the enum.** The corpus is the
+**Why this reads the source fragments and not the enum.** The corpus is the
 thing the loader consumes and the thing an author edits; an enum is a
 downstream projection that can be relocated, renamed or deleted while the
 fragments stay exactly as they are. A gate pinned to a symbol goes quiet the
@@ -51,13 +51,13 @@ this gate, that is the thing to check first.
 from __future__ import annotations
 
 import re
-import subprocess
 from pathlib import Path
 from typing import Final
 
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -95,33 +95,16 @@ def _repository_root() -> Path:
     return REPO_ROOT
 
 
-def header_keys_at_revision(revision: str) -> frozenset[str]:
-    """Return every ``header_key`` token in the registry at *revision*.
+def source_header_keys() -> frozenset[str]:
+    """Return every producer-header token in the repository-visible registry."""
 
-    Reads the git object store rather than the working tree, so the verdict is
-    about a named commit and not about whatever a dozen agents have left on
-    disk. Naming the tree a reading belongs to is the discipline this file is
-    downstream of: the same measurement run against the worktree and reported
-    as a fact about HEAD produced a confidently wrong finding earlier in this
-    corpus's history.
-    """
     tokens: set[str] = set()
-    for field_name in _HEADER_FIELD_NAMES:
-        listing = subprocess.run(  # noqa: S603 - fixed executable and arguments
-            ["git", "grep", "-h", field_name, revision, "--", "src/cadrumo/_data/registry"],  # noqa: S607
-            capture_output=True,
-            # The registry is UTF-8 by contract, and `git grep -h` prints whole
-            # matching LINES -- so a line carrying an accented AEAT name comes
-            # back as UTF-8 bytes. `text=True` alone decodes with the platform's
-            # locale codec, which on Windows is cp1252, where the second byte of
-            # "Á" is undefined: the decode raised, `.stdout` came back None, and
-            # this gate ERRORED instead of gating. Modelo 322's "Álava" line is
-            # the one that does it, and it has been committed for some time.
-            encoding="utf-8",
-            check=False,
-            cwd=_repository_root(),
-        ).stdout
-        tokens.update(_HEADER_KEY.findall(listing))
+    registry_root = "src/cadrumo/_data/registry"
+    for relative in repository_files(_repository_root(), under=(registry_root,)):
+        path = _repository_root() / relative
+        if path.suffix != ".toml":
+            continue
+        tokens.update(_HEADER_KEY.findall(path.read_text(encoding="utf-8")))
     return frozenset(tokens)
 
 
@@ -146,16 +129,16 @@ def english_stem_offenders(tokens: frozenset[str]) -> tuple[tuple[str, str], ...
 
 
 @pytest.fixture(scope="module")
-def head_tokens() -> frozenset[str]:
-    """Every ``header_key`` token committed at HEAD."""
-    return header_keys_at_revision("HEAD")
+def source_tokens() -> frozenset[str]:
+    """Every producer-header token in the current registry source tree."""
+    return source_header_keys()
 
 
-def test_the_scan_reaches_a_real_population(head_tokens: frozenset[str]) -> None:
+def test_the_scan_reaches_a_real_population(source_tokens: frozenset[str]) -> None:
     """Fail on an empty scan before any verdict below is allowed to stand.
 
     A scan that returns nothing because the path moved, the pattern broke or
-    the subprocess failed is indistinguishable from a corpus with no header
+    source enumeration failed is indistinguishable from a corpus with no header
     keys at all -- and it would make every assertion here pass.
 
     Gated on the PROPERTY, never on a tally. An earlier version required more
@@ -168,8 +151,8 @@ def test_the_scan_reaches_a_real_population(head_tokens: frozenset[str]) -> None
     """
     from cadrumo.core.filing_producer_key import FilingProducerKey
 
-    assert head_tokens, "the header_key scan found nothing at HEAD; that is a broken scan, not a corpus"
-    unknown = head_tokens - {member.value for member in FilingProducerKey}
+    assert source_tokens, "the producer-key scan found nothing in the source tree; that is a broken scan"
+    unknown = source_tokens - {member.value for member in FilingProducerKey}
     assert not unknown, f"the header_key scan returned tokens outside the closed producer vocabulary: {sorted(unknown)}"
 
 
@@ -187,13 +170,13 @@ def test_the_gate_detects_a_known_dual_spelling() -> None:
     assert english_stem_offenders(control) == (), "the control corpus must PASS or the mutation proves nothing"
 
 
-def test_no_header_key_spells_a_spanish_concept_in_english(head_tokens: frozenset[str]) -> None:
+def test_no_header_key_spells_a_spanish_concept_in_english(source_tokens: frozenset[str]) -> None:
     """The canonical producer vocabulary keeps only the Spanish AEAT spelling.
 
-    The committed corpus must carry NO dual spelling. An earlier version of
+    The source corpus must carry NO dual spelling. An earlier version of
     this assertion pinned the `presenter_tax_id`/`presenter_nif` pair as the
     expected result, which made a live defect the contract: once the pair left
-    HEAD the gate failed for having been FIXED, and while it stood it could
+    the source tree the gate failed for having been FIXED, and while it stood it could
     never have caught a second offender appearing beside the first. The
     detector's own proof lives in
     :func:`test_the_gate_detects_a_known_dual_spelling`, against a hand-built
@@ -201,7 +184,7 @@ def test_no_header_key_spells_a_spanish_concept_in_english(head_tokens: frozense
     """
     from cadrumo.core.filing_producer_key import FilingProducerKey
 
-    assert english_stem_offenders(head_tokens) == ()
+    assert english_stem_offenders(source_tokens) == ()
     producer_keys = {member.value for member in FilingProducerKey}
     assert "presenter.tax_id" in producer_keys
     assert "presenter_tax_id" not in producer_keys
