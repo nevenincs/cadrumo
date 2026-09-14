@@ -12,6 +12,18 @@ from pydantic import AnyHttpUrl
 
 from cadrumo.adapters.inbound.justificante.parser import parse_justificante_bytes
 from cadrumo.adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from cadrumo.adapters.outbound.aeat.sede.filed_observation_persistence import (
+    BaselineImportAdapter,
+    BucketEventRepositoryAdapter,
+    CalculationObservationRepositoryAdapter,
+    FiledDeclarationTransformationAdapter,
+    FiledObservationParserAdapter,
+    FiledObservationStoreAdapter,
+    FilingRepositoryAdapter,
+    IvaHistoryRepositoryAdapter,
+    IvaObservationPersistenceAdapter,
+    JustificanteRepositoryAdapter,
+)
 from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from cadrumo.adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionArtefact,
@@ -22,7 +34,9 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import (
     _CAPTURED_AT,
     _M303_DECLARATION_TYPE_C,
@@ -48,6 +62,7 @@ from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support i
     _stored_303_justificante_observation,
     _stored_justificante_observation,
 )
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 from cadrumo.application.calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
@@ -65,9 +80,11 @@ from cadrumo.application.live.filed_observation_persistence import (
     persistiva_compensation_history_observations_strict,
     select_latest_filed_observations_in_history_order,
 )
+from cadrumo.application.live.filed_observation_ports import FiledObservationPersistencePorts
 from cadrumo.application.live.iva_remote_state import (
     list_iva_compensation_history,
 )
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.config import Settings
@@ -75,6 +92,7 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.json_contract import NoticeSeverity
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -85,6 +103,48 @@ from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodS
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FILED_OPERATION_LEASES: list[object] = []
+
+
+def _filed_ports(
+    *,
+    bucket_id: str,
+    root: Path,
+    calculation_repository: CalculationObservationRepository | None = None,
+) -> FiledObservationPersistencePorts:
+    """Compose the canonical filed-observation capability bundle for a test."""
+    objects = secure_object_repository_for_bucket(bucket_id)
+    lease = bundled_indexed_authority().operation()
+    _FILED_OPERATION_LEASES.append(lease)
+    operation = next(lease)
+    work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    filing = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    justificantes = JustificanteRepository(objects=objects)
+    events = BucketEventHistoryRepository(objects=objects)
+    observations = calculation_repository or CalculationObservationRepository(bucket_id=bucket_id, objects=objects)
+    history = IvaCompensationHistoryRepository(bucket_id=bucket_id, objects=objects)
+    return FiledObservationPersistencePorts(
+        parser=FiledObservationParserAdapter(),
+        transformation=FiledDeclarationTransformationAdapter(operation=operation),
+        observation_persistence=FiledObservationStoreAdapter(root=root, objects=objects),
+        calculation_repository=CalculationObservationRepositoryAdapter(repository=observations),
+        iva_history_repository=IvaHistoryRepositoryAdapter(repository=history),
+        iva_observation_persistence=IvaObservationPersistenceAdapter(),
+        justificante_repository=JustificanteRepositoryAdapter(repository=justificantes),
+        filing_repository=FilingRepositoryAdapter(repository=filing),
+        bucket_event_repository=BucketEventRepositoryAdapter(repository=events),
+        baseline_import=BaselineImportAdapter(
+            work_lifecycle_ports=WorkLifecyclePorts(
+                work_unit_repository=work_units,
+                bucket_event_repository=events,
+            ),
+            calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects),
+            filing_repository=filing,
+            justificante_repository=justificantes,
+            observation_repository=observations,
+        ),
+    )
 
 
 def test_filed_observation_capture_promotes_previous_303_into_recurrence_history(tmp_path: Path) -> None:

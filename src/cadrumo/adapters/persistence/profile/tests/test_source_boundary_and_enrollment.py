@@ -30,6 +30,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.catalogue_reads import (
     InvoiceCatalogueReadAdapter,
     TransactionCatalogueReadAdapter,
@@ -38,6 +39,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -53,6 +55,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
 from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.period import Period
@@ -207,7 +210,10 @@ def _seed(
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         revision_id=revision_id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_T0,
     )
 
@@ -277,10 +283,12 @@ def test_s08_atribucion_member_profile_source_resolves_m184_rows(
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            calculation_repository=cr_repo,
+            invoice_repository=invoice_repo,
+            transaction_repository=tx_repo,
+            work_unit_repository=wu_repo,
+        ),
         clock=_T1,
     )
 
@@ -356,10 +364,12 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
         with pytest.raises(ModeloProfileReadinessError) as refusal:
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
-                work_unit_repository=wu_repo,
-                calculation_repository=cr_repo,
-                transaction_repository=tx_repo,
-                invoice_repository=invoice_repo,
+                ports=calculation_ports_for_test(
+                    calculation_repository=cr_repo,
+                    invoice_repository=invoice_repo,
+                    transaction_repository=tx_repo,
+                    work_unit_repository=wu_repo,
+                ),
                 clock=_T1,
             )
 
@@ -497,10 +507,12 @@ def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            calculation_repository=cr_repo,
+            invoice_repository=invoice_repo,
+            transaction_repository=tx_repo,
+            work_unit_repository=wu_repo,
+        ),
         clock=_T1,
     )
 
@@ -533,10 +545,12 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            calculation_repository=cr_repo,
+            invoice_repository=invoice_repo,
+            transaction_repository=tx_repo,
+            work_unit_repository=wu_repo,
+        ),
         clock=_T1,
     )
 
@@ -609,15 +623,20 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
             revision_id="2013-y-siguientes",
-            repository=wu_repo,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_T0,
         )
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
+            ports=calculation_ports_for_test(
+                calculation_repository=cr_repo,
+                invoice_repository=invoice_repo,
+                transaction_repository=tx_repo,
+                work_unit_repository=wu_repo,
+            ),
             foreign_asset_observations=observations,
             clock=_T1,
         )

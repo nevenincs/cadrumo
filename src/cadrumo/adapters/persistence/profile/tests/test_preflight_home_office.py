@@ -2,31 +2,57 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
-from cadrumo.application.user_profile.censo_sync import CensoSyncService
+from cadrumo.application.user_profile.censo_sync import bound_raw_afectacion_ratio
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    GovernedFactComponentQuery,
+    ProfileSchemaComponentQuery,
+)
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.usage_ratios.service import derive_home_office_ratios_from_censo
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _HOME_OFFICE_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 _Q2_2026 = Period.from_year_and_code(2026, "2T")
+
+
+@pytest.fixture(scope="module")
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Expose canonical authored facts and profile schema through one pin."""
+    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
+    reader = FakeAuthorityComponentReader(
+        {
+            **{GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()},
+            ProfileSchemaComponentQuery(): load_user_profile_schema(),
+        },
+    )
+    pinned = PinnedAuthorityOperation(reader, reader.pin())
+    with validating_governed_facts(pinned):
+        yield pinned
 
 
 def _transaction(
@@ -82,7 +108,7 @@ def _transaction(
     )
 
 
-def _declare_home_office_m2(bucket_id: str) -> None:
+def _declare_home_office_m2(bucket_id: str, *, operation: PinnedAuthorityOperation) -> None:
     """Persist the operator-declared ``vivienda_office`` m² facts."""
     facts = tuple(
         UserProfileFact(path=path, value=Decimal(value))
@@ -92,7 +118,8 @@ def _declare_home_office_m2(bucket_id: str) -> None:
         }.items()
     )
     seed_test_profile_record(
-        UserProfileRecord(
+        create_user_profile_record(
+            context=operation.profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=facts,
@@ -100,13 +127,17 @@ def _declare_home_office_m2(bucket_id: str) -> None:
     )
 
 
-def _apply_home_office_censo(bucket_id: str) -> None:
+def _apply_home_office_censo(bucket_id: str, *, operation: PinnedAuthorityOperation) -> None:
     """Persist declared m² facts and the ratios derived from their binding."""
-    _declare_home_office_m2(bucket_id)
-    raw = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
+    _declare_home_office_m2(bucket_id, operation=operation)
+    raw = bound_raw_afectacion_ratio(
+        bucket_id=bucket_id,
+        profile_id=bucket_id,
+        operation=operation,
+    )
     assert raw is not None
-    derived = derive_home_office_ratios_from_censo(raw, year=2025)
-    merged = dict(load_usage_ratios(bucket_id=bucket_id).ratios)
+    derived = derive_home_office_ratios_from_censo(raw, year=2025, operation=operation)
+    merged = dict(load_usage_ratios(bucket_id=bucket_id, operation=operation).ratios)
     merged.update(derived.ratios)
     save_usage_ratios(UsageRatioProfile(ratios=merged), bucket_id=bucket_id)
 
@@ -114,7 +145,10 @@ def _apply_home_office_censo(bucket_id: str) -> None:
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(tmp_path: Path) -> None:
+def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Retirement regression: the ``config profile edit`` instruction is live.
 
     With the live censo scrape retired, ``bound_raw_afectacion_ratio`` derives
@@ -149,25 +183,30 @@ def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(tmp_pa
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            operation=operation,
             transaction_repository=repository,
         )
         assert before.ready is False
         assert [issue.reason for issue in before.issues] == [LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH]
         assert "aeat config profile edit" in before.issues[0].detail
 
-        _declare_home_office_m2(profile.bucket_id)
+        _declare_home_office_m2(profile.bucket_id, operation=operation)
 
         after = preflight_ledger_tax_readiness(
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            operation=operation,
             transaction_repository=repository,
         )
         assert after.ready is True
         assert after.issues == ()
 
 
-def test_preflight_flags_home_office_ratio_without_applied_censo(tmp_path: Path) -> None:
+def test_preflight_flags_home_office_ratio_without_applied_censo(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         category = SpendingCategory._from_registry("suministros_home_office_internet")
         save_usage_ratios(
@@ -193,6 +232,7 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(tmp_path: Path)
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            operation=operation,
             transaction_repository=repository,
         )
 
@@ -203,9 +243,12 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(tmp_path: Path)
     assert "aeat config profile edit" in report.issues[0].detail
 
 
-def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(tmp_path: Path) -> None:
+def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
-        _apply_home_office_censo(profile.bucket_id)
+        _apply_home_office_censo(profile.bucket_id, operation=operation)
         category = SpendingCategory._from_registry("suministros_home_office_internet")
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         repository.save(
@@ -226,6 +269,7 @@ def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(tmp_path
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            operation=operation,
             transaction_repository=repository,
         )
 
@@ -234,9 +278,12 @@ def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(tmp_path
     assert report.issues == ()
 
 
-def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(tmp_path: Path) -> None:
+def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
-        _apply_home_office_censo(profile.bucket_id)
+        _apply_home_office_censo(profile.bucket_id, operation=operation)
         category = SpendingCategory._from_registry("suministros_home_office_internet")
         save_usage_ratios(
             UsageRatioProfile(ratios={category: Decimal("0.30")}),
@@ -261,6 +308,7 @@ def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(tmp
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            operation=operation,
             transaction_repository=repository,
         )
 
@@ -272,7 +320,10 @@ def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(tmp
     assert "censo=0.060" in report.issues[0].detail
 
 
-def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio(tmp_path: Path) -> None:
+def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         save_usage_ratios(
             UsageRatioProfile(
@@ -302,6 +353,7 @@ def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            operation=operation,
             transaction_repository=repository,
         )
 
@@ -310,7 +362,10 @@ def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio
     assert report.issues == ()
 
 
-def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(tmp_path: Path) -> None:
+def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The unguarded path: the category is set and ``--usage-ratio-id`` is not.
 
     Leaving ``--usage-ratio-id`` unset is the CLI default, so this is the
@@ -354,6 +409,7 @@ def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(tmp_path:
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            operation=operation,
             transaction_repository=repository,
         )
 
@@ -367,7 +423,10 @@ def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(tmp_path:
     assert "persisted HOME_OFFICE overrides require an applied censo" in mismatch.detail
 
 
-def test_preflight_stays_silent_for_a_non_home_office_category(tmp_path: Path) -> None:
+def test_preflight_stays_silent_for_a_non_home_office_category(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The other direction, so the screen is not simply always-on.
 
     A category outside the home-office families takes no such override, so a
@@ -401,6 +460,7 @@ def test_preflight_stays_silent_for_a_non_home_office_category(tmp_path: Path) -
             bucket_id=profile.bucket_id,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
+            operation=operation,
             transaction_repository=repository,
         )
 

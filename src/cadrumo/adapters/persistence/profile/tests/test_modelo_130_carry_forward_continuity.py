@@ -34,9 +34,11 @@ from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -54,9 +56,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -79,11 +79,54 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
+    repository = kwargs.pop("work_unit_repository", None)
+    for key in ("calculation_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return _calculate_modelo_revision(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            **kwargs,
+        )
+
+
+def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+    for key in (
+        "work_unit_repository",
+        "calculation_repository",
+        "filing_repository",
+        "verification_repository",
+        "bucket_event_repository",
+    ):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return _verify_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            operation=operation,
+            **kwargs,
+        )
+
+
+def _import_external_filing_evidence(**kwargs: Any) -> Any:
+    kwargs.setdefault("observation_repository", CalculationObservationRepository())
+    return import_external_filing_evidence(**kwargs)
+
+
+def _resolve_bindings_from_local_store(snapshot: Any, **kwargs: Any) -> Any:
+    with compiled_bundled_authority().operation() as operation:
+        return resolve_bindings_from_local_store(snapshot, operation=operation, **kwargs)
+
 
 _Repos = tuple[
     WorkUnitCatalogueRepository,
@@ -184,6 +227,8 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 def _seed_ready_profile(*, profile_id: str) -> None:
     seed_test_profile_record(
         UserProfileRecord(
+            schema_id="cadrumo.user_profile",
+            schema_version=load_user_profile_schema().version,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=_READY_PROFILE_FACTS,
@@ -229,7 +274,7 @@ def _calculate_quarter(
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_CLOCK,
     )
-    return calculate_modelo_revision(
+    return _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
@@ -278,7 +323,7 @@ def _import_official_filing_evidence(
         period=period,
         captured_at=_CLOCK,
     )
-    import_external_filing_evidence(
+    _import_external_filing_evidence(
         work_unit_id=source_work_unit.work_unit_id,
         casilla_values=casilla_values,
         evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
@@ -376,7 +421,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
     )
 
     q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    report = resolve_bindings_from_local_store(
+    report = _resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     )
 
@@ -411,7 +456,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     )
 
     q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    resolved = resolve_bindings_from_local_store(
+    resolved = _resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values
 
@@ -495,7 +540,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
     )
 
     q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    resolved = resolve_bindings_from_local_store(
+    resolved = _resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values
     assert resolved.get(_CARRY_FORWARD_BINDING) == Decimal("62.00")
@@ -520,7 +565,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
     assert q2.casilla_values[_M130_CARRY_FORWARD_CASILLA] == Decimal("37.40")
     assert q2.casilla_values[_M130_DIFERENCIA_CASILLA] == Decimal("0.00")
 
-    report = verify_modelo_revision(
+    report = _verify_modelo_revision(
         q2.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
@@ -629,7 +674,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     )
 
     snapshot_3t = compiled_bundled_authority().snapshot("130", filing_year=2026, period="3T")
-    resolved = resolve_bindings_from_local_store(
+    resolved = _resolve_bindings_from_local_store(
         snapshot_3t, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values
 

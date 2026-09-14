@@ -15,6 +15,7 @@ from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support impo
     _split_subprocess_proposer,
     _two_line_proposal,
 )
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_split_merge import split_transaction_with_classified_children
@@ -255,8 +256,9 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
             classified_by="llm:test-model",
             actor="operator",
             source_command="aeat app ledger split --llm --apply",
-            transaction_repository=repository,
-            bucket_event_repository=events,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET, transaction_repository=repository, bucket_event_repository=events
+            ),
             occurred_at=_NOW,
         )
 

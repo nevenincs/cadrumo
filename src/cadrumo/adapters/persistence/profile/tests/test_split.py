@@ -25,6 +25,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import archive_manual_transaction
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
@@ -56,8 +57,9 @@ def test_split_transitions_parent_to_split_and_creates_children(secure_objects: 
         ),
         actor="operator-A",
         reason="separate business and personal",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
         occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
     )
 
@@ -95,8 +97,9 @@ def test_split_emits_single_event_anchored_on_parent(secure_objects: SecureObjec
             SplitChildCommand(amount=Decimal("70.00"), description="part two"),
         ),
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
     )
 
     catalogue = event_repository.load()
@@ -124,24 +127,31 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
             SplitChildCommand(amount=Decimal("70.00"), description="b"),
         ),
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
     )
     archive_manual_transaction(
         bucket_id=_BUCKET_ID,
         transaction_id=first.child_transaction_ids[0],
         actor="operator-A",
         source_command="aeat app ledger archive",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
     )
     archive_manual_transaction(
         bucket_id=_BUCKET_ID,
         transaction_id=first.child_transaction_ids[1],
         actor="operator-A",
         source_command="aeat app ledger archive",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
     )
 
     # Independent invocation with identical inputs against a fresh parent
@@ -156,8 +166,9 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
             description="materials",
             actor="operator-A",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 9, 9, 30, tzinfo=UTC),
     )
     second = split_transaction(
@@ -168,8 +179,9 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
             SplitChildCommand(amount=Decimal("70.00"), description="b"),
         ),
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
     )
     # Different parent id -> different group id
     assert first.split_group_id != second.split_group_id
@@ -192,8 +204,9 @@ def test_split_preserves_parent_amount_as_persisted_child_sum(secure_objects: Se
             SplitChildCommand(amount=value, description=f"slice-{idx}") for idx, value in enumerate(amounts)
         ),
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
     )
     persisted = {child.raw.amount for child in result.child_transactions}
     assert persisted == set(amounts)

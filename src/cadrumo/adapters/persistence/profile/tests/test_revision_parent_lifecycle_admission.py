@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -16,6 +19,10 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     verify_revision,
     workflow_profile,
 )
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
@@ -24,16 +31,76 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import discard_work_unit
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.entrypoints.adapter_composition import (
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_work_lifecycle_ports,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
+    repository = kwargs.pop("work_unit_repository", None)
+    for key in ("calculation_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return calculate_modelo_revision(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            **kwargs,
+        )
+
+
+def _discard_work_unit(work_unit_id: str, **kwargs: Any) -> Any:
+    repository = kwargs.pop("repository", None)
+    kwargs.pop("bucket_event_repository", None)
+    return discard_work_unit(
+        work_unit_id,
+        ports=build_work_lifecycle_ports(bucket_id=repository.bucket_id),
+        **kwargs,
+    )
+
+
+def _verify_modelo_revision_with_preconditions(calculation_revision_id: str, **kwargs: Any) -> Any:
+    for key in (
+        "work_unit_repository",
+        "calculation_repository",
+        "filing_repository",
+        "verification_repository",
+        "bucket_event_repository",
+    ):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return verify_modelo_revision_with_preconditions(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            operation=operation,
+            **kwargs,
+        )
+
+
+def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+    repository = kwargs.pop("work_unit_repository", None)
+    for key in ("calculation_repository", "filing_repository", "verification_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return file_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            ports=build_filing_action_ports(bucket_id=repository.bucket_id),
+            operation=operation,
+            **kwargs,
+        )
+
+
 def _calculated_target(repos: Repos):
     work_unit_repository, calculation_repository, _, _, bucket_event_repository = repos
     work_unit = seed_work_unit(work_unit_repository)
-    revision = calculate_modelo_revision(
+    revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
         casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
@@ -77,7 +144,7 @@ def _verified_target(repos: Repos):
 
 def _discard_target(*, work_unit, repos: Repos) -> None:
     work_unit_repository, _, _, _, bucket_event_repository = repos
-    discard_work_unit(
+    _discard_work_unit(
         work_unit.work_unit_id,
         actor="operator-A",
         repository=work_unit_repository,
@@ -141,7 +208,7 @@ def test_direct_verify_rejects_discarded_draft_without_creating_a_report_or_even
     ) = repos
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        verify_modelo_revision_with_preconditions(
+        _verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
@@ -177,7 +244,7 @@ def test_direct_verify_rejects_discarded_verified_revision_before_idempotent_ret
     before = _catalogue_snapshot(repos)
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        verify_modelo_revision_with_preconditions(
+        _verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
@@ -213,7 +280,7 @@ def test_direct_file_rejects_discarded_verified_revision_without_a_filing(repos:
     before = _catalogue_snapshot(repos)
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        file_modelo_revision(
+        _file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),

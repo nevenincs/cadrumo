@@ -42,6 +42,7 @@ from .censal_observation import CensalObservation, CensalObservationAddress
 from .censo_errors import CensoSyncError
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
     from .profile_record_repository import ProfileRecordRepository
     from .projections import EffectiveFact
@@ -384,15 +385,15 @@ class CensoSyncService:
         self,
         *,
         bucket_id: str,
-        profiles: ProfileRecordRepository | None = None,
+        profiles: ProfileRecordRepository,
     ) -> None:
         """Initialize the service for one profile bucket and record repository.
 
         Args:
             bucket_id: Profile bucket identifier; surrounding whitespace is
                 removed before the non-blank check.
-            profiles: Optional repository for profile-record reads. When it is
-                omitted, the current-session repository is resolved on demand.
+            profiles: Repository already bound to the caller's authenticated
+                profile session and authority generation.
         """
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
@@ -421,12 +422,10 @@ class CensoSyncService:
         is absent / non-decimal / zero.
         """
         from ...domain.user_profile.errors import ProfileNotFoundError
-        from .profile_record_repository import ProfileRecordRepository
         from .projections import record_to_path_values
 
-        repository = self._profiles or ProfileRecordRepository.for_current_session(self._bucket_id)
         try:
-            record = repository.load(profile_id)
+            record = self._profiles.load(profile_id)
         except ProfileNotFoundError:
             return None
         return _raw_afectacion_ratio(record_to_path_values(record))
@@ -449,7 +448,31 @@ def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:
     return office / total
 
 
-def bound_raw_afectacion_ratio_for_bucket(bucket_id: str) -> Decimal | None:
+def bound_raw_afectacion_ratio(
+    *,
+    bucket_id: str,
+    profile_id: str,
+    operation: PinnedAuthorityOperation,
+) -> Decimal | None:
+    """Read one encrypted profile's dwelling ratio through the caller's pin."""
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from .profile_record_repository import ProfileRecordRepository
+
+    try:
+        profiles = ProfileRecordRepository.for_current_session(
+            profile_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+    except ProfileNotFoundError:
+        return None
+    return CensoSyncService(bucket_id=bucket_id, profiles=profiles).bound_raw_afectacion_ratio(profile_id=profile_id)
+
+
+def bound_raw_afectacion_ratio_for_bucket(
+    bucket_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Decimal | None:
     """Return the bucket's own censo-declared ``office_m2 / total_m2``, if any.
 
     The bucket IS the profile for this question, so the two identifiers the
@@ -463,12 +486,18 @@ def bound_raw_afectacion_ratio_for_bucket(bucket_id: str) -> Decimal | None:
 
     Args:
         bucket_id: The bucket whose profile facts are read.
+        operation: The caller-owned authority generation used to decode the
+            encrypted profile record.
 
     Returns:
         The raw afectación proportion, or ``None`` when the profile is absent or
         declares no usable m².
     """
-    return CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
+    return bound_raw_afectacion_ratio(
+        bucket_id=bucket_id,
+        profile_id=bucket_id,
+        operation=operation,
+    )
 
 
 __all__ = [
@@ -476,6 +505,7 @@ __all__ = [
     "CENSO_SOURCE_TAG",
     "CensalReconciliation",
     "CensoSyncService",
+    "bound_raw_afectacion_ratio",
     "bound_raw_afectacion_ratio_for_bucket",
     "censal_facts_from_read",
     "reconcile_censal_read",

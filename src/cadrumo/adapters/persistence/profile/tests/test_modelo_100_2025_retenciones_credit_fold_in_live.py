@@ -59,6 +59,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -374,10 +375,12 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values=_non_relation_zero_bindings(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            calculation_repository=cr_repo,
+            invoice_repository=invoice_repo,
+            transaction_repository=tx_repo,
+            work_unit_repository=wu_repo,
+        ),
         clock=_T1,
     )
 
@@ -507,10 +510,12 @@ def _calculate_m111_administrador_quarter(
     )
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+        ports=calculation_ports_for_test(
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+            invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            work_unit_repository=wu_repo,
+        ),
         clock=_T1,
     )
     values = result.revision.casilla_values

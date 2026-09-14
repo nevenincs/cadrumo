@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -34,6 +35,7 @@ from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -161,14 +163,12 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
         ),
         clock=_T0,
     )
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_M349_BUCKET, operation=operation),
+            clock=_T1,
+        )
 
     assert isinstance(result, BucketAggregationCalculationResult)
     folded_importe = Decimal(result.revision.casilla_values[_M349_IMPORTE_CASILLA])

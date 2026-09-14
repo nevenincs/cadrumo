@@ -63,6 +63,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
@@ -73,6 +74,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -198,7 +200,10 @@ def _calculate_and_verify_m210_inmobiliaria(
             filing_year=_FILING_YEAR,
             period=Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE),
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_CLOCK,
         )
         revision = calculate_modelo_revision(
@@ -211,9 +216,9 @@ def _calculate_and_verify_m210_inmobiliaria(
             },
             text_casilla_inputs={_TIPO_RENTA_CASILLA: "inmobiliaria"},
             filing_period_date=date(_FILING_YEAR, 12, 31),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_CLOCK,
         )
         report = verify_modelo_revision(

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.export.tabular import ExportSerializationFormat
 from cadrumo.application.ledger.actions_export import export_ledger_transactions
@@ -43,8 +44,9 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
                 description=f"export row {index:02d}",
                 idempotency_key=f"export-bulk-{index:02d}",
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository, bucket_event_repository=event_repository
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -76,8 +78,7 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: 
             description="bucket a row",
             idempotency_key="shared-key",
         ),
-        transaction_repository=repo_a,
-        bucket_event_repository=event_repo_a,
+        ports=ledger_ports_for_test(transaction_repository=repo_a, bucket_event_repository=event_repo_a),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     create_manual_transaction(
@@ -89,8 +90,7 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: 
             description="bucket b row",
             idempotency_key="shared-key",
         ),
-        transaction_repository=repo_b,
-        bucket_event_repository=event_repo_b,
+        ports=ledger_ports_for_test(transaction_repository=repo_b, bucket_event_repository=event_repo_b),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
 
@@ -124,8 +124,9 @@ def test_export_ledger_transactions_writes_output_before_export_event(
             description="export row",
             idempotency_key="export-output-before-event",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -165,8 +166,9 @@ def test_export_ledger_transactions_replaces_prior_export_atomically(
             description="export row",
             idempotency_key="export-atomic-replace",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository, bucket_event_repository=event_repository
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 

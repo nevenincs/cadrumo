@@ -28,6 +28,9 @@ from cadrumo.adapters.persistence.storage.custody.recovery_artifact import (
     ProfileCustodyRecoveryArtifact,
     unlock_imported_profile_custody_recovery_artifact,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordIntegrityError,
@@ -111,6 +114,7 @@ def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envel
     transaction as the envelope swap. This test pins the reason that step
     cannot be dropped as an optimisation.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -130,13 +134,17 @@ def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envel
 
         # The control: the row is readable under the envelope it was written
         # with, so the refusal below is caused by the re-wrap and nothing else.
-        current = ProfileRecordSession.from_envelope(envelope=material.envelope, dek=dek)
+        current = ProfileRecordSession.from_envelope(
+            envelope=material.envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+        )
         try:
             assert ProfileRecordStore(session=current).load().record.profile_id == str(profile_id)
         finally:
             current.close()
 
-        after = ProfileRecordSession.from_envelope(envelope=rotated, dek=dek)
+        after = ProfileRecordSession.from_envelope(
+            envelope=rotated, dek=dek, profile_decode_context=_profile_decode_context_for_test
+        )
         try:
             with pytest.raises(ProfileRecordIntegrityError, match="provenance"):
                 ProfileRecordStore(session=after).load()
@@ -146,6 +154,7 @@ def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envel
 
 def _register(tmp_path: Path, handed: list[str]):
     """Register one profile with recovery enrolled, capturing its phrase."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
     return register_profile_with_credentials(
@@ -154,6 +163,8 @@ def _register(tmp_path: Path, handed: list[str]):
         recovery_handover=lambda enrollment: (
             handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
         ),
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
 

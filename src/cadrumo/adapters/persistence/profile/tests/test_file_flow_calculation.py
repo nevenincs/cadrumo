@@ -18,18 +18,25 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     T3,
     FileFlowRuntime,
     Repos,
+    calculation_ports_for_test,
     seed_work_unit,
     verify_revision,
     workflow_gate,
 )
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, list_calculation_revisions
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -50,9 +57,9 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: Repos) 
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
 
@@ -60,9 +67,9 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: Repos) 
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("2000"), M130_EXPENSE_CASILLA: Decimal("500")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T2,
     )
 
@@ -70,7 +77,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: Repos) 
 
     revisions = list_calculation_revisions(
         work_unit_id=work_unit.work_unit_id,
-        calculation_repository=cr_repo,
+        ports=calculation_ports_for_test(calculation_repository=cr_repo),
     )
     assert len(revisions) == 2
     assert {r.calculation_revision_id for r in revisions} == {
@@ -82,7 +89,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: Repos) 
     # Current pointer follows most-recent calculate.
     refreshed_work_unit = get_work_unit(
         work_unit.work_unit_id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
     )
     assert refreshed_work_unit.current_calculation_revision_id == second.calculation_revision_id
     assert refreshed_work_unit.filed_calculation_revision_id is None
@@ -101,24 +108,24 @@ def test_calculate_is_idempotent_on_identical_inputs(repos: Repos) -> None:
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     second = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T2,
     )
     assert first.calculation_revision_id == second.calculation_revision_id
     revisions = list_calculation_revisions(
         work_unit_id=work_unit.work_unit_id,
-        calculation_repository=cr_repo,
+        ports=calculation_ports_for_test(calculation_repository=cr_repo),
     )
     assert len(revisions) == 1
 
@@ -133,12 +140,15 @@ def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos: Repos
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
-    stale_work_unit = get_work_unit(work_unit.work_unit_id, repository=wu_repo).model_copy(
+    stale_work_unit = get_work_unit(
+        work_unit.work_unit_id,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+    ).model_copy(
         update={"current_calculation_revision_id": None},
     )
     wu_repo.save(upsert_work_unit(wu_repo.load(), stale_work_unit))
@@ -147,14 +157,17 @@ def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos: Repos
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T2,
     )
 
     assert duplicate.calculation_revision_id == first.calculation_revision_id
-    refreshed = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    refreshed = get_work_unit(
+        work_unit.work_unit_id,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+    )
     assert refreshed.current_calculation_revision_id == first.calculation_revision_id
     assert refreshed.filed_calculation_revision_id is None
     assert refreshed.current_filing_record_id is None
@@ -172,8 +185,7 @@ def test_calculate_refused_on_discarded_work_unit(repos: Repos) -> None:
     discard_work_unit(
         work_unit.work_unit_id,
         actor="operator-A",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=T1,
     )
     with pytest.raises(WorkUnitMutationRefusedError):
@@ -181,9 +193,9 @@ def test_calculate_refused_on_discarded_work_unit(repos: Repos) -> None:
             work_unit.work_unit_id,
             casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
             binding_values=DEFAULT_130_BINDING_VALUES,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
             clock=T2,
         )
 
@@ -201,8 +213,7 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos: Repos) -> None:
         work_unit.work_unit_id,
         actor="operator-A",
         reason="superseded by new work unit",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=T1,
     )
     history = bv_repo.load().for_bucket(discarded.bucket_id)
@@ -237,9 +248,9 @@ def test_calculate_runs_registry_formula_engine(repos: Repos) -> None:
         actor="operator-A",
         casilla_inputs=casilla_inputs,
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
 
@@ -299,9 +310,9 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
             actor="operator-A",
             casilla_inputs={M130_INCOME_CASILLA: Decimal("10000"), M130_EXPENSE_CASILLA: Decimal("3000")},
             binding_values=DEFAULT_130_BINDING_VALUES,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
             clock=T1,
         )
 
@@ -339,9 +350,9 @@ def test_draft_calculation_commits_revision_pointer_and_event_together(
             work_unit.work_unit_id,
             casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
             binding_values=DEFAULT_130_BINDING_VALUES,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
             clock=T1,
         )
 
@@ -358,9 +369,9 @@ def test_split_draft_write_shape_commits_between_catalogues(
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     revisions = cr_repo.load()
@@ -387,14 +398,17 @@ def test_draft_calculation_records_its_created_event(
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
 
     assert revision.state is CalculationRevisionState.BORRADOR
-    refreshed = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    refreshed = get_work_unit(
+        work_unit.work_unit_id,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+    )
     assert refreshed.current_calculation_revision_id == revision.calculation_revision_id
     created = [
         event
@@ -427,9 +441,9 @@ def test_local_filing_commits_state_pointer_and_filed_event_together(
         work_unit.work_unit_id,
         casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     verify_revision(
@@ -456,18 +470,17 @@ def test_local_filing_commits_state_pointer_and_filed_event_together(
     gate = workflow_gate(revision=revision, work_unit=work_unit, clock=T3)
     recorder = WriteUnitRecorder(file_flow_runtime.engine)
 
-    with recorder.recording():
+    with recorder.recording(), bundled_indexed_authority().operation() as operation:
         file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=gate.profile,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
             workflow_engine=gate.engine,
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
         )
 
     # One group holds the filing catalogue, the filed revision, the advanced
@@ -483,7 +496,10 @@ def test_local_filing_commits_state_pointer_and_filed_event_together(
         event for event in bv_repo.load().events.values() if event.event_type is BucketEventType.MODELO_FILED
     ]
     assert len(filed_events) == 1
-    refreshed = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    refreshed = get_work_unit(
+        work_unit.work_unit_id,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+    )
     assert refreshed.filed_calculation_revision_id == revision.calculation_revision_id
 
     # Negative control for the bound above: the same four catalogues persisted

@@ -29,6 +29,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -181,7 +182,10 @@ def _create_m200_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        repository=work_unit_repository,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_unit_repository,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_T0,
     )
 

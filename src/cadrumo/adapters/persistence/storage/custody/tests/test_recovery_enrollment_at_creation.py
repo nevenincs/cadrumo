@@ -27,6 +27,9 @@ from cadrumo.adapters.persistence.storage.custody.recovery_artifact import (
     unlock_imported_profile_custody_recovery_artifact,
 )
 from cadrumo.adapters.persistence.storage.recovery_key import RecoveryKey, generate_recovery_key
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
 from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
@@ -63,6 +66,7 @@ def test_a_registration_that_takes_the_handover_publishes_a_wrapper_its_words_op
     derives from the secret the operator was handed and verifies the result
     against the capsule's own committed sentinel.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -72,6 +76,8 @@ def test_a_registration_that_takes_the_handover_publishes_a_wrapper_its_words_op
             recovery_handover=lambda enrollment: (
                 handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
             ),
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         assert len(handed) == 1
@@ -101,6 +107,7 @@ def test_a_different_minted_mnemonic_does_not_open_the_published_wrapper(tmp_pat
     well-formed BIP-39 phrase, so a second real mint -- same shape, same
     entropy, different words -- must be refused against the same envelope.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -110,6 +117,8 @@ def test_a_different_minted_mnemonic_does_not_open_the_published_wrapper(tmp_pat
             recovery_handover=lambda enrollment: (
                 handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
             ),
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         material = load_committed_profile_password_material(UUID(outcome.profile_id))
@@ -140,11 +149,14 @@ def test_registration_requires_a_recovery_handover_contract(tmp_path: Path) -> N
 
 def test_the_outcome_confirms_that_recovery_was_enrolled(tmp_path: Path) -> None:
     """The success outcome confirms the wrapper the boundary requires."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         enrolled = register_profile_with_credentials(
             label=f"{_LABEL} enrolled",
             passphrase=_PASSPHRASE,
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         assert enrolled.recovery_enrolled is True
@@ -157,6 +169,7 @@ def test_the_handed_over_key_is_wiped_by_the_time_registration_returns(tmp_path:
     Retaining the enrollment past the handover has to be useless, or the
     wipe-as-early-as-the-flow-allows contract is only a docstring.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     retained: list[ProfileRecoveryEnrollment] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -164,6 +177,8 @@ def test_the_handed_over_key_is_wiped_by_the_time_registration_returns(tmp_path:
             label=_LABEL,
             passphrase=_PASSPHRASE,
             recovery_handover=lambda enrollment: retained.append(enrollment) or enrollment.recovery_key.mnemonic,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
     assert len(retained) == 1
@@ -175,12 +190,15 @@ def test_the_handed_over_key_is_wiped_by_the_time_registration_returns(tmp_path:
 
 def test_an_inexact_possession_proof_creates_no_profile(tmp_path: Path) -> None:
     """Only the exact handed-over phrase authorises publication."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
                 label=_LABEL,
                 passphrase=_PASSPHRASE,
                 recovery_handover=lambda enrollment: f"{enrollment.recovery_key.mnemonic} wrong",
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
         assert not any(view.label == _LABEL for view in CommittedProfileRepository().list())
@@ -200,6 +218,7 @@ def test_a_channel_that_cannot_deliver_the_words_creates_no_profile(tmp_path: Pa
     Delivering before publication makes the failure fall the other way: no
     profile, no wrapper, and a refusal the caller can act on.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     retained: list[ProfileRecoveryEnrollment] = []
 
     def _refuse(enrollment: ProfileRecoveryEnrollment) -> NoReturn:
@@ -212,6 +231,8 @@ def test_a_channel_that_cannot_deliver_the_words_creates_no_profile(tmp_path: Pa
                 label=_LABEL,
                 passphrase=_PASSPHRASE,
                 recovery_handover=_refuse,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
         assert len(retained) == 1

@@ -25,12 +25,14 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -145,7 +147,10 @@ def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path
             filing_year=filing_year,
             period=typed_period,
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_CLOCK,
         )
         # Persist a zero-amount wallet-reconciliation decision so the new
@@ -161,9 +166,9 @@ def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path
             binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=decision,
             filing_period_date=period_date,
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_CLOCK,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:m303-declaration-period-binding"

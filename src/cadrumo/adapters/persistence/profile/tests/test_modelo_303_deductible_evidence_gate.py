@@ -78,6 +78,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -322,23 +323,21 @@ def _calculate_irene_revision(
     )
     decision = _wallet_decision()
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
-    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        actor="operator",
-        binding_values={
-            "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-            "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-        },
-        iva_compensation_decision=decision,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=event_repo,
-        transaction_repository=tx_repo,
-        clock=_CALCULATED_AT,
-        filing_instance_evidence=general_m303_filing_evidence(
-            work_unit.period, reference="test:m303-deductible-evidence-gate"
-        ),
-    ).revision
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator",
+            binding_values={
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            iva_compensation_decision=decision,
+            clock=_CALCULATED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:m303-deductible-evidence-gate"
+            ),
+        ).revision
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
 

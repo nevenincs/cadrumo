@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -25,12 +26,53 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _create_manual_transaction(command: Any, **kwargs: Any) -> Any:
+    transaction_repository = kwargs.pop("transaction_repository")
+    bucket_event_repository = kwargs.pop("bucket_event_repository")
+    return create_manual_transaction(
+        command,
+        ports=ledger_ports_for_test(
+            bucket_id=command.bucket_id,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=bucket_event_repository,
+        ),
+        **kwargs,
+    )
+
+
+def _update_manual_transaction_fields(**kwargs: Any) -> Any:
+    transaction_repository = kwargs.pop("transaction_repository")
+    bucket_event_repository = kwargs.pop("bucket_event_repository")
+    return update_manual_transaction_fields(
+        ports=ledger_ports_for_test(
+            bucket_id=kwargs["bucket_id"],
+            transaction_repository=transaction_repository,
+            bucket_event_repository=bucket_event_repository,
+        ),
+        **kwargs,
+    )
+
+
+def _archive_manual_transaction(**kwargs: Any) -> Any:
+    transaction_repository = kwargs.pop("transaction_repository")
+    bucket_event_repository = kwargs.pop("bucket_event_repository")
+    return archive_manual_transaction(
+        ports=ledger_ports_for_test(
+            bucket_id=kwargs["bucket_id"],
+            transaction_repository=transaction_repository,
+            bucket_event_repository=bucket_event_repository,
+        ),
+        **kwargs,
+    )
 
 
 def _create_business_row(
@@ -41,7 +83,7 @@ def _create_business_row(
     business_pct: Decimal | None = None,
 ):
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
+    created = _create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=_BUCKET_ID,
             booked_date=date(2026, 5, 1),
@@ -147,7 +189,7 @@ def test_mark_reviewed_excluded_is_reversible_by_reclassify(
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
-    reincluded = update_manual_transaction_fields(
+    reincluded = _update_manual_transaction_fields(
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS),
@@ -195,7 +237,7 @@ def test_mark_reviewed_excluded_refuses_non_active_row(
         secure_objects,
         idempotency_key="exclude-archived-row",
     )
-    archive_manual_transaction(
+    _archive_manual_transaction(
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",

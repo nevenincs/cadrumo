@@ -38,6 +38,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 if TYPE_CHECKING:
     from multiprocessing.synchronize import Barrier
 
@@ -49,6 +53,7 @@ _PASSPHRASE = "concurrent-registration-operator-secret"  # noqa: S105 - syntheti
 
 def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tuple[str, str]]) -> None:
     """Register the shared label from a separate process, reporting the outcome."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from pathlib import Path as _Path
 
     from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
@@ -62,6 +67,8 @@ def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tu
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=_LABEL,
                 passphrase=_PASSPHRASE,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
         except Exception as exc:
             results.put(("refused", type(exc).__name__))

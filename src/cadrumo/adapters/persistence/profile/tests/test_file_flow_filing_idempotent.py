@@ -24,18 +24,24 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     T3,
     T4,
     Repos,
+    calculation_ports_for_test,
     file_revision,
     seed_work_unit,
     verify_revision,
     workflow_profile,
+)
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
+from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -50,9 +56,9 @@ def _verified_revision(repos: Repos):
         work_unit.work_unit_id,
         casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     verify_revision(
@@ -81,10 +87,8 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
         work_unit=work_unit,
         actor="operator-A",
         notes="Q1 IVA",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
+        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
         clock=T3,
     )
     records_after_first = dict(fr_repo.load().records)
@@ -97,17 +101,17 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
     # Re-file the same revision at a LATER clock. The revision is PRESENTADO, so
     # file_modelo_revision short-circuits to the existing record (no workflow gate,
     # no auth provider needed).
-    second = file_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T4,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        second = file_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            clock=T4,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     # Same record returned, unchanged - no re-stamp of filed_at to T4.
     assert second.filing_record_id == first.filing_record_id
@@ -126,7 +130,7 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
     # The revision stays PRESENTADO.
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,
-        calculation_repository=cr_repo,
+        ports=calculation_ports_for_test(calculation_repository=cr_repo),
     )
     assert refreshed.state is CalculationRevisionState.PRESENTADO
 
@@ -139,20 +143,20 @@ def test_file_of_unverified_revision_still_hard_refuses(repos: Repos) -> None:
         work_unit.work_unit_id,
         casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+        ),
         clock=T1,
     )
     with pytest.raises(CalculationRevisionStateError, match=r"state|VERIFICADO_COMPLETO"):
-        file_modelo_revision(
-            revision.calculation_revision_id,
-            actor="operator-A",
-            workflow_profile=workflow_profile(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=T2,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            file_modelo_revision(
+                revision.calculation_revision_id,
+                actor="operator-A",
+                workflow_profile=workflow_profile(),
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+                clock=T2,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )

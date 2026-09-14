@@ -6,6 +6,8 @@ active bucket so category overrides remain auditable.
 
 from __future__ import annotations
 
+from datetime import date
+
 import typer
 
 from ...core.external_constants import OutputLanguage
@@ -49,22 +51,25 @@ def ratios_list(
     from ...adapters.persistence.profile.usage_ratios import (
         load_usage_ratios_with_censo_guard,
     )
-    from ...application.user_profile.censo_sync import CensoSyncService
+    from ...application.user_profile.censo_sync import bound_raw_afectacion_ratio
     from ...domain.usage_ratios.errors import CensoRatioMismatchError
     from ._ledger_ratios_payloads import RatiosListResult, RatiosRowPayload
 
     bucket_id, profile_id = _ratios_bucket_and_profile()
+    operation = authority_operation(ctx)
     raw_afectacion = None
     if profile_id is not None:
-        raw_afectacion = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(
+        raw_afectacion = bound_raw_afectacion_ratio(
+            bucket_id=bucket_id,
             profile_id=profile_id,
+            operation=operation,
         )
     try:
         profile = load_usage_ratios_with_censo_guard(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion,
             year=_resolved_ratio_year(year),
-            operation=authority_operation(ctx),
+            operation=operation,
         )
     except CensoRatioMismatchError as exc:
         from ...application.cli_exception_preconditions import CliExceptionPrecondition
@@ -100,14 +105,24 @@ def ratios_set(
     """Set or replace one per-category usage-ratio override on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger.ratios import apply_usage_ratio_override
-    from ...application.user_profile.censo_sync import CensoSyncService
+    from ...application.user_profile.censo_sync import bound_raw_afectacion_ratio
     from ._ledger_ratios_payloads import RatiosSetResult
 
-    category = require_spending_category(category)
+    resolved_year = _resolved_ratio_year(year)
+    operation = authority_operation(ctx)
+    category = require_spending_category(
+        category,
+        effective_date=date(resolved_year, 12, 31),
+        authority=operation,
+    )
     parsed = parse_decimal_amount(ratio, label="ratio")
     bucket_id, profile_id = _ratios_bucket_and_profile()
     raw_afectacion = (
-        CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=profile_id)
+        bound_raw_afectacion_ratio(
+            bucket_id=bucket_id,
+            profile_id=profile_id,
+            operation=operation,
+        )
         if profile_id is not None
         else None
     )
@@ -115,10 +130,10 @@ def ratios_set(
         bucket_id=bucket_id,
         category=category,
         ratio=parsed,
-        year=_resolved_ratio_year(year),
+        year=resolved_year,
         profile_id=profile_id,
         raw_afectacion_ratio=raw_afectacion,
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     emit_envelope(
         ctx,

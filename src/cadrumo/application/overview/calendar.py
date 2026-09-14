@@ -816,6 +816,7 @@ def _calendar_entry_from_obligation(
             modelo=obligation.modelo,
             ccaa_code=None,
             calendar=holiday_calendar,
+            operation=operation,
         )
         adjusted = shift.adjusted_close_date
         reason = shift.shift_reason

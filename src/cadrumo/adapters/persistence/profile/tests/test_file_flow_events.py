@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -39,6 +40,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -49,15 +51,14 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
     """The filing decision boundary cannot consume values under a drifted schema."""
     wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
     stale = revision.model_copy(
         update={
             "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
@@ -93,16 +94,15 @@ def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
     wu_repo, cr_repo, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
 
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
 
     catalogue = bv_repo.load()
     events = [
@@ -131,16 +131,15 @@ def test_verify_emits_passed_event_on_success(repos: Repos) -> None:
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -181,17 +180,16 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos) -> None:
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
     work_unit = seed_modelo_180_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs=supplied,
-        binding_values=DEFAULT_180_BINDING_VALUES,
-        relation_values=DEFAULT_180_RELATION_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            casilla_inputs=supplied,
+            binding_values=DEFAULT_180_BINDING_VALUES,
+            relation_values=DEFAULT_180_RELATION_VALUES,
+            clock=T1,
+        )
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -230,16 +228,15 @@ def test_file_emits_modelo_filed_event(repos: Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -289,16 +286,15 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
 
-    revision_one = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision_one = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
     report_one = verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -324,20 +320,19 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
         clock=T3,
     )
 
-    revision_two = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={
-            **DEFAULT_130_BASELINE_INPUTS,
-            M130_INCOME_CASILLA: Decimal("1200"),
-            M130_EXPENSE_CASILLA: Decimal("100"),
-        },
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T4,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision_two = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            casilla_inputs={
+                **DEFAULT_130_BASELINE_INPUTS,
+                M130_INCOME_CASILLA: Decimal("1200"),
+                M130_EXPENSE_CASILLA: Decimal("100"),
+            },
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T4,
+        )
     report_two = verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,

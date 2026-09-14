@@ -30,6 +30,9 @@ from cadrumo.adapters.persistence.storage.custody.records import (
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
 from cadrumo.adapters.persistence.storage.custody.tests.support import replace_test_profile_custody_label_file
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordConflictError,
     ProfileRecordSession,
@@ -138,10 +141,13 @@ def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -
 
 
 def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
     service = ProfileCapsuleLifecycle(root=tmp_path)
 
-    record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    record_session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     created = service.create(
         label="Capsule operator",
         profile_id=_PROFILE_ID,
@@ -161,15 +167,18 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
     assert pointer.bucket_id == str(_PROFILE_ID)
     assert (tmp_path / "buckets" / str(_PROFILE_ID) / "db" / "cadrumo.db").is_file()
     with bound_profile_record_session(record_session):
-        assert ProfileRecordRepository.for_current_session(_PROFILE_ID, root=tmp_path).load(
-            _PROFILE_ID
-        ).profile_id == str(_PROFILE_ID)
+        assert ProfileRecordRepository.for_current_session(
+            _PROFILE_ID, root=tmp_path, profile_decode_context=_profile_decode_context_for_test
+        ).load(_PROFILE_ID).profile_id == str(_PROFILE_ID)
 
 
 def test_enrollment_publication_requires_a_recovery_envelope_argument(tmp_path) -> None:
     """The lifecycle signature has no password-only creation lane."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
-    record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    record_session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     try:
         with pytest.raises(TypeError, match="recovery_envelope"):
             ProfileCapsuleLifecycle(
@@ -191,8 +200,11 @@ def test_enrollment_publication_requires_a_recovery_envelope_argument(tmp_path) 
 
 def test_enrollment_publication_refuses_explicit_none_without_a_capsule(tmp_path) -> None:
     """Runtime callers cannot bypass the mandatory type with explicit None."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
-    record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    record_session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     try:
         with pytest.raises(ProfileCustodyTransactionRefusalError, match="requires a recovery envelope"):
             ProfileCapsuleLifecycle(root=tmp_path).create(
@@ -224,8 +236,11 @@ def test_repository_refuses_retired_bucket_directories_without_treating_them_as_
 
 
 def test_complete_setup_cas_replaces_only_the_current_authenticated_record(tmp_path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
-    record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    record_session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     service = ProfileCapsuleLifecycle(root=tmp_path)
     service.create(
         label="CAS operator",
@@ -248,7 +263,9 @@ def test_complete_setup_cas_replaces_only_the_current_authenticated_record(tmp_p
     )
 
     with bound_profile_record_session(record_session):
-        repository = ProfileRecordRepository.for_current_session(_PROFILE_ID, root=tmp_path)
+        repository = ProfileRecordRepository.for_current_session(
+            _PROFILE_ID, root=tmp_path, profile_decode_context=_profile_decode_context_for_test
+        )
         initial = repository.load(_PROFILE_ID)
         completed = repository.complete_setup(
             _PROFILE_ID,
@@ -271,8 +288,11 @@ def test_complete_setup_cas_replaces_only_the_current_authenticated_record(tmp_p
 
 
 def test_fact_command_cas_publishes_the_record_and_authenticated_event_together(tmp_path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
-    record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    record_session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     ProfileCapsuleLifecycle(root=tmp_path).create(
         label="Fact command operator",
         profile_id=_PROFILE_ID,
@@ -285,7 +305,9 @@ def test_fact_command_cas_publishes_the_record_and_authenticated_event_together(
     )
 
     with bound_profile_record_session(record_session):
-        repository = ProfileRecordRepository.for_current_session(_PROFILE_ID, root=tmp_path)
+        repository = ProfileRecordRepository.for_current_session(
+            _PROFILE_ID, root=tmp_path, profile_decode_context=_profile_decode_context_for_test
+        )
         initial = repository.load(_PROFILE_ID)
         updated = repository.apply_fact_changes(
             _PROFILE_ID,
@@ -317,8 +339,11 @@ def test_public_facade_exposes_no_transaction_service_or_generic_record_replace(
 
 
 def test_label_provenance_is_uuid_bound_and_revisioned_at_create(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     lifecycle = ProfileCapsuleLifecycle(root=tmp_path)
     lifecycle.create(
         label="Original operator",
@@ -341,11 +366,14 @@ def test_label_provenance_is_uuid_bound_and_revisioned_at_create(tmp_path: Path)
 
 
 def test_label_provenance_refuses_a_same_uuid_canonical_substitution(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     other_profile_id = UUID("57c9594e-65de-470b-b768-4a4dd1323597")
     label_records: list[tuple[UUID, ProfileCustodyCapsuleLabel]] = []
     for profile_id, label in ((_PROFILE_ID, "First operator"), (other_profile_id, "Second operator")):
         envelope, sentinel, data_files, dek = _current_capsule_input(profile_id=profile_id)
-        session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+        session = ProfileRecordSession.from_envelope(
+            envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+        )
         ProfileCapsuleLifecycle(root=tmp_path).create(
             label=label,
             profile_id=profile_id,
@@ -368,8 +396,11 @@ def test_label_provenance_refuses_a_same_uuid_canonical_substitution(tmp_path: P
 
 
 def test_locked_label_read_refuses_a_fresh_canonical_same_uuid_substitution(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     ProfileCapsuleLifecycle(root=tmp_path).create(
         label="Trusted operator",
         profile_id=_PROFILE_ID,
@@ -395,8 +426,11 @@ def test_locked_label_read_refuses_a_fresh_canonical_same_uuid_substitution(tmp_
 
 
 def test_real_crash_between_label_and_head_recovers_the_durable_advance(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     ProfileCapsuleLifecycle(root=tmp_path).create(
         label="Crash boundary operator",
         profile_id=_PROFILE_ID,
@@ -426,8 +460,11 @@ def test_real_crash_between_label_and_head_recovers_the_durable_advance(tmp_path
 
 
 def test_committed_profile_view_keeps_facts_locked_until_the_current_session_authenticates(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope, sentinel, data_files, dek = _current_capsule_input()
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+    )
     ProfileCapsuleLifecycle(root=tmp_path).create(
         label="Locked view operator",
         profile_id=_PROFILE_ID,

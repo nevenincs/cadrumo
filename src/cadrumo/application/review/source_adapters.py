@@ -23,6 +23,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.filing.schema import ModeloDraft, ModeloValidationFinding
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
@@ -255,6 +256,7 @@ def drafts_pending(
     *,
     bucket_id: str,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
     drafts: tuple[tuple[Path, ModeloDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
     """Return :class:`FindingReviewItem` records for findings + unready drafts.
@@ -262,6 +264,8 @@ def drafts_pending(
     Args:
         settings: Active application settings.
         bucket_id: Stable bucket identifier for the draft repository to inspect.
+        ports: Required encrypted persistence capabilities.
+        operation: Caller-owned generation-pinned indexed authority operation.
         drafts: Optional pre-loaded sequence of ``(path, draft)`` pairs where
             each draft is a :class:`ModeloDraft`; when ``None`` drafts are
             loaded from that bucket's secure storage.
@@ -285,6 +289,7 @@ def drafts_pending(
             stored,
             bucket_id=bucket_id,
             ports=ports,
+            operation=operation,
         )
         path_str = str(path)
         if draft.findings:
@@ -304,6 +309,7 @@ def reviewed_against_current_state(
     *,
     bucket_id: str,
     ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloDraft, tuple[ModeloApprovalStaleReason, ...]]:
     """Return ``draft`` with an aged-out approval reported as aged out.
 
@@ -334,12 +340,14 @@ def reviewed_against_current_state(
         filing_year=draft.period.filing_year,
         period=draft.period,
         modelos=(draft.modelo,),
+        operation=operation,
     )
     refreshed = refresh_review_status(
         draft,
         bucket_id=bucket_id,
         schema_provider=schema_provider,
         ports=ports,
+        operation=operation,
     )
     if refreshed.status is not ModeloDraftStatus.APROBACION_CADUCADA:
         return (refreshed, ())
@@ -355,6 +363,7 @@ def reviewed_against_current_state(
             bucket_id=bucket_id,
             schema_provider=schema_provider,
             ports=ports,
+            operation=operation,
         ),
     )
 
@@ -414,7 +423,8 @@ def _resolve_review_active_tax_id(
     except (CadrumoError, OSError, ValueError):
         _LOGGER.debug("review adapters could not resolve profile tax id", exc_info=True)
         return None
-    return (values or {}).get("identity.tax_id") or None
+    tax_id = (values or {}).get("identity.tax_id")
+    return tax_id if isinstance(tax_id, str) and tax_id else None
 
 
 def load_drafts(*, ports: DraftReviewPorts) -> tuple[tuple[Path, ModeloDraft], ...]:

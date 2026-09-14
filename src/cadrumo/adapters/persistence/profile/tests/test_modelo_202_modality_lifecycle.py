@@ -21,6 +21,7 @@ from cadrumo.adapters.persistence.profile.tests.verification_repository_support 
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -225,18 +226,18 @@ def _calculate_m202(
         repository=work_repo,
         clock=_CLOCK,
     )
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-test",
-        casilla_inputs={},
-        binding_values={
-            _M202_RELATION_BINDING: Decimal("0"),
-            _M202_PRIOR_PAYMENTS_BINDING: Decimal("0"),
-        },
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        clock=_CLOCK,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-test",
+            casilla_inputs={},
+            binding_values={
+                _M202_RELATION_BINDING: Decimal("0"),
+                _M202_PRIOR_PAYMENTS_BINDING: Decimal("0"),
+            },
+            clock=_CLOCK,
+        )
     refreshed_work_unit = work_repo.load().get(work_unit.work_unit_id)
     assert refreshed_work_unit is not None
     return refreshed_work_unit, revision, work_repo, calc_repo, filing_repo, verification_repo
@@ -301,15 +302,15 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(tmp
         )
 
         with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
-            calculate_modelo_revision(
-                work_unit.work_unit_id,
-                actor="operator-test",
-                casilla_inputs={},
-                binding_values={},
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                clock=_CLOCK,
-            )
+            with compiled_bundled_authority().operation() as operation:
+                calculate_modelo_revision(
+                    work_unit.work_unit_id,
+                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator-test",
+                    casilla_inputs={},
+                    binding_values={},
+                    clock=_CLOCK,
+                )
 
         context = exc_info.value.context
         assert context is not None
@@ -475,18 +476,18 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(tmp_p
         )
 
         with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
-            calculate_modelo_revision(
-                work_unit.work_unit_id,
-                actor="operator-test",
-                casilla_inputs={},
-                binding_values={
-                    _M202_RELATION_BINDING: Decimal("0"),
-                    _M202_PRIOR_PAYMENTS_BINDING: Decimal("0"),
-                },
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                clock=_CLOCK,
-            )
+            with compiled_bundled_authority().operation() as operation:
+                calculate_modelo_revision(
+                    work_unit.work_unit_id,
+                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator-test",
+                    casilla_inputs={},
+                    binding_values={
+                        _M202_RELATION_BINDING: Decimal("0"),
+                        _M202_PRIOR_PAYMENTS_BINDING: Decimal("0"),
+                    },
+                    clock=_CLOCK,
+                )
 
         context2 = exc_info.value.context
         assert context2 is not None

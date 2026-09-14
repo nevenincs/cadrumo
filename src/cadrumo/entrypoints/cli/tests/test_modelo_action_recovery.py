@@ -277,7 +277,13 @@ def _work_state(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str
             bucket_id = resolve_active_bucket_id()
             assert bucket_id is not None
             with open_test_profile_session(bucket_id):
-                work_unit = get_work_unit(work_unit_id)
+                work_unit = get_work_unit(
+                    work_unit_id,
+                    ports=WorkLifecyclePorts(
+                        work_unit_repository=WorkUnitCatalogueRepository(),
+                        bucket_event_repository=BucketEventHistoryRepository(),
+                    ),
+                )
             assert work_unit is not None
             return {
                 "state": work_unit.state.value,

@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_split_merge import merge_transactions
 from cadrumo.domain.buckets.event import BucketEventType
@@ -38,8 +39,9 @@ def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_obj
         child_transaction_ids=split.child_transaction_ids,
         actor="operator-A",
         reason="reverted split",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
         occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
     )
 
@@ -71,8 +73,9 @@ def test_merged_transaction_id_differs_from_original_parent_id(secure_objects: S
         bucket_id=_BUCKET_ID,
         child_transaction_ids=split.child_transaction_ids,
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
     )
     assert merge.merged_transaction_id != parent_result.ref.transaction_id
     assert merge.parent_transaction_id == parent_result.ref.transaction_id
@@ -94,8 +97,9 @@ def test_merge_amount_round_trips_parent_amount(secure_objects: SecureObjectRepo
         bucket_id=_BUCKET_ID,
         child_transaction_ids=split.child_transaction_ids,
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
     )
     assert merge.merged_transaction.raw.amount == original_amount
 
@@ -108,8 +112,9 @@ def test_merge_emits_single_event_anchored_on_parent(secure_objects: SecureObjec
         bucket_id=_BUCKET_ID,
         child_transaction_ids=split.child_transaction_ids,
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
     )
 
     catalogue = event_repository.load()
@@ -134,8 +139,9 @@ def test_split_then_merge_chain_is_addressable_via_event_for_object(secure_objec
         bucket_id=_BUCKET_ID,
         child_transaction_ids=split.child_transaction_ids,
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository, transaction_repository=transaction_repository
+        ),
         occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
     )
     from cadrumo.domain.buckets.event import BucketEventObjectType

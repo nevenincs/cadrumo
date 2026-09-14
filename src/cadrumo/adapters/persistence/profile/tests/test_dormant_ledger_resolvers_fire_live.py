@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.profile.tests._dormant_resolver_live_support i
     _revision,
     _seed_ready_profile,
 )
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -245,10 +246,12 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=_M130_MANUAL_INPUTS,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            calculation_repository=cr_repo,
+            invoice_repository=invoice_repo,
+            transaction_repository=tx_repo,
+            work_unit_repository=wu_repo,
+        ),
         clock=_T1,
     )
 
@@ -353,10 +356,12 @@ def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_cal
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=manual_inputs_without_c06,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            calculation_repository=cr_repo,
+            invoice_repository=invoice_repo,
+            transaction_repository=tx_repo,
+            work_unit_repository=wu_repo,
+        ),
         clock=_T1,
     )
 

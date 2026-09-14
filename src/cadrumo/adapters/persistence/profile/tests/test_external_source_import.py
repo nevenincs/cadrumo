@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import override
+from typing import Any, override
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
@@ -40,12 +41,55 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.entrypoints.adapter_composition import (
+    build_amendment_action_ports,
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 
 __all__ = ["repos"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _STALE_REVISION_ID = "0" * 64
+
+
+def _import_external_filing_source(source: Any, **kwargs: Any) -> Any:
+    """Compose external-import lifecycle and observation capabilities canonically."""
+    for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    kwargs.setdefault("work_lifecycle_ports", build_work_lifecycle_ports(bucket_id=_PROFILE_ID))
+    kwargs.setdefault("observation_repository", CalculationObservationRepository())
+    return import_external_filing_source(source, **kwargs)
+
+
+def _import_external_filing_evidence(**kwargs: Any) -> Any:
+    """Compose the observation capability required by evidence import."""
+    kwargs.setdefault("observation_repository", CalculationObservationRepository())
+    return import_external_filing_evidence(**kwargs)
+
+
+def _get_calculation_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+    """Read calculations through the current calculation capability contract."""
+    kwargs.pop("calculation_repository", None)
+    with compiled_bundled_authority().operation() as operation:
+        return get_calculation_revision(
+            calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            **kwargs,
+        )
+
+
+def _amend_modelo_revision(**kwargs: Any) -> Any:
+    """Compose amendment capabilities through the current application contract."""
+    for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            operation=operation,
+            **kwargs,
+        )
 
 
 class _ConflictingObservationRepository(CalculationObservationRepository):
@@ -73,7 +117,7 @@ def test_source_lexicals_refuse_dropped_casillas(repos: _Repos) -> None:
         clock=_T1,
     )
     with pytest.raises(ExternalModeloImportError):
-        import_external_filing_evidence(
+        _import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={
                 _IMPORT_INCOME_CASILLA: Decimal("1500"),
@@ -103,7 +147,7 @@ def test_source_lexicals_refuse_value_shadowing(repos: _Repos) -> None:
         clock=_T1,
     )
     with pytest.raises(ExternalModeloImportError):
-        import_external_filing_evidence(
+        _import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             source_lexical_values_by_casilla_id={_IMPORT_INCOME_CASILLA: "1501"},
@@ -124,7 +168,7 @@ def test_source_payload_import_creates_exact_amendable_baseline(
     """The CSV-register source's complete casilla map reaches one durable baseline."""
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     reference_id = "SOURCECSV0001"
-    filing = import_external_filing_source(
+    filing = _import_external_filing_source(
         ExternalFilingBaselineSource(
             modelo="130",
             filing_year=2026,
@@ -146,7 +190,7 @@ def test_source_payload_import_creates_exact_amendable_baseline(
     )
 
     assert len(wu_repo.load()) == 1
-    baseline = get_calculation_revision(
+    baseline = _get_calculation_revision(
         filing.calculation_revision_id,
         calculation_repository=cr_repo,
     )
@@ -171,7 +215,7 @@ def test_source_payload_import_creates_exact_amendable_baseline(
         observation_source_metadata=observed.source_metadata,
     )
 
-    amended = amend_modelo_revision(
+    amended = _amend_modelo_revision(
         from_filing_record_id=filing.filing_record_id,
         overrides={_IMPORT_INCOME_CASILLA: Decimal("1600")},
         amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
@@ -189,7 +233,7 @@ def test_source_payload_import_creates_exact_amendable_baseline(
 def test_public_source_import_refuses_partial_required_manifest_without_writes(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     with pytest.raises(ExternalModeloImportError):
-        import_external_filing_source(
+        _import_external_filing_source(
             ExternalFilingBaselineSource(
                 modelo="130",
                 filing_year=2026,
@@ -222,7 +266,7 @@ def test_public_source_import_refuses_partial_required_manifest_without_writes(r
 
 def test_csv_filing_refuses_tampered_observation_evidence_binding(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    filing = import_external_filing_source(
+    filing = _import_external_filing_source(
         ExternalFilingBaselineSource(
             modelo="130",
             filing_year=2026,
@@ -266,7 +310,7 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
-    import_external_filing_source(
+    _import_external_filing_source(
         ExternalFilingBaselineSource(
             modelo="130",
             filing_year=2026,
@@ -295,7 +339,7 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
     assert baseline_observation is not None
 
     with pytest.raises(SecureObjectRevisionConflictError):
-        import_external_filing_source(
+        _import_external_filing_source(
             ExternalFilingBaselineSource(
                 modelo="130",
                 filing_year=2026,
@@ -327,7 +371,7 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
 def test_failed_receipt_evidence_validation_leaves_no_work_unit_or_event(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     with pytest.raises(ExternalModeloImportError):
-        import_external_filing_source(
+        _import_external_filing_source(
             ExternalFilingBaselineSource(
                 modelo="130",
                 filing_year=2026,

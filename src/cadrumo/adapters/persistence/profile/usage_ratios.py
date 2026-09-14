@@ -249,7 +249,11 @@ def load_usage_ratios_with_censo_guard(
         raise CensoRatioMismatchError(
             f"persisted HOME_OFFICE overrides require an applied censo; offending categories: {offending}",
         )
-    derived = derive_home_office_ratios_from_censo(raw_afectacion_ratio, year=year)
+    derived = derive_home_office_ratios_from_censo(
+        raw_afectacion_ratio,
+        year=year,
+        operation=operation,
+    )
     mismatches = {
         category: (persisted, derived.ratios[category])
         for category, persisted in persisted_home_office.items()

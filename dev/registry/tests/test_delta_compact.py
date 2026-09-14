@@ -1,6 +1,7 @@
 """Source delta reduction uses real typed construction, without granting filing authority."""
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from dev.registry.compact import fingerprint
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.delta_compact import compact_deltas, differences
+from dev.registry.edition_delta_migration import migrate_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -63,6 +65,33 @@ def test_evidence_relocation_preserves_typed_claim_without_inheriting_it(tmp_pat
     assert after.revisions["2026"].casillas[0].continuidad_evidence is None
     assert not after.revisions["2026"].lineage_attestations
     assert compact_deltas(directory, tmp_path / "again")["dropped_members"] == 0
+
+
+def test_ordinary_migration_and_family_drop_relocate_the_same_claim(tmp_path: Path) -> None:
+    family_root = tmp_path / "family"
+    family_root.mkdir()
+    family_directory = lineage_tree(family_root)
+    compact_deltas(family_directory, tmp_path / "family-work", apply=True)
+    family_revision = load_modelo_directory(family_directory).revisions["2025"]
+
+    registry_root = tmp_path / "ordinary" / "registry" / "aeat"
+    ordinary_directory = registry_root / "modelos" / "999"
+    ordinary_directory.parent.mkdir(parents=True)
+    ordinary_source = tmp_path / "ordinary-source"
+    ordinary_source.mkdir()
+    shutil.copytree(lineage_tree(ordinary_source), ordinary_directory)
+    outcome = migrate_modelo(
+        registry_root=registry_root,
+        modelo_id="999",
+        work_dir=tmp_path / "ordinary-work",
+    )
+    assert outcome.staged_registry is not None
+    ordinary_revision = load_modelo_directory(outcome.staged_registry / "modelos" / "999").revisions["2025"]
+
+    assert not (outcome.staged_registry / "modelos" / "999" / "revisions" / "2025" / "casillas").exists()
+    assert ordinary_revision.casillas == family_revision.casillas
+    assert ordinary_revision.lineage_attestations == family_revision.lineage_attestations
+    assert len(ordinary_revision.lineage_attestations) == 1
 
 
 def test_duplicate_evidence_ownership_is_refused(tmp_path: Path) -> None:

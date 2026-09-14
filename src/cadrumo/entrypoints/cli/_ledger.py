@@ -121,6 +121,7 @@ def _resolve_add_business_pct(
     category_id: str | None,
     business_pct: str | None,
     booked_date: str,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
     """Resolve an operator share through the existing censo-backed service."""
     return resolve_business_pct_with_censo(
@@ -129,6 +130,7 @@ def _resolve_add_business_pct(
         category_id=category_id,
         operator_supplied=validate_business_pct_range(parse_decimal_option(business_pct, label="business-pct")),
         year=_parse_iso_date(booked_date, label="date").year,
+        operation=operation,
     )
 
 
@@ -406,12 +408,14 @@ def ledger_add(
     _require_add_assignable_classification(business_classification)
     current_state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(current_state)
+    operation = authority_operation(ctx)
     validated_category_id = validate_category_id(category_id)
     resolved_business_pct = _resolve_add_business_pct(
         bucket_id=transaction_repository.bucket_id,
         category_id=validated_category_id,
         business_pct=business_pct,
         booked_date=booked_date,
+        operation=operation,
     )
     active_taxpayer = profile_to_taxpayer(current_state)
     resolved_source_jurisdiction = resolve_source_jurisdiction(
@@ -467,7 +471,6 @@ def ledger_add(
     # Same ECB-backed normalizer the file-import path wires in: a manually
     # entered foreign-currency row must convert at entry, or it persists with no
     # value_in_eur and every aggregation gate withholds it from the modelo.
-    operation = authority_operation(ctx)
     result = _create_manual_add_transaction(
         command,
         transaction_repository=transaction_repository,

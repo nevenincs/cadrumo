@@ -35,18 +35,27 @@ from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
+)
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -75,6 +84,11 @@ from cadrumo.domain.deadlines.models import (
     TaxpayerProfile,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import (
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_work_lifecycle_ports,
+)
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -116,6 +130,60 @@ _NEGATIVE_CREDIT_ENGINE_INPUTS = {
 }
 
 
+def _create_work_unit(**kwargs: Any) -> Any:
+    kwargs.pop("repository", None)
+    kwargs.pop("bucket_event_repository", None)
+    return create_work_unit(ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID), **kwargs)
+
+
+def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
+    for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return calculate_modelo_revision(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            **kwargs,
+        )
+
+
+def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+    for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return verify_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            operation=operation,
+            **kwargs,
+        )
+
+
+def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+    for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return file_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+            operation=operation,
+            **kwargs,
+        )
+
+
+def _reconcile_modelo_303_iva_compensation(snapshot: Any, **kwargs: Any) -> Any:
+    kwargs.setdefault("decision_repository", IvaWalletDecisionRepository())
+    with compiled_bundled_authority().operation() as operation:
+        return reconcile_modelo_303_iva_compensation(snapshot, operation=operation, **kwargs)
+
+
+def _resolve_relations_from_local_store(snapshot: Any, **kwargs: Any) -> Any:
+    with compiled_bundled_authority().operation() as operation:
+        return resolve_relations_from_local_store(snapshot, operation=operation, **kwargs)
+
+
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -126,6 +194,8 @@ def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
     activity_start_date = _activity_start_date_for_period(period_token)
     seed_test_profile_record(
         UserProfileRecord(
+            schema_id="cadrumo.user_profile",
+            schema_version=load_user_profile_schema().version,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -242,7 +312,7 @@ def _calculate_negative_period(
     event_repo = BucketEventHistoryRepository()
 
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period_token)
-    report = reconcile_modelo_303_iva_compensation(
+    report = _reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=_TAX_ID,
         wallet=None,
@@ -254,7 +324,7 @@ def _calculate_negative_period(
     )
     assert report.decision.divergence == "first_period_zero"
 
-    work_unit = create_work_unit(
+    work_unit = _create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=_YEAR,
@@ -263,7 +333,7 @@ def _calculate_negative_period(
         repository=work_repo,
         clock=decided_at,
     )
-    revision = calculate_modelo_revision(
+    revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator",
         casilla_inputs={},
@@ -284,7 +354,7 @@ def _calculate_negative_period(
     saldo = revision.casilla_values[_SALDO_CASILLA]
     assert saldo > Decimal("0")
 
-    verification = verify_modelo_revision(
+    verification = _verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",
         workflow_profile=workflow_profile(
@@ -327,7 +397,7 @@ def _file_period(
     work_unit = work_repo.load().get(revision.work_unit_id)
     assert work_unit is not None
 
-    file_modelo_revision(
+    _file_modelo_revision(
         calculation_revision_id,
         actor="operator",
         workflow_profile=workflow_profile(
@@ -362,7 +432,7 @@ def _file_period(
 def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None:
     """Resolve the next period's casilla-110 carry-in from whatever carry the filing persisted."""
     snapshot_next = compiled_bundled_authority().snapshot("303", filing_year=next_year, period=next_period)
-    relation_values = resolve_relations_from_local_store(
+    relation_values = _resolve_relations_from_local_store(
         snapshot_next,
         repository=CalculationObservationRepository(),
     )

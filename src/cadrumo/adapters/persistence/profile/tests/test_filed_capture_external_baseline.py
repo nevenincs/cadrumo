@@ -13,6 +13,7 @@ from cadrumo.adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import (
     _CAPTURED_AT,
     _M303_RESULTADO_CASILLA,
@@ -96,7 +97,7 @@ def test_live_capture_creates_exact_immediately_amendable_baseline(
         )
     )
     assert filing is not None
-    revision = get_calculation_revision(filing.calculation_revision_id)
+    revision = get_calculation_revision(filing.calculation_revision_id, ports=calculation_ports_for_test())
     assert filing.filed_at == _CAPTURED_AT
     assert revision.input_values_by_casilla_id == {_INCOME: " 001500.00 ", _EXPENSE: "300,0"}
 
@@ -106,6 +107,7 @@ def test_live_capture_creates_exact_immediately_amendable_baseline(
         amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
         reason="live imported baseline correction",
         actor="operator",
+        ports=calculation_ports_for_test(),
     )
     assert amended.amends_filing_record_id == filing.filing_record_id
 

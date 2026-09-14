@@ -58,12 +58,45 @@ from cadrumo.domain.calculations.registry.schema_verification import (
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000330"
+
+
+def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
+    """Compose calculation capabilities through the current application contract."""
+    for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return calculate_modelo_revision(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            **kwargs,
+        )
+
+
+def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+    """Compose verification capabilities through the current application contract."""
+    for key in ("work_unit_repository", "calculation_repository", "verification_repository", "bucket_event_repository"):
+        kwargs.pop(key, None)
+    with compiled_bundled_authority().operation() as operation:
+        return verify_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            operation=operation,
+            **kwargs,
+        )
+
+
+def __data_inventory_checklist(*args: Any, **kwargs: Any) -> Any:
+    """Pin registry reads for checklist assertions to one authority operation."""
+    with compiled_bundled_authority().operation() as operation:
+        return data_inventory_checklist(*args, operation=operation, **kwargs)
 
 
 @pytest.fixture
@@ -118,7 +151,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
         _CASILLA_18: Decimal("0"),
     }
 
-    revision = calculate_modelo_revision(
+    revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values={
@@ -131,7 +164,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
         clock=_T1,
     )
 
-    report = verify_modelo_revision(
+    report = _verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
@@ -267,7 +300,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     # previous_year_economic_activity_net_income > 12000 keeps the C13
     # minoración at zero so C14 = C12 (positive cuota) instead of being
     # eroded to negative by the small-income minoración bracket.
-    revision = calculate_modelo_revision(
+    revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values={
@@ -320,7 +353,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), invalid_revision))
 
-    report = verify_modelo_revision(
+    report = _verify_modelo_revision(
         invalid_revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
@@ -381,7 +414,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         _CASILLA_12: Decimal("0"),
         _CASILLA_14: Decimal("0"),
     }
-    revision = calculate_modelo_revision(
+    revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values={
@@ -393,7 +426,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         clock=_T1,
     )
 
-    report = verify_modelo_revision(
+    report = _verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
@@ -459,7 +492,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
         _CASILLA_16: Decimal("0"),
         _CASILLA_18: Decimal("0"),
     }
-    revision = calculate_modelo_revision(
+    revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values={
@@ -508,7 +541,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
 
     # The public verify action must refuse the tampered persisted revision.
     with pytest.raises(StoredCalculationDriftError, match="provenance drift"):
-        verify_modelo_revision(
+        _verify_modelo_revision(
             tampered_revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -535,7 +568,7 @@ def test_required_manual_checklist_carries_registry_provenance() -> None:
     inputs, and its entries copy the authority's legal/source references rather
     than exposing the verification implementation.
     """
-    checklist = data_inventory_checklist(
+    checklist = _data_inventory_checklist(
         modelo="180",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "0A"),
@@ -560,7 +593,7 @@ def test_required_manual_checklist_carries_registry_provenance() -> None:
 
 def test_required_manual_checklist_excludes_absent_registry_definition() -> None:
     """The public checklist cannot invent an entry for an absent casilla."""
-    checklist = data_inventory_checklist(
+    checklist = _data_inventory_checklist(
         modelo="180",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "0A"),

@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
@@ -290,6 +291,10 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
                 period=Period.from_year_and_code(2025, "1T"),
                 revision_id=_M303_2025_REVISION,
                 clock=_NOW,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=WorkUnitCatalogueRepository(),
+                    bucket_event_repository=BucketEventHistoryRepository(),
+                ),
             )
 
 
@@ -442,7 +447,7 @@ def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tm
                 actor="operator",
                 casilla_inputs={},
                 binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("100.00")},
-                work_unit_repository=repository,
+                ports=calculation_ports_for_test(work_unit_repository=repository),
                 clock=_NOW,
             )
 
@@ -477,7 +482,7 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                work_unit_repository=repository,
+                ports=calculation_ports_for_test(work_unit_repository=repository),
                 clock=_NOW,
             )
 
@@ -540,8 +545,9 @@ def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_pa
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repository, calculation_repository=calculation_repository
+                ),
                 clock=_NOW,
             )
 
@@ -579,8 +585,9 @@ def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repository, calculation_repository=calculation_repository
+                ),
                 clock=_NOW,
             )
 
@@ -730,9 +737,11 @@ def test_stale_pre_activity_m303_calculate_refuses_before_wallet_or_revision(tmp
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                iva_compensation_decision_repository=wallet_repository,
+                ports=calculation_ports_for_test(
+                    calculation_repository=calculation_repository,
+                    iva_compensation_decision_repository=wallet_repository,
+                    work_unit_repository=work_repository,
+                ),
                 clock=_NOW,
             )
 
@@ -762,8 +771,9 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repository, calculation_repository=calculation_repository
+                ),
                 clock=_NOW,
             )
 
@@ -794,9 +804,11 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator",
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            iva_compensation_decision_repository=wallet_repository,
+            ports=calculation_ports_for_test(
+                calculation_repository=calculation_repository,
+                iva_compensation_decision_repository=wallet_repository,
+                work_unit_repository=work_repository,
+            ),
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period,
                 reference="test:profile-readiness:first-active-m303",
@@ -864,6 +876,10 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
                 period=Period.from_year_and_code(2025, "1T"),
                 revision_id=_M303_2025_REVISION,
                 clock=_NOW,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=WorkUnitCatalogueRepository(),
+                    bucket_event_repository=BucketEventHistoryRepository(),
+                ),
             )
         assert excinfo.value.translated_message == "application.modelo.errors.profile_readiness_setup_incomplete"
 
@@ -918,7 +934,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                work_unit_repository=repository,
+                ports=calculation_ports_for_test(work_unit_repository=repository),
                 clock=_NOW,
             )
 

@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     IvaWalletDecisionRepository,
 )
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -55,9 +56,9 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
                 filing_period_date=date(2026, 6, 30),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+                ),
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
@@ -101,9 +102,11 @@ def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: P
                     backend_binding_values=_modelo_303_engine_inputs(),
                     iva_compensation_decision=supplied_decision,
                     filing_period_date=date(2026, 6, 30),
-                    work_unit_repository=work_repo,
-                    calculation_repository=calc_repo,
-                    bucket_event_repository=event_repo,
+                    ports=calculation_ports_for_test(
+                        work_unit_repository=work_repo,
+                        calculation_repository=calc_repo,
+                        bucket_event_repository=event_repo,
+                    ),
                     clock=_DECIDED_AT,
                     filing_instance_evidence=general_m303_filing_evidence(
                         work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
@@ -128,9 +131,9 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
             iva_compensation_decision=None,
             filing_instance_evidence=_filing_instance_evidence(work_unit.period),
             filing_period_date=date(2026, 3, 31),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_DECIDED_AT,
         )
         assert first_revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
@@ -164,9 +167,9 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                 iva_compensation_decision=None,
                 filing_instance_evidence=_filing_instance_evidence(work_unit.period),
                 filing_period_date=date(2026, 3, 31),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+                ),
                 clock=_DECIDED_AT,
             )
 
@@ -207,9 +210,9 @@ def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303
             },
             iva_compensation_decision=None,
             filing_period_date=date(2026, 6, 30),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+            ),
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
@@ -258,9 +261,9 @@ def test_explicit_nonzero_binding_conflicts_with_prior_zero_seed(tmp_path: Path)
                 },
                 iva_compensation_decision=None,
                 filing_period_date=date(2026, 6, 30),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+                ),
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"

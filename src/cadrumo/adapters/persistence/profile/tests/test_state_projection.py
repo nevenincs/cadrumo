@@ -29,8 +29,11 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.bucket.tests.bucket_layout import provision_bucket_directory
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
@@ -63,6 +66,7 @@ from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.core.period import Period
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
+from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 from ._operator_probe_fakes import fake_operator_probe_ports
 from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
@@ -224,6 +228,7 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path, state_project
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
     )
 
     report = build_overview_status_report(
@@ -250,6 +255,7 @@ def test_overview_status_distinguishes_drafts_from_work_units(state_projection_d
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
             revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         )
 
     projection = build_operator_state_projection(
@@ -279,6 +285,7 @@ def test_work_units_counter_excludes_discarded_units(state_projection_dependenci
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
             revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         )
     discarded = create_work_unit(
         bucket_id=bucket_id,
@@ -286,8 +293,14 @@ def test_work_units_counter_excludes_discarded_units(state_projection_dependenci
         filing_year=2026,
         period=Period.from_year_and_code(2026, "4T"),
         revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="4T"),
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
     )
-    discard_work_unit(discarded.work_unit_id, actor="operator", reason="superseded")
+    discard_work_unit(
+        discarded.work_unit_id,
+        actor="operator",
+        reason="superseded",
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+    )
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -330,6 +343,7 @@ def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
             revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         )
 
     projection = build_operator_state_projection(
@@ -405,6 +419,11 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
             iva_rate=Decimal("0.21"),
             iva_amount=Decimal("21.00"),
             actor="operator",
+        ),
+        ports=ledger_ports_for_test(
+            bucket_id=bucket_id,
+            transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
+            bucket_event_repository=BucketEventHistoryRepository(),
         ),
     )
 
@@ -529,6 +548,11 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
             iva_amount=Decimal("210.00"),
             actor="operator",
         ),
+        ports=ledger_ports_for_test(
+            bucket_id=bucket_id,
+            transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
     )
     create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -543,6 +567,11 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
             iva_rate=Decimal("0.21"),
             iva_amount=Decimal("21.00"),
             actor="operator",
+        ),
+        ports=ledger_ports_for_test(
+            bucket_id=bucket_id,
+            transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
+            bucket_event_repository=BucketEventHistoryRepository(),
         ),
     )
 
@@ -646,6 +675,7 @@ def test_projection_is_pure_read(state_projection_dependencies) -> None:
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
     )
 
     first = build_operator_state_projection(

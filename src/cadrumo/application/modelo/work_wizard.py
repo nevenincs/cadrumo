@@ -141,6 +141,7 @@ def discover_modelo_work_wizard_steps(
         filing_year=unit.filing_year,
         period=unit.period.registry_token,
         input_kind=InputKind.MANUAL,
+        operation=operation,
     )
     casilla_steps = tuple(
         ModeloWorkWizardStep(
@@ -155,7 +156,7 @@ def discover_modelo_work_wizard_steps(
         )
         for row in casillas_report.rows
     )
-    bindings_report = registry_bindings_for_scope(str(unit.modelo), period=unit.period)
+    bindings_report = registry_bindings_for_scope(str(unit.modelo), period=unit.period, operation=operation)
     profile_resolved = _profile_resolved_binding_ids(unit, operation=operation)
     binding_steps: list[ModeloWorkWizardStep] = []
     for row in bindings_report.rows:

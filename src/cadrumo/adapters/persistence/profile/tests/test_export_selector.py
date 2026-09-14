@@ -7,7 +7,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.tests._export_test_support import isolated_backend
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 
 __all__ = ["isolated_backend"]
 
@@ -42,7 +44,10 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
-        repository=work_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_repo,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=datetime(2026, 6, 4, 10, 0, tzinfo=UTC),
     )
     verified_id = derive_calculation_revision_id(

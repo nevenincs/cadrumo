@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -33,6 +34,7 @@ from cadrumo.application.modelo.work_addressing import (
     law_selected_revision_for_work_target,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.period import Period
@@ -271,7 +273,10 @@ class TestS03CreateWorkUnitDoorReconfirmation:
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
                 revision_id="2022",
-                repository=repo,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=repo,
+                    bucket_event_repository=BucketEventHistoryRepository(),
+                ),
                 clock=_T0,
             )
         # The refusal's prose lives in the locale catalogue and reaches the
@@ -311,7 +316,10 @@ class TestS03CreateWorkUnitDoorReconfirmation:
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             revision_id="2026-y-siguientes",
-            repository=repo,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_T0,
         )
         assert unit.revision_id == "2026-y-siguientes"

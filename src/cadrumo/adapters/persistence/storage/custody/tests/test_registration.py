@@ -30,6 +30,9 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import unlock_profile_custody_password
 from cadrumo.application.user_profile.login_session import logout_active_profile
@@ -65,11 +68,14 @@ def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path: P
     the ambient one does not, is what distinguishes a threaded callback from
     a discarded one.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Registration Subject",
             passphrase=_OPERATOR_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         assert outcome.setup_state is ProfileSetupState.INCOMPLETE
         assert outcome.bucket_id == outcome.profile_id
@@ -98,11 +104,14 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
     refuses outright without an active bucket session, so a successful load
     here means the session the manager needs is already open.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Minimal Subject",
             passphrase=_OPERATOR_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
@@ -113,11 +122,13 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
             bound_profile_record_session,
         )
 
-        session = ProfileRecordSession.from_envelope(envelope=material.envelope, dek=unlocked.dek)
+        session = ProfileRecordSession.from_envelope(
+            envelope=material.envelope, dek=unlocked.dek, profile_decode_context=_profile_decode_context_for_test
+        )
         with bound_profile_record_session(session):
-            record = ProfileRecordRepository.for_current_session(outcome.profile_id, root=storage_root).load(
-                outcome.profile_id
-            )
+            record = ProfileRecordRepository.for_current_session(
+                outcome.profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+            ).load(outcome.profile_id)
         assert record.setup_state is ProfileSetupState.INCOMPLETE
         tax_id_facts = [fact for fact in record.facts if fact.path == "identity.tax_id"]
         assert tax_id_facts == []
@@ -135,6 +146,7 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
     fact about a brand-new profile rather than an assumption of clearance,
     exactly the same class of fact already recorded for its filing history.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
     from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
@@ -143,6 +155,8 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Legal Hold Subject",
             passphrase=_OPERATOR_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         identity = UUID(outcome.profile_id)
 
@@ -159,12 +173,15 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
 
 
 def test_blank_label_is_refused_before_any_bucket_is_created(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="   ",
                 passphrase=_OPERATOR_PASSPHRASE,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
         assert not list(storage_root.glob("*/manifest.json")), "no bucket may survive a refused registration"
 
@@ -177,12 +194,15 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
     directory. Refusing up front is what keeps a failed attempt from leaving
     artefacts the operator has to clear by hand.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Too Short",
                 passphrase="a" * (PROFILE_PASSWORD_MIN_SCALARS - 1),
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
         assert not list(storage_root.glob("*/manifest.json")), "no bucket may survive a refused registration"
 
@@ -235,6 +255,7 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
     context: dict[str, object],
 ) -> None:
     """Every canonical refusal reaches application code before any persisted state."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         before = _storage_snapshot(storage_root)
         with pytest.raises(ProfileRegistrationError) as refused:
@@ -242,6 +263,8 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Refused Candidate",
                 passphrase=candidate,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
         assert _storage_snapshot(storage_root) == before
@@ -268,11 +291,14 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
 )
 def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, candidate: str) -> None:
     """The application accepts both scalar bounds and the 1,024-byte boundary."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=f"Boundary {len(candidate)}",
             passphrase=candidate,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         material = load_committed_profile_password_material(UUID(outcome.profile_id))
         assert unlock_profile_custody_password(material, password=candidate).dek is not None
@@ -280,18 +306,25 @@ def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path,
 
 def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_path: Path) -> None:
     """Visually equivalent credentials stay distinct; registration never normalises."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     composed = "\u00e9" * PROFILE_PASSWORD_MIN_SCALARS
     decomposed = "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         composed_profile = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label="Composed", passphrase=composed
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Composed",
+            passphrase=composed,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         logout_active_profile()
         decomposed_profile = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Decomposed",
             passphrase=decomposed,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         composed_material = load_committed_profile_password_material(UUID(composed_profile.profile_id))
@@ -307,17 +340,22 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
 
 
 def test_duplicate_label_is_refused(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Same Label",
             passphrase=_OPERATOR_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Same Label",
                 passphrase=_OPERATOR_PASSPHRASE,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
 

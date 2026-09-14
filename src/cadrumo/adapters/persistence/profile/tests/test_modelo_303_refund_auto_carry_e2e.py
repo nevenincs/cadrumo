@@ -46,6 +46,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
@@ -59,6 +60,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
@@ -228,7 +230,10 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
-        repository=work_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_repo,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_DECIDED_AT,
     )
     revision = calculate_modelo_revision(
@@ -243,9 +248,9 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
             reference="test:m303-refund-auto-carry",
         ),
         filing_period_date=date(_YEAR, 6, 30),
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        bucket_event_repository=event_repo,
+        ports=calculation_ports_for_test(
+            work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+        ),
         clock=_DECIDED_AT,
     )
     # The scenario genuinely produced a negative result and a positive carry saldo.

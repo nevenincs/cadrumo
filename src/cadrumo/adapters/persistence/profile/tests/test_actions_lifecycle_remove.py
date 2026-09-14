@@ -9,6 +9,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import remove_manual_transaction
@@ -49,9 +50,11 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
             purchase_invoice_evidence_id=purchase_evidence.invoice_id,
             idempotency_key="remove-linked-row",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        invoice_repository=invoice_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     invoice_repository.save(
@@ -180,9 +183,11 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
             attachment_ids=attachment_ids,
             idempotency_key="remove-eight-attachments",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        attachment_store=store,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            attachment_store=store,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
 

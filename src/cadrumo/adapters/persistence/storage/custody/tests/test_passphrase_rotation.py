@@ -23,6 +23,9 @@ from cadrumo.adapters.persistence.storage.custody.recovery_artifact import (
     ProfileCustodyRecoveryArtifact,
     unlock_imported_profile_custody_recovery_artifact,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import (
     profile_custody_recovery_envelope_path,
@@ -69,6 +72,7 @@ _REFUSAL_MESSAGES = {
 
 def _register(handed: list[str] | None = None):
     """Create the subject profile, optionally retaining its recovery words."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     return register_profile_with_credentials(
         label=_LABEL,
         passphrase=_CURRENT,
@@ -76,11 +80,14 @@ def _register(handed: list[str] | None = None):
             (handed.append(enrollment.recovery_key.mnemonic) if handed is not None else None)
             or enrollment.recovery_key.mnemonic
         ),
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
 
 def test_the_new_passphrase_opens_the_profile_and_the_old_one_no_longer_does(tmp_path: Path) -> None:
     """The whole point of the verb, proved on both sides of the change."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
@@ -90,6 +97,7 @@ def test_the_new_passphrase_opens_the_profile_and_the_old_one_no_longer_does(tmp
             current_passphrase=_CURRENT,
             new_passphrase=_REPLACEMENT,
             new_passphrase_confirmation=_REPLACEMENT,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         assert rotated.password_generation == 2
@@ -110,14 +118,19 @@ def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -
     authenticates under the new password and then cannot read itself. This
     reads the record back through a real login on the new credential.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
         # Registration closes its own session, so the profile is locked here;
         # reading the "before" record needs a real login exactly as an
         # operator's next command would.
-        login_profile(name=_LABEL, passphrase_callback=lambda: _CURRENT)
-        before = ProfileRecordRepository.for_current_session(outcome.profile_id).load(outcome.profile_id)
+        login_profile(
+            name=_LABEL, passphrase_callback=lambda: _CURRENT, profile_decode_context=_profile_decode_context_for_test
+        )
+        before = ProfileRecordRepository.for_current_session(
+            outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(outcome.profile_id)
         logout_active_profile()
 
         rotate_profile_passphrase(
@@ -125,10 +138,17 @@ def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -
             current_passphrase=_CURRENT,
             new_passphrase=_REPLACEMENT,
             new_passphrase_confirmation=_REPLACEMENT,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
-        login_profile(name=_LABEL, passphrase_callback=lambda: _REPLACEMENT)
-        after = ProfileRecordRepository.for_current_session(outcome.profile_id).load(outcome.profile_id)
+        login_profile(
+            name=_LABEL,
+            passphrase_callback=lambda: _REPLACEMENT,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        after = ProfileRecordRepository.for_current_session(
+            outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(outcome.profile_id)
 
         assert after.facts == before.facts
         assert after.setup_state == before.setup_state
@@ -137,6 +157,7 @@ def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -
 
 def test_the_rotation_is_recorded_in_the_profile_history(tmp_path: Path) -> None:
     """A custody change the operator cannot see afterwards is not auditable."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = _register()
         logout_active_profile()
@@ -146,13 +167,22 @@ def test_the_rotation_is_recorded_in_the_profile_history(tmp_path: Path) -> None
             current_passphrase=_CURRENT,
             new_passphrase=_REPLACEMENT,
             new_passphrase_confirmation=_REPLACEMENT,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
-        login_profile(name=_LABEL, passphrase_callback=lambda: _REPLACEMENT)
+        login_profile(
+            name=_LABEL,
+            passphrase_callback=lambda: _REPLACEMENT,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
         from cadrumo.application.user_profile.profile_record_repository import require_profile_record_session
 
-        history = ProfileRecordStore(session=require_profile_record_session(outcome.profile_id)).history()
+        history = ProfileRecordStore(
+            session=require_profile_record_session(
+                outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+            )
+        ).history()
 
         assert any(event.event_type is BucketEventType.PROFILE_PASSPHRASE_ROTATED for event in history)
 
@@ -164,6 +194,7 @@ def test_an_outstanding_recovery_phrase_still_opens_the_profile_afterwards(tmp_p
     working, or changing a password silently destroys the only route back
     into the records for someone who later forgets the new one.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -175,6 +206,7 @@ def test_an_outstanding_recovery_phrase_still_opens_the_profile_afterwards(tmp_p
             current_passphrase=_CURRENT,
             new_passphrase=_REPLACEMENT,
             new_passphrase_confirmation=_REPLACEMENT,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         assert rotated.recovery_enrollment_retained is True
@@ -200,6 +232,7 @@ def test_a_rejected_current_passphrase_is_non_oracular_and_changes_nothing(
     current_candidate: str,
 ) -> None:
     """Fail closed: the existing wrapper must survive a refused attempt intact."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
@@ -211,6 +244,7 @@ def test_a_rejected_current_passphrase_is_non_oracular_and_changes_nothing(
                 current_passphrase=current_candidate,
                 new_passphrase=_REPLACEMENT,
                 new_passphrase_confirmation=_REPLACEMENT,
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
         material = load_committed_profile_password_material(profile_id)
@@ -223,6 +257,7 @@ def test_a_rejected_current_passphrase_is_non_oracular_and_changes_nothing(
 
 def test_a_mismatched_confirmation_refuses_before_anything_is_read(tmp_path: Path) -> None:
     """The confirmation is checked here too, not only at the surface above."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
@@ -234,6 +269,7 @@ def test_a_mismatched_confirmation_refuses_before_anything_is_read(tmp_path: Pat
                 current_passphrase=_CURRENT,
                 new_passphrase=_REPLACEMENT,
                 new_passphrase_confirmation=f"{_REPLACEMENT}-typo",
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
         assert load_committed_profile_password_material(profile_id).envelope.canonical_json_bytes() == before
@@ -241,6 +277,7 @@ def test_a_mismatched_confirmation_refuses_before_anything_is_read(tmp_path: Pat
 
 def test_a_new_passphrase_below_the_verifier_minimum_refuses(tmp_path: Path) -> None:
     """A rotation must not be a way to install a credential creation would reject."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
@@ -251,6 +288,7 @@ def test_a_new_passphrase_below_the_verifier_minimum_refuses(tmp_path: Path) -> 
                 current_passphrase=_CURRENT,
                 new_passphrase=_TOO_SHORT,
                 new_passphrase_confirmation=_TOO_SHORT,
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
         material = load_committed_profile_password_material(profile_id)
@@ -273,6 +311,7 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
     reason: ProfilePasswordRefusalReason,
 ) -> None:
     """Prospective refusal precedes locks, unwrap, re-heading and publication."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
@@ -284,6 +323,7 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
                 current_passphrase=_CURRENT,
                 new_passphrase=candidate,
                 new_passphrase_confirmation=candidate,
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
         assert _storage_snapshot(storage_root) == before
@@ -319,6 +359,7 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
 )
 def test_rotation_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, replacement: str) -> None:
     """Rotation accepts the two scalar boundaries and 1,024 strict UTF-8 bytes."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
@@ -328,6 +369,7 @@ def test_rotation_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, rep
             current_passphrase=_CURRENT,
             new_passphrase=replacement,
             new_passphrase_confirmation=replacement,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         material = load_committed_profile_password_material(profile_id)
@@ -347,6 +389,7 @@ def test_rotation_preserves_composed_and_decomposed_passwords_exactly(
     equivalent: str,
 ) -> None:
     """Rotation never normalises a replacement credential."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
@@ -355,6 +398,7 @@ def test_rotation_preserves_composed_and_decomposed_passwords_exactly(
             current_passphrase=_CURRENT,
             new_passphrase=replacement,
             new_passphrase_confirmation=replacement,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         material = load_committed_profile_password_material(profile_id)

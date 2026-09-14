@@ -25,6 +25,7 @@ from ...core.prose_elision import ElidedProse
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.categories.proportionality import ProportionalityKind, ProportionalityRule, effective_usage_ratio
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for
@@ -83,7 +84,12 @@ class RatiosValidationReport(BaseModel):
     findings: tuple[RatiosValidationFinding, ...] = Field(default_factory=tuple)
 
 
-def eligible_ratio_categories(profile: UsageRatioProfile, *, year: int) -> tuple[EligibleCategoryRow, ...]:
+def eligible_ratio_categories(
+    profile: UsageRatioProfile,
+    *,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> tuple[EligibleCategoryRow, ...]:
     """Return all eligible categories with their default ratio + override flag.
 
     The output is sorted by canonical category value so callers can
@@ -95,10 +101,14 @@ def eligible_ratio_categories(profile: UsageRatioProfile, *, year: int) -> tuple
             default ratio. Required rather than defaulted: the default ratio
             is year-versioned regulatory data, and a pinned year would apply
             one year's law to every filing.
+        operation: The caller-owned authority generation used for every
+            category and governed-fact query in this projection.
     """
     rows: list[EligibleCategoryRow] = []
-    year_profiles = resolve_category_profiles(year)
-    for category in sorted(ELIGIBLE_USAGE_RATIO_CATEGORIES, key=lambda c: c.value):
+    year_profiles = resolve_category_profiles(year, operation=operation)
+    with validating_governed_facts(operation):
+        eligible_categories = tuple(sorted(ELIGIBLE_USAGE_RATIO_CATEGORIES, key=lambda c: c.value))
+    for category in eligible_categories:
         category_profile = year_profiles[category]
         rule: ProportionalityRule = category_profile.proportionality
         rows.append(
@@ -116,6 +126,7 @@ def validate_ratios_profile(
     *,
     bucket_id: str,
     profile: UsageRatioProfile,
+    operation: PinnedAuthorityOperation,
     require_overrides_for: tuple[SpendingCategory, ...] = (),
 ) -> RatiosValidationReport:
     """Inspect a profile against eligibility and any required overrides.
@@ -129,9 +140,11 @@ def validate_ratios_profile(
     """
     findings: list[RatiosValidationFinding] = []
     missing: list[SpendingCategory] = []
+    with validating_governed_facts(operation):
+        eligible_categories = frozenset(ELIGIBLE_USAGE_RATIO_CATEGORIES)
 
     for category in require_overrides_for:
-        if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
+        if category not in eligible_categories:
             findings.append(
                 RatiosValidationFinding(
                     category=category,
@@ -150,7 +163,7 @@ def validate_ratios_profile(
     # construction time; surfacing those here is a defensive guard for
     # malformed on-disk records that bypass validation on read.
     for category, ratio in profile.ratios.items():
-        if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
+        if category not in eligible_categories:
             findings.append(
                 RatiosValidationFinding(
                     category=category,
@@ -171,7 +184,7 @@ def validate_ratios_profile(
     return RatiosValidationReport(
         bucket_id=bucket_id,
         profile_present=bool(profile.ratios),
-        eligible_count=len(ELIGIBLE_USAGE_RATIO_CATEGORIES),
+        eligible_count=len(eligible_categories),
         overrides_count=len(profile.ratios),
         missing_overrides=tuple(missing),
         findings=tuple(findings),
@@ -194,7 +207,7 @@ def list_eligible_ratios_for_bucket(
             stored profile.
     """
     profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
-    return eligible_ratio_categories(profile, year=year)
+    return eligible_ratio_categories(profile, year=year, operation=operation)
 
 
 def validate_ratios_for_bucket(
@@ -208,6 +221,7 @@ def validate_ratios_for_bucket(
     return validate_ratios_profile(
         bucket_id=bucket_id,
         profile=profile,
+        operation=operation,
         require_overrides_for=require_overrides_for,
     )
 
@@ -231,7 +245,8 @@ def set_usage_ratio(
     with usage_ratio_bucket_lock(bucket_id):
         profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
         prior = profile.ratios.get(category)
-        save_usage_ratio_profile(profile.with_ratio(category, ratio), bucket_id=bucket_id)
+        with validating_governed_facts(operation):
+            save_usage_ratio_profile(profile.with_ratio(category, ratio), bucket_id=bucket_id)
         return prior
 
 
@@ -256,7 +271,8 @@ def unset_usage_ratio(
             raise UsageRatioValidationError(
                 f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
             )
-        save_usage_ratio_profile(profile.without_ratio(category), bucket_id=bucket_id)
+        with validating_governed_facts(operation):
+            save_usage_ratio_profile(profile.without_ratio(category), bucket_id=bucket_id)
         return prior
 
 
@@ -282,6 +298,7 @@ def censo_business_pct_for(
     raw_afectacion_ratio: Decimal | None,
     *,
     year: int,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
     """Return the legally-effective business_pct for a category from censo.
 
@@ -298,9 +315,9 @@ def censo_business_pct_for(
     """
     if raw_afectacion_ratio is None:
         return None
-    if family_for(category) not in HOME_OFFICE_FAMILIES:
+    if family_for(category, authority=operation) not in HOME_OFFICE_FAMILIES:
         return None
-    rule = resolve_category_profiles(year)[category].proportionality
+    rule = resolve_category_profiles(year, operation=operation)[category].proportionality
     return effective_usage_ratio(rule, raw_afectacion_ratio)
 
 
@@ -360,6 +377,7 @@ def resolve_business_share_pct(
     category: SpendingCategory | None,
     censo_afectacion_ratio: Decimal | None,
     year: int,
+    operation: PinnedAuthorityOperation,
 ) -> BusinessSharePctResolution:
     """Decide the business share a row is stamped with, and say why.
 
@@ -386,6 +404,8 @@ def resolve_business_share_pct(
         year: The filing year whose category profiles supply the statutory
             multiplier. Year-versioned regulatory data, so it comes from the
             row's own booked date rather than a pinned literal.
+        operation: The caller-owned authority generation used for category
+            family and proportionality resolution.
 
     Returns:
         The resolution, carrying a share only where one was decided.
@@ -399,7 +419,7 @@ def resolve_business_share_pct(
         return BusinessSharePctResolution(outcome=BusinessSharePctOutcome.NO_CATEGORY)
     if censo_afectacion_ratio is None:
         return BusinessSharePctResolution(outcome=BusinessSharePctOutcome.NO_CENSO_APPLIED)
-    derived = censo_business_pct_for(category, censo_afectacion_ratio, year=year)
+    derived = censo_business_pct_for(category, censo_afectacion_ratio, year=year, operation=operation)
     if derived is None:
         return BusinessSharePctResolution(outcome=BusinessSharePctOutcome.CATEGORY_NOT_APPORTIONED)
     return BusinessSharePctResolution(
@@ -414,6 +434,7 @@ def censo_override_warning(
     override_ratio: Decimal,
     raw_afectacion_ratio: Decimal,
     year: int,
+    operation: PinnedAuthorityOperation,
 ) -> RatiosCensoOverrideWarning | None:
     """Return a typed warning when an override deviates from the censo.
 
@@ -434,14 +455,16 @@ def censo_override_warning(
             censo snapshot.
         year: Registry year whose proportionality rule drives the
             derivation.
+        operation: The caller-owned authority generation used for category
+            family and proportionality resolution.
 
     Returns:
         A :class:`RatiosCensoOverrideWarning` if a warning should be
         emitted, otherwise ``None``.
     """
-    if family_for(category) not in HOME_OFFICE_FAMILIES:
+    if family_for(category, authority=operation) not in HOME_OFFICE_FAMILIES:
         return None
-    rule = resolve_category_profiles(year)[category].proportionality
+    rule = resolve_category_profiles(year, operation=operation)[category].proportionality
     derived = effective_usage_ratio(rule, raw_afectacion_ratio)
     if derived == override_ratio:
         return None
@@ -571,6 +594,7 @@ def apply_usage_ratio_override(
             override_ratio=ratio,
             raw_afectacion_ratio=raw_afectacion_ratio,
             year=year,
+            operation=operation,
         )
         if profile_id is not None and raw_afectacion_ratio is not None
         else None

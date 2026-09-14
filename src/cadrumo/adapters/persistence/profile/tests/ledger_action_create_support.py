@@ -22,6 +22,44 @@ from cadrumo.domain.transactions.models import Transaction as _Transaction
 
 from .ledger_action_persistence_support import _BUCKET_ID, _repositories, purchase_invoice
 
+_LEDGER_OPERATION_LEASES: list[object] = []
+
+
+def ledger_ports_for_test(
+    *,
+    bucket_id: str | None = None,
+    transaction_repository: object,
+    bucket_event_repository: object | None = None,
+    invoice_repository: object | None = None,
+    attachment_store: object | None = None,
+    **port_updates: object,
+):
+    """Compose canonical ledger ports while retaining isolated test authorities."""
+    from dataclasses import replace
+
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
+
+    lease = bundled_indexed_authority().operation()
+    _LEDGER_OPERATION_LEASES.append(lease)
+    operation = next(lease)
+    resolved_bucket_id = bucket_id or getattr(transaction_repository, "bucket_id", None) or "test-bucket"
+    ports = compose_ledger_action_ports(bucket_id=resolved_bucket_id, operation=operation)
+    from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+
+    bucket_event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    updates = {
+        "transaction_repository": transaction_repository,
+        "bucket_event_repository": bucket_event_repository,
+    }
+    if invoice_repository is not None:
+        updates["invoice_repository"] = invoice_repository
+    if attachment_store is not None:
+        updates["attachment_store"] = attachment_store
+    updates.update(port_updates)
+    return replace(ports, **updates)
+
+
 __all__ = [
     "POST_UPDATE_EVENT_PAYLOADS",
     "PRESERVED_CREATE_AUDIT_FIELDS",
@@ -70,9 +108,12 @@ def drive_create_manual_transaction(secure_objects: _SecureObjectRepository) -> 
     )
     result = _create_manual_transaction(
         command,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        invoice_repository=invoice_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=_UTC),
     )
     reloaded = transaction_repository.load()

@@ -6,8 +6,10 @@ import asyncio
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
+    _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
     DEFAULT_180_BINDING_VALUES,
@@ -66,6 +68,11 @@ from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
+from cadrumo.entrypoints.adapter_composition import (
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_work_lifecycle_ports,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -76,15 +83,14 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
     """Verification cannot interpret a stored calculation under a different schema."""
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
     stale = revision.model_copy(
         update={
             "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
@@ -121,15 +127,14 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> N
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
 
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
 
     report = verify_revision(
         revision.calculation_revision_id,
@@ -146,10 +151,11 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> N
     assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
 
-    refreshed = get_calculation_revision(
-        revision.calculation_revision_id,
-        calculation_repository=cr_repo,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        refreshed = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+        )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
 
@@ -158,16 +164,17 @@ def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
     work_unit = seed_work_unit(wu_repo)
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
     baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=baseline_inputs,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=baseline_inputs,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
+    calculated_work_unit = get_work_unit(
+        work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID)
     )
-    calculated_work_unit = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
     assert calculated_work_unit.current_calculation_revision_id == revision.calculation_revision_id
     wu_repo.save(
         upsert_work_unit(
@@ -189,7 +196,7 @@ def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
     )
 
     assert report.granted_verificado_completo is True
-    repaired = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    repaired = get_work_unit(work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID))
     assert repaired.current_calculation_revision_id == revision.calculation_revision_id
 
 
@@ -198,28 +205,28 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
     work_unit = seed_work_unit(wu_repo)
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
     baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
-    first = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=baseline_inputs,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        first = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=baseline_inputs,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
     second_inputs = dict(baseline_inputs)
     second_inputs[M130_INCOME_CASILLA] = second_inputs[M130_INCOME_CASILLA] + Decimal("1")
-    second = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=second_inputs,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        second = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=second_inputs,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T2,
+        )
     assert first.calculation_revision_id != second.calculation_revision_id
-    current_work_unit = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    current_work_unit = get_work_unit(
+        work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID)
+    )
     assert current_work_unit.current_calculation_revision_id == second.calculation_revision_id
 
     report = verify_revision(
@@ -235,7 +242,7 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
     )
 
     assert report.granted_verificado_completo is True
-    preserved = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
+    preserved = get_work_unit(work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID))
     assert preserved.current_calculation_revision_id == second.calculation_revision_id
 
 
@@ -249,15 +256,14 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
 
     gate = workflow_gate(revision=revision, work_unit=work_unit, clock=T2)
     result = asyncio.run(
@@ -283,10 +289,10 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
 
 def test_get_calculation_revision_raises_on_missing_id(repos: Repos) -> None:
     _, cr_repo, _, _, _ = repos
-    with pytest.raises(CalculationRevisionNotFoundError):
+    with pytest.raises(CalculationRevisionNotFoundError), compiled_bundled_authority().operation() as operation:
         get_calculation_revision(
             "0" * 64,
-            calculation_repository=cr_repo,
+            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
         )
 
 
@@ -307,15 +313,14 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         period=work_unit.period.registry_token,
     )
 
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
 
     report = verify_revision(
         revision.calculation_revision_id,
@@ -338,10 +343,11 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     assert set(report.resolved_casilla_ids) == set(required)
     assert report.missing_required_casilla_ids == ()
 
-    refreshed = get_calculation_revision(
-        revision.calculation_revision_id,
-        calculation_repository=cr_repo,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        refreshed = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+        )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert refreshed.verified_at == T2
     assert refreshed.verified_by == "operator-A"
@@ -349,7 +355,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     # Round-trip through encrypted storage.
     persisted = get_verification_report(
         report.verification_report_id,
-        verification_repository=vr_repo,
+        ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
     )
     assert persisted.granted_verificado_completo is True
     assert persisted.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -371,16 +377,15 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
     work_unit = seed_modelo_180_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=supplied,
-        binding_values=DEFAULT_180_BINDING_VALUES,
-        relation_values=DEFAULT_180_RELATION_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=supplied,
+            binding_values=DEFAULT_180_BINDING_VALUES,
+            relation_values=DEFAULT_180_RELATION_VALUES,
+            clock=T1,
+        )
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -409,15 +414,16 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     )
     assert omitted in report.missing_required_casilla_ids
 
-    refreshed = get_calculation_revision(
-        revision.calculation_revision_id,
-        calculation_repository=cr_repo,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        refreshed = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+        )
     assert refreshed.state is CalculationRevisionState.BORRADOR
 
     persisted = get_verification_report(
         report.verification_report_id,
-        verification_repository=vr_repo,
+        ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
     )
     assert persisted.granted_verificado_completo is False
 
@@ -453,15 +459,14 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -479,10 +484,12 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     assert first.granted_verificado_completo is True
-    assert (
-        get_calculation_revision(revision.calculation_revision_id, calculation_repository=cr_repo).state
-        is CalculationRevisionState.VERIFICADO_COMPLETO
-    )
+    with compiled_bundled_authority().operation() as operation:
+        refreshed_state = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+        ).state
+    assert refreshed_state is CalculationRevisionState.VERIFICADO_COMPLETO
 
     def _verification_event_ids() -> tuple[str, ...]:
         events = bv_repo.load().for_bucket(
@@ -499,7 +506,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
         r.verification_report_id
         for r in list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            verification_repository=vr_repo,
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
         )
     )
 
@@ -524,14 +531,16 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
         r.verification_report_id
         for r in list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            verification_repository=vr_repo,
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
         )
     )
     assert reports_after_second == reports_after_first
-    assert (
-        get_calculation_revision(revision.calculation_revision_id, calculation_repository=cr_repo).state
-        is CalculationRevisionState.VERIFICADO_COMPLETO
-    )
+    with compiled_bundled_authority().operation() as operation:
+        refreshed_state = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+        ).state
+    assert refreshed_state is CalculationRevisionState.VERIFICADO_COMPLETO
 
 
 def test_verify_refuses_non_draft_revision_with_no_granting_report(repos: Repos) -> None:
@@ -553,25 +562,24 @@ def test_verify_refuses_non_draft_revision_with_no_granting_report(repos: Repos)
         period="1T",
         revision_id="2019-y-siguientes",
     )
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={
-            M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
-            M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
-            M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
-            M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
-            M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
-            M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
-            M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
-            M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
-            M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
-            M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
-        },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs={
+                M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
+                M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
+                M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
+                M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
+                M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
+                M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
+                M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
+                M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
+                M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
+                M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
+            },
+            clock=T1,
+        )
     # Construct the inconsistent persisted state directly: this test owns the
     # verifier's refusal of a sealed revision that has no granting report.
     verified = revision.model_copy(
@@ -603,15 +611,14 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
+    with compiled_bundled_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        )
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -626,19 +633,19 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
 
     listed = list_verification_reports(
         calculation_revision_id=revision.calculation_revision_id,
-        verification_repository=vr_repo,
+        ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
     )
     assert tuple(r.verification_report_id for r in listed) == (report.verification_report_id,)
 
     fetched = get_verification_report(
         report.verification_report_id,
-        verification_repository=vr_repo,
+        ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
     )
     assert fetched.verification_report_id == report.verification_report_id
 
     with pytest.raises(VerificationReportNotFoundError) as excinfo:
         get_verification_report(
             "0" * 64,
-            verification_repository=vr_repo,
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
         )
     assert excinfo.value.translated_message == "application.modelo.errors.verification_report_not_found"

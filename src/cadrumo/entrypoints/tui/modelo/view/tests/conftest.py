@@ -15,7 +15,9 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -70,7 +72,10 @@ def bucket_and_repository(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalog
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             revision_id=_REVISION,
-            repository=repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=repository,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_T0,
         )
         yield profile.bucket_id, repository

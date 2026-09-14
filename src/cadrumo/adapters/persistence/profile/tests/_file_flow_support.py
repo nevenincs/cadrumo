@@ -34,6 +34,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import (
     create_work_unit,
 )
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.modelo.workflow_gate import build_revision_workflow_engine, workflow_period_for_work_unit
 from cadrumo.application.workflow.engine import WorkflowEngine
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -50,8 +51,58 @@ from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+_CALCULATION_OPERATION_LEASES: list[object] = []
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def calculation_ports_for_test(
+    *,
+    bucket_id: str | None = None,
+    work_unit_repository: object | None = None,
+    calculation_repository: object | None = None,
+    bucket_event_repository: object | None = None,
+    transaction_repository: object | None = None,
+    invoice_repository: object | None = None,
+    borrador_snapshot_repository: object | None = None,
+    **port_updates: object,
+):
+    """Compose canonical calculation ports while retaining test repositories."""
+    from dataclasses import replace
+
+    from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+
+    work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
+    calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
+    bucket_event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    lease = bundled_indexed_authority().operation()
+    _CALCULATION_OPERATION_LEASES.append(lease)
+    operation = next(lease)
+    resolved_bucket_id = bucket_id or getattr(work_unit_repository, "bucket_id", None) or "test-bucket"
+    ports = build_calculation_action_ports(bucket_id=resolved_bucket_id, operation=operation)
+    updates = {
+        "work_unit_repository": work_unit_repository,
+        "calculation_repository": calculation_repository,
+        "bucket_event_repository": bucket_event_repository,
+        "work_lifecycle_ports": replace(
+            ports.work_lifecycle_ports,
+            work_unit_repository=work_unit_repository,
+            bucket_event_repository=bucket_event_repository,
+        ),
+    }
+    if transaction_repository is not None:
+        updates["transaction_repository"] = transaction_repository
+    if invoice_repository is not None:
+        updates["invoice_repository"] = invoice_repository
+    if borrador_snapshot_repository is not None:
+        updates["borrador_snapshot_repository"] = borrador_snapshot_repository
+    updates.update(port_updates)
+    return replace(ports, **updates)
+
 
 __all__ = [
     "DEFAULT_130_BASELINE_INPUTS",
@@ -262,7 +313,10 @@ def _seed_work_unit(
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         revision_id=revision_id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_T0,
     )
 
@@ -445,7 +499,10 @@ def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
         filing_year=_VERIFY_YEAR,
         period=Period.from_year_and_code(_VERIFY_YEAR, _VERIFY_PERIOD),
         revision_id=_VERIFY_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_T0,
     )
 

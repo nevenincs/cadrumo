@@ -42,7 +42,7 @@ import base64
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from ...core.config import Settings
 from ...core.document_shape import PDF_CONTAINER_SHAPES
@@ -71,6 +71,7 @@ from ...domain.transactions.llm import (
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.service import set_classification
+from .action_ports import LedgerActionPorts
 from .actions_common import (
     build_ledger_bucket_event,
     build_manual_ledger_result,
@@ -99,6 +100,9 @@ from .models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult,
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 _logger = get_logger(__name__)
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 # The CLI binary each subprocess provider shells out to. Used by
@@ -412,6 +416,7 @@ def suggest_llm_classification(
     *,
     bucket_id: str,
     transaction_id: str,
+    operation: PinnedAuthorityOperation,
     classifier: LLMClassifier | None = None,
     vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
@@ -430,6 +435,8 @@ def suggest_llm_classification(
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to classify.
+        operation: Generation-pinned authority operation for the prompt's
+            dated category vocabulary and profile hints.
         classifier: Injected classifier (dependency injection for tests). With
             the cloud transports deleted the on-host reader is the default, so
             an injected classifier is the only non-default case.
@@ -443,6 +450,7 @@ def suggest_llm_classification(
             classifier (consent-gated), a scan-only PDF or image is read by the
             local vision model (no consent needed). Off by default.
         settings: Injected settings; defaults to ``load_settings()``.
+        ports: Injected evidence-reading and classifier execution ports.
 
     Returns:
         A :class:`~llm.suggestions.LLMClassificationSuggestion`.
@@ -470,7 +478,10 @@ def suggest_llm_classification(
         transaction,
         evidence,
         text_classifier=resolved_classifier,
-        spec=prompt_spec_with_every_spending_category(year=transaction.raw.booked_date.year),
+        spec=prompt_spec_with_every_spending_category(
+            year=transaction.raw.booked_date.year,
+            operation=operation,
+        ),
         vision_classifier=vision_classifier,
         vision_model=vision_model,
         settings=resolved_settings,
@@ -695,6 +706,7 @@ def saturate_llm_classification(
     *,
     bucket_id: str,
     transaction_id: str,
+    operation: PinnedAuthorityOperation,
     classifier: LLMClassifier | None = None,
     vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
@@ -715,6 +727,8 @@ def saturate_llm_classification(
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to classify.
+        operation: Generation-pinned authority operation for the prompt's
+            dated category and IVA projections.
         classifier: Injected classifier (dependency injection for tests). With
             the cloud transports deleted the on-host reader is the default; an
             injected classifier overrides it, with the saturation prompt spec.
@@ -728,6 +742,7 @@ def saturate_llm_classification(
         read_evidence: When True, resolve the transaction's linked evidence, extract
             its text on-host, and inject it into the prompt. Off by default.
         settings: Injected settings; defaults to ``load_settings()``.
+        ports: Injected evidence-reading and classifier execution ports.
 
     Returns:
         A :class:`~llm.suggestions.LLMSaturatedSuggestion`
@@ -756,7 +771,10 @@ def saturate_llm_classification(
         transaction,
         evidence,
         text_classifier=resolved_classifier,
-        spec=prompt_spec_with_saturation_fields(year=transaction.raw.booked_date.year),
+        spec=prompt_spec_with_saturation_fields(
+            year=transaction.raw.booked_date.year,
+            operation=operation,
+        ),
         vision_classifier=vision_classifier,
         vision_model=vision_model,
         settings=resolved_settings,
@@ -804,8 +822,7 @@ def apply_saturated_llm_classification(
     business_pct: Decimal | None = None,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Persist an accepted saturated suggestion through the manual write path.
@@ -833,8 +850,8 @@ def apply_saturated_llm_classification(
             falls back to the model's proposed ``business_pct``.
         actor: Operator identity for the audit event.
         source_command: Source-command label recording the operator's verb.
-        transaction_repository: Injected catalogue repository.
-        bucket_event_repository: Injected audit-event repository.
+        ports: Injected ledger action ports for the catalogue and audit-event
+            repositories.
         occurred_at: Override clock for deterministic tests.
 
     Returns:
@@ -881,8 +898,7 @@ def apply_saturated_llm_classification(
         actor=actor,
         source_command=source_command,
         classified_by_override=suggestion.provenance,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         occurred_at=occurred_at,
     )
     _logger.info(
@@ -906,8 +922,7 @@ def derive_operator_iva_substrate(
     on_date: date | None = None,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> OperatorIvaDerivationResult:
     """Derive and persist the IVA substrate for an OPERATOR-chosen category.
@@ -935,7 +950,7 @@ def derive_operator_iva_substrate(
         TransactionValidationError: When the transaction is not classified
             BUSINESS or MIXED (IVA applies only to business activity).
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -976,8 +991,7 @@ def derive_operator_iva_substrate(
         actor=actor,
         source_command=source_command,
         classified_by_override="derived:iva-category",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         occurred_at=occurred_at,
     )
     _logger.info(
@@ -1080,6 +1094,7 @@ def suggest_evidence_split(
     *,
     bucket_id: str,
     transaction_id: str,
+    operation: PinnedAuthorityOperation,
     proposer: LLMSplitProposer | None = None,
     vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
@@ -1101,6 +1116,8 @@ def suggest_evidence_split(
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to split.
+        operation: Generation-pinned authority operation for the prompt's
+            dated category and IVA projections.
         proposer: Injected split proposer (dependency injection for tests). With
             the cloud transports deleted the on-host reader is the default, so
             an injected proposer is the only non-default case.
@@ -1115,6 +1132,7 @@ def suggest_evidence_split(
             transaction's linked evidence, extract its text on-host, and inject it
             into the prompt.
         settings: Injected settings; defaults to ``load_settings()``.
+        ports: Injected evidence-reading and classifier execution ports.
 
     Returns:
         A :class:`~llm.suggestions.LLMSplitSuggestion`
@@ -1143,7 +1161,10 @@ def suggest_evidence_split(
         transaction,
         evidence,
         proposer=resolved_proposer,
-        spec=prompt_spec_with_saturation_fields(year=transaction.raw.booked_date.year),
+        spec=prompt_spec_with_saturation_fields(
+            year=transaction.raw.booked_date.year,
+            operation=operation,
+        ),
         vision_classifier=vision_classifier,
         vision_model=vision_model,
         settings=resolved_settings,
@@ -1202,8 +1223,7 @@ def apply_evidence_split(
     bucket_id: str,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> LLMSplitApplyResult:
     """Apply a reviewed evidence-driven split through the single-writer split path.
@@ -1230,8 +1250,8 @@ def apply_evidence_split(
         bucket_id: Active profile bucket id.
         actor: Operator identity for the audit events.
         source_command: Source-command label recording the operator's verb.
-        transaction_repository: Injected catalogue repository.
-        bucket_event_repository: Injected audit-event repository.
+        ports: Injected ledger action ports for the catalogue and audit-event
+            repositories.
         occurred_at: Override clock for deterministic tests.
 
     Returns:
@@ -1250,7 +1270,7 @@ def apply_evidence_split(
             "this proposal is a no-split verdict (one line); classify the transaction instead of splitting it",
             context={"transaction_id": suggestion.transaction_id, "child_count": len(suggestion.children)},
         )
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
         raise TransactionNotFoundError(
@@ -1286,8 +1306,7 @@ def apply_evidence_split(
         actor=actor,
         source_command=source_command,
         reason=suggestion.reason,
-        transaction_repository=repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         occurred_at=occurred_at,
     )
     classified = len(split_result.child_transactions)
@@ -1316,8 +1335,7 @@ def apply_evidence_classification(
     bucket_id: str,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Apply a no-split (single-child) evidence suggestion in place on the parent.
@@ -1341,8 +1359,8 @@ def apply_evidence_classification(
         bucket_id: Active profile bucket id.
         actor: Operator identity for the audit event.
         source_command: Source-command label recording the operator's verb.
-        transaction_repository: Injected catalogue repository.
-        bucket_event_repository: Injected audit-event repository.
+        ports: Injected ledger action ports for the catalogue and audit-event
+            repositories.
         occurred_at: Override clock for deterministic tests.
 
     Returns:
@@ -1359,7 +1377,7 @@ def apply_evidence_classification(
             "this proposal recommends a split; apply it with apply_evidence_split, not in place",
             context={"transaction_id": suggestion.transaction_id, "child_count": len(suggestion.children)},
         )
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
         raise TransactionNotFoundError(
@@ -1388,8 +1406,7 @@ def apply_evidence_classification(
         actor=actor,
         source_command=source_command,
         classified_by_override=suggestion.provenance,
-        transaction_repository=repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         occurred_at=occurred_at,
     )
     _logger.info(

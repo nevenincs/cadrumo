@@ -377,10 +377,12 @@ def ledger_check(
     else:
         transaction_repository = transaction_catalogue_repo(current_workflow_state())
 
+    operation = authority_operation(ctx)
     check = read_ledger_check(
         bucket_id=transaction_repository.bucket_id,
         transactions=transaction_repository.load(),
         ports=build_invoice_catalogue_read_ports(bucket_id=transaction_repository.bucket_id),
+        operation=operation,
         period=_optional_canonical_period(period, year=year),
     )
     link_rows = [

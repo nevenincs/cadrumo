@@ -19,6 +19,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.capsule_record import ProfileRecordSession
 from ......application.user_profile.capsule_restore import (
@@ -47,8 +51,13 @@ _PASSPHRASE_B = "isolation-subject-b-operator-secret"  # noqa: S105 - synthetic 
 
 
 def _register(label: str, passphrase: str) -> UUID:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=passphrase
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label=label,
+        passphrase=passphrase,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     return UUID(outcome.profile_id)
 
@@ -59,6 +68,7 @@ class _EnrolledProfile:
     __slots__ = ("dek", "enrollment", "envelope", "password", "profile_id", "root", "sentinel")
 
     def __init__(self, root: Path, *, label: str, password: str) -> None:
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         self.root = root
         self.password = password
         self.profile_id = uuid4()
@@ -79,7 +89,9 @@ class _EnrolledProfile:
             dek=self.dek,
             dek_epoch=dek_epoch,
         )
-        session = ProfileRecordSession.from_envelope(envelope=self.envelope, dek=self.dek)
+        session = ProfileRecordSession.from_envelope(
+            envelope=self.envelope, dek=self.dek, profile_decode_context=_profile_decode_context_for_test
+        )
         try:
             ProfileCapsuleLifecycle(root=root).create(
                 label=label,
@@ -132,6 +144,7 @@ def test_one_profiles_recovery_artifact_cannot_restore_another(tmp_path: Path) -
     then restores A from the same artifact, so the refusal is the artifact's
     identity, not a broken restore path.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_a = _EnrolledProfile(root, label="Isolation A", password=_PASSPHRASE_A)
         profile_b = _EnrolledProfile(root, label="Isolation B", password=_PASSPHRASE_B)
@@ -146,6 +159,7 @@ def test_one_profiles_recovery_artifact_cannot_restore_another(tmp_path: Path) -
                 artifact_source=target,
                 recovery_secret=profile_a.enrollment.recovery_key.mnemonic,
                 root=tmp_path / "restored-b",
+                profile_decode_context=_profile_decode_context_for_test,
             )
 
         restored = restore_profile_capsule_with_recovery_artifact(
@@ -154,5 +168,6 @@ def test_one_profiles_recovery_artifact_cannot_restore_another(tmp_path: Path) -
             artifact_source=target,
             recovery_secret=profile_a.enrollment.recovery_key.mnemonic,
             root=tmp_path / "restored-a",
+            profile_decode_context=_profile_decode_context_for_test,
         )
         assert restored.profile_id == str(profile_a.profile_id)

@@ -46,9 +46,11 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
@@ -210,7 +212,10 @@ def _calculate_and_verify(
             filing_year=_YEAR_N_PLUS_1,
             period=Period.from_year_and_code(_YEAR_N_PLUS_1, _PERIOD),
             revision_id=snapshot.revision.id,
-            repository=work_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repository,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_CLOCK_N_PLUS_1,
         )
 
@@ -231,9 +236,11 @@ def _calculate_and_verify(
                 ("modelo-720-asset-row-class", 2): _SECURITY_CLAVE,
                 ("modelo-720-asset-row-valuation", 2): _VALORES_N1,
             },
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            bucket_event_repository=event_repository,
+            ports=calculation_ports_for_test(
+                work_unit_repository=work_repository,
+                calculation_repository=calculation_repository,
+                bucket_event_repository=event_repository,
+            ),
             clock=_CLOCK_N_PLUS_1,
         )
         report = verify_modelo_revision(
@@ -310,7 +317,10 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             filing_year=_YEAR_N_PLUS_1,
             period=Period.from_year_and_code(_YEAR_N_PLUS_1, _PERIOD),
             revision_id=snapshot_n1.revision.id,
-            repository=work_unit_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_unit_repository,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_CLOCK_N_PLUS_1,
         )
         work_unit_n2 = create_work_unit(
@@ -319,7 +329,10 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             filing_year=_YEAR_N_PLUS_1 + 1,
             period=Period.from_year_and_code(_YEAR_N_PLUS_1 + 1, _PERIOD),
             revision_id=snapshot_n2.revision.id,
-            repository=work_unit_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_unit_repository,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_CLOCK_N_PLUS_1,
         )
         resolution_n1 = resolve_bucket_source_mesh(

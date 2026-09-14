@@ -16,6 +16,9 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.user_profile.login_session import login_profile
@@ -40,9 +43,14 @@ def test_a_freshly_registered_profile_passes_the_deletion_preflight(tmp_path: Pa
     born without that fact recorded is undeletable by any route, so this is
     the narrowest proof that registration supplies it.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         journal = ProfileCapsuleLifecycle().prepare_delete(profile_id=UUID(outcome.profile_id))
@@ -62,18 +70,29 @@ def test_the_profile_the_operator_is_signed_into_can_be_deleted(tmp_path: Path) 
     is the one the configuration reset path runs -- prepare, confirm, delete,
     with no session close in between.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
+        login_profile(
+            name=outcome.label,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         lifecycle = ProfileCapsuleLifecycle()
 
         # Read the record through the live session so the capsule database is
         # genuinely open at preflight. Without this the sidecars may be absent
         # and the test would pass for the wrong reason: the transaction would
         # never have had a checkpoint to survive.
-        ProfileRecordRepository.for_current_session(outcome.profile_id).load(outcome.profile_id)
+        ProfileRecordRepository.for_current_session(
+            outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(outcome.profile_id)
         capsule = load_committed_profile_password_material(UUID(outcome.profile_id)).capsule_path
         assert (capsule / "db" / "cadrumo.db-wal").exists()
 

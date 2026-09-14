@@ -21,7 +21,9 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -130,7 +132,10 @@ def _calculate_m111(objects: SecureObjectRepository, period: Period) -> dict[str
         filing_year=period.filing_year,
         period=period,
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_T0,
     )
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
