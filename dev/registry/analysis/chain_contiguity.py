@@ -242,6 +242,7 @@ _RULINGS_FILE: Final = Path(__file__).with_name("casilla_lineage_rulings.toml")
 #: emit site, so one that stops being emitted is caught by nothing -- and a lost
 #: limitation reads as an axis that was measured and found clean.
 LIMITATIONS: Final[tuple[str, ...]] = (
+    "lineage_attestations_unreadable",
     "ruling_references_unchecked",
     "rulings_unreadable",
 )
@@ -250,6 +251,7 @@ LIMITATIONS: Final[tuple[str, ...]] = (
 #: The scope-dependent limitation's prefix, named once so the emit site and the
 #: per-call reset cannot drift apart.
 _UNCHECKED_REFERENCES: Final = "ruling_references_unchecked:"
+_UNREADABLE_ATTESTATIONS: Final = "lineage_attestations_unreadable:"
 
 _RULING_PAIR_FIELDS: Final = ("grounded", "held", "withheld")
 _RULING_SUCCESSOR_FIELDS: Final = ("new_on_form", "not_on_form")
@@ -499,6 +501,14 @@ def grounding_by_chain(
     compiler-validated.
     """
     per_chain: dict[str, tuple[int, int]] = {}
+    _RULING_LIMITATIONS[:] = [
+        text for text in _RULING_LIMITATIONS if not text.startswith(_UNREADABLE_ATTESTATIONS)
+    ]
+    refused = sum(status.lineage_attestation_refusals for status in statuses)
+    if refused:
+        _note_ruling_limitation(
+            f"lineage_attestations_unreadable: {refused} raw attestations failed typed shape parsing and were not used"
+        )
     by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
     for status in statuses:
         by_modelo[status.modelo].append(status)
@@ -516,17 +526,30 @@ def grounding_by_chain(
         stated = {status.edition: _chains_of(status) for status in ordered}
         materialised = _materialised_chains(ordered, stated)
         by_edition = {status.edition: status for status in ordered}
+        target_counts = Counter(
+            attestation.target_key()
+            for status in ordered
+            for attestation in status.lineage_attestations
+        )
         for status in ordered:
             for attestation in status.lineage_attestations:
                 chain = str(attestation.continuidad_id) if attestation.continuidad_id is not None else ""
+                row_owns_claim = any(
+                    row.get(_LINEAGE) == chain
+                    and ("continuidad_origin" in row or "continuidad_evidence" in row)
+                    for row in status.rows_by_id.values()
+                )
                 if (
                     attestation.family != "casillas"
                     or not chain
+                    or target_counts[attestation.target_key()] != 1
+                    or row_owns_claim
                     or attestation.origin.value != _GROUNDED
                     or attestation.to_revision != status.edition
                     or status.predecessor_id != attestation.from_revision
                     or attestation.from_revision not in by_edition
                     or chain not in materialised.get(attestation.from_revision, ())
+                    or chain not in materialised.get(status.edition, ())
                     or chain in status.retired_lineages
                 ):
                     continue

@@ -562,66 +562,6 @@ continuidad_id = "iva-deducible-aic-corrientes-tipo-7-5-cuota"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-[[revisions."2025".casillas]]
-id = "iva.anual.repercutido.recargo.tipo-0-26.base"
-continuidad_id = "iva-anual-repercutido-recargo-tipo-0-26-base"
-continuidad_origin = "grounded"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:254 (sha256 8be79bacc860) box [691] (8 47 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx.extracted.md:255 (sha256 6d33d8a42459) box [691] (8 47 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
-number = "691"
-section = ["operaciones_regimen_general", "recargo_equivalencia"]
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-[[revisions."2025".casillas]]
-id = "iva.anual.repercutido.recargo.tipo-0-62.base"
-continuidad_id = "iva-anual-repercutido-recargo-tipo-0-62-base"
-continuidad_origin = "grounded"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:258 (sha256 8be79bacc860) box [665] (12 115 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx.extracted.md:259 (sha256 6d33d8a42459) box [665] (12 115 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...)."
-number = "665"
-section = ["operaciones_regimen_general", "recargo_equivalencia"]
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-[[revisions."2025".casillas]]
-id = "iva.anual.repercutido.recargo.tipo-0.base"
-continuidad_id = "iva-anual-repercutido-recargo-tipo-0-base"
-continuidad_origin = "grounded"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:252 (sha256 8be79bacc860) box [663] (6 13 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx.extracted.md:253 (sha256 6d33d8a42459) box [663] (6 13 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
-number = "663"
-section = ["operaciones_regimen_general", "recargo_equivalencia"]
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-[[revisions."2025".casillas]]
-id = "iva.anual.repercutido.recargo.tipo-0.cuota"
-continuidad_id = "iva-anual-repercutido-recargo-tipo-0-cuota"
-continuidad_origin = "grounded"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:253 (sha256 8be79bacc860) box [664] (7 30 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx.extracted.md:254 (sha256 6d33d8a42459) box [664] (7 30 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
-number = "664"
-section = ["operaciones_regimen_general", "recargo_equivalencia"]
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-[[revisions."2025".casillas]]
-id = "iva.anual.repercutido.recargo.tipo-1.base"
-continuidad_id = "iva-anual-repercutido-recargo-tipo-1-base"
-continuidad_origin = "grounded"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:260 (sha256 8be79bacc860) box [693] (14 149 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx.extracted.md:261 (sha256 6d33d8a42459) box [693] (14 149 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...)."
-number = "693"
-section = ["operaciones_regimen_general", "recargo_equivalencia"]
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-# Rate-specific box-layer casillas for the Recargo de equivalencia block. Each
-# carries the official AEAT box number read off the bundled 2024 Diseno de
-# Registros, apartado 5, "Operaciones Reg. Gral. - Base Imponible y cuota -
-# Recargo de equivalencia" rows, stated explicitly rather than left implied by an
-# export position. Every position in that apartado appears twice, once under Reg.
-# ordinario and once under Recargo de equivalencia, so a number matched on offset
-# alone would be ambiguous; these are segment-resolved.
-#
-# The casilla is named for its RECARGO rate, matching the official box label,
-# while its binding narrows on the IVA rate that statute pairs with it. The three
-# rate-blind recargo tier casillas remain the TOTAL layer: they keep their
-# bindings, keep feeding the annual devengada total, and keep every row including
-# one whose IVA rate was never recorded. That layer therefore sums to MORE than
-# this one by exactly the rate-unrecorded amount.
-#
-# These carry no export_refs yet. The record decomposition for this block is
-# being established separately, and writing a rate box into the record before the
-# shortfall refusal covers it would render an unpopulated money field as 0,00 --
-# turning a silence into a false nil.
-
 # Box [694] - "Recargo de equivalencia - Tipo 1% - Cuota". RDL 4/2024 art. 1.Dos
 # pairs it with the temporary 7,5 % rate. Vigencia: 1 oct - 31 dic 2024.
 [[revisions."2025".casillas]]

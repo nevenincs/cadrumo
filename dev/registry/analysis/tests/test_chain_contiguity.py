@@ -22,6 +22,7 @@ from ..chain_contiguity import (
     CONDITIONS,
     MEASUREMENTS,
     census,
+    grounding_by_chain,
     read_evolutions,
     ruling_reference_findings,
     screen,
@@ -368,6 +369,53 @@ class TestGroundingCensusCountsLinksNotRows:
 
         assert counts["chain_fully_grounded"] == 0
         assert counts["chained_rows"] == 1
+
+    def test_duplicate_sidecar_targets_are_not_treated_as_grounded(self, tmp_path: Path) -> None:
+        _edition(tmp_path, "2023", valid_from="2023-01-01", chains=("c1",))
+        _edition(
+            tmp_path,
+            "2024",
+            valid_from="2024-01-01",
+            chains=(),
+            predecessor='predecessor = "2023"',
+        )
+        self._sidecar(tmp_path)
+        self._sidecar(tmp_path)
+
+        assert grounding_by_chain(scan_registry(tmp_path)) == {}
+
+    def test_row_and_sidecar_cannot_both_own_the_target_claim(self, tmp_path: Path) -> None:
+        _edition(tmp_path, "2023", valid_from="2023-01-01", chains=("c1",))
+        _edition(
+            tmp_path,
+            "2024",
+            valid_from="2024-01-01",
+            chains=("c1",),
+            predecessor='predecessor = "2023"',
+        )
+        row_file = tmp_path / "modelos" / _MODELO / "revisions" / "2024" / "casillas" / "0001-casillas.toml"
+        row_file.write_text(row_file.read_text(encoding="utf-8") + 'continuidad_origin = "seeded"\n', encoding="utf-8")
+        self._sidecar(tmp_path)
+
+        assert grounding_by_chain(scan_registry(tmp_path))[f"{_MODELO}/c1"] == (0, 1)
+
+    def test_malformed_sidecar_is_reported_as_a_limitation(self, tmp_path: Path) -> None:
+        _edition(tmp_path, "2023", valid_from="2023-01-01", chains=("c1",))
+        _edition(
+            tmp_path,
+            "2024",
+            valid_from="2024-01-01",
+            chains=(),
+            predecessor='predecessor = "2023"',
+        )
+        self._sidecar(tmp_path)
+        manifest = tmp_path / "modelos" / _MODELO / "revisions" / "2024" / "revision.toml"
+        payload = manifest.read_text(encoding="utf-8").replace('evidence = "focused exact-edge test"\n', "")
+        manifest.write_text(payload, encoding="utf-8")
+
+        grounding_by_chain(scan_registry(tmp_path))
+
+        assert any(text.startswith("lineage_attestations_unreadable:") for text in _RULING_LIMITATIONS)
 
 
 class TestUncheckedRulingReferencesAreNamed:
