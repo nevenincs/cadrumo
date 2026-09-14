@@ -987,7 +987,14 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
         assert result.removed_certificate_secrets == 1
         assert session_store.exists(certificate_session) is False
         assert state.auth.certificate_sources == {}
-        assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
+        assert (
+            resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_BUCKET_ID,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            )
+            is None
+        )
 
         assert session_store.exists(unrelated_session) is True, (
             "an unrelated provider's persisted session must survive a scoped reset"

@@ -176,6 +176,7 @@ def test_calculation_source_mesh_migrates_the_stored_catalogue(tmp_path: Path) -
     that the migration works in isolation.
     """
     from .....application.modelo.calculation_actions import resolve_bucket_source_mesh
+    from .....adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_parent_work_unit(profile)
@@ -188,8 +189,7 @@ def test_calculation_source_mesh_migrates_the_stored_catalogue(tmp_path: Path) -
         resolve_bucket_source_mesh(
             _SNAPSHOT,
             work_unit,
-            transaction_repository=None,
-            invoice_repository=None,
+            ports=calculation_ports_for_test(bucket_id=work_unit.bucket_id),
             foreign_asset_observations=(),
             foreign_asset_row_observations=(),
         )

@@ -137,6 +137,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -342,6 +343,7 @@ def _calculate_m200(
     _seed_zero_m202_pagos()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot(
@@ -357,7 +359,7 @@ def _calculate_m200(
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+            work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo
         ),
         clock=_T0,
     )
@@ -370,10 +372,14 @@ def _calculate_m200(
             # have the oracle check the figure it was handed.
             _CASILLA_CUOTA_LIQUIDA_MINIMA: cuota_liquida_minima,
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bucket_event_repo,
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
 

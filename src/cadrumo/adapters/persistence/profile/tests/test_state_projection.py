@@ -69,8 +69,8 @@ from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.core.period import Period
-from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
@@ -781,18 +781,17 @@ def test_projection_profile_read_refuses_explicit_database_route(
         cadrumo_local_storage_root=tmp_path,
         cadrumo_active_profile=profile_id,
         cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
-    ):
-        with bundled_indexed_authority().operation() as operation:
-            projection = build_operator_state_projection(
-                certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                read_ports=read_ports,
-                state=WorkflowState(),
-                include_workspace_summary=False,
-                include_pending_obligations=False,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            )
+    ), bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            state=WorkflowState(),
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert projection.active_profile.profile_id == profile_id
     assert projection.active_profile.registered_bucket is False

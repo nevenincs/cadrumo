@@ -13,6 +13,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 from .....adapters.outbound.aeat.browser.site_health_records import (
@@ -82,7 +83,7 @@ def _create_work_unit(**kwargs: Any) -> Any:
 
 def _resolve_modelo_workflow_resume_target(**kwargs: Any) -> Any:
     bucket_id = kwargs.get("bucket_id") or _BUCKET_ID
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return resolve_modelo_workflow_resume_target(
             ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
             **kwargs,

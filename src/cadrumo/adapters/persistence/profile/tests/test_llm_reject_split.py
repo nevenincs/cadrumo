@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
+from typing import NoReturn
 
 import pytest
 
@@ -15,14 +17,17 @@ from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support impo
     _two_line_proposal,
 )
 from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support import repositories as repositories
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from cadrumo.application.ledger.llm_classification import (
     apply_evidence_split,
     reject_llm_suggestion,
     suggest_evidence_split,
 )
-from cadrumo.application.ledger.llm_classification_ports import LLMClassificationSuggestion
+from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts, LLMClassificationSuggestion
+from cadrumo.core.config import load_settings
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -31,6 +36,30 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["repositories"]
+
+
+def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
+    """Fail loudly if a no-evidence split test reaches an unused reader port."""
+    raise AssertionError("the no-evidence split path must not use this reader port")
+
+
+def _run_reader(run: Callable[[], object]) -> object:
+    return run()
+
+
+def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
+    return run()
+
+
+_LLM_PORTS = LLMClassificationPorts(
+    resolve_evidence_input=_unused_llm_port,
+    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
+    rasterise_pdf=_unused_llm_port,
+    make_text_classifier=_unused_llm_port,
+    make_vision_classifier=_unused_llm_port,
+    run_reader=_run_reader,
+    record_classifier_run=_record_classifier_run,
+)
 
 
 def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
@@ -57,6 +86,8 @@ def test_reject_split_suggestion_records_kind_split(
             transaction_repository=repository,
             read_evidence=False,
             operation=_authority_operation_for_test,
+            settings=load_settings(),
+            ports=_LLM_PORTS,
         )
 
         result = reject_llm_suggestion(
@@ -95,14 +126,21 @@ def test_reject_non_active_transaction_raises(
             transaction_repository=repository,
             read_evidence=False,
             operation=_authority_operation_for_test,
+            settings=load_settings(),
+            ports=_LLM_PORTS,
         )
-        apply_evidence_split(
-            suggestion,
+        with ledger_ports_for_test(
             bucket_id=_BUCKET,
-            source_command="aeat app ledger split --llm --apply",
+            objects=_objects,
             transaction_repository=repository,
             bucket_event_repository=events,
-        )
+        ) as ports:
+            apply_evidence_split(
+                suggestion,
+                bucket_id=_BUCKET,
+                source_command="aeat app ledger split --llm --apply",
+                ports=ports,
+            )
 
         with pytest.raises(TransactionValidationError, match="active"):
             reject_llm_suggestion(

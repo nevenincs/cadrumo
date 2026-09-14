@@ -22,7 +22,6 @@ from ._invoice_confirmation_test_support import (
     _EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
     _make_svc,
-    invoice_authority,
     invoice_confirmation_kwargs,
     invoice_draft_extraction_kwargs,
     isolated_settings,

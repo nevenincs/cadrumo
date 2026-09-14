@@ -199,16 +199,15 @@ def test_value_affecting_update_still_refuses_under_finalized_revision(
     transaction_id = _deductible_expense_row(profile, idempotency_key="classify-under-finalized")
     _finalize_revision_citing(profile, transaction_id)
 
-    with pytest.raises(TransactionValidationError, match="finalized modelo"):
-        with _ledger_ports(profile) as ports:
-            update_manual_transaction_fields(
-                bucket_id=_BUCKET,
-                transaction_id=transaction_id,
-                patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
-                actor="operator-A",
-                source_command="aeat app ledger classify",
-                ports=ports,
-            )
+    with pytest.raises(TransactionValidationError, match="finalized modelo"), _ledger_ports(profile) as ports:
+        update_manual_transaction_fields(
+            bucket_id=_BUCKET,
+            transaction_id=transaction_id,
+            patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
+            actor="operator-A",
+            source_command="aeat app ledger classify",
+            ports=ports,
+        )
 
     persisted = _transactions(profile).load().get(transaction_id)
     assert persisted is not None
@@ -225,20 +224,19 @@ def test_evidence_attachment_bundled_with_a_value_change_still_refuses(
     _finalize_revision_citing(profile, transaction_id)
     evidence_id = _mint_evidence_id(profile, pdf_file)
 
-    with pytest.raises(TransactionValidationError, match="finalized modelo"):
-        with _ledger_ports(profile) as ports:
-            update_manual_transaction_fields(
-                bucket_id=_BUCKET,
-                transaction_id=transaction_id,
-                patch=ManualLedgerTransactionPatch(
-                    purchase_invoice_evidence_id=evidence_id,
-                    taxable_base=Decimal("400.00"),
-                ),
-                actor="operator-A",
-                source_command="aeat app ledger attach",
-                ports=ports,
-                _evidence_authority=True,
-            )
+    with pytest.raises(TransactionValidationError, match="finalized modelo"), _ledger_ports(profile) as ports:
+        update_manual_transaction_fields(
+            bucket_id=_BUCKET,
+            transaction_id=transaction_id,
+            patch=ManualLedgerTransactionPatch(
+                purchase_invoice_evidence_id=evidence_id,
+                taxable_base=Decimal("400.00"),
+            ),
+            actor="operator-A",
+            source_command="aeat app ledger attach",
+            ports=ports,
+            _evidence_authority=True,
+        )
 
     persisted = _transactions(profile).load().get(transaction_id)
     assert persisted is not None

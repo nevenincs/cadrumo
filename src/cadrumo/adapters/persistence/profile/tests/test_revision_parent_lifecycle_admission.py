@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -30,6 +29,7 @@ from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import discard_work_unit
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.entrypoints.adapter_composition import (
     build_calculation_action_ports,
@@ -46,7 +46,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     repository = kwargs.pop("work_unit_repository", None)
     for key in ("calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
@@ -73,7 +73,7 @@ def _verify_modelo_revision_with_preconditions(calculation_revision_id: str, **k
         "bucket_event_repository",
     ):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision_with_preconditions(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -87,7 +87,7 @@ def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     repository = kwargs.pop("work_unit_repository", None)
     for key in ("calculation_repository", "filing_repository", "verification_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),

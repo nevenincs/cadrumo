@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -22,6 +21,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
@@ -39,7 +39,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     repository = kwargs.pop("work_unit_repository", None)
     for key in ("calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),

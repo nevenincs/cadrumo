@@ -23,8 +23,10 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -76,24 +78,29 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
                 "taxpayer_type.legal_entity_form": "sl",
             },
         )
-        work_unit = create_work_unit(
-            bucket_id=bucket_id,
-            modelo="200",
-            filing_year=2025,
-            period=period,
-            revision_id=snapshot.revision.id,
-            clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
-        )
-
-        with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
-            build_work_calculate_input_bundle(
-                work_unit_id=work_unit.work_unit_id,
-                casilla_overrides={_M200_AMBIGUOUS_PRINTED_NUMBER: "100.00"},
-                binding_overrides={},
-                relation_overrides={},
-                detail_rows=(),
-                borrador_snapshot_id=None,
+        with bundled_indexed_authority().operation() as operation:
+            calculation_ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
+            work_unit = create_work_unit(
+                bucket_id=bucket_id,
+                modelo="200",
+                filing_year=2025,
+                period=period,
+                revision_id=snapshot.revision.id,
+                ports=calculation_ports.work_lifecycle_ports,
+                clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
             )
+
+            with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
+                build_work_calculate_input_bundle(
+                    work_unit_id=work_unit.work_unit_id,
+                    ports=calculation_ports,
+                    casilla_overrides={_M200_AMBIGUOUS_PRINTED_NUMBER: "100.00"},
+                    binding_overrides={},
+                    relation_overrides={},
+                    detail_rows=(),
+                    borrador_snapshot_id=None,
+                    operation=operation,
+                )
 
     # The competing casilla ids travel as facts; the refusal itself renders from
     # its registered key, so neither id can be asserted through str(exc).
@@ -163,22 +170,27 @@ def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCa
                 "taxpayer_type.legal_entity_form": "sl",
             },
         )
-        work_unit = create_work_unit(
-            bucket_id=bucket_id,
-            modelo="200",
-            filing_year=2025,
-            period=period,
-            revision_id=snapshot.revision.id,
-            clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
-        )
-        return build_work_calculate_input_bundle(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_overrides={_M200_MANUAL_DECIMAL_CASILLA: raw_value},
-            binding_overrides={},
-            relation_overrides={},
-            detail_rows=(),
-            borrador_snapshot_id=None,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            calculation_ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
+            work_unit = create_work_unit(
+                bucket_id=bucket_id,
+                modelo="200",
+                filing_year=2025,
+                period=period,
+                revision_id=snapshot.revision.id,
+                ports=calculation_ports.work_lifecycle_ports,
+                clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
+            )
+            return build_work_calculate_input_bundle(
+                work_unit_id=work_unit.work_unit_id,
+                ports=calculation_ports,
+                casilla_overrides={_M200_MANUAL_DECIMAL_CASILLA: raw_value},
+                binding_overrides={},
+                relation_overrides={},
+                detail_rows=(),
+                borrador_snapshot_id=None,
+                operation=operation,
+            )
 
 
 @pytest.mark.parametrize("raw_value", _NON_CANONICAL_CASILLA_VALUES)
@@ -231,22 +243,27 @@ def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> Work
                 "taxpayer_type.legal_entity_form": "sl",
             },
         )
-        work_unit = create_work_unit(
-            bucket_id=bucket_id,
-            modelo="303",
-            filing_year=2025,
-            period=period,
-            revision_id=snapshot.revision.id,
-            clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
-        )
-        return build_work_calculate_input_bundle(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_overrides={_M303_PERIOD_CASILLA: raw_value},
-            binding_overrides={},
-            relation_overrides={},
-            detail_rows=(),
-            borrador_snapshot_id=None,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            calculation_ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
+            work_unit = create_work_unit(
+                bucket_id=bucket_id,
+                modelo="303",
+                filing_year=2025,
+                period=period,
+                revision_id=snapshot.revision.id,
+                ports=calculation_ports.work_lifecycle_ports,
+                clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
+            )
+            return build_work_calculate_input_bundle(
+                work_unit_id=work_unit.work_unit_id,
+                ports=calculation_ports,
+                casilla_overrides={_M303_PERIOD_CASILLA: raw_value},
+                binding_overrides={},
+                relation_overrides={},
+                detail_rows=(),
+                borrador_snapshot_id=None,
+                operation=operation,
+            )
 
 
 def test_period_code_casilla_override_routes_to_the_text_channel(tmp_path: Path) -> None:
@@ -315,22 +332,30 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
             profile_id=_MATERNIDAD_BUCKET_ID,
             overrides=descendant_overrides,
         )
-        work_unit = create_work_unit(
-            bucket_id=_MATERNIDAD_BUCKET_ID,
-            modelo="100",
-            filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
-            period=period,
-            revision_id=snapshot.revision.id,
-            clock=datetime(2026, 8, 5, 12, 0, tzinfo=UTC),
-        )
-        bundle = build_work_calculate_input_bundle(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_overrides={},
-            binding_overrides={},
-            relation_overrides={},
-            detail_rows=(),
-            borrador_snapshot_id=None,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            calculation_ports = build_calculation_action_ports(
+                bucket_id=_MATERNIDAD_BUCKET_ID,
+                operation=operation,
+            )
+            work_unit = create_work_unit(
+                bucket_id=_MATERNIDAD_BUCKET_ID,
+                modelo="100",
+                filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
+                period=period,
+                revision_id=snapshot.revision.id,
+                ports=calculation_ports.work_lifecycle_ports,
+                clock=datetime(2026, 8, 5, 12, 0, tzinfo=UTC),
+            )
+            bundle = build_work_calculate_input_bundle(
+                work_unit_id=work_unit.work_unit_id,
+                ports=calculation_ports,
+                casilla_overrides={},
+                binding_overrides={},
+                relation_overrides={},
+                detail_rows=(),
+                borrador_snapshot_id=None,
+                operation=operation,
+            )
 
     assert _MATERNIDAD_CASILLA_ID not in bundle.casilla_inputs
     source_kinds = {diagnostic.source_kind for diagnostic in bundle.shortcut_diagnostics}

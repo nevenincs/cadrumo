@@ -22,6 +22,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConflictError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -59,14 +60,19 @@ def test_link_appends_exactly_one_invoice_linked_event(tmp_path: Path) -> None:
         # this asserts the DELTA this verb appends rather than an empty log.
         baseline = set(events.load().events)
 
-        link_manual_transaction_invoice(
+        with ledger_ports_for_test(
             bucket_id=profile.bucket_id,
-            transaction_id=transaction.transaction_id,
-            invoice_id=invoice.invoice_id,
-            actor="operator",
+            objects=profile.repository,
             bucket_event_repository=events,
-            occurred_at=_NOW,
-        )
+        ) as ports:
+            link_manual_transaction_invoice(
+                bucket_id=profile.bucket_id,
+                transaction_id=transaction.transaction_id,
+                invoice_id=invoice.invoice_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_NOW,
+            )
 
         appended = tuple(event for key, event in events.load().events.items() if key not in baseline)
         assert len(appended) == 1
@@ -103,13 +109,17 @@ def test_refused_link_appends_no_event(tmp_path: Path) -> None:
         events = BucketEventHistoryRepository(objects=profile.repository)
         baseline = set(events.load().events)
 
-        with pytest.raises(InvoiceLinkError):
+        with pytest.raises(InvoiceLinkError), ledger_ports_for_test(
+            bucket_id=profile.bucket_id,
+            objects=profile.repository,
+            bucket_event_repository=events,
+        ) as ports:
             link_manual_transaction_invoice(
                 bucket_id=profile.bucket_id,
                 transaction_id=transaction.transaction_id,
                 invoice_id="no-such-invoice",
                 actor="operator",
-                bucket_event_repository=events,
+                ports=ports,
                 occurred_at=_NOW,
             )
 

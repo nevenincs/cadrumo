@@ -232,6 +232,7 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
                 secret_before = resolve_certificate_source_secret(
                     name="personal",
                     bucket_id=_PROFILE_A,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
 
             assert persisted_before is not None
@@ -254,6 +255,7 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
                 secret_after = resolve_certificate_source_secret(
                     name="personal",
                     bucket_id=_PROFILE_A,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
                 assert session_store.exists(session_path) is False
 
@@ -308,13 +310,24 @@ def test_reset_removes_certificate_registry_and_secure_secret(tmp_path: Path) ->
                     operation=_certificate_authority_operation_for_test,
                     certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
-                assert resolve_certificate_source_secret(name="personal", bucket_id=_PROFILE_A) is not None
+                assert (
+                    resolve_certificate_source_secret(
+                        name="personal",
+                        bucket_id=_PROFILE_A,
+                        certificate_secret_backend_factory=build_certificate_secret_backend,
+                    )
+                    is not None
+                )
 
             first = _reset(provider="certificate")
             second = _reset(provider="certificate")
             with open_test_profile_session(_PROFILE_A):
                 state = workflow_state_repository().load()
-                secret = resolve_certificate_source_secret(name="personal", bucket_id=_PROFILE_A)
+                secret = resolve_certificate_source_secret(
+                    name="personal",
+                    bucket_id=_PROFILE_A,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
+                )
 
             assert first.cleared_provider_configuration is True
             assert first.removed_certificate_sources == 1

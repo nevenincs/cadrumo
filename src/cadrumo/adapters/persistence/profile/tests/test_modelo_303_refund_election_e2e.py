@@ -75,6 +75,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -139,7 +140,7 @@ def _create_work_unit(**kwargs: Any) -> Any:
 def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
@@ -150,7 +151,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
 def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -163,7 +164,7 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
 def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -175,12 +176,12 @@ def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
 
 def _reconcile_modelo_303_iva_compensation(snapshot: Any, **kwargs: Any) -> Any:
     kwargs.setdefault("decision_repository", IvaWalletDecisionRepository())
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return reconcile_modelo_303_iva_compensation(snapshot, operation=operation, **kwargs)
 
 
 def _resolve_relations_from_local_store(snapshot: Any, **kwargs: Any) -> Any:
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return resolve_relations_from_local_store(snapshot, operation=operation, **kwargs)
 
 

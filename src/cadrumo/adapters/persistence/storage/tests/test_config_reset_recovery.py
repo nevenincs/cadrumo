@@ -22,6 +22,7 @@ from textwrap import dedent
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
@@ -411,6 +412,7 @@ def test_pointer_reconciling_resume_refuses_a_later_absent_tombstone(tmp_path: P
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert resumed.status is ConfigResetOperationStatus.PAUSED
         assert resumed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED
@@ -471,6 +473,7 @@ def test_resume_refuses_malformed_journal_identity_before_target_lock(
                 confirmed=True,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 bucket_storage=default_profile_bucket_storage(),
+                certificate_secret_backend_factory=build_certificate_secret_backend,
             )
 
         assert raised.value.context == {"operation_id": interrupted.operation_id, "journal_corrupt": True}

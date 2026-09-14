@@ -51,6 +51,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     parse_verification_predicate_expression,
@@ -71,7 +72,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     """Compose calculation capabilities through the current application contract."""
     for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
@@ -83,7 +84,7 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     """Compose verification capabilities through the current application contract."""
     for key in ("work_unit_repository", "calculation_repository", "verification_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -95,7 +96,7 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
 
 def __data_inventory_checklist(*args: Any, **kwargs: Any) -> Any:
     """Pin registry reads for checklist assertions to one authority operation."""
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return data_inventory_checklist(*args, operation=operation, **kwargs)
 
 

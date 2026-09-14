@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -46,6 +45,7 @@ from cadrumo.application.modelo.iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision,
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
@@ -56,7 +56,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _reconcile_modelo_303_iva_compensation(snapshot: Any, **kwargs: Any) -> Any:
     kwargs.setdefault("decision_repository", IvaWalletDecisionRepository())
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return reconcile_modelo_303_iva_compensation(snapshot, operation=operation, **kwargs)
 
 
@@ -64,7 +64,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     repository = kwargs.pop("work_unit_repository", None)
     for key in ("calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
@@ -75,7 +75,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
 def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),

@@ -6,7 +6,6 @@ import asyncio
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     _FILE_FLOW_PROFILE_ID,
@@ -60,6 +59,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -83,7 +83,7 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
     """Verification cannot interpret a stored calculation under a different schema."""
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -127,7 +127,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> N
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
 
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -151,7 +151,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> N
     assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
 
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         refreshed = get_calculation_revision(
             revision.calculation_revision_id,
             ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
@@ -164,7 +164,7 @@ def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
     work_unit = seed_work_unit(wu_repo)
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
     baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -205,7 +205,7 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
     work_unit = seed_work_unit(wu_repo)
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
     baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         first = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -215,7 +215,7 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
         )
     second_inputs = dict(baseline_inputs)
     second_inputs[M130_INCOME_CASILLA] = second_inputs[M130_INCOME_CASILLA] + Decimal("1")
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         second = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -256,7 +256,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -289,7 +289,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
 
 def test_get_calculation_revision_raises_on_missing_id(repos: Repos) -> None:
     _, cr_repo, _, _, _ = repos
-    with pytest.raises(CalculationRevisionNotFoundError), compiled_bundled_authority().operation() as operation:
+    with pytest.raises(CalculationRevisionNotFoundError), bundled_indexed_authority().operation() as operation:
         get_calculation_revision(
             "0" * 64,
             ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
@@ -313,7 +313,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         period=work_unit.period.registry_token,
     )
 
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -343,7 +343,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     assert set(report.resolved_casilla_ids) == set(required)
     assert report.missing_required_casilla_ids == ()
 
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         refreshed = get_calculation_revision(
             revision.calculation_revision_id,
             ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
@@ -377,7 +377,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
     work_unit = seed_modelo_180_work_unit(wu_repo)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -414,7 +414,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     )
     assert omitted in report.missing_required_casilla_ids
 
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         refreshed = get_calculation_revision(
             revision.calculation_revision_id,
             ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
@@ -459,7 +459,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -484,7 +484,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     assert first.granted_verificado_completo is True
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         refreshed_state = get_calculation_revision(
             revision.calculation_revision_id,
             ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
@@ -535,7 +535,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
         )
     )
     assert reports_after_second == reports_after_first
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         refreshed_state = get_calculation_revision(
             revision.calculation_revision_id,
             ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
@@ -562,7 +562,7 @@ def test_verify_refuses_non_draft_revision_with_no_granting_report(repos: Repos)
         period="1T",
         revision_id="2019-y-siguientes",
     )
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -611,7 +611,7 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),

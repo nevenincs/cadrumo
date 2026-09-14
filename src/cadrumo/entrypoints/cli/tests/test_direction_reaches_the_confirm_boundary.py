@@ -41,8 +41,8 @@ from ....application.ledger.confirmation_gate import ConfirmationBlockedError, c
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH
 from ....application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from ....application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
-from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ....application.ledger.invoice_draft_records import InvoiceDraft
+from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ....core.config import load_settings, override_settings
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind

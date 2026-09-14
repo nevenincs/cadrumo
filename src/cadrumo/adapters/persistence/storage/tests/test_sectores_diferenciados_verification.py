@@ -77,6 +77,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _BUCKET_ID = "5c705c70-5c70-4c70-8c70-5c705c705c70"
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _DEDUCIBLE_BASE_BINDING: BindingId = "modelo-303-iva-soportado-interiores-base"

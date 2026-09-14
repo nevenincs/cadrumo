@@ -32,6 +32,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -239,7 +240,7 @@ def calculate_irene_revision(
     from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         calculation_ports = build_calculation_action_ports(bucket_id=BUCKET_ID, operation=operation)
         revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,

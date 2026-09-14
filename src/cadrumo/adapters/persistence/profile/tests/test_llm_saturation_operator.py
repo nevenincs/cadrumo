@@ -112,22 +112,21 @@ def test_operator_derive_refuses_non_business_row(
     repository, events = repositories
     tx_id = _seed_unclassified(repository)
 
-    with pytest.raises(TransactionValidationError, match="business transaction"):
-        with ledger_ports_for_test(
+    with pytest.raises(TransactionValidationError, match="business transaction"), ledger_ports_for_test(
+        bucket_id=_BUCKET,
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        derive_operator_iva_substrate(
             bucket_id=_BUCKET,
-            objects=repository._objects,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ) as ports:
-            derive_operator_iva_substrate(
-                bucket_id=_BUCKET,
-                transaction_id=tx_id,
-                iva_category=IvaCategory("domestic_general"),
-                actor="operator-A",
-                source_command="aeat app ledger classify --iva-category --saturate",
-                ports=ports,
-                occurred_at=_NOW,
-            )
+            transaction_id=tx_id,
+            iva_category=IvaCategory("domestic_general"),
+            actor="operator-A",
+            source_command="aeat app ledger classify --iva-category --saturate",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
 
 def test_operator_derive_zero_rated_category_derives_zero_iva(

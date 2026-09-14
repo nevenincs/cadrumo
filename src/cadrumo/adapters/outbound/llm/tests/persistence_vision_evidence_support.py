@@ -10,8 +10,8 @@ import pytest
 from PIL import Image
 
 from .....application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ....persistence.profile.buckets import BucketEventHistoryRepository
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .....entrypoints.adapter_composition import build_ledger_evidence_ports
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
@@ -33,7 +33,6 @@ def add_evidence(profile: TestRuntimeProfile, tmp_path: Path, *, name: str, data
     path = tmp_path / name
     path.write_bytes(data)
     service = PurchaseInvoiceEvidenceService(
-        settings=profile.settings,
-        bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+        ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
     )
     return service.add(bucket_id=_BUCKET_ID, source_path=path).record.evidence_id

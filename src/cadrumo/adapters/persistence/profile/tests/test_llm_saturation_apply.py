@@ -161,21 +161,20 @@ def test_apply_mixed_without_business_pct_refuses(
             ports=_LLM_PORTS,
         )
 
-    with pytest.raises(TransactionValidationError, match="requires a business percentage"):
-        with ledger_ports_for_test(
+    with pytest.raises(TransactionValidationError, match="requires a business percentage"), ledger_ports_for_test(
+        bucket_id=_BUCKET,
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        apply_saturated_llm_classification(
+            suggestion,
             bucket_id=_BUCKET,
-            objects=repository._objects,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ) as ports:
-            apply_saturated_llm_classification(
-                suggestion,
-                bucket_id=_BUCKET,
-                actor="operator-A",
-                source_command="aeat app ledger classify --llm --saturate --apply",
-                ports=ports,
-                occurred_at=_NOW,
-            )
+            actor="operator-A",
+            source_command="aeat app ledger classify --llm --saturate --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
 
 def test_apply_mixed_uses_proposed_business_pct(
