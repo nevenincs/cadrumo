@@ -30,6 +30,7 @@ from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
 )
+from .ledger_action_create_support import ledger_ports_for_test
 
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 
@@ -133,17 +134,22 @@ def create_row(
     description: str,
 ) -> str:
     transaction_repository, event_repository = _repositories(objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("1200.00"),
-            direction=TransactionDirection.INCOMING,
-            description=description,
-            idempotency_key=idempotency_key,
-        ),
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("1200.00"),
+                direction=TransactionDirection.INCOMING,
+                description=description,
+                idempotency_key=idempotency_key,
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
     return created.ref.transaction_id

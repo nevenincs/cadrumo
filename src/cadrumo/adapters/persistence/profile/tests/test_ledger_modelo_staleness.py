@@ -63,11 +63,13 @@ from .....domain.transactions.enums import BusinessClassification, TransactionDi
 from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..buckets import BucketEventHistoryRepository
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .secure_objects_fixture import secure_objects
+from .ledger_action_create_support import ledger_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -260,12 +262,20 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(secure_objects: SecureO
     )
 
     # The row now feeds a VERIFICADO_COMPLETO revision: editing it is refused.
+    transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+    event_repository = BucketEventHistoryRepository(objects=objects)
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
-        update_manual_transaction_fields(
+        with ledger_ports_for_test(
             bucket_id=_BUCKET_ID,
-            transaction_id=tx.transaction_id,
-            patch=ManualLedgerTransactionPatch(notes="tweak"),
-            actor="operator",
-            source_command="aeat app ledger update",
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-        )
+            objects=objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports:
+            update_manual_transaction_fields(
+                bucket_id=_BUCKET_ID,
+                transaction_id=tx.transaction_id,
+                patch=ManualLedgerTransactionPatch(notes="tweak"),
+                actor="operator",
+                source_command="aeat app ledger update",
+                ports=ports,
+            )

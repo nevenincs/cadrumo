@@ -9,12 +9,12 @@ dependency on a frontend package.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
-from contextlib import AbstractContextManager, contextmanager
+from collections.abc import Awaitable, Generator
+from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Protocol, override
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
@@ -98,6 +98,8 @@ from ..application.live.remote_state_models import (
 from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import active_verified_session
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ..application.operations.owner import OperationEventEmitter
+from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError
@@ -109,16 +111,34 @@ from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_location
 from ..core.time.clock import now
 from ..domain.calculations.registry.authority import bundled_indexed_authority
-from ..domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
+from ..domain.deadlines.models import TaxpayerProfile
+from ..domain.iva_compensation.carry_forward import (
+    IvaCompensationCarryForwardLot,
+    IvaCompensationPeriodState,
+    build_iva_compensation_carry_forward_report,
+)
+from ..domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 
 _WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
+
+
+class _FiledHistoryPullPayload(Protocol):
+    """Fields consumed by the shared filed-history composition boundary."""
+
+    output_root: Path
+    today: date | None
+    limit: int | None
+    dry_run: bool
 
 
 class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):
     """Translate Sede notification records into the application snapshot DTO."""
 
     @override
-    async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
+    async def fetch(self, session: AeatSession, *, settings: Settings) -> NotificationsSnapshot:
         """Read the Sede query and translate adapter DTOs/errors at this boundary."""
         try:
             captured = await fetch_notifications_query(session, settings=settings)
@@ -320,7 +340,7 @@ class AppIvaRemoteStatePort:
         return PRE303_PRESENTATION_SERVICE_URL
 
     @contextmanager
-    def active_storage_span(self) -> AbstractContextManager[None]:
+    def active_storage_span(self) -> Generator[None]:
         """Require the active bucket session for every storage operation."""
         bucket_id = require_active_bucket_id()
         if not active_bucket_session_serves(bucket_id):
@@ -349,6 +369,8 @@ class AppIvaRemoteStatePort:
         target_url: str | None,
     ) -> Awaitable[AuthenticatedAeatSessionResult]:
         """Start the configured authentication flow."""
+        with bundled_indexed_authority().operation() as authority_operation:
+            profile_decode_context = authority_operation.profile_decode_context()
         return ensure_authenticated_aeat_session(
             settings,
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
@@ -356,6 +378,7 @@ class AppIvaRemoteStatePort:
             operation=operation,
             target_url=target_url,
             operator_scope_ports=self._operator_scope_ports,
+            profile_decode_context=profile_decode_context,
         )
 
     def list_history(self, *, as_of_year: int | None) -> IvaCompensationHistoryReport:
@@ -517,34 +540,36 @@ def persist_and_reconcile_iva_compensation_wallet(
                 "target_period": observation.target_period.registry_token,
             },
         )
+    from ..application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
+
+    resolved_decision_repository = decision_repository or IvaWalletDecisionRepository(
+        objects=resolved_repository.secure_object_repository,
+    )
     with bundled_indexed_authority().operation() as operation:
         snapshot = operation.snapshot(
             Modelo("303").value,
             filing_year=reloaded.target_year,
             period=reloaded.target_period.registry_token,
         )
-    from ..application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
-
-    recurrence, prefill = extract_modelo_303_local_iva_compensation_recurrence(
-        snapshot,
-        repository=resolved_repository,
-        iva_history_repository=history_repository,
-        captured_at=decided_at,
-    )
-    reconciliation = reconcile_modelo_303_iva_compensation(
-        snapshot,
-        taxpayer_nif=reloaded.taxpayer_nif,
-        wallet=reloaded,
-        repository=resolved_repository,
-        decision_repository=decision_repository,
-        decided_at=decided_at,
-        local_recurrence=recurrence,
-        prefill_report=prefill,
-    )
-    decision = reconciliation.decision
-    resolved_decision_repository = decision_repository or IvaWalletDecisionRepository(
-        objects=resolved_repository.secure_object_repository,
-    )
+        recurrence, prefill = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=resolved_repository,
+            iva_history_repository=history_repository,
+            captured_at=decided_at,
+            operation=operation,
+        )
+        reconciliation = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=reloaded.taxpayer_nif,
+            wallet=reloaded,
+            repository=resolved_repository,
+            decision_repository=resolved_decision_repository,
+            decided_at=decided_at,
+            local_recurrence=recurrence,
+            prefill_report=prefill,
+            operation=operation,
+        )
+        decision = reconciliation.decision
     loaded = resolved_decision_repository.load_decision(decision.taxpayer_nif, decision.target_period)
     if loaded != decision:
         raise LiveApplicationError(
@@ -598,10 +623,10 @@ def aggregate_iva_compensation_history_reports(
 
 
 async def pull_filed_history_with_shared_composition(
-    payload: object,
-    profile: object,
-    repository: object,
-    events: object,
+    payload: _FiledHistoryPullPayload,
+    profile: TaxpayerProfile | None,
+    repository: SyncRunRecordRepositoryProtocol | None,
+    events: OperationEventEmitter | None,
     ports: FiledObservationPersistencePorts,
     filed_data_port: FiledDataCapturePort,
     iva_remote_state_port: IvaRemoteStatePort,
@@ -637,7 +662,7 @@ def taxpayer_ref(value: str | None) -> str:
     return "absent" if not token else f"sha256:{sha256_hex(token.encode('utf-8'))[:12]}"
 
 
-def _history_row(state: object) -> IvaCompensationHistoryRow:
+def _history_row(state: IvaCompensationPeriodState) -> IvaCompensationHistoryRow:
     return IvaCompensationHistoryRow(
         year=state.filing_year,
         period=state.period,
@@ -654,7 +679,7 @@ def _history_row(state: object) -> IvaCompensationHistoryRow:
     )
 
 
-def carry_forward_lot_row(lot: object) -> IvaCompensationCarryForwardLotRow:
+def carry_forward_lot_row(lot: IvaCompensationCarryForwardLot) -> IvaCompensationCarryForwardLotRow:
     """Project one persisted carry-forward lot into the live-state DTO."""
     return IvaCompensationCarryForwardLotRow(
         taxpayer_ref=taxpayer_ref(lot.taxpayer_nif),
@@ -669,7 +694,7 @@ def carry_forward_lot_row(lot: object) -> IvaCompensationCarryForwardLotRow:
     )
 
 
-def _decision_row(decision: object) -> IvaWalletAuthorityDecisionRow:
+def _decision_row(decision: IvaCompensationReconciliationDecision) -> IvaWalletAuthorityDecisionRow:
     return IvaWalletAuthorityDecisionRow(
         taxpayer_ref=taxpayer_ref(decision.taxpayer_nif),
         target_year=decision.target_year,
@@ -690,7 +715,7 @@ def _decision_row(decision: object) -> IvaWalletAuthorityDecisionRow:
     )
 
 
-def _authority_source_text(source: object) -> str:
+def _authority_source_text(source: IvaCompensationAuthoritySource) -> str:
     parts = [str(source.source_kind)]
     if source.source_modelo is not None:
         parts.append(f"modelo={source.source_modelo}")

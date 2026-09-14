@@ -38,25 +38,28 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="material oficina",
-            business_classification=BusinessClassification.BUSINESS,
-            category_id="office-supplies",
-            purchase_invoice_evidence_id=purchase_evidence.invoice_id,
-            idempotency_key="remove-linked-row",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        invoice_repository=invoice_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="material oficina",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="office-supplies",
+                purchase_invoice_evidence_id=purchase_evidence.invoice_id,
+                idempotency_key="remove-linked-row",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
     invoice_repository.save(
         InvoiceCatalogue.from_invoices(
             (purchase_evidence.model_copy(update={"linked_transaction_ids": (created.ref.transaction_id,)}),),
@@ -171,25 +174,28 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
     # overflow if id widths ever changed, and would prove nothing.
     assert len(",".join(sorted(attachment_ids))) > 500
 
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="material oficina",
-            business_classification=BusinessClassification.BUSINESS,
-            category_id="office-supplies",
-            attachment_ids=attachment_ids,
-            idempotency_key="remove-eight-attachments",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            attachment_store=store,
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        attachment_store=store,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="material oficina",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="office-supplies",
+                attachment_ids=attachment_ids,
+                idempotency_key="remove-eight-attachments",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
 
     removed = remove_manual_transaction(
         bucket_id=_BUCKET_ID,

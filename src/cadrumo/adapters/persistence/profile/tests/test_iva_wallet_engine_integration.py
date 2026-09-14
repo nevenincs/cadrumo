@@ -55,6 +55,7 @@ from cadrumo.application.modelo.iva_wallet_gate import (
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationOverride,
@@ -65,73 +66,80 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
-        _store_operator_profile()
-        observation_repo = CalculationObservationRepository()
-        _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
-        snapshot = _snapshot_303()
-        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
-            snapshot,
-            repository=observation_repo,
-            captured_at=_DECIDED_AT,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        )
-        report = reconcile_modelo_303_iva_compensation(
-            snapshot,
-            taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(pending=Decimal("1200.00")),
-            repository=observation_repo,
-            decided_at=_DECIDED_AT,
-            local_recurrence=local_recurrence,
-            prefill_report=prefill_report,
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with _secure_backend(tmp_path):
+            _store_operator_profile()
+            observation_repo = CalculationObservationRepository()
+            _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
+            snapshot = _snapshot_303()
+            local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+                snapshot,
+                repository=observation_repo,
+                captured_at=_DECIDED_AT,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
+            report = reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_NIF,
+                wallet=_wallet_observation(pending=Decimal("1200.00")),
+                repository=observation_repo,
+                decided_at=_DECIDED_AT,
+                local_recurrence=local_recurrence,
+                prefill_report=prefill_report,
+                operation=_authority_operation_for_test,
+            )
 
-        loaded_decision = IvaWalletDecisionRepository().load_decision(
-            _TAXPAYER_NIF,
-            _period(_TARGET_YEAR, _TARGET_PERIOD),
-        )
-        assert loaded_decision == report.decision
-        assert report.decision.selected_authority == "aeat_wallet"
-        assert report.decision.local_recurrence_amount == Decimal("1200.00")
-        assert {source.source_kind for source in report.decision.authority_sources} == {
-            "aeat_wallet",
-            "local_recurrence",
-            "filed_history_observation",
-        }
-        filed_history_source = next(
-            source for source in report.decision.authority_sources if source.source_kind == "filed_history_observation"
-        )
-        assert filed_history_source.source_modelo == "303"
-        assert filed_history_source.source_filing_year == _TARGET_YEAR
-        assert filed_history_source.source_periods == (Period.from_year_and_code(_TARGET_YEAR, "1T"),)
+            loaded_decision = IvaWalletDecisionRepository().load_decision(
+                _TAXPAYER_NIF,
+                _period(_TARGET_YEAR, _TARGET_PERIOD),
+            )
+            assert loaded_decision == report.decision
+            assert report.decision.selected_authority == "aeat_wallet"
+            assert report.decision.local_recurrence_amount == Decimal("1200.00")
+            assert {source.source_kind for source in report.decision.authority_sources} == {
+                "aeat_wallet",
+                "local_recurrence",
+                "filed_history_observation",
+            }
+            filed_history_source = next(
+                source
+                for source in report.decision.authority_sources
+                if source.source_kind == "filed_history_observation"
+            )
+            assert filed_history_source.source_modelo == "303"
+            assert filed_history_source.source_filing_year == _TARGET_YEAR
+            assert filed_history_source.source_periods == (Period.from_year_and_code(_TARGET_YEAR, "1T"),)
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values=_modelo_303_engine_inputs(),
-            iva_compensation_decision=loaded_decision,
-            filing_period_date=date(2026, 6, 30),
-            ports=calculation_ports_for_test(
-                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
-            ),
-            clock=_DECIDED_AT,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:iva-wallet-engine-integration"
-            ),
-        )
+            work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=loaded_decision,
+                filing_period_date=date(2026, 6, 30),
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+                ),
+                clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-engine-integration"
+                ),
+            )
 
-        assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("1200.00")
-        assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("1200.00")
-        assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("1000.00")
-        assert revision.casilla_values[_M303_POSTERIOR_CASILLA] == Decimal("200.00")
-        assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("0.00")
-        assert revision.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("200.00")
-        assert any(
-            obs.casilla_id == _M303_COMPENSACION_APLICADA_CASILLA and obs.legal_refs and obs.source_refs
-            for obs in revision.observations
-        )
+            assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal(
+                "1200.00"
+            )
+            assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("1200.00")
+            assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("1000.00")
+            assert revision.casilla_values[_M303_POSTERIOR_CASILLA] == Decimal("200.00")
+            assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("0.00")
+            assert revision.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("200.00")
+            assert any(
+                obs.casilla_id == _M303_COMPENSACION_APLICADA_CASILLA and obs.legal_refs and obs.source_refs
+                for obs in revision.observations
+            )
 
 
 def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
@@ -183,62 +191,67 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
 
 
 def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
-        _store_operator_profile()
-        observation_repo = CalculationObservationRepository()
-        _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
-        snapshot = _snapshot_303()
-        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
-            snapshot,
-            repository=observation_repo,
-            captured_at=_DECIDED_AT,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        )
-        report = reconcile_modelo_303_iva_compensation(
-            snapshot,
-            taxpayer_nif=_TAXPAYER_NIF,
-            wallet=None,
-            repository=observation_repo,
-            decided_at=_DECIDED_AT,
-            local_recurrence=local_recurrence,
-            prefill_report=prefill_report,
-        )
-
-        assert report.decision.selected_authority == "filed_history"
-        assert report.decision.divergence == "filed_history_only"
-        assert report.decision.blocked is True
-        assert {source.source_kind for source in report.decision.authority_sources} == {
-            "local_recurrence",
-            "filed_history_observation",
-        }
-
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-        with pytest.raises(
-            ModeloIvaWalletReconciliationBlocked,
-            match="filed_history_requires_override",
-        ) as exc_info:
-            calculate_modelo_revision(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                binding_values={},
-                backend_binding_values=_modelo_303_engine_inputs(),
-                iva_compensation_decision=report.decision,
-                filing_period_date=date(2026, 6, 30),
-                ports=calculation_ports_for_test(
-                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
-                ),
-                clock=_DECIDED_AT,
-                filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit.period, reference="test:iva-wallet-engine-integration"
-                ),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with _secure_backend(tmp_path):
+            _store_operator_profile()
+            observation_repo = CalculationObservationRepository()
+            _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
+            snapshot = _snapshot_303()
+            local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+                snapshot,
+                repository=observation_repo,
+                captured_at=_DECIDED_AT,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
             )
-        assert not hasattr(exc_info.value, "suggestion")
-        assert (
-            exc_info.value.precondition_failure.scenario_id
-            == "modelo.work.calculate.iva_wallet.filed_history_requires_override"
-        )
-        assert len(calc_repo.load()) == 0
+            report = reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_NIF,
+                wallet=None,
+                repository=observation_repo,
+                decided_at=_DECIDED_AT,
+                local_recurrence=local_recurrence,
+                prefill_report=prefill_report,
+                operation=_authority_operation_for_test,
+            )
+
+            assert report.decision.selected_authority == "filed_history"
+            assert report.decision.divergence == "filed_history_only"
+            assert report.decision.blocked is True
+            assert {source.source_kind for source in report.decision.authority_sources} == {
+                "local_recurrence",
+                "filed_history_observation",
+            }
+
+            work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+            with pytest.raises(
+                ModeloIvaWalletReconciliationBlocked,
+                match="filed_history_requires_override",
+            ) as exc_info:
+                calculate_modelo_revision(
+                    work_unit.work_unit_id,
+                    actor="operator",
+                    casilla_inputs={},
+                    binding_values={},
+                    backend_binding_values=_modelo_303_engine_inputs(),
+                    iva_compensation_decision=report.decision,
+                    filing_period_date=date(2026, 6, 30),
+                    ports=calculation_ports_for_test(
+                        work_unit_repository=work_repo,
+                        calculation_repository=calc_repo,
+                        bucket_event_repository=event_repo,
+                    ),
+                    clock=_DECIDED_AT,
+                    filing_instance_evidence=general_m303_filing_evidence(
+                        work_unit.period, reference="test:iva-wallet-engine-integration"
+                    ),
+                )
+            assert not hasattr(exc_info.value, "suggestion")
+            assert (
+                exc_info.value.precondition_failure.scenario_id
+                == "modelo.work.calculate.iva_wallet.filed_history_requires_override"
+            )
+            assert len(calc_repo.load()) == 0
 
 
 def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed_envelope(tmp_path: Path) -> None:
@@ -339,67 +352,70 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
 
 
 def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
-        _store_operator_profile()
-        observation_repo = CalculationObservationRepository()
-        _store_prior_303_compensation(
-            observation_repo,
-            amount=Decimal("450.00"),
-            filing_year=2025,
-            period="4T",
-        )
-        target_year = 2026
-        target_period = "1T"
-        snapshot = _snapshot_303(filing_year=target_year, period=target_period)
-        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
-            snapshot,
-            repository=observation_repo,
-            captured_at=_DECIDED_AT,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        )
-        report = reconcile_modelo_303_iva_compensation(
-            snapshot,
-            taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(
-                pending=Decimal("450.00"),
-                target_year=target_year,
-                target_period=_period(target_year, target_period),
-                generation_year=2025,
-                generation_period="4T",
-            ),
-            repository=observation_repo,
-            decided_at=_DECIDED_AT,
-            local_recurrence=local_recurrence,
-            prefill_report=prefill_report,
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with _secure_backend(tmp_path):
+            _store_operator_profile()
+            observation_repo = CalculationObservationRepository()
+            _store_prior_303_compensation(
+                observation_repo,
+                amount=Decimal("450.00"),
+                filing_year=2025,
+                period="4T",
+            )
+            target_year = 2026
+            target_period = "1T"
+            snapshot = _snapshot_303(filing_year=target_year, period=target_period)
+            local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+                snapshot,
+                repository=observation_repo,
+                captured_at=_DECIDED_AT,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
+            report = reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_NIF,
+                wallet=_wallet_observation(
+                    pending=Decimal("450.00"),
+                    target_year=target_year,
+                    target_period=_period(target_year, target_period),
+                    generation_year=2025,
+                    generation_period="4T",
+                ),
+                repository=observation_repo,
+                decided_at=_DECIDED_AT,
+                local_recurrence=local_recurrence,
+                prefill_report=prefill_report,
+                operation=_authority_operation_for_test,
+            )
 
-        assert report.decision.selected_authority == "aeat_wallet"
-        assert report.decision.local_recurrence_amount == Decimal("450.00")
-        assert report.prefill_report.prefilled[0].source_filing_year == 2025
-        assert report.prefill_report.prefilled[0].source_periods == ("4T",)
+            assert report.decision.selected_authority == "aeat_wallet"
+            assert report.decision.local_recurrence_amount == Decimal("450.00")
+            assert report.prefill_report.prefilled[0].source_filing_year == 2025
+            assert report.prefill_report.prefilled[0].source_periods == ("4T",)
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-            backend_binding_values=_modelo_303_engine_inputs(),
-            iva_compensation_decision=report.decision,
-            filing_period_date=date(2026, 3, 31),
-            ports=calculation_ports_for_test(
-                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
-            ),
-            clock=_DECIDED_AT,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:iva-wallet-engine-integration"
-            ),
-        )
+            work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                backend_binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=report.decision,
+                filing_period_date=date(2026, 3, 31),
+                ports=calculation_ports_for_test(
+                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
+                ),
+                clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-engine-integration"
+                ),
+            )
 
-        assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("450.00")
-        assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("450.00")
-        assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("550.00")
-        assert revision.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("0.00")
+            assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("450.00")
+            assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("450.00")
+            assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("550.00")
+            assert revision.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("0.00")
 
 
 def _calculate_credit_1t(
@@ -741,39 +757,41 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
 
 def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(tmp_path: Path) -> None:
     """A taxpayer override never becomes envelope recurrence from its free-form locator."""
-    taxpayer_nif = _TAXPAYER_NIF
-    with _secure_backend(tmp_path):
-        _store_operator_profile_with_tax_id(taxpayer_nif)
-        work_repo, _, _ = _work_unit_repositories()
-        snapshot = _snapshot_303(period="2T")
-        target = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo)
-        local_recurrence, prefill_report = (None, BindingPrefillReport(prefilled=(), binding_values={}))
-        decision = reconcile_modelo_303_iva_compensation(
-            snapshot,
-            taxpayer_nif=taxpayer_nif,
-            wallet=None,
-            repository=CalculationObservationRepository(),
-            override=IvaCompensationOverride(
-                amount=Decimal("42"),
-                operator_explanation="Taxpayer reviewed the prior IVA compensation evidence.",
-                evidence_locator="observation-envelope:taxpayer-attestation",
-                recorded_at=_DECIDED_AT,
-            ),
-            decided_at=_DECIDED_AT,
-            local_recurrence=local_recurrence,
-            prefill_report=prefill_report,
-        ).decision
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        taxpayer_nif = _TAXPAYER_NIF
+        with _secure_backend(tmp_path):
+            _store_operator_profile_with_tax_id(taxpayer_nif)
+            work_repo, _, _ = _work_unit_repositories()
+            snapshot = _snapshot_303(period="2T")
+            target = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo)
+            local_recurrence, prefill_report = (None, BindingPrefillReport(prefilled=(), binding_values={}))
+            decision = reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=taxpayer_nif,
+                wallet=None,
+                repository=CalculationObservationRepository(),
+                override=IvaCompensationOverride(
+                    amount=Decimal("42"),
+                    operator_explanation="Taxpayer reviewed the prior IVA compensation evidence.",
+                    evidence_locator="observation-envelope:taxpayer-attestation",
+                    recorded_at=_DECIDED_AT,
+                ),
+                decided_at=_DECIDED_AT,
+                local_recurrence=local_recurrence,
+                prefill_report=prefill_report,
+                operation=_authority_operation_for_test,
+            ).decision
 
-        replayed = resolve_iva_compensation_decision_for_calculation(
-            target,
-            snapshot=snapshot,
-            supplied_decision=None,
-            repository=IvaWalletDecisionRepository(),
-            binding_values=None,
-            backend_binding_values=None,
-            casilla_inputs=None,
-            backend_casilla_inputs=None,
-        )
+            replayed = resolve_iva_compensation_decision_for_calculation(
+                target,
+                snapshot=snapshot,
+                supplied_decision=None,
+                repository=IvaWalletDecisionRepository(),
+                binding_values=None,
+                backend_binding_values=None,
+                casilla_inputs=None,
+                backend_casilla_inputs=None,
+            )
 
-    assert decision.selected_authority == "taxpayer_override"
-    assert replayed == decision
+        assert decision.selected_authority == "taxpayer_override"
+        assert replayed == decision

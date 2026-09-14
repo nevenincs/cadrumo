@@ -48,6 +48,7 @@ from cadrumo.application.aggregation.renta_income_ledger import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.domain.iva.flow import IvaFlowDirection
@@ -231,80 +232,87 @@ def _catalogue() -> TransactionCatalogue:
 
 def test_iva_pipeline_gates_transfers_personal_and_nondeclarable() -> None:
     """No gated row may ever surface as an IVA observation, any period."""
-    gated_ids = {tx.transaction_id for tx, rule, _ in _BUILT if not rule.get("iva_declarable", False)}
-    catalogue = _catalogue()
-    emitted: set[str] = set()
-    for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_iva_ledger_observations(
-            catalogue,
-            period=period,
-            ledger_profile_id="corpus-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="corpus-test",
-        )
-        emitted.update(o.ledger_id for o in result.observations)
-    leaked = emitted & gated_ids
-    assert not leaked, f"{len(leaked)} non-declarable rows leaked into IVA observations"
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        gated_ids = {tx.transaction_id for tx, rule, _ in _BUILT if not rule.get("iva_declarable", False)}
+        catalogue = _catalogue()
+        emitted: set[str] = set()
+        for period in _QUARTERLY_TEST_PERIODS:
+            result = aggregate_iva_ledger_observations(
+                catalogue,
+                period=period,
+                ledger_profile_id="corpus-test",
+                investment_asset_register=BienesInversionIvaRegister(),
+                investment_asset_profile_id="corpus-test",
+                operation=_authority_operation_for_test,
+            )
+            emitted.update(o.ledger_id for o in result.observations)
+        leaked = emitted & gated_ids
+        assert not leaked, f"{len(leaked)} non-declarable rows leaked into IVA observations"
 
 
 def test_iva_observations_match_oracle_category_and_flow() -> None:
     """Every emitted observation matches the oracle's category and flow."""
-    by_id = {tx.transaction_id: rule for tx, rule, _ in _BUILT}
-    catalogue = _catalogue()
-    seen = 0
-    for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_iva_ledger_observations(
-            catalogue,
-            period=period,
-            ledger_profile_id="corpus-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="corpus-test",
-        )
-        # Issues are the pipeline's gating signal for transfers / personal /
-        # no-IVA rows; they are expected for a mixed corpus, not an error.
-        for obs in result.observations:
-            rule = by_id[obs.ledger_id]
-            assert obs.category is IvaCategory(rule["iva_category"]), (
-                f"{rule['match']}: {obs.category} != {rule['iva_category']}"
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        by_id = {tx.transaction_id: rule for tx, rule, _ in _BUILT}
+        catalogue = _catalogue()
+        seen = 0
+        for period in _QUARTERLY_TEST_PERIODS:
+            result = aggregate_iva_ledger_observations(
+                catalogue,
+                period=period,
+                ledger_profile_id="corpus-test",
+                investment_asset_register=BienesInversionIvaRegister(),
+                investment_asset_profile_id="corpus-test",
+                operation=_authority_operation_for_test,
             )
-            expected_flow = (
-                IvaFlowDirection._from_registry("repercutido")
-                if rule["direction"] == "INCOMING"
-                else IvaFlowDirection._from_registry("soportado")
-            )
-            # Reverse-charge / intra-community acquisition / import self-assess
-            # as inversion sujeto pasivo; allow either the directional flow or ISP.
-            assert obs.flow_direction in {expected_flow, IvaFlowDirection._from_registry("inversion_sujeto_pasivo")}
-            seen += 1
-    assert seen > 0
+            # Issues are the pipeline's gating signal for transfers / personal /
+            # no-IVA rows; they are expected for a mixed corpus, not an error.
+            for obs in result.observations:
+                rule = by_id[obs.ledger_id]
+                assert obs.category is IvaCategory(rule["iva_category"]), (
+                    f"{rule['match']}: {obs.category} != {rule['iva_category']}"
+                )
+                expected_flow = (
+                    IvaFlowDirection._from_registry("repercutido")
+                    if rule["direction"] == "INCOMING"
+                    else IvaFlowDirection._from_registry("soportado")
+                )
+                # Reverse-charge / intra-community acquisition / import self-assess
+                # as inversion sujeto pasivo; allow either the directional flow or ISP.
+                assert obs.flow_direction in {expected_flow, IvaFlowDirection._from_registry("inversion_sujeto_pasivo")}
+                seen += 1
+        assert seen > 0
 
 
 def test_iva_pipeline_refuses_input_categories_without_authoritative_deduction_evidence() -> None:
     """Legacy corpus input categories remain blocked until their evidence oracle is extended."""
-    catalogue = _catalogue()
-    categories: set[IvaCategory] = set()
-    refusal_count = 0
-    for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_iva_ledger_observations(
-            catalogue,
-            period=period,
-            ledger_profile_id="corpus-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="corpus-test",
-        )
-        categories.update(o.category for o in result.observations)
-        refusal_count += sum(
-            issue.reason is IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION for issue in result.issues
-        )
-    for required in (
-        IvaCategory("domestic_general"),
-        IvaCategory("intra_community_supply"),
-        IvaCategory("export_third_country_zero_rated"),
-    ):
-        assert required in categories, f"{required} never reached M303"
-    assert IvaCategory("intra_community_acquisition_reverse_charge") not in categories
-    assert IvaCategory("import_third_country") not in categories
-    assert refusal_count > 0
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        catalogue = _catalogue()
+        categories: set[IvaCategory] = set()
+        refusal_count = 0
+        for period in _QUARTERLY_TEST_PERIODS:
+            result = aggregate_iva_ledger_observations(
+                catalogue,
+                period=period,
+                ledger_profile_id="corpus-test",
+                investment_asset_register=BienesInversionIvaRegister(),
+                investment_asset_profile_id="corpus-test",
+                operation=_authority_operation_for_test,
+            )
+            categories.update(o.category for o in result.observations)
+            refusal_count += sum(
+                issue.reason is IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION
+                for issue in result.issues
+            )
+        for required in (
+            IvaCategory("domestic_general"),
+            IvaCategory("intra_community_supply"),
+            IvaCategory("export_third_country_zero_rated"),
+        ):
+            assert required in categories, f"{required} never reached M303"
+        assert IvaCategory("intra_community_acquisition_reverse_charge") not in categories
+        assert IvaCategory("import_third_country") not in categories
+        assert refusal_count > 0
 
 
 def test_renta_income_excludes_salary_rent_and_interest_from_m130() -> None:
@@ -322,22 +330,26 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130() -> None:
 
 def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
     """The RE anomaly row must never surface as deductible soportado IVA."""
-    re_ids = {
-        tx.transaction_id
-        for tx, rule, _ in _BUILT
-        if rule.get("iva_category") == IvaCategory("recargo_equivalencia").value
-    }
-    assert re_ids, "corpus must contain the recargo-equivalencia anomaly row"
-    catalogue = _catalogue()
-    for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_iva_ledger_observations(
-            catalogue,
-            period=period,
-            ledger_profile_id="corpus-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="corpus-test",
-        )
-        soportado = {
-            o.ledger_id for o in result.observations if o.flow_direction is IvaFlowDirection._from_registry("soportado")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        re_ids = {
+            tx.transaction_id
+            for tx, rule, _ in _BUILT
+            if rule.get("iva_category") == IvaCategory("recargo_equivalencia").value
         }
-        assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"
+        assert re_ids, "corpus must contain the recargo-equivalencia anomaly row"
+        catalogue = _catalogue()
+        for period in _QUARTERLY_TEST_PERIODS:
+            result = aggregate_iva_ledger_observations(
+                catalogue,
+                period=period,
+                ledger_profile_id="corpus-test",
+                investment_asset_register=BienesInversionIvaRegister(),
+                investment_asset_profile_id="corpus-test",
+                operation=_authority_operation_for_test,
+            )
+            soportado = {
+                o.ledger_id
+                for o in result.observations
+                if o.flow_direction is IvaFlowDirection._from_registry("soportado")
+            }
+            assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"

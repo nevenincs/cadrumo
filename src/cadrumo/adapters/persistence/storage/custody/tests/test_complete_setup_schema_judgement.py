@@ -146,7 +146,12 @@ def test_complete_setup_refuses_a_record_whose_conditional_block_is_unanswered(t
         assert isinstance(issue_codes, tuple)
         assert CONDITIONAL_REQUIRED_FIELD_MISSING_CODE in issue_codes
 
-        record = ProfileRecordRepository.for_current_session(profile_id, root=storage_root).load(profile_id)
+        _, profile_decode_context = _profile_contexts_for_test()
+        record = ProfileRecordRepository.for_current_session(
+            profile_id,
+            root=storage_root,
+            profile_decode_context=profile_decode_context,
+        ).load(profile_id)
         assert record.setup_state is ProfileSetupState.INCOMPLETE
 
 

@@ -27,10 +27,7 @@ from dev.registry.tests.profile_schema_support import (
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
@@ -42,6 +39,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -50,6 +48,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -202,17 +201,14 @@ def _calculate_m100(
         ),
         clock=_CLOCK,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        casilla_inputs=casilla_inputs,
-        binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
-        work_unit_repository=work_repo,
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        clock=_CLOCK,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=casilla_inputs,
+            binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+            clock=_CLOCK,
+        )
 
 
 @pytest.mark.parametrize(

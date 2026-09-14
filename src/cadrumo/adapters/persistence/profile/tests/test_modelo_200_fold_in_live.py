@@ -68,12 +68,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
@@ -82,10 +77,10 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -93,6 +88,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -338,10 +334,6 @@ def _calculate_m200(
     _seed_m200_sociedad_profile(activity_start_date=activity_start_date)
     if seed_m202_pagos:
         _seed_zero_m202_pagos(obs_repo=CalculationObservationRepository())
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot(
         _M200,
         filing_year=_FILING_YEAR,
@@ -354,20 +346,16 @@ def _calculate_m200(
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values={},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            binding_values={},
+            clock=_T1,
+        )
 
 
 def test_m200_self_cross_year_stock_carries_fire_on_live_calculate(

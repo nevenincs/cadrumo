@@ -18,6 +18,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Final
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_interaction import profile_login_choices
 from ....application.user_profile.login_session import login_profile
@@ -54,15 +58,22 @@ async def installed_workbench_root(
     identity, which is the state an operator is in before completing setup.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_create_context, profile_decode_context = _profile_contexts_for_test()
         register_profile_with_credentials(
             label=WORKBENCH_PROFILE_LABEL,
             passphrase=_WORKBENCH_PASSWORD,
             facts=(() if tax_id is None else (UserProfileFact(path="identity.tax_id", value=tax_id),)),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            profile_create_context=profile_create_context,
+            profile_decode_context=profile_decode_context,
         )
         # Registration closes its own session and leaves the capsule sealed, so
         # the workbench generation below needs a real login to read anything.
-        login_profile(name=WORKBENCH_PROFILE_LABEL, passphrase_callback=lambda: _WORKBENCH_PASSWORD)
+        login_profile(
+            name=WORKBENCH_PROFILE_LABEL,
+            passphrase_callback=lambda: _WORKBENCH_PASSWORD,
+            profile_decode_context=profile_decode_context,
+        )
         provider = compose_authenticated_root_inputs_provider(
             profile_id=require_active_bucket_id(),
             profile_label=WORKBENCH_PROFILE_LABEL,

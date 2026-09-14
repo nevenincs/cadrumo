@@ -70,6 +70,7 @@ from cadrumo.application.foreign_asset_thresholds import foreign_asset_declarati
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -715,23 +716,26 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
 
 
 def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_delta_is_below_threshold() -> None:
-    assert (
-        modelo_720_redeclaration_advisory_findings(
-            prior_observation=_year_n_advisory_observation(),
-            current_observation=_year_n_plus_1_advisory_observation(),
-            current_declaration_observation=_year_n_plus_1_advisory_observation(),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            modelo_720_redeclaration_advisory_findings(
+                prior_observation=_year_n_advisory_observation(),
+                current_observation=_year_n_plus_1_advisory_observation(),
+                current_declaration_observation=_year_n_plus_1_advisory_observation(),
+                operation=_authority_operation_for_test,
+            )
+            == ()
         )
-        == ()
-    )
 
-    assert (
-        modelo_720_redeclaration_advisory_findings(
-            prior_observation=_year_n_advisory_observation(),
-            current_observation=_year_n_plus_1_advisory_observation(),
-            current_declaration_observation=_year_n_plus_1_advisory_without_valores(),
+        assert (
+            modelo_720_redeclaration_advisory_findings(
+                prior_observation=_year_n_advisory_observation(),
+                current_observation=_year_n_plus_1_advisory_observation(),
+                current_declaration_observation=_year_n_plus_1_advisory_without_valores(),
+                operation=_authority_operation_for_test,
+            )
+            == ()
         )
-        == ()
-    )
 
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:

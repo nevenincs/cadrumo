@@ -121,7 +121,15 @@ def test_create_manual_transaction_emits_bucket_event_chain(secure_objects: Secu
 def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects, bucket_id=_OTHER_BUCKET_ID)
 
-    with pytest.raises(TransactionValidationError, match="bucket_id"):
+    with (
+        pytest.raises(TransactionValidationError, match="bucket_id"),
+        ledger_ports_for_test(
+            bucket_id=_OTHER_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports,
+    ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,
@@ -130,9 +138,7 @@ def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_obj
                 direction=TransactionDirection.OUTGOING,
                 description="wrong bucket",
             ),
-            ports=ledger_ports_for_test(
-                transaction_repository=transaction_repository, bucket_event_repository=event_repository
-            ),
+            ports=ports,
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -142,7 +148,14 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
 ) -> None:
     transaction_repository = TransactionCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=secure_objects)
 
-    with pytest.raises(StorageValidationError):
+    with (
+        pytest.raises(StorageValidationError),
+        ledger_ports_for_test(
+            bucket_id=_OTHER_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+        ) as ports,
+    ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_OTHER_BUCKET_ID,
@@ -153,7 +166,7 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
                 actor="operator-A",
                 source_command="aeat app ledger add",
             ),
-            ports=ledger_ports_for_test(transaction_repository=transaction_repository),
+            ports=ports,
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -176,21 +189,25 @@ def test_manual_foreign_currency_row_converts_at_entry(
         rate_provider=EcbReferenceRateProvider(fetch=ecb_csv_fetch({"GBP": {_date(2026, 5, 2): quote}})),
     )
 
-    result = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("1000.00"),
-            currency="GBP",
-            direction=TransactionDirection.INCOMING,
-            description="UK client invoice",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-        currency_normalizer=normalizer,
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        result = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("1000.00"),
+                currency="GBP",
+                direction=TransactionDirection.INCOMING,
+                description="UK client invoice",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            currency_normalizer=normalizer,
+        )
 
     expected_eur = (Decimal("1000.00") * (Decimal("1") / quote)).quantize(Decimal("0.01"))
     assert result.transaction.fx_rate == Decimal("1") / quote
@@ -206,19 +223,23 @@ def test_manual_eur_row_carries_no_conversion_stamp(
     """A euro row is already euro: stamping it would imply a conversion that never happened."""
     transaction_repository, event_repository = _repositories(secure_objects)
 
-    result = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("100.00"),
-            direction=TransactionDirection.INCOMING,
-            description="Domestic invoice",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        result = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("100.00"),
+                direction=TransactionDirection.INCOMING,
+                description="Domestic invoice",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
 
     assert result.transaction.raw.currency == "EUR"
     assert result.transaction.fx_rate is None

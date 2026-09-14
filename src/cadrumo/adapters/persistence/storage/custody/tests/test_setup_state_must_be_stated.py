@@ -86,9 +86,8 @@ def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
 
         # The second write is the subject: it is composed from the loaded
         # record exactly as a real edit is, and must not be refused.
-        replacement = UserProfileRecord(
-            schema_id=loaded.schema_id,
-            schema_version=loaded.schema_version,
+        replacement = _create_profile_record_for_test(
+            context=_profile_create_context_for_test,
             profile_id=loaded.profile_id,
             facts=loaded.facts,
             setup_state=loaded.setup_state,
@@ -150,7 +149,13 @@ def test_model_copy_preserves_the_statement_so_the_guard_is_not_defeated(tmp_pat
     # is required, so an unstated record cannot be built through validation at
     # all. That is the same guard enforced sooner, not a weaker one -- the
     # writer backstop below still refuses a record that evades construction.
+    context = _profile_creation_context_for_test()
     with pytest.raises(ValidationError):
-        UserProfileRecord(  # reason: omitting setup_state IS the refusal under test
-            profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e",
+        UserProfileRecord.model_validate(
+            {
+                "schema_id": context.schema.id,
+                "schema_version": context.schema.version,
+                "profile_id": "8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e",
+            },
+            context=context,
         )

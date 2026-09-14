@@ -11,6 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from .....application.diagnostic_models import (
     ConfigRepairReport,
@@ -490,64 +491,65 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     three workflow states (no provider, provider only, fully
     authenticated) and asserting the report shape across each.
     """
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
-    from .....application.auth.actions import update_auth
-    from .....application.workflow.persistence import workflow_state_repository
+        from .....application.auth.actions import update_auth
+        from .....application.workflow.persistence import workflow_state_repository
 
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
-    ):
-        register_minimal_profile(
-            profile_id="11111111-1111-4111-8111-111111111111",
-            overrides={
-                "identity.tax_id": "00000000T",
-                "activities.description": "design",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-            },
-        )
+        with (
+            isolated_profile_storage_root(tmp_path=tmp_path),
+            open_test_profile_session("11111111-1111-4111-8111-111111111111"),
+        ):
+            register_minimal_profile(
+                profile_id="11111111-1111-4111-8111-111111111111",
+                overrides={
+                    "identity.tax_id": "00000000T",
+                    "activities.description": "design",
+                    "tax_residence.jurisdiction_scope": "common_regime",
+                    "iva.regime": "GENERAL",
+                    "iva.m303_regime_composition": "general",
+                    "iva.redeme_enrolled": "false",
+                    "iva.cash_accounting_regime_enrolled": "false",
+                    "iva.voluntary_sii_enrolled": "false",
+                    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+                },
+            )
 
-        # The seeding door publishes the profile CAPSULE and returns its
-        # UserProfileRecord; local auth readiness lives on the WorkflowState,
-        # which is a separate record read from its own repository.
-        no_provider = workflow_state_repository().load()
-        provider_only = update_auth(no_provider, provider="clave_movil")
-        fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
+            # The seeding door publishes the profile CAPSULE and returns its
+            # UserProfileRecord; local auth readiness lives on the WorkflowState,
+            # which is a separate record read from its own repository.
+            no_provider = workflow_state_repository().load()
+            provider_only = update_auth(no_provider, provider="clave_movil")
+            fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
-        from .....application.wizard.status import build_wizard_status
+            from .....application.wizard.status import build_wizard_status
 
-        for state in (no_provider, provider_only, fully_authenticated):
-            workflow_state_repository().save(state)
-            setup_report = build_wizard_status(state)
-            repair_report = build_config_repair_report(ports=_diagnostics_ports())
-            auth_check = next(check for check in repair_report.checks if check.name == "auth.readiness")
-            if state is no_provider:
-                assert setup_report.login_ready is False
-                verdict = auth_check.precondition_verdict
-                assert verdict is not None
-                assert verdict.action is not None
-                assert verdict.action.action_id == "operator.auth.configure"
-                assert verdict.missing_argument_names == ("file",)
-            elif state is provider_only:
-                assert setup_report.auth_provider == "clave_movil"
-                assert setup_report.login_ready is False
-                verdict = auth_check.precondition_verdict
-                assert verdict is not None
-                assert verdict.action is not None
-                assert verdict.action.action_id == "operator.auth.login"
-                assert verdict.argument_bindings[0].value == "clave_movil"
-            else:
-                assert setup_report.auth_provider == "clave_movil"
-                assert setup_report.login_ready is True
-                assert auth_check.status == "ok"
-                assert auth_check.precondition_verdict is None
+            for state in (no_provider, provider_only, fully_authenticated):
+                workflow_state_repository().save(state)
+                setup_report = build_wizard_status(state, operation=_authority_operation_for_test)
+                repair_report = build_config_repair_report(ports=_diagnostics_ports())
+                auth_check = next(check for check in repair_report.checks if check.name == "auth.readiness")
+                if state is no_provider:
+                    assert setup_report.login_ready is False
+                    verdict = auth_check.precondition_verdict
+                    assert verdict is not None
+                    assert verdict.action is not None
+                    assert verdict.action.action_id == "operator.auth.configure"
+                    assert verdict.missing_argument_names == ("file",)
+                elif state is provider_only:
+                    assert setup_report.auth_provider == "clave_movil"
+                    assert setup_report.login_ready is False
+                    verdict = auth_check.precondition_verdict
+                    assert verdict is not None
+                    assert verdict.action is not None
+                    assert verdict.action.action_id == "operator.auth.login"
+                    assert verdict.argument_bindings[0].value == "clave_movil"
+                else:
+                    assert setup_report.auth_provider == "clave_movil"
+                    assert setup_report.login_ready is True
+                    assert auth_check.status == "ok"
+                    assert auth_check.precondition_verdict is None
 
 
 def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(

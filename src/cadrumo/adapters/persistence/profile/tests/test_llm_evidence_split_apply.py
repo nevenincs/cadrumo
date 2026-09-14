@@ -79,17 +79,19 @@ def test_apply_splits_parent_and_classifies_children(
             settings=load_settings(),
             ports=_LLM_PORTS,
         )
-    result = apply_evidence_split(
-        suggestion,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        source_command="aeat app ledger split --llm --apply",
-        ports=ledger_ports_for_test(
+        objects=_objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        result = apply_evidence_split(
+            suggestion,
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            source_command="aeat app ledger split --llm --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     assert isinstance(result, LLMSplitApplyResult)
     assert result.classified_child_count == 2
@@ -133,17 +135,19 @@ def test_apply_links_parent_invoice_evidence_to_each_child(
             settings=load_settings(),
             ports=_LLM_PORTS,
         )
-    result = apply_evidence_split(
-        suggestion,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        source_command="aeat app ledger split --llm --apply",
-        ports=ledger_ports_for_test(
+        objects=objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        result = apply_evidence_split(
+            suggestion,
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            source_command="aeat app ledger split --llm --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     catalogue = repository.load()
     for child_id in result.child_transaction_ids:
@@ -169,17 +173,19 @@ def test_apply_child_numbers_are_registry_derived_not_model(
             settings=load_settings(),
             ports=_LLM_PORTS,
         )
-    result = apply_evidence_split(
-        suggestion,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        source_command="aeat app ledger split --llm --apply",
-        ports=ledger_ports_for_test(
+        objects=_objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        result = apply_evidence_split(
+            suggestion,
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            source_command="aeat app ledger split --llm --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     catalogue = repository.load()
     children = []
@@ -213,17 +219,19 @@ def test_split_children_retain_lineage_and_evidence_provenance(
             settings=load_settings(),
             ports=_LLM_PORTS,
         )
-    result = apply_evidence_split(
-        suggestion,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        source_command="aeat app ledger split --llm --apply",
-        ports=ledger_ports_for_test(
+        objects=objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        result = apply_evidence_split(
+            suggestion,
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            source_command="aeat app ledger split --llm --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     catalogue = repository.load()
     parent = catalogue.get(tx_id)
@@ -268,17 +276,19 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
         )
 
     with pytest.raises(TransactionValidationError):
-        apply_evidence_split(
-            suggestion,
+        with ledger_ports_for_test(
             bucket_id=_BUCKET,
-            source_command="aeat app ledger split --llm --apply",
-            ports=ledger_ports_for_test(
+            objects=_objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports:
+            apply_evidence_split(
+                suggestion,
                 bucket_id=_BUCKET,
-                transaction_repository=repository,
-                bucket_event_repository=events,
-            ),
-            occurred_at=_NOW,
-        )
+                source_command="aeat app ledger split --llm --apply",
+                ports=ports,
+                occurred_at=_NOW,
+            )
 
     catalogue = repository.load()
     parent = catalogue.get(tx_id)
@@ -312,19 +322,23 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
     )
 
     with pytest.raises(TransactionValidationError, match="transaction id"):
-        split_transaction_with_classified_children(
+        with ledger_ports_for_test(
             bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            children=children,
-            child_classifications=classifications,
-            classified_by="llm:test-model",
-            actor="operator",
-            source_command="aeat app ledger split --llm --apply",
-            ports=ledger_ports_for_test(
-                bucket_id=_BUCKET, transaction_repository=repository, bucket_event_repository=events
-            ),
-            occurred_at=_NOW,
-        )
+            objects=_objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports:
+            split_transaction_with_classified_children(
+                bucket_id=_BUCKET,
+                transaction_id=tx_id,
+                children=children,
+                child_classifications=classifications,
+                classified_by="llm:test-model",
+                actor="operator",
+                source_command="aeat app ledger split --llm --apply",
+                ports=ports,
+                occurred_at=_NOW,
+            )
 
     catalogue = repository.load()
     parent = catalogue.get(tx_id)

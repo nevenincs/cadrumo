@@ -37,19 +37,21 @@ def test_operator_derive_persists_substrate_with_derived_provenance(
     gross = Decimal("121.00")
     tx_id = _seed_business(repository, amount=gross)
 
-    derivation = derive_operator_iva_substrate(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        iva_category=IvaCategory("domestic_general"),
-        actor="operator-A",
-        source_command="aeat app ledger classify --iva-category --saturate",
-        ports=ledger_ports_for_test(
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        derivation = derive_operator_iva_substrate(
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            transaction_id=tx_id,
+            iva_category=IvaCategory("domestic_general"),
+            actor="operator-A",
+            source_command="aeat app ledger classify --iva-category --saturate",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     assert isinstance(derivation, OperatorIvaDerivationResult)
     assert derivation.derivable is True
@@ -74,19 +76,21 @@ def test_operator_derive_non_derivable_returns_reason_and_leaves_row_unmutated(
     repository, events = repositories
     tx_id = _seed_business(repository)
 
-    derivation = derive_operator_iva_substrate(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        iva_category=IvaCategory("intra_community_supply"),
-        actor="operator-A",
-        source_command="aeat app ledger classify --iva-category --saturate",
-        ports=ledger_ports_for_test(
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        derivation = derive_operator_iva_substrate(
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            transaction_id=tx_id,
+            iva_category=IvaCategory("intra_community_supply"),
+            actor="operator-A",
+            source_command="aeat app ledger classify --iva-category --saturate",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     assert derivation.derivable is False
     assert derivation.result is None
@@ -109,19 +113,21 @@ def test_operator_derive_refuses_non_business_row(
     tx_id = _seed_unclassified(repository)
 
     with pytest.raises(TransactionValidationError, match="business transaction"):
-        derive_operator_iva_substrate(
+        with ledger_ports_for_test(
             bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            iva_category=IvaCategory("domestic_general"),
-            actor="operator-A",
-            source_command="aeat app ledger classify --iva-category --saturate",
-            ports=ledger_ports_for_test(
+            objects=repository._objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports:
+            derive_operator_iva_substrate(
                 bucket_id=_BUCKET,
-                transaction_repository=repository,
-                bucket_event_repository=events,
-            ),
-            occurred_at=_NOW,
-        )
+                transaction_id=tx_id,
+                iva_category=IvaCategory("domestic_general"),
+                actor="operator-A",
+                source_command="aeat app ledger classify --iva-category --saturate",
+                ports=ports,
+                occurred_at=_NOW,
+            )
 
 
 def test_operator_derive_zero_rated_category_derives_zero_iva(
@@ -131,19 +137,21 @@ def test_operator_derive_zero_rated_category_derives_zero_iva(
     gross = Decimal("121.00")
     tx_id = _seed_business(repository, amount=gross)
 
-    derivation = derive_operator_iva_substrate(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        iva_category=IvaCategory("domestic_zero"),
-        actor="operator-A",
-        source_command="aeat app ledger classify --iva-category --saturate",
-        ports=ledger_ports_for_test(
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        derivation = derive_operator_iva_substrate(
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            transaction_id=tx_id,
+            iva_category=IvaCategory("domestic_zero"),
+            actor="operator-A",
+            source_command="aeat app ledger classify --iva-category --saturate",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     assert derivation.derivable is True
     assert derivation.iva_rate == Decimal("0")

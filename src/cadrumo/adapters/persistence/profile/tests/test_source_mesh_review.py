@@ -42,6 +42,7 @@ from cadrumo.application.filing.draft_review import ModeloApprovalStaleReason, a
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue
@@ -97,35 +98,43 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
 def test_approval_goes_stale_when_invoice_source_data_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
-    bucket_id = _active_bucket_runtime.bucket_id
-    schema_provider = _schema_provider()
-    draft = _ready_draft(schema_provider)
-    repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = _active_bucket_runtime.bucket_id
+        schema_provider = _schema_provider()
+        draft = _ready_draft(schema_provider)
+        repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
 
-    repository.save(
-        InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]),
-    )
-    approved = approve_draft(
-        draft,
-        bucket_id=bucket_id,
-        approved_by="operator",
-        schema_provider=schema_provider,
-    )
-    assert approved.status is ModeloDraftStatus.APROBADO
-    assert approved.approval_basis is not None
-    assert approved.approval_basis.invoice_catalogue_fingerprint  # populated, non-empty
+        repository.save(
+            InvoiceCatalogue.from_invoices(
+                [_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]
+            ),
+        )
+        approved = approve_draft(
+            draft,
+            bucket_id=bucket_id,
+            approved_by="operator",
+            schema_provider=schema_provider,
+            operation=_authority_operation_for_test,
+        )
+        assert approved.status is ModeloDraftStatus.APROBADO
+        assert approved.approval_basis is not None
+        assert approved.approval_basis.invoice_catalogue_fingerprint  # populated, non-empty
 
-    # Mutate ONLY the invoice source: a different taxable base yields a different
-    # invoice, so the self-loaded catalogue fingerprint must change.
-    repository.save(
-        InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("250.00"), bucket_id=bucket_id)]),
-    )
+        # Mutate ONLY the invoice source: a different taxable base yields a different
+        # invoice, so the self-loaded catalogue fingerprint must change.
+        repository.save(
+            InvoiceCatalogue.from_invoices(
+                [_invoice("2026-0001", taxable_base=Decimal("250.00"), bucket_id=bucket_id)]
+            ),
+        )
 
-    reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
+        reasons = approval_stale_reasons(
+            approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+        )
 
-    # Only the invoice source changed: the draft, transactions, category profiles,
-    # and schema are all unchanged, so INVOICE_CATALOGUE_CHANGED is the sole reason.
-    assert reasons == (ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED,)
+        # Only the invoice source changed: the draft, transactions, category profiles,
+        # and schema are all unchanged, so INVOICE_CATALOGUE_CHANGED is the sole reason.
+        assert reasons == (ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED,)
 
 
 def test_approval_not_stale_when_invoice_source_unchanged(
@@ -138,23 +147,29 @@ def test_approval_not_stale_when_invoice_source_unchanged(
     meaningless. Approving and then re-checking against the identical catalogue
     must yield an empty reason tuple.
     """
-    bucket_id = _active_bucket_runtime.bucket_id
-    schema_provider = _schema_provider()
-    draft = _ready_draft(schema_provider)
-    repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = _active_bucket_runtime.bucket_id
+        schema_provider = _schema_provider()
+        draft = _ready_draft(schema_provider)
+        repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
 
-    repository.save(
-        InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]),
-    )
-    approved = approve_draft(
-        draft,
-        bucket_id=bucket_id,
-        approved_by="operator",
-        schema_provider=schema_provider,
-    )
+        repository.save(
+            InvoiceCatalogue.from_invoices(
+                [_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]
+            ),
+        )
+        approved = approve_draft(
+            draft,
+            bucket_id=bucket_id,
+            approved_by="operator",
+            schema_provider=schema_provider,
+            operation=_authority_operation_for_test,
+        )
 
-    # No mutation to any source between approval and the staleness check.
-    reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
+        # No mutation to any source between approval and the staleness check.
+        reasons = approval_stale_reasons(
+            approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+        )
 
-    assert ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED not in reasons
-    assert reasons == ()
+        assert ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED not in reasons
+        assert reasons == ()

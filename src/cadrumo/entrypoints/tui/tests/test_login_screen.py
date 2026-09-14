@@ -75,7 +75,16 @@ def _register(label: str) -> str:
 
 def _screen(choices: list[ProfileLoginChoice], *, preselected: str | None = None) -> LoginScreen:
     """The production composition, wired to the application interaction contract."""
-    return LoginScreen(choices=choices, authenticate=attempt_profile_login, preselected=preselected)
+    _, profile_decode_context = _profile_contexts_for_test()
+
+    def _authenticate(profile_id: str, passphrase: str):
+        return attempt_profile_login(
+            profile_id,
+            passphrase,
+            profile_decode_context=profile_decode_context,
+        )
+
+    return LoginScreen(choices=choices, authenticate=_authenticate, preselected=preselected)
 
 
 async def _unlock_with(screen: LoginScreen, pilot, password: str) -> None:
@@ -270,7 +279,12 @@ async def test_cancelling_leaves_without_opening_anything(tmp_path) -> None:
         assert app.error is None
         assert app.outcome is None, "cancelling must not report a login"
 
-        resumed = login_profile(name=profile_id, passphrase_callback=lambda: _PASSWORD)
+        _, profile_decode_context = _profile_contexts_for_test()
+        resumed = login_profile(
+            name=profile_id,
+            passphrase_callback=lambda: _PASSWORD,
+            profile_decode_context=profile_decode_context,
+        )
         assert resumed.already_authenticated is False, "cancelling must have left the profile locked"
 
 

@@ -67,22 +67,24 @@ def _seed_attachment(secure_objects: SecureObjectRepository, *, marker: bytes) -
 
 def _seed_transaction(secure_objects: SecureObjectRepository, *, idempotency_key: str) -> str:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="material oficina",
-            idempotency_key=idempotency_key,
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            attachment_store=_store(secure_objects),
-        ),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        attachment_store=_store(secure_objects),
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="material oficina",
+                idempotency_key=idempotency_key,
+            ),
+            ports=ports,
+        )
     return created.transaction.transaction_id
 
 
@@ -93,18 +95,20 @@ def _attach(
     attachment_id: str,
 ) -> str:
     transaction_repository, event_repository = _repositories(secure_objects)
-    result = attach_manual_transaction_evidence(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=transaction_id,
-        actor="operator",
-        attachment_ids=(attachment_id,),
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        attachment_store=_store(secure_objects),
+    ) as ports:
+        result = attach_manual_transaction_evidence(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            attachment_store=_store(secure_objects),
-        ),
-    )
+            transaction_id=transaction_id,
+            actor="operator",
+            attachment_ids=(attachment_id,),
+            ports=ports,
+        )
     return result.transaction.transaction_id
 
 

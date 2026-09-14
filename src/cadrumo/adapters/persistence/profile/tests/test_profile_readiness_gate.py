@@ -41,6 +41,7 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -619,51 +620,57 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
     returns ``None`` (applicable, no refusal) for a resident IRPF natural
     person whose only differing fact is the residency axis.
     """
-    nonresident = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_NONRESIDENT_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="X1234567L"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
-            UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="FR"),
-        ),
-        created_at=_NOW,
-        updated_at=_NOW,
-    )
-    resident = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_OPERATOR_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
-        ),
-        created_at=_NOW,
-        updated_at=_NOW,
-    )
-
-    refusal = modelo_applicability_refusal(
-        record=nonresident,
-        bucket_id=_NONRESIDENT_PROFILE_ID,
-        modelo=Modelo("100").value,
-    )
-    assert refusal is not None
-    message, context = refusal
-    assert "NON_RESIDENT_IRNR" in message
-    assert "Modelo 210" in message
-    assert context["applicability_verdict"] == "not_applicable"
-
-    assert (
-        modelo_applicability_refusal(
-            record=resident,
-            bucket_id=_OPERATOR_PROFILE_ID,
-            modelo=Modelo("100").value,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        profile_context = _profile_creation_context_for_test()
+        nonresident = _create_profile_record_for_test(
+            context=profile_context,
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=_NONRESIDENT_PROFILE_ID,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
+                UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="FR"),
+            ),
+            created_at=_NOW,
+            updated_at=_NOW,
         )
-        is None
-    )
+        resident = _create_profile_record_for_test(
+            context=profile_context,
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=_OPERATOR_PROFILE_ID,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
+            ),
+            created_at=_NOW,
+            updated_at=_NOW,
+        )
+
+        refusal = modelo_applicability_refusal(
+            record=nonresident,
+            bucket_id=_NONRESIDENT_PROFILE_ID,
+            modelo=Modelo("100").value,
+            operation=_authority_operation_for_test,
+        )
+        assert refusal is not None
+        message, context = refusal
+        assert "NON_RESIDENT_IRNR" in message
+        assert "Modelo 210" in message
+        assert context["applicability_verdict"] == "not_applicable"
+
+        assert (
+            modelo_applicability_refusal(
+                record=resident,
+                bucket_id=_OPERATOR_PROFILE_ID,
+                modelo=Modelo("100").value,
+                operation=_authority_operation_for_test,
+            )
+            is None
+        )
 
 
 def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work_unit(tmp_path: Path) -> None:

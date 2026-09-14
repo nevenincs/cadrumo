@@ -30,23 +30,37 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="modelo source row",
-            idempotency_key="update-blocked",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="modelo source row",
+                idempotency_key="update-blocked",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
     persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
-    with pytest.raises(TransactionValidationError, match="finalized modelo"):
+    with (
+        pytest.raises(TransactionValidationError, match="finalized modelo"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            bucket_event_repository=event_repository,
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+            transaction_repository=transaction_repository,
+            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        ) as ports,
+    ):
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
@@ -57,12 +71,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
                 description="mutated modelo source row",
                 idempotency_key="update-blocked",
             ),
-            ports=ledger_ports_for_test(
-                bucket_event_repository=event_repository,
-                calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-                transaction_repository=transaction_repository,
-                work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
-            ),
+            ports=ports,
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
 
@@ -77,23 +86,36 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     category = SpendingCategory._from_registry("telefonia_movil")
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("50.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="telefono movil",
-            idempotency_key="usage-ratio-update",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="telefono movil",
+                idempotency_key="usage-ratio-update",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
-    with pytest.raises(TransactionValidationError, match="does not match"):
+    with (
+        pytest.raises(TransactionValidationError, match="does not match"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            bucket_event_repository=event_repository,
+            transaction_repository=transaction_repository,
+            usage_ratio_profile=profile,
+        ) as ports,
+    ):
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
@@ -107,10 +129,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
                 category_id=category.value,
                 usage_ratio_id=category.value,
             ),
-            ports=ledger_ports_for_test(
-                bucket_event_repository=event_repository, transaction_repository=transaction_repository
-            ),
-            usage_ratio_profile=profile,
+            ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -122,22 +141,34 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
 
 def test_update_manual_transaction_rejects_provenance_only_correction(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("50.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="same row",
-            idempotency_key="same-row",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="same row",
+                idempotency_key="same-row",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
 
-    with pytest.raises(TransactionValidationError, match="must change at least one ledger field"):
+    with (
+        pytest.raises(TransactionValidationError, match="must change at least one ledger field"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            bucket_event_repository=event_repository,
+            transaction_repository=transaction_repository,
+        ) as ports,
+    ):
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
@@ -148,8 +179,6 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
                 description="same row",
                 idempotency_key="same-row",
             ),
-            ports=ledger_ports_for_test(
-                bucket_event_repository=event_repository, transaction_repository=transaction_repository
-            ),
+            ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )

@@ -33,12 +33,14 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -49,6 +51,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -164,9 +167,13 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
     snapshot = _snapshot()
     from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 
-    carry = resolve_bindings_from_local_store(
-        snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
-    ).binding_values
+    with bundled_indexed_authority().operation() as operation:
+        carry = resolve_bindings_from_local_store(
+            snapshot,
+            repository=obs_repo,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=operation,
+        ).binding_values
     binding_values, relation_values = _zeroed_channels(snapshot)
     binding_values.update(carry)
 
@@ -179,7 +186,7 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, _PERIOD),
         revision_id=str(_FILING_YEAR),
-        repository=work_repo,
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_CLOCK,
     )
     revision = calculate_modelo_revision(
@@ -188,9 +195,12 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
         relation_values=relation_values,
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        bucket_event_repository=event_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ),
         clock=_CLOCK,
     )
     return revision

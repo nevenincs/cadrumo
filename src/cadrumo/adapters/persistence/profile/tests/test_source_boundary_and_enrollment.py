@@ -64,7 +64,7 @@ from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.modelos.row_models import Modelo184MemberRow
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -345,8 +345,10 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
+        profile_context = _profile_creation_context_for_test()
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
+                context=profile_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=profile_facts,
@@ -358,7 +360,8 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
         work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2025-y-siguientes")
 
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
+                context=profile_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=incomplete_facts,

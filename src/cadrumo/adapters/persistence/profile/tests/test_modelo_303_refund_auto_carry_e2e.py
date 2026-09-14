@@ -45,13 +45,19 @@ from dev.registry.tests.profile_schema_support import (
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
+)
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -68,6 +74,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -78,6 +85,7 @@ from cadrumo.domain.deadlines.models import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -213,20 +221,22 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     _store_operator_profile(period_token=period)
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
-    filing_repo = ModeloRecordCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
 
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
-    report = reconcile_modelo_303_iva_compensation(
-        snapshot,
-        taxpayer_nif=_TAX_ID,
-        wallet=None,
-        repository=CalculationObservationRepository(),
-        decided_at=_DECIDED_AT,
-        treat_absent_recurrence_as_first_period=True,
-        local_recurrence=None,
-        prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAX_ID,
+            wallet=None,
+            repository=CalculationObservationRepository(),
+            decision_repository=IvaWalletDecisionRepository(),
+            decided_at=_DECIDED_AT,
+            treat_absent_recurrence_as_first_period=True,
+            local_recurrence=None,
+            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
+            operation=operation,
+        )
     assert report.decision.divergence == "first_period_zero"
 
     work_unit = create_work_unit(
@@ -263,40 +273,40 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     saldo = revision.casilla_values[_SALDO_CASILLA]
     assert saldo > Decimal("0")
 
-    verification = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator",
-        workflow_profile=workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        filing_repository=filing_repo,
-        bucket_event_repository=event_repo,
-        settings=Settings(
-            cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
-            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
-        ),
-        clock=_VERIFY_AT,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        verification = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="operator",
+            workflow_profile=workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
+            settings=Settings(
+                cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
+                cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+            ),
+            clock=_VERIFY_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert verification.granted_verificado_completo is True
 
     # The filing path determines the devolución/compensación disposition itself
     # from the REDEME profile — NO refunded flag is passed here.
-    file_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator",
-        workflow_profile=workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        filing_repository=filing_repo,
-        bucket_event_repository=event_repo,
-        settings=Settings(
-            cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
-            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
-        ),
-        clock=_FILE_AT,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        file_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            actor="operator",
+            workflow_profile=workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+            operation=operation,
+            settings=Settings(
+                cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
+                cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+            ),
+            clock=_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
     return saldo
 
 
@@ -309,10 +319,12 @@ def _next_period_carry_in(*, next_period: str = _NEXT_PERIOD) -> Decimal | None:
     ``_REDEME_REFUND_PERIOD``).
     """
     snapshot_next = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=next_period)
-    relation_values = resolve_relations_from_local_store(
-        snapshot_next,
-        repository=CalculationObservationRepository(),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        relation_values = resolve_relations_from_local_store(
+            snapshot_next,
+            repository=CalculationObservationRepository(),
+            operation=operation,
+        )
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in relation_values.values if item.value is not None
     }

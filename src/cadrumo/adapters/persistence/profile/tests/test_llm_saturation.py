@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.application.ledger.llm_classification import saturate_llm_classification
 from cadrumo.application.ledger.llm_classification_ports import LLMSaturatedSuggestion
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -48,67 +49,73 @@ __all__ = ["repositories"]
 def test_suggest_derives_substrate_from_selected_category(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
 ) -> None:
-    repository, _events = repositories
-    # The gross is the transaction input the derived substrate must reconstitute;
-    # asserting base + iva against this seeded input (not a recomputed literal) is
-    # the real invariant, not a hand-summed expectation.
-    gross = Decimal("121.00")
-    tx_id = _seed_unclassified(repository, amount=gross)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        repository, _events = repositories
+        # The gross is the transaction input the derived substrate must reconstitute;
+        # asserting base + iva against this seeded input (not a recomputed literal) is
+        # the real invariant, not a hand-summed expectation.
+        gross = Decimal("121.00")
+        tx_id = _seed_unclassified(repository, amount=gross)
 
-    suggestion = saturate_llm_classification(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
-        transaction_repository=repository,
-    )
+        suggestion = saturate_llm_classification(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
+            transaction_repository=repository,
+            operation=_authority_operation_for_test,
+        )
 
-    assert isinstance(suggestion, LLMSaturatedSuggestion)
-    assert suggestion.iva_category == IvaCategory("domestic_general")
-    assert suggestion.rate_derivable is True
-    assert suggestion.iva_rate == Decimal("0.21")
-    assert suggestion.taxable_base == Decimal("100.00")
-    assert suggestion.iva_amount == Decimal("21.00")
-    assert suggestion.provenance == "llm:claude:test-model"
-    # The substrate sums to the gross to the cent — the persisted invariant.
-    assert suggestion.taxable_base is not None and suggestion.iva_amount is not None
-    assert suggestion.taxable_base + suggestion.iva_amount == gross
+        assert isinstance(suggestion, LLMSaturatedSuggestion)
+        assert suggestion.iva_category == IvaCategory("domestic_general")
+        assert suggestion.rate_derivable is True
+        assert suggestion.iva_rate == Decimal("0.21")
+        assert suggestion.taxable_base == Decimal("100.00")
+        assert suggestion.iva_amount == Decimal("21.00")
+        assert suggestion.provenance == "llm:claude:test-model"
+        # The substrate sums to the gross to the cent — the persisted invariant.
+        assert suggestion.taxable_base is not None and suggestion.iva_amount is not None
+        assert suggestion.taxable_base + suggestion.iva_amount == gross
 
 
 def test_suggest_zero_rated_category_derives_zero_iva(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
 ) -> None:
-    repository, _events = repositories
-    tx_id = _seed_unclassified(repository)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        repository, _events = repositories
+        tx_id = _seed_unclassified(repository)
 
-    suggestion = saturate_llm_classification(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_zero")),
-        transaction_repository=repository,
-    )
+        suggestion = saturate_llm_classification(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_zero")),
+            transaction_repository=repository,
+            operation=_authority_operation_for_test,
+        )
 
-    assert suggestion.rate_derivable is True
-    assert suggestion.iva_rate == Decimal("0")
-    assert suggestion.taxable_base == Decimal("121.00")
-    assert suggestion.iva_amount == Decimal("0.00")
+        assert suggestion.rate_derivable is True
+        assert suggestion.iva_rate == Decimal("0")
+        assert suggestion.taxable_base == Decimal("121.00")
+        assert suggestion.iva_amount == Decimal("0.00")
 
 
 def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
 ) -> None:
-    repository, _events = repositories
-    tx_id = _seed_unclassified(repository)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        repository, _events = repositories
+        tx_id = _seed_unclassified(repository)
 
-    suggestion = saturate_llm_classification(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("intra_community_supply")),
-        transaction_repository=repository,
-    )
+        suggestion = saturate_llm_classification(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("intra_community_supply")),
+            transaction_repository=repository,
+            operation=_authority_operation_for_test,
+        )
 
-    assert suggestion.iva_category == IvaCategory("intra_community_supply")
-    assert suggestion.rate_derivable is False
-    assert suggestion.iva_rate is None
-    assert suggestion.taxable_base is None
-    assert suggestion.iva_amount is None
-    assert suggestion.derivation_note  # operator-facing explanation present
+        assert suggestion.iva_category == IvaCategory("intra_community_supply")
+        assert suggestion.rate_derivable is False
+        assert suggestion.iva_rate is None
+        assert suggestion.taxable_base is None
+        assert suggestion.iva_amount is None
+        assert suggestion.derivation_note  # operator-facing explanation present

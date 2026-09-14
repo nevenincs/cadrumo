@@ -32,6 +32,7 @@ already-verified con/total definitive substrate.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -58,6 +59,7 @@ from .....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.ids import BindingId
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.prorrata import InputClassification
@@ -67,6 +69,13 @@ from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation across differentiated-sector aggregation."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BUCKET_ID = "5c705c70-5c70-4c70-8c70-5c705c705c70"
 _PERIOD = Period.from_year_and_code(2026, "1T")
@@ -164,7 +173,10 @@ def _settled_2025_entry(sector_id: str | None, *, con: str, sin: str) -> Prorrat
     )
 
 
-def test_two_sectors_apportion_at_own_percentage_with_common_use_split(tmp_path: Path) -> None:
+def test_two_sectors_apportion_at_own_percentage_with_common_use_split(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Each sector deducts at its own percentage; common-use at art. 104.Dos; not a single rate.
 
     Hand-constructed-register verification (no bundled two-sector oracle ships).
@@ -245,11 +257,13 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(tmp_path:
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=_BUCKET_ID,
+            operation=authority_operation,
         )
         values = resolve_iva_ledger_binding_values(
             revision,
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
+            operation=authority_operation,
         )
 
     apportionment = aggregation.prorrata_apportionment

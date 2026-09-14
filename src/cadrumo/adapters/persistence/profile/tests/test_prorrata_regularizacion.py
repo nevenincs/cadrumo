@@ -47,6 +47,7 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -607,54 +608,58 @@ def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
 
 def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_entry(tmp_path: Path) -> None:
     """Filing the settlement writes the register and lets year+1 carry from the stamped observation."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
-        filing_repository = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
-        work_unit_repository = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
-        prorrata_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID)
-        observation_repository = CalculationObservationRepository(objects=profile.repository)
-        revision, work_unit = _seed_verified_m303_settlement(
-            calculation_repository=calculation_repository,
-            work_unit_repository=work_unit_repository,
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+            calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+            filing_repository = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+            work_unit_repository = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
+            prorrata_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID)
+            observation_repository = CalculationObservationRepository(objects=profile.repository)
+            revision, work_unit = _seed_verified_m303_settlement(
+                calculation_repository=calculation_repository,
+                work_unit_repository=work_unit_repository,
+            )
 
-        persist_filed_revision(
-            target=revision,
-            work_unit=work_unit,
-            work_units=work_unit_repository.load(),
-            notes=None,
-            actor="aeat.test.modelo.file",
-            now=_T0 + timedelta(hours=2),
-            calculation_repository=calculation_repository,
-            filing_repository=filing_repository,
-            work_unit_repository=work_unit_repository,
-            bucket_event_repository=BucketEventHistoryRepository(),
-            calculation_observation_repository=observation_repository,
-            participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
-            prorrata_register_repository=prorrata_repository,
-            result_disposition=ResultDisposition.NEGATIVA,
-            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
-        )
+            persist_filed_revision(
+                target=revision,
+                work_unit=work_unit,
+                work_units=work_unit_repository.load(),
+                notes=None,
+                actor="aeat.test.modelo.file",
+                now=_T0 + timedelta(hours=2),
+                calculation_repository=calculation_repository,
+                filing_repository=filing_repository,
+                work_unit_repository=work_unit_repository,
+                bucket_event_repository=BucketEventHistoryRepository(),
+                calculation_observation_repository=observation_repository,
+                participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
+                prorrata_register_repository=prorrata_repository,
+                result_disposition=ResultDisposition.NEGATIVA,
+                iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
-        settled_entry = prorrata_repository.load().entry_for(_SETTLEMENT_YEAR)
-        seed_evaluation = evaluate_carried_prior_definitiva_seed(
-            ejercicio=_CARRY_YEAR,
-            observation_repository=observation_repository,
-        )
+            settled_entry = prorrata_repository.load().entry_for(_SETTLEMENT_YEAR)
+            seed_evaluation = evaluate_carried_prior_definitiva_seed(
+                ejercicio=_CARRY_YEAR,
+                observation_repository=observation_repository,
+            )
 
-    assert settled_entry is not None
-    assert settled_entry.definitive_percentage == Decimal("75")
-    assert settled_entry.definitive_volume_con_derecho == Decimal("150000.00")
-    assert settled_entry.definitive_volume_sin_derecho == Decimal("50000.00")
-    assert seed_evaluation.findings == ()
-    seed = seed_evaluation.seed
-    assert seed is not None
-    assert seed.source_modelo == Modelo("303").value
-    assert seed.source_filing_year == _SETTLEMENT_YEAR
-    assert seed.source_period == _SETTLEMENT_PERIOD
-    assert seed.source_casilla_id == _PORCENTAJE_ID
-    assert seed.stamped_revision_id == _m303_revision_id(filing_year=_SETTLEMENT_YEAR, period=_SETTLEMENT_PERIOD)
-    assert seed.entry.ejercicio == _CARRY_YEAR
-    assert seed.entry.provisional_percentage == Decimal("75")
-    assert seed.entry.provisional_provenance == ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
-    assert seed.entry.source_observation_ref == "303:2026:4T"
+        assert settled_entry is not None
+        assert settled_entry.definitive_percentage == Decimal("75")
+        assert settled_entry.definitive_volume_con_derecho == Decimal("150000.00")
+        assert settled_entry.definitive_volume_sin_derecho == Decimal("50000.00")
+        assert seed_evaluation.findings == ()
+        seed = seed_evaluation.seed
+        assert seed is not None
+        assert seed.source_modelo == Modelo("303").value
+        assert seed.source_filing_year == _SETTLEMENT_YEAR
+        assert seed.source_period == _SETTLEMENT_PERIOD
+        assert seed.source_casilla_id == _PORCENTAJE_ID
+        assert seed.stamped_revision_id == _m303_revision_id(filing_year=_SETTLEMENT_YEAR, period=_SETTLEMENT_PERIOD)
+        assert seed.entry.ejercicio == _CARRY_YEAR
+        assert seed.entry.provisional_percentage == Decimal("75")
+        assert seed.entry.provisional_provenance == ProrrataProvisionalProvenance._from_registry(
+            "carried_prior_definitiva"
+        )
+        assert seed.entry.source_observation_ref == "303:2026:4T"

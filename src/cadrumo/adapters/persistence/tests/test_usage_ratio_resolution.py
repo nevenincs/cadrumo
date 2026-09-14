@@ -30,6 +30,7 @@ from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_runtime_profile_fixture,
 )
 from cadrumo.application.user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -69,13 +70,16 @@ def test_a_declared_dwelling_area_produces_the_suministros_ratio(_runtime_profil
     of the utility bill. Before this resolver the same profile produced no ratio at
     all and the deduction was zero.
     """
-    _store_profile(
-        **{"vivienda_office.office_m2": "20", "vivienda_office.total_m2": "100"},
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _store_profile(
+            **{"vivienda_office.office_m2": "20", "vivienda_office.total_m2": "100"},
+        )
 
-    ratios = resolve_effective_usage_ratios(bucket_id=_BUCKET_ID, year=_YEAR)
+        ratios = resolve_effective_usage_ratios(
+            bucket_id=_BUCKET_ID, year=_YEAR, operation=_authority_operation_for_test
+        )
 
-    assert ratios[SpendingCategory._from_registry("suministros_home_office_luz")] == Decimal("0.060")
+        assert ratios[SpendingCategory._from_registry("suministros_home_office_luz")] == Decimal("0.060")
 
 
 def test_the_ownership_costs_take_the_raw_proportion(_runtime_profile: object) -> None:
@@ -86,13 +90,16 @@ def test_the_ownership_costs_take_the_raw_proportion(_runtime_profile: object) -
     proportion itself. Asserting both keeps the statutory factor from being applied
     where no provision establishes it.
     """
-    _store_profile(
-        **{"vivienda_office.office_m2": "20", "vivienda_office.total_m2": "100"},
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _store_profile(
+            **{"vivienda_office.office_m2": "20", "vivienda_office.total_m2": "100"},
+        )
 
-    ratios = resolve_effective_usage_ratios(bucket_id=_BUCKET_ID, year=_YEAR)
+        ratios = resolve_effective_usage_ratios(
+            bucket_id=_BUCKET_ID, year=_YEAR, operation=_authority_operation_for_test
+        )
 
-    assert ratios[SpendingCategory._from_registry("amortizacion_vivienda_afecto")] == Decimal("0.20")
+        assert ratios[SpendingCategory._from_registry("amortizacion_vivienda_afecto")] == Decimal("0.20")
 
 
 def test_no_declared_area_resolves_to_nothing_rather_than_a_guess(_runtime_profile: object) -> None:
@@ -102,13 +109,20 @@ def test_no_declared_area_resolves_to_nothing_rather_than_a_guess(_runtime_profi
     invented. The categories stay ineligible, which is the honest outcome: the
     registry cannot know how much of a home is an office.
     """
-    _store_profile(**{"identity.tax_id": "X1234567L"})
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _store_profile(**{"identity.tax_id": "X1234567L"})
 
-    ratios = resolve_effective_usage_ratios(bucket_id=_BUCKET_ID, year=_YEAR)
+        ratios = resolve_effective_usage_ratios(
+            bucket_id=_BUCKET_ID, year=_YEAR, operation=_authority_operation_for_test
+        )
 
-    assert SpendingCategory._from_registry("suministros_home_office_luz") not in ratios
+        assert SpendingCategory._from_registry("suministros_home_office_luz") not in ratios
 
 
 def test_an_absent_profile_resolves_to_nothing(_runtime_profile: object) -> None:
     """SUPPORTING. A bucket with no profile must not raise on the calculate path."""
-    assert resolve_effective_usage_ratios(bucket_id=_BUCKET_ID, year=_YEAR) == {}
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            resolve_effective_usage_ratios(bucket_id=_BUCKET_ID, year=_YEAR, operation=_authority_operation_for_test)
+            == {}
+        )

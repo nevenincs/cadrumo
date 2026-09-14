@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests._export_test_support import isolated_backend
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 __all__ = ["isolated_backend"]
 from pydantic import ValidationError
@@ -164,19 +165,20 @@ def test_export_refuses_when_no_active_bucket(
 ) -> None:
     """Without an active profile bucket the service cannot scope the
     MODELO_EXPORTED event and must refuse cleanly."""
-
-    with pytest.raises(ModeloExportNoActiveBucketError) as exc_info, override_settings(cadrumo_active_profile=None):
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id="0" * 64,
-                output_path=tmp_path / "out.txt",
-                actor="operator",
-            ),
-            workflow_profile=_profile(),
-            export_ports=empty_modelo_export_ports_for_test(),
-        )
-    assert exc_info.value.translated_message == "application.modelo.errors.export_no_active_bucket"
-    assert exc_info.value.context is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(ModeloExportNoActiveBucketError) as exc_info, override_settings(cadrumo_active_profile=None):
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id="0" * 64,
+                    output_path=tmp_path / "out.txt",
+                    actor="operator",
+                ),
+                workflow_profile=_profile(),
+                export_ports=empty_modelo_export_ports_for_test(),
+                operation=_authority_operation_for_test,
+            )
+        assert exc_info.value.translated_message == "application.modelo.errors.export_no_active_bucket"
+        assert exc_info.value.context is None
 
 
 def test_export_refuses_unknown_revision(
@@ -185,21 +187,22 @@ def test_export_refuses_unknown_revision(
 ) -> None:
     """An addressed calculation revision id that is not in the
     catalogue surfaces as CalculationRevisionNotFoundError."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _seed_profile()
 
-    _seed_profile()
-
-    with pytest.raises(CalculationRevisionNotFoundError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id="f" * 64,
-                output_path=tmp_path / "out.txt",
-                actor="operator",
-            ),
-            workflow_profile=_profile(),
-            export_ports=modelo_export_ports_for_test(),
-        )
-    assert exc_info.value.translated_message == "application.modelo.errors.calculation_revision_not_found"
-    assert exc_info.value.context == {"calculation_revision_id": "f" * 64}
+        with pytest.raises(CalculationRevisionNotFoundError) as exc_info:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id="f" * 64,
+                    output_path=tmp_path / "out.txt",
+                    actor="operator",
+                ),
+                workflow_profile=_profile(),
+                export_ports=modelo_export_ports_for_test(),
+                operation=_authority_operation_for_test,
+            )
+        assert exc_info.value.translated_message == "application.modelo.errors.calculation_revision_not_found"
+        assert exc_info.value.context == {"calculation_revision_id": "f" * 64}
 
 
 def test_export_refuses_borrador_revision(
@@ -211,25 +214,26 @@ def test_export_refuses_borrador_revision(
 
     The export artefact must reflect a revision the operator has
     already verified, not a work-in-progress."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = _seed_profile()
+        _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
 
-    bucket_id = _seed_profile()
-    _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
-
-    with pytest.raises(CalculationRevisionStateError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calc_rev_id,
-                output_path=tmp_path / "out.txt",
-                actor="operator",
-            ),
-            workflow_profile=_profile(),
-            export_ports=modelo_export_ports_for_test(),
-        )
-    assert exc_info.value.translated_message == "application.modelo.errors.export_revision_state_refused"
-    assert exc_info.value.context == {
-        "calculation_revision_id": calc_rev_id,
-        "state": CalculationRevisionState.BORRADOR.value,
-    }
+        with pytest.raises(CalculationRevisionStateError) as exc_info:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=calc_rev_id,
+                    output_path=tmp_path / "out.txt",
+                    actor="operator",
+                ),
+                workflow_profile=_profile(),
+                export_ports=modelo_export_ports_for_test(),
+                operation=_authority_operation_for_test,
+            )
+        assert exc_info.value.translated_message == "application.modelo.errors.export_revision_state_refused"
+        assert exc_info.value.context == {
+            "calculation_revision_id": calc_rev_id,
+            "state": CalculationRevisionState.BORRADOR.value,
+        }
 
 
 def test_export_refuses_persisted_registry_revision_divergence(
@@ -237,62 +241,66 @@ def test_export_refuses_persisted_registry_revision_divergence(
     tmp_path: Path,
 ) -> None:
     """Export cannot replay stored values against a different registry schema."""
-    bucket_id = _seed_profile()
-    _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
-    repository = CalculationRevisionCatalogueRepository()
-    revision = repository.load().get(calc_rev_id)
-    assert revision is not None
-    stale = revision.model_copy(
-        update={
-            "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
-                update={"revision_id": "persisted-stale-revision"}
-            )
-        }
-    )
-    repository.save(upsert_calculation_revision(repository.load(), stale))
-
-    with pytest.raises(WorkUnitRevisionDivergenceError):
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calc_rev_id,
-                output_path=tmp_path / "out.txt",
-                actor="operator",
-            ),
-            workflow_profile=_profile(),
-            export_ports=modelo_export_ports_for_test(),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = _seed_profile()
+        _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
+        repository = CalculationRevisionCatalogueRepository()
+        revision = repository.load().get(calc_rev_id)
+        assert revision is not None
+        stale = revision.model_copy(
+            update={
+                "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
+                    update={"revision_id": "persisted-stale-revision"}
+                )
+            }
         )
+        repository.save(upsert_calculation_revision(repository.load(), stale))
+
+        with pytest.raises(WorkUnitRevisionDivergenceError):
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=calc_rev_id,
+                    output_path=tmp_path / "out.txt",
+                    actor="operator",
+                ),
+                workflow_profile=_profile(),
+                export_ports=modelo_export_ports_for_test(),
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_export_reaches_modelo_100_xml_dictionary_path_before_later_readiness_gate(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    bucket_id = _seed_profile()
-    _, calc_rev_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="100",
-        filing_year=2025,
-        period="0A",
-    )
-    out = tmp_path / "modelo-100.xml"
-
-    with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calc_rev_id,
-                output_path=out,
-                actor="operator",
-            ),
-            workflow_profile=_profile(),
-            export_ports=modelo_export_ports_for_test(),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = _seed_profile()
+        _, calc_rev_id = _seed_revision(
+            bucket_id=bucket_id,
+            state=CalculationRevisionState.VERIFICADO_COMPLETO,
+            modelo="100",
+            filing_year=2025,
+            period="0A",
         )
+        out = tmp_path / "modelo-100.xml"
 
-    assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
-    assert "export_unsupported" not in str(exc_info.value.context)
-    assert "fixed_width" not in str(exc_info.value.context)
-    assert not out.exists()
-    assert not out.with_name(out.name + ".tmp").exists()
+        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=calc_rev_id,
+                    output_path=out,
+                    actor="operator",
+                ),
+                workflow_profile=_profile(),
+                export_ports=modelo_export_ports_for_test(),
+                operation=_authority_operation_for_test,
+            )
+
+        assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
+        assert "export_unsupported" not in str(exc_info.value.context)
+        assert "fixed_width" not in str(exc_info.value.context)
+        assert not out.exists()
+        assert not out.with_name(out.name + ".tmp").exists()
 
 
 def test_export_refuses_cross_bucket_revision(
@@ -303,58 +311,61 @@ def test_export_refuses_cross_bucket_revision(
     is refused. Allowing the service to emit the MODELO_EXPORTED
     event into a foreign bucket would let any caller pollute another
     operator's history."""
-
-    _seed_profile()
-    foreign_bucket_id = "other-bucket-7" * 4
-    _, calc_rev_id = _seed_revision(
-        bucket_id=foreign_bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-    )
-
-    with pytest.raises(ModeloExportCrossBucketRefusedError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calc_rev_id,
-                output_path=tmp_path / "out.txt",
-                actor="operator",
-            ),
-            workflow_profile=_profile(),
-            export_ports=modelo_export_ports_for_test(),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _seed_profile()
+        foreign_bucket_id = "other-bucket-7" * 4
+        _, calc_rev_id = _seed_revision(
+            bucket_id=foreign_bucket_id,
+            state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )
-    assert exc_info.value.translated_message == "application.modelo.errors.export_cross_bucket_refused"
-    assert isinstance(exc_info.value.context, dict)
-    assert "work_unit_id" in exc_info.value.context
+
+        with pytest.raises(ModeloExportCrossBucketRefusedError) as exc_info:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=calc_rev_id,
+                    output_path=tmp_path / "out.txt",
+                    actor="operator",
+                ),
+                workflow_profile=_profile(),
+                export_ports=modelo_export_ports_for_test(),
+                operation=_authority_operation_for_test,
+            )
+        assert exc_info.value.translated_message == "application.modelo.errors.export_cross_bucket_refused"
+        assert isinstance(exc_info.value.context, dict)
+        assert "work_unit_id" in exc_info.value.context
 
 
 def test_m303_export_refuses_revision_missing_filing_evidence(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    bucket_id = _seed_profile()
-    _, calc_rev_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="303",
-        filing_year=2026,
-        period="1T",
-    )
-    output = tmp_path / "modelo-303.txt"
-
-    with pytest.raises(ModeloExportError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calc_rev_id,
-                output_path=output,
-                actor="operator",
-            ),
-            workflow_profile=_profile(),
-            export_ports=modelo_export_ports_for_test(),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = _seed_profile()
+        _, calc_rev_id = _seed_revision(
+            bucket_id=bucket_id,
+            state=CalculationRevisionState.VERIFICADO_COMPLETO,
+            modelo="303",
+            filing_year=2026,
+            period="1T",
         )
+        output = tmp_path / "modelo-303.txt"
 
-    assert isinstance(exc_info.value.context, dict)
-    # The cause is identified by its registered error type, not by prose: the
-    # producer now carries a declared precondition failure instead of a
-    # sentence this assertion could match on.
-    assert exc_info.value.context["cause_type"] == "M303FilingEvidenceError"
-    assert not output.exists()
-    assert not output.with_name(output.name + ".tmp").exists()
+        with pytest.raises(ModeloExportError) as exc_info:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=calc_rev_id,
+                    output_path=output,
+                    actor="operator",
+                ),
+                workflow_profile=_profile(),
+                export_ports=modelo_export_ports_for_test(),
+                operation=_authority_operation_for_test,
+            )
+
+        assert isinstance(exc_info.value.context, dict)
+        # The cause is identified by its registered error type, not by prose: the
+        # producer now carries a declared precondition failure instead of a
+        # sentence this assertion could match on.
+        assert exc_info.value.context["cause_type"] == "M303FilingEvidenceError"
+        assert not output.exists()
+        assert not output.with_name(output.name + ".tmp").exists()

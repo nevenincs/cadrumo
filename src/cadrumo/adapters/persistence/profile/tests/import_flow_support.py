@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -15,6 +15,7 @@ from dev.registry.tests.profile_schema_support import (
 )
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -28,6 +29,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord, derive_filing_record_id
@@ -35,6 +37,7 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 _Repos = tuple[
     WorkUnitCatalogueRepository,
@@ -184,6 +187,7 @@ def _import_external_filing(
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        observation_repository=CalculationObservationRepository(),
         expected_tax_id=expected_tax_id,
         clock=clock,
     )
@@ -217,7 +221,12 @@ def _seed_local_filing_record(
     filed_at: datetime,
     filed_by: str,
 ) -> ModeloRecord:
-    revision = get_calculation_revision(revision_id, calculation_repository=calculation_repository)
+    with bundled_indexed_authority().operation() as operation:
+        calculation_ports = replace(
+            build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            calculation_repository=calculation_repository,
+        )
+        revision = get_calculation_revision(revision_id, ports=calculation_ports)
     filed_revision = revision.model_copy(
         update={
             "state": CalculationRevisionState.PRESENTADO,

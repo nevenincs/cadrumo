@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.config import Settings
 from ......core.period import Period
@@ -210,63 +212,75 @@ def test_declarations_page_shape_context_field_set_is_closed() -> None:
 
 
 def test_modelo_303_filed_observation_derives_compensation_available() -> None:
-    observation = _filed_observation(
-        modelo="303",
-        ejercicio=2024,
-        period="4T",
-        casilla_values={
-            _M303_POSTERIOR_CASILLA: Decimal("0"),
-            _M303_RESULTADO_CASILLA: Decimal("-258.02"),
-        },
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observation = _filed_observation(
+            modelo="303",
+            ejercicio=2024,
+            period="4T",
+            casilla_values={
+                _M303_POSTERIOR_CASILLA: Decimal("0"),
+                _M303_RESULTADO_CASILLA: Decimal("-258.02"),
+            },
+        )
 
-    derived = _with_derived_303_compensation_available_observation(observation)
-    registry_observation = registry_observation_from_filed_declaration(derived)
-    registry_casillas = {
-        casilla.id: casilla for casilla in _modelo_snapshot("303", filing_year=2024, period="4T").revision.casillas
-    }
+        derived = _with_derived_303_compensation_available_observation(
+            observation, operation=_authority_operation_for_test
+        )
+        registry_observation = registry_observation_from_filed_declaration(
+            derived, operation=_authority_operation_for_test
+        )
+        registry_casillas = {
+            casilla.id: casilla
+            for casilla in _modelo_snapshot(
+                "303", filing_year=2024, period="4T", operation=_authority_operation_for_test
+            ).revision.casillas
+        }
 
-    assert {casilla.casilla_id: casilla.value for casilla in derived.casillas}[_M303_DISPONIBLE_CASILLA] == "258.02"
-    assert registry_observation.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("258.02")
-    observation_by_id = {casilla.casilla_id: casilla for casilla in registry_observation.observations}
-    available_observation = observation_by_id[_M303_DISPONIBLE_CASILLA]
-    registry_casilla = registry_casillas[_M303_DISPONIBLE_CASILLA]
-    assert available_observation.legal_refs == registry_casilla.legal_refs
-    assert available_observation.source_refs == registry_casilla.source_refs
-    derived_value = next(casilla for casilla in derived.casillas if casilla.casilla_id == _M303_DISPONIBLE_CASILLA)
-    assert derived_value.source_artefact_kind == "derived_carry_policy"
+        assert {casilla.casilla_id: casilla.value for casilla in derived.casillas}[_M303_DISPONIBLE_CASILLA] == "258.02"
+        assert registry_observation.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("258.02")
+        observation_by_id = {casilla.casilla_id: casilla for casilla in registry_observation.observations}
+        available_observation = observation_by_id[_M303_DISPONIBLE_CASILLA]
+        registry_casilla = registry_casillas[_M303_DISPONIBLE_CASILLA]
+        assert available_observation.legal_refs == registry_casilla.legal_refs
+        assert available_observation.source_refs == registry_casilla.source_refs
+        derived_value = next(casilla for casilla in derived.casillas if casilla.casilla_id == _M303_DISPONIBLE_CASILLA)
+        assert derived_value.source_artefact_kind == "derived_carry_policy"
 
 
 def test_modelo_303_filed_observation_derives_compensation_available_from_registry_formula() -> None:
-    observation = _filed_observation(
-        modelo="303",
-        ejercicio=2024,
-        period="4T",
-        casilla_values={
-            _M303_POSTERIOR_CASILLA: Decimal("10.00"),
-            _M303_RESULTADO_CASILLA: Decimal("-999.99"),
-            _M303_GENERADA_CASILLA: Decimal("2.50"),
-        },
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observation = _filed_observation(
+            modelo="303",
+            ejercicio=2024,
+            period="4T",
+            casilla_values={
+                _M303_POSTERIOR_CASILLA: Decimal("10.00"),
+                _M303_RESULTADO_CASILLA: Decimal("-999.99"),
+                _M303_GENERADA_CASILLA: Decimal("2.50"),
+            },
+        )
 
-    derived = _with_derived_303_compensation_available_observation(observation)
+        derived = _with_derived_303_compensation_available_observation(
+            observation, operation=_authority_operation_for_test
+        )
 
-    derived_value = next(casilla for casilla in derived.casillas if casilla.casilla_id == _M303_DISPONIBLE_CASILLA)
-    assert derived_value.value == "12.50"
-    assert derived_value.source_artefact_kind == "derived_registry_formula"
-    assert derived_value.source_locator == (f"formula:{_M303_POSTERIOR_CASILLA}+{_M303_GENERADA_CASILLA}")
+        derived_value = next(casilla for casilla in derived.casillas if casilla.casilla_id == _M303_DISPONIBLE_CASILLA)
+        assert derived_value.value == "12.50"
+        assert derived_value.source_artefact_kind == "derived_registry_formula"
+        assert derived_value.source_locator == (f"formula:{_M303_POSTERIOR_CASILLA}+{_M303_GENERADA_CASILLA}")
 
 
 def test_registry_observation_from_filed_declaration_refuses_noncanonical_casilla_ids() -> None:
-    observation = _filed_observation(
-        modelo="303",
-        ejercicio=2024,
-        period="4T",
-        casilla_values={_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: Decimal("0")},
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observation = _filed_observation(
+            modelo="303",
+            ejercicio=2024,
+            period="4T",
+            casilla_values={_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: Decimal("0")},
+        )
 
-    with pytest.raises(SedeParseError, match=r"canonical casilla\.id"):
-        registry_observation_from_filed_declaration(observation)
+        with pytest.raises(SedeParseError, match=r"canonical casilla\.id"):
+            registry_observation_from_filed_declaration(observation, operation=_authority_operation_for_test)
 
 
 class TestParseListbox:
@@ -540,19 +554,20 @@ class TestSubmittedFileContext:
     """Verify submitted files are bound to the declaration row context."""
 
     def test_period_mismatch_raises_parse_error(self) -> None:
-        snapshot = _modelo_130_snapshot()
-        resolved = resolve_export_layout(snapshot)
-        parsed = parse_export_payload(resolved.layout, _submitted_file_payload())
-        declaration = Declaracion(
-            modelo="130",
-            ejercicio=2026,
-            period=Period.from_year_and_code(2026, "2T"),
-            expediente_id="202610013522222A",
-            estado="ALTA",
-            presented_at=datetime(2026, 7, 1, 10, 0, 0, tzinfo=UTC),
-            justificante_link_text="Ver",
-            archive_link_text="Ver",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
+            resolved = resolve_export_layout(snapshot)
+            parsed = parse_export_payload(resolved.layout, _submitted_file_payload())
+            declaration = Declaracion(
+                modelo="130",
+                ejercicio=2026,
+                period=Period.from_year_and_code(2026, "2T"),
+                expediente_id="202610013522222A",
+                estado="ALTA",
+                presented_at=datetime(2026, 7, 1, 10, 0, 0, tzinfo=UTC),
+                justificante_link_text="Ver",
+                archive_link_text="Ver",
+            )
 
-        with pytest.raises(SedeParseError, match="does not match declaration"):
-            _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
+            with pytest.raises(SedeParseError, match="does not match declaration"):
+                _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)

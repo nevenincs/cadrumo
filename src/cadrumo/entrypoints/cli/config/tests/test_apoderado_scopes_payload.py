@@ -12,6 +12,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from .....core.json_contract import strict_round_trip
 from .....domain.auth.apoderamientos.catalogue import ApoderadoScope, load_default_catalogue
 from ...config_payloads import ApoderadoScopesListResult
@@ -21,14 +23,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_apoderado_scopes_list_result_projects_real_catalogue() -> None:
     """The real shipped catalogue round-trips through the typed payload."""
-    catalogue = load_default_catalogue()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        catalogue = load_default_catalogue(operation=_authority_operation_for_test)
 
-    result = strict_round_trip(ApoderadoScopesListResult, catalogue)
+        result = strict_round_trip(ApoderadoScopesListResult, catalogue)
 
-    assert result.catalogue_version == catalogue.catalogue_version
-    assert len(result.scopes) == len(catalogue.scopes)
-    codes = {scope.code for scope in result.scopes}
-    assert {"IVA", "RENT", "CENSO"} <= codes
+        assert result.catalogue_version == catalogue.catalogue_version
+        assert len(result.scopes) == len(catalogue.scopes)
+        codes = {scope.code for scope in result.scopes}
+        assert {"IVA", "RENT", "CENSO"} <= codes
 
 
 def test_apoderado_scopes_list_result_refuses_empty_catalogue_version() -> None:

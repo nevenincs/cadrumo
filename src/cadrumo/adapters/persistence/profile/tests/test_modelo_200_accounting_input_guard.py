@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -212,11 +213,14 @@ def _calculate_m200(
         work_unit.work_unit_id,
         actor="operator-Beatriz",
         casilla_inputs=casilla_inputs or {},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=event_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
     return result, cr_repo

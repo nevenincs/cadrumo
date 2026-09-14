@@ -52,6 +52,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -70,6 +71,10 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import calcul
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -81,6 +86,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -226,17 +232,26 @@ def _calculate_and_verify_m210_inmobiliaria(
             ),
             clock=_CLOCK,
         )
-        report = verify_modelo_revision(
-            revision.calculation_revision_id,
-            actor="system",
-            workflow_profile=_irnr_gbworkflow_profile(),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID),
-            calculation_observation_repository=CalculationObservationRepository(),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+        observation_repository = CalculationObservationRepository()
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision.calculation_revision_id,
+                actor="system",
+                workflow_profile=_irnr_gbworkflow_profile(),
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=replace(
+                    build_test_verification_repository_bundle(),
+                    work_unit=work_repo,
+                    calculation=calc_repo,
+                    transaction=transaction_repository,
+                    observation=observation_repository,
+                    bucket_event=event_repo,
+                ),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         return revision, report
 
 

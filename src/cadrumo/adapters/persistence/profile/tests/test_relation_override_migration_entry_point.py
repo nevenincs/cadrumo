@@ -30,6 +30,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -151,17 +153,18 @@ def test_post_cut_binding_override_is_preserved_unchanged() -> None:
     The join cannot know the key, so the classification falls to the revision's
     own registry snapshot. Getting this wrong refuses the revision forever.
     """
-    binding_id = _post_cut_binding_id()
-    assert binding_id not in bundled_relation_binding_join()
-    stored = _revision(relation_overrides={binding_id: _OVERRIDE_VALUE})
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        binding_id = _post_cut_binding_id()
+        assert binding_id not in bundled_relation_binding_join()
+        stored = _revision(relation_overrides={binding_id: _OVERRIDE_VALUE})
 
-    result = rekey_calculation_revision_overrides(_catalogue(stored))
+        result = rekey_calculation_revision_overrides(_catalogue(stored), operation=_authority_operation_for_test)
 
-    assert not result.changed
-    assert result.unchanged_revision_ids == (stored.calculation_revision_id,)
-    carried = result.catalogue.get(stored.calculation_revision_id)
-    assert carried is not None
-    assert dict(carried.relation_overrides) == {binding_id: _OVERRIDE_VALUE}
+        assert not result.changed
+        assert result.unchanged_revision_ids == (stored.calculation_revision_id,)
+        carried = result.catalogue.get(stored.calculation_revision_id)
+        assert carried is not None
+        assert dict(carried.relation_overrides) == {binding_id: _OVERRIDE_VALUE}
 
 
 def test_calculation_source_mesh_migrates_the_stored_catalogue(tmp_path: Path) -> None:

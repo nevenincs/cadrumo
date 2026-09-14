@@ -42,8 +42,11 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -90,8 +93,11 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
         transaction_id=created.ref.transaction_id,
         actor="operator-B",
         reason="restored",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
     )
 

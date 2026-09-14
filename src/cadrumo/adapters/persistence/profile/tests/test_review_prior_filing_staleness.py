@@ -40,6 +40,7 @@ from cadrumo.application.filing.draft_review import ModeloApprovalStaleReason, a
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
@@ -103,44 +104,48 @@ def _prior_observation(*, value: str) -> RegistryModeloObservation:
 def test_approval_goes_stale_when_prior_filing_observation_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
-    bucket_id = _active_bucket_runtime.bucket_id
-    schema_provider = _schema_provider()
-    draft = _ready_draft(schema_provider)
-    repository = CalculationObservationRepository(bucket_id=bucket_id)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = _active_bucket_runtime.bucket_id
+        schema_provider = _schema_provider()
+        draft = _ready_draft(schema_provider)
+        repository = CalculationObservationRepository(bucket_id=bucket_id)
 
-    repository.save(
-        repository.prepare_observation_envelope(
-            _prior_observation(value="100.00"),
-            source_kind="app_filing",
-            stamped_revision_id=_stamped_revision_id(),
+        repository.save(
+            repository.prepare_observation_envelope(
+                _prior_observation(value="100.00"),
+                source_kind="app_filing",
+                stamped_revision_id=_stamped_revision_id(),
+            )
         )
-    )
-    approved = approve_draft(
-        draft,
-        bucket_id=bucket_id,
-        approved_by="operator",
-        schema_provider=schema_provider,
-    )
-    assert approved.status is ModeloDraftStatus.APROBADO
-    assert approved.approval_basis is not None
-    assert approved.approval_basis.prior_filing_observations_fingerprint  # populated, non-empty
-
-    # Mutate ONLY the prior filing: same (modelo, year, period) key, different
-    # filed value, so the self-loaded observation-store digest must change.
-    repository.save(
-        repository.prepare_observation_envelope(
-            _prior_observation(value="250.00"),
-            source_kind="app_filing",
-            stamped_revision_id=_stamped_revision_id(),
+        approved = approve_draft(
+            draft,
+            bucket_id=bucket_id,
+            approved_by="operator",
+            schema_provider=schema_provider,
+            operation=_authority_operation_for_test,
         )
-    )
+        assert approved.status is ModeloDraftStatus.APROBADO
+        assert approved.approval_basis is not None
+        assert approved.approval_basis.prior_filing_observations_fingerprint  # populated, non-empty
 
-    reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
+        # Mutate ONLY the prior filing: same (modelo, year, period) key, different
+        # filed value, so the self-loaded observation-store digest must change.
+        repository.save(
+            repository.prepare_observation_envelope(
+                _prior_observation(value="250.00"),
+                source_kind="app_filing",
+                stamped_revision_id=_stamped_revision_id(),
+            )
+        )
 
-    # Only the prior-filing source changed: draft, transactions, invoices, category
-    # profiles, and schema are unchanged, so PRIOR_FILING_OBSERVATIONS_CHANGED is
-    # the sole reason.
-    assert reasons == (ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED,)
+        reasons = approval_stale_reasons(
+            approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+        )
+
+        # Only the prior-filing source changed: draft, transactions, invoices, category
+        # profiles, and schema are unchanged, so PRIOR_FILING_OBSERVATIONS_CHANGED is
+        # the sole reason.
+        assert reasons == (ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED,)
 
 
 def test_approval_not_stale_when_prior_filing_observations_unchanged(
@@ -153,27 +158,31 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
     meaningless. Approving and re-checking against the identical store must yield
     an empty reason tuple.
     """
-    bucket_id = _active_bucket_runtime.bucket_id
-    schema_provider = _schema_provider()
-    draft = _ready_draft(schema_provider)
-    repository = CalculationObservationRepository(bucket_id=bucket_id)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = _active_bucket_runtime.bucket_id
+        schema_provider = _schema_provider()
+        draft = _ready_draft(schema_provider)
+        repository = CalculationObservationRepository(bucket_id=bucket_id)
 
-    repository.save(
-        repository.prepare_observation_envelope(
-            _prior_observation(value="100.00"),
-            source_kind="app_filing",
-            stamped_revision_id=_stamped_revision_id(),
+        repository.save(
+            repository.prepare_observation_envelope(
+                _prior_observation(value="100.00"),
+                source_kind="app_filing",
+                stamped_revision_id=_stamped_revision_id(),
+            )
         )
-    )
-    approved = approve_draft(
-        draft,
-        bucket_id=bucket_id,
-        approved_by="operator",
-        schema_provider=schema_provider,
-    )
+        approved = approve_draft(
+            draft,
+            bucket_id=bucket_id,
+            approved_by="operator",
+            schema_provider=schema_provider,
+            operation=_authority_operation_for_test,
+        )
 
-    # No mutation to any source between approval and the staleness check.
-    reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
+        # No mutation to any source between approval and the staleness check.
+        reasons = approval_stale_reasons(
+            approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+        )
 
-    assert ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED not in reasons
-    assert reasons == ()
+        assert ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED not in reasons
+        assert reasons == ()

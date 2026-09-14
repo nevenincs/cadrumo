@@ -29,6 +29,7 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -61,83 +62,94 @@ def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_
     the required Modelo 100 2024 anchor), so both buckets reach the resolver
     with the identical genuinely-absent condition.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = _m130_snapshot()
-        repository = CalculationObservationRepository()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            snapshot = _m130_snapshot()
+            repository = CalculationObservationRepository()
 
-        report_without_activity_start = resolve_bindings_from_local_store(
-            snapshot,
-            repository=repository,
-            activity_start_date=None,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        )
-        report_with_activity_start = resolve_bindings_from_local_store(
-            snapshot,
-            repository=repository,
-            activity_start_date=date(2015, 1, 1),
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        )
+            report_without_activity_start = resolve_bindings_from_local_store(
+                snapshot,
+                repository=repository,
+                activity_start_date=None,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
+            report_with_activity_start = resolve_bindings_from_local_store(
+                snapshot,
+                repository=repository,
+                activity_start_date=date(2015, 1, 1),
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
-    for report in (report_without_activity_start, report_with_activity_start):
-        assert _BINDING_ID not in report.binding_values
-        unsatisfied_ids = {item.binding_id for item in report.unsatisfied}
-        assert _BINDING_ID in unsatisfied_ids
+        for report in (report_without_activity_start, report_with_activity_start):
+            assert _BINDING_ID not in report.binding_values
+            unsatisfied_ids = {item.binding_id for item in report.unsatisfied}
+            assert _BINDING_ID in unsatisfied_ids
 
-    assert set(report_without_activity_start.binding_values) == set(report_with_activity_start.binding_values)
-    without_unsatisfied = {item.binding_id for item in report_without_activity_start.unsatisfied}
-    with_unsatisfied = {item.binding_id for item in report_with_activity_start.unsatisfied}
-    assert without_unsatisfied == with_unsatisfied
+        assert set(report_without_activity_start.binding_values) == set(report_with_activity_start.binding_values)
+        without_unsatisfied = {item.binding_id for item in report_without_activity_start.unsatisfied}
+        with_unsatisfied = {item.binding_id for item in report_with_activity_start.unsatisfied}
+        assert without_unsatisfied == with_unsatisfied
 
 
 def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(tmp_path: Path) -> None:
     """The canonical ``y/o`` binding sums whichever applicable M100 source is observed."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = _m130_snapshot()
-        repository = CalculationObservationRepository()
-        incomplete_observation = registry_grounded_modelo_observation(
-            modelo="100",
-            filing_year=_M100_FILING_YEAR,
-            period="0A",
-            casilla_values={validated_casilla_id(_SOURCE_CASILLAS[0], surface="test fixture"): Decimal("1")},
-        )
-        repository.save(
-            repository.prepare_observation_envelope(
-                incomplete_observation,
-                source_kind="app_filing",
-                stamped_revision_id=revision_id_for_observation(incomplete_observation),
-            ),
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            snapshot = _m130_snapshot()
+            repository = CalculationObservationRepository()
+            incomplete_observation = registry_grounded_modelo_observation(
+                modelo="100",
+                filing_year=_M100_FILING_YEAR,
+                period="0A",
+                casilla_values={validated_casilla_id(_SOURCE_CASILLAS[0], surface="test fixture"): Decimal("1")},
+            )
+            repository.save(
+                repository.prepare_observation_envelope(
+                    incomplete_observation,
+                    source_kind="app_filing",
+                    stamped_revision_id=revision_id_for_observation(incomplete_observation),
+                ),
+            )
 
-        report = resolve_bindings_from_local_store(
-            snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
-        )
+            report = resolve_bindings_from_local_store(
+                snapshot,
+                repository=repository,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
-    assert report.binding_values[_BINDING_ID] == Decimal("1")
+        assert report.binding_values[_BINDING_ID] == Decimal("1")
 
 
 def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses(tmp_path: Path) -> None:
     """Optional candidates cannot turn a structurally unrelated observation into a silent zero."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = _m130_snapshot()
-        repository = CalculationObservationRepository()
-        unrelated_observation = registry_grounded_modelo_observation(
-            modelo="100",
-            filing_year=_M100_FILING_YEAR,
-            period="0A",
-            casilla_values={validated_casilla_id("0670", surface="test fixture"): Decimal("1")},
-        )
-        repository.save(
-            repository.prepare_observation_envelope(
-                unrelated_observation,
-                source_kind="app_filing",
-                stamped_revision_id=revision_id_for_observation(unrelated_observation),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            snapshot = _m130_snapshot()
+            repository = CalculationObservationRepository()
+            unrelated_observation = registry_grounded_modelo_observation(
+                modelo="100",
+                filing_year=_M100_FILING_YEAR,
+                period="0A",
+                casilla_values={validated_casilla_id("0670", surface="test fixture"): Decimal("1")},
             )
-        )
+            repository.save(
+                repository.prepare_observation_envelope(
+                    unrelated_observation,
+                    source_kind="app_filing",
+                    stamped_revision_id=revision_id_for_observation(unrelated_observation),
+                )
+            )
 
-        with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
-            resolve_bindings_from_local_store(
-                snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
-            )
+            with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
+                resolve_bindings_from_local_store(
+                    snapshot,
+                    repository=repository,
+                    iva_history_repository=IvaCompensationHistoryRepository(),
+                    operation=_authority_operation_for_test,
+                )
 
 
 def test_an_ambiguous_multiple_observed_filing_match_still_refuses() -> None:

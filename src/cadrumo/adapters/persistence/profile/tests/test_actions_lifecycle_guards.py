@@ -29,54 +29,54 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("50.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="wrong account import",
-            idempotency_key="archived-edit-refusal",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-    archived = archive_manual_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        actor="operator-A",
-        reason="wrong account import",
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
-
-    with pytest.raises(TransactionValidationError, match="can be edited"):
-        update_manual_transaction(
-            transaction_id=created.ref.transaction_id,
-            command=ManualLedgerTransactionCommand(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, 1),
-                amount=Decimal("60.00"),
+                amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
-                description="attempt to edit archived row",
-                actor="operator-B",
-                source_command="aeat app ledger update",
+                description="wrong account import",
+                idempotency_key="archived-edit-refusal",
             ),
-            ports=ledger_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=event_repository,
-            ),
-            occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
+        archived = archive_manual_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            actor="operator-A",
+            reason="wrong account import",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
+
+    with pytest.raises(TransactionValidationError, match="can be edited"):
+        with ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports:
+            update_manual_transaction(
+                transaction_id=created.ref.transaction_id,
+                command=ManualLedgerTransactionCommand(
+                    bucket_id=_BUCKET_ID,
+                    booked_date=date(2026, 5, 1),
+                    amount=Decimal("60.00"),
+                    direction=TransactionDirection.OUTGOING,
+                    description="attempt to edit archived row",
+                    actor="operator-B",
+                    source_command="aeat app ledger update",
+                ),
+                ports=ports,
+                occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+            )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)
     assert persisted is not None
@@ -90,58 +90,60 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
 
 def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("50.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="wrong account import",
-            idempotency_key="archive-stash-refusal",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-    archive_manual_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
-
-    with pytest.raises(TransactionValidationError, match="already archived"):
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="wrong account import",
+                idempotency_key="archive-stash-refusal",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
         archive_manual_transaction(
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
-            ports=ledger_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=event_repository,
-            ),
-            occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
-    with pytest.raises(TransactionValidationError, match="cannot be stashed"):
-        stash_manual_transaction(
+
+    with pytest.raises(TransactionValidationError, match="already archived"):
+        with ledger_ports_for_test(
             bucket_id=_BUCKET_ID,
-            transaction_id=created.ref.transaction_id,
-            actor="operator-A",
-            ports=ledger_ports_for_test(
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports:
+            archive_manual_transaction(
                 bucket_id=_BUCKET_ID,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=event_repository,
-            ),
-            occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
-        )
+                transaction_id=created.ref.transaction_id,
+                actor="operator-A",
+                ports=ports,
+                occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+            )
+    with pytest.raises(TransactionValidationError, match="cannot be stashed"):
+        with ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports:
+            stash_manual_transaction(
+                bucket_id=_BUCKET_ID,
+                transaction_id=created.ref.transaction_id,
+                actor="operator-A",
+                ports=ports,
+                occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+            )
 
     assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,

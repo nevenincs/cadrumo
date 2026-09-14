@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import list_verification_reports
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -76,91 +77,99 @@ def _seed_nongranting_revision(repos: Repos):
 
 def test_identical_nongranting_verify_retry_collapses_to_one_report(repos: Repos) -> None:
     """Two identical-outcome non-granting verifies at different clocks → one report."""
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    revision = _seed_nongranting_revision(repos)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+        revision = _seed_nongranting_revision(repos)
 
-    first = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    second = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T3,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        first = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_authority_operation_for_test,
+        )
+        second = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T3,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_authority_operation_for_test,
+        )
 
-    # Both refused, identical outcome.
-    assert first.granted_verificado_completo is False
-    assert second.granted_verificado_completo is False
-    assert first.completeness_status is second.completeness_status
-    assert first.findings == second.findings
-    # The wall clock differs but the identity does not (run_at is excluded).
-    assert first.run_at == T2
-    assert second.run_at == T3
-    assert second.verification_report_id == first.verification_report_id
+        # Both refused, identical outcome.
+        assert first.granted_verificado_completo is False
+        assert second.granted_verificado_completo is False
+        assert first.completeness_status is second.completeness_status
+        assert first.findings == second.findings
+        # The wall clock differs but the identity does not (run_at is excluded).
+        assert first.run_at == T2
+        assert second.run_at == T3
+        assert second.verification_report_id == first.verification_report_id
 
-    # The catalogue collapsed: exactly ONE report for this revision, carrying
-    # the last-seen run_at (T3 from the upsert), not two accumulated rows.
-    stored = list_verification_reports(
-        calculation_revision_id=revision.calculation_revision_id,
-        verification_repository=vr_repo,
-    )
-    assert len(stored) == 1
-    assert stored[0].verification_report_id == first.verification_report_id
-    assert stored[0].run_at == T3
-    assert stored[0].completeness_status is VerificationCompletenessStatus.INCOMPLETE
+        # The catalogue collapsed: exactly ONE report for this revision, carrying
+        # the last-seen run_at (T3 from the upsert), not two accumulated rows.
+        stored = list_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
+            verification_repository=vr_repo,
+            operation=_authority_operation_for_test,
+        )
+        assert len(stored) == 1
+        assert stored[0].verification_report_id == first.verification_report_id
+        assert stored[0].run_at == T3
+        assert stored[0].completeness_status is VerificationCompletenessStatus.INCOMPLETE
 
 
 def test_distinct_outcome_verify_produces_a_distinct_report(repos: Repos) -> None:
     """A verify whose outcome differs (different actor) → a distinct report, not a collapse."""
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    revision = _seed_nongranting_revision(repos)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+        revision = _seed_nongranting_revision(repos)
 
-    by_a = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    by_b = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-B",
-        workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T3,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        by_a = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_authority_operation_for_test,
+        )
+        by_b = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-B",
+            workflow_profile=workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T3,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_authority_operation_for_test,
+        )
 
-    # verified_by is part of the outcome identity, so the two reports do NOT
-    # collapse: distinct ids, both retained.
-    assert by_b.verification_report_id != by_a.verification_report_id
-    stored = list_verification_reports(
-        calculation_revision_id=revision.calculation_revision_id,
-        verification_repository=vr_repo,
-    )
-    assert len(stored) == 2
-    assert {r.verification_report_id for r in stored} == {
-        by_a.verification_report_id,
-        by_b.verification_report_id,
-    }
+        # verified_by is part of the outcome identity, so the two reports do NOT
+        # collapse: distinct ids, both retained.
+        assert by_b.verification_report_id != by_a.verification_report_id
+        stored = list_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
+            verification_repository=vr_repo,
+            operation=_authority_operation_for_test,
+        )
+        assert len(stored) == 2
+        assert {r.verification_report_id for r in stored} == {
+            by_a.verification_report_id,
+            by_b.verification_report_id,
+        }

@@ -894,7 +894,7 @@ def overview_prepare(
 
     canonical_period = _canonical_period(period, year=year)
     try:
-        registry_describe_modelo_for_scope(modelo, period=canonical_period)
+        registry_describe_modelo_for_scope(modelo, period=canonical_period, operation=authority_operation(ctx))
     except (ValueError, RegistrySnapshotError) as exc:
         raise bad(
             tr(
@@ -1004,6 +1004,7 @@ def overview_pipeline(
         reports_by_revision_id[revision.calculation_revision_id] = list_verification_reports(
             ports=filing_ports,
             calculation_revision_id=revision.calculation_revision_id,
+            operation=authority_operation(ctx),
         )
 
     report = build_pipeline_health_report(

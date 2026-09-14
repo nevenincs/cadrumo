@@ -29,6 +29,8 @@ from textwrap import dedent
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....adapters.persistence.storage.tests.locked_profile_support import (
@@ -136,27 +138,30 @@ def _destroy_the_profile_record_row(root: Path) -> None:
 
 def test_a_locked_profile_reports_a_lock_and_routes_the_operator_to_login(tmp_path: Path) -> None:
     """The record is intact and unread; the operator is told to log in, not that it is gone."""
-    _publish_in_a_separate_process(tmp_path)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _publish_in_a_separate_process(tmp_path)
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        health = assess_active_profile_health()
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            health = assess_active_profile_health(operation=_authority_operation_for_test)
 
-    assert health.status == "profile_locked"
-    assert health.status != "missing_profile_record"
-    assert health.status != "profile_record_unreadable"
-    assert health.registered_bucket is True
-    assert health.active_profile_label == PROFILE_LABEL
-    # A lock is not a broken pointer, so it must not offer to clear one.
-    assert health.repairable_by_clearing_pointer is False
+        assert health.status == "profile_locked"
+        assert health.status != "missing_profile_record"
+        assert health.status != "profile_record_unreadable"
+        assert health.registered_bucket is True
+        assert health.active_profile_label == PROFILE_LABEL
+        # A lock is not a broken pointer, so it must not offer to clear one.
+        assert health.repairable_by_clearing_pointer is False
 
-    verdict = health.precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == "profile.session.logged_in"
-    assert verdict.action is not None
-    assert verdict.action.action_id == "operator.profile.login"
-    # The remedy names WHICH profile to log into, from the capsule's own label.
-    assert {binding.argument_name: binding.value for binding in verdict.argument_bindings} == {"name": PROFILE_LABEL}
-    assert verdict.missing_argument_names == ()
+        verdict = health.precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "profile.session.logged_in"
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.profile.login"
+        # The remedy names WHICH profile to log into, from the capsule's own label.
+        assert {binding.argument_name: binding.value for binding in verdict.argument_bindings} == {
+            "name": PROFILE_LABEL
+        }
+        assert verdict.missing_argument_names == ()
 
 
 def test_a_locked_profile_reports_the_same_lock_when_the_caller_supplies_state(tmp_path: Path) -> None:
@@ -166,16 +171,17 @@ def test_a_locked_profile_reports_the_same_lock_when_the_caller_supplies_state(t
     load runs first and is refused by the same absent session. The two paths
     once produced different false diagnostics for one profile.
     """
-    from ....application.workflow.state_models import WorkflowState
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ....application.workflow.state_models import WorkflowState
 
-    _publish_in_a_separate_process(tmp_path)
+        _publish_in_a_separate_process(tmp_path)
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        supplied = assess_active_profile_health(WorkflowState())
-        loaded = assess_active_profile_health()
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            supplied = assess_active_profile_health(WorkflowState(), operation=_authority_operation_for_test)
+            loaded = assess_active_profile_health(operation=_authority_operation_for_test)
 
-    assert supplied.status == "profile_locked"
-    assert loaded.status == "profile_locked"
+        assert supplied.status == "profile_locked"
+        assert loaded.status == "profile_locked"
 
 
 def test_an_unlocked_profile_is_read_through_to_ready(tmp_path: Path) -> None:
@@ -184,39 +190,42 @@ def test_an_unlocked_profile_is_read_through_to_ready(tmp_path: Path) -> None:
     Without this the locked assertions above would hold for a projection that
     reported every profile locked, which is the inverse defect.
     """
-    _publish_in_a_separate_process(tmp_path)
-    _bind_real_custody_session(tmp_path)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _publish_in_a_separate_process(tmp_path)
+        _bind_real_custody_session(tmp_path)
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        health = assess_active_profile_health()
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            health = assess_active_profile_health(operation=_authority_operation_for_test)
 
-    assert health.status == "ready"
-    assert health.profile_record_present is True
-    assert health.precondition_verdict is None
+        assert health.status == "ready"
+        assert health.profile_record_present is True
+        assert health.precondition_verdict is None
 
 
 def test_a_selector_with_no_committed_capsule_is_not_softened_into_a_lock(tmp_path: Path) -> None:
     """Genuine absence keeps its own alarming verdict; nothing is hidden behind the lock."""
-    write_pointer(tmp_path, BucketPointer.selected(bucket_id=PROFILE_ID, transition_revision=1))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        write_pointer(tmp_path, BucketPointer.selected(bucket_id=PROFILE_ID, transition_revision=1))
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        health = assess_active_profile_health()
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            health = assess_active_profile_health(operation=_authority_operation_for_test)
 
-    assert health.status == "dangling_pointer"
-    assert health.status != "profile_locked"
-    assert health.repairable_by_clearing_pointer is True
+        assert health.status == "dangling_pointer"
+        assert health.status != "profile_locked"
+        assert health.repairable_by_clearing_pointer is True
 
 
 def test_a_record_destroyed_under_a_live_session_reports_unreadable_not_locked(tmp_path: Path) -> None:
     """A session exists, so the absent row is knowable and must be reported as such."""
-    _publish_in_a_separate_process(tmp_path)
-    _bind_real_custody_session(tmp_path)
-    _destroy_the_profile_record_row(tmp_path)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _publish_in_a_separate_process(tmp_path)
+        _bind_real_custody_session(tmp_path)
+        _destroy_the_profile_record_row(tmp_path)
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        health = assess_active_profile_health()
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            health = assess_active_profile_health(operation=_authority_operation_for_test)
 
-    assert health.status == "profile_record_unreadable"
-    assert health.status != "profile_locked"
-    assert health.profile_record_present is False
-    assert health.profile_record_error != ""
+        assert health.status == "profile_record_unreadable"
+        assert health.status != "profile_locked"
+        assert health.profile_record_present is False
+        assert health.profile_record_error != ""

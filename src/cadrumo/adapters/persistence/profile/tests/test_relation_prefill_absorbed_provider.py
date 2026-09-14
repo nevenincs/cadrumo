@@ -28,6 +28,7 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
@@ -190,17 +191,20 @@ def test_resolved_provenance_names_the_filed_casilla_terminal_origin(tmp_path: P
 
 
 def test_prefill_values_carry_the_slot_bindings_own_grounding(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = _seeded_repository()
-        snapshot = _snapshot("180", 2026, "0A")
-        prefill = resolve_relations_from_local_store(snapshot, repository=repository)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repository = _seeded_repository()
+            snapshot = _snapshot("180", 2026, "0A")
+            prefill = resolve_relations_from_local_store(
+                snapshot, repository=repository, operation=_authority_operation_for_test
+            )
 
-    bindings_by_id = {
-        binding.id: binding for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
-    }
-    assert prefill.values
-    for item in prefill.values:
-        binding = bindings_by_id[item.relation]
-        assert item.legal_refs == tuple(binding.legal_refs)
-        assert item.source_refs == tuple(binding.source_refs)
-        assert item.source_modelo == "115"
+        bindings_by_id = {
+            binding.id: binding for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+        }
+        assert prefill.values
+        for item in prefill.values:
+            binding = bindings_by_id[item.relation]
+            assert item.legal_refs == tuple(binding.legal_refs)
+            assert item.source_refs == tuple(binding.source_refs)
+            assert item.source_modelo == "115"

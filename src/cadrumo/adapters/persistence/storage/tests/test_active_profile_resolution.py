@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
@@ -88,49 +89,51 @@ def _current_profile_session(profile_id: str, *, root: Path, label: str) -> Prof
 
 def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(tmp_path: Path) -> None:
     """Canonicalize an override label before secure reads while preserving pointer precedence."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+        dangling_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
+        session = _current_profile_session(bucket_id, root=tmp_path, label="Operator")
+        try:
+            write_pointer(tmp_path, BucketPointer.selected(bucket_id=dangling_id, transition_revision=1))
+            target = pointer_path(tmp_path)
+            dangling_bytes = target.read_bytes()
 
-    bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-    dangling_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
-    session = _current_profile_session(bucket_id, root=tmp_path, label="Operator")
-    try:
-        write_pointer(tmp_path, BucketPointer.selected(bucket_id=dangling_id, transition_revision=1))
-        target = pointer_path(tmp_path)
-        dangling_bytes = target.read_bytes()
+            with (
+                override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator"),
+                bound_profile_record_session(session),
+            ):
+                state = WorkflowState()
+                assert state.active_profile_bucket_id() == bucket_id
+                assert state.active_profile_record() is not None
 
-        with (
-            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator"),
-            bound_profile_record_session(session),
-        ):
-            state = WorkflowState()
-            assert state.active_profile_bucket_id() == bucket_id
-            assert state.active_profile_record() is not None
+                protected_health = assess_active_profile_health(state, operation=_authority_operation_for_test)
 
-            protected_health = assess_active_profile_health(state)
+                assert protected_health.active_profile == bucket_id
+                assert protected_health.source == "env_override"
+                assert protected_health.status == "incomplete"
+                assert protected_health.registered_bucket is True
+                assert protected_health.profile_record_present is True
+                assert protected_health.repairable_by_clearing_pointer is False
+                assert target.read_bytes() == dangling_bytes
 
-            assert protected_health.active_profile == bucket_id
-            assert protected_health.source == "env_override"
-            assert protected_health.status == "incomplete"
-            assert protected_health.registered_bucket is True
-            assert protected_health.profile_record_present is True
-            assert protected_health.repairable_by_clearing_pointer is False
-            assert target.read_bytes() == dangling_bytes
+            with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+                exposed_health = assess_active_profile_health(operation=_authority_operation_for_test)
+                repaired = repair_active_profile_pointer(
+                    clear_active=True, confirmed=True, operation=_authority_operation_for_test
+                )
 
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-            exposed_health = assess_active_profile_health()
-            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
-
-        assert exposed_health.active_profile == dangling_id
-        assert exposed_health.source == "pointer"
-        assert exposed_health.status == "dangling_pointer"
-        assert exposed_health.repairable_by_clearing_pointer is True
-        assert repaired.before == exposed_health
-        assert repaired.dry_run is False
-        assert repaired.cleared_pointer is True
-        assert repaired.after is not None
-        assert repaired.after.status == "none"
-        assert read_pointer(tmp_path).bucket_id is None
-    finally:
-        session.close()
+            assert exposed_health.active_profile == dangling_id
+            assert exposed_health.source == "pointer"
+            assert exposed_health.status == "dangling_pointer"
+            assert exposed_health.repairable_by_clearing_pointer is True
+            assert repaired.before == exposed_health
+            assert repaired.dry_run is False
+            assert repaired.cleared_pointer is True
+            assert repaired.after is not None
+            assert repaired.after.status == "none"
+            assert read_pointer(tmp_path).bucket_id is None
+        finally:
+            session.close()
 
 
 def test_resolve_profile_bucket_refuses_a_retired_manifest_without_reading_it(tmp_path: Path) -> None:

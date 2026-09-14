@@ -28,6 +28,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
@@ -127,12 +128,15 @@ def test_auth_reset_refuses_without_yes() -> None:
 
 def test_auth_logout_does_not_require_yes() -> None:
     """Anti-tautology: session logout executes without the destructive reset guard."""
-    from ....application.auth.operator import configure_operator_auth
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ....application.auth.operator import configure_operator_auth
 
-    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    result = invoke_cached_cli(["config", "auth", "logout", "--provider", "certificate"])
+        configure_operator_auth(
+            "certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=_authority_operation_for_test
+        )
+        result = invoke_cached_cli(["config", "auth", "logout", "--provider", "certificate"])
 
-    assert result.exit_code == 0, result.output
+        assert result.exit_code == 0, result.output
 
 
 def test_auth_status_is_non_destructive_and_needs_no_yes() -> None:
@@ -155,11 +159,14 @@ def test_auth_test_is_non_destructive_and_needs_no_yes() -> None:
     The probe may report an unavailable verdict, but it never mutates provider
     state and never demands ``--yes``; only destructive ``auth reset`` is guarded.
     """
-    from ....application.auth.operator import configure_operator_auth
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ....application.auth.operator import configure_operator_auth
 
-    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    result = invoke_cached_cli(["config", "auth", "test"])
+        configure_operator_auth(
+            "certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=_authority_operation_for_test
+        )
+        result = invoke_cached_cli(["config", "auth", "test"])
 
-    assert "Traceback" not in result.output, result.output
-    combined = (result.output or "") + (result.stderr or "")
-    assert "--yes" not in combined and "confirm" not in combined.lower(), combined
+        assert "Traceback" not in result.output, result.output
+        combined = (result.output or "") + (result.stderr or "")
+        assert "--yes" not in combined and "confirm" not in combined.lower(), combined

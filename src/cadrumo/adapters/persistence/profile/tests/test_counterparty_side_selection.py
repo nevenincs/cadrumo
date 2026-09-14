@@ -51,7 +51,9 @@ from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
@@ -141,8 +143,12 @@ def _loopback_reader() -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
-def _filer_territory_without_taxpayer_identity(secure_objects: SecureObjectRepository) -> None:
+def _filer_territory_without_taxpayer_identity(
+    secure_objects: SecureObjectRepository,
+    invoice_authority: InvoiceAuthorityFixture,
+) -> None:
     """Seed only the filing territory so the self-counterparty guards stay inert."""
+    del invoice_authority
     seed_filer_profile(tax_id=None)
 
 
@@ -185,6 +191,7 @@ def test_an_issued_document_records_the_billed_party_not_the_issuer(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """On a document the filer issued, the counterparty is the party billed."""
     evidence_id = _stored_evidence(
@@ -202,7 +209,7 @@ def test_an_issued_document_records_the_billed_party_not_the_issuer(
         evidence_id=evidence_id,
         counterparty_name="Cliente Ejemplo SL",
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
     assert confirmation.invoice.counterparty_tax_id == _BILLED_NIF
@@ -215,6 +222,7 @@ def test_a_received_document_records_the_issuing_party(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The mirror direction, so the fix cannot be a blanket swap of the sides."""
     evidence_id = _stored_evidence(
@@ -232,7 +240,7 @@ def test_a_received_document_records_the_issuing_party(
         evidence_id=evidence_id,
         counterparty_name="Acme Suministros SL",
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
     assert confirmation.invoice.counterparty_tax_id == _ISSUER_CIF
@@ -242,6 +250,7 @@ def test_an_issued_document_with_no_billed_party_read_refuses_rather_than_substi
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The load-bearing case: an unread counterparty is asked for, never guessed.
 
@@ -271,7 +280,7 @@ def test_an_issued_document_with_no_billed_party_read_refuses_rather_than_substi
             evidence_id=evidence_id,
             counterparty_name="Cliente Ejemplo SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
         )
 
     verdict = raised.value.terminal_precondition_verdict
@@ -287,6 +296,7 @@ def test_an_operator_override_supplies_the_counterparty_the_reader_could_not(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The refusal above is a door, not a wall -- the documented way through it."""
     evidence_id = _stored_evidence(
@@ -305,7 +315,7 @@ def test_an_operator_override_supplies_the_counterparty_the_reader_could_not(
         counterparty_name="Cliente Ejemplo SL",
         counterparty_tax_id=_BILLED_NIF,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
     assert confirmation.invoice.counterparty_tax_id == _BILLED_NIF

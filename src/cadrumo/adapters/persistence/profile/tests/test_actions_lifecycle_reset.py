@@ -34,40 +34,44 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
-    first = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="first reset row",
-            purchase_invoice_evidence_id=purchase_evidence.invoice_id,
-            idempotency_key="reset-first",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
-    second = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 3),
-            amount=Decimal("30.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="second reset row",
-            idempotency_key="reset-second",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        invoice_repository=invoice_repository,
+    ) as ports:
+        first = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="first reset row",
+                purchase_invoice_evidence_id=purchase_evidence.invoice_id,
+                idempotency_key="reset-first",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        second = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 3),
+                amount=Decimal("30.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="second reset row",
+                idempotency_key="reset-second",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
+        )
     invoice_repository.save(
         InvoiceCatalogue.from_invoices(
             (purchase_evidence.model_copy(update={"linked_transaction_ids": (first.ref.transaction_id,)}),),
@@ -120,24 +124,26 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
     transaction_repository, event_repository = _repositories(secure_objects)
     row_count = 12
     created_ids: list[str] = []
-    for index in range(row_count):
-        created = create_manual_transaction(
-            ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
-                booked_date=date(2026, 5, 1),
-                amount=Decimal("10.00") + Decimal(index),
-                direction=TransactionDirection.OUTGOING,
-                description=f"bulk reset row {index}",
-                idempotency_key=f"bulk-reset-{index}",
-            ),
-            ports=ledger_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=event_repository,
-            ),
-            occurred_at=datetime(2026, 5, 4, 9, index, tzinfo=UTC),
-        )
-        created_ids.append(created.ref.transaction_id)
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        for index in range(row_count):
+            created = create_manual_transaction(
+                ManualLedgerTransactionCommand(
+                    bucket_id=_BUCKET_ID,
+                    booked_date=date(2026, 5, 1),
+                    amount=Decimal("10.00") + Decimal(index),
+                    direction=TransactionDirection.OUTGOING,
+                    description=f"bulk reset row {index}",
+                    idempotency_key=f"bulk-reset-{index}",
+                ),
+                ports=ports,
+                occurred_at=datetime(2026, 5, 4, 9, index, tzinfo=UTC),
+            )
+            created_ids.append(created.ref.transaction_id)
 
     assert len(transaction_repository.load().transactions) == row_count
 

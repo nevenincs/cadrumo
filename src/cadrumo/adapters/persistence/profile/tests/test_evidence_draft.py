@@ -65,9 +65,12 @@ from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
+    InvoiceAuthorityFixture,
     _make_svc,
     evidence_text_layer_ports_for_test,
+    invoice_authority,
     invoice_confirmation_kwargs,
+    invoice_draft_extraction_kwargs,
     isolated_settings,
     secure_objects,
     serving_a_loopback_reader,
@@ -193,6 +196,27 @@ class TestExtractInvoiceDraftFromEvidence:
     (``evidence_id`` and ``attachment_id``). No mocks.
     """
 
+    _invoice_authority: InvoiceAuthorityFixture
+
+    @pytest.fixture(autouse=True)
+    def _authority(self, invoice_authority: InvoiceAuthorityFixture) -> None:
+        self._invoice_authority = invoice_authority
+
+    def _extract(
+        self,
+        *,
+        evidence_id: str | None = None,
+        attachment_id: str | None = None,
+        settings: Settings,
+    ) -> InvoiceDraft:
+        return extract_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            evidence_id=evidence_id,
+            attachment_id=attachment_id,
+            settings=settings,
+            **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+        )
+
     def test_extracts_by_evidence_id_from_a_real_stored_pdf(
         self,
         isolated_settings: Settings,
@@ -204,11 +228,7 @@ class TestExtractInvoiceDraftFromEvidence:
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 
-        draft = extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
-            evidence_id=record.evidence_id,
-            settings=isolated_settings,
-        )
+        draft = self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
 
         assert draft.supplier_tax_id == _SUPPLIER_CIF
         assert draft.invoice_number == "2026-0142"
@@ -231,11 +251,7 @@ class TestExtractInvoiceDraftFromEvidence:
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
 
-        draft = extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
-            attachment_id=record.attachment_id,
-            settings=isolated_settings,
-        )
+        draft = self._extract(attachment_id=record.attachment_id, settings=isolated_settings)
 
         assert draft.taxable_base == 250
         assert draft.grand_total == 250
@@ -245,24 +261,15 @@ class TestExtractInvoiceDraftFromEvidence:
 
     def test_neither_reference_supplied_refuses(self, isolated_settings: Settings) -> None:
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
-            extract_invoice_draft_from_evidence(bucket_id=_BUCKET_ID, settings=isolated_settings)
+            self._extract(settings=isolated_settings)
 
     def test_both_references_supplied_refuses(self, isolated_settings: Settings) -> None:
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
-            extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                evidence_id="whatever",
-                attachment_id="a" * 64,
-                settings=isolated_settings,
-            )
+            self._extract(evidence_id="whatever", attachment_id="a" * 64, settings=isolated_settings)
 
     def test_unknown_evidence_id_refuses_not_found(self, isolated_settings: Settings) -> None:
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
-            extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                evidence_id="does-not-exist",
-                settings=isolated_settings,
-            )
+            self._extract(evidence_id="does-not-exist", settings=isolated_settings)
 
     def test_extraction_from_stored_evidence_never_writes_a_file(
         self,
@@ -278,11 +285,7 @@ class TestExtractInvoiceDraftFromEvidence:
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 
         empty_dir = tmp_path_factory.mktemp("no-write-expected-from-store")
-        extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
-            evidence_id=record.evidence_id,
-            settings=isolated_settings,
-        )
+        self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
 
         assert scan_directory(empty_dir) == ()
 
@@ -312,6 +315,27 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
     host at any point in the fallback.
     """
 
+    _invoice_authority: InvoiceAuthorityFixture
+
+    @pytest.fixture(autouse=True)
+    def _authority(self, invoice_authority: InvoiceAuthorityFixture) -> None:
+        self._invoice_authority = invoice_authority
+
+    def _extract(
+        self,
+        *,
+        evidence_id: str | None = None,
+        attachment_id: str | None = None,
+        settings: Settings,
+    ) -> InvoiceDraft:
+        return extract_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            evidence_id=evidence_id,
+            attachment_id=attachment_id,
+            settings=settings,
+            **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+        )
+
     def _extraction_json(self) -> str:
         return json.dumps(
             {
@@ -338,11 +362,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         assert record.media_kind is MediaKind.PDF
 
         def _call() -> InvoiceDraft:
-            return extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                evidence_id=record.evidence_id,
-                settings=isolated_settings,
-            )
+            return self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
 
         observed, draft = run_against_loopback_ollama(self._extraction_json(), _call)
 
@@ -373,11 +393,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         assert record.media_kind is MediaKind.IMAGE
 
         def _call() -> InvoiceDraft:
-            return extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                attachment_id=record.attachment_id,
-                settings=isolated_settings,
-            )
+            return self._extract(attachment_id=record.attachment_id, settings=isolated_settings)
 
         _observed, draft = run_against_loopback_ollama(self._extraction_json(), _call)
         assert draft.taxable_base == Decimal("100.00")
@@ -398,11 +414,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         empty_dir = tmp_path_factory.mktemp("no-write-expected-vision-fallback")
 
         def _call() -> InvoiceDraft:
-            return extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                evidence_id=record.evidence_id,
-                settings=isolated_settings,
-            )
+            return self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
 
         run_against_loopback_ollama(self._extraction_json(), _call)
         assert scan_directory(empty_dir) == ()
@@ -435,11 +447,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         )
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                evidence_id=record.evidence_id,
-                settings=isolated_settings,
-            )
+            self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
         # The refusal is instructive through its TYPED payload, not prose: the
         # verdict builder deliberately keeps no message string, so the failed
         # condition and the capability fact are what tell the caller why.
@@ -463,6 +471,27 @@ class TestConfirmInvoiceDraftFromEvidence:
     extracted value. No mocks.
     """
 
+    _invoice_authority: InvoiceAuthorityFixture
+
+    @pytest.fixture(autouse=True)
+    def _authority(self, invoice_authority: InvoiceAuthorityFixture) -> None:
+        self._invoice_authority = invoice_authority
+
+    def _extract(
+        self,
+        *,
+        evidence_id: str | None = None,
+        attachment_id: str | None = None,
+        settings: Settings,
+    ) -> InvoiceDraft:
+        return extract_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            evidence_id=evidence_id,
+            attachment_id=attachment_id,
+            settings=settings,
+            **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+        )
+
     def _repo(self, secure_objects: SecureObjectRepository) -> InvoiceCatalogueRepository:
         return InvoiceCatalogueRepository(objects=secure_objects)
 
@@ -485,7 +514,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
         assert confirmation.created is True
@@ -525,15 +554,11 @@ class TestConfirmInvoiceDraftFromEvidence:
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
-            extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                evidence_id=confirmation.invoice.invoice_id,
-                settings=isolated_settings,
-            )
+            self._extract(evidence_id=confirmation.invoice.invoice_id, settings=isolated_settings)
 
         # PurchaseInvoiceEvidenceNotFoundError is a sibling class, not a subclass, so
         # `pytest.raises` above already excludes the "no such record" refusal.
@@ -558,7 +583,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
         assert first.created is True
 
@@ -569,7 +594,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
         assert second.created is False
@@ -598,7 +623,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             invoice_number="OVERRIDE-9999",
             taxable_base=Decimal("500.00"),
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
         assert confirmation.created is True
@@ -637,7 +662,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             taxable_base=Decimal("0"),
             iva_rate=Decimal("0"),
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
         assert confirmation.invoice.base_total == Decimal("0")
@@ -667,7 +692,7 @@ class TestConfirmInvoiceDraftFromEvidence:
                 # No override for supplier_tax_id / invoice_number, which the
                 # partial layout does not carry either.
                 settings=isolated_settings,
-                **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+                **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
             )
         # Nothing was written on the refused attempt.
         assert len(InvoiceCatalogueRepository(objects=secure_objects).load()) == 0
@@ -707,7 +732,7 @@ class TestConfirmInvoiceDraftFromEvidence:
                 counterparty_name="Acme Suministros SL",
                 counterparty_tax_id="not-a-real-nif",
                 settings=isolated_settings,
-                **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+                **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
             )
         # Nothing was written on the refused attempt.
         assert len(InvoiceCatalogueRepository(objects=secure_objects).load()) == 0
@@ -734,7 +759,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
         assert scan_directory(empty_dir) == ()
@@ -765,7 +790,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
         store = AttachmentStore(objects=secure_objects)
@@ -796,7 +821,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             invoice_number="ATT-0099",
             invoice_date=date(2026, 3, 15),
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
 
         store = AttachmentStore(objects=secure_objects)
@@ -824,7 +849,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
         assert first.created is True
 
@@ -835,7 +860,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
         )
         assert second.created is False
         assert second.invoice.invoice_id == first.invoice.invoice_id

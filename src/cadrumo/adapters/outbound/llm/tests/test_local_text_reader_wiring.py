@@ -26,6 +26,8 @@ import inspect
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from .....core.config_support import LLMProvider
 from ..text_classifier import LocalTextLLMClassifier
 
@@ -64,14 +66,17 @@ def test_the_local_text_reader_requests_the_local_provider_and_carries_no_images
     fall through to whatever the settings default happens to be -- which is how
     a document ends up leaving the host by accident rather than by decision.
     """
-    from .....domain.transactions.llm import prompt_spec_with_every_spending_category
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from .....domain.transactions.llm import prompt_spec_with_every_spending_category
 
-    reader = LocalTextLLMClassifier(spec=prompt_spec_with_every_spending_category(year=2025))
-    request = reader._request("classify this")
+        reader = LocalTextLLMClassifier(
+            spec=prompt_spec_with_every_spending_category(year=2025, operation=_authority_operation_for_test)
+        )
+        request = reader._request("classify this")
 
-    assert request.provider_override is LLMProvider.LOCAL
-    assert not request.images, "a text read must carry no images"
-    assert request.prompt == "classify this"
+        assert request.provider_override is LLMProvider.LOCAL
+        assert not request.images, "a text read must carry no images"
+        assert request.prompt == "classify this"
 
 
 def test_the_provenance_stamp_names_the_local_text_transport() -> None:
@@ -86,15 +91,16 @@ def test_the_provenance_stamp_names_the_local_text_transport() -> None:
     off-host reading returned behind a consent gate -- and the readers that took
     a provider back are held to stamping the transport they actually used.
     """
-    from .....domain.transactions.llm import prompt_spec_with_every_spending_category
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from .....domain.transactions.llm import prompt_spec_with_every_spending_category
 
-    reader = LocalTextLLMClassifier(
-        spec=prompt_spec_with_every_spending_category(year=2025),
-        model="qwen2.5:3b",
-    )
+        reader = LocalTextLLMClassifier(
+            spec=prompt_spec_with_every_spending_category(year=2025, operation=_authority_operation_for_test),
+            model="qwen2.5:3b",
+        )
 
-    assert reader.decided_by == "llm:local-text:qwen2.5:3b"
-    assert reader.decided_by.startswith("llm:local-")
+        assert reader.decided_by == "llm:local-text:qwen2.5:3b"
+        assert reader.decided_by.startswith("llm:local-")
 
 
 def test_the_text_model_default_sits_under_the_declared_hardware_floor() -> None:

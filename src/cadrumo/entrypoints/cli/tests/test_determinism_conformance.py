@@ -112,15 +112,17 @@ def _emit_ledger_add(profile: TestRuntimeProfile) -> dict[str, object]:
     """
     repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id, objects=profile.repository)
     events = BucketEventHistoryRepository(objects=profile.repository)
-    result = create_manual_transaction(
-        _idempotent_command(),
-        ports=ledger_ports_for_test(
-            bucket_id=profile.bucket_id,
-            transaction_repository=repo,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_INSTANT,
-    )
+    with ledger_ports_for_test(
+        bucket_id=profile.bucket_id,
+        objects=profile.repository,
+        transaction_repository=repo,
+        bucket_event_repository=events,
+    ) as ports:
+        result = create_manual_transaction(
+            _idempotent_command(),
+            ports=ports,
+            occurred_at=_INSTANT,
+        )
     payload = LedgerAddResult.model_validate(
         {
             "bucket_id": result.ref.bucket_id,
@@ -191,26 +193,30 @@ class TestEnrolledCommandDeterminism:
             repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id, objects=profile.repository)
             events = BucketEventHistoryRepository(objects=profile.repository)
             command = _idempotent_command()
-            create_manual_transaction(
-                command,
-                ports=ledger_ports_for_test(
-                    bucket_id=profile.bucket_id,
-                    transaction_repository=repo,
-                    bucket_event_repository=events,
-                ),
-                occurred_at=_INSTANT,
-            )
+            with ledger_ports_for_test(
+                bucket_id=profile.bucket_id,
+                objects=profile.repository,
+                transaction_repository=repo,
+                bucket_event_repository=events,
+            ) as ports:
+                create_manual_transaction(
+                    command,
+                    ports=ports,
+                    occurred_at=_INSTANT,
+                )
             db_after_create = _committed_db_fingerprint(profile, tmp_path / "db-snap-create")
 
-            second = create_manual_transaction(
-                command,
-                ports=ledger_ports_for_test(
-                    bucket_id=profile.bucket_id,
-                    transaction_repository=repo,
-                    bucket_event_repository=events,
-                ),
-                occurred_at=_INSTANT,
-            )
+            with ledger_ports_for_test(
+                bucket_id=profile.bucket_id,
+                objects=profile.repository,
+                transaction_repository=repo,
+                bucket_event_repository=events,
+            ) as ports:
+                second = create_manual_transaction(
+                    command,
+                    ports=ports,
+                    occurred_at=_INSTANT,
+                )
             assert second.bucket_event_ids == ()  # the guarded-idempotent no-op signal
             db_after_retry = _committed_db_fingerprint(profile, tmp_path / "db-snap-retry")
 

@@ -292,7 +292,11 @@ def work_verify(
         selected_revision.work_unit_id,
         ports=calculation_ports.work_lifecycle_ports,
     )
-    require_profile_ready_for_work_unit(selected_work_unit)
+    require_profile_ready_for_work_unit(
+        selected_work_unit,
+        operation=authority_operation(ctx),
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+    )
     workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
     already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
     with bundled_indexed_authority().operation() as operation:
@@ -389,7 +393,11 @@ def work_dependencies(
                     taxpayer_tax_id=workflow_profile.tax_id,
                     activity_start_date=workflow_profile.activity_start_date,
                     taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
-                    m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(active_bucket_id),
+                    m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(
+                        active_bucket_id,
+                        operation=operation,
+                    ),
+                    operation=operation,
                 )
     except (FileNotFoundError, RegistrySnapshotError, ValueError) as exc:
         raise bad_parameter_from_error(exc) from exc
@@ -448,7 +456,11 @@ def work_file(
         selected_revision.work_unit_id,
         ports=calculation_ports.work_lifecycle_ports,
     )
-    require_profile_ready_for_work_unit(selected_work_unit)
+    require_profile_ready_for_work_unit(
+        selected_work_unit,
+        operation=authority_operation(ctx),
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+    )
     workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
     filing_ports = filing_action_ports_factory(ctx)(bucket_id=selected_work_unit.bucket_id)
     already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
@@ -463,6 +475,7 @@ def work_file(
         payment_election=payment_election,
         prior_domiciliation_election=prior_domiciliation_election,
         ports=filing_ports,
+        operation=authority_operation(ctx),
     )
     result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]

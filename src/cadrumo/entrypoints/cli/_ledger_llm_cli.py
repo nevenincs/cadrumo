@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import typer
 from pydantic import BaseModel, ValidationError
@@ -55,7 +55,7 @@ from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ._ledger_llm_composition import LedgerLlmComposition, compose_ledger_llm
+from ._ledger_llm_composition import compose_ledger_llm
 from ._ledger_support import (
     ledger_transaction_validation_no_recovery,
     ledger_validation_bad,
@@ -64,6 +64,9 @@ from ._ledger_support import (
 )
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from .state_projection_support import authority_operation
+
+if TYPE_CHECKING:
+    from ...application.ledger.action_ports import LedgerActionPorts
 
 __all__ = [
     "dispatch_autosplit",
@@ -85,8 +88,7 @@ def emit_llm_rejection(
     bucket_id: str,
     reason: str,
     actor: str | None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    composition: LedgerLlmComposition,
+    ports: LedgerActionPorts,
 ) -> None:
     """Record an explicit rejection of an LLM suggestion and emit the result.
 
@@ -109,8 +111,7 @@ def emit_llm_rejection(
         bucket_id=bucket_id,
         reason=reason,
         actor=actor or resolve_active_bucket_id() or "operator",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=composition.bucket_event_repository,
+        ports=ports,
     )
     if not isinstance(result, LLMSuggestionRejectionResult):
         raise TransactionValidationError(
@@ -264,7 +265,7 @@ def dispatch_autosplit(
     )
     if prologue is None:
         return
-    suggestion, transaction_repository, composition = prologue
+    suggestion, transaction_repository, ports = prologue
     bucket_id = transaction_repository.bucket_id
 
     if suggestion.recommends_split:
@@ -274,8 +275,7 @@ def dispatch_autosplit(
             bucket_id=bucket_id,
             apply=apply,
             actor=actor,
-            transaction_repository=transaction_repository,
-            composition=composition,
+            ports=ports,
         )
         return
     _emit_single(
@@ -285,8 +285,7 @@ def dispatch_autosplit(
         apply=apply,
         actor=actor,
         result_models=(LedgerClassifyLlmSuggestResult, LedgerClassifySingleResult),
-        transaction_repository=transaction_repository,
-        composition=composition,
+        ports=ports,
     )
 
 
@@ -297,16 +296,12 @@ def _emit_split(
     bucket_id: str,
     apply: bool,
     actor: str | None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    composition: LedgerLlmComposition,
+    ports: LedgerActionPorts,
 ) -> None:
     """Preview or apply the multi-child evidence-driven split for the auto-split route.
 
-    The caller's already-open repository is threaded through to the write. It
-    is not optional here: every other apply path in this module and in the
-    ``ledger split --llm`` route passes one, and omitting it made this the only
-    site that opened a second encrypted-storage repository for the bucket it
-    was already holding — and silently ignored an injected one.
+    The caller-composed action-port bundle is threaded through to the write so
+    the review workflow uses one canonical bucket-scoped composition.
     """
     from ._ledger_payloads import LedgerSplitResult
 
@@ -339,8 +334,7 @@ def _emit_split(
             decision=LlmReviewDecision.SPLIT,
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=composition.bucket_event_repository,
+            ports=ports,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -378,14 +372,13 @@ def _emit_single(
     apply: bool,
     actor: str | None,
     result_models: tuple[type[BaseModel], type[BaseModel]],
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    composition: LedgerLlmComposition,
+    ports: LedgerActionPorts,
 ) -> None:
     """Preview or apply the in-place single-line classification (no-split verdict).
 
-    Takes the caller's open repository for the same reason :func:`_emit_split`
-    does: the two branches of one route must not differ in whether the write
-    reaches the repository the suggestion was read from.
+    Takes the caller-composed action-port bundle for the same reason
+    :func:`_emit_split` does: both branches of one route use the canonical
+    bucket-scoped write composition.
     """
     suggest_model, single_model = result_models
     child = suggestion.children[0]
@@ -419,8 +412,7 @@ def _emit_single(
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=composition.bucket_event_repository,
+            ports=ports,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -634,12 +626,12 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     vision_model: str | None,
     reject: bool,
     reason: str,
-) -> tuple[SuggestionT, TransactionCatalogueRepositoryProtocol, LedgerLlmComposition] | None:
+) -> tuple[SuggestionT, TransactionCatalogueRepositoryProtocol, LedgerActionPorts] | None:
     """Shared classify/saturate prologue: validate options, resolve, suggest, handle ``--reject``.
 
-    Returns ``(suggestion, transaction_repository)`` for the caller to preview or
-    apply, or ``None`` when ``--reject`` handled the invocation (the caller then
-    returns). ``suggest_fn`` is the stage-specific suggester
+    Returns ``(suggestion, transaction_repository, ports)`` for the caller to
+    preview or apply, or ``None`` when ``--reject`` handled the
+    invocation (the caller then returns). ``suggest_fn`` is the stage-specific suggester
     (:func:`suggest_llm_classification` or :func:`saturate_llm_classification`).
     """
     validated_transaction_id = _validate_classify_llm_options(
@@ -654,6 +646,9 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     transaction_repository = transaction_catalogue_repo(state)
     composition = compose_ledger_llm(bucket_id=transaction_repository.bucket_id, settings=load_settings())
     operation = authority_operation(ctx)
+    from ..ledger_action_composition import compose_ledger_action_ports
+
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=operation)
     resolved_id = resolve_id(transaction_repository, validated_transaction_id)
     suggestion = suggest_fn(
         bucket_id=transaction_repository.bucket_id,
@@ -674,11 +669,10 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
             bucket_id=transaction_repository.bucket_id,
             reason=reason,
             actor=actor,
-            transaction_repository=transaction_repository,
-            composition=composition,
+            ports=ports,
         )
         return None
-    return suggestion, transaction_repository, composition
+    return suggestion, transaction_repository, ports
 
 
 class LedgerLlmRouteArguments(TypedDict):
@@ -743,7 +737,7 @@ def ledger_classify_llm(
     )
     if prologue is None:
         return
-    suggestion, transaction_repository, composition = prologue
+    suggestion, transaction_repository, ports = prologue
 
     if not apply:
         _render_classify_llm_preview(ctx, suggestion=suggestion)
@@ -757,8 +751,7 @@ def ledger_classify_llm(
             bucket_id=transaction_repository.bucket_id,
             business_pct=parse_decimal_option(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=composition.bucket_event_repository,
+            ports=ports,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -814,7 +807,7 @@ def ledger_saturate_llm(
     )
     if prologue is None:
         return
-    suggestion, transaction_repository, composition = prologue
+    suggestion, transaction_repository, ports = prologue
 
     iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
 
@@ -830,8 +823,7 @@ def ledger_saturate_llm(
             bucket_id=transaction_repository.bucket_id,
             business_pct=parse_decimal_option(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=composition.bucket_event_repository,
+            ports=ports,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -882,19 +874,17 @@ def _derive_operator_iva(
     transaction_id: str,
     iva_category: IvaCategory,
     actor: str | None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    ports: LedgerActionPorts,
 ) -> OperatorIvaDerivationResult:
     """Run the canonical application derivation and translate its refusals."""
     try:
-        composition = compose_ledger_llm(bucket_id=bucket_id, settings=load_settings())
         return derive_operator_iva_substrate(
             bucket_id=bucket_id,
             transaction_id=transaction_id,
             iva_category=iva_category,
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command=LlmReviewInvocationOrigin.CLASSIFY_IVA_CATEGORY_SATURATE.source_command,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=composition.bucket_event_repository,
+            ports=ports,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -992,13 +982,19 @@ def ledger_operator_iva_derive(
 
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    from ..ledger_action_composition import compose_ledger_action_ports
+
+    ports = compose_ledger_action_ports(
+        bucket_id=transaction_repository.bucket_id,
+        operation=authority_operation(ctx),
+    )
     resolved_id = resolve_id(transaction_repository, transaction_id)
     derivation = _derive_operator_iva(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
         iva_category=iva_category,
         actor=actor,
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     result, taxable_base, iva_rate, iva_amount = _require_complete_operator_derivation(
         derivation,

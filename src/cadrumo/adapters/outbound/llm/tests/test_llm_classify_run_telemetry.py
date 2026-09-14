@@ -21,6 +21,7 @@ from cadrumo.adapters.outbound.llm.run_telemetry import LLMRunTelemetryRecorder
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.ledger.llm_classification import suggest_llm_classification
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import LLMClassifierError
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -79,61 +80,65 @@ def _transaction() -> Transaction:
 
 def test_suggest_llm_classification_records_one_run_on_success(profile: TestRuntimeProfile) -> None:
     """A successful subprocess classify call records exactly one succeeded run."""
-    txn = _transaction()
-    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-    repository.save(TransactionCatalogue.from_transactions((txn,)))
-    classifier = SubprocessLLMClassifier(
-        name="test-provider",
-        command=(sys.executable, "-c", _SUCCESS_SCRIPT),
-        model="test-model",
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        txn = _transaction()
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(TransactionCatalogue.from_transactions((txn,)))
+        classifier = SubprocessLLMClassifier(
+            name="test-provider",
+            command=(sys.executable, "-c", _SUCCESS_SCRIPT),
+            model="test-model",
+        )
 
-    run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
-    assert run_recorder.load_records() == ()
+        run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
+        assert run_recorder.load_records() == ()
 
-    suggestion = suggest_llm_classification(
-        bucket_id=_BUCKET_ID,
-        transaction_id=txn.transaction_id,
-        classifier=classifier,
-        transaction_repository=repository,
-        settings=profile.settings,
-    )
-    assert suggestion.provenance == "llm:test-provider:test-model"
-
-    records = run_recorder.load_records()
-    assert len(records) == 1
-    record = records[0]
-    assert record.succeeded is True
-    assert record.error_kind == ""
-    assert record.provider == "llm:test-provider:test-model"
-    assert record.duration_ms >= 0
-
-
-def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRuntimeProfile) -> None:
-    """A subprocess call whose output fails schema parsing records one failed run."""
-    txn = _transaction()
-    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-    repository.save(TransactionCatalogue.from_transactions((txn,)))
-    classifier = SubprocessLLMClassifier(
-        name="test-provider",
-        command=(sys.executable, "-c", _FAILURE_SCRIPT),
-        model="test-model",
-    )
-
-    run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
-
-    with pytest.raises(LLMClassifierError):
-        suggest_llm_classification(
+        suggestion = suggest_llm_classification(
             bucket_id=_BUCKET_ID,
             transaction_id=txn.transaction_id,
             classifier=classifier,
             transaction_repository=repository,
             settings=profile.settings,
+            operation=_authority_operation_for_test,
+        )
+        assert suggestion.provenance == "llm:test-provider:test-model"
+
+        records = run_recorder.load_records()
+        assert len(records) == 1
+        record = records[0]
+        assert record.succeeded is True
+        assert record.error_kind == ""
+        assert record.provider == "llm:test-provider:test-model"
+        assert record.duration_ms >= 0
+
+
+def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRuntimeProfile) -> None:
+    """A subprocess call whose output fails schema parsing records one failed run."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        txn = _transaction()
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(TransactionCatalogue.from_transactions((txn,)))
+        classifier = SubprocessLLMClassifier(
+            name="test-provider",
+            command=(sys.executable, "-c", _FAILURE_SCRIPT),
+            model="test-model",
         )
 
-    records = run_recorder.load_records()
-    assert len(records) == 1
-    record = records[0]
-    assert record.succeeded is False
-    assert record.error_kind == "LLMClassifierError"
-    assert record.provider == "llm:test-provider:test-model"
+        run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
+
+        with pytest.raises(LLMClassifierError):
+            suggest_llm_classification(
+                bucket_id=_BUCKET_ID,
+                transaction_id=txn.transaction_id,
+                classifier=classifier,
+                transaction_repository=repository,
+                settings=profile.settings,
+                operation=_authority_operation_for_test,
+            )
+
+        records = run_recorder.load_records()
+        assert len(records) == 1
+        record = records[0]
+        assert record.succeeded is False
+        assert record.error_kind == "LLMClassifierError"
+        assert record.provider == "llm:test-provider:test-model"

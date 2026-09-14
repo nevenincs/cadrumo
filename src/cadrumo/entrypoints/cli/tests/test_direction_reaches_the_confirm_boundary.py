@@ -41,11 +41,14 @@ from ....application.ledger.confirmation_gate import ConfirmationBlockedError, c
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH
 from ....application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from ....application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
+from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....core.config import load_settings, override_settings
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from ....domain.user_profile.values import UserProfileFact
 from ....entrypoints.adapter_composition import build_ledger_evidence_ports
 from ....entrypoints.cli._ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
@@ -172,14 +175,26 @@ def reader_url() -> Iterator[str]:
 class _LiveDocument:
     """A real evidence record in a real bucket, read through the real entry point."""
 
-    def __init__(self, evidence_id: str) -> None:
+    def __init__(
+        self,
+        evidence_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        legends: tuple[RegimeLegend, ...],
+    ) -> None:
         self.evidence_id = evidence_id
+        self.operation = operation
+        self.legends = legends
 
     def extract(self) -> InvoiceDraft:
+        evidence_ports = build_ledger_evidence_ports(bucket_id=_PROFILE_ID)
         return extract_invoice_draft_from_evidence(
             evidence_id=self.evidence_id,
             bucket_id=_PROFILE_ID,
             settings=load_settings(),
+            ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+            operation=self.operation,
+            legends=self.legends,
         )
 
     def confirm(self, *, kind: InvoiceKind) -> None:
@@ -195,6 +210,8 @@ class _LiveDocument:
             counterparty_establishment_repository=CounterpartyEstablishmentRepository(bucket_id=_PROFILE_ID),
             evidence_ports=evidence_ports,
             extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+            operation=self.operation,
+            legends=self.legends,
         )
 
 
@@ -215,6 +232,7 @@ def live_document(tmp_path: Path, reader_url: str):
         ),
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),
+        bundled_indexed_authority().operation() as operation,
     ):
         # Seeded through a detached WorkflowState, never a repository read:
         # the capsule publishes by an atomic no-replace rename onto
@@ -225,6 +243,9 @@ def live_document(tmp_path: Path, reader_url: str):
             (UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_FILER_CIF),),
         )
 
+        period = default_invoice_extraction_period()
+        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
         def _add(lines: tuple[str, ...], read: dict[str, str]) -> _LiveDocument:
             _ReaderEndpoint.reply = json.dumps({**_COMMON_READ, **read})
             document = tmp_path / f"factura-{len(lines)}-{len(read)}.pdf"
@@ -233,7 +254,11 @@ def live_document(tmp_path: Path, reader_url: str):
                 ["--format", "json", "app", "ledger", "evidence", "add", str(document), "--supplier", "Acme SL"],
             )
             assert added.exit_code == 0, added.output
-            return _LiveDocument(json.loads(added.output)["result"]["evidence_id"])
+            return _LiveDocument(
+                json.loads(added.output)["result"]["evidence_id"],
+                operation=operation,
+                legends=legends,
+            )
 
         yield _add
     dispose_engine()

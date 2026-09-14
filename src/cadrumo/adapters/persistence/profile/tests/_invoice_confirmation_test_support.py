@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, TypedDict, override
+from typing import ClassVar, NamedTuple, TypedDict, override
 
 import httpx
 import pytest
@@ -89,7 +89,9 @@ from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.optional_extras import MissingOptionalExtraError
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.supply_nature import SupplyNature
+from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.loopback_llm import (
@@ -104,6 +106,26 @@ _BUCKET_ID = "29292929-2929-4929-8929-292929292929"
 _EVIDENCE_CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
+
+
+class InvoiceAuthorityFixture(NamedTuple):
+    """One generation-pinned authority lease for a complete invoice test."""
+
+    operation: PinnedAuthorityOperation
+    legends: tuple[RegimeLegend, ...]
+
+
+@pytest.fixture
+def invoice_authority() -> Generator[InvoiceAuthorityFixture]:
+    """Keep extraction, legends, and confirmation on one live authority lease."""
+    from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+
+    with bundled_indexed_authority().operation() as operation:
+        period = default_invoice_extraction_period()
+        yield InvoiceAuthorityFixture(
+            operation=operation,
+            legends=resolve_regime_legends(operation=operation, effective_date=period.end_date),
+        )
 
 
 def _ledger_evidence_ports(*, bucket_id: str) -> LedgerEvidencePorts:
@@ -276,9 +298,12 @@ def seed_filer_profile(*, tax_id: str | None = "12345678Z") -> None:
 
 
 @pytest.fixture(autouse=True)
-def seeded_filer_profile(secure_objects: SecureObjectRepository) -> None:
+def seeded_filer_profile(
+    secure_objects: SecureObjectRepository,
+    invoice_authority: InvoiceAuthorityFixture,
+) -> None:
     """Provide the profile facts required by the real confirmation path."""
-    del secure_objects
+    del secure_objects, invoice_authority
     seed_filer_profile()
 
 
@@ -307,9 +332,15 @@ class InvoiceConfirmationKwargs(TypedDict):
     counterparty_establishment_repository: CounterpartyEstablishmentRepositoryProtocol
     evidence_ports: LedgerEvidencePorts
     extraction_ports: InvoiceDraftExtractionPorts
+    operation: PinnedAuthorityOperation
+    legends: tuple[RegimeLegend, ...]
 
 
-def invoice_confirmation_kwargs(*, bucket_id: str) -> InvoiceConfirmationKwargs:
+def invoice_confirmation_kwargs(
+    *,
+    bucket_id: str,
+    authority: InvoiceAuthorityFixture,
+) -> InvoiceConfirmationKwargs:
     """Compose every required port for a real confirmation invocation."""
     evidence_ports = _ledger_evidence_ports(bucket_id=bucket_id)
     return {
@@ -318,6 +349,8 @@ def invoice_confirmation_kwargs(*, bucket_id: str) -> InvoiceConfirmationKwargs:
         "counterparty_establishment_repository": CounterpartyEstablishmentRepository(bucket_id=bucket_id),
         "evidence_ports": evidence_ports,
         "extraction_ports": _invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+        "operation": authority.operation,
+        "legends": authority.legends,
     }
 
 
@@ -325,6 +358,7 @@ def invoice_confirmation_kwargs_with_catalogue(
     *,
     bucket_id: str,
     catalogue_creation_ports: CatalogueCreationPorts,
+    authority: InvoiceAuthorityFixture,
 ) -> InvoiceConfirmationKwargs:
     """Compose confirmation ports while retaining a test-specific catalogue port."""
     evidence_ports = _ledger_evidence_ports(bucket_id=bucket_id)
@@ -334,6 +368,30 @@ def invoice_confirmation_kwargs_with_catalogue(
         "counterparty_establishment_repository": CounterpartyEstablishmentRepository(bucket_id=bucket_id),
         "evidence_ports": evidence_ports,
         "extraction_ports": _invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+        "operation": authority.operation,
+        "legends": authority.legends,
+    }
+
+
+class InvoiceDraftExtractionKwargs(TypedDict):
+    """Exact capabilities supplied to direct extraction integration tests."""
+
+    ports: InvoiceDraftExtractionPorts
+    operation: PinnedAuthorityOperation
+    legends: tuple[RegimeLegend, ...]
+
+
+def invoice_draft_extraction_kwargs(
+    *,
+    bucket_id: str,
+    authority: InvoiceAuthorityFixture,
+) -> InvoiceDraftExtractionKwargs:
+    """Compose the real reader ports and same-generation authority inputs."""
+    evidence_ports = _ledger_evidence_ports(bucket_id=bucket_id)
+    return {
+        "ports": _invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+        "operation": authority.operation,
+        "legends": authority.legends,
     }
 
 
@@ -389,8 +447,11 @@ __all__ = [
     "_BUCKET_ID",
     "_EVIDENCE_CORPUS",
     "_make_svc",
+    "InvoiceAuthorityFixture",
+    "invoice_authority",
     "invoice_confirmation_kwargs",
     "invoice_confirmation_kwargs_with_catalogue",
+    "invoice_draft_extraction_kwargs",
     "isolated_settings",
     "pdf_file",
     "runtime_profile",

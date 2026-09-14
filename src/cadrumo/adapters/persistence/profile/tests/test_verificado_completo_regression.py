@@ -58,6 +58,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -290,143 +291,149 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
     missing-required mechanism itself is exercised against a real registry casilla
     definition in ``test_missing_required_casilla_finding_carries_registry_provenance``.
     """
-    wu_repo, cr_repo, _filing_repo, vr_repo, bv_repo = repos
-    required = _required_manual_casillas_for_m130()
-    assert required == (), (
-        "M130 must have no required MANUAL casillas after the H1 gasto bind "
-        f"(casilla 02 is now ledger-bound); registry still declares {required!r}"
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        wu_repo, cr_repo, _filing_repo, vr_repo, bv_repo = repos
+        required = _required_manual_casillas_for_m130()
+        assert required == (), (
+            "M130 must have no required MANUAL casillas after the H1 gasto bind "
+            f"(casilla 02 is now ledger-bound); registry still declares {required!r}"
+        )
 
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=_M130_MODELO,
-        filing_year=_M130_FILING_YEAR,
-        period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
-    )
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=_M130_MODELO,
+            filing_year=_M130_FILING_YEAR,
+            period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            clock=_T0,
+        )
 
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={
+                _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
+                _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
+                _M130_RETENCIONES_CASILLA: Decimal("0"),
+                _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
+                _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
+                _M130_RESULTADO_CASILLA: Decimal("0"),
+            },
+            binding_values={
+                "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+            },
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
+            clock=_T1,
+        )
+
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-test",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings("X1234567L"),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_authority_operation_for_test,
+        )
+
+        missing_finding_casillas = {
+            f.casilla_id for f in report.findings if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+        }
+        assert missing_finding_casillas == set(), (
+            f"M130 has no required manual casilla, so no MISSING_REQUIRED_CASILLA finding is expected; "
+            f"got {missing_finding_casillas!r}"
+        )
+        assert report.missing_required_casilla_ids == ()
+
+
+def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> None:
+    """M130 revision with all required casillas present is granted verificado_completo."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
+        required = _required_manual_casillas_for_m130()
+
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=_M130_MODELO,
+            filing_year=_M130_FILING_YEAR,
+            period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            clock=_T0,
+        )
+
+        casilla_inputs: dict[CasillaId, Decimal] = {
+            _M130_INGRESOS_CASILLA: Decimal("10000"),
+            _M130_GASTOS_CASILLA: Decimal("3000"),
             _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
             _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
             _M130_RETENCIONES_CASILLA: Decimal("0"),
             _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
             _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
             _M130_RESULTADO_CASILLA: Decimal("0"),
-        },
-        binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-        },
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T1,
-    )
+        }
+        # Confirm the test supplies all required casillas
+        assert set(required) <= set(casilla_inputs), (
+            f"Test fixture missing required casillas: {set(required) - set(casilla_inputs)}"
+        )
 
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-test",
-        workflow_profile=workflow_profile(),
-        settings=ready_clave_settings("X1234567L"),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=casilla_inputs,
+            binding_values={
+                "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+            },
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
+            clock=_T1,
+        )
+        observation_repo = _seed_clean_cross_period_sources_for_m130(
+            work_unit,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            bucket_event_repository=bv_repo,
+        )
 
-    missing_finding_casillas = {
-        f.casilla_id for f in report.findings if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
-    }
-    assert missing_finding_casillas == set(), (
-        f"M130 has no required manual casilla, so no MISSING_REQUIRED_CASILLA finding is expected; "
-        f"got {missing_finding_casillas!r}"
-    )
-    assert report.missing_required_casilla_ids == ()
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-test",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings("X1234567L"),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            calculation_observation_repository=observation_repo,
+            clock=_T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_authority_operation_for_test,
+        )
 
-
-def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> None:
-    """M130 revision with all required casillas present is granted verificado_completo."""
-    wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
-    required = _required_manual_casillas_for_m130()
-
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=_M130_MODELO,
-        filing_year=_M130_FILING_YEAR,
-        period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
-    )
-
-    casilla_inputs: dict[CasillaId, Decimal] = {
-        _M130_INGRESOS_CASILLA: Decimal("10000"),
-        _M130_GASTOS_CASILLA: Decimal("3000"),
-        _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
-        _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-        _M130_RETENCIONES_CASILLA: Decimal("0"),
-        _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
-        _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
-        _M130_RESULTADO_CASILLA: Decimal("0"),
-    }
-    # Confirm the test supplies all required casillas
-    assert set(required) <= set(casilla_inputs), (
-        f"Test fixture missing required casillas: {set(required) - set(casilla_inputs)}"
-    )
-
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=casilla_inputs,
-        binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-        },
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T1,
-    )
-    observation_repo = _seed_clean_cross_period_sources_for_m130(
-        work_unit,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=filing_repo,
-        bucket_event_repository=bv_repo,
-    )
-
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-test",
-        workflow_profile=workflow_profile(),
-        settings=ready_clave_settings("X1234567L"),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=filing_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        calculation_observation_repository=observation_repo,
-        clock=_T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-
-    assert report.granted_verificado_completo is True
-    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
-    assert report.missing_required_casilla_ids == ()
-    assert set(report.resolved_casilla_ids) >= set(required)
-    verified = cr_repo.load().get(revision.calculation_revision_id)
-    assert verified is not None
-    assert verified.ledger_filing_snapshot is not None
-    assert verified.ledger_filing_evidence is not None
-    assert verified.ledger_filing_evidence.snapshot_fingerprint == verified.ledger_filing_snapshot.snapshot_fingerprint
-    assert {entry.casilla_id for entry in verified.ledger_filing_evidence.manual_entries} >= set(casilla_inputs)
-    assert all(row.legal_refs and row.source_refs for row in verified.ledger_filing_evidence.rows)
-    assert all(entry.legal_refs and entry.source_refs for entry in verified.ledger_filing_evidence.manual_entries)
+        assert report.granted_verificado_completo is True
+        assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
+        assert report.missing_required_casilla_ids == ()
+        assert set(report.resolved_casilla_ids) >= set(required)
+        verified = cr_repo.load().get(revision.calculation_revision_id)
+        assert verified is not None
+        assert verified.ledger_filing_snapshot is not None
+        assert verified.ledger_filing_evidence is not None
+        assert (
+            verified.ledger_filing_evidence.snapshot_fingerprint == verified.ledger_filing_snapshot.snapshot_fingerprint
+        )
+        assert {entry.casilla_id for entry in verified.ledger_filing_evidence.manual_entries} >= set(casilla_inputs)
+        assert all(row.legal_refs and row.source_refs for row in verified.ledger_filing_evidence.rows)
+        assert all(entry.legal_refs and entry.source_refs for entry in verified.ledger_filing_evidence.manual_entries)
 
 
 def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
@@ -442,75 +449,77 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
     In production, such breakage can occur through raw-storage manipulation or a
     future schema migration that mutates the payload without updating the id.
     """
-    wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
 
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=_M130_MODELO,
-        filing_year=_M130_FILING_YEAR,
-        period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
-    )
-
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={
-            _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("3000"),
-            _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
-            _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-            _M130_RETENCIONES_CASILLA: Decimal("0"),
-            _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
-            _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
-            _M130_RESULTADO_CASILLA: Decimal("0"),
-        },
-        binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-        },
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T1,
-    )
-
-    catalogue = cr_repo.load()
-    original = catalogue.get(revision.calculation_revision_id)
-    assert original is not None
-
-    # Construct a tampered revision via model_copy — like model_construct it
-    # bypasses the validators, so the hash mismatch is not caught at build time,
-    # but unlike it every other field is carried over from the original.
-    #
-    # The enumerated model_construct call this replaces listed the fields by
-    # hand, so each field added to CalculationRevision afterwards was simply
-    # absent from the tampered object: reading `source_provenance` raised
-    # AttributeError inside the integrity check, and the test failed on a
-    # missing attribute instead of on the drift it exists to prove.
-    tampered_values = dict(original.casilla_values)
-    tampered_values[_M130_GASTOS_CASILLA] = Decimal("999999")
-
-    tampered = original.model_copy(
-        update={
-            "casilla_values": tampered_values,
-            # Cleared so the obs-vs-casilla_values pydantic check is skipped.
-            "observations": (),
-        },
-    )
-
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), tampered))
-
-    # The public verify action must detect the hash mismatch before any grant.
-    with pytest.raises(StoredCalculationDriftError):
-        verify_modelo_revision(
-            tampered.calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            actor="operator-test",
-            workflow_profile=workflow_profile(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            settings=ready_clave_settings("X1234567L"),
-            clock=_T2,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=_M130_MODELO,
+            filing_year=_M130_FILING_YEAR,
+            period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            clock=_T0,
         )
+
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={
+                _M130_INGRESOS_CASILLA: Decimal("10000"),
+                _M130_GASTOS_CASILLA: Decimal("3000"),
+                _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
+                _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
+                _M130_RETENCIONES_CASILLA: Decimal("0"),
+                _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
+                _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
+                _M130_RESULTADO_CASILLA: Decimal("0"),
+            },
+            binding_values={
+                "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+            },
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
+            clock=_T1,
+        )
+
+        catalogue = cr_repo.load()
+        original = catalogue.get(revision.calculation_revision_id)
+        assert original is not None
+
+        # Construct a tampered revision via model_copy — like model_construct it
+        # bypasses the validators, so the hash mismatch is not caught at build time,
+        # but unlike it every other field is carried over from the original.
+        #
+        # The enumerated model_construct call this replaces listed the fields by
+        # hand, so each field added to CalculationRevision afterwards was simply
+        # absent from the tampered object: reading `source_provenance` raised
+        # AttributeError inside the integrity check, and the test failed on a
+        # missing attribute instead of on the drift it exists to prove.
+        tampered_values = dict(original.casilla_values)
+        tampered_values[_M130_GASTOS_CASILLA] = Decimal("999999")
+
+        tampered = original.model_copy(
+            update={
+                "casilla_values": tampered_values,
+                # Cleared so the obs-vs-casilla_values pydantic check is skipped.
+                "observations": (),
+            },
+        )
+
+        cr_repo.save(upsert_calculation_revision(cr_repo.load(), tampered))
+
+        # The public verify action must detect the hash mismatch before any grant.
+        with pytest.raises(StoredCalculationDriftError):
+            verify_modelo_revision(
+                tampered.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                actor="operator-test",
+                workflow_profile=workflow_profile(),
+                verification_repositories=build_test_verification_repository_bundle(),
+                settings=ready_clave_settings("X1234567L"),
+                clock=_T2,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_authority_operation_for_test,
+            )

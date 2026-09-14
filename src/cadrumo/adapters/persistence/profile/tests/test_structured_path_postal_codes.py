@@ -40,6 +40,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
 
@@ -165,20 +166,31 @@ def test_a_facturae_document_with_no_address_resolves_to_nothing(
     A reader that defaulted here would hand the resolver a well-formed mainland
     code, and the resolver's own refusal would never get the chance to fire.
     """
-    evidence_id = _stored(
-        _corpus(_FACTURAE_WITHOUT_ADDRESSES),
-        settings=isolated_settings,
-        objects=secure_objects,
-        tmp_path=tmp_path,
-        name="facturae-no-address.xml",
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        evidence_id = _stored(
+            _corpus(_FACTURAE_WITHOUT_ADDRESSES),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="facturae-no-address.xml",
+        )
 
-    draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings)
 
-    assert draft.supplier_postal_code is None
-    assert draft.customer_postal_code is None
-    assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) is None
-    assert territorial_scope_for_spanish_postal_code(draft.customer_postal_code) is None
+        assert draft.supplier_postal_code is None
+        assert draft.customer_postal_code is None
+        assert (
+            territorial_scope_for_spanish_postal_code(
+                draft.supplier_postal_code, operation=_authority_operation_for_test
+            )
+            is None
+        )
+        assert (
+            territorial_scope_for_spanish_postal_code(
+                draft.customer_postal_code, operation=_authority_operation_for_test
+            )
+            is None
+        )
 
 
 def test_a_canarian_code_survives_the_document_as_canarias(
@@ -192,31 +204,32 @@ def test_a_canarian_code_survives_the_document_as_canarias(
     IVA. This is the case a mainland default would silently swallow, and it is
     the reason the code has to travel exactly rather than approximately.
     """
-    xml = _corpus(_FACTURAE_WITH_ADDRESSES).replace(
-        f"<PostCode>{_PRINTED_SUPPLIER_CODE}</PostCode>",
-        f"<PostCode>{_CANARIAS_CODE}</PostCode>",
-        1,
-    )
-    assert _CANARIAS_CODE in xml
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        xml = _corpus(_FACTURAE_WITH_ADDRESSES).replace(
+            f"<PostCode>{_PRINTED_SUPPLIER_CODE}</PostCode>",
+            f"<PostCode>{_CANARIAS_CODE}</PostCode>",
+            1,
+        )
+        assert _CANARIAS_CODE in xml
 
-    evidence_id = _stored(
-        xml,
-        settings=isolated_settings,
-        objects=secure_objects,
-        tmp_path=tmp_path,
-        name="facturae-canarias.xml",
-    )
-    draft = _draft(evidence_id, isolated_settings)
+        evidence_id = _stored(
+            xml,
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="facturae-canarias.xml",
+        )
+        draft = _draft(evidence_id, isolated_settings)
 
-    assert draft.supplier_postal_code == _CANARIAS_CODE
-    assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) == require_iva_territorial_scope(
-        "es_canarias"
-    )
-    # The other party is untouched and must still read as the mainland, so the
-    # case proves a territory was RESOLVED rather than that everything moved.
-    assert territorial_scope_for_spanish_postal_code(draft.customer_postal_code) == require_iva_territorial_scope(
-        "es_mainland"
-    )
+        assert draft.supplier_postal_code == _CANARIAS_CODE
+        assert territorial_scope_for_spanish_postal_code(
+            draft.supplier_postal_code, operation=_authority_operation_for_test
+        ) == require_iva_territorial_scope("es_canarias", operation=_authority_operation_for_test)
+        # The other party is untouched and must still read as the mainland, so the
+        # case proves a territory was RESOLVED rather than that everything moved.
+        assert territorial_scope_for_spanish_postal_code(
+            draft.customer_postal_code, operation=_authority_operation_for_test
+        ) == require_iva_territorial_scope("es_mainland", operation=_authority_operation_for_test)
 
 
 def test_a_ubl_document_carries_the_postal_zone(
@@ -282,21 +295,22 @@ def test_a_cii_document_carries_the_postcode_code(
     codes name excluded territories -- Santa Cruz de Tenerife
     and Ceuta -- so a reader that silently produced the mainland would fail.
     """
-    evidence_id = _stored(
-        _CII_SPECIMEN,
-        settings=isolated_settings,
-        objects=secure_objects,
-        tmp_path=tmp_path,
-        name="cii.xml",
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        evidence_id = _stored(
+            _CII_SPECIMEN,
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="cii.xml",
+        )
 
-    draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings)
 
-    assert draft.supplier_postal_code == "38001"
-    assert draft.customer_postal_code == "51001"
-    assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) == require_iva_territorial_scope(
-        "es_canarias"
-    )
-    assert territorial_scope_for_spanish_postal_code(draft.customer_postal_code) == require_iva_territorial_scope(
-        "es_ceuta_melilla"
-    )
+        assert draft.supplier_postal_code == "38001"
+        assert draft.customer_postal_code == "51001"
+        assert territorial_scope_for_spanish_postal_code(
+            draft.supplier_postal_code, operation=_authority_operation_for_test
+        ) == require_iva_territorial_scope("es_canarias", operation=_authority_operation_for_test)
+        assert territorial_scope_for_spanish_postal_code(
+            draft.customer_postal_code, operation=_authority_operation_for_test
+        ) == require_iva_territorial_scope("es_ceuta_melilla", operation=_authority_operation_for_test)

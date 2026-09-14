@@ -283,8 +283,7 @@ def test_history_records_discard_event(repos: _Repos) -> None:
         work_unit.work_unit_id,
         actor="operator@example.test",
         reason="superseded by a fresh draft",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=t1,
     )
 
@@ -332,8 +331,7 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
     discard_work_unit(
         other.work_unit_id,
         actor="other-operator",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=t1,
     )
 

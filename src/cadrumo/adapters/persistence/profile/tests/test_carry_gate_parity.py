@@ -46,6 +46,7 @@ from cadrumo.application.calculations.revision_carry_gate import revision_carry_
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 
@@ -211,37 +212,41 @@ def _public_carry_outcomes(
 @pytest.mark.parametrize("case", ["matching", "divergent"])
 def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Path, case: str) -> None:
     """Binding-prefill and cross-period readers expose the shared R2 decision."""
-    if case == "matching":
-        stamp = _law_revision_id()
-        expected = False
-    else:
-        stamp = _DIVERGENT_REVISION_ID
-        expected = True
-    shared_refused = revision_carry_outcome(
-        RegistrySnapshotRef(
-            modelo=_MODELO,
-            revision_id=stamp,
-            modelo_year=_YEAR,
-            period=_SOURCE_PERIOD,
-        )
-    ).refused
-    binding_refused, cross_period_refused = _public_carry_outcomes(tmp_path / case, stamp)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        if case == "matching":
+            stamp = _law_revision_id()
+            expected = False
+        else:
+            stamp = _DIVERGENT_REVISION_ID
+            expected = True
+        shared_refused = revision_carry_outcome(
+            RegistrySnapshotRef(
+                modelo=_MODELO,
+                revision_id=stamp,
+                modelo_year=_YEAR,
+                period=_SOURCE_PERIOD,
+            ),
+            operation=_authority_operation_for_test,
+        ).refused
+        binding_refused, cross_period_refused = _public_carry_outcomes(tmp_path / case, stamp)
 
-    assert shared_refused is expected, f"shared gate disagreed with the spec for {case!r}"
-    assert binding_refused is expected, f"binding prefill diverged from the shared gate for {case!r}"
-    assert cross_period_refused is expected, f"cross-period clean state diverged from the shared gate for {case!r}"
+        assert shared_refused is expected, f"shared gate disagreed with the spec for {case!r}"
+        assert binding_refused is expected, f"binding prefill diverged from the shared gate for {case!r}"
+        assert cross_period_refused is expected, f"cross-period clean state diverged from the shared gate for {case!r}"
 
 
 def test_shared_gate_refuses_unresolvable_source() -> None:
     """A source context the registry cannot resolve is refused, not carried."""
-    assert (
-        revision_carry_outcome(
-            RegistrySnapshotRef(
-                modelo=_NONEXISTENT_MODELO,
-                revision_id=_DIVERGENT_REVISION_ID,
-                modelo_year=_YEAR,
-                period=_SOURCE_PERIOD,
-            )
-        ).refused
-        is True
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            revision_carry_outcome(
+                RegistrySnapshotRef(
+                    modelo=_NONEXISTENT_MODELO,
+                    revision_id=_DIVERGENT_REVISION_ID,
+                    modelo_year=_YEAR,
+                    period=_SOURCE_PERIOD,
+                ),
+                operation=_authority_operation_for_test,
+            ).refused
+            is True
+        )

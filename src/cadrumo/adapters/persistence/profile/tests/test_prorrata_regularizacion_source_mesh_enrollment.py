@@ -31,6 +31,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
 from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
@@ -190,8 +191,7 @@ def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) ->
         resolution = resolve_bucket_source_mesh(
             snapshot,
             work_unit,
-            transaction_repository=None,
-            invoice_repository=None,
+            ports=calculation_ports_for_test(bucket_id=work_unit.bucket_id),
             foreign_asset_observations=(),
             foreign_asset_row_observations=(),
             casilla_inputs={
@@ -233,8 +233,7 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
         resolution = resolve_bucket_source_mesh(
             snapshot,
             work_unit,
-            transaction_repository=None,
-            invoice_repository=None,
+            ports=calculation_ports_for_test(bucket_id=work_unit.bucket_id),
             foreign_asset_observations=(),
             foreign_asset_row_observations=(),
             filing_period_date=snapshot.filing_period.end_date,

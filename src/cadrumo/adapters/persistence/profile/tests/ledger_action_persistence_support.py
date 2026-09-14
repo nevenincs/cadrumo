@@ -82,23 +82,32 @@ def _create_manual_row(
     booked_date: _date | None = None,
     occurred_at: _datetime | None = None,
 ) -> tuple[_TransactionCatalogueRepository, _BucketEventHistoryRepository, _ManualLedgerTransactionResult]:
+    # Import lazily because ``ledger_action_create_support`` imports this module
+    # for the shared repository and invoice fixtures.
+    from .ledger_action_create_support import ledger_ports_for_test
+
     transaction_repository, event_repository = _repositories(secure_objects)
     resolved_booked_date = booked_date if booked_date is not None else _date(2026, 5, 2)
     resolved_amount = amount if amount is not None else _Decimal("25.00")
     resolved_occurred_at = occurred_at if occurred_at is not None else _datetime(2026, 5, 4, 9, 30, tzinfo=_UTC)
-    created = _create_manual_transaction(
-        _ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=resolved_booked_date,
-            amount=resolved_amount,
-            direction=_TransactionDirection.OUTGOING,
-            description=description,
-            idempotency_key=idempotency_key,
-        ),
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=resolved_occurred_at,
-    )
+    ) as ports:
+        created = _create_manual_transaction(
+            _ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=resolved_booked_date,
+                amount=resolved_amount,
+                direction=_TransactionDirection.OUTGOING,
+                description=description,
+                idempotency_key=idempotency_key,
+            ),
+            ports=ports,
+            occurred_at=resolved_occurred_at,
+        )
     return transaction_repository, event_repository, created
 
 

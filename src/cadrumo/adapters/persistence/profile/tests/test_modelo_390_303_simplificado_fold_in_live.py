@@ -60,6 +60,7 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
@@ -612,130 +613,136 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A filed source is invalid as soon as the live pointer no longer names it."""
-    _store_ready_profile(secure_objects)
-    work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
-    target = _calculate_m390_annual(
-        secure_objects,
-        work_units=work_units,
-        calculations=calculations,
-        filings=filings,
-    ).revision
-    source_work_unit = work_units.load().get(source.work_unit_id)
-    assert source_work_unit is not None
-    work_units.save(
-        upsert_work_unit(
-            work_units.load(),
-            source_work_unit.model_copy(
-                update={"current_calculation_revision_id": "d" * 64, "updated_at": _T2},
-            ),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _store_ready_profile(secure_objects)
+        work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+        target = _calculate_m390_annual(
+            secure_objects,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+        ).revision
+        source_work_unit = work_units.load().get(source.work_unit_id)
+        assert source_work_unit is not None
+        work_units.save(
+            upsert_work_unit(
+                work_units.load(),
+                source_work_unit.model_copy(
+                    update={"current_calculation_revision_id": "d" * 64, "updated_at": _T2},
+                ),
+            )
         )
-    )
 
-    with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="current calculation pointer"):
-        verify_modelo_revision(
-            target.calculation_revision_id,
-            actor="operator",
-            workflow_profile=workflow_profile(),
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="current calculation pointer"):
+            verify_modelo_revision(
+                target.calculation_revision_id,
+                actor="operator",
+                workflow_profile=workflow_profile(),
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_m390_refuses_a_non_presentado_source_calculation_revision(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """VERIFICADO_COMPLETO is not a substitute for the filed PRESENTADO source."""
-    _store_ready_profile(secure_objects)
-    work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
-    target = _calculate_m390_annual(
-        secure_objects,
-        work_units=work_units,
-        calculations=calculations,
-        filings=filings,
-    ).revision
-    non_presentado = source.model_copy(
-        update={
-            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-            "updated_at": _T1,
-            "filed_at": None,
-            "filed_by": None,
-        },
-    )
-    calculations.save(upsert_calculation_revision(calculations.load(), non_presentado))
-
-    with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="PRESENTADO"):
-        verify_modelo_revision(
-            target.calculation_revision_id,
-            actor="operator",
-            workflow_profile=workflow_profile(),
-            work_unit_repository=work_units,
-            calculation_repository=calculations,
-            filing_repository=filings,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _store_ready_profile(secure_objects)
+        work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+        target = _calculate_m390_annual(
+            secure_objects,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+        ).revision
+        non_presentado = source.model_copy(
+            update={
+                "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+                "updated_at": _T1,
+                "filed_at": None,
+                "filed_by": None,
+            },
         )
+        calculations.save(upsert_calculation_revision(calculations.load(), non_presentado))
+
+        with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="PRESENTADO"):
+            verify_modelo_revision(
+                target.calculation_revision_id,
+                actor="operator",
+                workflow_profile=workflow_profile(),
+                work_unit_repository=work_units,
+                calculation_repository=calculations,
+                filing_repository=filings,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A target draft cannot be verified after its filed source receipt is superseded."""
-    _store_ready_profile(secure_objects)
-    work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
-    target = _calculate_m390_annual(
-        secure_objects,
-        work_units=work_units,
-        calculations=calculations,
-        filings=filings,
-    ).revision
-    source_work_unit = work_units.load().get(source.work_unit_id)
-    assert source_work_unit is not None
-    original_filing_id = source_work_unit.current_filing_record_id
-    assert original_filing_id is not None
-    original_filing = filings.load().get(original_filing_id)
-    assert original_filing is not None
-    successor_id = derive_filing_record_id(
-        work_unit_id=source.work_unit_id,
-        calculation_revision_id=source.calculation_revision_id,
-        filed_by="operator-successor",
-    )
-    successor = ModeloRecord(
-        filing_record_id=successor_id,
-        work_unit_id=source.work_unit_id,
-        calculation_revision_id=source.calculation_revision_id,
-        bucket_id=_BUCKET_ID,
-        modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "4T"),
-        filed_at=_T2,
-        filed_by="operator-successor",
-        status=ModeloRecordStatus.VIGENTE,
-    )
-    filings.save(
-        ModeloRecordCatalogue(
-            records={
-                original_filing_id: original_filing.model_copy(
-                    update={
-                        "status": ModeloRecordStatus.SUPERSEDIDO,
-                        "superseded_at": _T2,
-                        "superseded_by_filing_record_id": successor_id,
-                    },
-                ),
-                successor_id: successor,
-            },
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _store_ready_profile(secure_objects)
+        work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+        target = _calculate_m390_annual(
+            secure_objects,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+        ).revision
+        source_work_unit = work_units.load().get(source.work_unit_id)
+        assert source_work_unit is not None
+        original_filing_id = source_work_unit.current_filing_record_id
+        assert original_filing_id is not None
+        original_filing = filings.load().get(original_filing_id)
+        assert original_filing is not None
+        successor_id = derive_filing_record_id(
+            work_unit_id=source.work_unit_id,
+            calculation_revision_id=source.calculation_revision_id,
+            filed_by="operator-successor",
         )
-    )
+        successor = ModeloRecord(
+            filing_record_id=successor_id,
+            work_unit_id=source.work_unit_id,
+            calculation_revision_id=source.calculation_revision_id,
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "4T"),
+            filed_at=_T2,
+            filed_by="operator-successor",
+            status=ModeloRecordStatus.VIGENTE,
+        )
+        filings.save(
+            ModeloRecordCatalogue(
+                records={
+                    original_filing_id: original_filing.model_copy(
+                        update={
+                            "status": ModeloRecordStatus.SUPERSEDIDO,
+                            "superseded_at": _T2,
+                            "superseded_by_filing_record_id": successor_id,
+                        },
+                    ),
+                    successor_id: successor,
+                },
+            )
+        )
 
-    with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="VIGENTE filing record"):
-        verify_modelo_revision(
-            target.calculation_revision_id,
-            actor="operator",
-            workflow_profile=workflow_profile(),
-            work_unit_repository=work_units,
-            calculation_repository=calculations,
-            filing_repository=filings,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="VIGENTE filing record"):
+            verify_modelo_revision(
+                target.calculation_revision_id,
+                actor="operator",
+                workflow_profile=workflow_profile(),
+                work_unit_repository=work_units,
+                calculation_repository=calculations,
+                filing_repository=filings,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_file_and_export(

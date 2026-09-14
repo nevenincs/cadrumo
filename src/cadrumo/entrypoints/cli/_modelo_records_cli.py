@@ -347,6 +347,7 @@ def _record_local_observation(
             actor=actor or _actor(),
             replace_official_evidence=replace_official_evidence,
             repository=calculation_ports.observation_repository,
+            operation=authority_operation(ctx),
         )
     except ModeloLocalObservationError as exc:
         raise _bad_from_error(exc) from exc
@@ -441,6 +442,7 @@ def verification_report_list(ctx: typer.Context, calculation_revision_id: str | 
     reports = list_verification_reports(
         ports=filing_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse()),
         calculation_revision_id=calculation_revision_id,
+        operation=authority_operation(ctx),
     )
     result = VerificationReportListResult(
         calculation_revision_id_filter=calculation_revision_id,
@@ -484,6 +486,7 @@ def verification_report_show(ctx: typer.Context, verification_report_id: str) ->
         report = get_verification_report(
             verification_report_id,
             ports=filing_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse()),
+            operation=authority_operation(ctx),
         )
     except VerificationReportNotFoundError as exc:
         raise _bad_from_error(exc) from exc

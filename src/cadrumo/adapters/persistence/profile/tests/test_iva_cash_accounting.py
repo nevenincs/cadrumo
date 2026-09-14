@@ -19,6 +19,7 @@ from cadrumo.application.aggregation.iva_ledger import (
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -115,35 +116,36 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
     rather than its filing date or it returns an empty Q1 aggregation and
     silently under-declares.
     """
-
-    cash_purchase = _transaction(
-        "cross-quarter-devengo",
-        direction=TransactionDirection.OUTGOING,
-        booked_date=date(2026, 4, 15),
-        taxable_base=Decimal("1000.00"),
-        iva_amount=Decimal("210.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
-        operation_date=date(2026, 3, 20),
-        cash_accounting_payment_evidence=(
-            IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 4, 15),
-                taxable_base=Decimal("1000.00"),
-                iva_amount=Decimal("210.00"),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        cash_purchase = _transaction(
+            "cross-quarter-devengo",
+            direction=TransactionDirection.OUTGOING,
+            booked_date=date(2026, 4, 15),
+            taxable_base=Decimal("1000.00"),
+            iva_amount=Decimal("210.00"),
+            cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
+            operation_date=date(2026, 3, 20),
+            cash_accounting_payment_evidence=(
+                IvaCashAccountingPaymentEvidence(
+                    payment_date=date(2026, 4, 15),
+                    taxable_base=Decimal("1000.00"),
+                    iva_amount=Decimal("210.00"),
+                ),
             ),
-        ),
-    )
-    catalogue = TransactionCatalogue.from_transactions((cash_purchase,))
-    pure = _pure_projection(catalogue, period=_Q1_2026)
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PARITY_BUCKET_ID) as profile:
-        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(catalogue)
-        repository_backed = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=profile.bucket_id,
-            period=_Q1_2026,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=profile.bucket_id),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
         )
+        catalogue = TransactionCatalogue.from_transactions((cash_purchase,))
+        pure = _pure_projection(catalogue, period=_Q1_2026)
 
-    assert pure.observations != ()
-    assert tuple(repository_backed.observations) == tuple(pure.observations)
-    assert repository_backed.issues == pure.issues
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PARITY_BUCKET_ID) as profile:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(catalogue)
+            repository_backed = aggregate_iva_ledger_observations_from_repositories(
+                bucket_id=profile.bucket_id,
+                period=_Q1_2026,
+                prorrata_register_repository=ProrrataRegisterRepository(bucket_id=profile.bucket_id),
+                transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
+                operation=_authority_operation_for_test,
+            )
+
+        assert pure.observations != ()
+        assert tuple(repository_backed.observations) == tuple(pure.observations)
+        assert repository_backed.issues == pure.issues

@@ -15,6 +15,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....adapters.persistence.storage.custody.records import (
@@ -107,93 +108,102 @@ def _create_current_profile(*, root: Path, facts: tuple[UserProfileFact, ...] = 
 
 
 def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_path: Path) -> None:
-    session = _create_current_profile(root=tmp_path)
-    try:
-        with (
-            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_PROFILE_ID),
-            bound_profile_record_session(session),
-        ):
-            health = assess_active_profile_health(WorkflowState())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        session = _create_current_profile(root=tmp_path)
+        try:
+            with (
+                override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_PROFILE_ID),
+                bound_profile_record_session(session),
+            ):
+                health = assess_active_profile_health(WorkflowState(), operation=_authority_operation_for_test)
 
-        assert health.active_profile == _PROFILE_ID
-        assert health.active_profile_label == _PROFILE_LABEL
-        assert health.status == "ready"
-        assert health.registered_bucket is True
-        assert health.profile_record_present is True
-        assert health.precondition_verdict is None
-        assert build_active_profile(health).label == _PROFILE_LABEL
-        assert "active_profile_label" not in health.model_dump(mode="json")
-    finally:
-        session.close()
+            assert health.active_profile == _PROFILE_ID
+            assert health.active_profile_label == _PROFILE_LABEL
+            assert health.status == "ready"
+            assert health.registered_bucket is True
+            assert health.profile_record_present is True
+            assert health.precondition_verdict is None
+            assert build_active_profile(health).label == _PROFILE_LABEL
+            assert "active_profile_label" not in health.model_dump(mode="json")
+        finally:
+            session.close()
 
 
 def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -> None:
-    session = _create_current_profile(root=tmp_path)
-    try:
-        with active_profile_pointer_transaction(tmp_path) as pointer_transaction:
-            pointer_transaction.clear()
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-            health = assess_active_profile_health()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        session = _create_current_profile(root=tmp_path)
+        try:
+            with active_profile_pointer_transaction(tmp_path) as pointer_transaction:
+                pointer_transaction.clear()
+            with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+                health = assess_active_profile_health(operation=_authority_operation_for_test)
+
+            assert health.status == "none"
+            assert health.precondition_verdict is not None
+            assert health.precondition_verdict.action is not None
+            assert health.precondition_verdict.action.action_id == "operator.profile.login"
+            assert health.precondition_verdict.missing_argument_names == ("name",)
+        finally:
+            session.close()
+
+
+def test_empty_storage_routes_the_operator_to_current_registration(tmp_path: Path) -> None:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with override_settings(cadrumo_local_storage_root=tmp_path / "empty", cadrumo_active_profile=None):
+            health = assess_active_profile_health(operation=_authority_operation_for_test)
 
         assert health.status == "none"
         assert health.precondition_verdict is not None
         assert health.precondition_verdict.action is not None
-        assert health.precondition_verdict.action.action_id == "operator.profile.login"
-        assert health.precondition_verdict.missing_argument_names == ("name",)
-    finally:
-        session.close()
-
-
-def test_empty_storage_routes_the_operator_to_current_registration(tmp_path: Path) -> None:
-    with override_settings(cadrumo_local_storage_root=tmp_path / "empty", cadrumo_active_profile=None):
-        health = assess_active_profile_health()
-
-    assert health.status == "none"
-    assert health.precondition_verdict is not None
-    assert health.precondition_verdict.action is not None
-    assert health.precondition_verdict.action.action_id == "operator.profile.create"
-    assert health.precondition_verdict.missing_argument_names == ("profile_name",)
+        assert health.precondition_verdict.action.action_id == "operator.profile.create"
+        assert health.precondition_verdict.missing_argument_names == ("profile_name",)
 
 
 def test_pointer_to_no_current_capsule_is_repaired_without_creating_a_bucket(tmp_path: Path) -> None:
-    write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        before = assess_active_profile_health()
-        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            before = assess_active_profile_health(operation=_authority_operation_for_test)
+            repaired = repair_active_profile_pointer(
+                clear_active=True, confirmed=True, operation=_authority_operation_for_test
+            )
 
-    assert before.status == "dangling_pointer"
-    assert before.repairable_by_clearing_pointer is True
-    assert repaired.dry_run is False
-    assert repaired.cleared_pointer is True
-    assert repaired.after is not None
-    assert repaired.after.status == "none"
-    assert read_pointer(tmp_path).bucket_id is None
+        assert before.status == "dangling_pointer"
+        assert before.repairable_by_clearing_pointer is True
+        assert repaired.dry_run is False
+        assert repaired.cleared_pointer is True
+        assert repaired.after is not None
+        assert repaired.after.status == "none"
+        assert read_pointer(tmp_path).bucket_id is None
 
 
 def test_pointer_to_malformed_current_marker_is_reported_as_capsule_integrity_not_manifest_state(
     tmp_path: Path,
 ) -> None:
-    marker = tmp_path / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
-    marker.parent.mkdir(parents=True)
-    malformed = b"not a current commit"
-    marker.write_bytes(malformed)
-    write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        marker = tmp_path / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
+        marker.parent.mkdir(parents=True)
+        malformed = b"not a current commit"
+        marker.write_bytes(malformed)
+        write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        before = assess_active_profile_health()
-        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            before = assess_active_profile_health(operation=_authority_operation_for_test)
+            repaired = repair_active_profile_pointer(
+                clear_active=True, confirmed=True, operation=_authority_operation_for_test
+            )
 
-    assert before.status == "capsule_unreadable"
-    assert before.repairable_by_clearing_pointer is True
-    # The application-owned integrity error, not the adapter's own
-    # ``ProfileCustodyRecordError``. Discovery reaches this module through the
-    # custody PORT, which translates the persistence failure at the boundary
-    # rather than letting an adapter type surface in an application report.
-    assert "ProfileCustodyRecordIntegrityError" in before.profile_record_error
-    assert repaired.cleared_pointer is True
-    assert repaired.after is not None
-    assert repaired.after.status == "capsule_unreadable"
-    assert marker.read_bytes() == malformed
+        assert before.status == "capsule_unreadable"
+        assert before.repairable_by_clearing_pointer is True
+        # The application-owned integrity error, not the adapter's own
+        # ``ProfileCustodyRecordError``. Discovery reaches this module through the
+        # custody PORT, which translates the persistence failure at the boundary
+        # rather than letting an adapter type surface in an application report.
+        assert "ProfileCustodyRecordIntegrityError" in before.profile_record_error
+        assert repaired.cleared_pointer is True
+        assert repaired.after is not None
+        assert repaired.after.status == "capsule_unreadable"
+        assert marker.read_bytes() == malformed
 
 
 def test_health_observes_current_or_degraded_state_without_provider_or_recovery_access(tmp_path: Path) -> None:
@@ -206,105 +216,106 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
     No test double is involved: readiness uses a real, already-authenticated
     custody session and the cold case intentionally has none.
     """
-    ready_root = tmp_path / "ready"
-    cold_root = tmp_path / "cold"
-    absent_root = tmp_path / "absent"
-    malformed_root = tmp_path / "malformed"
-    ready_record_session = _create_current_profile(root=ready_root)
-    cold_record_session = _create_current_profile(root=cold_root)
-    ready_record_session.close()
-    cold_record_session.close()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        ready_root = tmp_path / "ready"
+        cold_root = tmp_path / "cold"
+        absent_root = tmp_path / "absent"
+        malformed_root = tmp_path / "malformed"
+        ready_record_session = _create_current_profile(root=ready_root)
+        cold_record_session = _create_current_profile(root=cold_root)
+        ready_record_session.close()
+        cold_record_session.close()
 
-    malformed_marker = malformed_root / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
-    malformed_marker.parent.mkdir(parents=True)
-    malformed_marker.write_bytes(b"malformed current marker")
-    write_pointer(malformed_root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
+        malformed_marker = malformed_root / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
+        malformed_marker.parent.mkdir(parents=True)
+        malformed_marker.write_bytes(b"malformed current marker")
+        write_pointer(malformed_root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
 
-    secret_paths = tuple(root / "secrets" for root in (ready_root, absent_root, malformed_root, cold_root))
-    recovery_paths = (
-        ready_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
-        cold_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
-        malformed_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
-    )
-    for path in secret_paths:
-        path.mkdir(parents=True, exist_ok=True)
-    for path in recovery_paths:
-        if path.is_file():
-            path.unlink()
-        path.mkdir(parents=True, exist_ok=True)
+        secret_paths = tuple(root / "secrets" for root in (ready_root, absent_root, malformed_root, cold_root))
+        recovery_paths = (
+            ready_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
+            cold_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
+            malformed_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
+        )
+        for path in secret_paths:
+            path.mkdir(parents=True, exist_ok=True)
+        for path in recovery_paths:
+            if path.is_file():
+                path.unlink()
+            path.mkdir(parents=True, exist_ok=True)
 
-    sensitive_accesses: list[str] = []
+        sensitive_accesses: list[str] = []
 
-    def observe_open(event: str, arguments: tuple[object, ...]) -> None:
-        if event != "open" or not arguments:
-            return
-        candidate = arguments[0]
-        if not isinstance(candidate, (str, bytes, os.PathLike)):
-            return
-        candidate_text = os.fsdecode(os.fspath(candidate))
-        candidate_path = Path(candidate_text)
-        if candidate_path in recovery_paths or any(
-            candidate_path == secret_path or secret_path in candidate_path.parents for secret_path in secret_paths
-        ):
-            sensitive_accesses.append(candidate_text)
+        def observe_open(event: str, arguments: tuple[object, ...]) -> None:
+            if event != "open" or not arguments:
+                return
+            candidate = arguments[0]
+            if not isinstance(candidate, (str, bytes, os.PathLike)):
+                return
+            candidate_text = os.fsdecode(os.fspath(candidate))
+            candidate_path = Path(candidate_text)
+            if candidate_path in recovery_paths or any(
+                candidate_path == secret_path or secret_path in candidate_path.parents for secret_path in secret_paths
+            ):
+                sensitive_accesses.append(candidate_text)
 
-    def observe_filesystem_calls(frame: object, event: str, argument: object) -> None:
-        if event != "c_call" or getattr(argument, "__name__", "") not in {"stat", "lstat", "open", "read"}:
-            return
-        local_values = getattr(frame, "f_locals", {}).values()
-        watched_paths = (*secret_paths, *recovery_paths)
-        if any(isinstance(value, Path) and value in watched_paths for value in local_values):
-            sensitive_accesses.append(getattr(argument, "__name__", "unknown"))
+        def observe_filesystem_calls(frame: object, event: str, argument: object) -> None:
+            if event != "c_call" or getattr(argument, "__name__", "") not in {"stat", "lstat", "open", "read"}:
+                return
+            local_values = getattr(frame, "f_locals", {}).values()
+            watched_paths = (*secret_paths, *recovery_paths)
+            if any(isinstance(value, Path) and value in watched_paths for value in local_values):
+                sensitive_accesses.append(getattr(argument, "__name__", "unknown"))
 
-    sys.addaudithook(observe_open)
-    previous_profile = sys.getprofile()
-    sys.setprofile(observe_filesystem_calls)
-    instant = datetime.now(UTC)
-    ready_custody_session = BucketSession.open_resumed(
-        bucket_id=_PROFILE_ID,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=instant,
-        idle_deadline=instant + timedelta(minutes=15),
-        absolute_deadline=instant + timedelta(hours=4),
-        storage_root=ready_root,
-    )
-    try:
-        profile_login_session_port().bind_session(ready_custody_session)
-        with override_settings(
-            cadrumo_local_storage_root=ready_root,
-            cadrumo_secret_store_dir=ready_root / "secrets",
-            cadrumo_active_profile=_PROFILE_ID,
-        ):
-            ready = assess_active_profile_health()
-        close_active_bucket_session()
+        sys.addaudithook(observe_open)
+        previous_profile = sys.getprofile()
+        sys.setprofile(observe_filesystem_calls)
+        instant = datetime.now(UTC)
+        ready_custody_session = BucketSession.open_resumed(
+            bucket_id=_PROFILE_ID,
+            dek=_DEK,
+            idle_minutes=15,
+            opened_at=instant,
+            idle_deadline=instant + timedelta(minutes=15),
+            absolute_deadline=instant + timedelta(hours=4),
+            storage_root=ready_root,
+        )
+        try:
+            profile_login_session_port().bind_session(ready_custody_session)
+            with override_settings(
+                cadrumo_local_storage_root=ready_root,
+                cadrumo_secret_store_dir=ready_root / "secrets",
+                cadrumo_active_profile=_PROFILE_ID,
+            ):
+                ready = assess_active_profile_health(operation=_authority_operation_for_test)
+            close_active_bucket_session()
 
-        with override_settings(
-            cadrumo_local_storage_root=absent_root,
-            cadrumo_secret_store_dir=absent_root / "secrets",
-            cadrumo_active_profile=None,
-        ):
-            absent = assess_active_profile_health()
-        with override_settings(
-            cadrumo_local_storage_root=malformed_root,
-            cadrumo_secret_store_dir=malformed_root / "secrets",
-            cadrumo_active_profile=None,
-        ):
-            malformed = assess_active_profile_health()
-        with override_settings(
-            cadrumo_local_storage_root=cold_root,
-            cadrumo_secret_store_dir=cold_root / "secrets",
-            cadrumo_active_profile=_PROFILE_ID,
-        ):
-            cold = assess_active_profile_health()
-    finally:
-        close_active_bucket_session()
-        sys.setprofile(previous_profile)
+            with override_settings(
+                cadrumo_local_storage_root=absent_root,
+                cadrumo_secret_store_dir=absent_root / "secrets",
+                cadrumo_active_profile=None,
+            ):
+                absent = assess_active_profile_health(operation=_authority_operation_for_test)
+            with override_settings(
+                cadrumo_local_storage_root=malformed_root,
+                cadrumo_secret_store_dir=malformed_root / "secrets",
+                cadrumo_active_profile=None,
+            ):
+                malformed = assess_active_profile_health(operation=_authority_operation_for_test)
+            with override_settings(
+                cadrumo_local_storage_root=cold_root,
+                cadrumo_secret_store_dir=cold_root / "secrets",
+                cadrumo_active_profile=_PROFILE_ID,
+            ):
+                cold = assess_active_profile_health(operation=_authority_operation_for_test)
+        finally:
+            close_active_bucket_session()
+            sys.setprofile(previous_profile)
 
-    assert ready.status == "ready"
-    assert absent.status == "none"
-    assert malformed.status == "capsule_unreadable"
-    assert cold.status == "profile_locked"
-    assert cold.precondition_verdict is not None
-    assert cold.precondition_verdict.failed_condition_id == "profile.session.logged_in"
-    assert sensitive_accesses == []
+        assert ready.status == "ready"
+        assert absent.status == "none"
+        assert malformed.status == "capsule_unreadable"
+        assert cold.status == "profile_locked"
+        assert cold.precondition_verdict is not None
+        assert cold.precondition_verdict.failed_condition_id == "profile.session.logged_in"
+        assert sensitive_accesses == []

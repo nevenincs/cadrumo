@@ -16,10 +16,10 @@ real revision fixtures (``aeat-quality-gates``, ``aeat-quality-gates``).
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
 import pytest
 
@@ -85,17 +85,17 @@ def _revisions(profile: TestRuntimeProfile) -> CalculationRevisionCatalogueRepos
     return CalculationRevisionCatalogueRepository(objects=profile.repository)
 
 
-def _ledger_ports(profile: TestRuntimeProfile) -> LedgerActionPorts:
-    return cast(
-        LedgerActionPorts,
-        ledger_ports_for_test(
-            bucket_id=profile.bucket_id,
-            transaction_repository=_transactions(profile),
-            bucket_event_repository=_events(profile),
-            work_unit_repository=_work_units(profile),
-            calculation_repository=_revisions(profile),
-        ),
-    )
+@contextmanager
+def _ledger_ports(profile: TestRuntimeProfile) -> Iterator[LedgerActionPorts]:
+    with ledger_ports_for_test(
+        bucket_id=profile.bucket_id,
+        objects=profile.repository,
+        transaction_repository=_transactions(profile),
+        bucket_event_repository=_events(profile),
+        work_unit_repository=_work_units(profile),
+        calculation_repository=_revisions(profile),
+    ) as ports:
+        yield ports
 
 
 def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:
@@ -106,23 +106,24 @@ def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:
 
 def _deductible_expense_row(profile: TestRuntimeProfile, *, idempotency_key: str) -> str:
     """Create the shape the export evidence gate refuses: deductible input IVA, no proof."""
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET,
-            booked_date=date(2026, 2, 11),
-            amount=Decimal("605.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="material oficina",
-            business_classification=BusinessClassification.BUSINESS,
-            category_id="material_oficina",
-            taxable_base=Decimal("500.00"),
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("105.00"),
-            idempotency_key=idempotency_key,
-        ),
-        ports=_ledger_ports(profile),
-        occurred_at=datetime(2026, 2, 11, 8, 0, tzinfo=UTC),
-    )
+    with _ledger_ports(profile) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET,
+                booked_date=date(2026, 2, 11),
+                amount=Decimal("605.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="material oficina",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="material_oficina",
+                taxable_base=Decimal("500.00"),
+                iva_rate=Decimal("0.21"),
+                iva_amount=Decimal("105.00"),
+                idempotency_key=idempotency_key,
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 2, 11, 8, 0, tzinfo=UTC),
+        )
     return created.ref.transaction_id
 
 
@@ -146,14 +147,15 @@ def test_attach_evidence_proceeds_under_finalized_revision(
     revision_id = _finalize_revision_citing(profile, transaction_id)
     evidence_id = _mint_evidence_id(profile, pdf_file)
 
-    attached = attach_manual_transaction_evidence(
-        bucket_id=_BUCKET,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=evidence_id,
-        actor="operator-A",
-        ports=_ledger_ports(profile),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+    with _ledger_ports(profile) as ports:
+        attached = attach_manual_transaction_evidence(
+            bucket_id=_BUCKET,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=evidence_id,
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
     assert attached.transaction.purchase_invoice_evidence_id == evidence_id
     # The citation still resolves: an evidence-only edit re-derives the same id.
@@ -176,14 +178,15 @@ def test_attach_leaves_the_finalized_revision_untouched(
     revision_id = _finalize_revision_citing(profile, transaction_id)
     before = _revisions(profile).load().revisions[revision_id]
 
-    attach_manual_transaction_evidence(
-        bucket_id=_BUCKET,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
-        actor="operator-A",
-        ports=_ledger_ports(profile),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+    with _ledger_ports(profile) as ports:
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
     assert _revisions(profile).load().revisions[revision_id] == before
 
@@ -197,14 +200,15 @@ def test_value_affecting_update_still_refuses_under_finalized_revision(
     _finalize_revision_citing(profile, transaction_id)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
-        update_manual_transaction_fields(
-            bucket_id=_BUCKET,
-            transaction_id=transaction_id,
-            patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
-            actor="operator-A",
-            source_command="aeat app ledger classify",
-            ports=_ledger_ports(profile),
-        )
+        with _ledger_ports(profile) as ports:
+            update_manual_transaction_fields(
+                bucket_id=_BUCKET,
+                transaction_id=transaction_id,
+                patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
+                actor="operator-A",
+                source_command="aeat app ledger classify",
+                ports=ports,
+            )
 
     persisted = _transactions(profile).load().get(transaction_id)
     assert persisted is not None
@@ -222,18 +226,19 @@ def test_evidence_attachment_bundled_with_a_value_change_still_refuses(
     evidence_id = _mint_evidence_id(profile, pdf_file)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
-        update_manual_transaction_fields(
-            bucket_id=_BUCKET,
-            transaction_id=transaction_id,
-            patch=ManualLedgerTransactionPatch(
-                purchase_invoice_evidence_id=evidence_id,
-                taxable_base=Decimal("400.00"),
-            ),
-            actor="operator-A",
-            source_command="aeat app ledger attach",
-            ports=_ledger_ports(profile),
-            _evidence_authority=True,
-        )
+        with _ledger_ports(profile) as ports:
+            update_manual_transaction_fields(
+                bucket_id=_BUCKET,
+                transaction_id=transaction_id,
+                patch=ManualLedgerTransactionPatch(
+                    purchase_invoice_evidence_id=evidence_id,
+                    taxable_base=Decimal("400.00"),
+                ),
+                actor="operator-A",
+                source_command="aeat app ledger attach",
+                ports=ports,
+                _evidence_authority=True,
+            )
 
     persisted = _transactions(profile).load().get(transaction_id)
     assert persisted is not None
@@ -250,14 +255,15 @@ def test_attach_without_a_finalized_revision_reports_no_stale_revisions(
     # above is a real signal rather than a constant.
     transaction_id = _deductible_expense_row(profile, idempotency_key="attach-no-revision")
 
-    attached = attach_manual_transaction_evidence(
-        bucket_id=_BUCKET,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
-        actor="operator-A",
-        ports=_ledger_ports(profile),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+    with _ledger_ports(profile) as ports:
+        attached = attach_manual_transaction_evidence(
+            bucket_id=_BUCKET,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
     assert attached.stale_finalized_revisions == ()
 
@@ -317,14 +323,15 @@ def test_evidence_fields_are_not_transaction_identity_or_tax_facts(
     before = _transactions(profile).load().get(transaction_id)
     assert before is not None
 
-    attach_manual_transaction_evidence(
-        bucket_id=_BUCKET,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
-        actor="operator-A",
-        ports=_ledger_ports(profile),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+    with _ledger_ports(profile) as ports:
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
     after = _transactions(profile).load().get(transaction_id)
     assert after is not None
     assert after.purchase_invoice_evidence_id is not None

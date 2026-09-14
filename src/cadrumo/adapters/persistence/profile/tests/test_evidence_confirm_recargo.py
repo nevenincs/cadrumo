@@ -28,7 +28,9 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
@@ -60,6 +62,7 @@ def _confirm_the_recargo_document(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    authority: InvoiceAuthorityFixture,
 ):
     """Confirm the fixture with NO operator overrides at all.
 
@@ -77,7 +80,7 @@ def _confirm_the_recargo_document(
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -85,6 +88,7 @@ def test_the_recargo_the_document_states_reaches_the_persisted_invoice(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The confirmed invoice carries the document's own recargo figure.
 
@@ -98,6 +102,7 @@ def test_the_recargo_the_document_states_reaches_the_persisted_invoice(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.draft.recargo_amount == _PRINTED_RECARGO, "the parser did not read the recargo off the document"
@@ -110,6 +115,7 @@ def test_the_confirmed_total_reconciles_with_the_total_on_the_paper(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """Grand total equals the printed total, with the recargo inside it.
 
@@ -124,6 +130,7 @@ def test_the_confirmed_total_reconciles_with_the_total_on_the_paper(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
     invoice = result.invoice
 
@@ -140,6 +147,7 @@ def test_re_confirming_the_same_document_is_a_guarded_no_op(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """A second confirm returns the existing invoice instead of refusing.
 
@@ -154,11 +162,13 @@ def test_re_confirming_the_same_document_is_a_guarded_no_op(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
     second = _confirm_the_recargo_document(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert first.created is True

@@ -161,7 +161,12 @@ async def test_a_wrong_current_passphrase_refuses_and_never_rotates(tmp_path: Pa
         assert app.outcome is None
 
         # The old passphrase must still open the profile: no rotation occurred.
-        login_profile(name=str(profile_id), passphrase_callback=lambda: _CURRENT_PASSPHRASE)
+        _, profile_decode_context = _profile_contexts_for_test()
+        login_profile(
+            name=str(profile_id),
+            passphrase_callback=lambda: _CURRENT_PASSPHRASE,
+            profile_decode_context=profile_decode_context,
+        )
 
 
 @pytest.mark.asyncio
@@ -232,9 +237,18 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
         assert app.outcome is not None
         assert app.outcome.password_generation == 2
 
-        login_profile(name=str(profile_id), passphrase_callback=lambda: _NEW_PASSPHRASE)
+        _, profile_decode_context = _profile_contexts_for_test()
+        login_profile(
+            name=str(profile_id),
+            passphrase_callback=lambda: _NEW_PASSPHRASE,
+            profile_decode_context=profile_decode_context,
+        )
         with pytest.raises(ProfileAuthenticationRefusedError):
-            login_profile(name=str(profile_id), passphrase_callback=lambda: _CURRENT_PASSPHRASE)
+            login_profile(
+                name=str(profile_id),
+                passphrase_callback=lambda: _CURRENT_PASSPHRASE,
+                profile_decode_context=profile_decode_context,
+            )
 
 
 @pytest.mark.asyncio
@@ -281,7 +295,12 @@ async def test_abandoning_the_screen_leaves_no_outcome_and_never_touches_storage
 
         assert app.outcome is None
 
-        login_profile(name=str(profile_id), passphrase_callback=lambda: _CURRENT_PASSPHRASE)
+        _, profile_decode_context = _profile_contexts_for_test()
+        login_profile(
+            name=str(profile_id),
+            passphrase_callback=lambda: _CURRENT_PASSPHRASE,
+            profile_decode_context=profile_decode_context,
+        )
 
 
 @pytest.mark.asyncio

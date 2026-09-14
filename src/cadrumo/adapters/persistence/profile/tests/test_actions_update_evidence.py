@@ -262,8 +262,11 @@ def test_invoice_linkage_does_not_mutate_evidence(
         transaction_id=created.ref.transaction_id,
         invoice_id=purchase_evidence.invoice_id,
         actor="operator-B",
-        transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
+        ports=ledger_ports_for_test(
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+            transaction_repository=transaction_repository,
+        ),
     )
 
     assert linked.invoice_id == purchase_evidence.invoice_id
@@ -350,8 +353,11 @@ def test_failed_invoice_link_leaves_transaction_and_history_unchanged(
             transaction_id=created.ref.transaction_id,
             invoice_id="unknown-invoice-id",
             actor="operator-B",
-            transaction_repository=transaction_repository,
-            invoice_repository=invoice_repository,
+            ports=ledger_ports_for_test(
+                bucket_event_repository=event_repository,
+                invoice_repository=invoice_repository,
+                transaction_repository=transaction_repository,
+            ),
         )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)

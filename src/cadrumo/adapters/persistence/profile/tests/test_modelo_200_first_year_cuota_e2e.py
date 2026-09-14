@@ -73,6 +73,7 @@ from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -187,42 +188,44 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
     the discriminator against the flag-OFF status quo where it stays unresolved - and
     the resulting draft then verifies end-to-end with no crash.
     """
-    # 1) Draft build via the full calculate action.
-    result = _calculate_m200(secure_objects)
-    values = result.revision.casilla_values
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        # 1) Draft build via the full calculate action.
+        result = _calculate_m200(secure_objects)
+        values = result.revision.casilla_values
 
-    # The first-year zero-resolution reaches the FULL calculate: the cuota-diferencial
-    # formula operand resolved (M202 relation -> 0), so the casilla is PRESENT.
-    # (Flag-OFF status quo leaves it ABSENT - that is the discriminator.)
-    assert _CASILLA_CUOTA_DIFERENCIAL in values, (
-        "IS-3: a first-year modalidad-cuota M200 must resolve the unfiled M202 fold relation to 0 so the "
-        f"cuota-diferencial {_CASILLA_CUOTA_DIFERENCIAL} COMPUTES on the full calculate; it is absent "
-        f"(present keys sample: {sorted(values)[:8]}...)"
-    )
-    # And NO relation-prefill advisory names the M202 source (the flag resolved it,
-    # so there is no unresolved-relation diagnostic for the missing M202 filing).
-    m202_advisories = tuple(
-        diag
-        for diag in result.source_diagnostics
-        if diag.source_kind == _RELATION_PREFILL_SOURCE and "202" in diag.message
-    )
-    assert m202_advisories == (), (
-        "IS-3: the first-year flag must resolve the unfiled M202 relation (no unresolved advisory); "
-        f"got {m202_advisories}"
-    )
+        # The first-year zero-resolution reaches the FULL calculate: the cuota-diferencial
+        # formula operand resolved (M202 relation -> 0), so the casilla is PRESENT.
+        # (Flag-OFF status quo leaves it ABSENT - that is the discriminator.)
+        assert _CASILLA_CUOTA_DIFERENCIAL in values, (
+            "IS-3: a first-year modalidad-cuota M200 must resolve the unfiled M202 fold relation to 0 so the "
+            f"cuota-diferencial {_CASILLA_CUOTA_DIFERENCIAL} COMPUTES on the full calculate; it is absent "
+            f"(present keys sample: {sorted(values)[:8]}...)"
+        )
+        # And NO relation-prefill advisory names the M202 source (the flag resolved it,
+        # so there is no unresolved-relation diagnostic for the missing M202 filing).
+        m202_advisories = tuple(
+            diag
+            for diag in result.source_diagnostics
+            if diag.source_kind == _RELATION_PREFILL_SOURCE and "202" in diag.message
+        )
+        assert m202_advisories == (), (
+            "IS-3: the first-year flag must resolve the unfiled M202 relation (no unresolved advisory); "
+            f"got {m202_advisories}"
+        )
 
-    # 2) Verify runs end-to-end over the draft - the closure of the overstated
-    # "verified end-to-end" claim. We assert the verify gate produces a report for
-    # this revision with no crash (grant/block verdict is not the subject here).
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="system",
-        workflow_profile=TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime("GENERAL")),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    assert report.calculation_revision_id == result.revision.calculation_revision_id, (
-        "IS-3: verify must run end-to-end over the first-year M200 draft and return a report for the same "
-        f"revision; got {report.calculation_revision_id!r} != {result.revision.calculation_revision_id!r}"
-    )
+        # 2) Verify runs end-to-end over the draft - the closure of the overstated
+        # "verified end-to-end" claim. We assert the verify gate produces a report for
+        # this revision with no crash (grant/block verdict is not the subject here).
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="system",
+            workflow_profile=TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime("GENERAL")),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_authority_operation_for_test,
+        )
+        assert report.calculation_revision_id == result.revision.calculation_revision_id, (
+            "IS-3: verify must run end-to-end over the first-year M200 draft and return a report for the same "
+            f"revision; got {report.calculation_revision_id!r} != {result.revision.calculation_revision_id!r}"
+        )

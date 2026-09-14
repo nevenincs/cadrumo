@@ -42,6 +42,7 @@ from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from cadrumo.core.period import Period
 from cadrumo.core.register_scoping_signal import RegisterScopingSignal
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 
@@ -170,20 +171,21 @@ def test_a_modelo_the_profile_positively_excludes_is_absent() -> None:
 
 
 def test_every_nominated_modelo_is_one_the_registry_actually_models() -> None:
-    # This is the invariant behind dropping the registry-unmodeled advisories: a
-    # modelo with no registry definition has no declared fact producing its
-    # verdict, so nominating it would invent an expectation the taxpayer never
-    # made and then report the inevitable zero rows as an anomaly.
-    #
-    # Asserted as a containment property rather than against
-    # UNMODELED_OBLIGATIONS, which is EMPTY at present -- an intersection test
-    # against it would pass vacuously and keep passing if the filter were deleted.
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        # This is the invariant behind dropping the registry-unmodeled advisories: a
+        # modelo with no registry definition has no declared fact producing its
+        # verdict, so nominating it would invent an expectation the taxpayer never
+        # made and then report the inevitable zero rows as an anomaly.
+        #
+        # Asserted as a containment property rather than against
+        # UNMODELED_OBLIGATIONS, which is EMPTY at present -- an intersection test
+        # against it would pass vacuously and keep passing if the filter were deleted.
+        from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
-    grid = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
-    registry_codes = set(registry_modelo_codes())
-    assert registry_codes
-    assert set(grid.modelos) <= registry_codes
+        grid = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
+        registry_codes = set(registry_modelo_codes(operation=_authority_operation_for_test))
+        assert registry_codes
+        assert set(grid.modelos) <= registry_codes
 
 
 def test_an_out_of_scope_modelo_is_absent() -> None:

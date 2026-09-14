@@ -40,8 +40,11 @@ from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
+    invoice_draft_extraction_kwargs,
     isolated_settings,
     secure_objects,
     serving_a_loopback_reader,
@@ -134,6 +137,7 @@ def _operator_attestations(
     *,
     evidence_id: str,
     isolated_settings: Settings,
+    authority: InvoiceAuthorityFixture,
 ) -> tuple[FindingResolution, ...]:
     """Answer each blocking finding this document raises, as the operator must.
 
@@ -152,6 +156,7 @@ def _operator_attestations(
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
     return tuple(
         FindingResolution(
@@ -170,6 +175,7 @@ def _confirm(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
     filename: str,
+    authority: InvoiceAuthorityFixture,
 ):
     pdf_path = tmp_path / filename
     pdf_path.write_bytes(text_pdf_bytes(lines))
@@ -185,8 +191,9 @@ def _confirm(
         resolutions=_operator_attestations(
             evidence_id=record.evidence_id,
             isolated_settings=isolated_settings,
+            authority=authority,
         ),
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -194,6 +201,7 @@ def test_a_recargo_invoice_reports_the_printed_total_it_could_not_represent(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The document totals 126,20; the record carries 121,00 and says so.
 
@@ -208,6 +216,7 @@ def test_a_recargo_invoice_reports_the_printed_total_it_could_not_represent(
         secure_objects=secure_objects,
         tmp_path=tmp_path,
         filename="factura_recargo.pdf",
+        authority=invoice_authority,
     )
 
     # The derived total still wins -- the printed figure never overwrites it.
@@ -225,6 +234,7 @@ def test_a_coherent_invoice_reports_no_discrepancy(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """An advisory that fires on a clean document trains operators to ignore it.
 
@@ -237,6 +247,7 @@ def test_a_coherent_invoice_reports_no_discrepancy(
         secure_objects=secure_objects,
         tmp_path=tmp_path,
         filename="factura.pdf",
+        authority=invoice_authority,
     )
 
     assert result.invoice.grand_total == Decimal("121.00")
@@ -247,6 +258,7 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """A re-confirm must not be a way to clear the alert.
 
@@ -260,7 +272,11 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
     svc = _make_svc(isolated_settings, secure_objects)
     record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 
-    attestations = _operator_attestations(evidence_id=record.evidence_id, isolated_settings=isolated_settings)
+    attestations = _operator_attestations(
+        evidence_id=record.evidence_id,
+        isolated_settings=isolated_settings,
+        authority=invoice_authority,
+    )
 
     def _run():
         return confirm_invoice_draft_from_evidence(
@@ -271,7 +287,7 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
             resolutions=attestations,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
         )
 
     first = _run()
@@ -290,6 +306,7 @@ def _confirm_with(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
     filename: str,
+    authority: InvoiceAuthorityFixture,
     **overrides: Any,
 ):
     """Confirm with operator overrides, the boundary's widened parameter set."""
@@ -307,8 +324,9 @@ def _confirm_with(
         resolutions=_operator_attestations(
             evidence_id=record.evidence_id,
             isolated_settings=isolated_settings,
+            authority=authority,
         ),
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
         **overrides,
     )
 
@@ -317,6 +335,7 @@ def test_a_declared_recargo_persists_and_clears_the_printed_total_discrepancy(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The operator can now resolve the discrepancy the reader detects.
 
@@ -337,6 +356,7 @@ def test_a_declared_recargo_persists_and_clears_the_printed_total_discrepancy(
         secure_objects=secure_objects,
         tmp_path=tmp_path,
         filename="factura_recargo_declarada.pdf",
+        authority=invoice_authority,
         recargo_amount=Decimal("5.20"),
     )
 
@@ -351,6 +371,7 @@ def test_the_confirm_boundary_carries_the_writer_regime_axes(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """Confirming from evidence reaches the same axes as direct entry.
 
@@ -366,6 +387,7 @@ def test_the_confirm_boundary_carries_the_writer_regime_axes(
         secure_objects=secure_objects,
         tmp_path=tmp_path,
         filename="factura_regimen.pdf",
+        authority=invoice_authority,
         recargo_amount=Decimal("5.20"),
         invoice_class=InvoiceClass._from_registry("RECTIFICATIVA"),
         series="R",

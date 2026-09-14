@@ -31,6 +31,7 @@ general deducible cuota  = (10.50 + 10.50 + 10.50) * 60% = 18.90 (all inputs fla
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from datetime import date as _esp_date
 from decimal import Decimal
@@ -52,6 +53,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -60,6 +62,13 @@ from cadrumo.domain.iva.prorrata_especial_parameters import ProrrataEspecialMand
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation across each art. 106 aggregation chain."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 #: An explicit resolved margin. These tests exercise the PREDICATE and the
@@ -163,7 +172,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
     )
 
 
-def _deducible_cuota(objects: SecureObjectRepository) -> Decimal:
+def _deducible_cuota(objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation) -> Decimal:
     from cadrumo.domain.transactions.models import TransactionCatalogue
 
     revision = compiled_bundled_authority().modelo("303").revisions["2022"]
@@ -176,11 +185,13 @@ def _deducible_cuota(objects: SecureObjectRepository) -> Decimal:
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=_BUCKET_ID,
+        operation=operation,
     )
     values = resolve_iva_ledger_binding_values(
         revision,
         aggregation.observations,
         prorrata_apportionment=aggregation.prorrata_apportionment,
+        operation=operation,
     )
     return values[_DEDUCIBLE_CUOTA_BINDING]
 
@@ -193,14 +204,17 @@ def _txns():
     )
 
 
-def test_especial_routes_three_art106_reglas_and_differs_from_general(tmp_path: Path) -> None:
+def test_especial_routes_three_art106_reglas_and_differs_from_general(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The production aggregation routes the three art. 106 reglas, distinct from general."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_register(objects, ProrrataRegisterRegime._from_registry("especial"))
-        especial_cuota = _deducible_cuota(objects)
+        especial_cuota = _deducible_cuota(objects, operation=authority_operation)
         _seed_register(objects, ProrrataRegisterRegime._from_registry("general"))
-        general_cuota = _deducible_cuota(objects)
+        general_cuota = _deducible_cuota(objects, operation=authority_operation)
 
     multiplier = _GENERAL_PERCENTAGE / Decimal("100")
     # Art. 106.Uno: regla 1.ª (full) + regla 2.ª (nil) + regla 3.ª (general %).
@@ -226,6 +240,7 @@ def test_each_art106_regla_isolated(
     tmp_path: Path,
     classification: InputClassification,
     expected: Decimal,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Each art. 106.Uno regla, isolated, deducts at its lawful rate (100 / 0 / general)."""
     from cadrumo.domain.transactions.models import TransactionCatalogue
@@ -245,24 +260,29 @@ def test_each_art106_regla_isolated(
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=_BUCKET_ID,
+            operation=authority_operation,
         )
         values = resolve_iva_ledger_binding_values(
             revision,
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
+            operation=authority_operation,
         )
 
     assert values.get(_DEDUCIBLE_CUOTA_BINDING, Decimal("0")) == expected
 
 
-def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_totals(tmp_path: Path) -> None:
+def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_totals(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The art. 103.Dos.2 advisory fires on the real production general-vs-especial totals."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_register(objects, ProrrataRegisterRegime._from_registry("especial"))
-        especial_cuota = _deducible_cuota(objects)
+        especial_cuota = _deducible_cuota(objects, operation=authority_operation)
         _seed_register(objects, ProrrataRegisterRegime._from_registry("general"))
-        general_cuota = _deducible_cuota(objects)
+        general_cuota = _deducible_cuota(objects, operation=authority_operation)
 
     # general 18.90 exceeds especial 16.80 by 12.5% (> 10%): especial is obligatory.
     notice = build_prorrata_especial_mandatory_advisory(
@@ -270,6 +290,7 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
         deduction_under_especial=especial_cuota,
         ejercicio=2026,
         parameters=_especial_params_for(2026),
+        operation=authority_operation,
     )
 
     assert notice is not None
@@ -284,6 +305,7 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
             deduction_under_especial=especial_cuota,
             ejercicio=2026,
             parameters=_especial_params_for(2026),
+            operation=authority_operation,
         )
         is None
     )
