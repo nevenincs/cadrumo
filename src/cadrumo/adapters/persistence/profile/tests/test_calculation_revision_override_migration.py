@@ -26,6 +26,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -139,99 +141,111 @@ def test_frozen_join_carries_the_retired_relation_this_suite_migrates() -> None:
 
 def test_pre_cut_relation_override_is_rekeyed_and_the_revision_id_recomputed() -> None:
     """A stored pre-absorption override moves onto its binding under a new content address."""
-    stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
 
-    result = rekey_calculation_revision_overrides(_catalogue(stored))
+        result = rekey_calculation_revision_overrides(_catalogue(stored), operation=_authority_operation_for_test)
 
-    assert result.changed
-    (remap,) = result.rekeyed_revisions
-    assert remap.previous_calculation_revision_id == stored.calculation_revision_id
-    assert remap.calculation_revision_id != stored.calculation_revision_id
-    assert remap.work_unit_id == _WORK_UNIT_ID
+        assert result.changed
+        (remap,) = result.rekeyed_revisions
+        assert remap.previous_calculation_revision_id == stored.calculation_revision_id
+        assert remap.calculation_revision_id != stored.calculation_revision_id
+        assert remap.work_unit_id == _WORK_UNIT_ID
 
-    migrated = result.catalogue.get(remap.calculation_revision_id)
-    assert migrated is not None
-    assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
-    # The recomputed id is the canonical derivation of the migrated contents,
-    # not a value the migration invented alongside them.
-    assert derive_calculation_revision_id_from_revision(migrated) == remap.calculation_revision_id
+        migrated = result.catalogue.get(remap.calculation_revision_id)
+        assert migrated is not None
+        assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
+        # The recomputed id is the canonical derivation of the migrated contents,
+        # not a value the migration invented alongside them.
+        assert derive_calculation_revision_id_from_revision(migrated) == remap.calculation_revision_id
 
-    (move,) = result.rekeyed_override_keys
-    assert (move.relation_id, move.binding_id) == (_RETIRED_RELATION_ID, _ABSORBING_BINDING_ID)
-    assert move.calculation_revision_id == stored.calculation_revision_id
+        (move,) = result.rekeyed_override_keys
+        assert (move.relation_id, move.binding_id) == (_RETIRED_RELATION_ID, _ABSORBING_BINDING_ID)
+        assert move.calculation_revision_id == stored.calculation_revision_id
 
 
 def test_override_value_appears_in_no_reported_field() -> None:
     """The run's report carries identifiers only, never the taxpayer's figure."""
-    result = rekey_calculation_revision_overrides(
-        _catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = rekey_calculation_revision_overrides(
+            _catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
+            operation=_authority_operation_for_test,
+        )
 
-    reported = result.model_dump_json(exclude={"catalogue"})
+        reported = result.model_dump_json(exclude={"catalogue"})
 
-    assert _OVERRIDE_VALUE not in reported
+        assert _OVERRIDE_VALUE not in reported
 
 
 def test_second_run_over_a_migrated_catalogue_changes_nothing() -> None:
     """Idempotence: re-running rekeys nothing and moves no content address."""
-    first = rekey_calculation_revision_overrides(
-        _catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        first = rekey_calculation_revision_overrides(
+            _catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
+            operation=_authority_operation_for_test,
+        )
 
-    second = rekey_calculation_revision_overrides(first.catalogue)
+        second = rekey_calculation_revision_overrides(first.catalogue, operation=_authority_operation_for_test)
 
-    assert not second.changed
-    assert second.rekeyed_revisions == ()
-    assert second.rekeyed_override_keys == ()
-    assert second.unchanged_revision_ids == tuple(sorted(first.catalogue.revisions))
-    assert second.catalogue == first.catalogue
+        assert not second.changed
+        assert second.rekeyed_revisions == ()
+        assert second.rekeyed_override_keys == ()
+        assert second.unchanged_revision_ids == tuple(sorted(first.catalogue.revisions))
+        assert second.catalogue == first.catalogue
 
 
 def test_unknown_override_key_is_refused_rather_than_dropped() -> None:
     """An override the frozen join cannot resolve stops the run, naming the key."""
-    orphan = "modelo-303-rel-self-this-relation-never-existed"
-    stored = _revision(relation_overrides={orphan: _OVERRIDE_VALUE})
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        orphan = "modelo-303-rel-self-this-relation-never-existed"
+        stored = _revision(relation_overrides={orphan: _OVERRIDE_VALUE})
 
-    with pytest.raises(OrphanedRelationOverrideError) as refusal:
-        rekey_calculation_revision_overrides(_catalogue(stored))
+        with pytest.raises(OrphanedRelationOverrideError) as refusal:
+            rekey_calculation_revision_overrides(_catalogue(stored), operation=_authority_operation_for_test)
 
-    context = refusal.value.context
-    assert context is not None
-    assert context["reason"] == "orphaned_relation_override"
-    assert orphan in str(context["override_keys"])
-    # The refusal identifies the key, never the taxpayer figure behind it.
-    assert _OVERRIDE_VALUE not in str(context)
+        context = refusal.value.context
+        assert context is not None
+        assert context["reason"] == "orphaned_relation_override"
+        assert orphan in str(context["override_keys"])
+        # The refusal identifies the key, never the taxpayer figure behind it.
+        assert _OVERRIDE_VALUE not in str(context)
 
 
 def test_revision_without_overrides_is_untouched_and_keeps_its_id() -> None:
     """A revision the migration has no business rewriting keeps its content address."""
-    stored = _revision(relation_overrides={})
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        stored = _revision(relation_overrides={})
 
-    result = rekey_calculation_revision_overrides(_catalogue(stored))
+        result = rekey_calculation_revision_overrides(_catalogue(stored), operation=_authority_operation_for_test)
 
-    assert not result.changed
-    assert result.unchanged_revision_ids == (stored.calculation_revision_id,)
-    assert result.catalogue.get(stored.calculation_revision_id) is stored
+        assert not result.changed
+        assert result.unchanged_revision_ids == (stored.calculation_revision_id,)
+        assert result.catalogue.get(stored.calculation_revision_id) is stored
 
 
 def test_migration_rekeys_a_catalogue_through_encrypted_storage(tmp_path: Path) -> None:
     """End to end: the stored encrypted catalogue comes back binding-keyed."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_parent_work_unit(profile)
-        repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
-        repository.save(_catalogue(stored))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+            _seed_parent_work_unit(profile)
+            repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+            stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
+            repository.save(_catalogue(stored))
 
-        result = migrate_stored_relation_overrides_to_binding_ids(repository)
+            result = migrate_stored_relation_overrides_to_binding_ids(
+                repository, operation=_authority_operation_for_test
+            )
 
-        assert result.changed
-        reloaded = repository.load()
-        assert stored.calculation_revision_id not in reloaded
-        (migrated,) = tuple(reloaded.values())
-        assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
+            assert result.changed
+            reloaded = repository.load()
+            assert stored.calculation_revision_id not in reloaded
+            (migrated,) = tuple(reloaded.values())
+            assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
 
-        # Re-running against the now-migrated encrypted row is a no-op, so a
-        # migration interrupted after its write can simply be repeated.
-        rerun = migrate_stored_relation_overrides_to_binding_ids(repository)
-        assert not rerun.changed
-        assert tuple(repository.load().revisions) == tuple(reloaded.revisions)
+            # Re-running against the now-migrated encrypted row is a no-op, so a
+            # migration interrupted after its write can simply be repeated.
+            rerun = migrate_stored_relation_overrides_to_binding_ids(
+                repository, operation=_authority_operation_for_test
+            )
+            assert not rerun.changed
+            assert tuple(repository.load().revisions) == tuple(reloaded.revisions)

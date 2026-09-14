@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.ledger.preflight import preflight_ledger_tax_readiness
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -88,45 +89,51 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
-    objects = secure_objects
-    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
-    repository.save(TransactionCatalogue.from_transactions((_transaction("row-ready"),)))
-
-    report = preflight_ledger_tax_readiness(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
-        usage_ratio_profile_loader=load_usage_ratios,
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-    )
-
-    assert report.ready is True
-    assert report.checked_transaction_count == 1
-    assert report.issues == ()
-
-
-def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
-            TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        objects = secure_objects
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        repository.save(TransactionCatalogue.from_transactions((_transaction("row-ready"),)))
 
         report = preflight_ledger_tax_readiness(
-            bucket_id=profile.bucket_id,
-            period=_Q2_2026,
-            usage_ratio_profile_loader=load_usage_ratios,
-        )
-
-    assert report.ready is True
-    assert report.checked_transaction_count == 1
-    assert report.issues == ()
-
-
-def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
-    objects = secure_objects
-    with pytest.raises(TransactionValidationError, match="bucket_id"):
-        preflight_ledger_tax_readiness(
             bucket_id=_BUCKET_ID,
             period=_Q2_2026,
             usage_ratio_profile_loader=load_usage_ratios,
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            operation=_authority_operation_for_test,
         )
+
+        assert report.ready is True
+        assert report.checked_transaction_count == 1
+        assert report.issues == ()
+
+
+def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path) -> None:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
+                TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
+            )
+
+            report = preflight_ledger_tax_readiness(
+                bucket_id=profile.bucket_id,
+                period=_Q2_2026,
+                usage_ratio_profile_loader=load_usage_ratios,
+                operation=_authority_operation_for_test,
+            )
+
+        assert report.ready is True
+        assert report.checked_transaction_count == 1
+        assert report.issues == ()
+
+
+def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        objects = secure_objects
+        with pytest.raises(TransactionValidationError, match="bucket_id"):
+            preflight_ledger_tax_readiness(
+                bucket_id=_BUCKET_ID,
+                period=_Q2_2026,
+                usage_ratio_profile_loader=load_usage_ratios,
+                transaction_repository=TransactionCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=objects),
+                operation=_authority_operation_for_test,
+            )

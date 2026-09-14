@@ -34,9 +34,11 @@ from cadrumo.adapters.persistence.profile.state_projection import StateProjectio
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.bucket.tests.bucket_layout import provision_bucket_directory
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
@@ -61,13 +63,14 @@ from cadrumo.application.state_projection_ports import StateProjectionReadPorts
 from cadrumo.application.user_profile.login_session_port import profile_login_session_port
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
+from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.core.period import Period
 from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
@@ -102,7 +105,7 @@ class _EmptyDiagnosticRepository:
 def _diagnostics_ports() -> DiagnosticsPorts:
     return DiagnosticsPorts(
         secure_object_repository=_EmptyDiagnosticRepository(),
-        session_failure_classifier=lambda _error: False,
+        session_failure_classifier=lambda error: False,
     )
 
 
@@ -112,7 +115,8 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
 
     global _ACTIVE_STORAGE_STACK, _ACTIVE_PROFILE_ID, _PROFILE_SPAN_OPEN
 
-    assert WIZARD_FLOWS
+    with bundled_indexed_authority().operation() as operation:
+        assert build_setup_flow(operation).sections
     dispose_engine()
     with ExitStack() as stack:
         stack.enter_context(
@@ -142,7 +146,11 @@ def state_projection_dependencies() -> tuple[InMemoryCertificateSecretBackendFac
     adapter = StateProjectionPersistenceAdapter(diagnostics_ports=_diagnostics_ports())
     return (
         InMemoryCertificateSecretBackendFactory(),
-        StateProjectionReadPorts(workspace=adapter, profile=adapter),
+        StateProjectionReadPorts(
+            workspace=adapter,
+            profile=adapter,
+            usage_ratio_profile_loader=load_usage_ratios,
+        ),
     )
 
 
@@ -237,12 +245,14 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path, state_project
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
     )
 
-    report = build_overview_status_report(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = build_overview_status_report(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert report.work_units == 1, "overview status must surface modelo work units, not zero"
     assert report.drafts == 0, "the ModeloDraft store is separate and stays at zero"
@@ -264,12 +274,14 @@ def test_overview_status_distinguishes_drafts_from_work_units(state_projection_d
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         )
 
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert projection.workspace.work_units == 2
     assert projection.workspace.drafts == 0
@@ -308,22 +320,26 @@ def test_work_units_counter_excludes_discarded_units(state_projection_dependenci
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
     )
 
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert projection.workspace.work_units == 3, "discarded units must not inflate the active counter"
     assert projection.workspace.discarded_work_units == 1
 
-    report = build_overview_status_report(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = build_overview_status_report(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert report.work_units == 3
     assert report.discarded_work_units == 1
 
@@ -352,40 +368,45 @@ def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         )
 
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        modelo_readiness_requests=(
-            ModeloReadinessRequest(
-                modelo="303",
-                revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="303",
+                    revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "1T"),
+                ),
             ),
-        ),
-        probe_live_backend=True,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+            probe_live_backend=True,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
-    overview = build_overview_status_report(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    auth_status = inspect_operator_auth(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    auth_test = probe_operator_auth(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        overview = build_overview_status_report(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        auth_status = inspect_operator_auth(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        auth_test = probe_operator_auth(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     # auth status and auth test report the SAME configured — the
     # historical disagreement is closed structurally.
@@ -413,40 +434,47 @@ def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None
 def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projection_dependencies) -> None:
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
-    create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=bucket_id,
-            booked_date=date(2026, 2, 10),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="business expense without category",
-            business_classification=BusinessClassification.BUSINESS,
-            taxable_base=Decimal("100.00"),
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("21.00"),
-            actor="operator",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=bucket_id,
-            transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-    )
-
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        modelo_readiness_requests=(
-            ModeloReadinessRequest(
-                modelo="303",
-                revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+    objects = secure_object_repository_for_active_bucket()
+    transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    event_repository = BucketEventHistoryRepository(objects=objects)
+    with ledger_ports_for_test(
+        bucket_id=bucket_id,
+        objects=objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=bucket_id,
+                booked_date=date(2026, 2, 10),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="business expense without category",
+                business_classification=BusinessClassification.BUSINESS,
+                taxable_base=Decimal("100.00"),
+                iva_rate=Decimal("0.21"),
+                iva_amount=Decimal("21.00"),
+                actor="operator",
             ),
-        ),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+            ports=ports,
+        )
+
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="303",
+                    revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "1T"),
+                ),
+            ),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     readiness = projection.modelo_readiness[0]
     assert readiness.registry_ready is True
@@ -462,20 +490,22 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projecti
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile(overrides={"censo.activity_start_date": "2026-05-01"})
 
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        modelo_readiness_requests=(
-            ModeloReadinessRequest(
-                modelo="303",
-                revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="303",
+                    revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "1T"),
+                ),
             ),
-        ),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     readiness = projection.modelo_readiness[0]
     assert readiness.profile_id == bucket_id
@@ -510,20 +540,22 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_pr
         },
     )
 
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        modelo_readiness_requests=(
-            ModeloReadinessRequest(
-                modelo="349",
-                revision_id=active_registry_revision_id(modelo="349", filing_year=2026, period="1T"),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="349",
+                    revision_id=active_registry_revision_id(modelo="349", filing_year=2026, period="1T"),
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "1T"),
+                ),
             ),
-        ),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     readiness = projection.modelo_readiness[0]
     assert readiness.profile_id == bucket_id
@@ -541,60 +573,69 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
 ) -> None:
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
-    create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=bucket_id,
-            booked_date=date(2026, 4, 15),
-            amount=Decimal("1210.00"),
-            direction=TransactionDirection.INCOMING,
-            description="consulting invoice with output IVA",
-            business_classification=BusinessClassification.BUSINESS,
-            taxable_base=Decimal("1000.00"),
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("210.00"),
-            actor="operator",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=bucket_id,
-            transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-    )
-    create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=bucket_id,
-            booked_date=date(2026, 4, 20),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="office supplies with input IVA",
-            business_classification=BusinessClassification.BUSINESS,
-            category_id=SpendingCategory._from_registry("material_oficina").value,
-            taxable_base=Decimal("100.00"),
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("21.00"),
-            actor="operator",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=bucket_id,
-            transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-    )
-
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        modelo_readiness_requests=(
-            ModeloReadinessRequest(
-                modelo="303",
-                revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="2T"),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "2T"),
+    objects = secure_object_repository_for_active_bucket()
+    transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    event_repository = BucketEventHistoryRepository(objects=objects)
+    with ledger_ports_for_test(
+        bucket_id=bucket_id,
+        objects=objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=bucket_id,
+                booked_date=date(2026, 4, 15),
+                amount=Decimal("1210.00"),
+                direction=TransactionDirection.INCOMING,
+                description="consulting invoice with output IVA",
+                business_classification=BusinessClassification.BUSINESS,
+                taxable_base=Decimal("1000.00"),
+                iva_rate=Decimal("0.21"),
+                iva_amount=Decimal("210.00"),
+                actor="operator",
             ),
-        ),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+            ports=ports,
+        )
+    with ledger_ports_for_test(
+        bucket_id=bucket_id,
+        objects=objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=bucket_id,
+                booked_date=date(2026, 4, 20),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="office supplies with input IVA",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id=SpendingCategory._from_registry("material_oficina").value,
+                taxable_base=Decimal("100.00"),
+                iva_rate=Decimal("0.21"),
+                iva_amount=Decimal("21.00"),
+                actor="operator",
+            ),
+            ports=ports,
+        )
+
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="303",
+                    revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="2T"),
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "2T"),
+                ),
+            ),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     readiness = projection.modelo_readiness[0]
     assert readiness.ledger_preflight_required is True
@@ -609,20 +650,22 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
 
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        modelo_readiness_requests=(
-            ModeloReadinessRequest(
-                modelo="309",
-                revision_id=active_registry_revision_id(modelo="309", filing_year=2026, period="AD-HOC"),
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "AD-HOC"),
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="309",
+                    revision_id=active_registry_revision_id(modelo="309", filing_year=2026, period="AD-HOC"),
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "AD-HOC"),
+                ),
             ),
-        ),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     readiness = projection.modelo_readiness[0]
     assert readiness.profile_id == bucket_id
@@ -650,19 +693,21 @@ def test_modelo_readiness_without_period_uses_annual_period(state_projection_dep
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
 
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        modelo_readiness_requests=(
-            ModeloReadinessRequest(
-                modelo="303",
-                revision_id="2022",
-                filing_year=2026,
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="303",
+                    revision_id="2022",
+                    filing_year=2026,
+                ),
             ),
-        ),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     readiness = projection.modelo_readiness[0]
     assert readiness.profile_id == bucket_id
@@ -684,18 +729,21 @@ def test_projection_is_pure_read(state_projection_dependencies) -> None:
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
     )
 
-    first = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    second = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        first = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        second = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert first == second
 
@@ -705,12 +753,14 @@ def test_projection_without_active_profile_is_empty(state_projection_dependencie
     no encrypted store is opened."""
 
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert projection.active_profile.profile_id is None
     assert projection.workspace.work_units == 0
@@ -732,15 +782,17 @@ def test_projection_profile_read_refuses_explicit_database_route(
         cadrumo_active_profile=profile_id,
         cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     ):
-        projection = build_operator_state_projection(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            read_ports=read_ports,
-            state=WorkflowState(),
-            include_workspace_summary=False,
-            include_pending_obligations=False,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            projection = build_operator_state_projection(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                operator_probe_ports=_OPERATOR_PROBE_PORTS,
+                read_ports=read_ports,
+                state=WorkflowState(),
+                include_workspace_summary=False,
+                include_pending_obligations=False,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
     assert projection.active_profile.profile_id == profile_id
     assert projection.active_profile.registered_bucket is False
@@ -762,20 +814,23 @@ def test_auth_readiness_no_provider_matches_with_and_without_probe(state_project
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
 
-    unprobed = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        probe_live_backend=False,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    probed = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        probe_live_backend=True,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        unprobed = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            probe_live_backend=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        probed = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            probe_live_backend=True,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert unprobed.auth.provider == ""
     assert probed.auth.provider == unprobed.auth.provider
@@ -792,16 +847,18 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
 
     with caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"):
-        projection = build_operator_state_projection(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            read_ports=read_ports,
-            requested_provider=sensitive_provider,
-            probe_live_backend=True,
-            include_workspace_summary=False,
-            include_pending_obligations=False,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            projection = build_operator_state_projection(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                operator_probe_ports=_OPERATOR_PROBE_PORTS,
+                read_ports=read_ports,
+                requested_provider=sensitive_provider,
+                probe_live_backend=True,
+                include_workspace_summary=False,
+                include_pending_obligations=False,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
     assert projection.auth.available is False
     assert any("unknown provider" in record.getMessage() for record in caplog.records)
@@ -823,15 +880,21 @@ def test_auth_readiness_configured_is_coherent_with_health_summary(state_project
 
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
-    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    with bundled_indexed_authority().operation() as operation:
+        configure_operator_auth(
+            "certificate",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
-    projection = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        probe_live_backend=True,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            probe_live_backend=True,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     auth = projection.auth
     assert auth.configured is False, (
@@ -871,24 +934,37 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(
     cert_file = tmp_path / "operator-cert.pfx"
     cert_file.write_bytes(b"placeholder pkcs12 bytes")
 
-    configure_operator_auth("certificate", certificate_path=cert_file, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    after_cert = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        probe_live_backend=False,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        configure_operator_auth(
+            "certificate",
+            certificate_path=cert_file,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        after_cert = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            probe_live_backend=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert after_cert.auth.certificate_path == str(cert_file)
 
-    configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    after_switch = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        probe_live_backend=False,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        configure_operator_auth(
+            "clave_movil",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        after_switch = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            probe_live_backend=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert after_switch.auth.provider == "clave_movil"
     assert after_switch.auth.certificate_path == "", (
@@ -910,15 +986,21 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider(
 
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
-    configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    with bundled_indexed_authority().operation() as operation:
+        configure_operator_auth(
+            "clave_movil",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
-    auth = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        probe_live_backend=True,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    ).auth
+        auth = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            probe_live_backend=True,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        ).auth
 
     # Round-5 M5: ``info`` is now a valid severity for benign undeclared
     # or pending states. ``error`` is reserved for genuine faults.
@@ -931,13 +1013,15 @@ def test_auth_readiness_health_severity_empty_only_when_no_provider(state_projec
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
 
-    auth = build_operator_state_projection(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        read_ports=read_ports,
-        probe_live_backend=True,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    ).auth
+    with bundled_indexed_authority().operation() as operation:
+        auth = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            probe_live_backend=True,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        ).auth
 
     assert auth.provider == ""
     assert auth.health_severity == ""

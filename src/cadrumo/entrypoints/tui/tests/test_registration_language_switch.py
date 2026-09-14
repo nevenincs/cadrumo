@@ -22,7 +22,10 @@ import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+    load_test_profile_record,
+)
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import login_profile
@@ -232,7 +235,12 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         # unlocked belongs to that thread's context and not this one.
         # Unlocking again through the ordinary login door is how the test
         # reaches the encrypted record the screen actually wrote.
-        login_profile(name="Language Subject", passphrase_callback=lambda: _PASSWORD)
+        _, profile_decode_context = _profile_contexts_for_test()
+        login_profile(
+            name="Language Subject",
+            passphrase_callback=lambda: _PASSWORD,
+            profile_decode_context=profile_decode_context,
+        )
         record = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in record.facts}
         assert stored.get(PROFILE_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (

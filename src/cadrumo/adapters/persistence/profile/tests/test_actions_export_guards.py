@@ -34,21 +34,25 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    for index in range(12):
-        create_manual_transaction(
-            ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
-                booked_date=date(2026, 5, index + 1),
-                amount=Decimal("25.00"),
-                direction=TransactionDirection.OUTGOING,
-                description=f"export row {index:02d}",
-                idempotency_key=f"export-bulk-{index:02d}",
-            ),
-            ports=ledger_ports_for_test(
-                transaction_repository=transaction_repository, bucket_event_repository=event_repository
-            ),
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-        )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        for index in range(12):
+            create_manual_transaction(
+                ManualLedgerTransactionCommand(
+                    bucket_id=_BUCKET_ID,
+                    booked_date=date(2026, 5, index + 1),
+                    amount=Decimal("25.00"),
+                    direction=TransactionDirection.OUTGOING,
+                    description=f"export row {index:02d}",
+                    idempotency_key=f"export-bulk-{index:02d}",
+                ),
+                ports=ports,
+                occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            )
 
     result = export_ledger_transactions(
         LedgerExportCommand(bucket_id=_BUCKET_ID),
@@ -69,30 +73,42 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
 def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: SecureObjectRepository) -> None:
     repo_a, event_repo_a = _repositories(secure_objects, bucket_id=_BUCKET_ID)
     repo_b, event_repo_b = _repositories(secure_objects, bucket_id=_OTHER_BUCKET_ID)
-    first = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="bucket a row",
-            idempotency_key="shared-key",
-        ),
-        ports=ledger_ports_for_test(transaction_repository=repo_a, bucket_event_repository=event_repo_a),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
-    create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_OTHER_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="bucket b row",
-            idempotency_key="shared-key",
-        ),
-        ports=ledger_ports_for_test(transaction_repository=repo_b, bucket_event_repository=event_repo_b),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=repo_a,
+        bucket_event_repository=event_repo_a,
+    ) as ports_a:
+        first = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="bucket a row",
+                idempotency_key="shared-key",
+            ),
+            ports=ports_a,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
+        bucket_id=_OTHER_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=repo_b,
+        bucket_event_repository=event_repo_b,
+    ) as ports_b:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_OTHER_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="bucket b row",
+                idempotency_key="shared-key",
+            ),
+            ports=ports_b,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
 
     result = export_ledger_transactions(
         LedgerExportCommand(bucket_id=_BUCKET_ID, export_format=ExportSerializationFormat.JSONL),
@@ -115,20 +131,24 @@ def test_export_ledger_transactions_writes_output_before_export_event(
     tmp_path: Path,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="export row",
-            idempotency_key="export-output-before-event",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="export row",
+                idempotency_key="export-output-before-event",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
 
     with pytest.raises(OSError):
         export_ledger_transactions(
@@ -157,20 +177,24 @@ def test_export_ledger_transactions_replaces_prior_export_atomically(
     must still emit the export event.
     """
     transaction_repository, event_repository = _repositories(secure_objects)
-    create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="export row",
-            idempotency_key="export-atomic-replace",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="export row",
+                idempotency_key="export-atomic-replace",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
 
     output_path = tmp_path / "ledger-export.csv"
     output_path.write_bytes(_STALE_EXPORT_BYTES)

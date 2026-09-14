@@ -41,7 +41,9 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs_with_catalogue,
     isolated_settings,
     secure_objects,
@@ -103,6 +105,7 @@ def _confirm_the_foreign_document(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
     currency_override: str | None = None,
+    authority: InvoiceAuthorityFixture,
 ):
     """Confirm the fixture with no overrides beyond the direction and country.
 
@@ -134,6 +137,7 @@ def _confirm_the_foreign_document(
         **invoice_confirmation_kwargs_with_catalogue(
             bucket_id=_BUCKET_ID,
             catalogue_creation_ports=catalogue_ports,
+            authority=authority,
         ),
     )
 
@@ -142,6 +146,7 @@ def test_the_printed_currency_reaches_the_persisted_invoice(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The confirmed invoice reports SEK, not the euro default.
 
@@ -153,6 +158,7 @@ def test_the_printed_currency_reaches_the_persisted_invoice(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.draft.currency == _PRINTED_CURRENCY, "the parser did not read the currency off the document"
@@ -168,6 +174,7 @@ def test_an_unconverted_foreign_invoice_reports_no_euro_value(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """No rate resolved means no euro figure, never the face value.
 
@@ -180,6 +187,7 @@ def test_an_unconverted_foreign_invoice_reports_no_euro_value(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.invoice.base_total == _PRINTED_BASE
@@ -194,6 +202,7 @@ def test_an_operator_override_still_outranks_the_printed_currency(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The document is the default, not the authority.
 
@@ -205,6 +214,7 @@ def test_an_operator_override_still_outranks_the_printed_currency(
         secure_objects=secure_objects,
         tmp_path=tmp_path,
         currency_override="NOK",
+        authority=invoice_authority,
     )
 
     assert result.invoice.currency == "NOK"
@@ -214,6 +224,7 @@ def test_the_reader_recovers_every_field_from_a_document_printing_no_spanish(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """Base, cuota, both parties and the legend, off a German-language invoice.
 
@@ -229,6 +240,7 @@ def test_the_reader_recovers_every_field_from_a_document_printing_no_spanish(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
     draft = result.draft
 

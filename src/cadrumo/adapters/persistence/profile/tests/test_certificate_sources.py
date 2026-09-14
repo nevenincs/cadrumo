@@ -37,6 +37,12 @@ from cadrumo.application.diagnostics_ports import DiagnosticSecureObjectNamespac
 from cadrumo.application.state_projection_ports import StateProjectionReadPorts
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -99,30 +105,35 @@ def test_register_two_sources_are_both_enumerable(tmp_path: Path) -> None:
     enumerate every registered source, not only the most recently
     registered one.
     """
-    _register_operator_profile()
-    personal = tmp_path / "personal.p12"
-    personal.write_bytes(b"placeholder personal cert")
-    apoderado = tmp_path / "apoderado-acme.p12"
-    apoderado.write_bytes(b"placeholder apoderado cert")
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        personal = tmp_path / "personal.p12"
+        personal.write_bytes(b"placeholder personal cert")
+        apoderado = tmp_path / "apoderado-acme.p12"
+        apoderado.write_bytes(b"placeholder apoderado cert")
 
-    register_operator_certificate_source(
-        name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    register_operator_certificate_source(
-        name="apoderado-acme",
-        certificate_path=apoderado,
-        friendly_name="ACME SL",
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=personal,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        register_operator_certificate_source(
+            name="apoderado-acme",
+            certificate_path=apoderado,
+            friendly_name="ACME SL",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    report = list_operator_certificate_sources()
+        report = list_operator_certificate_sources()
 
-    names = {source.name for source in report.sources}
-    assert names == {"personal", "apoderado-acme"}, f"both sources must be enumerable — got {names!r}"
-    by_name = {source.name: source for source in report.sources}
-    assert by_name["personal"].certificate_path == str(personal)
-    assert by_name["apoderado-acme"].certificate_path == str(apoderado)
-    assert by_name["apoderado-acme"].friendly_name == "ACME SL"
+        names = {source.name for source in report.sources}
+        assert names == {"personal", "apoderado-acme"}, f"both sources must be enumerable — got {names!r}"
+        by_name = {source.name: source for source in report.sources}
+        assert by_name["personal"].certificate_path == str(personal)
+        assert by_name["apoderado-acme"].certificate_path == str(apoderado)
+        assert by_name["apoderado-acme"].friendly_name == "ACME SL"
 
 
 def test_select_one_source_activates_it_and_leaves_the_other_inactive(tmp_path: Path) -> None:
@@ -132,72 +143,103 @@ def test_select_one_source_activates_it_and_leaves_the_other_inactive(tmp_path: 
     across the registry, and the canonical projection resolves the selected
     record without copying it into the unnamed-credential field.
     """
-    _register_operator_profile()
-    personal = tmp_path / "personal.p12"
-    personal.write_bytes(b"placeholder personal cert")
-    apoderado = tmp_path / "apoderado-acme.p12"
-    apoderado.write_bytes(b"placeholder apoderado cert")
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        personal = tmp_path / "personal.p12"
+        personal.write_bytes(b"placeholder personal cert")
+        apoderado = tmp_path / "apoderado-acme.p12"
+        apoderado.write_bytes(b"placeholder apoderado cert")
 
-    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(
-        name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    register_operator_certificate_source(
-        name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
+        configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=personal,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        register_operator_certificate_source(
+            name="apoderado-acme",
+            certificate_path=apoderado,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    result = select_operator_certificate_source(name="apoderado-acme", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        result = select_operator_certificate_source(
+            name="apoderado-acme",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    assert result.name == "apoderado-acme"
-    assert result.active is True
-    assert result.certificate_path == str(apoderado)
+        assert result.name == "apoderado-acme"
+        assert result.active is True
+        assert result.certificate_path == str(apoderado)
 
-    report = list_operator_certificate_sources()
-    by_name = {source.name: source for source in report.sources}
-    assert by_name["apoderado-acme"].active is True
-    assert by_name["personal"].active is False, "the non-selected source must stay registered but inactive"
-    assert report.active_source == "apoderado-acme"
+        report = list_operator_certificate_sources()
+        by_name = {source.name: source for source in report.sources}
+        assert by_name["apoderado-acme"].active is True
+        assert by_name["personal"].active is False, "the non-selected source must stay registered but inactive"
+        assert report.active_source == "apoderado-acme"
 
-    # `auth status` resolves the selected source through the canonical
-    # credential projection.
-    status = inspect_operator_auth(
-        certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        read_ports=_state_projection_read_ports(),
-    )
-    assert status.certificate_path == str(apoderado)
+        # `auth status` resolves the selected source through the canonical
+        # credential projection.
+        status = inspect_operator_auth(
+            certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            read_ports=_state_projection_read_ports(),
+        )
+        assert status.certificate_path == str(apoderado)
 
 
 def test_selecting_a_second_source_switches_the_active_selection(tmp_path: Path) -> None:
     """Selecting a different source moves the active marker, it does not accumulate."""
-    _register_operator_profile()
-    personal = tmp_path / "personal.p12"
-    personal.write_bytes(b"placeholder personal cert")
-    apoderado = tmp_path / "apoderado-acme.p12"
-    apoderado.write_bytes(b"placeholder apoderado cert")
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        personal = tmp_path / "personal.p12"
+        personal.write_bytes(b"placeholder personal cert")
+        apoderado = tmp_path / "apoderado-acme.p12"
+        apoderado.write_bytes(b"placeholder apoderado cert")
 
-    register_operator_certificate_source(
-        name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    register_operator_certificate_source(
-        name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=personal,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        register_operator_certificate_source(
+            name="apoderado-acme",
+            certificate_path=apoderado,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    select_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    select_operator_certificate_source(name="apoderado-acme", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        select_operator_certificate_source(
+            name="personal",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        select_operator_certificate_source(
+            name="apoderado-acme",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    report = list_operator_certificate_sources()
-    active_names = {source.name for source in report.sources if source.active}
-    assert active_names == {"apoderado-acme"}, f"exactly one source must be active — got {active_names!r}"
+        report = list_operator_certificate_sources()
+        active_names = {source.name for source in report.sources if source.active}
+        assert active_names == {"apoderado-acme"}, f"exactly one source must be active — got {active_names!r}"
 
 
 def test_selecting_an_unregistered_source_refuses(tmp_path: Path) -> None:
     """Selecting a name that was never registered raises a typed refusal, not a silent no-op."""
-    _register_operator_profile()
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
 
-    with pytest.raises(CertificateSourceNotFoundError):
-        select_operator_certificate_source(name="does-not-exist", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        with pytest.raises(CertificateSourceNotFoundError):
+            select_operator_certificate_source(
+                name="does-not-exist",
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
+            )
 
 
 def test_state_source_refusal_is_the_registered_public_contract() -> None:
@@ -217,62 +259,80 @@ def test_state_source_refusal_is_the_registered_public_contract() -> None:
 
 def test_re_registering_an_existing_name_repoints_its_path(tmp_path: Path) -> None:
     """Re-registering a name updates its path in place rather than erroring or duplicating."""
-    _register_operator_profile()
-    original = tmp_path / "personal-v1.p12"
-    original.write_bytes(b"v1")
-    renewed = tmp_path / "personal-v2.p12"
-    renewed.write_bytes(b"v2")
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        original = tmp_path / "personal-v1.p12"
+        original.write_bytes(b"v1")
+        renewed = tmp_path / "personal-v2.p12"
+        renewed.write_bytes(b"v2")
 
-    register_operator_certificate_source(
-        name="personal", certificate_path=original, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    register_operator_certificate_source(
-        name="personal", certificate_path=renewed, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=original,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=renewed,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    report = list_operator_certificate_sources()
-    assert len(report.sources) == 1, "re-registering the same name must not duplicate the entry"
-    assert report.sources[0].certificate_path == str(renewed)
+        report = list_operator_certificate_sources()
+        assert len(report.sources) == 1, "re-registering the same name must not duplicate the entry"
+        assert report.sources[0].certificate_path == str(renewed)
 
 
 def test_remove_source_clears_registration_and_active_selection(tmp_path: Path) -> None:
     """Removing the active source makes its certificate path unusable."""
-    _register_operator_profile()
-    personal = tmp_path / "personal.p12"
-    personal.write_bytes(b"placeholder personal cert")
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        personal = tmp_path / "personal.p12"
+        personal.write_bytes(b"placeholder personal cert")
 
-    register_operator_certificate_source(
-        name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    select_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=personal,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        select_operator_certificate_source(
+            name="personal",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    result = remove_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        result = remove_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
-    assert result.removed is True
-    report = list_operator_certificate_sources()
-    assert report.sources == ()
-    assert report.active_source == ""
-    reloaded = workflow_state_repository().load()
-    assert reloaded.auth.certificate_path is None
-    credentials = resolve_active_certificate_credentials(
-        certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
-        settings=Settings(
-            cadrumo_certificate_path=None,
-            cadrumo_certificate_password_secret=None,
-        ),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    assert credentials.certificate_path is None
-    assert credentials.source_name is None
+        assert result.removed is True
+        report = list_operator_certificate_sources()
+        assert report.sources == ()
+        assert report.active_source == ""
+        reloaded = workflow_state_repository().load()
+        assert reloaded.auth.certificate_path is None
+        credentials = resolve_active_certificate_credentials(
+            certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+            settings=Settings(
+                cadrumo_certificate_path=None,
+                cadrumo_certificate_password_secret=None,
+            ),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
+        assert credentials.certificate_path is None
+        assert credentials.source_name is None
 
 
 def test_remove_unregistered_source_is_a_no_op() -> None:
     """Removing a name that was never registered is a no-op, not an error."""
-    _register_operator_profile()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _register_operator_profile()
 
-    result = remove_operator_certificate_source(name="never-registered", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        result = remove_operator_certificate_source(
+            name="never-registered", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=_authority_operation_for_test
+        )
 
-    assert result.removed is False
+        assert result.removed is False
 
 
 def test_certificate_source_registry_roundtrips_through_encrypted_workflow_state(tmp_path: Path) -> None:
@@ -284,25 +344,37 @@ def test_certificate_source_registry_roundtrips_through_encrypted_workflow_state
     ``workflow_state_repository().load()`` must reproduce every
     registered source and the active selection exactly.
     """
-    _register_operator_profile()
-    personal = tmp_path / "personal.p12"
-    personal.write_bytes(b"placeholder personal cert")
-    apoderado = tmp_path / "apoderado-acme.p12"
-    apoderado.write_bytes(b"placeholder apoderado cert")
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        personal = tmp_path / "personal.p12"
+        personal.write_bytes(b"placeholder personal cert")
+        apoderado = tmp_path / "apoderado-acme.p12"
+        apoderado.write_bytes(b"placeholder apoderado cert")
 
-    register_operator_certificate_source(
-        name="personal", certificate_path=personal, friendly_name="Yo mismo", operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    register_operator_certificate_source(
-        name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    select_operator_certificate_source(name="apoderado-acme", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=personal,
+            friendly_name="Yo mismo",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        register_operator_certificate_source(
+            name="apoderado-acme",
+            certificate_path=apoderado,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        select_operator_certificate_source(
+            name="apoderado-acme",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    reloaded = workflow_state_repository().load()
+        reloaded = workflow_state_repository().load()
 
-    assert set(reloaded.auth.certificate_sources) == {"personal", "apoderado-acme"}
-    assert reloaded.auth.certificate_sources["personal"].certificate_path == str(personal)
-    assert reloaded.auth.certificate_sources["personal"].friendly_name == "Yo mismo"
-    assert reloaded.auth.certificate_sources["apoderado-acme"].certificate_path == str(apoderado)
-    assert reloaded.auth.active_certificate_source == "apoderado-acme"
-    assert reloaded.auth.certificate_path is None
+        assert set(reloaded.auth.certificate_sources) == {"personal", "apoderado-acme"}
+        assert reloaded.auth.certificate_sources["personal"].certificate_path == str(personal)
+        assert reloaded.auth.certificate_sources["personal"].friendly_name == "Yo mismo"
+        assert reloaded.auth.certificate_sources["apoderado-acme"].certificate_path == str(apoderado)
+        assert reloaded.auth.active_certificate_source == "apoderado-acme"
+        assert reloaded.auth.certificate_path is None

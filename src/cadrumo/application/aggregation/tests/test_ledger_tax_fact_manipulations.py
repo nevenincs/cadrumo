@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 
@@ -87,45 +88,47 @@ def _gross_split(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
 
 # --- behavior contract: gross→base/IVA at 21/10/4 routes to M303 soportado ----------------
 def test_base_iva_rederivation_without_invoice_evidence_is_refused() -> None:
-    cases = [
-        (Decimal("0.21"), IvaCategory("domestic_general")),
-        (Decimal("0.10"), IvaCategory("domestic_reduced")),
-        (Decimal("0.04"), IvaCategory("domestic_super_reduced")),
-    ]
-    gross = Decimal("121.00")
-    txns = []
-    for idx, (rate, category) in enumerate(cases):
-        base, iva = _gross_split(gross, rate)
-        txns.append(
-            Transaction.model_validate(
-                {
-                    "raw": _raw(f"row-rate-{idx}", amount=gross, description=f"Compra al {rate}"),
-                    "direction": TransactionDirection.OUTGOING,
-                    "group_label": None,
-                    "business_classification": BusinessClassification.BUSINESS,
-                    "source_jurisdiction": "ES",
-                    "taxable_base": base,
-                    "iva_rate": rate,
-                    "iva_amount": iva,
-                    "iva_category": category,
-                    "lifecycle_state": TransactionLifecycleState.ACTIVE,
-                    "classified_at": _NOW,
-                    "classified_by": "manual",
-                },
-            ),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        cases = [
+            (Decimal("0.21"), IvaCategory("domestic_general")),
+            (Decimal("0.10"), IvaCategory("domestic_reduced")),
+            (Decimal("0.04"), IvaCategory("domestic_super_reduced")),
+        ]
+        gross = Decimal("121.00")
+        txns = []
+        for idx, (rate, category) in enumerate(cases):
+            base, iva = _gross_split(gross, rate)
+            txns.append(
+                Transaction.model_validate(
+                    {
+                        "raw": _raw(f"row-rate-{idx}", amount=gross, description=f"Compra al {rate}"),
+                        "direction": TransactionDirection.OUTGOING,
+                        "group_label": None,
+                        "business_classification": BusinessClassification.BUSINESS,
+                        "source_jurisdiction": "ES",
+                        "taxable_base": base,
+                        "iva_rate": rate,
+                        "iva_amount": iva,
+                        "iva_category": category,
+                        "lifecycle_state": TransactionLifecycleState.ACTIVE,
+                        "classified_at": _NOW,
+                        "classified_by": "manual",
+                    },
+                ),
+            )
+        catalogue = TransactionCatalogue.from_transactions(tuple(txns))
+        result = aggregate_iva_ledger_observations(
+            catalogue,
+            period=_Q1_2025,
+            ledger_profile_id="manipulation-test",
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id="manipulation-test",
+            operation=_authority_operation_for_test,
         )
-    catalogue = TransactionCatalogue.from_transactions(tuple(txns))
-    result = aggregate_iva_ledger_observations(
-        catalogue,
-        period=_Q1_2025,
-        ledger_profile_id="manipulation-test",
-        investment_asset_register=BienesInversionIvaRegister(),
-        investment_asset_profile_id="manipulation-test",
-    )
-    assert result.observations == ()
-    assert [issue.reason for issue in result.issues] == [
-        IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
-    ] * len(cases)
+        assert result.observations == ()
+        assert [issue.reason for issue in result.issues] == [
+            IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
+        ] * len(cases)
 
 
 # --- behavior contract: business_pct / usage-ratio proportionality propagates -------------

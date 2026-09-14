@@ -6,10 +6,12 @@ from datetime import date
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
+from .calendar_test_support import calendar_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -30,9 +32,11 @@ def _legal_entity() -> TaxpayerProfile:
     )
 
 
-def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados() -> None:
+def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, today=date(2025, 4, 1))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=calendar_operation, today=date(2025, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "202" in surfaced, (
@@ -42,9 +46,11 @@ def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados() -> None:
     assert cal.taxpayer_model_declared is True
 
 
-def test_calendar_legal_entity_shows_modelo_200_impuesto_sociedades() -> None:
+def test_calendar_legal_entity_shows_modelo_200_impuesto_sociedades(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, today=date(2025, 4, 1))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=calendar_operation, today=date(2025, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "200" in surfaced, (

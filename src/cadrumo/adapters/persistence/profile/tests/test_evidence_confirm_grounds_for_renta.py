@@ -31,7 +31,9 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
@@ -54,6 +56,7 @@ def _confirm_as_issued(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    authority: InvoiceAuthorityFixture,
 ):
     """Confirm the structured document as an ISSUED invoice, with no overrides.
 
@@ -74,7 +77,7 @@ def _confirm_as_issued(
         kind=InvoiceKind.ISSUED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -82,6 +85,7 @@ def test_a_structured_confirm_grounds_through_the_decomposition_contract(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The step's red condition: the renta path must not refuse this as ungrounded.
 
@@ -96,6 +100,7 @@ def test_a_structured_confirm_grounds_through_the_decomposition_contract(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     decomposition = decompose_invoice(result.invoice)
@@ -110,6 +115,7 @@ def test_the_grounding_rests_on_a_declared_treatment_not_a_defaulted_one(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """Name the defect that would otherwise fire, so the proof cannot pass hollowly.
 
@@ -124,6 +130,7 @@ def test_the_grounding_rests_on_a_declared_treatment_not_a_defaulted_one(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     defects = set(decompose_invoice(result.invoice).defects)
@@ -139,6 +146,7 @@ def test_an_unreadable_document_is_not_grounded_by_this_path(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The discriminator: grounding must come from the document, not from confirming.
 
@@ -151,6 +159,7 @@ def test_an_unreadable_document_is_not_grounded_by_this_path(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     ).invoice
 
     stripped = invoice.model_copy(update={"iva_category": None})

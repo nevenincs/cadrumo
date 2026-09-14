@@ -75,18 +75,20 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
             ports=_LLM_PORTS,
         )
 
-    result = apply_saturated_llm_classification(
-        suggestion,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        actor="operator-A",
-        source_command="aeat app ledger classify --llm --saturate --apply",
-        ports=ledger_ports_for_test(
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        result = apply_saturated_llm_classification(
+            suggestion,
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            actor="operator-A",
+            source_command="aeat app ledger classify --llm --saturate --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     persisted = result.transaction
     assert persisted.business_classification is BusinessClassification.BUSINESS
@@ -117,18 +119,20 @@ def test_apply_non_derivable_persists_category_without_numbers(
             ports=_LLM_PORTS,
         )
 
-    result = apply_saturated_llm_classification(
-        suggestion,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        actor="operator-A",
-        source_command="aeat app ledger classify --llm --saturate --apply",
-        ports=ledger_ports_for_test(
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        result = apply_saturated_llm_classification(
+            suggestion,
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            actor="operator-A",
+            source_command="aeat app ledger classify --llm --saturate --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     persisted = result.transaction
     assert persisted.iva_category == IvaCategory("intra_community_supply")
@@ -158,18 +162,20 @@ def test_apply_mixed_without_business_pct_refuses(
         )
 
     with pytest.raises(TransactionValidationError, match="requires a business percentage"):
-        apply_saturated_llm_classification(
-            suggestion,
+        with ledger_ports_for_test(
             bucket_id=_BUCKET,
-            actor="operator-A",
-            source_command="aeat app ledger classify --llm --saturate --apply",
-            ports=ledger_ports_for_test(
+            objects=repository._objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports:
+            apply_saturated_llm_classification(
+                suggestion,
                 bucket_id=_BUCKET,
-                transaction_repository=repository,
-                bucket_event_repository=events,
-            ),
-            occurred_at=_NOW,
-        )
+                actor="operator-A",
+                source_command="aeat app ledger classify --llm --saturate --apply",
+                ports=ports,
+                occurred_at=_NOW,
+            )
 
 
 def test_apply_mixed_uses_proposed_business_pct(
@@ -192,18 +198,20 @@ def test_apply_mixed_uses_proposed_business_pct(
             ports=_LLM_PORTS,
         )
 
-    result = apply_saturated_llm_classification(
-        suggestion,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        actor="operator-A",
-        source_command="aeat app ledger classify --llm --saturate --apply",
-        ports=ledger_ports_for_test(
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        result = apply_saturated_llm_classification(
+            suggestion,
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            actor="operator-A",
+            source_command="aeat app ledger classify --llm --saturate --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     assert result.transaction.business_classification is BusinessClassification.MIXED
     assert result.transaction.business_pct == Decimal("0.6")

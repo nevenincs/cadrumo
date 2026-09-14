@@ -4,14 +4,10 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import cast
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_lifecycle import stash_manual_transaction
 from cadrumo.application.ledger.actions_manual import (
     create_manual_transaction,
@@ -36,117 +32,141 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["secure_objects"]
 
 
-def _ledger_ports(
-    transaction_repository: TransactionCatalogueRepository,
-    event_repository: BucketEventHistoryRepository,
-    *,
-    bucket_id: str,
-) -> LedgerActionPorts:
-    """Compose canonical ledger ports over the isolated repositories."""
-    return cast(
-        LedgerActionPorts,
-        ledger_ports_for_test(
-            bucket_id=bucket_id,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-    )
-
-
 def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
     secure_objects: SecureObjectRepository,
 ) -> None:
     repo_a, event_repo = _repositories(secure_objects, bucket_id=_BUCKET_ID)
     repo_b, event_repo_b = _repositories(secure_objects, bucket_id=_OTHER_BUCKET_ID)
-    first = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="first bucket row",
-            idempotency_key="first",
-        ),
-        ports=_ledger_ports(repo_a, event_repo, bucket_id=_BUCKET_ID),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-    create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_OTHER_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="other bucket row",
-            idempotency_key="first",
-        ),
-        ports=_ledger_ports(repo_b, event_repo_b, bucket_id=_OTHER_BUCKET_ID),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-
-    bucket_ports = _ledger_ports(repo_a, event_repo, bucket_id=_BUCKET_ID)
-    listed = list_manual_transactions(bucket_id=_BUCKET_ID, ports=bucket_ports)
-    fetched = get_manual_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=first.ref.transaction_id,
-        ports=bucket_ports,
-    )
+        objects=secure_objects,
+        transaction_repository=repo_a,
+        bucket_event_repository=event_repo,
+    ) as ports:
+        first = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="first bucket row",
+                idempotency_key="first",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
+        bucket_id=_OTHER_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=repo_b,
+        bucket_event_repository=event_repo_b,
+    ) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_OTHER_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="other bucket row",
+                idempotency_key="first",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=repo_a,
+        bucket_event_repository=event_repo,
+    ) as ports:
+        listed = list_manual_transactions(bucket_id=_BUCKET_ID, ports=ports)
+        fetched = get_manual_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=first.ref.transaction_id,
+            ports=ports,
+        )
+        with pytest.raises(TransactionNotFoundError):
+            get_manual_transaction(
+                bucket_id=_BUCKET_ID,
+                transaction_id="0" * 64,
+                ports=ports,
+            )
 
     assert [item.ref.transaction_id for item in listed] == [first.ref.transaction_id]
     assert fetched.transaction.raw.description == "first bucket row"
-    with pytest.raises(TransactionNotFoundError):
-        get_manual_transaction(
-            bucket_id=_BUCKET_ID,
-            transaction_id="0" * 64,
-            ports=bucket_ports,
-        )
 
 
 def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects, bucket_id=_BUCKET_ID)
-    ready = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="ready row",
-            business_classification=BusinessClassification.BUSINESS,
-            category_id="office-supplies",
-            taxable_base=Decimal("100.00"),
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("21.00"),
-            idempotency_key="ready-status",
-        ),
-        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-    pending = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="pending row",
-            idempotency_key="pending-status",
-        ),
-        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID),
-        occurred_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
-    )
-    stash_manual_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=pending.ref.transaction_id,
-        actor="operator-A",
-        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID),
-        occurred_at=datetime(2026, 5, 3, 8, 0, tzinfo=UTC),
-    )
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        ready = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="ready row",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="office-supplies",
+                taxable_base=Decimal("100.00"),
+                iva_rate=Decimal("0.21"),
+                iva_amount=Decimal("21.00"),
+                idempotency_key="ready-status",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        pending = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="pending row",
+                idempotency_key="pending-status",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        stash_manual_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=pending.ref.transaction_id,
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 3, 8, 0, tzinfo=UTC),
+        )
 
-    report = summarize_manual_transactions(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        period=Period.from_year_and_code(2026, "05"),
-        ports=_ledger_ports(transaction_repository, event_repository, bucket_id=_BUCKET_ID),
-    )
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        report = summarize_manual_transactions(
+            bucket_id=_BUCKET_ID,
+            period=Period.from_year_and_code(2026, "05"),
+            ports=ports,
+        )
 
     assert ledger_transaction_review_status(ready.transaction) == "reviewed"
     assert report.total_count == 2

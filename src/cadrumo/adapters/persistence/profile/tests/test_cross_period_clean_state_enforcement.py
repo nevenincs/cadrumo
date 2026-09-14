@@ -56,6 +56,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -85,6 +86,7 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -396,19 +398,21 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=revision_id,
-                    output_path=tmp_path / "modelo-180.txt",
-                    actor="operator-test",
-                ),
-                workflow_profile=workflow_profile(),
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=profile.bucket_id,
-                    taxpayer_tax_id=workflow_profile().tax_id,
-                ),
-                clock=_CLOCK,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                export_modelo_revision(
+                    ModeloExportCommand(
+                        calculation_revision_id=revision_id,
+                        output_path=tmp_path / "modelo-180.txt",
+                        actor="operator-test",
+                    ),
+                    workflow_profile=workflow_profile(),
+                    export_ports=modelo_export_ports_for_test(
+                        bucket_id=profile.bucket_id,
+                        taxpayer_tax_id=workflow_profile().tax_id,
+                    ),
+                    operation=operation,
+                    clock=_CLOCK,
+                )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
@@ -423,13 +427,17 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_p
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            file_modelo_revision(
-                revision_id,
-                actor="operator-test",
-                workflow_profile=workflow_profile(),
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                file_modelo_revision(
+                    revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                    actor="operator-test",
+                    workflow_profile=workflow_profile(),
+                    operation=operation,
+                    clock=_CLOCK,
+                )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
@@ -462,13 +470,17 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            file_modelo_revision(
-                revision_id,
-                actor="operator-test",
-                workflow_profile=workflow_profile(),
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                file_modelo_revision(
+                    revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                    actor="operator-test",
+                    workflow_profile=workflow_profile(),
+                    operation=operation,
+                    clock=_CLOCK,
+                )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
@@ -482,16 +494,18 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
             period="2T",
         )
 
-        report = verify_modelo_revision(
-            revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="operator-test",
-            workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("X1234567L"),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=build_test_verification_repository_bundle(),
+                actor="operator-test",
+                workflow_profile=workflow_profile(),
+                settings=ready_clave_settings("X1234567L"),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
     assert any(
         finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
@@ -521,16 +535,18 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
                 "irpf_income_categories": frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
             },
         )
-        report = verify_modelo_revision(
-            revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="operator-test",
-            workflow_profile=salaried,
-            settings=ready_clave_settings("X1234567L"),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=build_test_verification_repository_bundle(),
+                actor="operator-test",
+                workflow_profile=salaried,
+                settings=ready_clave_settings("X1234567L"),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
     withholding_pagos = {"111", "115", "123", "130", "131", "180", "184", "190", "193"}
     blocked = {
@@ -565,24 +581,26 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
                 bucket_event_repository=BucketEventHistoryRepository(),
             ),
         )
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            actor="operator-test",
-            casilla_inputs={
-                "0003": Decimal("32000.00"),
-                "0013": Decimal("2100.00"),
-                "0014": Decimal("0"),
-                "0015": Decimal("0"),
-                "0016": Decimal("0"),
-            },
-            binding_values={
-                "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-                retenciones_trabajo_binding: retenciones_trabajo_amount,
-                "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-                zero_binding: Decimal("0"),
-            },
-            clock=_CLOCK,
-        ).revision
+        with bundled_indexed_authority().operation() as operation:
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator-test",
+                casilla_inputs={
+                    "0003": Decimal("32000.00"),
+                    "0013": Decimal("2100.00"),
+                    "0014": Decimal("0"),
+                    "0015": Decimal("0"),
+                    "0016": Decimal("0"),
+                },
+                binding_values={
+                    "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+                    retenciones_trabajo_binding: retenciones_trabajo_amount,
+                    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+                    zero_binding: Decimal("0"),
+                },
+                clock=_CLOCK,
+            ).revision
         assert Decimal(revision.casilla_values[retenciones_trabajo_casilla]) == retenciones_trabajo_amount
         assert Decimal(revision.binding_overrides[retenciones_trabajo_binding]) == retenciones_trabajo_amount
         revision_id = revision.calculation_revision_id
@@ -592,16 +610,18 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
                 "irpf_income_categories": frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
             },
         )
-        report = verify_modelo_revision(
-            revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="operator-test",
-            workflow_profile=salaried,
-            settings=ready_clave_settings("X1234567L"),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=build_test_verification_repository_bundle(),
+                actor="operator-test",
+                workflow_profile=salaried,
+                settings=ready_clave_settings("X1234567L"),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
     assert report.granted_verificado_completo is True
     assert not any(
@@ -747,6 +767,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                     evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                     evidence_reference_id=evidence_reference_id,
                     actor="aeat-import-test",
+                    observation_repository=observations,
                     expected_tax_id="X1234567L",
                     clock=_CLOCK,
                 )
@@ -777,13 +798,17 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
             period="0A",
         )
 
-        filing = file_modelo_revision(
-            revision_id,
-            actor="operator-test",
-            workflow_profile=workflow_profile(),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            filing = file_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                actor="operator-test",
+                workflow_profile=workflow_profile(),
+                operation=operation,
+                clock=_CLOCK,
+            )
 
     assert filing.modelo == "390"
     assert filing.filing_year == 2025
@@ -842,21 +867,25 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            file_modelo_revision(
-                revision_id,
-                actor="operator-test",
-                workflow_profile=workflow_profile(),
-                cross_period_expected_member_sets=(
-                    CrossPeriodExpectedMemberSet(
-                        source_modelo="322",
-                        filing_year=2026,
-                        period=Period.from_year_and_code(2026, "12"),
-                        member_nifs=("A00000000", "B00000001"),
+            with bundled_indexed_authority().operation() as operation:
+                file_modelo_revision(
+                    revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                    actor="operator-test",
+                    workflow_profile=workflow_profile(),
+                    operation=operation,
+                    cross_period_expected_member_sets=(
+                        CrossPeriodExpectedMemberSet(
+                            source_modelo="322",
+                            filing_year=2026,
+                            period=Period.from_year_and_code(2026, "12"),
+                            member_nifs=("A00000000", "B00000001"),
+                        ),
                     ),
-                ),
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+                    clock=_CLOCK,
+                )
 
     failure = exc_info.value.precondition_failure
     assert failure is not None
@@ -928,13 +957,17 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            file_modelo_revision(
-                revision_id,
-                actor="operator-test",
-                workflow_profile=workflow_profile,
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                file_modelo_revision(
+                    revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                    actor="operator-test",
+                    workflow_profile=workflow_profile,
+                    operation=operation,
+                    clock=_CLOCK,
+                )
 
     failure = exc_info.value.precondition_failure
     assert failure is not None

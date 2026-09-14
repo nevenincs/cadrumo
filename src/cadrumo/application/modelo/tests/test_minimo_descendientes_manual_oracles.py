@@ -38,6 +38,8 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel, ConfigDict
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
@@ -392,24 +394,29 @@ def test_the_anualidades_flag_consumes_the_same_eligibility_predicate() -> None:
     is the mutation pair proving the flag reads the predicate rather than a
     constant.
     """
-    key = f"renta_family.anualidades_sin_minimo_descendientes_{_ORACLE_YEAR}"
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        key = f"renta_family.anualidades_sin_minimo_descendientes_{_ORACLE_YEAR}"
 
-    excluded: dict[str, UserProfileFactValue] = {
-        "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 10}-01-01",
-        "renta_family.descendiente.0.custodia_compartida": "true",
-        "renta_family.descendiente.0.rentas_anuales": "8001",
-    }
-    narrowed_excluded: Any = excluded
-    inject_derived_anualidades_eligibility_facts(narrowed_excluded, _snapshot())
-    assert excluded[key] == Decimal("1")
+        excluded: dict[str, UserProfileFactValue] = {
+            "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 10}-01-01",
+            "renta_family.descendiente.0.custodia_compartida": "true",
+            "renta_family.descendiente.0.rentas_anuales": "8001",
+        }
+        narrowed_excluded: Any = excluded
+        inject_derived_anualidades_eligibility_facts(
+            narrowed_excluded, _snapshot(), operation=_authority_operation_for_test
+        )
+        assert excluded[key] == Decimal("1")
 
-    eligible: dict[str, UserProfileFactValue] = {
-        "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 10}-01-01",
-        "renta_family.descendiente.0.custodia_compartida": "true",
-    }
-    narrowed_eligible: Any = eligible
-    inject_derived_anualidades_eligibility_facts(narrowed_eligible, _snapshot())
-    assert eligible[key] == Decimal("0")
+        eligible: dict[str, UserProfileFactValue] = {
+            "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 10}-01-01",
+            "renta_family.descendiente.0.custodia_compartida": "true",
+        }
+        narrowed_eligible: Any = eligible
+        inject_derived_anualidades_eligibility_facts(
+            narrowed_eligible, _snapshot(), operation=_authority_operation_for_test
+        )
+        assert eligible[key] == Decimal("0")
 
 
 # ---------------------------------------------------------------------------

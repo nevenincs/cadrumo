@@ -187,7 +187,8 @@ __all__ = [
 
 def list_modelos(ctx: typer.Context, year: int | None = None, domain: TaxDomain | None = None) -> None:
     report = _run_query(
-        lambda: registry_list_modelos(year=year, domain=domain), bad_parameter_from_error=deps.bad_parameter_from_error
+        lambda: registry_list_modelos(year=year, domain=domain, operation=authority_operation(ctx)),
+        bad_parameter_from_error=deps.bad_parameter_from_error,
     )
     modelos = [discovery_rendering.modelo_row_payload(row) for row in report.modelos]
     result = ModeloListResult(
@@ -214,10 +215,16 @@ def describe_modelo(
         resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
         if resolved_scope is not None:
             report = registry_describe_modelo_for_registry_scope(
-                modelo, filing_year=resolved_scope.filing_year, period=resolved_scope.period, as_of=_as_of(as_of)
+                modelo,
+                filing_year=resolved_scope.filing_year,
+                period=resolved_scope.period,
+                as_of=_as_of(as_of),
+                operation=authority_operation(ctx),
             )
         else:
-            report = registry_describe_modelo(modelo, period=period, as_of=_as_of(as_of))
+            report = registry_describe_modelo(
+                modelo, period=period, as_of=_as_of(as_of), operation=authority_operation(ctx)
+            )
     except (ValueError, RegistrySnapshotError) as exc:
         message = str(exc)
         if period is not None and "period" in message.lower():
@@ -334,8 +341,11 @@ def casilla(
                 filing_year=resolved_scope.filing_year,
                 period=resolved_scope.period,
                 as_of=_as_of(as_of),
+                operation=authority_operation(ctx),
             )
-        return registry_casilla(modelo, casilla_id, period=period, as_of=_as_of(as_of))
+        return registry_casilla(
+            modelo, casilla_id, period=period, as_of=_as_of(as_of), operation=authority_operation(ctx)
+        )
 
     report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
     label = report.label
@@ -391,6 +401,7 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
             filing_year=typed_period.filing_year,
             period=typed_period,
             bucket_id=resolve_active_bucket_id(),
+            operation=authority_operation(ctx),
         )
 
     checklist = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
@@ -497,7 +508,7 @@ def bindings_list(
 ) -> None:
     """List bindings across modelos. All filters are optional refinements."""
     resolved_as_of = _as_of(as_of)
-    known_codes = registry_modelo_codes()
+    known_codes = registry_modelo_codes(operation=authority_operation(ctx))
     if modelo is not None and modelo not in known_codes:
         # The accepted set is registry-derived, so it cannot be a static Choice on
         # the option. A late refusal is allowed for exactly that reason, but it
@@ -555,7 +566,9 @@ def bindings_resolve(
     overrides = dict(deps.parse_binding_override(spec) for spec in binding or ())
     typed_period = deps.resolve_year_period(year, period, modelo=modelo)
     report = _run_query(
-        lambda: registry_bindings_for_scope(modelo, period=typed_period, as_of=_as_of(as_of)),
+        lambda: registry_bindings_for_scope(
+            modelo, period=typed_period, as_of=_as_of(as_of), operation=authority_operation(ctx)
+        ),
         bad_parameter_from_error=deps.bad_parameter_from_error,
     )
     known_ids = {row.binding_id for row in report.rows}
@@ -633,9 +646,13 @@ def formulas(
         resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
         if resolved_scope is not None:
             return registry_formulas_for_registry_scope(
-                modelo, filing_year=resolved_scope.filing_year, period=resolved_scope.period, as_of=_as_of(as_of)
+                modelo,
+                filing_year=resolved_scope.filing_year,
+                period=resolved_scope.period,
+                as_of=_as_of(as_of),
+                operation=authority_operation(ctx),
             )
-        return registry_formulas(modelo, period=period, as_of=_as_of(as_of))
+        return registry_formulas(modelo, period=period, as_of=_as_of(as_of), operation=authority_operation(ctx))
 
     report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
     lines = discovery_rendering.formula_lines(report, explain=explain)
@@ -664,7 +681,7 @@ def formulas(
 
 
 def support_matrix(ctx: typer.Context) -> None:
-    report = registry_support_matrix()
+    report = registry_support_matrix(operation=authority_operation(ctx))
     entries = [discovery_rendering.support_matrix_entry_payload(entry) for entry in report.entries]
     result = ModeloSupportMatrixResult(modelo_count=len(entries), entries=entries)
     lines = [

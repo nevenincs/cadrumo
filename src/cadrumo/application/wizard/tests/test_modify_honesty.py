@@ -43,6 +43,7 @@ from pydantic import BaseModel
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n.render import tr
@@ -181,19 +182,24 @@ def test_modify_definition_carries_no_descendant_pages(*, registry_setup_flow: W
     definition carries the count page, the group, and the adoption cross-field
     validator; the MODIFY definition carries none of them.
     """
-    create_definition = setup_flow_definition(registry_setup_flow, attach_descendants=True)
-    modify_definition = setup_flow_definition(registry_setup_flow, attach_descendants=False)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        create_definition = setup_flow_definition(
+            registry_setup_flow, attach_descendants=True, operation=_authority_operation_for_test
+        )
+        modify_definition = setup_flow_definition(
+            registry_setup_flow, attach_descendants=False, operation=_authority_operation_for_test
+        )
 
-    create_familia = next(section for section in create_definition.sections if section.id == "familia")
-    modify_familia = next(section for section in modify_definition.sections if section.id == "familia")
-    create_ids = {item.id for item in create_familia.items}
-    modify_ids = {item.id for item in modify_familia.items}
+        create_familia = next(section for section in create_definition.sections if section.id == "familia")
+        modify_familia = next(section for section in modify_definition.sections if section.id == "familia")
+        create_ids = {item.id for item in create_familia.items}
+        modify_ids = {item.id for item in modify_familia.items}
 
-    assert {DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID} <= create_ids
-    assert DESCENDANT_ENTRY_EVENT_VALIDATOR_ID in create_definition.flow_validator_ids
-    assert DESCENDANTS_COUNT_PAGE_ID not in modify_ids
-    assert DESCENDANTS_GROUP_ID not in modify_ids
-    assert DESCENDANT_ENTRY_EVENT_VALIDATOR_ID not in modify_definition.flow_validator_ids
+        assert {DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID} <= create_ids
+        assert DESCENDANT_ENTRY_EVENT_VALIDATOR_ID in create_definition.flow_validator_ids
+        assert DESCENDANTS_COUNT_PAGE_ID not in modify_ids
+        assert DESCENDANTS_GROUP_ID not in modify_ids
+        assert DESCENDANT_ENTRY_EVENT_VALIDATOR_ID not in modify_definition.flow_validator_ids
 
 
 def test_edit_envelope_carries_descendants_via_door_notice(

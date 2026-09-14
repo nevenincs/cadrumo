@@ -76,6 +76,7 @@ from cadrumo.application.foreign_asset_thresholds import foreign_asset_declarati
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observation_rows,
@@ -565,49 +566,54 @@ def test_year_n_plus_1_btc_delta_exceeds_redeclaration_threshold(tmp_path: Path)
 
 
 def test_redeclaration_advisory_fires_when_grown_btc_token_is_absent_from_current_declaration() -> None:
-    findings = modelo_721_redeclaration_advisory_findings(
-        prior_observation=_year_n_advisory_observation(),
-        current_observation=_year_n_plus_1_advisory_observation(),
-        current_declaration_observation=_year_n_plus_1_advisory_without_btc(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        findings = modelo_721_redeclaration_advisory_findings(
+            prior_observation=_year_n_advisory_observation(),
+            current_observation=_year_n_plus_1_advisory_observation(),
+            current_declaration_observation=_year_n_plus_1_advisory_without_btc(),
+            operation=_authority_operation_for_test,
+        )
 
-    assert len(findings) == 1
-    finding = findings[0]
-    assert finding.kind is ModeloVerificationFindingKind.ADVISORY
-    assert finding.severity is ModeloVerificationFindingSeverity.WARNING
-    assert finding.message_locale_key == "application.modelo.findings.foreign_asset_redeclaration"
-    assert dict(finding.message_facts) == {
-        "modelo_code": _MODELO,
-        "filing_year": _YEAR_N_PLUS_1,
-        "position_key": "monedas_virtuales|1|840|1",
-        "group_code": ForeignAssetObligationGroup._from_registry("monedas_virtuales").value,
-        "prior_value_eur": _BTC_N,
-        "current_value_eur": _BTC_N1,
-        "delta_value_eur": _BTC_N1 - _BTC_N,
-        "redeclaration_increase_threshold_eur": _REDECLARATION_DELTA_EUR,
-    }
-    assert "rd-1065-2007:art-42-quater" in finding.legal_refs
-    assert "aeat-modelo-721-procedure" in finding.source_refs
+        assert len(findings) == 1
+        finding = findings[0]
+        assert finding.kind is ModeloVerificationFindingKind.ADVISORY
+        assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+        assert finding.message_locale_key == "application.modelo.findings.foreign_asset_redeclaration"
+        assert dict(finding.message_facts) == {
+            "modelo_code": _MODELO,
+            "filing_year": _YEAR_N_PLUS_1,
+            "position_key": "monedas_virtuales|1|840|1",
+            "group_code": ForeignAssetObligationGroup._from_registry("monedas_virtuales").value,
+            "prior_value_eur": _BTC_N,
+            "current_value_eur": _BTC_N1,
+            "delta_value_eur": _BTC_N1 - _BTC_N,
+            "redeclaration_increase_threshold_eur": _REDECLARATION_DELTA_EUR,
+        }
+        assert "rd-1065-2007:art-42-quater" in finding.legal_refs
+        assert "aeat-modelo-721-procedure" in finding.source_refs
 
 
 def test_redeclaration_advisory_is_silent_when_required_token_is_declared_or_delta_is_below_threshold() -> None:
-    assert (
-        modelo_721_redeclaration_advisory_findings(
-            prior_observation=_year_n_advisory_observation(),
-            current_observation=_year_n_plus_1_advisory_observation(),
-            current_declaration_observation=_year_n_plus_1_advisory_observation(),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            modelo_721_redeclaration_advisory_findings(
+                prior_observation=_year_n_advisory_observation(),
+                current_observation=_year_n_plus_1_advisory_observation(),
+                current_declaration_observation=_year_n_plus_1_advisory_observation(),
+                operation=_authority_operation_for_test,
+            )
+            == ()
         )
-        == ()
-    )
 
-    assert (
-        modelo_721_redeclaration_advisory_findings(
-            prior_observation=_year_n_advisory_observation(),
-            current_observation=_year_n_plus_1_advisory_observation(),
-            current_declaration_observation=_year_n_plus_1_advisory_without_eth(),
+        assert (
+            modelo_721_redeclaration_advisory_findings(
+                prior_observation=_year_n_advisory_observation(),
+                current_observation=_year_n_plus_1_advisory_observation(),
+                current_declaration_observation=_year_n_plus_1_advisory_without_eth(),
+                operation=_authority_operation_for_test,
+            )
+            == ()
         )
-        == ()
-    )
 
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:

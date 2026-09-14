@@ -27,43 +27,47 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("75.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="pending row",
-            idempotency_key="typed-patch",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-
-    updated = update_manual_transaction_fields(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        patch=ManualLedgerTransactionPatch(
-            description="classified row",
-            business_classification=BusinessClassification.BUSINESS,
-            category_id="office-supplies",
-            taxable_base=Decimal("61.98"),
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("13.02"),
-        ),
-        actor="operator-C",
-        source_command="aeat app ledger classify",
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("75.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="pending row",
+                idempotency_key="typed-patch",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        updated = update_manual_transaction_fields(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+            transaction_id=created.ref.transaction_id,
+            patch=ManualLedgerTransactionPatch(
+                description="classified row",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="office-supplies",
+                taxable_base=Decimal("61.98"),
+                iva_rate=Decimal("0.21"),
+                iva_amount=Decimal("13.02"),
+            ),
+            actor="operator-C",
+            source_command="aeat app ledger classify",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
     assert updated.transaction.raw.description == "classified row"
     assert updated.transaction.business_classification is BusinessClassification.BUSINESS
@@ -82,44 +86,48 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 7, 15),
-            amount=Decimal("250.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="EU supplier statement row",
-            source_jurisdiction="FR",
-            idempotency_key="source-jurisdiction-classify",
-            source_command="aeat app ledger import",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 7, 15, 8, 0, tzinfo=UTC),
-    )
-
-    updated = update_manual_transaction_fields(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        patch=ManualLedgerTransactionPatch(
-            business_classification=BusinessClassification.BUSINESS,
-            category_id="office-supplies",
-            taxable_base=Decimal("250.00"),
-            iva_rate=Decimal("0"),
-            iva_amount=Decimal("0"),
-        ),
-        actor="operator-C",
-        source_command="aeat app ledger classify",
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 7, 15),
+                amount=Decimal("250.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="EU supplier statement row",
+                source_jurisdiction="FR",
+                idempotency_key="source-jurisdiction-classify",
+                source_command="aeat app ledger import",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 7, 15, 8, 0, tzinfo=UTC),
+        )
+
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        updated = update_manual_transaction_fields(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 7, 16, 10, 0, tzinfo=UTC),
-    )
+            transaction_id=created.ref.transaction_id,
+            patch=ManualLedgerTransactionPatch(
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="office-supplies",
+                taxable_base=Decimal("250.00"),
+                iva_rate=Decimal("0"),
+                iva_amount=Decimal("0"),
+            ),
+            actor="operator-C",
+            source_command="aeat app ledger classify",
+            ports=ports,
+            occurred_at=datetime(2026, 7, 16, 10, 0, tzinfo=UTC),
+        )
 
     assert created.transaction.source_jurisdiction == "FR"
     assert updated.transaction.source_jurisdiction == "FR"
@@ -130,43 +138,47 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="office supplies",
-            business_classification=BusinessClassification.BUSINESS,
-            category_id="office-supplies",
-            taxable_base=Decimal("100.00"),
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("21.00"),
-            irpf_category="activity-expense",
-            prorrata_reference="iva-prorrata-2026",
-            idempotency_key="personal-reclassification",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-
-    updated = update_manual_transaction_fields(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
-        actor="operator-C",
-        source_command="aeat app ledger classify",
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="office supplies",
+                business_classification=BusinessClassification.BUSINESS,
+                category_id="office-supplies",
+                taxable_base=Decimal("100.00"),
+                iva_rate=Decimal("0.21"),
+                iva_amount=Decimal("21.00"),
+                irpf_category="activity-expense",
+                prorrata_reference="iva-prorrata-2026",
+                idempotency_key="personal-reclassification",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        updated = update_manual_transaction_fields(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+            transaction_id=created.ref.transaction_id,
+            patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
+            actor="operator-C",
+            source_command="aeat app ledger classify",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
     assert updated.transaction.business_classification is BusinessClassification.PERSONAL
     assert updated.transaction.business_pct is None

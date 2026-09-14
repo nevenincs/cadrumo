@@ -13,6 +13,8 @@ from typing import override
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
@@ -295,14 +297,18 @@ def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_con
 
 
 def test_unsupported_modelo_has_an_exact_application_state_operator_decision_verdict() -> None:
-    with pytest.raises(AggregationUnsupportedModeloError) as raised:
-        provider_for_modelo(" 347 ")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(AggregationUnsupportedModeloError) as raised:
+            provider_for_modelo(" 347 ", operation=_authority_operation_for_test)
 
-    _assert_terminal_contract(
-        raised.value,
-        condition=AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
-        facts={"modelo": " 347 ", "supported_modelos": "|".join(_supported_per_modelo_modelos())},
-    )
+        _assert_terminal_contract(
+            raised.value,
+            condition=AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
+            facts={
+                "modelo": " 347 ",
+                "supported_modelos": "|".join(_supported_per_modelo_modelos(operation=_authority_operation_for_test)),
+            },
+        )
 
 
 @pytest.mark.parametrize("refusal", ["uncovered_deduction", "unmatched_ledger"])

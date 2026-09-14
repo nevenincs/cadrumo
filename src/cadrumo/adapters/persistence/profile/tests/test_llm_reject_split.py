@@ -24,6 +24,7 @@ from cadrumo.application.ledger.llm_classification import (
 )
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationSuggestion
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -46,64 +47,68 @@ def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
 def test_reject_split_suggestion_records_kind_split(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
-    repository, events, _objects = repositories
-    tx_id = _seed_parent(repository)
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        repository, events, _objects = repositories
+        tx_id = _seed_parent(repository)
+        suggestion = suggest_evidence_split(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            transaction_repository=repository,
+            read_evidence=False,
+            operation=_authority_operation_for_test,
+        )
 
-    result = reject_llm_suggestion(
-        suggestion,
-        bucket_id=_BUCKET,
-        reason="do not split this",
-        source_command="aeat app ledger classify --llm --reject",
-        transaction_repository=repository,
-        bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
+        result = reject_llm_suggestion(
+            suggestion,
+            bucket_id=_BUCKET,
+            reason="do not split this",
+            source_command="aeat app ledger classify --llm --reject",
+            transaction_repository=repository,
+            bucket_event_repository=events,
+            occurred_at=_NOW,
+        )
 
-    assert result.suggestion_kind == "split"
-    recorded = events.load().for_bucket(
-        _BUCKET,
-        event_types=(BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,),
-    )
-    payload = recorded[0].payload
-    assert payload["suggestion_kind"] == "split"
-    assert payload["child_count"] == "2"
-    txn = repository.load().get(tx_id)
-    assert txn is not None
-    assert txn.lifecycle_state is TransactionLifecycleState.ACTIVE
+        assert result.suggestion_kind == "split"
+        recorded = events.load().for_bucket(
+            _BUCKET,
+            event_types=(BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,),
+        )
+        payload = recorded[0].payload
+        assert payload["suggestion_kind"] == "split"
+        assert payload["child_count"] == "2"
+        txn = repository.load().get(tx_id)
+        assert txn is not None
+        assert txn.lifecycle_state is TransactionLifecycleState.ACTIVE
 
 
 def test_reject_non_active_transaction_raises(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
-    repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
-    apply_evidence_split(
-        suggestion,
-        bucket_id=_BUCKET,
-        source_command="aeat app ledger split --llm --apply",
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    )
-
-    with pytest.raises(TransactionValidationError, match="active"):
-        reject_llm_suggestion(
-            _classification_suggestion(tx_id),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        repository, events, _objects = repositories
+        tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+        suggestion = suggest_evidence_split(
             bucket_id=_BUCKET,
-            source_command="aeat app ledger classify --llm --reject",
+            transaction_id=tx_id,
+            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            transaction_repository=repository,
+            read_evidence=False,
+            operation=_authority_operation_for_test,
+        )
+        apply_evidence_split(
+            suggestion,
+            bucket_id=_BUCKET,
+            source_command="aeat app ledger split --llm --apply",
             transaction_repository=repository,
             bucket_event_repository=events,
         )
+
+        with pytest.raises(TransactionValidationError, match="active"):
+            reject_llm_suggestion(
+                _classification_suggestion(tx_id),
+                bucket_id=_BUCKET,
+                source_command="aeat app ledger classify --llm --reject",
+                transaction_repository=repository,
+                bucket_event_repository=events,
+            )

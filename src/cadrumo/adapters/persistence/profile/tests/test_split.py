@@ -46,22 +46,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 def test_split_transitions_parent_to_split_and_creates_children(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
+    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
 
-    result = split_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=parent_result.ref.transaction_id,
-        children=(
-            SplitChildCommand(amount=Decimal("60.00"), description="business portion"),
-            SplitChildCommand(amount=Decimal("40.00"), description="personal portion"),
-        ),
-        actor="operator-A",
-        reason="separate business and personal",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-        occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        result = split_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=parent_result.ref.transaction_id,
+            children=(
+                SplitChildCommand(amount=Decimal("60.00"), description="business portion"),
+                SplitChildCommand(amount=Decimal("40.00"), description="personal portion"),
+            ),
+            actor="operator-A",
+            reason="separate business and personal",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
 
     catalogue = transaction_repository.load()
     parent = catalogue.get(result.parent_transaction_id)
@@ -87,20 +91,24 @@ def test_split_transitions_parent_to_split_and_creates_children(secure_objects: 
 
 def test_split_emits_single_event_anchored_on_parent(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
+    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
 
-    result = split_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=parent_result.ref.transaction_id,
-        children=(
-            SplitChildCommand(amount=Decimal("30.00"), description="part one"),
-            SplitChildCommand(amount=Decimal("70.00"), description="part two"),
-        ),
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        result = split_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=parent_result.ref.transaction_id,
+            children=(
+                SplitChildCommand(amount=Decimal("30.00"), description="part one"),
+                SplitChildCommand(amount=Decimal("70.00"), description="part two"),
+            ),
+            actor="operator-A",
+            ports=ports,
+        )
 
     catalogue = event_repository.load()
     split_events = [
@@ -117,72 +125,88 @@ def test_split_emits_single_event_anchored_on_parent(secure_objects: SecureObjec
 
 def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
+    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
 
-    first = split_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=parent_result.ref.transaction_id,
-        children=(
-            SplitChildCommand(amount=Decimal("30.00"), description="a"),
-            SplitChildCommand(amount=Decimal("70.00"), description="b"),
-        ),
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-    )
-    archive_manual_transaction(
-        bucket_id=_BUCKET_ID,
-        transaction_id=first.child_transaction_ids[0],
-        actor="operator-A",
-        source_command="aeat app ledger archive",
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        first = split_transaction(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-    )
-    archive_manual_transaction(
+            transaction_id=parent_result.ref.transaction_id,
+            children=(
+                SplitChildCommand(amount=Decimal("30.00"), description="a"),
+                SplitChildCommand(amount=Decimal("70.00"), description="b"),
+            ),
+            actor="operator-A",
+            ports=ports,
+        )
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=first.child_transaction_ids[1],
-        actor="operator-A",
-        source_command="aeat app ledger archive",
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        archive_manual_transaction(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-    )
+            transaction_id=first.child_transaction_ids[0],
+            actor="operator-A",
+            source_command="aeat app ledger archive",
+            ports=ports,
+        )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        archive_manual_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=first.child_transaction_ids[1],
+            actor="operator-A",
+            source_command="aeat app ledger archive",
+            ports=ports,
+        )
 
     # Independent invocation with identical inputs against a fresh parent
     # must yield an identical split_group_id (content-addressed).
-    other_parent_result = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 9),
-            amount=Decimal("100.00"),
-            direction=TransactionDirection.OUTGOING,
-            counterparty="Vendor SL",
-            description="materials",
-            actor="operator-A",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 9, 9, 30, tzinfo=UTC),
-    )
-    second = split_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=other_parent_result.ref.transaction_id,
-        children=(
-            SplitChildCommand(amount=Decimal("30.00"), description="a"),
-            SplitChildCommand(amount=Decimal("70.00"), description="b"),
-        ),
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-    )
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        other_parent_result = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 9),
+                amount=Decimal("100.00"),
+                direction=TransactionDirection.OUTGOING,
+                counterparty="Vendor SL",
+                description="materials",
+                actor="operator-A",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 9, 9, 30, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        second = split_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=other_parent_result.ref.transaction_id,
+            children=(
+                SplitChildCommand(amount=Decimal("30.00"), description="a"),
+                SplitChildCommand(amount=Decimal("70.00"), description="b"),
+            ),
+            actor="operator-A",
+            ports=ports,
+        )
     # Different parent id -> different group id
     assert first.split_group_id != second.split_group_id
 
@@ -195,18 +219,22 @@ def test_split_preserves_parent_amount_as_persisted_child_sum(secure_objects: Se
     a hand-computed Decimal matches a runtime-computed Decimal.
     """
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(transaction_repository, event_repository)
+    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
     amounts = (Decimal("45.50"), Decimal("54.50"))
-    result = split_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=parent_result.ref.transaction_id,
-        children=tuple(
-            SplitChildCommand(amount=value, description=f"slice-{idx}") for idx, value in enumerate(amounts)
-        ),
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        result = split_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=parent_result.ref.transaction_id,
+            children=tuple(
+                SplitChildCommand(amount=value, description=f"slice-{idx}") for idx, value in enumerate(amounts)
+            ),
+            actor="operator-A",
+            ports=ports,
+        )
     persisted = {child.raw.amount for child in result.child_transactions}
     assert persisted == set(amounts)

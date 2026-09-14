@@ -20,8 +20,11 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
+    invoice_draft_extraction_kwargs,
     isolated_settings,
     secure_objects,
 )
@@ -48,11 +51,17 @@ def _store(
     return _make_svc(isolated_settings, secure_objects).add(bucket_id=_BUCKET_ID, source_path=source).record.evidence_id
 
 
-def _resolutions(*, evidence_id: str, isolated_settings: Settings) -> tuple[FindingResolution, ...]:
+def _resolutions(
+    *,
+    evidence_id: str,
+    isolated_settings: Settings,
+    authority: InvoiceAuthorityFixture,
+) -> tuple[FindingResolution, ...]:
     draft = extract_invoice_draft_from_evidence(
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
     return tuple(
         FindingResolution(
@@ -71,6 +80,7 @@ def _confirm(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
     invoice_class: InvoiceClass | None = None,
+    authority: InvoiceAuthorityFixture,
 ):
     evidence_id = _store(
         data,
@@ -84,8 +94,12 @@ def _confirm(
         counterparty_country="ES",
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
-        resolutions=_resolutions(evidence_id=evidence_id, isolated_settings=isolated_settings),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        resolutions=_resolutions(
+            evidence_id=evidence_id,
+            isolated_settings=isolated_settings,
+            authority=authority,
+        ),
         invoice_class=invoice_class,
     )
 
@@ -106,12 +120,14 @@ def test_the_existing_oo_corpus_record_confirms_as_ordinary(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     result = _confirm(
         _OO.read_bytes(),
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.invoice.invoice_class is InvoiceClass._from_registry("ORDINARIA")
@@ -121,12 +137,14 @@ def test_the_existing_or_corpus_record_confirms_as_corrective(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     result = _confirm(
         _OR.read_bytes(),
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
@@ -137,6 +155,7 @@ def test_a_record_declaring_no_class_keeps_the_corrective_reference_fallback(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     data = _OR.read_bytes().replace(b"<InvoiceClass>OR</InvoiceClass>", b"")
     assert data != _OR.read_bytes()
@@ -146,6 +165,7 @@ def test_a_record_declaring_no_class_keeps_the_corrective_reference_fallback(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
@@ -155,6 +175,7 @@ def test_a_declared_ordinary_class_does_not_silently_take_the_corrective_inferen
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     data = _OR.read_bytes().replace(b"<InvoiceClass>OR</InvoiceClass>", b"<InvoiceClass>OO</InvoiceClass>")
     evidence_id = _store(
@@ -167,6 +188,7 @@ def test_a_declared_ordinary_class_does_not_silently_take_the_corrective_inferen
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
     assert DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED in {finding.kind for finding in draft.discrepancies}
@@ -177,8 +199,12 @@ def test_a_declared_ordinary_class_does_not_silently_take_the_corrective_inferen
             counterparty_country="ES",
             evidence_id=evidence_id,
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
-            resolutions=_resolutions(evidence_id=evidence_id, isolated_settings=isolated_settings),
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+            resolutions=_resolutions(
+                evidence_id=evidence_id,
+                isolated_settings=isolated_settings,
+                authority=invoice_authority,
+            ),
         )
 
 
@@ -186,6 +212,7 @@ def test_the_copy_of_an_ordinary_invoice_keeps_the_ordinary_domain_class(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     data = _with_declared_class(_OO.read_bytes(), current=b"OO", replacement=b"CO")
 
@@ -194,6 +221,7 @@ def test_the_copy_of_an_ordinary_invoice_keeps_the_ordinary_domain_class(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.invoice.invoice_class is InvoiceClass._from_registry("ORDINARIA")
@@ -203,6 +231,7 @@ def test_the_copy_of_a_corrective_invoice_keeps_the_corrective_domain_class(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     data = _with_declared_class(_OR.read_bytes(), current=b"OR", replacement=b"CR")
 
@@ -211,6 +240,7 @@ def test_the_copy_of_a_corrective_invoice_keeps_the_corrective_domain_class(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
@@ -223,6 +253,7 @@ def test_a_summary_declaration_is_reported_without_overwriting_the_operator_clas
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     data = _with_declared_class(_OO.read_bytes(), current=b"OO", replacement=declared)
     evidence_id = _store(
@@ -235,6 +266,7 @@ def test_a_summary_declaration_is_reported_without_overwriting_the_operator_clas
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
     assert DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED in {finding.kind for finding in draft.discrepancies}
@@ -244,8 +276,12 @@ def test_a_summary_declaration_is_reported_without_overwriting_the_operator_clas
         counterparty_country="ES",
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
-        resolutions=_resolutions(evidence_id=evidence_id, isolated_settings=isolated_settings),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        resolutions=_resolutions(
+            evidence_id=evidence_id,
+            isolated_settings=isolated_settings,
+            authority=invoice_authority,
+        ),
         invoice_class=InvoiceClass._from_registry("SIMPLIFICADA"),
     )
 
@@ -258,6 +294,7 @@ def test_a_corrective_declaration_without_a_corrective_reference_is_contradicted
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     data = _without_corrective_reference(_OR.read_bytes())
     data = _with_declared_class(data, current=b"OR", replacement=declared)
@@ -271,6 +308,7 @@ def test_a_corrective_declaration_without_a_corrective_reference_is_contradicted
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
     assert DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED in {finding.kind for finding in draft.discrepancies}

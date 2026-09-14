@@ -53,6 +53,10 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import calcul
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
@@ -76,6 +80,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -248,16 +253,17 @@ def _calculate_and_verify(
             ),
             clock=_CLOCK_N_PLUS_1,
         )
-        report = verify_modelo_revision(
-            revision.calculation_revision_id,
-            actor="system",
-            workflow_profile=_resident_profile(),
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            calculation_observation_repository=observation_repository,
-            clock=_CLOCK_N_PLUS_1,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=build_test_verification_repository_bundle(),
+                actor="system",
+                workflow_profile=_resident_profile(),
+                clock=_CLOCK_N_PLUS_1,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         return revision, report
 
 
@@ -343,16 +349,20 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
         resolution_n1 = resolve_bucket_source_mesh(
             snapshot_n1,
             work_unit_n1,
-            transaction_repository=None,
-            invoice_repository=None,
+            ports=calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_unit_repository,
+            ),
             foreign_asset_observations=(),
             foreign_asset_row_observations=(),
         )
         resolution_n2 = resolve_bucket_source_mesh(
             snapshot_n2,
             work_unit_n2,
-            transaction_repository=None,
-            invoice_repository=None,
+            ports=calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_unit_repository,
+            ),
             foreign_asset_observations=(),
             foreign_asset_row_observations=(),
         )
@@ -373,12 +383,14 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
         expected_binding_values_n1
     )
 
-    projected = modelo_720_prior_baseline_observation(
-        binding_values=resolution_n1.binding_values,
-        modelo_revision=snapshot_n1.revision,
-        filing_year=work_unit_n1.filing_year,
-        period=work_unit_n1.period.registry_token,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        projected = modelo_720_prior_baseline_observation(
+            binding_values=resolution_n1.binding_values,
+            modelo_revision=snapshot_n1.revision,
+            filing_year=work_unit_n1.filing_year,
+            period=work_unit_n1.period.registry_token,
+            operation=operation,
+        )
     projected_by_casilla = {item.casilla_id: item for item in projected.observations}
     expected_source_casillas = {
         _source_casilla_id(binding)

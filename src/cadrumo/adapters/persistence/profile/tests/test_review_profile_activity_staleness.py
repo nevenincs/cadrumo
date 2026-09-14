@@ -51,6 +51,7 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.config import load_settings
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -119,35 +120,39 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
 
 
 def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: None) -> None:
-    _create_profile_with_activity("asesoria")
-    bucket_id = _active_bucket_id()
-    schema_provider = _schema_provider()
-    draft = _ready_draft(schema_provider)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _create_profile_with_activity("asesoria")
+        bucket_id = _active_bucket_id()
+        schema_provider = _schema_provider()
+        draft = _ready_draft(schema_provider)
 
-    with open_test_profile_session(bucket_id):
-        approved = approve_draft(
-            draft,
-            bucket_id=bucket_id,
-            approved_by="operator",
-            schema_provider=schema_provider,
-        )
-    assert approved.status is ModeloDraftStatus.APROBADO
-    assert approved.approval_basis is not None
-    # The real profile was loaded (non-vacuous): the digest is not the empty one.
-    assert approved.approval_basis.profile_activity_fingerprint != content_hash_hex([])
+        with open_test_profile_session(bucket_id):
+            approved = approve_draft(
+                draft,
+                bucket_id=bucket_id,
+                approved_by="operator",
+                schema_provider=schema_provider,
+                operation=_authority_operation_for_test,
+            )
+        assert approved.status is ModeloDraftStatus.APROBADO
+        assert approved.approval_basis is not None
+        # The real profile was loaded (non-vacuous): the digest is not the empty one.
+        assert approved.approval_basis.profile_activity_fingerprint != content_hash_hex([])
 
-    # The taxpayer edits a relation-scoping profile fact through the real
-    # application profile primitive; the self-loaded wizard-free projection
-    # digest changes.
-    _edit_profile_activity("comercio")
+        # The taxpayer edits a relation-scoping profile fact through the real
+        # application profile primitive; the self-loaded wizard-free projection
+        # digest changes.
+        _edit_profile_activity("comercio")
 
-    with open_test_profile_session(bucket_id):
-        reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
+        with open_test_profile_session(bucket_id):
+            reasons = approval_stale_reasons(
+                approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+            )
 
-    # Only the taxpayer profile changed: draft, transactions, invoices, prior
-    # observations, category profiles, and schema are unchanged, so
-    # PROFILE_ACTIVITY_CHANGED is the sole reason.
-    assert reasons == (ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED,)
+        # Only the taxpayer profile changed: draft, transactions, invoices, prior
+        # observations, category profiles, and schema are unchanged, so
+        # PROFILE_ACTIVITY_CHANGED is the sole reason.
+        assert reasons == (ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED,)
 
 
 def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> None:
@@ -158,22 +163,26 @@ def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> No
     Approving against a genuinely-loaded profile and re-checking without editing
     it must yield an empty reason tuple.
     """
-    _create_profile_with_activity("asesoria")
-    bucket_id = _active_bucket_id()
-    schema_provider = _schema_provider()
-    draft = _ready_draft(schema_provider)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _create_profile_with_activity("asesoria")
+        bucket_id = _active_bucket_id()
+        schema_provider = _schema_provider()
+        draft = _ready_draft(schema_provider)
 
-    with open_test_profile_session(bucket_id):
-        approved = approve_draft(
-            draft,
-            bucket_id=bucket_id,
-            approved_by="operator",
-            schema_provider=schema_provider,
-        )
-        # No mutation to any source between approval and the staleness check.
-        reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
+        with open_test_profile_session(bucket_id):
+            approved = approve_draft(
+                draft,
+                bucket_id=bucket_id,
+                approved_by="operator",
+                schema_provider=schema_provider,
+                operation=_authority_operation_for_test,
+            )
+            # No mutation to any source between approval and the staleness check.
+            reasons = approval_stale_reasons(
+                approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+            )
 
-    assert approved.approval_basis is not None
-    assert approved.approval_basis.profile_activity_fingerprint != content_hash_hex([])
-    assert ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED not in reasons
-    assert reasons == ()
+        assert approved.approval_basis is not None
+        assert approved.approval_basis.profile_activity_fingerprint != content_hash_hex([])
+        assert ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED not in reasons
+        assert reasons == ()

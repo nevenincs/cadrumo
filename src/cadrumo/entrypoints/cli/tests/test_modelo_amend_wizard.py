@@ -55,7 +55,9 @@ from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.justificante.schema import Justificante
+from ....entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._modelo_amend_wizard_cli import (
@@ -257,9 +259,16 @@ def _scripted_amend(
     with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(unit.current_filing_record_id)
+        baseline = get_filing_record(
+            unit.current_filing_record_id,
+            ports=build_filing_action_ports(bucket_id=bucket_id),
+        )
         casilla_rows = _baseline_casilla_rows(unit)
-        baseline_revision = get_calculation_revision(baseline.calculation_revision_id)
+        with bundled_indexed_authority().operation() as operation:
+            baseline_revision = get_calculation_revision(
+                baseline.calculation_revision_id,
+                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            )
         amendable = _amendable_rows(casilla_rows, baseline_revision)
         by_number = {row.number: row for row in amendable}
         selected_ids = [by_number[number].casilla_id for number in change_numbers]
@@ -355,9 +364,16 @@ def _permitted_kind_choice_values(
     with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(unit.current_filing_record_id)
+        baseline = get_filing_record(
+            unit.current_filing_record_id,
+            ports=build_filing_action_ports(bucket_id=bucket_id),
+        )
         casilla_rows = _baseline_casilla_rows(unit)
-        baseline_revision = get_calculation_revision(baseline.calculation_revision_id)
+        with bundled_indexed_authority().operation() as operation:
+            baseline_revision = get_calculation_revision(
+                baseline.calculation_revision_id,
+                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            )
         amendable = _amendable_rows(casilla_rows, baseline_revision)
         by_number = {row.number: row for row in amendable}
         selected = tuple(by_number[number] for number in change_numbers)
@@ -701,9 +717,16 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
     with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(unit.current_filing_record_id)
+        baseline = get_filing_record(
+            unit.current_filing_record_id,
+            ports=build_filing_action_ports(bucket_id=bucket_id),
+        )
         casilla_rows = _baseline_casilla_rows(unit)
-        baseline_revision = get_calculation_revision(baseline.calculation_revision_id)
+        with bundled_indexed_authority().operation() as operation:
+            baseline_revision = get_calculation_revision(
+                baseline.calculation_revision_id,
+                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            )
         amendable = _amendable_rows(casilla_rows, baseline_revision)
         _ACTIVE_RUNS[run_token] = {}
         try:

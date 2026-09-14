@@ -41,20 +41,14 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import (
     AggregationValidationError,
 )
-from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
@@ -66,7 +60,6 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,
@@ -76,6 +69,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -87,6 +81,11 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import (
+    build_calculation_action_ports,
+    build_retencion_observation_ports,
+    build_work_lifecycle_ports,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -236,7 +235,7 @@ def _retencion_observation(nif: str) -> RetencionObservation:
 
 def _seed_180_retencion_observations() -> Decimal:
     period = Period.from_year_and_code(_YEAR, "0A")
-    RetencionObservationRepository().replace_observations(
+    build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.replace_observations(
         modelo="180",
         filing_year=_YEAR,
         period=period,
@@ -258,10 +257,6 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
     expected = _seed_115_quarters(obs_repo=obs_repo)
     expected_perceptor_count = _seed_180_retencion_observations()
 
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     modelos_180, _catalogues_180 = bundled_registry_tree()
     modelo_180 = next(candidate for candidate in modelos_180 if candidate.id == "180")
     revision_180 = select_revision(modelo_180, filing_year=_YEAR, period="0A")
@@ -271,20 +266,16 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
         revision_id=revision_180.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
     )
 
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            clock=_T1,
+        )
 
     casilla_values = result.revision.casilla_values
     # Fold-in fires for the monetary outputs. The perceptor count is a separate
@@ -339,11 +330,13 @@ def test_relation_target_collision_refused_by_mesh_guard(secure_objects: SecureO
         revision=snapshot_180.revision,
         calculated_at=_T1,
     )
-    relation_resolution = RelationPrefillSourceResolver(
-        repository=obs_repo,
-        profile_read_ports=empty_profile_read_ports(),
-        registry_snapshot=snapshot_180,
-    ).resolve(context)
+    with bundled_indexed_authority().operation() as operation:
+        relation_resolution = RelationPrefillSourceResolver(
+            repository=obs_repo,
+            profile_read_ports=empty_profile_read_ports(),
+            operation=operation,
+            registry_snapshot=snapshot_180,
+        ).resolve(context)
     # Non-vacuous: the relation resolution must have materialised at least one
     # target binding for the collision to be possible.
     assert relation_resolution.binding_values, "relation resolver materialised no target bindings"

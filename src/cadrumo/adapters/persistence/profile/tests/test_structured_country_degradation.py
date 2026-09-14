@@ -89,6 +89,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.iva_category_resolution import IvaCategoryOutcome
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from cadrumo.domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
 from cadrumo.domain.iva.schema import IvaCategory
@@ -217,8 +218,15 @@ class TestTheProbeStillMeansWhatItSays:
         through to ``None``. Both are real ways the selection could stop meaning
         what the cases below read it as, and neither follows from the resolver.
         """
-        assert record_country_code_status(_UNCATALOGUED_ALPHA2) is StatedCountryCodeStatus.UNCATALOGUED
-        assert record_country_code_status(_UNCATALOGUED_ALPHA3) is StatedCountryCodeStatus.UNCATALOGUED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert (
+                record_country_code_status(_UNCATALOGUED_ALPHA2, operation=_authority_operation_for_test)
+                is StatedCountryCodeStatus.UNCATALOGUED
+            )
+            assert (
+                record_country_code_status(_UNCATALOGUED_ALPHA3, operation=_authority_operation_for_test)
+                is StatedCountryCodeStatus.UNCATALOGUED
+            )
 
     def test_the_probe_is_a_real_jurisdiction_and_not_a_reserved_range(self) -> None:
         """UNCATALOGUED must be earned by absence, never by ISO reservation.
@@ -229,12 +237,25 @@ class TestTheProbeStillMeansWhatItSays:
         recognised, a reserved code would report as our catalogue gap and this
         suite would happily use it as a stand-in for a real country.
         """
-        assert record_country_code_status(_UNASSIGNED_ALPHA2) is StatedCountryCodeStatus.UNASSIGNED
-        assert record_country_code_status(_UNASSIGNED_ALPHA3) is StatedCountryCodeStatus.UNASSIGNED
-        # Range interiors as well as the pinned probes, so a set that had lost
-        # its ranges and kept only the two literals this file names would fail.
-        assert record_country_code_status("QMA") is StatedCountryCodeStatus.UNASSIGNED
-        assert record_country_code_status("XZZ") is StatedCountryCodeStatus.UNASSIGNED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert (
+                record_country_code_status(_UNASSIGNED_ALPHA2, operation=_authority_operation_for_test)
+                is StatedCountryCodeStatus.UNASSIGNED
+            )
+            assert (
+                record_country_code_status(_UNASSIGNED_ALPHA3, operation=_authority_operation_for_test)
+                is StatedCountryCodeStatus.UNASSIGNED
+            )
+            # Range interiors as well as the pinned probes, so a set that had lost
+            # its ranges and kept only the two literals this file names would fail.
+            assert (
+                record_country_code_status("QMA", operation=_authority_operation_for_test)
+                is StatedCountryCodeStatus.UNASSIGNED
+            )
+            assert (
+                record_country_code_status("XZZ", operation=_authority_operation_for_test)
+                is StatedCountryCodeStatus.UNASSIGNED
+            )
 
     def test_the_catalogued_control_is_still_catalogued(self) -> None:
         """The other side of the same hostage problem, on the negative control.
@@ -244,7 +265,11 @@ class TestTheProbeStillMeansWhatItSays:
         -- an advisory suppressed because nothing was stated rather than because
         the country resolved.
         """
-        assert record_country_code_status(_CATALOGUED_ALPHA3) is StatedCountryCodeStatus.CATALOGUED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert (
+                record_country_code_status(_CATALOGUED_ALPHA3, operation=_authority_operation_for_test)
+                is StatedCountryCodeStatus.CATALOGUED
+            )
 
 
 class TestTheRecordsOwnTokenSurvivesTheLookup:
@@ -413,23 +438,24 @@ class TestTheOperatorIsTold:
         re-reads an invoice that reads perfectly. It is our vocabulary that is
         short, and the sentence has to say so.
         """
-        draft = _draft(
-            _stating(_UNCATALOGUED_ALPHA3),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_tha_advisory.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _stating(_UNCATALOGUED_ALPHA3),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_tha_advisory.xml",
+            )
 
-        advisory = country_vocabulary_advisory(draft)
+            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
 
-        assert advisory is not None
-        assert advisory.fields == ("supplier_stated_country_code",)
-        warning = advisory.parties[0]
-        assert warning.status is StatedCountryCodeStatus.UNCATALOGUED
-        assert warning.stated_code == _UNCATALOGUED_ALPHA3
-        assert repr(_UNCATALOGUED_ALPHA3) in warning.detail
-        assert warning.role == "issuing"
+            assert advisory is not None
+            assert advisory.fields == ("supplier_stated_country_code",)
+            warning = advisory.parties[0]
+            assert warning.status is StatedCountryCodeStatus.UNCATALOGUED
+            assert warning.stated_code == _UNCATALOGUED_ALPHA3
+            assert repr(_UNCATALOGUED_ALPHA3) in warning.detail
+            assert warning.role == "issuing"
 
     def test_an_uncatalogued_alpha2_raises_the_same_kind(
         self,
@@ -443,19 +469,20 @@ class TestTheOperatorIsTold:
         a route that reached only one of them would leave the population it
         missed exactly as silent as before.
         """
-        draft = _draft(
-            _stating(_UNCATALOGUED_ALPHA2),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_th_advisory.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _stating(_UNCATALOGUED_ALPHA2),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_th_advisory.xml",
+            )
 
-        advisory = country_vocabulary_advisory(draft)
+            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
 
-        assert advisory is not None
-        assert advisory.parties[0].status is StatedCountryCodeStatus.UNCATALOGUED
-        assert advisory.parties[0].stated_code == _UNCATALOGUED_ALPHA2
+            assert advisory is not None
+            assert advisory.parties[0].status is StatedCountryCodeStatus.UNCATALOGUED
+            assert advisory.parties[0].stated_code == _UNCATALOGUED_ALPHA2
 
     def test_an_unassigned_alpha2_raises_the_typo_advisory_instead(
         self,
@@ -464,19 +491,20 @@ class TestTheOperatorIsTold:
         tmp_path: Path,
     ) -> None:
         """The two kinds stay apart on the real path, not only on hand-built drafts."""
-        draft = _draft(
-            _stating(_UNASSIGNED_ALPHA2),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_xx_advisory.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _stating(_UNASSIGNED_ALPHA2),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_xx_advisory.xml",
+            )
 
-        advisory = country_vocabulary_advisory(draft)
+            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
 
-        assert advisory is not None
-        assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
-        assert advisory.by_status(StatedCountryCodeStatus.UNCATALOGUED) == ()
+            assert advisory is not None
+            assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
+            assert advisory.by_status(StatedCountryCodeStatus.UNCATALOGUED) == ()
 
     def test_an_unassigned_alpha3_raises_the_typo_advisory_too(
         self,
@@ -497,20 +525,21 @@ class TestTheOperatorIsTold:
         Facturae states the country in alpha-3 and is the format most of this
         corpus arrives in, so this is not the rare spelling.
         """
-        draft = _draft(
-            _stating(_UNASSIGNED_ALPHA3),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_unassigned_alpha3_advisory.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _stating(_UNASSIGNED_ALPHA3),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_unassigned_alpha3_advisory.xml",
+            )
 
-        advisory = country_vocabulary_advisory(draft)
+            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
 
-        assert advisory is not None
-        assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
-        assert advisory.parties[0].stated_code == _UNASSIGNED_ALPHA3
-        assert advisory.by_status(StatedCountryCodeStatus.UNCATALOGUED) == ()
+            assert advisory is not None
+            assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
+            assert advisory.parties[0].stated_code == _UNASSIGNED_ALPHA3
+            assert advisory.by_status(StatedCountryCodeStatus.UNCATALOGUED) == ()
 
     def test_a_document_stating_no_country_raises_no_advisory(
         self,
@@ -524,15 +553,16 @@ class TestTheOperatorIsTold:
         would pass against an advisory that fired on every document, and the
         operator would be no better off than with one that fired on none.
         """
-        draft = _draft(
-            _corpus(_WITHOUT_ADDRESSES),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_silent_advisory.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _corpus(_WITHOUT_ADDRESSES),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_silent_advisory.xml",
+            )
 
-        assert country_vocabulary_advisory(draft) is None
+            assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is None
 
     def test_a_catalogued_country_raises_no_advisory(
         self,
@@ -546,15 +576,16 @@ class TestTheOperatorIsTold:
         places. An advisory here would be noise on the majority population and
         would train the operator to clear the channel unread.
         """
-        draft = _draft(
-            _corpus(_WITH_ADDRESSES),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_esp_advisory.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _corpus(_WITH_ADDRESSES),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_esp_advisory.xml",
+            )
 
-        assert country_vocabulary_advisory(draft) is None
+            assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is None
 
 
 class TestTheTwoDocumentsAreNoLongerIdentical:
@@ -574,31 +605,34 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
         The seller's projection is compared field by field so the difference has
         to be in the country surface rather than anywhere else in the draft.
         """
-        unplaceable = _draft(
-            _stating(_UNCATALOGUED_ALPHA3),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_compare_tha.xml",
-        )
-        silent = _draft(
-            _corpus(_WITHOUT_ADDRESSES),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_compare_silent.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            unplaceable = _draft(
+                _stating(_UNCATALOGUED_ALPHA3),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_compare_tha.xml",
+            )
+            silent = _draft(
+                _corpus(_WITHOUT_ADDRESSES),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_compare_silent.xml",
+            )
 
-        # The resolved field agrees on both, which is exactly the collapse: the
-        # surface everything downstream is keyed by cannot tell them apart.
-        assert unplaceable.supplier_country_code == silent.supplier_country_code is None
-        # And every channel that now can.
-        assert unplaceable.supplier_stated_country_code != silent.supplier_stated_country_code
-        assert _country_envelopes(unplaceable, "supplier_stated_country_code") != _country_envelopes(
-            silent,
-            "supplier_stated_country_code",
-        )
-        assert (country_vocabulary_advisory(unplaceable) is None) != (country_vocabulary_advisory(silent) is None)
+            # The resolved field agrees on both, which is exactly the collapse: the
+            # surface everything downstream is keyed by cannot tell them apart.
+            assert unplaceable.supplier_country_code == silent.supplier_country_code is None
+            # And every channel that now can.
+            assert unplaceable.supplier_stated_country_code != silent.supplier_stated_country_code
+            assert _country_envelopes(unplaceable, "supplier_stated_country_code") != _country_envelopes(
+                silent,
+                "supplier_stated_country_code",
+            )
+            assert (country_vocabulary_advisory(unplaceable, operation=_authority_operation_for_test) is None) != (
+                country_vocabulary_advisory(silent, operation=_authority_operation_for_test) is None
+            )
 
     def test_the_unplaceable_country_still_resolves_no_territory(
         self,
@@ -616,32 +650,35 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
         On the issued side a wrongly-settled third country is zero-rated export
         treatment, so the direction this guards is the one that costs money.
         """
-        draft = _draft(
-            _stating(_UNCATALOGUED_ALPHA3),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_tha_ladder.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _stating(_UNCATALOGUED_ALPHA3),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_tha_ladder.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=draft,
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=draft,
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is None
-        assert resolved.rung is None
-        # The buyer's side still resolves from the same document, so this reads
-        # as a refusal about the unplaceable token rather than a ladder that
-        # stopped answering.
-        assert resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=draft,
-            kind=InvoiceKind.ISSUED,
-            repository=repository,
-        ).scope is IvaTerritorialScope._from_registry("es_mainland")
+            assert resolved.scope is None
+            assert resolved.rung is None
+            # The buyer's side still resolves from the same document, so this reads
+            # as a refusal about the unplaceable token rather than a ladder that
+            # stopped answering.
+            assert resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=draft,
+                kind=InvoiceKind.ISSUED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            ).scope is IvaTerritorialScope._from_registry("es_mainland")
 
 
 #: The authored UBL export specimen. It declares UNTDID ``G`` -- free export
@@ -914,52 +951,57 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         never carry it and a fixture that withheld it would be testing an
         unfinished setup rather than the country axis.
         """
-        draft = _draft(
-            _export_billed_to(_UNCATALOGUED_ALPHA2),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="ubl_export_established_filer.xml",
-        )
-        declared = DeclaredFacts(
-            stated_category=DeclaredFact(
-                value=IvaCategory("export_third_country_zero_rated"),
-                source=ClassifierInputSource.DOCUMENT_EVIDENCE,
-            ),
-            issuer_scope=DeclaredFact(
-                value=IvaTerritorialScope._from_registry("es_mainland"),
-                source=ClassifierInputSource.PROFILE_AUTHORITY,
-            ),
-            customer_tax_status=DeclaredFact(
-                value=CustomerTaxStatus._from_registry("b2b_iva_registered"),
-                source=ClassifierInputSource.OPERATOR_ASSERTION,
-            ),
-            supply_nature=DeclaredFact(
-                value=SupplyNature.GOODS,
-                source=ClassifierInputSource.OPERATOR_ASSERTION,
-            ),
-        )
-        assembly = assemble_classification_criteria(
-            transaction_date=date(2026, 4, 2),
-            direction=InvoiceKind.ISSUED,
-            inputs=collect_classifier_inputs(draft),
-            declared=declared,
-        )
-        # The counterparty's residency is the ONE thing still open, which is the
-        # precondition the exemption exists for. Asserted rather than assumed:
-        # were another input to go missing, the case below would be measuring
-        # that instead.
-        assert {gap.field for gap in assembly.missing} == {"customer_residency"}
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _export_billed_to(_UNCATALOGUED_ALPHA2),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="ubl_export_established_filer.xml",
+            )
+            declared = DeclaredFacts(
+                stated_category=DeclaredFact(
+                    value=IvaCategory("export_third_country_zero_rated"),
+                    source=ClassifierInputSource.DOCUMENT_EVIDENCE,
+                ),
+                issuer_scope=DeclaredFact(
+                    value=IvaTerritorialScope._from_registry("es_mainland"),
+                    source=ClassifierInputSource.PROFILE_AUTHORITY,
+                ),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                    source=ClassifierInputSource.OPERATOR_ASSERTION,
+                ),
+                supply_nature=DeclaredFact(
+                    value=SupplyNature.GOODS,
+                    source=ClassifierInputSource.OPERATOR_ASSERTION,
+                ),
+            )
+            assembly = assemble_classification_criteria(
+                transaction_date=date(2026, 4, 2),
+                direction=InvoiceKind.ISSUED,
+                inputs=collect_classifier_inputs(draft),
+                declared=declared,
+                operation=_authority_operation_for_test,
+            )
+            # The counterparty's residency is the ONE thing still open, which is the
+            # precondition the exemption exists for. Asserted rather than assumed:
+            # were another input to go missing, the case below would be measuring
+            # that instead.
+            assert {gap.field for gap in assembly.missing} == {"customer_residency"}
 
-        resolution = resolve_ingestion_iva_category(
-            assembly,
-            declared=declared,
-            direction=InvoiceKind.ISSUED,
-            counterparty_country_status=record_country_code_status(draft.customer_stated_country_code),
-        )
+            resolution = resolve_ingestion_iva_category(
+                assembly,
+                declared=declared,
+                direction=InvoiceKind.ISSUED,
+                counterparty_country_status=record_country_code_status(
+                    draft.customer_stated_country_code, operation=_authority_operation_for_test
+                ),
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolution.outcome is not IvaCategoryOutcome.UNSUPPORTED_RELIEF
-        assert resolution.category is IvaCategory("export_third_country_zero_rated")
+            assert resolution.outcome is not IvaCategoryOutcome.UNSUPPORTED_RELIEF
+            assert resolution.category is IvaCategory("export_third_country_zero_rated")
 
     def test_the_filers_own_gap_is_never_forgiven_by_the_counterpartys_excuse(
         self,
@@ -976,45 +1018,50 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         at all, which is to say this row opened it -- so it is gated beside the
         row rather than left for a later reader to find.
         """
-        draft = _draft(
-            _export_billed_to(_UNCATALOGUED_ALPHA2),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="ubl_export_no_filer.xml",
-        )
-        declared = DeclaredFacts(
-            stated_category=DeclaredFact(
-                value=IvaCategory("export_third_country_zero_rated"),
-                source=ClassifierInputSource.DOCUMENT_EVIDENCE,
-            ),
-            customer_tax_status=DeclaredFact(
-                value=CustomerTaxStatus._from_registry("b2b_iva_registered"),
-                source=ClassifierInputSource.OPERATOR_ASSERTION,
-            ),
-            supply_nature=DeclaredFact(
-                value=SupplyNature.GOODS,
-                source=ClassifierInputSource.OPERATOR_ASSERTION,
-            ),
-        )
-        assembly = assemble_classification_criteria(
-            transaction_date=date(2026, 4, 2),
-            direction=InvoiceKind.ISSUED,
-            inputs=collect_classifier_inputs(draft),
-            declared=declared,
-        )
-        assert {gap.field for gap in assembly.missing} == {"customer_residency", "issuer_residency"}
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = _draft(
+                _export_billed_to(_UNCATALOGUED_ALPHA2),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="ubl_export_no_filer.xml",
+            )
+            declared = DeclaredFacts(
+                stated_category=DeclaredFact(
+                    value=IvaCategory("export_third_country_zero_rated"),
+                    source=ClassifierInputSource.DOCUMENT_EVIDENCE,
+                ),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                    source=ClassifierInputSource.OPERATOR_ASSERTION,
+                ),
+                supply_nature=DeclaredFact(
+                    value=SupplyNature.GOODS,
+                    source=ClassifierInputSource.OPERATOR_ASSERTION,
+                ),
+            )
+            assembly = assemble_classification_criteria(
+                transaction_date=date(2026, 4, 2),
+                direction=InvoiceKind.ISSUED,
+                inputs=collect_classifier_inputs(draft),
+                declared=declared,
+                operation=_authority_operation_for_test,
+            )
+            assert {gap.field for gap in assembly.missing} == {"customer_residency", "issuer_residency"}
 
-        resolution = resolve_ingestion_iva_category(
-            assembly,
-            declared=declared,
-            direction=InvoiceKind.ISSUED,
-            counterparty_country_status=record_country_code_status(draft.customer_stated_country_code),
-        )
+            resolution = resolve_ingestion_iva_category(
+                assembly,
+                declared=declared,
+                direction=InvoiceKind.ISSUED,
+                counterparty_country_status=record_country_code_status(
+                    draft.customer_stated_country_code, operation=_authority_operation_for_test
+                ),
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolution.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
-        assert "issuer_residency" in resolution.note
-        assert "customer_residency" not in resolution.note
+            assert resolution.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+            assert "issuer_residency" in resolution.note
+            assert "customer_residency" not in resolution.note
 
     def test_a_catalogued_third_country_needs_no_exemption_at_all(
         self,

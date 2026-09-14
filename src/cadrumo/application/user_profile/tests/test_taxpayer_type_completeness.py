@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..keys_validation import validate_profile_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -24,17 +26,19 @@ _SPOUSE_PREFIX = "renta_spouse."
 
 def test_attribution_entity_is_never_asked_for_spouse_facts() -> None:
     """An attribution entity has no spouse and must not be asked to invent one."""
-    result = validate_profile_values(
-        {
-            "identity.tax_id": "E66012345",
-            "identity.legal_name": "Comunidad de Bienes",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "taxpayer_type.entity_type": "attribution_entity",
-            "activities.description": "arrendamiento",
-        }
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = validate_profile_values(
+            {
+                "identity.tax_id": "E66012345",
+                "identity.legal_name": "Comunidad de Bienes",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "taxpayer_type.entity_type": "attribution_entity",
+                "activities.description": "arrendamiento",
+            },
+            operation=_authority_operation_for_test,
+        )
 
-    assert [path for path in result.missing_required if path.startswith(_SPOUSE_PREFIX)] == []
+        assert [path for path in result.missing_required if path.startswith(_SPOUSE_PREFIX)] == []
 
 
 def test_a_joint_declaration_does_demand_a_spouse_fact() -> None:
@@ -44,14 +48,16 @@ def test_a_joint_declaration_does_demand_a_spouse_fact() -> None:
     appears -- which is exactly the defect it had when first written, filtering
     on ``spouse.`` while the schema names these paths ``renta_spouse.``.
     """
-    result = validate_profile_values(
-        {
-            "identity.tax_id": "12345678Z",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "taxpayer_type.entity_type": "natural_person",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-            "renta_filing.declaration_type": "2",
-        }
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = validate_profile_values(
+            {
+                "identity.tax_id": "12345678Z",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "taxpayer_type.entity_type": "natural_person",
+                "taxpayer_type.irpf_income_categories": "actividad_economica",
+                "renta_filing.declaration_type": "2",
+            },
+            operation=_authority_operation_for_test,
+        )
 
-    assert [path for path in result.missing_required if path.startswith(_SPOUSE_PREFIX)] != []
+        assert [path for path in result.missing_required if path.startswith(_SPOUSE_PREFIX)] != []

@@ -18,7 +18,7 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -42,6 +42,7 @@ from cadrumo.core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
@@ -51,6 +52,13 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation across each IVA aggregation/resolution chain."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BUCKET_ID = "78787878-7878-4878-8878-787878787878"
 _PERIOD = Period.from_year_and_code(2026, "1T")
@@ -79,6 +87,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     bucket_id: str,
     period: Period,
     transaction_repository: TransactionCatalogueRepository,
+    operation: PinnedAuthorityOperation,
 ):
     """Exercise the injected-repository path with its explicit asset authority."""
     return iva_ledger.aggregate_iva_ledger_observations_from_repositories(
@@ -88,6 +97,7 @@ def aggregate_iva_ledger_observations_from_repositories(
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=bucket_id,
+        operation=operation,
     )
 
 
@@ -208,7 +218,10 @@ def test_repository_aggregation_refuses_an_implicit_prorrata_store(tmp_path: Pat
             )
 
 
-def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_identical(tmp_path: Path) -> None:
+def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_identical(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A taxpayer recorded as no-prorrata keeps the previous full-deduction output."""
     revision = compiled_bundled_authority().modelo("303").revisions["2022"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -220,12 +233,14 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         baseline_binding_bytes = _canonical_binding_bytes(
             resolve_iva_ledger_binding_values(
                 revision,
                 baseline.observations,
                 prorrata_apportionment=baseline.prorrata_apportionment,
+                operation=authority_operation,
             ),
         )
         baseline_aggregation_bytes = baseline.model_dump_json().encode()
@@ -246,12 +261,14 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         non_prorrata_binding_bytes = _canonical_binding_bytes(
             resolve_iva_ledger_binding_values(
                 revision,
                 non_prorrata.observations,
                 prorrata_apportionment=non_prorrata.prorrata_apportionment,
+                operation=authority_operation,
             ),
         )
 
@@ -259,7 +276,10 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
     assert non_prorrata_binding_bytes == baseline_binding_bytes
 
 
-def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base(tmp_path: Path) -> None:
+def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The active provisional percentage bites only on deducible IVA cuota fields."""
     revision = compiled_bundled_authority().modelo("303").revisions["2022"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -278,11 +298,13 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         baseline_values = resolve_iva_ledger_binding_values(
             revision,
             baseline.observations,
             prorrata_apportionment=baseline.prorrata_apportionment,
+            operation=authority_operation,
         )
 
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects).save(
@@ -304,11 +326,13 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         apportioned_values = resolve_iva_ledger_binding_values(
             revision,
             apportioned.observations,
             prorrata_apportionment=apportioned.prorrata_apportionment,
+            operation=authority_operation,
         )
 
     assert baseline.prorrata_apportionment is None
@@ -346,7 +370,10 @@ def _seed_register(
     )
 
 
-def test_general_regime_apportionment_is_byte_identical_to_pre_especial(tmp_path: Path) -> None:
+def test_general_regime_apportionment_is_byte_identical_to_pre_especial(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The GENERAL path stays the flat `cuota * percentage` behaviour.
 
     The deducible cuota is pinned to the exact pre-especial value
@@ -370,11 +397,13 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(tmp_path
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         values = resolve_iva_ledger_binding_values(
             revision,
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
+            operation=authority_operation,
         )
 
     assert aggregation.prorrata_apportionment is not None
@@ -386,7 +415,10 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(tmp_path
     assert values[_DEVENGADO_CUOTA_BINDING] == Decimal("21.00")
 
 
-def test_especial_regime_routes_each_input_by_art_106_classification(tmp_path: Path) -> None:
+def test_especial_regime_routes_each_input_by_art_106_classification(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Prorrata especial routes deducible cuota per LIVA art. 106.Uno reglas.
 
     Three domestic 21% purchases each carrying iva cuota 10.50 are classified
@@ -417,11 +449,13 @@ def test_especial_regime_routes_each_input_by_art_106_classification(tmp_path: P
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         values = resolve_iva_ledger_binding_values(
             revision,
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
+            operation=authority_operation,
         )
 
     assert aggregation.prorrata_apportionment is not None
@@ -436,7 +470,10 @@ def test_especial_regime_routes_each_input_by_art_106_classification(tmp_path: P
     assert values[_DEVENGADO_CUOTA_BINDING] == Decimal("21.00")
 
 
-def test_especial_all_common_reduces_to_general_byte_identical(tmp_path: Path) -> None:
+def test_especial_all_common_reduces_to_general_byte_identical(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """An all-common especial bucket collapses to the general result, byte-identical.
 
     Especial reuses the one canonical binding resolver: when every input is
@@ -462,12 +499,14 @@ def test_especial_all_common_reduces_to_general_byte_identical(tmp_path: Path) -
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         especial_bytes = _canonical_binding_bytes(
             resolve_iva_ledger_binding_values(
                 revision,
                 especial.observations,
                 prorrata_apportionment=especial.prorrata_apportionment,
+                operation=authority_operation,
             ),
         )
 
@@ -476,12 +515,14 @@ def test_especial_all_common_reduces_to_general_byte_identical(tmp_path: Path) -
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         general_bytes = _canonical_binding_bytes(
             resolve_iva_ledger_binding_values(
                 revision,
                 general.observations,
                 prorrata_apportionment=general.prorrata_apportionment,
+                operation=authority_operation,
             ),
         )
 
@@ -534,7 +575,10 @@ def _sector_entry(sector_id: str | None, percentage: Decimal) -> ProrrataRegiste
     )
 
 
-def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(tmp_path: Path) -> None:
+def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A one-sector register with every input in that sector equals whole-entity general.
 
     Routing every deducible cuota through a single differentiated sector at 80%
@@ -574,12 +618,14 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(tmp
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         sectored_bytes = _canonical_binding_bytes(
             resolve_iva_ledger_binding_values(
                 revision,
                 sectored.observations,
                 prorrata_apportionment=sectored.prorrata_apportionment,
+                operation=authority_operation,
             ),
         )
 
@@ -600,12 +646,14 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(tmp
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         whole_entity_bytes = _canonical_binding_bytes(
             resolve_iva_ledger_binding_values(
                 revision,
                 whole_entity.observations,
                 prorrata_apportionment=whole_entity.prorrata_apportionment,
+                operation=authority_operation,
             ),
         )
 
@@ -616,7 +664,10 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(tmp
     assert sectored_bytes == whole_entity_bytes
 
 
-def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
+def test_each_input_routes_to_its_own_sector_percentage(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Two differentiated sectors (>50pp spread) each apply their own percentage.
 
     Wiring proof for the per-sector routing: a purchase in the high-deduction
@@ -666,11 +717,13 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            operation=authority_operation,
         )
         values = resolve_iva_ledger_binding_values(
             revision,
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
+            operation=authority_operation,
         )
 
     apportionment = aggregation.prorrata_apportionment
@@ -704,6 +757,7 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
             revision,
             (sector_input.model_copy(update={"prorrata_sector_id": None, "input_classification": None}),),
             prorrata_apportionment=apportionment,
+            operation=authority_operation,
         )
     with pytest.raises(
         AggregationValidationError,
@@ -713,6 +767,7 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
             revision,
             (sector_input.model_copy(update={"prorrata_sector_id": "unknown"}),),
             prorrata_apportionment=apportionment,
+            operation=authority_operation,
         )
 
 
@@ -743,7 +798,10 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
     ),
 )
 def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry(
-    tmp_path: Path, sector_entry: ProrrataRegisterEntry | None, message: str
+    tmp_path: Path,
+    sector_entry: ProrrataRegisterEntry | None,
+    message: str,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
@@ -769,4 +827,5 @@ def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry
                 period=_PERIOD,
                 prorrata_register_repository=repository,
                 transaction_repository=tx_repo,
+                operation=authority_operation,
             )

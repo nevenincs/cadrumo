@@ -26,6 +26,7 @@ def _repositories(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_I
 
 
 def _split_setup(
+    objects: SecureObjectRepository,
     transaction_repository: TransactionCatalogueRepository,
     event_repository: BucketEventHistoryRepository,
     *,
@@ -41,29 +42,33 @@ def _split_setup(
         description="materials",
         actor="operator-A",
     )
-    parent = create_manual_transaction(
-        parent_command,
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
-    half = parent_amount / Decimal("2")
-    split = split_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=parent.ref.transaction_id,
-        children=(
-            SplitChildCommand(amount=half, description="business portion"),
-            SplitChildCommand(amount=parent_amount - half, description="personal portion"),
-        ),
-        actor="operator-A",
-        ports=ledger_ports_for_test(
+        objects=objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        parent = create_manual_transaction(
+            parent_command,
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+    half = parent_amount / Decimal("2")
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        split = split_transaction(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
-    )
+            transaction_id=parent.ref.transaction_id,
+            children=(
+                SplitChildCommand(amount=half, description="business portion"),
+                SplitChildCommand(amount=parent_amount - half, description="personal portion"),
+            ),
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
     return parent, split

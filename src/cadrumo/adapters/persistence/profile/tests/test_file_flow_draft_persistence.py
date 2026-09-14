@@ -29,6 +29,7 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     verify_revision,
 )
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -112,45 +113,48 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
     an aged-out approval the moment anyone opens the queue, and a permanent
     high-severity row that is always wrong is worse than no row at all.
     """
-    from cadrumo.application.review.source_adapters import reviewed_against_current_state
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from cadrumo.application.review.source_adapters import reviewed_against_current_state
 
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo, filing_year=2024)
-    # A NON-empty bucket ledger is the whole point. Against an empty one the
-    # digest of a transient empty catalogue and the digest of the bucket's own
-    # agree by accident, and the assertion below holds however the basis is
-    # stamped.
-    _seed_one_bucket_transaction(work_unit.bucket_id)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=T1,
-    )
-    verify_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-    )
+        wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+        work_unit = seed_work_unit(wu_repo, filing_year=2024)
+        # A NON-empty bucket ledger is the whole point. Against an empty one the
+        # digest of a transient empty catalogue and the digest of the bucket's own
+        # agree by accident, and the assertion below holds however the basis is
+        # stamped.
+        _seed_one_bucket_transaction(work_unit.bucket_id)
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=calculation_ports_for_test(
+                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
+            ),
+            clock=T1,
+        )
+        verify_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T2,
+        )
 
-    stored = tuple(ModeloDraftRepository(bucket_id=work_unit.bucket_id).iter_drafts())
-    assert len(stored) == 1
-    assert stored[0].status is ModeloDraftStatus.APROBADO
+        stored = tuple(ModeloDraftRepository(bucket_id=work_unit.bucket_id).iter_drafts())
+        assert len(stored) == 1
+        assert stored[0].status is ModeloDraftStatus.APROBADO
 
-    # Asserted through the refresh rather than through drafts_pending, whose
-    # empty result is the CORRECT answer for a healthy approved draft and so
-    # cannot distinguish a working invariant from a queue that saw nothing.
-    refreshed, reasons = reviewed_against_current_state(stored[0], bucket_id=work_unit.bucket_id)
-    assert reasons == ()
-    assert refreshed.status is ModeloDraftStatus.APROBADO
+        # Asserted through the refresh rather than through drafts_pending, whose
+        # empty result is the CORRECT answer for a healthy approved draft and so
+        # cannot distinguish a working invariant from a queue that saw nothing.
+        refreshed, reasons = reviewed_against_current_state(
+            stored[0], bucket_id=work_unit.bucket_id, operation=_authority_operation_for_test
+        )
+        assert reasons == ()
+        assert refreshed.status is ModeloDraftStatus.APROBADO
 
 
 def _seed_one_bucket_transaction(bucket_id: str) -> None:

@@ -20,6 +20,7 @@ from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runt
 from cadrumo.application.filing.tests.filing_support import empty_profile_activity_fingerprint
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -108,56 +109,59 @@ def _transaction(*, provider_id: str, amount: Decimal, description: str) -> Tran
 
 def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) -> None:
     """Both fingerprints are self-loaded from one provisioned profile capsule."""
-    schema_provider = _schema_provider()
-    draft = _draft(schema_provider)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        schema_provider = _schema_provider()
+        draft = _draft(schema_provider)
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=profile.bucket_id,
-                facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-                created_at=_PROFILE_SEEDED_AT,
-                updated_at=_PROFILE_SEEDED_AT,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
-        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+            seed_test_profile_record(
+                _create_profile_record_for_test(
+                    setup_state=ProfileSetupState.COMPLETE,
+                    profile_id=profile.bucket_id,
+                    facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+                    created_at=_PROFILE_SEEDED_AT,
+                    updated_at=_PROFILE_SEEDED_AT,
+                    context=_profile_creation_context_for_test(),
+                ),
+            )
+            repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
 
-        repository.save(
-            TransactionCatalogue.from_transactions(
-                (
-                    _transaction(
-                        provider_id="first-catalogue-row",
-                        amount=Decimal("80.00"),
-                        description="First persisted catalogue row",
+            repository.save(
+                TransactionCatalogue.from_transactions(
+                    (
+                        _transaction(
+                            provider_id="first-catalogue-row",
+                            amount=Decimal("80.00"),
+                            description="First persisted catalogue row",
+                        ),
                     ),
                 ),
-            ),
-        )
-        first_basis = compute_current_approval_basis(
-            draft,
-            bucket_id=profile.bucket_id,
-            schema_provider=schema_provider,
-        )
+            )
+            first_basis = compute_current_approval_basis(
+                draft,
+                bucket_id=profile.bucket_id,
+                schema_provider=schema_provider,
+                operation=_authority_operation_for_test,
+            )
 
-        repository.save(
-            TransactionCatalogue.from_transactions(
-                (
-                    _transaction(
-                        provider_id="second-catalogue-row",
-                        amount=Decimal("125.00"),
-                        description="Second persisted catalogue row",
+            repository.save(
+                TransactionCatalogue.from_transactions(
+                    (
+                        _transaction(
+                            provider_id="second-catalogue-row",
+                            amount=Decimal("125.00"),
+                            description="Second persisted catalogue row",
+                        ),
                     ),
                 ),
-            ),
-        )
-        second_basis = compute_current_approval_basis(
-            draft,
-            bucket_id=profile.bucket_id,
-            schema_provider=schema_provider,
-        )
+            )
+            second_basis = compute_current_approval_basis(
+                draft,
+                bucket_id=profile.bucket_id,
+                schema_provider=schema_provider,
+                operation=_authority_operation_for_test,
+            )
 
-    assert first_basis.transaction_catalogue_fingerprint != second_basis.transaction_catalogue_fingerprint
-    assert first_basis.profile_activity_fingerprint == second_basis.profile_activity_fingerprint
-    assert first_basis.profile_activity_fingerprint != empty_profile_activity_fingerprint()
+        assert first_basis.transaction_catalogue_fingerprint != second_basis.transaction_catalogue_fingerprint
+        assert first_basis.profile_activity_fingerprint == second_basis.profile_activity_fingerprint
+        assert first_basis.profile_activity_fingerprint != empty_profile_activity_fingerprint()

@@ -32,18 +32,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result, split = _split_setup(transaction_repository, event_repository)
+    parent_result, split = _split_setup(secure_objects, transaction_repository, event_repository)
 
-    merge = merge_transactions(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        child_transaction_ids=split.child_transaction_ids,
-        actor="operator-A",
-        reason="reverted split",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-        occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        merge = merge_transactions(
+            bucket_id=_BUCKET_ID,
+            child_transaction_ids=split.child_transaction_ids,
+            actor="operator-A",
+            reason="reverted split",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
+        )
 
     catalogue = transaction_repository.load()
     archived_parent = catalogue.get(parent_result.ref.transaction_id)
@@ -67,16 +71,20 @@ def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_obj
 
 def test_merged_transaction_id_differs_from_original_parent_id(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result, split = _split_setup(transaction_repository, event_repository)
+    parent_result, split = _split_setup(secure_objects, transaction_repository, event_repository)
 
-    merge = merge_transactions(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        child_transaction_ids=split.child_transaction_ids,
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        merge = merge_transactions(
+            bucket_id=_BUCKET_ID,
+            child_transaction_ids=split.child_transaction_ids,
+            actor="operator-A",
+            ports=ports,
+        )
     assert merge.merged_transaction_id != parent_result.ref.transaction_id
     assert merge.parent_transaction_id == parent_result.ref.transaction_id
 
@@ -88,34 +96,42 @@ def test_merge_amount_round_trips_parent_amount(secure_objects: SecureObjectRepo
     arithmetic check — it asserts the backend preserves the operator-
     supplied amount across split+merge, not that any formula matches."""
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result, split = _split_setup(transaction_repository, event_repository)
+    parent_result, split = _split_setup(secure_objects, transaction_repository, event_repository)
     _parent = transaction_repository.load().get(parent_result.ref.transaction_id)
     assert _parent is not None, "parent transaction must be present after split"
     original_amount = _parent.raw.amount
 
-    merge = merge_transactions(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        child_transaction_ids=split.child_transaction_ids,
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        merge = merge_transactions(
+            bucket_id=_BUCKET_ID,
+            child_transaction_ids=split.child_transaction_ids,
+            actor="operator-A",
+            ports=ports,
+        )
     assert merge.merged_transaction.raw.amount == original_amount
 
 
 def test_merge_emits_single_event_anchored_on_parent(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result, split = _split_setup(transaction_repository, event_repository)
+    parent_result, split = _split_setup(secure_objects, transaction_repository, event_repository)
 
-    merge = merge_transactions(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        child_transaction_ids=split.child_transaction_ids,
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        merge = merge_transactions(
+            bucket_id=_BUCKET_ID,
+            child_transaction_ids=split.child_transaction_ids,
+            actor="operator-A",
+            ports=ports,
+        )
 
     catalogue = event_repository.load()
     merge_events = [
@@ -134,16 +150,20 @@ def test_split_then_merge_chain_is_addressable_via_event_for_object(secure_objec
     in chronological order, proving the audit chain is reconstructable
     via the existing event-store query helper."""
     transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result, split = _split_setup(transaction_repository, event_repository)
-    merge = merge_transactions(
+    parent_result, split = _split_setup(secure_objects, transaction_repository, event_repository)
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        child_transaction_ids=split.child_transaction_ids,
-        actor="operator-A",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-        occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        merge = merge_transactions(
+            bucket_id=_BUCKET_ID,
+            child_transaction_ids=split.child_transaction_ids,
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
+        )
     from cadrumo.domain.buckets.event import BucketEventObjectType
 
     catalogue = event_repository.load()

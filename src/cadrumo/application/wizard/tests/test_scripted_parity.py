@@ -26,6 +26,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.flows import FlowMode
 from ...flows.definition import FlowDefinition
@@ -106,49 +107,52 @@ def _drive_interactive(definition: FlowDefinition, intended: Mapping[str, str], 
 )
 def test_scripted_and_interactive_walks_agree(canonical: dict[str, str], *, registry_setup_flow: WizardFlow) -> None:
     """The scripted driver and a page-by-page walk agree on answers and eligibility."""
-    definition = setup_flow_definition(registry_setup_flow)
-    tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
+        tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
 
-    scripted_state, scripted_projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
-    interactive_state = _drive_interactive(definition, intended, mode=FlowMode.CREATE)
-    interactive_projection = review(definition, interactive_state)
+        scripted_state, scripted_projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
+        interactive_state = _drive_interactive(definition, intended, mode=FlowMode.CREATE)
+        interactive_projection = review(definition, interactive_state)
 
-    assert dict(scripted_state.answers) == dict(interactive_state.answers)
-    assert scripted_projection.submit_eligible == interactive_projection.submit_eligible
-    # A valid answer set submits from both drivers; a driver that silently
-    # produced a half-answered state would flip this and fail.
-    assert scripted_projection.submit_eligible is True
-    # The gate-revealed page was actually walked, proving the parity is not
-    # vacuous over an empty branch.
-    gate_revealed = "activity" if canonical is _INDIVIDUAL_CANONICAL else "legal-entity-form"
-    assert gate_revealed in scripted_state.answers
+        assert dict(scripted_state.answers) == dict(interactive_state.answers)
+        assert scripted_projection.submit_eligible == interactive_projection.submit_eligible
+        # A valid answer set submits from both drivers; a driver that silently
+        # produced a half-answered state would flip this and fail.
+        assert scripted_projection.submit_eligible is True
+        # The gate-revealed page was actually walked, proving the parity is not
+        # vacuous over an empty branch.
+        gate_revealed = "activity" if canonical is _INDIVIDUAL_CANONICAL else "legal-entity-form"
+        assert gate_revealed in scripted_state.answers
 
 
 def test_scripted_walk_refuses_a_starved_required_page(*, registry_setup_flow: WizardFlow) -> None:
     """An empty queue that reaches a required page raises the underflow refusal."""
-    definition = setup_flow_definition(registry_setup_flow)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
 
-    with pytest.raises(FlowAnswerError) as caught:
-        # ``tax-id`` is the first unconditionally-required page and carries no
-        # default; the empty queue starves it once the optional openers blank.
-        run_scripted_flow(definition, [], mode=FlowMode.CREATE)
+        with pytest.raises(FlowAnswerError) as caught:
+            # ``tax-id`` is the first unconditionally-required page and carries no
+            # default; the empty queue starves it once the optional openers blank.
+            run_scripted_flow(definition, [], mode=FlowMode.CREATE)
 
-    assert caught.value.translated_message == "application.flows.errors.scripted_queue_underflow"
-    assert caught.value.context is not None
-    assert caught.value.context["page_key"] == "tax-id"
+        assert caught.value.translated_message == "application.flows.errors.scripted_queue_underflow"
+        assert caught.value.context is not None
+        assert caught.value.context["page_key"] == "tax-id"
 
 
 def test_scripted_walk_refuses_trailing_unconsumed_tokens(*, registry_setup_flow: WizardFlow) -> None:
     """A queue longer than the visible sequence raises the overflow refusal."""
-    definition = setup_flow_definition(registry_setup_flow)
-    tokens, _intended = _project_scripted_answers(definition, _INDIVIDUAL_CANONICAL, mode=FlowMode.CREATE)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
+        tokens, _intended = _project_scripted_answers(definition, _INDIVIDUAL_CANONICAL, mode=FlowMode.CREATE)
 
-    with pytest.raises(FlowAnswerError) as caught:
-        run_scripted_flow(definition, [*tokens, "orphan-token"], mode=FlowMode.CREATE)
+        with pytest.raises(FlowAnswerError) as caught:
+            run_scripted_flow(definition, [*tokens, "orphan-token"], mode=FlowMode.CREATE)
 
-    assert caught.value.translated_message == "application.flows.errors.scripted_queue_overflow"
-    assert caught.value.context is not None
-    assert caught.value.context["remaining_count"] == 1
-    # Counts only — a canonical token can carry a secret and must never ride
-    # in the diagnostic.
-    assert "orphan-token" not in str(caught.value.context)
+        assert caught.value.translated_message == "application.flows.errors.scripted_queue_overflow"
+        assert caught.value.context is not None
+        assert caught.value.context["remaining_count"] == 1
+        # Counts only — a canonical token can carry a secret and must never ride
+        # in the diagnostic.
+        assert "orphan-token" not in str(caught.value.context)

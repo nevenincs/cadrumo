@@ -35,7 +35,9 @@ from cadrumo.domain.iva.schema import IvaCategory
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
@@ -57,6 +59,7 @@ def _confirm_the_reverse_charge_document(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    authority: InvoiceAuthorityFixture,
 ):
     """Confirm with NO ``iva_category`` override.
 
@@ -73,7 +76,7 @@ def _confirm_the_reverse_charge_document(
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -81,6 +84,7 @@ def test_the_reverse_charge_category_reaches_the_persisted_invoice(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The record carries the reverse-charge category the document declared.
 
@@ -91,6 +95,7 @@ def test_the_reverse_charge_category_reaches_the_persisted_invoice(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.draft.iva_category == IvaCategory("domestic_reverse_charge").value, (
@@ -109,6 +114,7 @@ def test_an_operator_supplied_category_still_wins(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """An explicit override outranks the document-read category.
 
@@ -127,7 +133,7 @@ def test_an_operator_supplied_category_still_wins(
         evidence_id=record.evidence_id,
         iva_category=IvaCategory("domestic_exempt"),
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
     assert result.invoice.iva_category is IvaCategory("domestic_exempt")
@@ -142,6 +148,7 @@ def test_an_export_claim_with_no_establishment_does_not_reach_the_record(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """A declared code survives confirm, EXCEPT where it relieves on an absent fact.
 
@@ -183,7 +190,7 @@ def test_an_export_claim_with_no_establishment_does_not_reach_the_record(
         # classification rather than refusing earlier for an unrelated reason.
         counterparty_name="Exportadora Peninsular SL",
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
     assert result.draft.iva_category == IvaCategory("export_third_country_zero_rated").value, (

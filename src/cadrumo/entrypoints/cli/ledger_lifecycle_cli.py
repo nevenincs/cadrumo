@@ -1018,6 +1018,7 @@ def _ledger_split_llm(
         vision_model=vision_model,
         settings=load_settings(),
         ports=composition.ports,
+        operation=authority_operation(ctx),
     )
 
     proposed_children = _build_split_child_proposals(suggestion)

@@ -53,8 +53,10 @@ from cadrumo.domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
     invoice_confirmation_kwargs,
+    invoice_authority,
     isolated_settings,
     secure_objects,
 )
@@ -141,6 +143,7 @@ def _confirmed(
     objects: SecureObjectRepository,
     tmp_path: Path,
     name: str,
+    authority: InvoiceAuthorityFixture,
 ):
     evidence_id = _stored(xml, settings=settings, objects=objects, tmp_path=tmp_path, name=name)
     return confirm_invoice_draft_from_evidence(
@@ -150,7 +153,7 @@ def _confirmed(
         evidence_id=evidence_id,
         counterparty_name=_SELLER_NAME,
         settings=settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -158,6 +161,7 @@ def test_a_confirmed_canarian_counterparty_resolves_its_territory_through_the_ve
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The headline: a real document, a real confirm, a resolved territory.
 
@@ -172,6 +176,7 @@ def test_a_confirmed_canarian_counterparty_resolves_its_territory_through_the_ve
         objects=secure_objects,
         tmp_path=tmp_path,
         name="facturae_canarias.xml",
+        authority=invoice_authority,
     )
 
     establishment = confirmation.establishment
@@ -184,6 +189,7 @@ def test_the_resolved_scope_reaches_the_criteria_as_a_declared_fact(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The scope arrives at the assembly through the declared-facts channel.
 
@@ -198,6 +204,7 @@ def test_the_resolved_scope_reaches_the_criteria_as_a_declared_fact(
         objects=secure_objects,
         tmp_path=tmp_path,
         name="facturae_declared.xml",
+        authority=invoice_authority,
     )
 
     establishment = confirmation.establishment
@@ -217,6 +224,7 @@ def test_a_document_whose_paper_settles_nothing_reaches_the_review_gate(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """Exhaustion surfaces a resolvable item and invents no territory.
 
@@ -230,6 +238,7 @@ def test_a_document_whose_paper_settles_nothing_reaches_the_review_gate(
         objects=secure_objects,
         tmp_path=tmp_path,
         name="facturae_exhausted.xml",
+        authority=invoice_authority,
     )
 
     establishment = confirmation.establishment

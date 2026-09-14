@@ -35,6 +35,8 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.period import Period
 from ....domain.deadlines.plazo import resolve_filing_closes_on
 from ....domain.deadlines.recargo import build_recovery_for_overdue
@@ -93,38 +95,40 @@ def test_late_m303_quarter_surfaces_unassessed_rate_preview() -> None:
     frozen literal. The recargo band is cross-checked against the domain
     ``build_recovery_for_overdue`` computation, not a hand-picked percentage.
     """
-    for quarter, filing_year in _quarter_year_cases():
-        case_id = f"M303 {filing_year} {quarter}"
-        period = Period.from_year_and_code(filing_year, quarter)
-        closes_on = resolve_filing_closes_on("303", filing_year, period)
-        assert closes_on is not None, f"registry must carry an {case_id} window"
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for quarter, filing_year in _quarter_year_cases():
+            case_id = f"M303 {filing_year} {quarter}"
+            period = Period.from_year_and_code(filing_year, quarter)
+            closes_on = resolve_filing_closes_on("303", filing_year, period)
+            assert closes_on is not None, f"registry must carry an {case_id} window"
 
-        reference_today = closes_on + timedelta(days=40)
-        work_unit = _work_unit_for(quarter, filing_year)
+            reference_today = closes_on + timedelta(days=40)
+            work_unit = _work_unit_for(quarter, filing_year)
 
-        summary = modelo_work_deadline_posture(work_unit, reference_on=reference_today)
+            summary = modelo_work_deadline_posture(work_unit, reference_on=reference_today)
 
-        assert summary is not None, case_id
-        assert summary.closes_on == closes_on, case_id
-        assert summary.days_remaining is None, case_id
-        assert summary.days_overdue == (reference_today - closes_on).days, case_id
-        assert summary.days_overdue == 40, case_id
+            assert summary is not None, case_id
+            assert summary.closes_on == closes_on, case_id
+            assert summary.days_remaining is None, case_id
+            assert summary.days_overdue == (reference_today - closes_on).days, case_id
+            assert summary.days_overdue == 40, case_id
 
-        preview = summary.conditional_recargo_preview
-        assert preview is not None, case_id
-        assert preview.assessment_status == "unassessed", case_id
-        assert preview.rate_reference_on == reference_today, case_id
-        assert preview.legal_ref.startswith("ley-58-2003:art-27"), case_id
+            preview = summary.conditional_recargo_preview
+            assert preview is not None, case_id
+            assert preview.assessment_status == "unassessed", case_id
+            assert preview.rate_reference_on == reference_today, case_id
+            assert preview.legal_ref.startswith("ley-58-2003:art-27"), case_id
 
-        expected = build_recovery_for_overdue(
-            closes_on=closes_on,
-            reference_today=reference_today,
-            modelo="303",
-            period=period,
-        )
-        assert preview.band_id == expected.recargo_band.id, case_id
-        assert preview.surcharge_pct == expected.recargo_band.surcharge_pct, case_id
-        assert preview.interest_applies is expected.recargo_band.interest_applies, case_id
+            expected = build_recovery_for_overdue(
+                closes_on=closes_on,
+                reference_today=reference_today,
+                modelo="303",
+                period=period,
+                operation=_authority_operation_for_test,
+            )
+            assert preview.band_id == expected.recargo_band.id, case_id
+            assert preview.surcharge_pct == expected.recargo_band.surcharge_pct, case_id
+            assert preview.interest_applies is expected.recargo_band.interest_applies, case_id
 
 
 def test_in_time_m303_quarter_is_silent() -> None:

@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ......core.casilla_id import validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.directory_scan import scan_directory
@@ -119,50 +121,53 @@ def test_skip_row_model_declares_no_value_field() -> None:
 
 def test_skip_query_returns_empty_when_every_casilla_is_numeric() -> None:
     """An all-numeric observation reports nothing, so a caller can trust silence."""
-    observation = _filed_observation(
-        modelo="100",
-        ejercicio=2025,
-        period="0A",
-        casilla_values={_M100_NUMERIC_CASILLA: Decimal("1234.56")},
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={_M100_NUMERIC_CASILLA: Decimal("1234.56")},
+        )
 
-    assert non_numeric_observed_casillas(observation) == ()
+        assert non_numeric_observed_casillas(observation, operation=_authority_operation_for_test) == ()
 
 
 def test_skip_query_names_a_text_casilla_without_disclosing_its_value() -> None:
     """The row identifies the casilla and its label, never what it holds."""
-    filed_address = "CL SANITIZADA 0000 LOCALIDAD"
-    observation = _filed_observation(
-        modelo="100",
-        ejercicio=2025,
-        period="0A",
-        casilla_values={_M100_NUMERIC_CASILLA: filed_address},
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        filed_address = "CL SANITIZADA 0000 LOCALIDAD"
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={_M100_NUMERIC_CASILLA: filed_address},
+        )
 
-    skips = non_numeric_observed_casillas(observation)
+        skips = non_numeric_observed_casillas(observation, operation=_authority_operation_for_test)
 
-    assert len(skips) == 1
-    assert skips[0].casilla_id == _M100_NUMERIC_CASILLA
-    assert skips[0].reason == "not_numeric"
-    assert skips[0].label
-    assert filed_address not in str(skips[0].model_dump())
-    assert "SANITIZADA" not in str(skips[0].model_dump())
+        assert len(skips) == 1
+        assert skips[0].casilla_id == _M100_NUMERIC_CASILLA
+        assert skips[0].reason == "not_numeric"
+        assert skips[0].label
+        assert filed_address not in str(skips[0].model_dump())
+        assert "SANITIZADA" not in str(skips[0].model_dump())
 
 
 def test_skip_query_reports_a_numeric_casilla_whose_token_will_not_parse() -> None:
     """A numeric casilla with an unreadable token is a distinct, named reason."""
-    observation = _filed_observation(
-        modelo="100",
-        ejercicio=2025,
-        period="0A",
-        casilla_values={_M100_NUMERIC_CASILLA: "no-decimal"},
-        value_kind=CasillaValueKind.NUMERIC,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={_M100_NUMERIC_CASILLA: "no-decimal"},
+            value_kind=CasillaValueKind.NUMERIC,
+        )
 
-    skips = non_numeric_observed_casillas(observation)
+        skips = non_numeric_observed_casillas(observation, operation=_authority_operation_for_test)
 
-    assert len(skips) == 1
-    assert skips[0].reason == "unreadable_numeric_token"
+        assert len(skips) == 1
+        assert skips[0].reason == "unreadable_numeric_token"
 
 
 _CARRIER_NAMES = ("ObservedCasillaValue", "ObservedCasillaValueProtocol")

@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.iva_compensation_history import seed_iva_compensation_period
@@ -25,103 +27,115 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> None:
     """seed_iva_compensation_period stores state so prefill resolves the balance."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
-        state = seed_iva_compensation_period(
-            taxpayer_nif=_NIF,
-            period=Period.from_year_and_code(2024, "4T"),
-            amount=Decimal("1200.00"),
-            repository=IvaCompensationHistoryRepository(),
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
+            state = seed_iva_compensation_period(
+                taxpayer_nif=_NIF,
+                period=Period.from_year_and_code(2024, "4T"),
+                amount=Decimal("1200.00"),
+                repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
-        repo = IvaCompensationHistoryRepository()
-        loaded = repo.load_period(Period.from_year_and_code(2024, "4T"))
+            repo = IvaCompensationHistoryRepository()
+            loaded = repo.load_period(Period.from_year_and_code(2024, "4T"))
 
-    assert loaded is not None
-    assert loaded.available_end_amount == Decimal("1200.00")
-    assert loaded.provenance is IvaCompensationStateProvenance.OPERATOR_SEED
-    assert loaded.status is None
-    assert loaded.taxpayer_nif == _NIF
-    assert loaded == state
+        assert loaded is not None
+        assert loaded.available_end_amount == Decimal("1200.00")
+        assert loaded.provenance is IvaCompensationStateProvenance.OPERATOR_SEED
+        assert loaded.status is None
+        assert loaded.taxpayer_nif == _NIF
+        assert loaded == state
 
 
 def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
     """A seeded opening balance shows up in iva-wallet balance."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
-        seed_iva_compensation_period(
-            taxpayer_nif=_NIF,
-            period=Period.from_year_and_code(2025, "4T"),
-            amount=Decimal("1500.00"),
-            repository=IvaCompensationHistoryRepository(),
-        )
-        report = query_iva_wallet_balance(as_of_year=2025, repository=IvaCompensationHistoryRepository())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
+            seed_iva_compensation_period(
+                taxpayer_nif=_NIF,
+                period=Period.from_year_and_code(2025, "4T"),
+                amount=Decimal("1500.00"),
+                repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
+            report = query_iva_wallet_balance(as_of_year=2025, repository=IvaCompensationHistoryRepository())
 
-    assert report.lot_count == 1, "seeded carry-forward must surface as exactly one wallet lot"
-    assert report.total_balance == Decimal("1500.00"), "balance must reflect the seeded amount, not zero"
-    assert report.active_balance == Decimal("1500.00")
-    assert report.expired_balance == Decimal("0")
-    assert report.next_expiry_year == 2025 + 4
+        assert report.lot_count == 1, "seeded carry-forward must surface as exactly one wallet lot"
+        assert report.total_balance == Decimal("1500.00"), "balance must reflect the seeded amount, not zero"
+        assert report.active_balance == Decimal("1500.00")
+        assert report.expired_balance == Decimal("0")
+        assert report.next_expiry_year == 2025 + 4
 
 
 def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
     """Anti-tautology: a zero-amount seed produces no lot."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
-        seed_iva_compensation_period(
-            taxpayer_nif=_NIF,
-            period=Period.from_year_and_code(2025, "1T"),
-            amount=Decimal("0"),
-            repository=IvaCompensationHistoryRepository(),
-        )
-        report = query_iva_wallet_balance(as_of_year=2025, repository=IvaCompensationHistoryRepository())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
+            seed_iva_compensation_period(
+                taxpayer_nif=_NIF,
+                period=Period.from_year_and_code(2025, "1T"),
+                amount=Decimal("0"),
+                repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
+            report = query_iva_wallet_balance(as_of_year=2025, repository=IvaCompensationHistoryRepository())
 
-    assert report.lot_count == 0, "a zero seed must not fabricate a wallet lot"
-    assert report.total_balance == Decimal("0")
-    assert report.active_balance == Decimal("0")
-    assert report.expired_balance == Decimal("0")
+        assert report.lot_count == 0, "a zero seed must not fabricate a wallet lot"
+        assert report.total_balance == Decimal("0")
+        assert report.active_balance == Decimal("0")
+        assert report.expired_balance == Decimal("0")
 
 
 def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) -> None:
     """Anti-tautology: seeding X vs Y produces different available_end_amount."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
-        state_a = seed_iva_compensation_period(
-            taxpayer_nif=_NIF,
-            period=Period.from_year_and_code(2024, "3T"),
-            amount=Decimal("500.00"),
-            repository=IvaCompensationHistoryRepository(),
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
+            state_a = seed_iva_compensation_period(
+                taxpayer_nif=_NIF,
+                period=Period.from_year_and_code(2024, "3T"),
+                amount=Decimal("500.00"),
+                repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3ba277a9-0812-47c5-9400-64768e433f06"):
-        state_b = seed_iva_compensation_period(
-            taxpayer_nif=_NIF,
-            period=Period.from_year_and_code(2024, "3T"),
-            amount=Decimal("999.00"),
-            repository=IvaCompensationHistoryRepository(),
-        )
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3ba277a9-0812-47c5-9400-64768e433f06"):
+            state_b = seed_iva_compensation_period(
+                taxpayer_nif=_NIF,
+                period=Period.from_year_and_code(2024, "3T"),
+                amount=Decimal("999.00"),
+                repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
-    assert state_a.available_end_amount != state_b.available_end_amount, (
-        "Anti-tautology failure: both seed amounts produced the same available_end_amount"
-    )
+        assert state_a.available_end_amount != state_b.available_end_amount, (
+            "Anti-tautology failure: both seed amounts produced the same available_end_amount"
+        )
 
 
 def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
     """Seeding a period that already has a stored state raises IvaCompensationSeedConflictError."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
-        seed_iva_compensation_period(
-            taxpayer_nif=_NIF,
-            period=Period.from_year_and_code(2024, "2T"),
-            amount=Decimal("800.00"),
-            repository=IvaCompensationHistoryRepository(),
-        )
-
-        with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
             seed_iva_compensation_period(
                 taxpayer_nif=_NIF,
                 period=Period.from_year_and_code(2024, "2T"),
-                amount=Decimal("100.00"),
+                amount=Decimal("800.00"),
                 repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
             )
 
-    assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
-    assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_provenance": "operator_seed"}
+            with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
+                seed_iva_compensation_period(
+                    taxpayer_nif=_NIF,
+                    period=Period.from_year_and_code(2024, "2T"),
+                    amount=Decimal("100.00"),
+                    repository=IvaCompensationHistoryRepository(),
+                    operation=_authority_operation_for_test,
+                )
+
+        assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
+        assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_provenance": "operator_seed"}
 
 
 def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:

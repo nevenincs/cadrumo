@@ -47,7 +47,9 @@ from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
@@ -156,6 +158,7 @@ def _confirm(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
     filename: str,
+    authority: InvoiceAuthorityFixture,
 ):
     pdf_path = tmp_path / filename
     pdf_path.write_bytes(text_pdf_bytes(lines))
@@ -168,7 +171,7 @@ def _confirm(
         evidence_id=record.evidence_id,
         counterparty_name="Energia Peninsular SL",
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -203,6 +206,7 @@ def test_an_unrepresentable_rate_refuses_and_names_the_accepted_rates(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The confirm boundary refuses, and the refusal is actionable.
 
@@ -222,6 +226,7 @@ def test_an_unrepresentable_rate_refuses_and_names_the_accepted_rates(
             secure_objects=secure_objects,
             tmp_path=tmp_path,
             filename="factura_luz_2011.pdf",
+            authority=invoice_authority,
         )
 
     error = excinfo.value
@@ -249,6 +254,7 @@ def test_the_refusal_is_the_same_one_whether_or_not_a_cuota_was_printed(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """One unrepresentable rate, one refusal -- on both confirm branches.
 
@@ -272,6 +278,7 @@ def test_the_refusal_is_the_same_one_whether_or_not_a_cuota_was_printed(
                 secure_objects=secure_objects,
                 tmp_path=tmp_path,
                 filename=f"factura_luz_fork_{index}.pdf",
+                authority=invoice_authority,
             )
         raised.append(excinfo.value)
 
@@ -288,6 +295,7 @@ def test_the_same_document_at_a_known_rate_confirms(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """Positive control: the fixture shape itself is confirmable.
 
@@ -301,6 +309,7 @@ def test_the_same_document_at_a_known_rate_confirms(
         secure_objects=secure_objects,
         tmp_path=tmp_path,
         filename="factura_luz_21.pdf",
+        authority=invoice_authority,
     )
 
     assert [line.iva_rate for line in result.invoice.lines] == [IvaRate._from_registry("RATE_21")]

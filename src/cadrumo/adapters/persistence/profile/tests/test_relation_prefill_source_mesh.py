@@ -31,6 +31,7 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement, relation_prefill_bindings_for_period
@@ -90,75 +91,80 @@ def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
 
 
 def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-        for observation in _modelo_115_observations():
-            repository.save(
-                repository.prepare_observation_envelope(
-                    observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repository = CalculationObservationRepository()
+            for observation in _modelo_115_observations():
+                repository.save(
+                    repository.prepare_observation_envelope(
+                        observation,
+                        source_kind="app_filing",
+                        stamped_revision_id=revision_id_for_observation(observation),
+                    )
                 )
+
+            snapshot = _snapshot("180", 2026, "0A")
+            prefill = resolve_relations_from_local_store(
+                snapshot, repository=repository, operation=_authority_operation_for_test
+            )
+            source_resolution = RelationPrefillSourceResolver(
+                repository=repository,
+                profile_read_ports=empty_profile_read_ports(),
+                registry_snapshot=snapshot,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id="operator",
+                    modelo="180",
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "0A"),
+                    revision=snapshot.revision,
+                ),
             )
 
-        snapshot = _snapshot("180", 2026, "0A")
-        prefill = resolve_relations_from_local_store(snapshot, repository=repository)
-        source_resolution = RelationPrefillSourceResolver(
-            repository=repository,
-            profile_read_ports=empty_profile_read_ports(),
-            registry_snapshot=snapshot,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="180",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "0A"),
-                revision=snapshot.revision,
-            ),
-        )
-
-        assert source_resolution.relation_values == {
-            item.relation: item.value for item in prefill.values if item.value is not None
-        }
-        assert source_resolution.owned_sources == (BindingSourceKind.RELATION_PREFILL,)
-        assert source_resolution.provenance
-        assert all(item.contributor_source_kind == "relation_prefill" for item in source_resolution.provenance)
-        bindings_by_id = {
-            binding.id: (binding, provider)
-            for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
-        }
-        for item in prefill.values:
-            binding, provider = bindings_by_id[item.relation]
-            assert item.source_modelo == provider.source_modelo
-            assert item.source_casilla_ids == provider.declared_source_casilla_ids
-            assert item.legal_refs == tuple(binding.legal_refs)
-            assert item.source_refs == tuple(binding.source_refs)
-        # RET-1: the perceptores relation is retired (decl.total-perceptores is now
-        # a distinct-NIF count from the retención store); only the monetary
-        # base/retenciones relations remain on the relation_prefill source.
-        assert {item.source_ref for item in source_resolution.provenance} == {
-            "modelo-180-115-base-anual:115:2026:1T,2T,3T,4T:02",
-            "modelo-180-115-retenciones-anual:115:2026:1T,2T,3T,4T:03",
-        }
-        resolved_prefill = {item.relation: item for item in prefill.values if item.value is not None}
-        provenance_by_relation = {item.relation_id: item for item in source_resolution.provenance}
-        assert set(provenance_by_relation) == set(resolved_prefill)
-        for relation_id, provenance in provenance_by_relation.items():
-            # Every provenance item here is confirmed relation_prefill-sourced (line
-            # above), which always carries a relation_id; the field is Optional only
-            # for other source kinds' provenance shape.
-            assert relation_id is not None
-            prefilled = resolved_prefill[relation_id]
-            assert provenance.source_modelo == prefilled.source_modelo
-            assert provenance.source_filing_year == prefilled.source_filing_year
-            assert provenance.source_periods == prefilled.source_periods
-            assert provenance.source_casilla_ids == prefilled.source_casilla_ids
-            assert provenance.legal_refs == prefilled.legal_refs
-            assert provenance.source_refs == prefilled.source_refs
-            # The registry's declared dependency classification for M115 (the M180
-            # dep-115 dependency_classification) survives the resolver join intact:
-            # a real, non-default declared treatment reaches the operator-facing
-            # provenance trace, not a silently dropped/defaulted empty string.
-            assert provenance.dependency_treatment == prefilled.dependency_treatment
-            assert provenance.dependency_treatment == "direct_annual_settlement"
+            assert source_resolution.relation_values == {
+                item.relation: item.value for item in prefill.values if item.value is not None
+            }
+            assert source_resolution.owned_sources == (BindingSourceKind.RELATION_PREFILL,)
+            assert source_resolution.provenance
+            assert all(item.contributor_source_kind == "relation_prefill" for item in source_resolution.provenance)
+            bindings_by_id = {
+                binding.id: (binding, provider)
+                for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+            }
+            for item in prefill.values:
+                binding, provider = bindings_by_id[item.relation]
+                assert item.source_modelo == provider.source_modelo
+                assert item.source_casilla_ids == provider.declared_source_casilla_ids
+                assert item.legal_refs == tuple(binding.legal_refs)
+                assert item.source_refs == tuple(binding.source_refs)
+            # RET-1: the perceptores relation is retired (decl.total-perceptores is now
+            # a distinct-NIF count from the retención store); only the monetary
+            # base/retenciones relations remain on the relation_prefill source.
+            assert {item.source_ref for item in source_resolution.provenance} == {
+                "modelo-180-115-base-anual:115:2026:1T,2T,3T,4T:02",
+                "modelo-180-115-retenciones-anual:115:2026:1T,2T,3T,4T:03",
+            }
+            resolved_prefill = {item.relation: item for item in prefill.values if item.value is not None}
+            provenance_by_relation = {item.relation_id: item for item in source_resolution.provenance}
+            assert set(provenance_by_relation) == set(resolved_prefill)
+            for relation_id, provenance in provenance_by_relation.items():
+                # Every provenance item here is confirmed relation_prefill-sourced (line
+                # above), which always carries a relation_id; the field is Optional only
+                # for other source kinds' provenance shape.
+                assert relation_id is not None
+                prefilled = resolved_prefill[relation_id]
+                assert provenance.source_modelo == prefilled.source_modelo
+                assert provenance.source_filing_year == prefilled.source_filing_year
+                assert provenance.source_periods == prefilled.source_periods
+                assert provenance.source_casilla_ids == prefilled.source_casilla_ids
+                assert provenance.legal_refs == prefilled.legal_refs
+                assert provenance.source_refs == prefilled.source_refs
+                # The registry's declared dependency classification for M115 (the M180
+                # dep-115 dependency_classification) survives the resolver join intact:
+                # a real, non-default declared treatment reaches the operator-facing
+                # provenance trace, not a silently dropped/defaulted empty string.
+                assert provenance.dependency_treatment == prefilled.dependency_treatment
+                assert provenance.dependency_treatment == "direct_annual_settlement"
 
 
 def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_empty(tmp_path: Path) -> None:
@@ -173,18 +179,18 @@ def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_em
     cross-domain-handoffs audit 2026-05-16 must not accidentally
     broaden back to a silent-swallow ``except Exception``).
     """
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            snapshot = _snapshot("180", 2026, "0A")
+            result = resolve_relations_from_local_store(snapshot, operation=_authority_operation_for_test)
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = _snapshot("180", 2026, "0A")
-        result = resolve_relations_from_local_store(snapshot)
-
-    assert result.values, "M180 must have at least one relation"
-    # Every relation must surface as None (operator-manual) when no
-    # prior filings exist — never raises, never crashes, never fabricates.
-    assert all(rv.value is None for rv in result.values), (
-        "empty local store must produce all-None relation values; "
-        "a non-None value means the prefill fabricated data from nothing"
-    )
+        assert result.values, "M180 must have at least one relation"
+        # Every relation must surface as None (operator-manual) when no
+        # prior filings exist — never raises, never crashes, never fabricates.
+        assert all(rv.value is None for rv in result.values), (
+            "empty local store must produce all-None relation values; "
+            "a non-None value means the prefill fabricated data from nothing"
+        )
 
 
 def test_resolve_relations_produced_values_carry_provenance_string_when_resolved(tmp_path: Path) -> None:
@@ -197,27 +203,31 @@ def test_resolve_relations_produced_values_carry_provenance_string_when_resolved
     This pins the provenance-string contract across the
     modelo→filing handoff boundary (F2 finding, 2026-05-16 audit).
     """
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-        for observation in _modelo_115_observations():
-            repository.save(
-                repository.prepare_observation_envelope(
-                    observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repository = CalculationObservationRepository()
+            for observation in _modelo_115_observations():
+                repository.save(
+                    repository.prepare_observation_envelope(
+                        observation,
+                        source_kind="app_filing",
+                        stamped_revision_id=revision_id_for_observation(observation),
+                    )
                 )
+
+            snapshot = _snapshot("180", 2026, "0A")
+            result = resolve_relations_from_local_store(
+                snapshot, repository=repository, operation=_authority_operation_for_test
             )
 
-        snapshot = _snapshot("180", 2026, "0A")
-        result = resolve_relations_from_local_store(snapshot, repository=repository)
-
-    resolved = [rv for rv in result.values if rv.value is not None]
-    assert resolved, "at least one relation must resolve from M115 observations"
-    for rv in resolved:
-        assert rv.provenance == "local_filing", (
-            f"resolved relation {rv.relation!r} must carry provenance='local_filing' "
-            f"but got {rv.provenance!r}; the provenance contract was lost at the "
-            "modelo→filing handoff boundary"
-        )
+        resolved = [rv for rv in result.values if rv.value is not None]
+        assert resolved, "at least one relation must resolve from M115 observations"
+        for rv in resolved:
+            assert rv.provenance == "local_filing", (
+                f"resolved relation {rv.relation!r} must carry provenance='local_filing' "
+                f"but got {rv.provenance!r}; the provenance contract was lost at the "
+                "modelo→filing handoff boundary"
+            )
 
 
 def _diagnosed_relation_ids(resolution: CalculationSourceResolution) -> set[str]:
@@ -572,48 +582,56 @@ def testscoped_relation_source_requirements_drops_pre_activity_quarters() -> Non
 
 def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Path) -> None:
     """A Q2-start filer folds the quarters it filed; the pre-activity 1T is scoped, not left unresolved (IRPF-1)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-        # The filer started activity in Q2, so it has no 1T M130 obligation; it
-        # filed 2T/3T/4T only. Zero-valued later filings prove the fold resolves
-        # rather than going all-or-nothing because 1T is absent.
-        q2_payment = Decimal("640")
-        for observation in _modelo_130_pagos_observations(
-            {"2T": q2_payment, "3T": Decimal("0"), "4T": Decimal("0")},
-        ):
-            repository.save(
-                repository.prepare_observation_envelope(
-                    observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repository = CalculationObservationRepository()
+            # The filer started activity in Q2, so it has no 1T M130 obligation; it
+            # filed 2T/3T/4T only. Zero-valued later filings prove the fold resolves
+            # rather than going all-or-nothing because 1T is absent.
+            q2_payment = Decimal("640")
+            for observation in _modelo_130_pagos_observations(
+                {"2T": q2_payment, "3T": Decimal("0"), "4T": Decimal("0")},
+            ):
+                repository.save(
+                    repository.prepare_observation_envelope(
+                        observation,
+                        source_kind="app_filing",
+                        stamped_revision_id=revision_id_for_observation(observation),
+                    )
                 )
+            snapshot = _snapshot("100", 2024, "0A")
+            prefill = resolve_relations_from_local_store(
+                snapshot,
+                repository=repository,
+                activity_start_date=date(2024, 4, 1),
+                operation=_authority_operation_for_test,
             )
-        snapshot = _snapshot("100", 2024, "0A")
-        prefill = resolve_relations_from_local_store(
-            snapshot,
-            repository=repository,
-            activity_start_date=date(2024, 4, 1),
-        )
-        m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
-        assert m130.value == q2_payment
+            m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
+            assert m130.value == q2_payment
 
 
 def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> None:
     """A missing POST-activity quarter still unresolves — no-silent-under-declaration is preserved (IRPF-1)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-        # Q2-start filer filed 2T and 4T but NOT 3T — a genuine in-scope gap, not a
-        # pre-activity period. The fold must stay unresolved (blank for the operator
-        # to confirm), never silently summed over the hole.
-        for observation in _modelo_130_pagos_observations({"2T": Decimal("640"), "4T": Decimal("800")}):
-            repository.save(
-                repository.prepare_observation_envelope(
-                    observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repository = CalculationObservationRepository()
+            # Q2-start filer filed 2T and 4T but NOT 3T — a genuine in-scope gap, not a
+            # pre-activity period. The fold must stay unresolved (blank for the operator
+            # to confirm), never silently summed over the hole.
+            for observation in _modelo_130_pagos_observations({"2T": Decimal("640"), "4T": Decimal("800")}):
+                repository.save(
+                    repository.prepare_observation_envelope(
+                        observation,
+                        source_kind="app_filing",
+                        stamped_revision_id=revision_id_for_observation(observation),
+                    )
                 )
+            snapshot = _snapshot("100", 2024, "0A")
+            prefill = resolve_relations_from_local_store(
+                snapshot,
+                repository=repository,
+                activity_start_date=date(2024, 4, 1),
+                operation=_authority_operation_for_test,
             )
-        snapshot = _snapshot("100", 2024, "0A")
-        prefill = resolve_relations_from_local_store(
-            snapshot,
-            repository=repository,
-            activity_start_date=date(2024, 4, 1),
-        )
-        m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
-        assert m130.value is None
+            m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
+            assert m130.value is None

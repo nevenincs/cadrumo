@@ -22,6 +22,7 @@ from cadrumo.application.modelo.export import (
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -122,20 +123,22 @@ def test_export_service_refuses_ledger_revision_without_evidence_reference(
     active_profile: None,
     tmp_path: Path,
 ) -> None:
-    revision = _revision(source_transaction_ids=(_TX_ID,))
-    repository = CalculationRevisionCatalogueRepository()
-    repository.save(upsert_calculation_revision(repository.load(), revision))
-    output_path = tmp_path / "modelo-303.txt"
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        revision = _revision(source_transaction_ids=(_TX_ID,))
+        repository = CalculationRevisionCatalogueRepository()
+        repository.save(upsert_calculation_revision(repository.load(), revision))
+        output_path = tmp_path / "modelo-303.txt"
 
-    with pytest.raises(ModeloExportEvidenceMissingError):
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=revision.calculation_revision_id,
-                output_path=output_path,
-                actor="operator",
-            ),
-            workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL")),
-            export_ports=_inward_export_ports(calculation=repository),
-        )
+        with pytest.raises(ModeloExportEvidenceMissingError):
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=revision.calculation_revision_id,
+                    output_path=output_path,
+                    actor="operator",
+                ),
+                workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL")),
+                export_ports=_inward_export_ports(calculation=repository),
+                operation=_authority_operation_for_test,
+            )
 
-    assert not output_path.exists()
+        assert not output_path.exists()

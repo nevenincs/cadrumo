@@ -28,6 +28,7 @@ test (aeat-quality-gates).
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -52,6 +53,7 @@ from cadrumo.core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
@@ -61,6 +63,13 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation across operator ingress and IVA projection."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BUCKET_ID = "5d5d5d5d-5d5d-4d5d-8d5d-5d5d5d5d5d5d"
 _PERIOD = Period.from_year_and_code(2026, "1T")
@@ -135,7 +144,11 @@ def _save_txns(
     return tx_repo
 
 
-def _deducible_cuota(tx_repo: TransactionCatalogueRepository) -> Decimal:
+def _deducible_cuota(
+    tx_repo: TransactionCatalogueRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Decimal:
     revision = compiled_bundled_authority().modelo("303").revisions[_REVISION]
     aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=_BUCKET_ID,
@@ -144,21 +157,29 @@ def _deducible_cuota(tx_repo: TransactionCatalogueRepository) -> Decimal:
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=_BUCKET_ID,
+        operation=operation,
     )
     values = resolve_iva_ledger_binding_values(
         revision,
         aggregation.observations,
         prorrata_apportionment=aggregation.prorrata_apportionment,
+        operation=operation,
     )
     return values.get(_DEDUCIBLE_CUOTA_BINDING, Decimal("0"))
 
 
-def _active_service() -> ProrrataRegisterService:
+def _active_service(*, operation: PinnedAuthorityOperation) -> ProrrataRegisterService:
     """The service the elect / declare-sector CLI verbs call (active-bucket bound)."""
-    return ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID))
+    return ProrrataRegisterService(
+        repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+        operation=operation,
+    )
 
 
-def test_elect_especial_via_service_makes_art106_apportionment_fire(tmp_path: Path) -> None:
+def test_elect_especial_via_service_makes_art106_apportionment_fire(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Electing especial through the CLI's service routes the three art. 106 reglas."""
     txns = (
         _purchase("buy-excl-ded", classification=InputClassification._from_registry("exclusively_deductible")),
@@ -171,10 +192,10 @@ def test_elect_especial_via_service_makes_art106_apportionment_fire(tmp_path: Pa
         tx_repo = _save_txns(objects, txns)
 
         # Non-electing operator: no register write -> whole-entity, no apportionment.
-        baseline = _deducible_cuota(tx_repo)
+        baseline = _deducible_cuota(tx_repo, operation=authority_operation)
 
         # Operator elects especial through the exact service `elect-especial` calls.
-        _active_service().declare(
+        _active_service(operation=authority_operation).declare(
             ProrrataRegisterEntry(
                 ejercicio=_EJERCICIO,
                 regime=ProrrataRegisterRegime._from_registry("especial"),
@@ -184,7 +205,7 @@ def test_elect_especial_via_service_makes_art106_apportionment_fire(tmp_path: Pa
                 source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
             )
         )
-        especial = _deducible_cuota(tx_repo)
+        especial = _deducible_cuota(tx_repo, operation=authority_operation)
 
     multiplier = general_percentage / Decimal("100")
     # LIVA art. 106.Uno: regla 1.a (full) + regla 2.a (nil) + regla 3.a (general %).
@@ -198,7 +219,10 @@ def test_elect_especial_via_service_makes_art106_apportionment_fire(tmp_path: Pa
     assert especial != baseline
 
 
-def test_declare_sector_via_service_makes_per_sector_apportionment_fire(tmp_path: Path) -> None:
+def test_declare_sector_via_service_makes_per_sector_apportionment_fire(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Declaring sectors + tagging rows through the CLI's service routes per-sector %."""
     txns = (
         _purchase("sector-a-row", sector_id="sector-a"),
@@ -211,9 +235,9 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(tmp_path
         objects = profile.repository
         tx_repo = _save_txns(objects, txns)
 
-        baseline = _deducible_cuota(tx_repo)
+        baseline = _deducible_cuota(tx_repo, operation=authority_operation)
 
-        service = _active_service()
+        service = _active_service(operation=authority_operation)
         # Operator declares the art. 9.1.c partition (`declare-sector`) ...
         service.declare_sector(
             SectorDefinition(
@@ -239,7 +263,7 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(tmp_path
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )
-        sectored = _deducible_cuota(tx_repo)
+        sectored = _deducible_cuota(tx_repo, operation=authority_operation)
 
     # LIVA art. 101: each sector's input deducts at its sector percentage.
     expected_sectored = _INPUT_CUOTA * (sector_a_pct / Decimal("100")) + _INPUT_CUOTA * (sector_b_pct / Decimal("100"))
@@ -251,7 +275,10 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(tmp_path
     assert sectored != baseline
 
 
-def test_non_electing_operator_path_is_byte_identical(tmp_path: Path) -> None:
+def test_non_electing_operator_path_is_byte_identical(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """With no operator election, the aggregate is exactly the unapportioned cuota."""
     txns = (
         _purchase("row-1"),
@@ -260,6 +287,6 @@ def test_non_electing_operator_path_is_byte_identical(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = _save_txns(objects, txns)
-        result = _deducible_cuota(tx_repo)
+        result = _deducible_cuota(tx_repo, operation=authority_operation)
 
     assert result == _INPUT_CUOTA * 2

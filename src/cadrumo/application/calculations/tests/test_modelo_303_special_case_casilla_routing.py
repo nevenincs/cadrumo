@@ -39,6 +39,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
@@ -215,19 +217,21 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted() -> None:
     anomaly. Reds if the category ever produces a silent declarable deducible
     observation.
     """
-    report = aggregate_iva_ledger_observations(
-        TransactionCatalogue.from_transactions((_recargo_purchase(),)),
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
-        ledger_profile_id="m303-special-test",
-        investment_asset_register=BienesInversionIvaRegister(),
-        investment_asset_profile_id="m303-special-test",
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        report = aggregate_iva_ledger_observations(
+            TransactionCatalogue.from_transactions((_recargo_purchase(),)),
+            period=Period.from_year_and_code(_YEAR, _PERIOD),
+            ledger_profile_id="m303-special-test",
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id="m303-special-test",
+            operation=_authority_operation_for_test,
+        )
 
-    # No declarable deducible observation was _produced for the recargo purchase...
-    assert all(obs.category != IvaCategory("recargo_equivalencia") for obs in report.observations), (
-        "recargo-equivalencia must not yield a declarable IVA observation (non-deductible cost)"
-    )
-    # ...and the exclusion is SURFACED (non-silent) with the unsupported-category reason.
-    assert any(issue.reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY for issue in report.issues), (
-        "recargo-equivalencia exclusion must be surfaced as an UNSUPPORTED_IVA_CATEGORY issue, not silent"
-    )
+        # No declarable deducible observation was _produced for the recargo purchase...
+        assert all(obs.category != IvaCategory("recargo_equivalencia") for obs in report.observations), (
+            "recargo-equivalencia must not yield a declarable IVA observation (non-deductible cost)"
+        )
+        # ...and the exclusion is SURFACED (non-silent) with the unsupported-category reason.
+        assert any(
+            issue.reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY for issue in report.issues
+        ), "recargo-equivalencia exclusion must be surfaced as an UNSUPPORTED_IVA_CATEGORY issue, not silent"

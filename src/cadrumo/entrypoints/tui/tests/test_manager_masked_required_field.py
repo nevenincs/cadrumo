@@ -176,8 +176,13 @@ async def test_a_required_masked_field_holding_a_value_keeps_it_on_a_blank_save(
     two are worth reading together.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE, "fixture must start with a value to lose"
@@ -203,8 +208,13 @@ async def test_the_dialog_explains_the_no_change_reading_wherever_it_applies(tmp
     same field, so neither half can drift alone.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
@@ -240,8 +250,13 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
     why saving it changed nothing.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         assert _MASKED_PATH not in _stored(), "the field must start empty for this to be the case under test"
 
@@ -259,8 +274,13 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
 async def test_whitespace_in_an_empty_required_masked_field_refuses_too(tmp_path) -> None:
     """Spaces read as blank everywhere else, so they must draw the same refusal."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -282,8 +302,13 @@ async def test_a_typed_value_still_reaches_the_record(tmp_path) -> None:
     unfillable -- a worse failure than the one being fixed.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -311,8 +336,13 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
     and the outcome is the one every empty optional field already had.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -350,8 +380,13 @@ async def test_a_required_masked_field_is_never_offered_a_clear_button(tmp_path)
     outcome the dialog then has to take back.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 

@@ -31,6 +31,7 @@ invoice. What the gates below pin is that neither half happens silently.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -42,6 +43,7 @@ from cadrumo.domain.iva.schema import IvaCategory
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
@@ -59,6 +61,13 @@ from .iva_authority_support import aggregate_iva_ledger_observations
 from .renta_income_aggregation_support import raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation across the invoice binding comparisons."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 # The invoice, stated once. Derived from the two cited rates and the canonical
 # identity, not from engine output.
@@ -518,7 +527,9 @@ def _modelo_303_revision() -> ModeloRevision:
     )
 
 
-def test_the_committed_m303_bindings_receive_the_invoice_figures() -> None:
+def test_the_committed_m303_bindings_receive_the_invoice_figures(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The IVA leg reaches its filed casillas, not merely its observation.
 
     The repercutido base takes the same 1000 the income casilla takes, and the
@@ -538,13 +549,15 @@ def test_the_committed_m303_bindings_receive_the_invoice_figures() -> None:
         period=_PERIOD,
     )
 
-    resolved = resolve_iva_ledger_binding_values(revision, iva.observations)
+    resolved = resolve_iva_ledger_binding_values(revision, iva.observations, operation=authority_operation)
 
     assert resolved[_M303_REPERCUTIDO_BASE_BINDING] == _BASE
     assert resolved[_M303_REPERCUTIDO_CUOTA_BINDING] == _CUOTA
 
 
-def test_the_two_modelos_draw_the_same_base_from_one_invoice() -> None:
+def test_the_two_modelos_draw_the_same_base_from_one_invoice(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """M130 casilla 01 and the M303 repercutido base are one figure, filed twice.
 
     This is the reconciliation the module is named for, asserted at the layer
@@ -557,7 +570,7 @@ def test_the_two_modelos_draw_the_same_base_from_one_invoice() -> None:
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
     m130 = resolve_ledger_renta_income_aggregation_binding_values(_modelo_130_revision(), income.observations)
-    m303 = resolve_iva_ledger_binding_values(_modelo_303_revision(), iva.observations)
+    m303 = resolve_iva_ledger_binding_values(_modelo_303_revision(), iva.observations, operation=authority_operation)
 
     assert m130[_M130_INGRESOS_BINDING] == _BASE
     assert m303[_M303_REPERCUTIDO_BASE_BINDING] == _BASE

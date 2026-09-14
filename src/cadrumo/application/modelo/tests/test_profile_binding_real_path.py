@@ -29,6 +29,7 @@ Design notes
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
@@ -42,6 +43,7 @@ from dev.registry.tests.profile_schema_support import (
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -55,6 +57,13 @@ from ..profile_binding import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for each profile-binding path test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000477"
 _BUCKET_ID = _PROFILE_ID
@@ -200,7 +209,9 @@ def test_profile_model_selector_resolves_via_model_selector_alias() -> None:
     assert fact_index["TaxResidenceProfile.ccaa"] == "cataluna"
 
 
-def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
+def test_every_scalar_profile_binding_resolves_to_typed_value(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """For each scalar ``profile_key`` / ``profile_model`` binding, ``resolve_profile_binding_value`` returns a non-None value.
 
     The full-population profile fixture covers all scalar profile_key-form
@@ -226,7 +237,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
     inject_derived_marriage_facts(fact_index, _YEAR)
     # Madrid nacimiento/adopción derived scalars (eligible count + unidad-familiar
     # base) are likewise injected at resolution time, defaulting to 0.
-    inject_derived_autonomic_deduccion_facts(fact_index, _YEAR)
+    inject_derived_autonomic_deduccion_facts(fact_index, _YEAR, operation=authority_operation)
 
     # Deliberately absent binding — tested separately.
     absent = "renta-profile-taxpayer-death-date"
@@ -252,7 +263,9 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
         )
 
 
-def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date() -> None:
+def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A single taxpayer does not owe an impossible marriage date to resolve 0245-0247."""
     snapshot = _modelo_100_snapshot()
     record = _create_profile_record_for_test(
@@ -271,14 +284,21 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
         context=_profile_creation_context_for_test(),
     )
 
-    resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
+    resolved = resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id=_BUCKET_ID,
+        profile_record=record,
+        operation=authority_operation,
+    )
 
     assert resolved.binding_values["renta-profile-marriage-full-year"] == Decimal("0")
     assert resolved.binding_values["renta-profile-marriage-month-start"] == Decimal("0")
     assert resolved.binding_values["renta-profile-marriage-month-end"] == Decimal("0")
 
 
-def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
+def test_pareja_hecho_status_does_not_feed_official_ecivil_channels(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Profile-only marital status 5 must not reach Modelo 100 ECIVIL export channels."""
     snapshot = _modelo_100_snapshot()
     ecivil_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == "ECIVIL")
@@ -312,7 +332,12 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
         context=_profile_creation_context_for_test(),
     )
 
-    resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
+    resolved = resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id=_BUCKET_ID,
+        profile_record=record,
+        operation=authority_operation,
+    )
 
     assert ecivil_binding_id not in resolved.binding_values
     assert ecivil_binding_id not in resolved.enum_binding_values
@@ -322,7 +347,9 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
     assert resolved.binding_values["renta-profile-marriage-month-end"] == Decimal("0")
 
 
-def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved() -> None:
+def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A married taxpayer still needs the actual marriage date for Art. 82 month facts."""
     snapshot = _modelo_100_snapshot()
     record = _create_profile_record_for_test(
@@ -341,7 +368,12 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved()
         context=_profile_creation_context_for_test(),
     )
 
-    resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
+    resolved = resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id=_BUCKET_ID,
+        profile_record=record,
+        operation=authority_operation,
+    )
 
     assert "renta-profile-marriage-full-year" not in resolved.binding_values
     assert "renta-profile-marriage-month-start" not in resolved.binding_values

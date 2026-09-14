@@ -15,6 +15,7 @@ territory fact must state it explicitly.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -26,6 +27,7 @@ from dev.registry.tests.profile_schema_support import (
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
 from ..profile_binding import (
     ProfileBindingResolutionError,
@@ -35,42 +37,55 @@ from ..profile_binding import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease the governed territory vocabulary for each state-attribution test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
 _RATIO_KEY = "tax_residence.state_attribution_ratio"
 _SCOPE_KEY = "tax_residence.jurisdiction_scope"
 _BINDING_ID = "modelo-303-profile-state-attribution-ratio"
 _CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
 
 
-def test_injector_refuses_absent_scope_instead_of_defaulting_common_regime() -> None:
+def test_injector_refuses_absent_scope_instead_of_defaulting_common_regime(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     fact_index: dict[str, UserProfileFactValue] = {}
     with pytest.raises(ProfileBindingResolutionError, match="cannot default to common regime"):
-        _inject_derived_state_attribution_facts(fact_index)
+        _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
 
 
-def test_injector_common_regime_resolves_to_one_hundred() -> None:
+def test_injector_common_regime_resolves_to_one_hundred(authority_operation: PinnedAuthorityOperation) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "common_regime"}
-    _inject_derived_state_attribution_facts(fact_index)
+    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 
-def test_injector_explicit_foral_resolves_to_zero() -> None:
+def test_injector_explicit_foral_resolves_to_zero(authority_operation: PinnedAuthorityOperation) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "foral_unsupported"}
-    _inject_derived_state_attribution_facts(fact_index)
+    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("0")
 
 
-def test_injector_refuses_legacy_ratio_as_authority_without_scope() -> None:
+def test_injector_refuses_legacy_ratio_as_authority_without_scope(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_RATIO_KEY: Decimal("50")}
     with pytest.raises(ProfileBindingResolutionError, match="cannot default to common regime"):
-        _inject_derived_state_attribution_facts(fact_index)
+        _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
 
 
-def test_injector_overwrites_legacy_ratio_from_explicit_scope() -> None:
+def test_injector_overwrites_legacy_ratio_from_explicit_scope(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     fact_index: dict[str, UserProfileFactValue] = {
         _SCOPE_KEY: "common_regime",
         _RATIO_KEY: Decimal("50"),
     }
-    _inject_derived_state_attribution_facts(fact_index)
+    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 
@@ -105,20 +120,25 @@ def _profile_without_jurisdiction_scope() -> UserProfileRecord:
     )
 
 
-def test_non_m303_profile_resolution_does_not_require_jurisdiction_scope() -> None:
+def test_non_m303_profile_resolution_does_not_require_jurisdiction_scope(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
 
     result = resolve_profile_sourced_bindings(
         snapshot,
         bucket_id="state-attribution-test",
         profile_record=_profile_without_jurisdiction_scope(),
+        operation=authority_operation,
     )
 
     assert result.resolver_id == "profile"
     assert _BINDING_ID not in result.binding_values
 
 
-def test_m303_profile_resolution_refuses_missing_jurisdiction_scope() -> None:
+def test_m303_profile_resolution_refuses_missing_jurisdiction_scope(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
     with pytest.raises(ProfileBindingResolutionError, match="jurisdiction_scope"):
@@ -126,16 +146,20 @@ def test_m303_profile_resolution_refuses_missing_jurisdiction_scope() -> None:
             snapshot,
             bucket_id="state-attribution-test",
             profile_record=_profile_without_jurisdiction_scope(),
+            operation=authority_operation,
         )
 
 
-def test_303_state_attribution_binding_resolves_to_100_for_common_profile() -> None:
+def test_303_state_attribution_binding_resolves_to_100_for_common_profile(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """End-to-end at the resolver boundary: the bound-casilla profile binding resolves to 100."""
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     result = resolve_profile_sourced_bindings(
         snapshot,
         bucket_id="state-attribution-test",
         profile_record=_common_profile(),
+        operation=authority_operation,
     )
     assert result.binding_values.get(_BINDING_ID) == Decimal("100"), (
         "M303 state-attribution ratio must resolve to 100 for a común-territory profile; "

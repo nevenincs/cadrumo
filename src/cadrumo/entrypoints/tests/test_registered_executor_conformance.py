@@ -15,6 +15,8 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
@@ -28,6 +30,7 @@ from ...adapters.persistence.operations.journal import OperationJournalRepositor
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -36,6 +39,9 @@ from ...adapters.persistence.profile.tests.cross_period_seeding import (
     seed_clean_cross_period_sources,
 )
 from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from ...adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.auth.operation_definitions import build_auth_operation_definitions
@@ -106,6 +112,13 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
+from ..adapter_composition import (
+    build_calculation_action_ports,
+    build_censal_fetch_port,
+    build_filing_action_ports,
+    build_verification_repository_bundle,
+    build_work_lifecycle_ports,
+)
 from ..censal_review import _run as run_censal_review_through_services
 from ..operation_composition import build_production_operation_registry
 
@@ -179,6 +192,7 @@ def _seeded_modelo_work_unit(profile_id: UUID) -> WorkUnit:
         period=Period.from_year_and_code(_MODELO_FILING_YEAR, _MODELO_PERIOD),
         revision_id=revision.id,
         actor=_ACTOR,
+        ports=build_work_lifecycle_ports(bucket_id=str(profile_id)),
     )
 
 
@@ -450,12 +464,14 @@ def _seeded_modelo_calculation_revision(profile_id: UUID) -> str:
     unit itself, so nothing here opens a second write path.
     """
     unit = _seeded_modelo_work_unit(profile_id)
-    revision = calculate_modelo_revision(
-        unit.work_unit_id,
-        actor=_ACTOR,
-        casilla_inputs={},
-        binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
+            actor=_ACTOR,
+            casilla_inputs={},
+            binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+        )
     return str(revision.calculation_revision_id)
 
 
@@ -488,19 +504,24 @@ def _seeded_modelo_verification_report(profile_id: UUID) -> tuple[str, str]:
         filing_repository=ModeloRecordCatalogueRepository(),
         bucket_event_repository=BucketEventHistoryRepository(),
     )
-    revision = calculate_modelo_revision(
-        unit.work_unit_id,
-        actor=_ACTOR,
-        casilla_inputs={},
-        binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-    )
-    revision_id = str(revision.calculation_revision_id)
-    report = verify_modelo_revision(
-        revision_id,
-        actor=_ACTOR,
-        workflow_profile=resolve_active_workflow_profile(),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
+            actor=_ACTOR,
+            casilla_inputs={},
+            binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+        )
+        revision_id = str(revision.calculation_revision_id)
+        report = verify_modelo_revision(
+            revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_verification_repository_bundle(unit.bucket_id),
+            actor=_ACTOR,
+            workflow_profile=resolve_active_workflow_profile(),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     # Verifying SUCCESSFULLY and GRANTING completeness are different outcomes: a
     # run that reports blocking findings settles fine while leaving the revision
     # in BORRADOR, and filing then refuses a state this fixture believed it had
@@ -573,6 +594,7 @@ def _seeded_modelo_filing_record(profile_id: UUID) -> tuple[str, str]:
         calculation_repository=CalculationRevisionCatalogueRepository(),
         filing_repository=ModeloRecordCatalogueRepository(),
         bucket_event_repository=BucketEventHistoryRepository(),
+        observation_repository=CalculationObservationRepository(),
         expected_tax_id=SEEDED_SOURCE_TAX_ID,
         clock=evidence_clock,
     )
@@ -604,12 +626,14 @@ def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
 
     unit = _seeded_modelo_work_unit(profile_id)
     seeded_casilla_id = validated_casilla_id("06")
-    revision = calculate_modelo_revision(
-        unit.work_unit_id,
-        actor=_ACTOR,
-        casilla_inputs={seeded_casilla_id: Decimal("0")},
-        binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
+            actor=_ACTOR,
+            casilla_inputs={seeded_casilla_id: Decimal("0")},
+            binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+        )
     objects = secure_object_repository_for_active_bucket()
     work_catalogue = WorkUnitCatalogueRepository(objects=objects).load()
     calculation_catalogue = CalculationRevisionCatalogueRepository(objects=objects).load()
@@ -855,9 +879,12 @@ def _runtime(
         registry = build_production_operation_registry(
             auth_definitions=build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login),
             censal_definition=build_censal_operation_definition(
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+                browser_session_factory=default_browser_session_factory,
                 acquire=acquire_censo,
                 before_irreversible_section=before_irreversible_section,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                censal_fetch_port=build_censal_fetch_port(),
             ),
             google_export_definition=build_google_sheets_export_operation_definition(),
         )
@@ -1137,12 +1164,16 @@ def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_o
     with _runtime(tmp_path / "authority-control", cleanup=_CloseWitness()) as (_driver, _registry, profile_id):
         revision_id, _report_id = _seeded_modelo_verification_report(profile_id)
 
-        record = file_modelo_revision(
-            revision_id,
-            actor=_ACTOR,
-            workflow_profile=resolve_active_workflow_profile(),
-            notes=None,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            record = file_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                ports=build_filing_action_ports(bucket_id=str(profile_id)),
+                actor=_ACTOR,
+                workflow_profile=resolve_active_workflow_profile(),
+                operation=operation,
+                notes=None,
+            )
 
         assert record is not None, "the filing authority produced no record for a verified-complete revision"

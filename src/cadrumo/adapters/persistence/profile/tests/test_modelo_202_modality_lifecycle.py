@@ -507,10 +507,13 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(tmp_pa
             bucket_id=_BUCKET_ID,
         )
 
-        with pytest.raises(
-            CalculationRevisionStateError,
-            match="error_modelo_calculation_revision_state",
-        ) as state_error, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(
+                CalculationRevisionStateError,
+                match="error_modelo_calculation_revision_state",
+            ) as state_error,
+            bundled_indexed_authority().operation() as operation,
+        ):
             file_modelo_revision(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),

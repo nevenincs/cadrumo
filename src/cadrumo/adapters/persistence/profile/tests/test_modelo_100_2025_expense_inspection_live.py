@@ -18,11 +18,8 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -33,9 +30,9 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -49,6 +46,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -255,11 +253,6 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
     transactions = _seed_sofia_ledger(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
 
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-
     # This was Sofia's blocker: resolving/creating M100/2025 work raised the
     # internal export-selector projection error before a calculation existed.
     work_unit = create_work_unit(
@@ -268,9 +261,7 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
         revision_id=_REVISION_ID,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
     )
 
@@ -281,16 +272,14 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
         str(binding_by_id[_M100_OTHER_EXPENSES_BINDING].source) == "ledger_renta_gastos_estimacion_directa_aggregation"
     )
 
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        actor="operator-sofia",
-        binding_values=_m100_caller_zero_bindings(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            actor="operator-sofia",
+            binding_values=_m100_caller_zero_bindings(),
+            clock=_T1,
+        )
 
     assert isinstance(result, BucketAggregationCalculationResult)
     values = result.revision.casilla_values

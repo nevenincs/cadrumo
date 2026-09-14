@@ -16,6 +16,7 @@ construction.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from typing import Any
@@ -24,6 +25,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import (
     calculate_registry_snapshot,
@@ -45,6 +47,13 @@ from ..profile_binding import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for each profile-channel transport test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
 _ANUALIDADES_BINDING = "renta-profile-anualidades-sin-minimo-descendientes"
 _ECONOMIC_ACTIVITY_BINDING = "renta-profile-has-economic-activity"
 _BIRTH_DATE_BINDING = "renta-profile-taxpayer-birth-date"
@@ -64,7 +73,10 @@ def _binding(snapshot: RegistrySnapshot, binding_id: str) -> Any:
 
 
 @pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
-def test_boolean_contract_bindings_never_appear_on_the_decimal_channel(year: int) -> None:
+def test_boolean_contract_bindings_never_appear_on_the_decimal_channel(
+    year: int,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Whatever the profile holds, a boolean contract does not land on Decimal.
 
     The defect this closes is silent, so the assertion is stated as an
@@ -77,7 +89,11 @@ def test_boolean_contract_bindings_never_appear_on_the_decimal_channel(year: int
     boolean_ids = {
         binding.id for binding in snapshot.revision.bindings if binding.value.channel is BindingValueChannel.BOOLEAN
     }
-    resolution = resolve_profile_sourced_bindings(snapshot, bucket_id="nonexistent-bucket-for-channel-shape")
+    resolution = resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id="nonexistent-bucket-for-channel-shape",
+        operation=authority_operation,
+    )
 
     assert not (boolean_ids & set(resolution.binding_values))
 
@@ -333,7 +349,9 @@ def test_the_boolean_operand_is_absent_from_the_decimal_channel_in_that_same_run
 # ---------------------------------------------------------------------------
 
 
-def test_declared_date_binding_resolves_on_the_date_channel_without_a_date_consumer() -> None:
+def test_declared_date_binding_resolves_on_the_date_channel_without_a_date_consumer(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A date contract is a date contract even where no ``age_at_year_end`` reads it.
 
     The regression this pins is the one consumer-shape inference cannot avoid:
@@ -358,6 +376,7 @@ def test_declared_date_binding_resolves_on_the_date_channel_without_a_date_consu
         caller_binding_ids=frozenset(),
         formula_date_consumed=frozenset(),
         enum_bindings=frozenset(),
+        operation=authority_operation,
     )
 
     assert channels.date_values == {_BIRTH_DATE_BINDING: date(1980, 3, 4)}
@@ -365,7 +384,9 @@ def test_declared_date_binding_resolves_on_the_date_channel_without_a_date_consu
     assert not channels.boolean_values
 
 
-def test_declared_boolean_binding_resolves_on_the_boolean_channel_without_a_consumer() -> None:
+def test_declared_boolean_binding_resolves_on_the_boolean_channel_without_a_consumer(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Same invariant on the boolean side: the declaration is the authority."""
     snapshot = _snapshot()
     binding = _binding(snapshot, _ANUALIDADES_BINDING)
@@ -377,13 +398,16 @@ def test_declared_boolean_binding_resolves_on_the_boolean_channel_without_a_cons
         caller_binding_ids=frozenset(),
         formula_date_consumed=frozenset(),
         enum_bindings=frozenset(),
+        operation=authority_operation,
     )
 
     assert channels.boolean_values == {_ANUALIDADES_BINDING: True}
     assert not channels.decimal_values
 
 
-def test_resolver_refuses_a_decimal_standing_in_for_a_boolean_contract() -> None:
+def test_resolver_refuses_a_decimal_standing_in_for_a_boolean_contract(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """``Decimal("1")`` is not a truth value, and is not quietly read as one.
 
     Accepting it would restore the very ambiguity the channel removes, because
@@ -400,10 +424,13 @@ def test_resolver_refuses_a_decimal_standing_in_for_a_boolean_contract() -> None
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset(),
             enum_bindings=frozenset(),
+            operation=authority_operation,
         )
 
 
-def test_resolver_refuses_a_truth_value_for_a_money_contract() -> None:
+def test_resolver_refuses_a_truth_value_for_a_money_contract(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The symmetric refusal: a bool must not become an amount.
 
     This is the direction that produces a filing-grade figure out of a fact
@@ -424,10 +451,13 @@ def test_resolver_refuses_a_truth_value_for_a_money_contract() -> None:
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset(),
             enum_bindings=frozenset(),
+            operation=authority_operation,
         )
 
 
-def test_resolver_refuses_a_declaration_that_contradicts_its_consuming_formula() -> None:
+def test_resolver_refuses_a_declaration_that_contradicts_its_consuming_formula(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A contract and its consumer disagreeing is a defect, not a routing choice.
 
     With the declaration made authoritative, this cross-check is what keeps a
@@ -447,6 +477,7 @@ def test_resolver_refuses_a_declaration_that_contradicts_its_consuming_formula()
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset({_ANUALIDADES_BINDING}),
             enum_bindings=frozenset(),
+            operation=authority_operation,
         )
 
 

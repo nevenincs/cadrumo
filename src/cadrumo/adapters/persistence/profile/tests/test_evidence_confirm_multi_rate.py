@@ -27,7 +27,9 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
@@ -61,6 +63,7 @@ def _confirm_the_two_rate_document(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    authority: InvoiceAuthorityFixture,
 ):
     source = tmp_path / "en16931_ubl_two_rate_invoice.xml"
     source.write_bytes(_TWO_RATE_FIXTURE.read_bytes())
@@ -72,7 +75,7 @@ def _confirm_the_two_rate_document(
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -80,6 +83,7 @@ def test_both_rates_survive_the_confirm_boundary(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The confirmed invoice carries a line per rate, not one collapsed line.
 
@@ -93,6 +97,7 @@ def test_both_rates_survive_the_confirm_boundary(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
     lines = result.invoice.lines
 
@@ -105,6 +110,7 @@ def test_the_invoice_level_identity_holds_exactly_on_the_parsed_document(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """Grand total equals base plus IVA exactly, with no per-line rounding drift.
 
@@ -121,6 +127,7 @@ def test_the_invoice_level_identity_holds_exactly_on_the_parsed_document(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
     invoice = result.invoice
 
@@ -140,6 +147,7 @@ def test_re_confirming_the_two_rate_document_is_a_guarded_no_op(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """A second confirm returns the existing invoice rather than refusing.
 
@@ -156,11 +164,13 @@ def test_re_confirming_the_two_rate_document_is_a_guarded_no_op(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
     second = _confirm_the_two_rate_document(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert first.created is True

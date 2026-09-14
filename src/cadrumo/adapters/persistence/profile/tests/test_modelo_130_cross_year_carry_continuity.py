@@ -56,9 +56,9 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -67,6 +67,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -194,25 +195,23 @@ def _calculate_quarter(
     ``casilla_values`` mapping the enrollment records as _produced-value
     evidence.
     """
-    wu_repo, cr_repo, bv_repo, _obs_repo = repos
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_MODELO,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         revision_id=_REVISION,
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_CLOCK,
     )
-    return calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=casilla_inputs,
-        binding_values=binding_values,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_CLOCK,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            casilla_inputs=casilla_inputs,
+            binding_values=binding_values,
+            clock=_CLOCK,
+        )
 
 
 def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_year: int) -> None:
@@ -298,9 +297,13 @@ def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Re
     # a real calculation with it. Nothing about the prior-year income is
     # re-keyed by hand.
     snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-    resolved = resolve_bindings_from_local_store(
-        snapshot_n1, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
-    ).binding_values
+    with bundled_indexed_authority().operation() as operation:
+        resolved = resolve_bindings_from_local_store(
+            snapshot_n1,
+            operation=operation,
+            repository=obs_repo,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+        ).binding_values
     assert resolved.get(_PREV_YEAR_BINDING) == _PRIOR_YEAR_NET_INCOME
 
     year_n1 = _calculate_quarter(

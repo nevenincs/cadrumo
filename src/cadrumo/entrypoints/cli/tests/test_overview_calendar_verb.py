@@ -9,12 +9,12 @@ from datetime import UTC, date, datetime
 import pytest
 from click.testing import Result
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ....adapters.outbound.aeat.sede.notifications import NotificationsSnapshot, RemoteNotification
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -22,19 +22,23 @@ from ....application.live.expedientes import (
     ExpedientesCapture,
     ExpedientesService,
 )
+from ....application.live.notification_ports import NotificationsSnapshot, RemoteNotification
 from ....application.live.notifications import NotificationsService
 from ....application.overview.calendar import build_overview_calendar
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....application.user_profile.projections import record_to_values
 from ....core.classification.policies import SensitivityClass
-from ....core.config import override_settings
+from ....core.config import load_settings, override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import clear_output_language_cache
 from ....core.period import Period
 from ....core.time.clock import frozen_clock, now, today_madrid
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.filing_repository import upsert_filing_record
-from ....domain.user_profile.values import ProfileSetupState
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
+from ....entrypoints.adapter_composition import build_expedientes_ports
+from ....entrypoints.live_state_composition import compose_notifications_ports
 from .._overview_evidence import live_censo_verified_profile_keys
 from .._overview_rendering import calendar_shift_reason_text
 from ..common import current_workflow_state, profile_to_taxpayer
@@ -247,12 +251,14 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
             )
             assert result.exit_code == 0, result.output
 
-            expected_calendar = build_overview_calendar(
-                profile,
-                OverviewCalendarRange(from_date=from_date, to_date=to_date),
-                today=reference_today,
-                raw_values=raw_values,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                expected_calendar = build_overview_calendar(
+                    profile,
+                    OverviewCalendarRange(from_date=from_date, to_date=to_date),
+                    operation=operation,
+                    today=reference_today,
+                    raw_values=raw_values,
+                )
             expected = tuple(
                 (
                     entry.modelo,
@@ -443,7 +449,7 @@ def test_calendar_output_language_applies_before_refusal_rendering() -> None:
 
 
 def test_calendar_json_includes_local_live_snapshot_events() -> None:
-    ExpedientesService().capture(
+    ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
@@ -461,7 +467,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
             authenticated_identity="57964777Q",
         ),
     )
-    NotificationsService().capture(
+    NotificationsService(ports=compose_notifications_ports(settings=load_settings())).capture(
         bucket_id=PRIMARY_PROFILE_ID,
         snapshot=NotificationsSnapshot(
             rows=(
@@ -476,7 +482,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
                     fecha_emision=date(2025, 4, 14),
                     fecha_notificacion=None,
                     leida=False,
-                    source_url=_SOURCE_URL,
+                    source_url=str(_SOURCE_URL),
                 ),
                 RemoteNotification(
                     certificado_id="2699101808461",
@@ -489,11 +495,11 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
                     fecha_emision=date(2025, 4, 14),
                     fecha_notificacion=None,
                     leida=True,
-                    source_url=_SOURCE_URL,
+                    source_url=str(_SOURCE_URL),
                 ),
             ),
             captured_at=datetime(2025, 4, 14, 10, 0, tzinfo=UTC),
-            source_url=_SOURCE_URL,
+            source_url=str(_SOURCE_URL),
         ),
     )
 
@@ -527,7 +533,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
 
 def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
     _stamp_calendar_enrolment_from_censo()
-    ExpedientesService().capture(
+    ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
@@ -600,7 +606,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
     with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
-    ExpedientesService().capture(
+    ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
@@ -691,7 +697,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
     with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
-    ExpedientesService().capture(
+    ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
@@ -916,12 +922,13 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
     """
     from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
     from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
-    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
+    from ....domain.user_profile.values import UserProfileFact
 
     verified_sources = {CENSO_SOURCE_TAG}
     assert PROVENANCE_SOURCE_MANUAL_CLI not in verified_sources
 
-    record = UserProfileRecord(
+    record = create_user_profile_record(
+        context=profile_creation_context_for_test(),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(

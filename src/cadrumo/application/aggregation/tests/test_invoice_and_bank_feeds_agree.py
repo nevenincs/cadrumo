@@ -29,6 +29,7 @@ a defect rather than a modelling choice needing interpretation.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
@@ -41,6 +42,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import EUMemberState, IvaCategory
@@ -52,6 +54,13 @@ from ..iva_ledger import resolve_iva_ledger_binding_values
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for the two-feed binding comparison."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BASE = Decimal("5000.00")
 _DAY = date(2026, 4, 15)
@@ -66,8 +75,15 @@ def _revision():
     return compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
 
 
-def _resolved(observations) -> dict[str, Decimal]:
-    return {str(k): v for k, v in resolve_iva_ledger_binding_values(_revision(), tuple(observations)).items()}
+def _resolved(observations, *, operation: PinnedAuthorityOperation) -> dict[str, Decimal]:
+    return {
+        str(k): v
+        for k, v in resolve_iva_ledger_binding_values(
+            _revision(),
+            tuple(observations),
+            operation=operation,
+        ).items()
+    }
 
 
 def _country_of(member_state: EUMemberState | None) -> str | None:
@@ -185,7 +201,9 @@ def _invoice_side(*, category: IvaCategory, country: str, tax_id: str):
     return (observation,)
 
 
-def test_both_feeds_declare_an_intra_community_supply_into_casilla_59() -> None:
+def test_both_feeds_declare_an_intra_community_supply_into_casilla_59(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The casilla is reached from both sides, with the same figure.
 
     Asserted as a comparison between the feeds rather than each against a
@@ -194,10 +212,12 @@ def test_both_feeds_declare_an_intra_community_supply_into_casilla_59() -> None:
     operation actually carries, so the two agreeing on a wrong number fails too.
     """
     bank = _resolved(
-        _bank_side(category=IvaCategory("intra_community_supply"), member_state=require_eu_member_state("DE"))
+        _bank_side(category=IvaCategory("intra_community_supply"), member_state=require_eu_member_state("DE")),
+        operation=authority_operation,
     )
     invoice = _resolved(
         _invoice_side(category=IvaCategory("intra_community_supply"), country="DE", tax_id="DE811907980"),
+        operation=authority_operation,
     )
 
     assert invoice.get(_CASILLA_59) == bank.get(_CASILLA_59), (
@@ -206,7 +226,9 @@ def test_both_feeds_declare_an_intra_community_supply_into_casilla_59() -> None:
     assert bank.get(_CASILLA_59) == _BASE, "both feeds agree, and both are wrong about the operation's base"
 
 
-def test_both_feeds_declare_an_export_into_casilla_60() -> None:
+def test_both_feeds_declare_an_export_into_casilla_60(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The second casilla, so a routing that sent everything to one is caught.
 
     A feed that collapsed every exempt base into casilla 59 would satisfy the
@@ -214,9 +236,11 @@ def test_both_feeds_declare_an_export_into_casilla_60() -> None:
     """
     bank = _resolved(
         _bank_side(category=IvaCategory("export_third_country_zero_rated"), member_state=None, country="US"),
+        operation=authority_operation,
     )
     invoice = _resolved(
         _invoice_side(category=IvaCategory("export_third_country_zero_rated"), country="US", tax_id="US987654321"),
+        operation=authority_operation,
     )
 
     assert invoice.get(_CASILLA_60) == bank.get(_CASILLA_60), (

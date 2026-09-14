@@ -58,13 +58,8 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
@@ -73,9 +68,9 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -84,6 +79,10 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -342,10 +341,6 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
     """
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -353,20 +348,16 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
         revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values=_non_relation_zero_bindings(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            binding_values=_non_relation_zero_bindings(),
+            clock=_T1,
+        )
 
 
 def test_m100_retenciones_credits_fold_in_periodic_filings_on_live_calculate(

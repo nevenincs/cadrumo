@@ -28,6 +28,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.schema import IvaCategory, require_eu_member_state
 
 from .....core.field_origin import FieldOrigin
@@ -75,20 +76,23 @@ class TestCompiledEnumerationsComeFromTheRegistry:
     @pytest.mark.parametrize("period", [_ANNUAL_2026, _Q4_2024], ids=["annual-2026", "q4-2024"])
     def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(self, period: Period) -> None:
         """Asserted on two periods whose law differs, so one hardcoded tuple cannot satisfy both."""
-        compiled = build_invoice_extraction_prompt(period=period)
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            compiled = build_invoice_extraction_prompt(period=period)
 
-        expected = sorted(
-            {
-                record.pct
-                for record in load_iva_rate_table()[require_eu_member_state("ES")]
-                if record.effective_from <= period.end_date
-                and (record.effective_until is None or record.effective_until >= period.start_date)
-            },
-        )
+            expected = sorted(
+                {
+                    record.pct
+                    for record in load_iva_rate_table(operation=_authority_operation_for_test)[
+                        require_eu_member_state("ES")
+                    ]
+                    if record.effective_from <= period.end_date
+                    and (record.effective_until is None or record.effective_until >= period.start_date)
+                },
+            )
 
-        assert list(compiled.iva_rate_pcts) == expected
-        for pct in expected:
-            assert format(pct.normalize(), "f") in compiled.text
+            assert list(compiled.iva_rate_pcts) == expected
+            for pct in expected:
+                assert format(pct.normalize(), "f") in compiled.text
 
     def test_retencion_rates_equal_the_rirpf_art_95_parameters_as_percentages(self) -> None:
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
@@ -148,27 +152,28 @@ class TestTheAntiDriftGateBitesInBothDirections:
         holding a hardcoded rate list cannot satisfy: it would keep emitting the
         original enumeration under the mutated authority.
         """
-        baseline = build_invoice_extraction_prompt(period=_ANNUAL_2026)
-        planted = Decimal("13.5")
-        assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            baseline = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+            planted = Decimal("13.5")
+            assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
 
-        real_table = load_iva_rate_table()
-        spain = real_table[require_eu_member_state("ES")]
-        extra = spain[0].model_copy(
-            update={
-                "pct": planted,
-                "effective_from": _ANNUAL_2026.start_date,
-                "effective_until": None,
-            },
-        )
-        mutated = dict(real_table) | {require_eu_member_state("ES"): (*spain, extra)}
-        # Patch the defining module used by the prompt builder.
-        with scoped_attribute(_iva_rates_module, "load_iva_rate_table", lambda: mutated):
-            after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+            real_table = load_iva_rate_table(operation=_authority_operation_for_test)
+            spain = real_table[require_eu_member_state("ES")]
+            extra = spain[0].model_copy(
+                update={
+                    "pct": planted,
+                    "effective_from": _ANNUAL_2026.start_date,
+                    "effective_until": None,
+                },
+            )
+            mutated = dict(real_table) | {require_eu_member_state("ES"): (*spain, extra)}
+            # Patch the defining module used by the prompt builder.
+            with scoped_attribute(_iva_rates_module, "load_iva_rate_table", lambda: mutated):
+                after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
-            assert planted in after.iva_rate_pcts
-            assert "13.5" in after.text
-            assert after.fingerprint != baseline.fingerprint
+                assert planted in after.iva_rate_pcts
+                assert "13.5" in after.text
+                assert after.fingerprint != baseline.fingerprint
 
 
 class TestTheNoPrintedTaxLineAsksThePaperQuestion:

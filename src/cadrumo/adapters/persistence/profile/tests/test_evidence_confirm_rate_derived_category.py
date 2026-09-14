@@ -48,7 +48,9 @@ from cadrumo.domain.iva.schema import IvaCategory
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
@@ -75,6 +77,7 @@ def _confirm(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    authority: InvoiceAuthorityFixture,
 ):
     """Confirm *fixture* with no operator overrides at all."""
     source = tmp_path / fixture.name
@@ -87,7 +90,7 @@ def _confirm(
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -95,6 +98,7 @@ def test_a_plain_rated_document_grounds_through_the_decomposition_contract(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The ordinary case reaches a declarable figure instead of being refused.
 
@@ -108,6 +112,7 @@ def test_a_plain_rated_document_grounds_through_the_decomposition_contract(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
     verdict = decompose_invoice(result.invoice)
 
@@ -124,6 +129,7 @@ def test_a_two_rate_document_leaves_the_category_undeclared(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """One category field cannot hold a two-tier document's answer.
 
@@ -138,6 +144,7 @@ def test_a_two_rate_document_leaves_the_category_undeclared(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.invoice.iva_category is None
@@ -150,6 +157,7 @@ def test_a_recargo_document_leaves_the_category_undeclared(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """A recargo invoice's category is a legal choice the rate does not answer.
 
@@ -165,6 +173,7 @@ def test_a_recargo_document_leaves_the_category_undeclared(
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
+        authority=invoice_authority,
     )
 
     assert result.invoice.recargo_amount == Decimal("5.20")

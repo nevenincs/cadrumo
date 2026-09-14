@@ -40,6 +40,7 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
@@ -74,7 +75,10 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ....entrypoints.adapter_composition import build_modelo_export_ports
+from ....entrypoints.adapter_composition import (
+    build_amendment_action_ports,
+    build_modelo_export_ports,
+)
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from .cli_runner import invoke_cached_cli
 
@@ -456,7 +460,7 @@ def test_public_amend_service_refuses_missing_motive_before_identity_with_real_p
             CalculationRevisionCatalogue(revisions={baseline_revision.calculation_revision_id: baseline_revision})
         )
 
-        with pytest.raises(AmendmentM303RectificativaMotiveError):
+        with pytest.raises(AmendmentM303RectificativaMotiveError), bundled_indexed_authority().operation() as operation:
             amend_modelo_revision(
                 from_filing_record_id=target.filing_record_id,
                 overrides={},
@@ -464,10 +468,13 @@ def test_public_amend_service_refuses_missing_motive_before_identity_with_real_p
                 m303_rectificativa_motive=None,
                 reason="rectificaciones and a lower result are only operator prose",
                 actor="operator",
-                work_unit_repository=work_repo,
-                calculation_repository=calculation_repo,
-                filing_repository=filing_repo,
-                justificante_repository=justificante_repo,
+                ports=replace(
+                    build_amendment_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+                    work_unit_repository=work_repo,
+                    calculation_repository=calculation_repo,
+                    filing_repository=filing_repo,
+                    justificante_repository=justificante_repo,
+                ),
             )
 
 
@@ -672,7 +679,7 @@ def test_public_export_requires_injected_persisted_justificante_authority(tmp_pa
             )
         )
 
-        with pytest.raises(ModeloExportError) as raised:
+        with pytest.raises(ModeloExportError) as raised, bundled_indexed_authority().operation() as operation:
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=revision.calculation_revision_id,
@@ -687,6 +694,7 @@ def test_public_export_requires_injected_persisted_justificante_authority(tmp_pa
                     ),
                     justificante=None,
                 ),
+                operation=operation,
             )
 
         assert raised.value.context is not None

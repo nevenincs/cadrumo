@@ -6,6 +6,8 @@ import logging
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ..binding_readiness import profile_resolvable_binding_ids
@@ -15,50 +17,55 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog: pytest.LogCaptureFixture) -> None:
     """Invalid registry scopes return no resolved bindings and emit debug diagnostics."""
-    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
-    resolved = profile_resolvable_binding_ids(
-        modelo="not-a-modelo",
-        bucket_id="operator",
-        filing_year=2026,
-        period=None,
-    )
+        resolved = profile_resolvable_binding_ids(
+            modelo="not-a-modelo",
+            bucket_id="operator",
+            filing_year=2026,
+            period=None,
+            operation=_authority_operation_for_test,
+        )
 
-    assert resolved == frozenset()
-    assert any(
-        "binding-readiness: annual period unavailable" in record.message
-        and "treating profile bindings as unresolved" in record.message
-        for record in caplog.records
-    )
+        assert resolved == frozenset()
+        assert any(
+            "binding-readiness: annual period unavailable" in record.message
+            and "treating profile bindings as unresolved" in record.message
+            for record in caplog.records
+        )
 
 
 def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Explicit Period scopes use the typed registry token at the snapshot boundary."""
-    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
-    resolved = profile_resolvable_binding_ids(
-        modelo="not-a-modelo",
-        bucket_id="operator",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-    )
+        resolved = profile_resolvable_binding_ids(
+            modelo="not-a-modelo",
+            bucket_id="operator",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            operation=_authority_operation_for_test,
+        )
 
-    assert resolved == frozenset()
-    assert any(
-        "binding-readiness: registry snapshot unavailable" in record.message and "period=1T" in record.message
-        for record in caplog.records
-    )
+        assert resolved == frozenset()
+        assert any(
+            "binding-readiness: registry snapshot unavailable" in record.message and "period=1T" in record.message
+            for record in caplog.records
+        )
 
 
 def test_typed_period_scope_must_match_filing_year() -> None:
     """The helper refuses contradictory typed coordinates before querying the registry."""
-
-    with pytest.raises(RegistryValidationError):
-        profile_resolvable_binding_ids(
-            modelo="303",
-            bucket_id="operator",
-            filing_year=2025,
-            period=Period.from_year_and_code(2026, "1T"),
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(RegistryValidationError):
+            profile_resolvable_binding_ids(
+                modelo="303",
+                bucket_id="operator",
+                filing_year=2025,
+                period=Period.from_year_and_code(2026, "1T"),
+                operation=_authority_operation_for_test,
+            )

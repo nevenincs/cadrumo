@@ -35,6 +35,7 @@ from ...application.modelo.projection import (
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.modelo import Modelo
 from ...core.output_rendering import jsonable_output_payload
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_cli_support import (
@@ -102,7 +103,15 @@ def modelo_project(
     binding_pairs = dict(parse_binding_override(spec) for spec in binding or ())
     try:
         service_result = project_modelo_100_from_m130(
-            year=year, ccaa=ccaa, casilla_overrides=casilla_pairs, binding_overrides=binding_pairs
+            year=year,
+            ccaa=ccaa,
+            ports=calculation_action_ports_factory(ctx)(
+                bucket_id=require_active_bucket_id(),
+                operation=authority_operation(ctx),
+            ),
+            casilla_overrides=casilla_pairs,
+            binding_overrides=binding_pairs,
+            operation=authority_operation(ctx),
         )
     except (
         ModeloProjectNoM130UnitsError,
@@ -174,10 +183,11 @@ def _load_compare_service_result(
     modelo: str,
     years: list[int],
     ports: CalculationActionPorts,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCompareServiceResult:
     """Read the backend comparison result and translate its typed refusals."""
     try:
-        return compare_modelo_years(modelo=modelo, years=years, ports=ports)
+        return compare_modelo_years(modelo=modelo, years=years, ports=ports, operation=operation)
     except (
         ModeloCompareNeedTwoYearsError,
         ModeloCompareNoWorkUnitsError,
@@ -246,6 +256,7 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
             bucket_id=require_active_bucket_id(),
             operation=authority_operation(ctx),
         ),
+        operation=authority_operation(ctx),
     )
     compare_result = _compare_result_payload(service_result)
     lines = _compare_lines(service_result)

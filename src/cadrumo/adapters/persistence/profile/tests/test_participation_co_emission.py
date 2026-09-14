@@ -29,6 +29,7 @@ from cadrumo.application.ledger.actions_common import blocking_modelo_references
 from cadrumo.application.modelo.revision_persistence import persist_filed_revision
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -183,86 +184,88 @@ def _seed_verified_participation(
 
 def test_verify_then_file_co_emits_participation_for_every_source_transaction(tmp_path: Path) -> None:
     """Verify then file a revision; the participation index records both transactions."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        cr_repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
-        wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
-        fr_repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
-        bv_repo = _bucket_event_repository()
-        participation_repo = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+            cr_repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+            wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
+            fr_repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+            bv_repo = _bucket_event_repository()
+            participation_repo = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
 
-        revision, work_unit = _seed_borrador(cr_repo=cr_repo, wu_repo=wu_repo)
+            revision, work_unit = _seed_borrador(cr_repo=cr_repo, wu_repo=wu_repo)
 
-        # --- VERIFY (co-emits VERIFICADO_COMPLETO participations) ---
-        verified_at = _T0 + timedelta(hours=3)
-        _seed_verified_participation(
-            target=revision,
-            actor="aeat.cli.modelo.verify",
-            now=verified_at,
-            work_unit=work_unit,
-            calculation_repository=cr_repo,
-            participation_index_repository=participation_repo,
-        )
+            # --- VERIFY (co-emits VERIFICADO_COMPLETO participations) ---
+            verified_at = _T0 + timedelta(hours=3)
+            _seed_verified_participation(
+                target=revision,
+                actor="aeat.cli.modelo.verify",
+                now=verified_at,
+                work_unit=work_unit,
+                calculation_repository=cr_repo,
+                participation_index_repository=participation_repo,
+            )
 
-        index_a = participation_repo.load(_TX_A)
-        index_b = participation_repo.load(_TX_B)
-        assert len(index_a.participations) == 1
-        assert len(index_b.participations) == 1
-        verified_entry = index_a.participations[0]
-        assert verified_entry.calculation_revision_id == revision.calculation_revision_id
-        assert verified_entry.revision_state == "verificado_completo"
-        assert verified_entry.modelo == "303"
-        assert verified_entry.filing_year == 2024
-        assert verified_entry.period == Period.from_year_and_code(2024, "2T")
-        assert verified_entry.filing_record_id is None
+            index_a = participation_repo.load(_TX_A)
+            index_b = participation_repo.load(_TX_B)
+            assert len(index_a.participations) == 1
+            assert len(index_b.participations) == 1
+            verified_entry = index_a.participations[0]
+            assert verified_entry.calculation_revision_id == revision.calculation_revision_id
+            assert verified_entry.revision_state == "verificado_completo"
+            assert verified_entry.modelo == "303"
+            assert verified_entry.filing_year == 2024
+            assert verified_entry.period == Period.from_year_and_code(2024, "2T")
+            assert verified_entry.filing_record_id is None
 
-        # --- FILE (replaces the verified entry in place, gaining filing_record_id) ---
-        verified_revision = cr_repo.load().get(revision.calculation_revision_id)
-        assert verified_revision is not None
-        assert verified_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+            # --- FILE (replaces the verified entry in place, gaining filing_record_id) ---
+            verified_revision = cr_repo.load().get(revision.calculation_revision_id)
+            assert verified_revision is not None
+            assert verified_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
-        filed_at = verified_at + timedelta(hours=1)
-        calculation_observation_repository, iva_compensation_history_repository = _iva_wallet_repositories()
-        prorrata_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID)
-        filing_record = persist_filed_revision(
-            target=verified_revision,
-            work_unit=work_unit,
-            work_units=wu_repo.load(),
-            notes=None,
-            actor="aeat.cli.modelo.file",
-            now=filed_at,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            work_unit_repository=wu_repo,
-            bucket_event_repository=bv_repo,
-            calculation_observation_repository=calculation_observation_repository,
-            iva_compensation_history_repository=iva_compensation_history_repository,
-            participation_index_repository=participation_repo,
-            prorrata_register_repository=prorrata_repository,
-        )
+            filed_at = verified_at + timedelta(hours=1)
+            calculation_observation_repository, iva_compensation_history_repository = _iva_wallet_repositories()
+            prorrata_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID)
+            filing_record = persist_filed_revision(
+                target=verified_revision,
+                work_unit=work_unit,
+                work_units=wu_repo.load(),
+                notes=None,
+                actor="aeat.cli.modelo.file",
+                now=filed_at,
+                calculation_repository=cr_repo,
+                filing_repository=fr_repo,
+                work_unit_repository=wu_repo,
+                bucket_event_repository=bv_repo,
+                calculation_observation_repository=calculation_observation_repository,
+                iva_compensation_history_repository=iva_compensation_history_repository,
+                participation_index_repository=participation_repo,
+                prorrata_register_repository=prorrata_repository,
+                operation=_authority_operation_for_test,
+            )
 
-        filed_index_a = participation_repo.load(_TX_A)
-        filed_index_b = participation_repo.load(_TX_B)
+            filed_index_a = participation_repo.load(_TX_A)
+            filed_index_b = participation_repo.load(_TX_B)
 
-        # --- write-guard live-scan correctness is unchanged by the index ---
-        blockers = blocking_modelo_references(
-            bucket_id=_BUCKET_ID,
-            transaction_ids=(_TX_A,),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-        )
+            # --- write-guard live-scan correctness is unchanged by the index ---
+            blockers = blocking_modelo_references(
+                bucket_id=_BUCKET_ID,
+                transaction_ids=(_TX_A,),
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+            )
 
-    # The verified entry was replaced in place — still exactly one per transaction.
-    assert len(filed_index_a.participations) == 1
-    assert len(filed_index_b.participations) == 1
-    filed_entry = filed_index_a.participations[0]
-    assert filed_entry.calculation_revision_id == revision.calculation_revision_id
-    assert filed_entry.revision_state == "presentado"
-    assert filed_entry.filing_record_id == filing_record.filing_record_id
+        # The verified entry was replaced in place — still exactly one per transaction.
+        assert len(filed_index_a.participations) == 1
+        assert len(filed_index_b.participations) == 1
+        filed_entry = filed_index_a.participations[0]
+        assert filed_entry.calculation_revision_id == revision.calculation_revision_id
+        assert filed_entry.revision_state == "presentado"
+        assert filed_entry.filing_record_id == filing_record.filing_record_id
 
-    # The live write-guard scan still returns the PRESENTADO revision as a blocker.
-    assert len(blockers) == 1
-    assert blockers[0].calculation_revision_id == revision.calculation_revision_id
-    assert blockers[0].revision_state == "presentado"
+        # The live write-guard scan still returns the PRESENTADO revision as a blocker.
+        assert len(blockers) == 1
+        assert blockers[0].calculation_revision_id == revision.calculation_revision_id
+        assert blockers[0].revision_state == "presentado"
 
 
 def _bucket_event_repository():

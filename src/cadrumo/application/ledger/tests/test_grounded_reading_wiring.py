@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.config import load_settings
 from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -183,26 +185,26 @@ def test_the_reader_output_starts_entirely_unverified() -> None:
 
 def test_grounding_upgrades_a_real_anchor_to_anchored() -> None:
     """The upgrade the wiring exists to perform, on the real control document."""
-    grounded = ground_draft_against_transcription(
-        draft=_reader_output(),
-        transcription=_control_transcription(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+        )
 
-    by_field = {envelope.field: envelope for envelope in grounded.provenance}
-    assert by_field["taxable_base"].grounding is FieldGroundingOutcome.ANCHORED
-    assert by_field["grand_total"].grounding is FieldGroundingOutcome.ANCHORED
+        by_field = {envelope.field: envelope for envelope in grounded.provenance}
+        assert by_field["taxable_base"].grounding is FieldGroundingOutcome.ANCHORED
+        assert by_field["grand_total"].grounding is FieldGroundingOutcome.ANCHORED
 
 
 def test_grounding_upgrades_a_percentage_anchor() -> None:
     """`21%` is the most common field in the corpus; it must survive the chain."""
-    grounded = ground_draft_against_transcription(
-        draft=_reader_output(),
-        transcription=_control_transcription(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+        )
 
-    rate = next(e for e in grounded.provenance if e.field == "iva_rate")
-    assert rate.grounding is FieldGroundingOutcome.ANCHORED
-    assert rate.anchor == "21%", "the verbatim printed form must survive the upgrade"
+        rate = next(e for e in grounded.provenance if e.field == "iva_rate")
+        assert rate.grounding is FieldGroundingOutcome.ANCHORED
+        assert rate.anchor == "21%", "the verbatim printed form must survive the upgrade"
 
 
 def test_a_fabricated_anchor_is_not_upgraded() -> None:
@@ -211,14 +213,14 @@ def test_a_fabricated_anchor_is_not_upgraded() -> None:
     A figure nobody can point at on the page stays unverified and loses its
     anchor, no matter how confidently the reader claimed it.
     """
-    grounded = ground_draft_against_transcription(
-        draft=_reader_output(),
-        transcription=_control_transcription(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+        )
 
-    fabricated = next(e for e in grounded.provenance if e.field == "iva_amount")
-    assert fabricated.grounding is FieldGroundingOutcome.UNANCHORED
-    assert fabricated.anchor is None
+        fabricated = next(e for e in grounded.provenance if e.field == "iva_amount")
+        assert fabricated.grounding is FieldGroundingOutcome.UNANCHORED
+        assert fabricated.anchor is None
 
 
 def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None:
@@ -231,65 +233,70 @@ def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None
     operator acts differently on the two, and downstream every trace of the
     first is gone the moment the anchor is cleared without recording it.
     """
-    offered_nothing = FieldProvenance(
-        field="currency",
-        origin=FieldOrigin.TEXT_LAYER,
-        grounding=FieldGroundingOutcome.UNANCHORED,
-        note="the reading model reported no printed form",
-    )
-    draft = _reader_output().model_copy(
-        update={"currency": "EUR", "provenance": (*_reader_output().provenance, offered_nothing)},
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        offered_nothing = FieldProvenance(
+            field="currency",
+            origin=FieldOrigin.TEXT_LAYER,
+            grounding=FieldGroundingOutcome.UNANCHORED,
+            note="the reading model reported no printed form",
+        )
+        draft = _reader_output().model_copy(
+            update={"currency": "EUR", "provenance": (*_reader_output().provenance, offered_nothing)},
+        )
 
-    grounded = ground_draft_against_transcription(draft=draft, transcription=_control_transcription())
-    by_field = {envelope.field: envelope for envelope in grounded.provenance}
+        grounded = ground_draft_against_transcription(
+            draft=draft, transcription=_control_transcription(), operation=_authority_operation_for_test
+        )
+        by_field = {envelope.field: envelope for envelope in grounded.provenance}
 
-    refused = by_field["iva_amount"]
-    assert refused.anchor is None, "a form the document does not carry must not read as evidence"
-    assert refused.refused_anchor == "9.999,99", "the offered form is the only trace a claim was made"
-    assert "9.999,99" in refused.note
+        refused = by_field["iva_amount"]
+        assert refused.anchor is None, "a form the document does not carry must not read as evidence"
+        assert refused.refused_anchor == "9.999,99", "the offered form is the only trace a claim was made"
+        assert "9.999,99" in refused.note
 
-    absent = by_field["currency"]
-    assert absent.anchor is None
-    assert absent.refused_anchor is None, "nothing was offered, so nothing was refused"
+        absent = by_field["currency"]
+        assert absent.anchor is None
+        assert absent.refused_anchor is None, "nothing was offered, so nothing was refused"
 
 
 def test_a_located_anchor_records_no_refusal() -> None:
     """The negative leg: a passing check must not stamp a refusal it did not reach."""
-    grounded = ground_draft_against_transcription(
-        draft=_reader_output(),
-        transcription=_control_transcription(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+        )
 
-    anchored = next(e for e in grounded.provenance if e.field == "taxable_base")
-    assert anchored.grounding is FieldGroundingOutcome.ANCHORED
-    assert anchored.refused_anchor is None
+        anchored = next(e for e in grounded.provenance if e.field == "taxable_base")
+        assert anchored.grounding is FieldGroundingOutcome.ANCHORED
+        assert anchored.refused_anchor is None
 
 
 def test_grounding_attaches_the_closure_finding() -> None:
     """The second leg runs on the wired path, not only in its own suite."""
-    grounded = ground_draft_against_transcription(
-        draft=_reader_output(),
-        transcription=_control_transcription(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+        )
 
-    kinds = {finding.kind for finding in grounded.discrepancies}
-    assert DraftDiscrepancyKind.ARITHMETIC_CLOSURE in kinds
+        kinds = {finding.kind for finding in grounded.discrepancies}
+        assert DraftDiscrepancyKind.ARITHMETIC_CLOSURE in kinds
 
 
 def test_role_resolution_runs_when_the_filer_is_known() -> None:
     """Both identity guards reach the live path on the control document."""
-    grounded = ground_draft_against_transcription(
-        draft=_reader_output(),
-        transcription=_control_transcription(),
-        taxpayer_tax_id=_FILER_CIF,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_reader_output(),
+            transcription=_control_transcription(),
+            taxpayer_tax_id=_FILER_CIF,
+            operation=_authority_operation_for_test,
+        )
 
-    kinds = {finding.kind for finding in grounded.discrepancies}
-    assert DraftDiscrepancyKind.IDENTITY_UNVERIFIED in kinds
-    assert DraftDiscrepancyKind.ROLE_UNRESOLVED in kinds
-    supplier = next(e for e in grounded.provenance if e.field == "supplier_tax_id")
-    assert supplier.grounding is not FieldGroundingOutcome.ANCHORED
+        kinds = {finding.kind for finding in grounded.discrepancies}
+        assert DraftDiscrepancyKind.IDENTITY_UNVERIFIED in kinds
+        assert DraftDiscrepancyKind.ROLE_UNRESOLVED in kinds
+        supplier = next(e for e in grounded.provenance if e.field == "supplier_tax_id")
+        assert supplier.grounding is not FieldGroundingOutcome.ANCHORED
 
 
 def test_role_resolution_is_skipped_when_the_filer_is_unknown() -> None:
@@ -298,13 +305,13 @@ def test_role_resolution_is_skipped_when_the_filer_is_unknown() -> None:
     Skipping is the honest behaviour, and it must be visible as an absence of
     findings rather than as a resolution nobody could justify.
     """
-    grounded = ground_draft_against_transcription(
-        draft=_reader_output(),
-        transcription=_control_transcription(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+        )
 
-    kinds = {finding.kind for finding in grounded.discrepancies}
-    assert DraftDiscrepancyKind.ROLE_UNRESOLVED not in kinds
+        kinds = {finding.kind for finding in grounded.discrepancies}
+        assert DraftDiscrepancyKind.ROLE_UNRESOLVED not in kinds
 
 
 def test_a_self_reported_anchor_is_never_upgraded_by_any_transcription() -> None:
@@ -435,20 +442,22 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     reader is the ENVIRONMENT this case is about, and making it unavailable is
     the condition being reproduced. Nothing about the router is stubbed.
     """
-    from ..invoice_draft_extraction import _read_transcription_semantically
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..invoice_draft_extraction import _read_transcription_semantically
 
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _read_transcription_semantically(
-            _control_evidence(),
-            _control_transcription(),
-            settings=load_settings(),
-            ports=_reader_unavailable_ports(),
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+            _read_transcription_semantically(
+                _control_evidence(),
+                _control_transcription(),
+                settings=load_settings(),
+                ports=_reader_unavailable_ports(),
+                operation=_authority_operation_for_test,
+            )
+
+        assert raised.value.terminal_precondition_verdict is not None
+        assert raised.value.terminal_precondition_verdict.failed_condition_id == (
+            LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
         )
-
-    assert raised.value.terminal_precondition_verdict is not None
-    assert raised.value.terminal_precondition_verdict.failed_condition_id == (
-        LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
-    )
 
 
 def test_the_routers_fallback_try_wraps_only_the_transcription() -> None:

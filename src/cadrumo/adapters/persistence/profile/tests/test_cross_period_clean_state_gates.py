@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -40,10 +41,12 @@ from cadrumo.application.calculations.cross_period_models import (
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.verification_cross_period import cross_period_clean_state_findings
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -173,6 +176,27 @@ def _persist_390_draft(
     return revision_id
 
 
+def _verification_repositories(
+    *,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    filing_repository: ModeloRecordCatalogueRepository,
+    verification_repository: VerificationReportCatalogueRepository,
+    observation_repository: CalculationObservationRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+) -> VerificationRepositoryBundle:
+    """Compose the complete bundle while retaining every fixture repository."""
+    return replace(
+        build_test_verification_repository_bundle(),
+        work_unit=work_unit_repository,
+        calculation=calculation_repository,
+        filing=filing_repository,
+        verification=verification_repository,
+        observation=observation_repository,
+        bucket_event=bucket_event_repository,
+    )
+
+
 def _source_values(period: str, source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
     period_ordinal = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}[period]
     return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casilla_ids)}
@@ -258,6 +282,7 @@ def _seed_303_cross_period_sources(
                 calculation_repository=calculation_repository,
                 filing_repository=filing_repository,
                 bucket_event_repository=bucket_event_repository,
+                observation_repository=observation_repository,
                 expected_tax_id="X1234567L",
                 clock=_CLOCK,
             )
@@ -433,15 +458,24 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
             calculation_repository=calculations,
         )
 
-        report = verify_modelo_revision(
-            revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="test-operator",
-            workflow_profile=workflow_profile(),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_repositories(
+                    work_unit_repository=work_units,
+                    calculation_repository=calculations,
+                    filing_repository=filings,
+                    verification_repository=reports,
+                    observation_repository=observations,
+                    bucket_event_repository=events,
+                ),
+                actor="test-operator",
+                workflow_profile=workflow_profile(),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         stored_reports = reports.load().for_calculation_revision(revision_id)
 
     cross_period_findings = tuple(
@@ -484,15 +518,24 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
             calculation_repository=calculations,
         )
 
-        report = verify_modelo_revision(
-            revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="test-operator",
-            workflow_profile=workflow_profile(),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_repositories(
+                    work_unit_repository=work_units,
+                    calculation_repository=calculations,
+                    filing_repository=filings,
+                    verification_repository=reports,
+                    observation_repository=observations,
+                    bucket_event_repository=events,
+                ),
+                actor="test-operator",
+                workflow_profile=workflow_profile(),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
     cross_period_findings = tuple(
         finding for finding in report.findings if finding.kind.value == "cross_period_dependency_unclean"
@@ -530,15 +573,24 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
         no_activity_profile = workflow_profile()
         assert no_activity_profile.activity_start_date is None
 
-        report = verify_modelo_revision(
-            revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="test-operator",
-            workflow_profile=no_activity_profile,
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_repositories(
+                    work_unit_repository=work_units,
+                    calculation_repository=calculations,
+                    filing_repository=filings,
+                    verification_repository=reports,
+                    observation_repository=observations,
+                    bucket_event_repository=events,
+                ),
+                actor="test-operator",
+                workflow_profile=no_activity_profile,
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
     assert report.granted_verificado_completo is False
     fail_closed_findings = tuple(

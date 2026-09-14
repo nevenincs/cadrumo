@@ -30,6 +30,8 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -223,13 +225,15 @@ def test_a_document_with_no_party_headings_settles_nothing() -> None:
     The fail-safe direction, and the case that separates this from a slot
     comparison: the slots still name the filer, and the answer is still withheld.
     """
-    draft = ground_draft_against_transcription(
-        draft=InvoiceDraft(supplier_tax_id=_FILER, customer_tax_id=_OTHER),
-        transcription=_transcription(_ISSUED_PAGE),
-        taxpayer_tax_id=_FILER,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        draft = ground_draft_against_transcription(
+            draft=InvoiceDraft(supplier_tax_id=_FILER, customer_tax_id=_OTHER),
+            transcription=_transcription(_ISSUED_PAGE),
+            taxpayer_tax_id=_FILER,
+            operation=_authority_operation_for_test,
+        )
 
-    assert draft.suggested_kind is None
+        assert draft.suggested_kind is None
 
 
 def test_the_filers_identifier_printed_in_the_other_block_withholds_the_answer() -> None:

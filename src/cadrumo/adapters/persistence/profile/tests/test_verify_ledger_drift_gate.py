@@ -18,10 +18,11 @@ deductible-evidence promotion depends on.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
 
 import pytest
 
@@ -41,6 +42,7 @@ from cadrumo.adapters.persistence.profile.tests.verification_repository_support 
     build_test_certificate_secret_backend_factory,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_filing_snapshot import row_fingerprint
@@ -84,19 +86,20 @@ _Repos = tuple[
 _AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
 
 
+@contextmanager
 def _ledger_ports(
+    objects: SecureObjectRepository,
     tx_repo: TransactionCatalogueRepository,
     event_repo: BucketEventHistoryRepository,
-) -> LedgerActionPorts:
-    """Compose canonical ledger ports over the isolated repositories."""
-    return cast(
-        LedgerActionPorts,
-        ledger_ports_for_test(
-            bucket_id=BUCKET_ID,
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
-        ),
-    )
+) -> Iterator[LedgerActionPorts]:
+    """Yield canonical ledger ports over the isolated repositories."""
+    with ledger_ports_for_test(
+        bucket_id=BUCKET_ID,
+        objects=objects,
+        transaction_repository=tx_repo,
+        bucket_event_repository=event_repo,
+    ) as ports:
+        yield ports
 
 
 def _verification_ports(repos: _Repos) -> VerificationRepositoryBundle:
@@ -145,14 +148,15 @@ def test_attaching_evidence_does_not_move_the_row_fingerprint(tmp_path: Path) ->
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=BUCKET_ID),
         ).add(bucket_id=BUCKET_ID, source_path=_write_invoice(tmp_path))
-        attach_manual_transaction_evidence(
-            bucket_id=BUCKET_ID,
-            transaction_id=purchase.transaction_id,
-            purchase_invoice_evidence_id=evidence.record.evidence_id,
-            actor="operator",
-            ports=_ledger_ports(tx_repo, event_repo),
-            occurred_at=_AT,
-        )
+        with _ledger_ports(profile.repository, tx_repo, event_repo) as ports:
+            attach_manual_transaction_evidence(
+                bucket_id=BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                purchase_invoice_evidence_id=evidence.record.evidence_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_AT,
+            )
 
         attached = tx_repo.load().get(purchase.transaction_id)
         assert attached is not None
@@ -175,15 +179,16 @@ def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
         )
         before = row_fingerprint(_row(tx_repo, purchase.transaction_id))
 
-        update_manual_transaction_fields(
-            bucket_id=BUCKET_ID,
-            transaction_id=purchase.transaction_id,
-            patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
-            actor="operator",
-            source_command="test",
-            ports=_ledger_ports(tx_repo, event_repo),
-            occurred_at=_AT,
-        )
+        with _ledger_ports(profile.repository, tx_repo, event_repo) as ports:
+            update_manual_transaction_fields(
+                bucket_id=BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
+                actor="operator",
+                source_command="test",
+                ports=ports,
+                occurred_at=_AT,
+            )
 
         reclassified = tx_repo.load().get(purchase.transaction_id)
         assert reclassified is not None
@@ -224,15 +229,16 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
         blocked = _verify(revision.calculation_revision_id, repos)
         assert blocked.granted_verificado_completo is False
 
-        update_manual_transaction_fields(
-            bucket_id=BUCKET_ID,
-            transaction_id=purchase.transaction_id,
-            patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
-            actor="operator",
-            source_command="test",
-            ports=_ledger_ports(tx_repo, event_repo),
-            occurred_at=_AT,
-        )
+        with _ledger_ports(profile.repository, tx_repo, event_repo) as ports:
+            update_manual_transaction_fields(
+                bucket_id=BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
+                actor="operator",
+                source_command="test",
+                ports=ports,
+                occurred_at=_AT,
+            )
 
         after_reclassify = _verify(revision.calculation_revision_id, repos)
 
@@ -287,14 +293,15 @@ def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=BUCKET_ID),
         ).add(bucket_id=BUCKET_ID, source_path=_write_invoice(tmp_path))
-        attach_manual_transaction_evidence(
-            bucket_id=BUCKET_ID,
-            transaction_id=purchase.transaction_id,
-            purchase_invoice_evidence_id=evidence.record.evidence_id,
-            actor="operator",
-            ports=_ledger_ports(tx_repo, event_repo),
-            occurred_at=_AT,
-        )
+        with _ledger_ports(profile.repository, tx_repo, event_repo) as ports:
+            attach_manual_transaction_evidence(
+                bucket_id=BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                purchase_invoice_evidence_id=evidence.record.evidence_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_AT,
+            )
 
         granted = _verify(revision.calculation_revision_id, repos)
 

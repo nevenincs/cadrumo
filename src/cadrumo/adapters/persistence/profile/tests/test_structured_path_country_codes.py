@@ -53,6 +53,7 @@ from cadrumo.application.ledger.invoice_draft_records import FieldProvenance, In
 from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from cadrumo.domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country
 
@@ -338,23 +339,25 @@ class TestTheStructuredPathOpensThePostalRung:
         with no country evidence the postal rung stayed shut. The postal code it
         consults was already in the draft the whole time.
         """
-        evidence_id = _stored(
-            _corpus(_FACTURAE_WITH_ADDRESSES),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_ladder.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id = _stored(
+                _corpus(_FACTURAE_WITH_ADDRESSES),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_ladder.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=_draft(evidence_id, isolated_settings),
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=_draft(evidence_id, isolated_settings),
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
-        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+            assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
+            assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_the_resolved_territory_follows_the_document_rather_than_a_constant(
         self,
@@ -371,30 +374,32 @@ class TestTheStructuredPathOpensThePostalRung:
         changed, so nothing but the postal rung's own reading can explain the
         different answer.
         """
-        canarian = _corpus(_FACTURAE_WITH_ADDRESSES).replace(
-            f"<PostCode>{_PRINTED_SUPPLIER_CODE}</PostCode>",
-            f"<PostCode>{_CANARIAS_CODE}</PostCode>",
-            1,
-        )
-        assert _CANARIAS_CODE in canarian
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            canarian = _corpus(_FACTURAE_WITH_ADDRESSES).replace(
+                f"<PostCode>{_PRINTED_SUPPLIER_CODE}</PostCode>",
+                f"<PostCode>{_CANARIAS_CODE}</PostCode>",
+                1,
+            )
+            assert _CANARIAS_CODE in canarian
 
-        evidence_id = _stored(
-            canarian,
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_canarias.xml",
-        )
+            evidence_id = _stored(
+                canarian,
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_canarias.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=_draft(evidence_id, isolated_settings),
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=_draft(evidence_id, isolated_settings),
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
-        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+            assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
+            assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_ubl_document_resolves_its_counterparty_territory(
         self,
@@ -404,23 +409,25 @@ class TestTheStructuredPathOpensThePostalRung:
         repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The alpha-2 leg reaches the same rung, so neither format is left behind."""
-        evidence_id = _stored(
-            _ubl_with_addresses(_corpus(_UBL_INVOICE)),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="ubl_ladder.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id = _stored(
+                _ubl_with_addresses(_corpus(_UBL_INVOICE)),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="ubl_ladder.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=_draft(evidence_id, isolated_settings),
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=_draft(evidence_id, isolated_settings),
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
-        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+            assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
+            assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_the_customer_side_resolves_its_own_country(
         self,
@@ -435,23 +442,25 @@ class TestTheStructuredPathOpensThePostalRung:
         selection that reached for the supplier's block would return Canarias
         here instead of the peninsula.
         """
-        evidence_id = _stored(
-            _ubl_with_addresses(_corpus(_UBL_INVOICE)),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="ubl_customer_side.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id = _stored(
+                _ubl_with_addresses(_corpus(_UBL_INVOICE)),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="ubl_customer_side.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=_draft(evidence_id, isolated_settings),
-            kind=InvoiceKind.ISSUED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=_draft(evidence_id, isolated_settings),
+                kind=InvoiceKind.ISSUED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
-        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+            assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
+            assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_cii_document_resolves_a_spanish_counterparty_through_the_postal_rung(
         self,
@@ -468,23 +477,25 @@ class TestTheStructuredPathOpensThePostalRung:
         element was read this document resolved no territory while carrying
         every value needed to.
         """
-        evidence_id = _stored(
-            _corpus(_CII_INVOICE),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="cii_ladder_received.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id = _stored(
+                _corpus(_CII_INVOICE),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="cii_ladder_received.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=_draft(evidence_id, isolated_settings),
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=_draft(evidence_id, isolated_settings),
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
-        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+            assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
+            assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_cii_document_resolves_a_foreign_counterparty_through_the_country_rung(
         self,
@@ -501,23 +512,25 @@ class TestTheStructuredPathOpensThePostalRung:
         party's block returns Spain here, which is the under-declaration
         direction -- a domestic treatment for an export.
         """
-        evidence_id = _stored(
-            _corpus(_CII_INVOICE),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="cii_ladder_issued.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id = _stored(
+                _corpus(_CII_INVOICE),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="cii_ladder_issued.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=_draft(evidence_id, isolated_settings),
-            kind=InvoiceKind.ISSUED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=_draft(evidence_id, isolated_settings),
+                kind=InvoiceKind.ISSUED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is IvaTerritorialScope._from_registry("third_country")
-        assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
+            assert resolved.scope is IvaTerritorialScope._from_registry("third_country")
+            assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     def test_a_document_stating_no_country_still_exhausts(
         self,
@@ -533,23 +546,25 @@ class TestTheStructuredPathOpensThePostalRung:
         specimen states none, so the ladder exhausts and the operator is asked
         once, which is the honest outcome.
         """
-        evidence_id = _stored(
-            _corpus(_FACTURAE_WITHOUT_ADDRESSES),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_exhausts.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id = _stored(
+                _corpus(_FACTURAE_WITHOUT_ADDRESSES),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_exhausts.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=_draft(evidence_id, isolated_settings),
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=_draft(evidence_id, isolated_settings),
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is None
-        assert resolved.rung is None
+            assert resolved.scope is None
+            assert resolved.rung is None
 
 
 class TestTheOverseasAddressIsNotConsulted:
@@ -646,27 +661,31 @@ class TestTheOverseasAddressIsNotConsulted:
         design -- so the country the document actually states is the only
         evidence available, and it is in the block the reader does not open.
         """
-        evidence_id = _stored(
-            self._overseas(_corpus(_FACTURAE_WITH_ADDRESSES)),
-            settings=isolated_settings,
-            objects=secure_objects,
-            tmp_path=tmp_path,
-            name="facturae_overseas_ladder.xml",
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id = _stored(
+                self._overseas(_corpus(_FACTURAE_WITH_ADDRESSES)),
+                settings=isolated_settings,
+                objects=secure_objects,
+                tmp_path=tmp_path,
+                name="facturae_overseas_ladder.xml",
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=_draft(evidence_id, isolated_settings),
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=_draft(evidence_id, isolated_settings),
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is None
-        assert resolved.rung is None
-        # And the answer the ladder WOULD give from that country, so this reads
-        # as a statement about unread evidence rather than about France being
-        # unresolvable.
-        assert territorial_scope_for_country("FR") is IvaTerritorialScope._from_registry("eu_member")
+            assert resolved.scope is None
+            assert resolved.rung is None
+            # And the answer the ladder WOULD give from that country, so this reads
+            # as a statement about unread evidence rather than about France being
+            # unresolvable.
+            assert territorial_scope_for_country(
+                "FR", operation=_authority_operation_for_test
+            ) is IvaTerritorialScope._from_registry("eu_member")
 
 
 class TestTheProvenanceTellsTheTwoApart:

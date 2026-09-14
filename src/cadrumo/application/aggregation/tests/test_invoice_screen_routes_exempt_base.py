@@ -23,6 +23,7 @@ previous attempt produced.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -30,6 +31,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
@@ -38,6 +40,13 @@ from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for invoice-to-casilla binding projections."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BASE = Decimal("5000.00")
 _DEVENGO = date(2024, 3, 15)
@@ -97,7 +106,7 @@ def _invoice(
     )
 
 
-def _resolved_for(invoice: Invoice) -> dict[str, Decimal]:
+def _resolved_for(invoice: Invoice, *, operation: PinnedAuthorityOperation) -> dict[str, Decimal]:
     """Project the invoice's single line the way the screen does, then resolve."""
     line = invoice.lines[0]
     base_amount_eur = invoice.line_amount_eur(line.subtotal)
@@ -115,17 +124,29 @@ def _resolved_for(invoice: Invoice) -> dict[str, Decimal]:
     )
     if observation is None:
         return {}
-    return {str(k): v for k, v in resolve_iva_ledger_binding_values(_revision(), (observation,)).items()}
+    return {
+        str(k): v
+        for k, v in resolve_iva_ledger_binding_values(
+            _revision(),
+            (observation,),
+            operation=operation,
+        ).items()
+    }
 
 
-def test_an_intra_community_supply_base_reaches_casilla_59() -> None:
+def test_an_intra_community_supply_base_reaches_casilla_59(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The exempt base is declared where LIVA art. 25 says it is declared.
 
     The counterparty is in another member state, which is what makes the supply
     an intra-community one rather than a domestic exemption. Both print an
     exempt slot, so nothing but the declared category distinguishes them.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory("intra_community_supply"), country="DE"))
+    resolved = _resolved_for(
+        _invoice(category=IvaCategory("intra_community_supply"), country="DE"),
+        operation=authority_operation,
+    )
 
     assert resolved.get(_CASILLA_59) == _BASE, (
         f"the intra-community base never reached casilla 59: {resolved.get(_CASILLA_59)!r}"
@@ -133,7 +154,7 @@ def test_an_intra_community_supply_base_reaches_casilla_59() -> None:
     assert not resolved.get(_CASILLA_60), "an intra-community supply is not an export"
 
 
-def test_an_export_base_reaches_casilla_60() -> None:
+def test_an_export_base_reaches_casilla_60(authority_operation: PinnedAuthorityOperation) -> None:
     """The same line, a third-country counterparty, a different casilla.
 
     Run alongside the intra-community case rather than instead of it: a routing
@@ -146,7 +167,8 @@ def test_an_export_base_reaches_casilla_60() -> None:
             country="US",
             tax_id="US987654321",
             identification=None,
-        )
+        ),
+        operation=authority_operation,
     )
 
     assert resolved.get(_CASILLA_60) == _BASE, (
@@ -155,7 +177,9 @@ def test_an_export_base_reaches_casilla_60() -> None:
     assert not resolved.get(_CASILLA_59), "an export is not an intra-community supply"
 
 
-def test_a_domestic_exemption_is_not_routed_to_either_base_casilla() -> None:
+def test_a_domestic_exemption_is_not_routed_to_either_base_casilla(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A domestic exemption belongs in neither, and must not be swept into one.
 
     This is the discrimination the rate slot could not make. LIVA art. 20 exempts
@@ -165,14 +189,17 @@ def test_a_domestic_exemption_is_not_routed_to_either_base_casilla() -> None:
     would put this base in casilla 59 and over-declare intra-community volume.
     """
     resolved = _resolved_for(
-        _invoice(category=IvaCategory("domestic_exempt"), country="ES", tax_id="ESB12345674", identification="es")
+        _invoice(category=IvaCategory("domestic_exempt"), country="ES", tax_id="ESB12345674", identification="es"),
+        operation=authority_operation,
     )
 
     assert not resolved.get(_CASILLA_59)
     assert not resolved.get(_CASILLA_60)
 
 
-def test_an_intra_community_supply_to_a_third_country_is_not_routed() -> None:
+def test_an_intra_community_supply_to_a_third_country_is_not_routed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A supply outside the Union is not an intra-community one, whatever it claims.
 
     The model already refuses the OTHER direction of this coupling -- an entrega
@@ -189,6 +216,7 @@ def test_an_intra_community_supply_to_a_third_country_is_not_routed() -> None:
             tax_id="US987654321",
             identification=None,
         ),
+        operation=authority_operation,
     )
 
     assert not resolved.get(_CASILLA_59), "a third-country destination was routed as an intra-community supply"
@@ -212,7 +240,9 @@ def test_the_aggregate_already_refuses_an_intra_community_supply_to_spain() -> N
         )
 
 
-def test_an_export_claimed_to_a_member_state_is_not_routed() -> None:
+def test_an_export_claimed_to_a_member_state_is_not_routed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The mirror coupling: an export leaves the Union, so an EU counterparty contradicts it."""
     resolved = _resolved_for(
         _invoice(
@@ -220,7 +250,8 @@ def test_an_export_claimed_to_a_member_state_is_not_routed() -> None:
             country="FR",
             tax_id="FR12345678901",
             identification="fr",
-        )
+        ),
+        operation=authority_operation,
     )
 
     assert not resolved.get(_CASILLA_60), "an EU counterparty was routed as a third-country export"

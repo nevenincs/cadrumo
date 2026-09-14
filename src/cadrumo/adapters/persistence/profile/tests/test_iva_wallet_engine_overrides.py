@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _BUCKET_ID,
     _DECIDED_AT,
@@ -49,6 +50,7 @@ from cadrumo.application.modelo.iva_wallet_seed import (
 )
 from cadrumo.application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationOverride
@@ -74,6 +76,7 @@ def _modelo_iva_wallet_seed_ports() -> ModeloIvaWalletSeedPorts:
             observation_repository=CalculationObservationRepository(objects=objects),
             iva_wallet_decision_repository=IvaWalletDecisionRepository(objects=objects),
         ),
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
     )
 
 
@@ -83,29 +86,33 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
         snapshot = _snapshot_303()
-        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
-            snapshot,
-            repository=observation_repo,
-            captured_at=_DECIDED_AT,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        )
-        report = reconcile_modelo_303_iva_compensation(
-            snapshot,
-            taxpayer_nif=_TAXPAYER_NIF,
-            wallet=None,
-            repository=observation_repo,
-            override=IvaCompensationOverride(
-                amount=Decimal("1200.00"),
-                operator_explanation=(
-                    "Operator reviewed filed-history evidence while direct wallet/cartera was unavailable."
+        with bundled_indexed_authority().operation() as operation:
+            local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+                snapshot,
+                repository=observation_repo,
+                captured_at=_DECIDED_AT,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=operation,
+            )
+            report = reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_NIF,
+                wallet=None,
+                repository=observation_repo,
+                decision_repository=IvaWalletDecisionRepository(),
+                override=IvaCompensationOverride(
+                    amount=Decimal("1200.00"),
+                    operator_explanation=(
+                        "Operator reviewed filed-history evidence while direct wallet/cartera was unavailable."
+                    ),
+                    evidence_locator="operator-review:modelo-303-2026-2T-filed-history",
+                    recorded_at=_DECIDED_AT,
                 ),
-                evidence_locator="operator-review:modelo-303-2026-2T-filed-history",
-                recorded_at=_DECIDED_AT,
-            ),
-            decided_at=_DECIDED_AT,
-            local_recurrence=local_recurrence,
-            prefill_report=prefill_report,
-        )
+                decided_at=_DECIDED_AT,
+                local_recurrence=local_recurrence,
+                prefill_report=prefill_report,
+                operation=operation,
+            )
 
         assert report.decision.selected_authority == "taxpayer_override"
         assert report.decision.divergence == "override"
@@ -126,9 +133,12 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             iva_compensation_decision=report.decision,
             filing_instance_evidence=_filing_instance_evidence(work_unit.period),
             filing_period_date=date(2026, 6, 30),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ),
             clock=_DECIDED_AT,
         )
 
@@ -158,9 +168,12 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
                 iva_compensation_decision=None,
                 filing_instance_evidence=_filing_instance_evidence(work_unit.period),
                 filing_period_date=date(2026, 6, 30),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    work_unit_repository=work_repo,
+                    calculation_repository=calc_repo,
+                    bucket_event_repository=event_repo,
+                ),
                 clock=_DECIDED_AT,
             )
 

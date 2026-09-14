@@ -15,6 +15,10 @@ from pathlib import Path
 import pytest
 from textual.widgets import Input
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.capsule_restore import (
     read_profile_capsule_source,
@@ -27,6 +31,7 @@ from ....application.user_profile.login_interaction import (
 )
 from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
+from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.login import LoginScreen
 
@@ -39,8 +44,15 @@ _TERMINAL_SIZE = (140, 60)
 _PASSWORD = "login-restored-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
-def _screen(choices: list[ProfileLoginChoice]) -> LoginScreen:
-    return LoginScreen(choices=choices, authenticate=attempt_profile_login)
+def _screen(choices: list[ProfileLoginChoice], *, profile_decode_context: ProfileDecodeContext) -> LoginScreen:
+    def _authenticate(profile_id: str, passphrase: str):
+        return attempt_profile_login(
+            profile_id,
+            passphrase,
+            profile_decode_context=profile_decode_context,
+        )
+
+    return LoginScreen(choices=choices, authenticate=_authenticate)
 
 
 async def _unlock_with(pilot, password: str) -> None:
@@ -57,10 +69,13 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
     """A profile that arrives by restore (not registration) is a login citizen."""
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "source-root") as source_root:
+        profile_create_context, profile_decode_context = _profile_contexts_for_test()
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Restore-born",
             passphrase=_PASSWORD,
+            profile_create_context=profile_create_context,
+            profile_decode_context=profile_decode_context,
         )
         capsule = source_root / "buckets" / outcome.profile_id
         restored = restore_profile_capsule_with_password(
@@ -68,6 +83,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
             capsule=read_profile_capsule_source(capsule),
             password=_PASSWORD,
             root=tmp_path / "tui-root",
+            profile_decode_context=profile_decode_context,
         )
 
     from ....core.config import override_settings
@@ -77,7 +93,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
         assert any(choice.profile_id == restored.profile_id for choice in choices)
         logout_active_profile()
 
-        app = _screen(choices)
+        app = _screen(choices, profile_decode_context=profile_decode_context)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(pilot, _PASSWORD)
             assert app.error is None

@@ -27,6 +27,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_exclusions import Art104TresExclusion
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -264,68 +265,74 @@ def _transaction(
 def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
-        aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
-            prorrata_register_repository=ProrrataRegisterRepository(
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
+            aggregate_iva_ledger_observations_from_repositories(
                 bucket_id=_BUCKET_ID,
-                objects=secure_objects,
-            ),
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=_OTHER_BUCKET_ID,
-                objects=secure_objects,
-            ),
-            investment_asset_register=_TEST_ASSET_REGISTER,
-            investment_asset_profile_id=_BUCKET_ID,
-        )
+                period=_Q2_2026,
+                prorrata_register_repository=ProrrataRegisterRepository(
+                    bucket_id=_BUCKET_ID,
+                    objects=secure_objects,
+                ),
+                transaction_repository=TransactionCatalogueRepository(
+                    bucket_id=_OTHER_BUCKET_ID,
+                    objects=secure_objects,
+                ),
+                investment_asset_register=_TEST_ASSET_REGISTER,
+                investment_asset_profile_id=_BUCKET_ID,
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository_before_loading(
     tmp_path: Path,
 ) -> None:
     """IVA aggregation never combines a primary ledger with another bucket's register."""
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id).save(
-            TransactionCatalogue.from_transactions((_transaction("primary-ledger-row"),))
-        )
-        foreign_prorrata_repository = ProrrataRegisterRepository(
-            bucket_id=runtime.secondary.bucket_id,
-            objects=runtime.secondary.repository,
-        )
-
-        assert foreign_prorrata_repository.bucket_id == runtime.secondary.bucket_id
-        with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
-            aggregate_iva_ledger_observations_from_repositories(
-                bucket_id=runtime.primary.bucket_id,
-                period=_Q2_2026,
-                prorrata_register_repository=foreign_prorrata_repository,
-                transaction_repository=TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+            TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id).save(
+                TransactionCatalogue.from_transactions((_transaction("primary-ledger-row"),))
             )
+            foreign_prorrata_repository = ProrrataRegisterRepository(
+                bucket_id=runtime.secondary.bucket_id,
+                objects=runtime.secondary.repository,
+            )
+
+            assert foreign_prorrata_repository.bucket_id == runtime.secondary.bucket_id
+            with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
+                aggregate_iva_ledger_observations_from_repositories(
+                    bucket_id=runtime.primary.bucket_id,
+                    period=_Q2_2026,
+                    prorrata_register_repository=foreign_prorrata_repository,
+                    transaction_repository=TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id),
+                    operation=_authority_operation_for_test,
+                )
 
 
 def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
-    transaction = _transaction("row-repository")
-    repository = TransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
-        objects=secure_objects,
-    )
-    repository.save(TransactionCatalogue.from_transactions((transaction,)))
-
-    result = aggregate_iva_ledger_observations_from_repositories(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        transaction = _transaction("row-repository")
+        repository = TransactionCatalogueRepository(
             bucket_id=_BUCKET_ID,
             objects=secure_objects,
-        ),
-        investment_asset_register=_TEST_ASSET_REGISTER,
-        investment_asset_profile_id=_BUCKET_ID,
-    )
+        )
+        repository.save(TransactionCatalogue.from_transactions((transaction,)))
 
-    assert result.issues == ()
-    assert result.observations[0].ledger_id == transaction.transaction_id
+        result = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_Q2_2026,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=_BUCKET_ID,
+                objects=secure_objects,
+            ),
+            investment_asset_register=_TEST_ASSET_REGISTER,
+            investment_asset_profile_id=_BUCKET_ID,
+            operation=_authority_operation_for_test,
+        )
+
+        assert result.issues == ()
+        assert result.observations[0].ledger_id == transaction.transaction_id
 
 
 def test_repository_backed_projection_reports_out_of_period_catalogue_transactions(
@@ -338,26 +345,28 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
     visibility signal without allocating one row-level issue per excluded
     plaintext index entry.
     """
-    in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
-    out_of_period = _transaction("row-out-of-period", value_date=date(2026, 7, 10))
-    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
+        out_of_period = _transaction("row-out-of-period", value_date=date(2026, 7, 10))
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+        repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
 
-    result = aggregate_iva_ledger_observations_from_repositories(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        investment_asset_register=_TEST_ASSET_REGISTER,
-        investment_asset_profile_id=_BUCKET_ID,
-    )
+        result = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_Q2_2026,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            investment_asset_register=_TEST_ASSET_REGISTER,
+            investment_asset_profile_id=_BUCKET_ID,
+            operation=_authority_operation_for_test,
+        )
 
-    assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
-    assert result.issues == ()
-    assert result.out_of_window_summary is not None
-    assert result.out_of_window_summary.count == 1
-    assert result.out_of_window_summary.min_filing_date == date(2026, 7, 10)
-    assert result.out_of_window_summary.max_filing_date == date(2026, 7, 10)
+        assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
+        assert result.issues == ()
+        assert result.out_of_window_summary is not None
+        assert result.out_of_window_summary.count == 1
+        assert result.out_of_window_summary.min_filing_date == date(2026, 7, 10)
+        assert result.out_of_window_summary.max_filing_date == date(2026, 7, 10)
 
 
 def test_repository_backed_projection_summarizes_previously_silent_out_of_window_rows(
@@ -370,37 +379,39 @@ def test_repository_backed_projection_summarizes_previously_silent_out_of_window
     repository-backed partition reports their count and date span instead of
     dropping them before aggregation.
     """
-    in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
-    excluded_out_of_period = _transaction(
-        "row-excluded-out-of-period",
-        value_date=date(2026, 7, 1),
-        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
-    )
-    archived_out_of_period = _transaction(
-        "row-archived-out-of-period",
-        value_date=date(2026, 7, 2),
-        lifecycle_state=TransactionLifecycleState.ARCHIVED,
-    )
-    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    repository.save(
-        TransactionCatalogue.from_transactions((in_period, excluded_out_of_period, archived_out_of_period)),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
+        excluded_out_of_period = _transaction(
+            "row-excluded-out-of-period",
+            value_date=date(2026, 7, 1),
+            business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+        )
+        archived_out_of_period = _transaction(
+            "row-archived-out-of-period",
+            value_date=date(2026, 7, 2),
+            lifecycle_state=TransactionLifecycleState.ARCHIVED,
+        )
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+        repository.save(
+            TransactionCatalogue.from_transactions((in_period, excluded_out_of_period, archived_out_of_period)),
+        )
 
-    result = aggregate_iva_ledger_observations_from_repositories(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        investment_asset_register=_TEST_ASSET_REGISTER,
-        investment_asset_profile_id=_BUCKET_ID,
-    )
+        result = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_Q2_2026,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            investment_asset_register=_TEST_ASSET_REGISTER,
+            investment_asset_profile_id=_BUCKET_ID,
+            operation=_authority_operation_for_test,
+        )
 
-    assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
-    assert result.issues == ()
-    assert result.out_of_window_summary is not None
-    assert result.out_of_window_summary.count == 2
-    assert result.out_of_window_summary.min_filing_date == date(2026, 7, 1)
-    assert result.out_of_window_summary.max_filing_date == date(2026, 7, 2)
+        assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
+        assert result.issues == ()
+        assert result.out_of_window_summary is not None
+        assert result.out_of_window_summary.count == 2
+        assert result.out_of_window_summary.min_filing_date == date(2026, 7, 1)
+        assert result.out_of_window_summary.max_filing_date == date(2026, 7, 2)
 
 
 def test_repository_backed_projection_partition_matches_full_scan(
@@ -413,49 +424,51 @@ def test_repository_backed_projection_partition_matches_full_scan(
     In-window observations and prorrata references must match; only the
     out-of-window issue taxonomy can differ between the two paths.
     """
-    q2_row_a = _transaction("row-q2-a", value_date=date(2026, 4, 5), taxable_base=Decimal("100.00"))
-    q2_row_b = _transaction("row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"))
-    q1_row = _transaction("row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"))
-    q3_row = _transaction("row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"))
-    excluded_q3_row = _transaction(
-        "row-q3-excluded",
-        value_date=date(2026, 9, 1),
-        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
-    )
-    catalogue = TransactionCatalogue.from_transactions(
-        (q2_row_a, q2_row_b, q1_row, q3_row, excluded_q3_row),
-    )
-    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    repository.save(catalogue)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        q2_row_a = _transaction("row-q2-a", value_date=date(2026, 4, 5), taxable_base=Decimal("100.00"))
+        q2_row_b = _transaction("row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"))
+        q1_row = _transaction("row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"))
+        q3_row = _transaction("row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"))
+        excluded_q3_row = _transaction(
+            "row-q3-excluded",
+            value_date=date(2026, 9, 1),
+            business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+        )
+        catalogue = TransactionCatalogue.from_transactions(
+            (q2_row_a, q2_row_b, q1_row, q3_row, excluded_q3_row),
+        )
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+        repository.save(catalogue)
 
-    partitioned = aggregate_iva_ledger_observations_from_repositories(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        investment_asset_register=_TEST_ASSET_REGISTER,
-        investment_asset_profile_id=_BUCKET_ID,
-    )
-    full_scan = aggregate_iva_ledger_observations(catalogue, period=_Q2_2026)
+        partitioned = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_Q2_2026,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            investment_asset_register=_TEST_ASSET_REGISTER,
+            investment_asset_profile_id=_BUCKET_ID,
+            operation=_authority_operation_for_test,
+        )
+        full_scan = aggregate_iva_ledger_observations(catalogue, period=_Q2_2026)
 
-    # Declared-value invariance: observations and prorrata references are
-    # identical SETS between the two paths (order may differ: full-scan
-    # iterates catalogue insertion order, partitioned iterates sorted ids).
-    assert set(partitioned.observations) == set(full_scan.observations)
-    assert set(partitioned.prorrata_references) == set(full_scan.prorrata_references)
-    assert {o.ledger_id for o in partitioned.observations} == {q2_row_a.transaction_id, q2_row_b.transaction_id}
+        # Declared-value invariance: observations and prorrata references are
+        # identical SETS between the two paths (order may differ: full-scan
+        # iterates catalogue insertion order, partitioned iterates sorted ids).
+        assert set(partitioned.observations) == set(full_scan.observations)
+        assert set(partitioned.prorrata_references) == set(full_scan.prorrata_references)
+        assert {o.ledger_id for o in partitioned.observations} == {q2_row_a.transaction_id, q2_row_b.transaction_id}
 
-    # Permitted delta: repository-backed partitioning reports one compact
-    # out-of-window summary, while full-scan refines by row after decryption.
-    assert partitioned.issues == ()
-    assert partitioned.out_of_window_summary is not None
-    assert partitioned.out_of_window_summary.count == 3
-    assert partitioned.out_of_window_summary.min_filing_date == date(2026, 2, 1)
-    assert partitioned.out_of_window_summary.max_filing_date == date(2026, 9, 1)
+        # Permitted delta: repository-backed partitioning reports one compact
+        # out-of-window summary, while full-scan refines by row after decryption.
+        assert partitioned.issues == ()
+        assert partitioned.out_of_window_summary is not None
+        assert partitioned.out_of_window_summary.count == 3
+        assert partitioned.out_of_window_summary.min_filing_date == date(2026, 2, 1)
+        assert partitioned.out_of_window_summary.max_filing_date == date(2026, 9, 1)
 
-    full_scan_ids_with_issues = {i.transaction_id for i in full_scan.issues}
-    assert full_scan_ids_with_issues == {q1_row.transaction_id, q3_row.transaction_id}
-    assert all(i.reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in full_scan.issues)
-    # excluded_q3_row is silently skipped by full-scan (no issue) but surfaces
-    # under the partitioned path.
-    assert excluded_q3_row.transaction_id not in full_scan_ids_with_issues
+        full_scan_ids_with_issues = {i.transaction_id for i in full_scan.issues}
+        assert full_scan_ids_with_issues == {q1_row.transaction_id, q3_row.transaction_id}
+        assert all(i.reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in full_scan.issues)
+        # excluded_q3_row is silently skipped by full-scan (no issue) but surfaces
+        # under the partitioned path.
+        assert excluded_q3_row.transaction_id not in full_scan_ids_with_issues

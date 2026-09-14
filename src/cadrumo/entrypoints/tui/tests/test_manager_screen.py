@@ -118,10 +118,13 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
     there to fill in.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         overview = _live_overview()
 
@@ -142,10 +145,13 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
     from textual.css.query import NoMatches
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         overview = _live_overview()
 
@@ -174,10 +180,13 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
     from ....core.json_contract import Notice, NoticeSeverity
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         overview = _live_overview().model_copy(
             update={
@@ -221,10 +230,13 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
     as a write-through defect rather than as an under-waited test.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -260,10 +272,13 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
     ultimately show the right number.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -318,10 +333,13 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
     """
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         release = threading.Event()
 
@@ -387,10 +405,13 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
         required=False,
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Masked Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         app = ProfileManagerScreen(_live_overview("Masked Subject"), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -418,10 +439,13 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
         raise RuntimeError
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         app = ProfileManagerScreen(_live_overview(), persist=_persist_wordlessly)
         expected = tr("flows.manager.edit.write_failed")
@@ -448,10 +472,13 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
     from textual.css.query import NoMatches
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -484,10 +511,13 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
     _long_label_field_path = "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
             passphrase=_PASSWORD,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         _live_overview()
         written = _persist(_long_label_field_path, "12345.67")

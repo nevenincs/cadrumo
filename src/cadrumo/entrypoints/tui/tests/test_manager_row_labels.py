@@ -15,9 +15,13 @@ unedited siblings.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from ....application.user_profile.overview import ProfileFieldChoice, ProfileFieldView
-from ....domain.user_profile.values import ProfileSetupState
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ..profile.overview import ProfileManagerScreen
 
 pytestmark = [
@@ -96,13 +100,13 @@ def test_a_closed_choice_row_renders_its_operator_label_not_its_token() -> None:
 def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
     from ....application.user_profile.overview import build_profile_overview
     from ....core.i18n.render import tr
-    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
 
     storage_value = "app_request"
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="00000000-0000-4000-8000-0000000000c1",
         facts=(UserProfileFact(path="auth.clave_movil_route", value=storage_value),),
+        context=_profile_creation_context_for_test(),
     )
     overview = build_profile_overview(record)
     route = next(

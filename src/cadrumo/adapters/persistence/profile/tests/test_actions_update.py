@@ -44,43 +44,47 @@ class _UpdateManualOutcome:
 def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> _UpdateManualOutcome:
     """Run the canonical create -> update scenario and bundle the observable state."""
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("50.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="draft description",
-            idempotency_key="cash-row",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-    updated = update_manual_transaction(
-        transaction_id=created.ref.transaction_id,
-        command=ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("60.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="corrected description",
-            business_classification=BusinessClassification.MIXED,
-            business_pct=Decimal("0.50"),
-            notes="corrected cash amount",
-            actor="operator-B",
-            source_command="aeat app ledger update",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="draft description",
+                idempotency_key="cash-row",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        updated = update_manual_transaction(
+            transaction_id=created.ref.transaction_id,
+            command=ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("60.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="corrected description",
+                business_classification=BusinessClassification.MIXED,
+                business_pct=Decimal("0.50"),
+                notes="corrected cash amount",
+                actor="operator-B",
+                source_command="aeat app ledger update",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
     reloaded = transaction_repository.load()
     events = tuple(event_repository.load().for_bucket(_BUCKET_ID))
     return _UpdateManualOutcome(created=created, updated=updated, reloaded=reloaded, events=events)

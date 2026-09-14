@@ -17,6 +17,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from cadrumo.application.auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
@@ -54,6 +55,9 @@ from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -923,62 +927,71 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
     Resetting the certificate provider must delete every certificate artefact
     and leave every Cl@ve Móvil artefact byte-for-byte in place.
     """
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        cert_path = tmp_path / "operator.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        settings = load_settings()
 
-    _register_operator_profile()
-    cert_path = tmp_path / "operator.p12"
-    cert_path.write_bytes(b"placeholder cert")
-    settings = load_settings()
+        configure_operator_auth("certificate", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=cert_path,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        set_operator_certificate_source_secret(
+            name="personal",
+            secret=SecretStr("cert-passphrase"),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+        )
 
-    configure_operator_auth("certificate", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(
-        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    set_operator_certificate_source_secret(
-        name="personal", secret=SecretStr("cert-passphrase"), operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
+        certificate_session = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+        session_store.save(
+            certificate_session,
+            storage_state={"cookies": [], "origins": []},
+            metadata={"provider_kind": "certificate"},
+        )
+        unrelated_session = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
+        session_store.save(
+            unrelated_session,
+            storage_state={"cookies": [], "origins": []},
+            metadata={"provider_kind": "clave_movil"},
+        )
 
-    certificate_session = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-    session_store.save(
-        certificate_session,
-        storage_state={"cookies": [], "origins": []},
-        metadata={"provider_kind": "certificate"},
-    )
-    unrelated_session = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
-    session_store.save(
-        unrelated_session,
-        storage_state={"cookies": [], "origins": []},
-        metadata={"provider_kind": "clave_movil"},
-    )
+        certificate_lock = auth_acquisition_lock_path(settings, AuthProviderKind.CERTIFICATE, bucket_id=_BUCKET_ID)
+        clave_lock = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id=_BUCKET_ID)
 
-    certificate_lock = auth_acquisition_lock_path(settings, AuthProviderKind.CERTIFICATE, bucket_id=_BUCKET_ID)
-    clave_lock = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id=_BUCKET_ID)
+        with (
+            acquire_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, ttl_seconds=60, operation="target"),
+            acquire_auth_acquisition_lock(
+                settings, AuthProviderKind.CLAVE_MOVIL, ttl_seconds=60, operation="unrelated"
+            ),
+        ):
+            assert certificate_lock.is_file()
+            assert clave_lock.is_file()
 
-    with (
-        acquire_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, ttl_seconds=60, operation="target"),
-        acquire_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, ttl_seconds=60, operation="unrelated"),
-    ):
-        assert certificate_lock.is_file()
-        assert clave_lock.is_file()
+            result = reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
-        result = reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            assert certificate_lock.exists() is False
+            assert clave_lock.is_file(), "an unrelated provider's acquisition lock must survive a scoped reset"
 
-        assert certificate_lock.exists() is False
-        assert clave_lock.is_file(), "an unrelated provider's acquisition lock must survive a scoped reset"
+        state = workflow_state_repository().load()
 
-    state = workflow_state_repository().load()
+        assert result.cleared_provider_configuration is True
+        assert result.removed_sessions == 1
+        assert result.cleared_locks == 1
+        assert result.removed_certificate_sources == 1
+        assert result.removed_certificate_secrets == 1
+        assert session_store.exists(certificate_session) is False
+        assert state.auth.certificate_sources == {}
+        assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
 
-    assert result.cleared_provider_configuration is True
-    assert result.removed_sessions == 1
-    assert result.cleared_locks == 1
-    assert result.removed_certificate_sources == 1
-    assert result.removed_certificate_secrets == 1
-    assert session_store.exists(certificate_session) is False
-    assert state.auth.certificate_sources == {}
-    assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
-
-    assert session_store.exists(unrelated_session) is True, (
-        "an unrelated provider's persisted session must survive a scoped reset"
-    )
+        assert session_store.exists(unrelated_session) is True, (
+            "an unrelated provider's persisted session must survive a scoped reset"
+        )
 
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:

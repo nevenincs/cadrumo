@@ -2,17 +2,32 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.period import Period
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority_artifact import ProfileCreateContext
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    create_user_profile_record,
+)
 from ..completeness import conditional_profile_missing_required
 from ..keys_validation import validate_profile_values
 from ..preflight import ProfilePreflightService
 from ..validation import ProfileValidationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _governed_facts_in_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
+    with validating_governed_facts(operation):
+        yield
 
 
 _BASE_VALUES: dict[str, str] = {
@@ -39,7 +54,9 @@ def test_clave_movil_route_is_conditionally_required_without_affecting_other_pro
     assert certificate == ()
 
 
-def test_profile_key_validation_applies_irnr_conditional_requirements() -> None:
+def test_profile_key_validation_applies_irnr_conditional_requirements(
+    operation: PinnedAuthorityOperation,
+) -> None:
     cases = (
         (
             "missing-country",
@@ -68,7 +85,7 @@ def test_profile_key_validation_applies_irnr_conditional_requirements() -> None:
     )
 
     for case_id, overrides, expected_valid, expected_missing in cases:
-        result = validate_profile_values({**_BASE_VALUES, **overrides})
+        result = validate_profile_values({**_BASE_VALUES, **overrides}, operation=operation)
 
         assert result.valid is expected_valid, case_id
         for missing_path in expected_missing:
@@ -98,14 +115,17 @@ def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
     assert "taxpayer_type.representante_fiscal_nombre" in error_paths
 
 
-def test_profile_key_validation_does_not_require_iva_regime_for_natural_person_without_activity() -> None:
+def test_profile_key_validation_does_not_require_iva_regime_for_natural_person_without_activity(
+    operation: PinnedAuthorityOperation,
+) -> None:
     result = validate_profile_values(
         {
             "identity.tax_id": "12345678Z",
             "tax_residence.jurisdiction_scope": "common_regime",
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
-        }
+        },
+        operation=operation,
     )
 
     assert result.valid is True
@@ -142,9 +162,12 @@ def test_lifecycle_validation_requires_natural_person_with_activity_to_declare_i
     assert "iva.regime" in error_paths
 
 
-def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work() -> None:
+def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work(
+    operation: PinnedAuthorityOperation,
+) -> None:
     schema = load_user_profile_schema()
-    record = UserProfileRecord(
+    record = create_user_profile_record(
+        context=ProfileCreateContext(schema=schema, generation=operation.generation),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="88888888-8888-4888-8888-888888888888",
         facts=(

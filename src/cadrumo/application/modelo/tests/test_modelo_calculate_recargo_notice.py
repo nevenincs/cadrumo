@@ -13,6 +13,8 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.period import Period
 from ....domain.deadlines.plazo import resolve_filing_closes_on
 from ....domain.deadlines.recargo import build_recovery_for_overdue
@@ -62,64 +64,69 @@ def _overdue_context() -> tuple[WorkUnit, Period, date, date]:
 
 def test_overdue_deadline_posture_exposes_unassessed_rate_preview() -> None:
     """A past deadline yields posture plus advisory rate, never an assessment."""
-    work_unit, period, closes_on, reference_on = _overdue_context()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        work_unit, period, closes_on, reference_on = _overdue_context()
 
-    posture = modelo_work_deadline_posture(work_unit, reference_on=reference_on)
+        posture = modelo_work_deadline_posture(work_unit, reference_on=reference_on)
 
-    assert posture is not None
-    assert posture.closes_on == closes_on
-    assert posture.days_overdue == (reference_on - closes_on).days
-    preview = posture.conditional_recargo_preview
-    assert preview is not None, "an overdue posture should expose the governed conditional rate"
-    assert preview.assessment_status == "unassessed"
-    assert preview.rate_reference_on == reference_on
-    assert not hasattr(preview, "presentation_date"), "the as-of reference must not become a filing date"
+        assert posture is not None
+        assert posture.closes_on == closes_on
+        assert posture.days_overdue == (reference_on - closes_on).days
+        preview = posture.conditional_recargo_preview
+        assert preview is not None, "an overdue posture should expose the governed conditional rate"
+        assert preview.assessment_status == "unassessed"
+        assert preview.rate_reference_on == reference_on
+        assert not hasattr(preview, "presentation_date"), "the as-of reference must not become a filing date"
 
-    expected = build_recovery_for_overdue(
-        closes_on=closes_on,
-        reference_today=reference_on,
-        modelo=_MODELO,
-        period=period,
-    )
-    assert preview.band_id == expected.recargo_band.id
-    assert preview.surcharge_pct == expected.recargo_band.surcharge_pct
-    assert preview.interest_applies is expected.recargo_band.interest_applies
+        expected = build_recovery_for_overdue(
+            closes_on=closes_on,
+            reference_today=reference_on,
+            modelo=_MODELO,
+            period=period,
+            operation=_authority_operation_for_test,
+        )
+        assert preview.band_id == expected.recargo_band.id
+        assert preview.surcharge_pct == expected.recargo_band.surcharge_pct
+        assert preview.interest_applies is expected.recargo_band.interest_applies
 
 
 def test_preview_preserves_exact_twelve_month_rate_boundary_without_assessment() -> None:
     """The governed 12-month band remains correct while status stays unassessed."""
-    work_unit, period, closes_on, _reference_on = _overdue_context()
-    anniversary = closes_on.replace(year=closes_on.year + 1)
-    day_after = anniversary + timedelta(days=1)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        work_unit, period, closes_on, _reference_on = _overdue_context()
+        anniversary = closes_on.replace(year=closes_on.year + 1)
+        day_after = anniversary + timedelta(days=1)
 
-    anniversary_posture = modelo_work_deadline_posture(work_unit, reference_on=anniversary)
-    day_after_posture = modelo_work_deadline_posture(work_unit, reference_on=day_after)
+        anniversary_posture = modelo_work_deadline_posture(work_unit, reference_on=anniversary)
+        day_after_posture = modelo_work_deadline_posture(work_unit, reference_on=day_after)
 
-    assert anniversary_posture is not None
-    assert day_after_posture is not None
-    anniversary_preview = anniversary_posture.conditional_recargo_preview
-    day_after_preview = day_after_posture.conditional_recargo_preview
-    assert anniversary_preview is not None
-    assert day_after_preview is not None
-    assert anniversary_preview.assessment_status == "unassessed"
-    assert day_after_preview.assessment_status == "unassessed"
+        assert anniversary_posture is not None
+        assert day_after_posture is not None
+        anniversary_preview = anniversary_posture.conditional_recargo_preview
+        day_after_preview = day_after_posture.conditional_recargo_preview
+        assert anniversary_preview is not None
+        assert day_after_preview is not None
+        assert anniversary_preview.assessment_status == "unassessed"
+        assert day_after_preview.assessment_status == "unassessed"
 
-    anniversary_recovery = build_recovery_for_overdue(
-        closes_on=closes_on,
-        reference_today=anniversary,
-        modelo=_MODELO,
-        period=period,
-    )
-    day_after_recovery = build_recovery_for_overdue(
-        closes_on=closes_on,
-        reference_today=day_after,
-        modelo=_MODELO,
-        period=period,
-    )
-    assert anniversary_preview.band_id == anniversary_recovery.recargo_band.id
-    assert anniversary_preview.interest_applies is anniversary_recovery.recargo_band.interest_applies
-    assert day_after_preview.band_id == day_after_recovery.recargo_band.id
-    assert day_after_preview.interest_applies is day_after_recovery.recargo_band.interest_applies
+        anniversary_recovery = build_recovery_for_overdue(
+            closes_on=closes_on,
+            reference_today=anniversary,
+            modelo=_MODELO,
+            period=period,
+            operation=_authority_operation_for_test,
+        )
+        day_after_recovery = build_recovery_for_overdue(
+            closes_on=closes_on,
+            reference_today=day_after,
+            modelo=_MODELO,
+            period=period,
+            operation=_authority_operation_for_test,
+        )
+        assert anniversary_preview.band_id == anniversary_recovery.recargo_band.id
+        assert anniversary_preview.interest_applies is anniversary_recovery.recargo_band.interest_applies
+        assert day_after_preview.band_id == day_after_recovery.recargo_band.id
+        assert day_after_preview.interest_applies is day_after_recovery.recargo_band.interest_applies
 
 
 def test_in_time_deadline_posture_has_no_conditional_rate_preview() -> None:

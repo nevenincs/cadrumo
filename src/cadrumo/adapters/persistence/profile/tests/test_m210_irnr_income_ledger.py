@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.profile.tests.verification_repository_support 
     build_test_verification_repository_bundle,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
@@ -93,32 +94,35 @@ def _classification(code: str, gross_income_amount: Decimal) -> M210IncomeClassi
 
 def _create_income(
     *,
+    objects: SecureObjectRepository,
     label: str,
     source_jurisdiction: str | None,
     classification: M210IncomeClassification | None,
     transaction_repository: TransactionCatalogueRepository,
     event_repository: BucketEventHistoryRepository,
 ) -> str:
-    result = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2025, 2, 15),
-            value_date=date(2025, 2, 15),
-            amount=classification.gross_income_amount if classification is not None else Decimal("300.00"),
-            direction=TransactionDirection.INCOMING,
-            description=f"M210 income {label}",
-            business_classification=BusinessClassification.BUSINESS,
-            source_jurisdiction=source_jurisdiction,
-            m210_income_classification=classification,
-            idempotency_key=f"m210-irnr-{label}",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=_CLOCK,
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        result = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2025, 2, 15),
+                value_date=date(2025, 2, 15),
+                amount=classification.gross_income_amount if classification is not None else Decimal("300.00"),
+                direction=TransactionDirection.INCOMING,
+                description=f"M210 income {label}",
+                business_classification=BusinessClassification.BUSINESS,
+                source_jurisdiction=source_jurisdiction,
+                m210_income_classification=classification,
+                idempotency_key=f"m210-irnr-{label}",
+            ),
+            ports=ports,
+            occurred_at=_CLOCK,
+        )
     return result.ref.transaction_id
 
 
@@ -179,6 +183,7 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
             )
             injected_event_repository = BucketEventHistoryRepository(objects=injected_objects)
             injected_id = _create_income(
+                objects=injected_objects,
                 label="injected-store-only",
                 source_jurisdiction="ES",
                 classification=_classification("01", Decimal("1234.56")),
@@ -241,6 +246,7 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         es_id = _create_income(
+            objects=runtime.repository,
             label="es-code-01",
             source_jurisdiction="ES",
             classification=_classification("01", Decimal("825.00")),
@@ -248,6 +254,7 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
             event_repository=event_repository,
         )
         foreign_id = _create_income(
+            objects=runtime.repository,
             label="foreign-code-01",
             source_jurisdiction="FR",
             classification=_classification("01", Decimal("500.00")),
@@ -255,6 +262,7 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
             event_repository=event_repository,
         )
         unresolved_id = _create_income(
+            objects=runtime.repository,
             label="unresolved-code-01",
             source_jurisdiction=None,
             classification=_classification("01", Decimal("400.00")),
@@ -262,6 +270,7 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
             event_repository=event_repository,
         )
         incomplete_id = _create_income(
+            objects=runtime.repository,
             label="es-missing-classification",
             source_jurisdiction="ES",
             classification=None,
@@ -269,6 +278,7 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
             event_repository=event_repository,
         )
         other_code_id = _create_income(
+            objects=runtime.repository,
             label="es-code-03",
             source_jurisdiction="ES",
             classification=_classification("03", Decimal("700.00")),
@@ -285,19 +295,21 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
             selected_official_tipo_renta_code="01",
             transaction_repository=transaction_repository,
         )
-        update_manual_transaction_fields(
+        with ledger_ports_for_test(
             bucket_id=_BUCKET_ID,
-            transaction_id=foreign_id,
-            patch=ManualLedgerTransactionPatch(source_jurisdiction="ES"),
-            actor="operator",
-            source_command="aeat app ledger classify",
-            ports=ledger_ports_for_test(
+            objects=runtime.repository,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports:
+            update_manual_transaction_fields(
                 bucket_id=_BUCKET_ID,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=event_repository,
-            ),
-            occurred_at=_CLOCK,
-        )
+                transaction_id=foreign_id,
+                patch=ManualLedgerTransactionPatch(source_jurisdiction="ES"),
+                actor="operator",
+                source_command="aeat app ledger classify",
+                ports=ports,
+                occurred_at=_CLOCK,
+            )
         after_mutation = aggregate_irnr_income_ledger_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
@@ -330,6 +342,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         es_id = _create_income(
+            objects=runtime.repository,
             label="mode-es",
             source_jurisdiction="ES",
             classification=_classification("01", Decimal("900.00")),
@@ -337,6 +350,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             event_repository=event_repository,
         )
         _create_income(
+            objects=runtime.repository,
             label="mode-foreign",
             source_jurisdiction="DE",
             classification=_classification("01", Decimal("300.00")),
@@ -344,6 +358,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             event_repository=event_repository,
         )
         code_35_id = _create_income(
+            objects=runtime.repository,
             label="mode-code-35",
             source_jurisdiction="ES",
             classification=_classification("35", Decimal("650.00")),
@@ -496,40 +511,44 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
         # no longer says 900.00 or even ES. Verifying BEFORE them finalizes the
         # revision, and the ledger then refuses to mutate a row a finalized
         # revision cites. What is left here is the staleness half.
-        update_manual_transaction_fields(
+        with ledger_ports_for_test(
             bucket_id=_BUCKET_ID,
-            transaction_id=es_id,
-            patch=ManualLedgerTransactionPatch(
-                m210_income_classification=_classification("01", Decimal("901.00")),
-            ),
-            actor="operator",
-            source_command="aeat app ledger classify",
-            ports=ledger_ports_for_test(
+            objects=runtime.repository,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports:
+            update_manual_transaction_fields(
                 bucket_id=_BUCKET_ID,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=event_repository,
-            ),
-            occurred_at=_CLOCK,
-        )
+                transaction_id=es_id,
+                patch=ManualLedgerTransactionPatch(
+                    m210_income_classification=_classification("01", Decimal("901.00")),
+                ),
+                actor="operator",
+                source_command="aeat app ledger classify",
+                ports=ports,
+                occurred_at=_CLOCK,
+            )
         classification_staleness = evaluate_ledger_filing_staleness(ledger_snapshot, transaction_repository.load())
         jurisdiction_snapshot = compute_ledger_filing_snapshot(
             source_transaction_ids=ledger.source_transaction_ids,
             catalogue=transaction_repository.load(),
             captured_at=_CLOCK,
         )
-        update_manual_transaction_fields(
+        with ledger_ports_for_test(
             bucket_id=_BUCKET_ID,
-            transaction_id=es_id,
-            patch=ManualLedgerTransactionPatch(source_jurisdiction="FR"),
-            actor="operator",
-            source_command="aeat app ledger classify",
-            ports=ledger_ports_for_test(
+            objects=runtime.repository,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports:
+            update_manual_transaction_fields(
                 bucket_id=_BUCKET_ID,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=event_repository,
-            ),
-            occurred_at=_CLOCK,
-        )
+                transaction_id=es_id,
+                patch=ManualLedgerTransactionPatch(source_jurisdiction="FR"),
+                actor="operator",
+                source_command="aeat app ledger classify",
+                ports=ports,
+                occurred_at=_CLOCK,
+            )
         jurisdiction_staleness = evaluate_ledger_filing_staleness(jurisdiction_snapshot, transaction_repository.load())
 
     assert manual.m210_gross_income_source_mode is M210GrossIncomeSourceMode.MANUAL
@@ -592,6 +611,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         _create_income(
+            objects=runtime.repository,
             label="bundle-es",
             source_jurisdiction="ES",
             classification=_classification("01", Decimal("900.00")),

@@ -10,6 +10,7 @@ import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
@@ -47,14 +48,15 @@ def _domestic_current_candidate() -> IvaLedgerCandidate:
 
 
 def test_candidate_freeze_preserves_exact_deduction_authority_losslessly() -> None:
-    candidate = _domestic_current_candidate()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        candidate = _domestic_current_candidate()
 
-    observation = validate_iva_ledger_observation(candidate)
+        observation = validate_iva_ledger_observation(candidate, operation=_authority_operation_for_test)
 
-    assert observation.deduction_fact_kind == IvaDeductionFactKind._from_registry("domestic_current")
-    assert observation.deduction_provenance == candidate.deduction_provenance
-    assert observation.investment_asset_id is None
-    assert observation.rectifies_ledger_id is None
+        assert observation.deduction_fact_kind == IvaDeductionFactKind._from_registry("domestic_current")
+        assert observation.deduction_provenance == candidate.deduction_provenance
+        assert observation.investment_asset_id is None
+        assert observation.rectifies_ledger_id is None
 
 
 def test_investment_kind_requires_an_asset_and_current_kind_forbids_one() -> None:
@@ -70,41 +72,44 @@ def test_investment_kind_requires_an_asset_and_current_kind_forbids_one() -> Non
 
 
 def test_signed_rectification_with_one_corrected_fact_is_accepted_once() -> None:
-    rectification = IvaLedgerCandidate(
-        ledger_id="rectification-001",
-        transaction_date=date(2026, 4, 11),
-        category=IvaCategory("domestic_general"),
-        rate_kind=IvaRateKind("general"),
-        flow_direction=IvaFlowDirection._from_registry("soportado"),
-        base_amount=Decimal("-100.00"),
-        iva_amount=Decimal("-21.00"),
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("rectification"),
-        deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("rectification_evidence"),
-            source_locator="invoice-rectification:2026-001",
-            evidence_digest="b" * 64,
-        ),
-        rectifies_ledger_id="current-purchase",
-        observation_role=IvaLedgerObservationRole.SETTLEMENT,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        rectification = IvaLedgerCandidate(
+            ledger_id="rectification-001",
+            transaction_date=date(2026, 4, 11),
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection._from_registry("soportado"),
+            base_amount=Decimal("-100.00"),
+            iva_amount=Decimal("-21.00"),
+            deduction_fact_kind=IvaDeductionFactKind._from_registry("rectification"),
+            deduction_provenance=IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority._from_registry("rectification_evidence"),
+                source_locator="invoice-rectification:2026-001",
+                evidence_digest="b" * 64,
+            ),
+            rectifies_ledger_id="current-purchase",
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
+        )
 
-    aggregation = aggregate_iva_ledger_candidates(
-        (rectification,),
-        period=Period.from_year_and_code(2026, "2T"),
-        ledger_profile_id="profile-a",
-        investment_asset_register=BienesInversionIvaRegister(),
-        investment_asset_profile_id="profile-a",
-    )
-
-    assert aggregation.observations[0].iva_amount == Decimal("-21.00")
-    with pytest.raises(ValueError, match=r"aggregation\.iva_ledger\.errors\.rectification_consumed_more_than_once"):
-        aggregate_iva_ledger_candidates(
-            (rectification, rectification.model_copy(update={"ledger_id": "rectification-002"})),
+        aggregation = aggregate_iva_ledger_candidates(
+            (rectification,),
             period=Period.from_year_and_code(2026, "2T"),
             ledger_profile_id="profile-a",
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id="profile-a",
+            operation=_authority_operation_for_test,
         )
+
+        assert aggregation.observations[0].iva_amount == Decimal("-21.00")
+        with pytest.raises(ValueError, match=r"aggregation\.iva_ledger\.errors\.rectification_consumed_more_than_once"):
+            aggregate_iva_ledger_candidates(
+                (rectification, rectification.model_copy(update={"ledger_id": "rectification-002"})),
+                period=Period.from_year_and_code(2026, "2T"),
+                ledger_profile_id="profile-a",
+                investment_asset_register=BienesInversionIvaRegister(),
+                investment_asset_profile_id="profile-a",
+                operation=_authority_operation_for_test,
+            )
 
 
 @pytest.mark.parametrize(
@@ -121,25 +126,26 @@ def test_rectification_preserves_the_corrected_import_or_intra_eu_legal_axes(
     category: IvaCategory,
     flow: IvaFlowDirection,
 ) -> None:
-    candidate = IvaLedgerCandidate(
-        ledger_id=f"rectification-{category.value}",
-        transaction_date=date(2026, 4, 11),
-        category=category,
-        rate_kind=IvaRateKind("general"),
-        flow_direction=flow,
-        base_amount=Decimal("-100.00"),
-        iva_amount=Decimal("-21.00"),
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("rectification"),
-        deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("rectification_evidence"),
-            source_locator=f"rectification:{category.value}",
-            evidence_digest="c" * 64,
-        ),
-        rectifies_ledger_id="corrected-source",
-        observation_role=IvaLedgerObservationRole.SETTLEMENT,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        candidate = IvaLedgerCandidate(
+            ledger_id=f"rectification-{category.value}",
+            transaction_date=date(2026, 4, 11),
+            category=category,
+            rate_kind=IvaRateKind("general"),
+            flow_direction=flow,
+            base_amount=Decimal("-100.00"),
+            iva_amount=Decimal("-21.00"),
+            deduction_fact_kind=IvaDeductionFactKind._from_registry("rectification"),
+            deduction_provenance=IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority._from_registry("rectification_evidence"),
+                source_locator=f"rectification:{category.value}",
+                evidence_digest="c" * 64,
+            ),
+            rectifies_ledger_id="corrected-source",
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
+        )
 
-    assert validate_iva_ledger_observation(candidate).category == category
+        assert validate_iva_ledger_observation(candidate, operation=_authority_operation_for_test).category == category
 
 
 def test_rectification_refuses_category_flow_mismatch_and_exempt_rate() -> None:
@@ -222,38 +228,42 @@ def _investment_record(*, ledger_id: str, asset_id: str, sector_id: str) -> Bien
 
 
 def test_production_candidate_aggregation_requires_and_accepts_exact_reciprocal_asset_authority() -> None:
-    candidate = _investment_candidate(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a")
-    register = BienesInversionIvaRegister(
-        records=(_investment_record(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a"),)
-    )
-
-    with pytest.raises(TypeError, match="investment_asset_register"):
-        cast(Any, aggregate_iva_ledger_candidates)((candidate,), period=Period.from_year_and_code(2026, "2T"))
-
-    result = aggregate_iva_ledger_candidates(
-        (candidate,),
-        period=Period.from_year_and_code(2026, "2T"),
-        ledger_profile_id="profile-a",
-        investment_asset_register=register,
-        investment_asset_profile_id="profile-a",
-    )
-    assert result.observations[0].investment_asset_id == "asset-machine"
-
-
-def test_production_candidate_aggregation_refuses_an_unobserved_filing_year_asset() -> None:
-    candidate = _investment_candidate(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a")
-    register = BienesInversionIvaRegister(
-        records=(
-            _investment_record(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a"),
-            _investment_record(ledger_id="ledger-vehicle", asset_id="asset-vehicle", sector_id="sector-b"),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        candidate = _investment_candidate(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a")
+        register = BienesInversionIvaRegister(
+            records=(_investment_record(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a"),)
         )
-    )
 
-    with pytest.raises(ValueError, match="asset-vehicle"):
-        aggregate_iva_ledger_candidates(
+        with pytest.raises(TypeError, match="investment_asset_register"):
+            cast(Any, aggregate_iva_ledger_candidates)((candidate,), period=Period.from_year_and_code(2026, "2T"))
+
+        result = aggregate_iva_ledger_candidates(
             (candidate,),
             period=Period.from_year_and_code(2026, "2T"),
             ledger_profile_id="profile-a",
             investment_asset_register=register,
             investment_asset_profile_id="profile-a",
+            operation=_authority_operation_for_test,
         )
+        assert result.observations[0].investment_asset_id == "asset-machine"
+
+
+def test_production_candidate_aggregation_refuses_an_unobserved_filing_year_asset() -> None:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        candidate = _investment_candidate(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a")
+        register = BienesInversionIvaRegister(
+            records=(
+                _investment_record(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a"),
+                _investment_record(ledger_id="ledger-vehicle", asset_id="asset-vehicle", sector_id="sector-b"),
+            )
+        )
+
+        with pytest.raises(ValueError, match="asset-vehicle"):
+            aggregate_iva_ledger_candidates(
+                (candidate,),
+                period=Period.from_year_and_code(2026, "2T"),
+                ledger_profile_id="profile-a",
+                investment_asset_register=register,
+                investment_asset_profile_id="profile-a",
+                operation=_authority_operation_for_test,
+            )

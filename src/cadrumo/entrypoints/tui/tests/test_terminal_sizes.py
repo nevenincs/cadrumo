@@ -53,7 +53,7 @@ from ....application.user_profile.overview import ProfileOverview, build_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.time.clock import now
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
@@ -111,7 +111,7 @@ def _assert_horizontally_contained(app: App[object], size: tuple[int, int], surf
 
 
 @contextmanager
-def _registered_profile(tmp_path: Path) -> Generator[Path]:
+def _registered_profile(tmp_path: Path) -> Generator[tuple[Path, PinnedAuthorityOperation]]:
     """One real profile created through the real registration door."""
     with (
         isolated_profile_storage_root(tmp_path=tmp_path) as root,
@@ -129,14 +129,14 @@ def _registered_profile(tmp_path: Path) -> Generator[Path]:
             passphrase_callback=lambda: _PASSWORD,
             profile_decode_context=authority_operation.profile_decode_context(),
         )
-        yield root
+        yield root, authority_operation
 
 
 @pytest.mark.parametrize("size", _SIZES)
 @pytest.mark.asyncio
 async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, size: tuple[int, int]) -> None:
     """The profile manager keeps its whole field table inside the terminal."""
-    with _registered_profile(tmp_path):
+    with _registered_profile(tmp_path) as (_root, _authority_operation):
         record = load_test_profile_record(require_active_bucket_id())
         overview = build_profile_overview(record, label=_LABEL)
 
@@ -160,12 +160,16 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
 @pytest.mark.asyncio
 async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size: tuple[int, int]) -> None:
     """The login screen keeps both credential fields inside the terminal."""
-    with _registered_profile(tmp_path):
+    with _registered_profile(tmp_path) as (_root, authority_operation):
         bucket_id = require_active_bucket_id()
         logout_active_profile()
         screen = LoginScreen(
             choices=[ProfileLoginChoice(profile_id=bucket_id, label=_LABEL)],
-            authenticate=lambda profile_id, secret: attempt_profile_login(profile_id=profile_id, passphrase=secret),
+            authenticate=lambda profile_id, secret: attempt_profile_login(
+                profile_id=profile_id,
+                passphrase=secret,
+                profile_decode_context=authority_operation.profile_decode_context(),
+            ),
         )
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:

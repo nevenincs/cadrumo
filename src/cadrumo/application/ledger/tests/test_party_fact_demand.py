@@ -27,6 +27,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope, TransactionKind
 from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
 
@@ -108,21 +109,27 @@ class TestARegistrationSettlesNoPlace:
         An operator saying where a party operates from has not said which State
         registered it, so an intra-community branch still has to ask.
         """
-        assembly = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=_TAXABLE,
-            declared=DeclaredFacts(
-                supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assembly = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=_TAXABLE,
+                declared=DeclaredFacts(
+                    supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
+                    customer_tax_status=DeclaredFact(
+                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                    ),
+                    issuer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                    ),
+                    customer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                    ),
                 ),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
-            ),
-        )
-        assert not assembly.assembled
-        assert {gap.field for gap in assembly.missing} == {"customer_identification_state"}
+                operation=_authority_operation_for_test,
+            )
+            assert not assembly.assembled
+            assert {gap.field for gap in assembly.missing} == {"customer_identification_state"}
 
 
 class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
@@ -130,23 +137,29 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
 
     def test_a_domestic_operation_assembles_with_no_identification_anywhere(self) -> None:
         """The commonest document there is. Asking it for a NIF-IVA would be noise."""
-        assembly = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=_TAXABLE,
-            declared=DeclaredFacts(
-                supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assembly = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=_TAXABLE,
+                declared=DeclaredFacts(
+                    supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
+                    customer_tax_status=DeclaredFact(
+                        value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED
+                    ),
+                    issuer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                    ),
+                    customer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                    ),
                 ),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
-            ),
-            rate_tier=IvaRateKind("general"),
-        )
-        assert assembly.assembled, [gap.field for gap in assembly.missing]
-        assert assembly.criteria is not None
-        assert assembly.criteria.customer_identification_state is None
+                rate_tier=IvaRateKind("general"),
+                operation=_authority_operation_for_test,
+            )
+            assert assembly.assembled, [gap.field for gap in assembly.missing]
+            assert assembly.criteria is not None
+            assert assembly.criteria.customer_identification_state is None
 
     def test_the_foreign_goods_population_still_resolves_with_no_operator_question(self) -> None:
         """The cost the split was designed to preserve.
@@ -155,61 +168,79 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
         printed number supplies it, because for this branch the prefix was never
         a proxy for anything. It was the operative fact.
         """
-        assembly = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=_TAXABLE,
-            declared=DeclaredFacts(
-                supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assembly = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=_TAXABLE,
+                declared=DeclaredFacts(
+                    supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
+                    customer_tax_status=DeclaredFact(
+                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                    ),
+                    issuer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                    ),
+                    customer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                    ),
                 ),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
-            ),
-            customer_identifier=_GERMAN_IVA_NUMBER,
-        )
-        assert assembly.assembled, [gap.field for gap in assembly.missing]
-        assert assembly.criteria is not None
-        assert assembly.criteria.customer_identification_state == require_eu_member_state("DE")
+                customer_identifier=_GERMAN_IVA_NUMBER,
+                operation=_authority_operation_for_test,
+            )
+            assert assembly.assembled, [gap.field for gap in assembly.missing]
+            assert assembly.criteria is not None
+            assert assembly.criteria.customer_identification_state == require_eu_member_state("DE")
 
     def test_an_intra_community_branch_with_no_printed_number_asks(self) -> None:
         """The same operation without the evidence: a question, never a blank."""
-        assembly = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=_TAXABLE,
-            declared=DeclaredFacts(
-                supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assembly = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=_TAXABLE,
+                declared=DeclaredFacts(
+                    supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
+                    customer_tax_status=DeclaredFact(
+                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                    ),
+                    issuer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                    ),
+                    customer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                    ),
                 ),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
-            ),
-        )
-        assert not assembly.assembled
-        gap = next(item for item in assembly.missing if item.field == "customer_identification_state")
-        assert gap.settled_by
+                operation=_authority_operation_for_test,
+            )
+            assert not assembly.assembled
+            gap = next(item for item in assembly.missing if item.field == "customer_identification_state")
+            assert gap.settled_by
 
     def test_an_operator_assertion_settles_it_where_no_number_was_printed(self) -> None:
-        assembly = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=_TAXABLE,
-            declared=DeclaredFacts(
-                supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assembly = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=_TAXABLE,
+                declared=DeclaredFacts(
+                    supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
+                    customer_tax_status=DeclaredFact(
+                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                    ),
+                    issuer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                    ),
+                    customer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                    ),
+                    customer_identification_state=DeclaredFact(value=require_eu_member_state("FR"), source=_ASSERTED),
                 ),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
-                customer_identification_state=DeclaredFact(value=require_eu_member_state("FR"), source=_ASSERTED),
-            ),
-        )
-        assert assembly.assembled, [gap.field for gap in assembly.missing]
-        assert assembly.criteria is not None
-        assert assembly.criteria.customer_identification_state == require_eu_member_state("FR")
+                operation=_authority_operation_for_test,
+            )
+            assert assembly.assembled, [gap.field for gap in assembly.missing]
+            assert assembly.criteria is not None
+            assert assembly.criteria.customer_identification_state == require_eu_member_state("FR")
 
 
 class TestTheUnplacedOperationGuardCoversTheNewAxis:
@@ -221,21 +252,25 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
     """
 
     def test_an_unplaced_operation_demands_the_identification(self) -> None:
-        assembly = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=_TAXABLE,
-            declared=DeclaredFacts(
-                supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assembly = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=_TAXABLE,
+                declared=DeclaredFacts(
+                    supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
+                    customer_tax_status=DeclaredFact(
+                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                    ),
+                    issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
+                    customer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                    ),
                 ),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
-            ),
-        )
-        assert not assembly.assembled
-        assert "customer_identification_state" in {gap.field for gap in assembly.missing}
+                operation=_authority_operation_for_test,
+            )
+            assert not assembly.assembled
+            assert "customer_identification_state" in {gap.field for gap in assembly.missing}
 
     def test_the_guard_is_the_tables_declaration_not_a_local_branch(self) -> None:
         """The demand tracks what the fallthrough declares, so one authority moves both.
@@ -244,15 +279,17 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
         stopped declaring both facts, this and the producer would change
         together instead of drifting.
         """
-        unplaced = classify_iva(
-            IvaInvoiceClassificationCriteria(
-                transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
-                customer_residency=IvaTerritorialScope._from_registry("eu_member"),
-                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
-                kind=TransactionKind("goods"),
-                direction=InvoiceKind.ISSUED,
-            ),
-        )
-        assert unplaced.category == IvaCategory("unknown")
-        assert PartyFact.IVA_IDENTIFICATION_STATE in unplaced.consumes_party_facts
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            unplaced = classify_iva(
+                IvaInvoiceClassificationCriteria(
+                    transaction_date=_DATE,
+                    issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                    customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                    customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                    kind=TransactionKind("goods"),
+                    direction=InvoiceKind.ISSUED,
+                ),
+                operation=_authority_operation_for_test,
+            )
+            assert unplaced.category == IvaCategory("unknown")
+            assert PartyFact.IVA_IDENTIFICATION_STATE in unplaced.consumes_party_facts

@@ -45,6 +45,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType as BucketEventObjectType
 from cadrumo.domain.buckets.event import BucketEventType as BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -53,6 +54,7 @@ from cadrumo.domain.modelos.filing_record import ModeloRecord
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 _CALCULATION_OPERATION_LEASES: list[object] = []
@@ -85,7 +87,7 @@ def calculation_ports_for_test(
     bucket_event_repository = bucket_event_repository or BucketEventHistoryRepository()
     lease = bundled_indexed_authority().operation()
     _CALCULATION_OPERATION_LEASES.append(lease)
-    operation = next(lease)
+    operation = lease.__enter__()
     resolved_bucket_id = bucket_id or getattr(work_unit_repository, "bucket_id", None) or "test-bucket"
     ports = build_calculation_action_ports(bucket_id=resolved_bucket_id, operation=operation)
     updates = {
@@ -398,6 +400,7 @@ def _canonical_work_unit_period(work_unit: WorkUnit) -> Period:
 class _WorkflowGate:
     engine: WorkflowEngine
     profile: TaxpayerProfile
+    operation: PinnedAuthorityOperation
 
 
 def _workflow_gate(
@@ -407,9 +410,16 @@ def _workflow_gate(
     clock: datetime,
 ) -> _WorkflowGate:
     profile = workflow_profile()
+    filing_ports = build_filing_action_ports(bucket_id=work_unit.bucket_id)
+    lease = bundled_indexed_authority().operation()
+    _CALCULATION_OPERATION_LEASES.append(lease)
+    operation = lease.__enter__()
     return _WorkflowGate(
         profile=profile,
         engine=build_revision_workflow_engine(
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            draft_review_ports=filing_ports.draft_review_ports,
+            workflow_gate_ports=filing_ports.workflow_gate_ports,
             revision=revision,
             work_unit=work_unit,
             profile=profile,
@@ -417,7 +427,9 @@ def _workflow_gate(
             clock=clock,
             settings=Settings(),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
         ),
+        operation=operation,
     )
 
 
@@ -448,16 +460,15 @@ def _file_revision(
     )
     return file_modelo_revision(
         calculation_revision_id,
+        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
         actor=actor,
         workflow_profile=gate.profile,
         notes=notes,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository,
-        bucket_event_repository=bucket_event_repository,
         workflow_engine=gate.engine,
         clock=clock,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operation=gate.operation,
     )
 
 
@@ -495,6 +506,7 @@ def _verify_revision(
         workflow_engine=gate.engine,
         clock=clock,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operation=gate.operation,
     )
 
 

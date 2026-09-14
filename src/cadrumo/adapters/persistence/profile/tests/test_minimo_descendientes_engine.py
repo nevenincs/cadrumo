@@ -8,6 +8,7 @@ reach the estatal/autonómico channels and the downstream tariff calculation.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -23,6 +24,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.profile_binding import resolve_profile_sourced_bindings
 from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -32,6 +34,13 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for each persisted profile resolution."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _BUCKET = "00000000-0000-4000-8000-000000000516"
@@ -81,7 +90,10 @@ def _binding_id_for_autonomico(snapshot: RegistrySnapshot) -> str:
     return matches[0]
 
 
-def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(tmp_path: Path) -> None:
+def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
         descendientes = (DescendantInfo(birth_date=date(2012, 4, 1)),)
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
@@ -97,13 +109,16 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(tmp_pa
         )
         snapshot = _snapshot(2024)
         binding_id = _binding_id_for_estatal(snapshot)
-        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET)
+        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET, operation=authority_operation)
 
     tranches, _ = _registry_tranches(snapshot)
     assert resolution.binding_values[binding_id] == tranches[0]
 
 
-def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_path: Path) -> None:
+def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Real profile descendientes feed 0513/0514 and the downstream cuota path."""
     snapshot = _snapshot(2024)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
@@ -130,7 +145,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
                 context=_profile_creation_context_for_test(),
             ),
         )
-        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET)
+        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET, operation=authority_operation)
 
     result = calculate_registry_snapshot(
         snapshot,
@@ -172,7 +187,10 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
     )
 
 
-def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channel(tmp_path: Path) -> None:
+def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channel(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """End-to-end: a real Madrid profile resolves the Madrid-specific tranches."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
         descendientes = (
@@ -194,7 +212,7 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
         snapshot = _snapshot(2024)
         estatal_binding_id = _binding_id_for_estatal(snapshot)
         autonomico_binding_id = _binding_id_for_autonomico(snapshot)
-        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET)
+        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET, operation=authority_operation)
 
     estatal_tranches, _ = _registry_tranches(snapshot)
     madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")

@@ -29,6 +29,8 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.aggregation import (
     COUNTERPART_SOURCE_KIND_ORDER,
     BindingSourceKind,
@@ -165,23 +167,24 @@ def _asset_obs(
 
 
 def test_contract_maps_supported_modelos_to_application_aggregation_owner() -> None:
-    contract = get_per_modelo_aggregation_contract()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        contract = get_per_modelo_aggregation_contract(operation=_authority_operation_for_test)
 
-    assert contract.service_owner == "cadrumo.application.aggregation"
-    assert contract.accepted_source_kinds == COUNTERPART_SOURCE_KIND_ORDER
-    assert contract.error_codes == AggregationErrorCodes
-    by_provider = {provider.provider: provider for provider in contract.providers}
-    assert by_provider[PerModeloAggregationContributor.RETENCIONES].modelos == (
-        "111",
-        "115",
-        "123",
-        "180",
-        "190",
-        "193",
-    )
-    assert by_provider[PerModeloAggregationContributor.COUNTERPART].modelos == ("347", "349")
-    assert by_provider[PerModeloAggregationContributor.FOREIGN_ASSETS].modelos == ("720",)
-    assert all(provider.service_owner == "cadrumo.application.aggregation" for provider in contract.providers)
+        assert contract.service_owner == "cadrumo.application.aggregation"
+        assert contract.accepted_source_kinds == COUNTERPART_SOURCE_KIND_ORDER
+        assert contract.error_codes == AggregationErrorCodes
+        by_provider = {provider.provider: provider for provider in contract.providers}
+        assert by_provider[PerModeloAggregationContributor.RETENCIONES].modelos == (
+            "111",
+            "115",
+            "123",
+            "180",
+            "190",
+            "193",
+        )
+        assert by_provider[PerModeloAggregationContributor.COUNTERPART].modelos == ("347", "349")
+        assert by_provider[PerModeloAggregationContributor.FOREIGN_ASSETS].modelos == ("720",)
+        assert all(provider.service_owner == "cadrumo.application.aggregation" for provider in contract.providers)
 
 
 def test_command_contract_is_strict_and_immutable() -> None:
@@ -244,228 +247,235 @@ def test_period_boundary_rejects_combined_period_string() -> None:
 
 
 def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None:
-    command = PerModeloAggregationCommand(
-        modelo="111",
-        period=_P_2025_Q1,
-        retencion_observations=(_retencion_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION),),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        command = PerModeloAggregationCommand(
+            modelo="111",
+            period=_P_2025_Q1,
+            retencion_observations=(_retencion_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION),),
+        )
 
-    result = aggregate_per_modelo(command)
+        result = aggregate_per_modelo(command, operation=_authority_operation_for_test)
 
-    assert result.provider is PerModeloAggregationContributor.RETENCIONES
-    assert isinstance(result.aggregation, RetencionesAggregation)
-    assert result.aggregation.total_retencion == Decimal("150.00")
-    assert result.source_kinds == (BindingSourceKind.LEDGER_TRANSACTION,)
-    assert result.log_fields.as_extra().for_logging() == {
-        "service_name": "per_modelo_aggregation",
-        "modelo": "111",
-        "period": "1T",
-        "provider": "retenciones",
-        "observation_count": 1,
-        "source_kind_count": 1,
-        "result_row_count": 1,
-    }
+        assert result.provider is PerModeloAggregationContributor.RETENCIONES
+        assert isinstance(result.aggregation, RetencionesAggregation)
+        assert result.aggregation.total_retencion == Decimal("150.00")
+        assert result.source_kinds == (BindingSourceKind.LEDGER_TRANSACTION,)
+        assert result.log_fields.as_extra().for_logging() == {
+            "service_name": "per_modelo_aggregation",
+            "modelo": "111",
+            "period": "1T",
+            "provider": "retenciones",
+            "observation_count": 1,
+            "source_kind_count": 1,
+            "result_row_count": 1,
+        }
 
 
 def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() -> None:
-    observations = (
-        _counterpart_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION, invoice_total="1500.00"),
-        _counterpart_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, invoice_total="1505.07"),
-    )
-    command = PerModeloAggregationCommand(
-        modelo="347",
-        period=_P_2025_ANNUAL,
-        counterpart_observations=observations,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observations = (
+            _counterpart_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION, invoice_total="1500.00"),
+            _counterpart_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, invoice_total="1505.07"),
+        )
+        command = PerModeloAggregationCommand(
+            modelo="347",
+            period=_P_2025_ANNUAL,
+            counterpart_observations=observations,
+        )
 
-    result = aggregate_per_modelo(command)
+        result = aggregate_per_modelo(command, operation=_authority_operation_for_test)
 
-    assert result.provider is PerModeloAggregationContributor.COUNTERPART
-    assert isinstance(result.aggregation, CounterpartAggregation)
-    assert result.source_kinds == (
-        BindingSourceKind.LEDGER_TRANSACTION,
-        BindingSourceKind.PAYABLE_INVOICE,
-    )
-    assert declarable_counterparty_nifs_347(result.aggregation) == frozenset({"B00000001"})
+        assert result.provider is PerModeloAggregationContributor.COUNTERPART
+        assert isinstance(result.aggregation, CounterpartAggregation)
+        assert result.source_kinds == (
+            BindingSourceKind.LEDGER_TRANSACTION,
+            BindingSourceKind.PAYABLE_INVOICE,
+        )
+        assert declarable_counterparty_nifs_347(result.aggregation) == frozenset({"B00000001"})
 
 
 def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics() -> None:
-    observations = (
-        _asset_obs(source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE, valuation="25000.00"),
-        _asset_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, valuation="25000.01"),
-    )
-    command = PerModeloAggregationCommand(
-        modelo="720",
-        period=_P_2025_ANNUAL,
-        foreign_asset_observations=observations,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observations = (
+            _asset_obs(source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE, valuation="25000.00"),
+            _asset_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, valuation="25000.01"),
+        )
+        command = PerModeloAggregationCommand(
+            modelo="720",
+            period=_P_2025_ANNUAL,
+            foreign_asset_observations=observations,
+        )
 
-    result = aggregate_per_modelo(command)
+        result = aggregate_per_modelo(command, operation=_authority_operation_for_test)
 
-    assert result.provider is PerModeloAggregationContributor.FOREIGN_ASSETS
-    assert isinstance(result.aggregation, ForeignAssetsAggregation)
-    assert result.source_kinds == (
-        BindingSourceKind.PAYABLE_INVOICE,
-        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    )
-    assert declarable_asset_classes_720(result.aggregation) == frozenset({ForeignAssetClass.ACCOUNT})
+        assert result.provider is PerModeloAggregationContributor.FOREIGN_ASSETS
+        assert isinstance(result.aggregation, ForeignAssetsAggregation)
+        assert result.source_kinds == (
+            BindingSourceKind.PAYABLE_INVOICE,
+            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        )
+        assert declarable_asset_classes_720(result.aggregation) == frozenset({ForeignAssetClass.ACCOUNT})
 
 
 def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> None:
-    observations = (
-        _asset_obs(
-            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-            source_id="tx-account-ad",
-            asset_external_id="AD-ACCOUNT-001",
-            country="AD",
-            valuation="40000.00",
-            acquisition_date="2020-01-15",
-        ),
-        _asset_obs(
-            source_kind=BindingSourceKind.PAYABLE_INVOICE,
-            source_id="payable-account-ch",
-            asset_external_id="CH-ACCOUNT-002",
-            country="CH",
-            valuation="15000.00",
-            acquisition_date="2021-02-20",
-        ),
-        _asset_obs(
-            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-            source_id="small-security",
-            asset_class=ForeignAssetClass.SECURITY,
-            asset_external_id="LI-SECURITY-001",
-            country="LI",
-            valuation="1000.00",
-            acquisition_date="2022-03-25",
-        ),
-    )
-    expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
-    service_result = aggregate_per_modelo(
-        PerModeloAggregationCommand(
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observations = (
+            _asset_obs(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_id="tx-account-ad",
+                asset_external_id="AD-ACCOUNT-001",
+                country="AD",
+                valuation="40000.00",
+                acquisition_date="2020-01-15",
+            ),
+            _asset_obs(
+                source_kind=BindingSourceKind.PAYABLE_INVOICE,
+                source_id="payable-account-ch",
+                asset_external_id="CH-ACCOUNT-002",
+                country="CH",
+                valuation="15000.00",
+                acquisition_date="2021-02-20",
+            ),
+            _asset_obs(
+                source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+                source_id="small-security",
+                asset_class=ForeignAssetClass.SECURITY,
+                asset_external_id="LI-SECURITY-001",
+                country="LI",
+                valuation="1000.00",
+                acquisition_date="2022-03-25",
+            ),
+        )
+        expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+        service_result = aggregate_per_modelo(
+            PerModeloAggregationCommand(
+                modelo="720",
+                period=_P_2025_ANNUAL,
+                foreign_asset_observations=observations,
+            ),
+            operation=_authority_operation_for_test,
+        )
+        _modelos, _catalogues = bundled_registry_tree()
+        _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
+        snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
+        context = CalculationSourceContext(
+            bucket_id="operator",
             modelo="720",
+            filing_year=2025,
             period=_P_2025_ANNUAL,
-            foreign_asset_observations=observations,
-        ),
-    )
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
-    context = CalculationSourceContext(
-        bucket_id="operator",
-        modelo="720",
-        filing_year=2025,
-        period=_P_2025_ANNUAL,
-        revision=snapshot.revision,
-    )
-    row_observations = _registry_observations_from_foreign_assets_aggregation(
-        expected_aggregation,
-        observations,
-    )
-    expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+            revision=snapshot.revision,
+        )
+        row_observations = _registry_observations_from_foreign_assets_aggregation(
+            expected_aggregation,
+            observations,
+        )
+        expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
 
-    resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
+        resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
 
-    assert service_result.aggregation == expected_aggregation
-    assert expected_row_values == {
-        ("modelo-720-asset-row-class", 1): "C",
-        ("modelo-720-asset-row-country", 1): "AD",
-        ("modelo-720-asset-row-currency", 1): "EUR",
-        ("modelo-720-asset-row-identifier", 1): "AD-ACCOUNT-001",
-        ("modelo-720-asset-row-valuation", 1): Decimal("40000.00"),
-        ("modelo-720-asset-row-acquisition-date", 1): "2020-01-15",
-        ("modelo-720-asset-row-class", 2): "C",
-        ("modelo-720-asset-row-country", 2): "CH",
-        ("modelo-720-asset-row-currency", 2): "EUR",
-        ("modelo-720-asset-row-identifier", 2): "CH-ACCOUNT-002",
-        ("modelo-720-asset-row-valuation", 2): Decimal("15000.00"),
-        ("modelo-720-asset-row-acquisition-date", 2): "2021-02-20",
-    }
-    assert resolution.binding_values == {}
-    assert dict(resolution.row_binding_values) == expected_row_values
-    assert resolution.source_transaction_ids == (_ledger_identity("tx-account-ad"),)
-    # M720 is deliberately grounding-blocked: the resolver emits NO
-    # provenance because no upstream carrier id can truthfully stand in for
-    # an authoritative persisted identity of the resolved asset. The
-    # contributing sources stay visible through source_transaction_ids.
-    assert resolution.provenance == ()
+        assert service_result.aggregation == expected_aggregation
+        assert expected_row_values == {
+            ("modelo-720-asset-row-class", 1): "C",
+            ("modelo-720-asset-row-country", 1): "AD",
+            ("modelo-720-asset-row-currency", 1): "EUR",
+            ("modelo-720-asset-row-identifier", 1): "AD-ACCOUNT-001",
+            ("modelo-720-asset-row-valuation", 1): Decimal("40000.00"),
+            ("modelo-720-asset-row-acquisition-date", 1): "2020-01-15",
+            ("modelo-720-asset-row-class", 2): "C",
+            ("modelo-720-asset-row-country", 2): "CH",
+            ("modelo-720-asset-row-currency", 2): "EUR",
+            ("modelo-720-asset-row-identifier", 2): "CH-ACCOUNT-002",
+            ("modelo-720-asset-row-valuation", 2): Decimal("15000.00"),
+            ("modelo-720-asset-row-acquisition-date", 2): "2021-02-20",
+        }
+        assert resolution.binding_values == {}
+        assert dict(resolution.row_binding_values) == expected_row_values
+        assert resolution.source_transaction_ids == (_ledger_identity("tx-account-ad"),)
+        # M720 is deliberately grounding-blocked: the resolver emits NO
+        # provenance because no upstream carrier id can truthfully stand in for
+        # an authoritative persisted identity of the resolved asset. The
+        # contributing sources stay visible through source_transaction_ids.
+        assert resolution.provenance == ()
 
 
 def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenance() -> None:
-    observations = (
-        _asset_obs(
-            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-            source_id="tx-security-li",
-            asset_class=ForeignAssetClass.SECURITY,
-            asset_external_id="LI-SECURITY-001",
-            country="LI",
-            valuation="30000.00",
-            acquisition_date="2020-01-15",
-        ),
-        _asset_obs(
-            source_kind=BindingSourceKind.PAYABLE_INVOICE,
-            source_id="payable-insurance-ch",
-            asset_class=ForeignAssetClass.INSURANCE,
-            asset_external_id="CH-INSURANCE-001",
-            country="CH",
-            valuation="25000.00",
-            acquisition_date="2021-02-20",
-        ),
-    )
-    expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
-    service_result = aggregate_per_modelo(
-        PerModeloAggregationCommand(
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observations = (
+            _asset_obs(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_id="tx-security-li",
+                asset_class=ForeignAssetClass.SECURITY,
+                asset_external_id="LI-SECURITY-001",
+                country="LI",
+                valuation="30000.00",
+                acquisition_date="2020-01-15",
+            ),
+            _asset_obs(
+                source_kind=BindingSourceKind.PAYABLE_INVOICE,
+                source_id="payable-insurance-ch",
+                asset_class=ForeignAssetClass.INSURANCE,
+                asset_external_id="CH-INSURANCE-001",
+                country="CH",
+                valuation="25000.00",
+                acquisition_date="2021-02-20",
+            ),
+        )
+        expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+        service_result = aggregate_per_modelo(
+            PerModeloAggregationCommand(
+                modelo="720",
+                period=_P_2025_ANNUAL,
+                foreign_asset_observations=observations,
+            ),
+            operation=_authority_operation_for_test,
+        )
+        _modelos, _catalogues = bundled_registry_tree()
+        _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
+        snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
+        context = CalculationSourceContext(
+            bucket_id="operator",
             modelo="720",
+            filing_year=2025,
             period=_P_2025_ANNUAL,
-            foreign_asset_observations=observations,
-        ),
-    )
-    _modelos, _catalogues = bundled_registry_tree()
-    _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
-    context = CalculationSourceContext(
-        bucket_id="operator",
-        modelo="720",
-        filing_year=2025,
-        period=_P_2025_ANNUAL,
-        revision=snapshot.revision,
-    )
-    row_observations = _registry_observations_from_foreign_assets_aggregation(
-        expected_aggregation,
-        observations,
-    )
-    expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+            revision=snapshot.revision,
+        )
+        row_observations = _registry_observations_from_foreign_assets_aggregation(
+            expected_aggregation,
+            observations,
+        )
+        expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
 
-    resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
+        resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
 
-    assert service_result.aggregation == expected_aggregation
-    assert declarable_asset_classes_720(expected_aggregation) == frozenset(
-        {
-            ForeignAssetClass.SECURITY,
-            ForeignAssetClass.INSURANCE,
-        },
-    )
-    assert expected_row_values == {
-        ("modelo-720-asset-row-class", 1): "S",
-        ("modelo-720-asset-row-country", 1): "CH",
-        ("modelo-720-asset-row-currency", 1): "EUR",
-        ("modelo-720-asset-row-identifier", 1): "CH-INSURANCE-001",
-        ("modelo-720-asset-row-valuation", 1): Decimal("25000.00"),
-        ("modelo-720-asset-row-acquisition-date", 1): "2021-02-20",
-        ("modelo-720-asset-row-class", 2): "V",
-        ("modelo-720-asset-row-country", 2): "LI",
-        ("modelo-720-asset-row-currency", 2): "EUR",
-        ("modelo-720-asset-row-identifier", 2): "LI-SECURITY-001",
-        ("modelo-720-asset-row-valuation", 2): Decimal("30000.00"),
-        ("modelo-720-asset-row-acquisition-date", 2): "2020-01-15",
-    }
-    assert resolution.binding_values == {}
-    assert dict(resolution.row_binding_values) == expected_row_values
-    assert resolution.source_transaction_ids == (_ledger_identity("tx-security-li"),)
-    # M720 is deliberately grounding-blocked: the resolver emits NO
-    # provenance because no upstream carrier id can truthfully stand in for
-    # an authoritative persisted identity of the resolved asset. The
-    # contributing sources stay visible through source_transaction_ids.
-    assert resolution.provenance == ()
+        assert service_result.aggregation == expected_aggregation
+        assert declarable_asset_classes_720(expected_aggregation) == frozenset(
+            {
+                ForeignAssetClass.SECURITY,
+                ForeignAssetClass.INSURANCE,
+            },
+        )
+        assert expected_row_values == {
+            ("modelo-720-asset-row-class", 1): "S",
+            ("modelo-720-asset-row-country", 1): "CH",
+            ("modelo-720-asset-row-currency", 1): "EUR",
+            ("modelo-720-asset-row-identifier", 1): "CH-INSURANCE-001",
+            ("modelo-720-asset-row-valuation", 1): Decimal("25000.00"),
+            ("modelo-720-asset-row-acquisition-date", 1): "2021-02-20",
+            ("modelo-720-asset-row-class", 2): "V",
+            ("modelo-720-asset-row-country", 2): "LI",
+            ("modelo-720-asset-row-currency", 2): "EUR",
+            ("modelo-720-asset-row-identifier", 2): "LI-SECURITY-001",
+            ("modelo-720-asset-row-valuation", 2): Decimal("30000.00"),
+            ("modelo-720-asset-row-acquisition-date", 2): "2020-01-15",
+        }
+        assert resolution.binding_values == {}
+        assert dict(resolution.row_binding_values) == expected_row_values
+        assert resolution.source_transaction_ids == (_ledger_identity("tx-security-li"),)
+        # M720 is deliberately grounding-blocked: the resolver emits NO
+        # provenance because no upstream carrier id can truthfully stand in for
+        # an authoritative persisted identity of the resolved asset. The
+        # contributing sources stay visible through source_transaction_ids.
+        assert resolution.provenance == ()
 
 
 def test_command_rejects_observations_from_non_selected_provider_family() -> None:
@@ -515,60 +525,64 @@ def test_modelo_whitespace_is_rejected_before_dispatch() -> None:
 
 
 def test_result_contract_rejects_incoherent_envelope_payload() -> None:
-    aggregation_payload = aggregate_per_modelo(
-        PerModeloAggregationCommand(
-            modelo="347",
-            period=_P_2025_ANNUAL,
-            counterpart_observations=(_counterpart_obs(),),
-        ),
-    ).aggregation
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        aggregation_payload = aggregate_per_modelo(
+            PerModeloAggregationCommand(
+                modelo="347",
+                period=_P_2025_ANNUAL,
+                counterpart_observations=(_counterpart_obs(),),
+            ),
+            operation=_authority_operation_for_test,
+        ).aggregation
 
-    with pytest.raises(ValidationError, match=r"aggregation\.service\.errors\.envelope_modelo_mismatch"):
-        PerModeloAggregationResult(
-            modelo="349",
-            period=_P_2025_ANNUAL,
-            provider=PerModeloAggregationContributor.COUNTERPART,
-            aggregation=aggregation_payload,
-            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
-            log_fields=PerModeloAggregationLogFields(
+        with pytest.raises(ValidationError, match=r"aggregation\.service\.errors\.envelope_modelo_mismatch"):
+            PerModeloAggregationResult(
                 modelo="349",
                 period=_P_2025_ANNUAL,
                 provider=PerModeloAggregationContributor.COUNTERPART,
-                observation_count=1,
-                source_kind_count=1,
-                result_row_count=1,
-            ),
-        )
+                aggregation=aggregation_payload,
+                source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
+                log_fields=PerModeloAggregationLogFields(
+                    modelo="349",
+                    period=_P_2025_ANNUAL,
+                    provider=PerModeloAggregationContributor.COUNTERPART,
+                    observation_count=1,
+                    source_kind_count=1,
+                    result_row_count=1,
+                ),
+            )
 
 
 def test_result_contract_rejects_provider_payload_mismatch() -> None:
-    aggregation_payload = aggregate_per_modelo(
-        PerModeloAggregationCommand(
-            modelo="111",
-            period=_P_2025_Q1,
-            retencion_observations=(_retencion_obs(),),
-        ),
-    ).aggregation
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        aggregation_payload = aggregate_per_modelo(
+            PerModeloAggregationCommand(
+                modelo="111",
+                period=_P_2025_Q1,
+                retencion_observations=(_retencion_obs(),),
+            ),
+            operation=_authority_operation_for_test,
+        ).aggregation
 
-    with pytest.raises(
-        ValidationError,
-        match=r"aggregation\.service\.errors\.envelope_provider_payload_mismatch",
-    ):
-        PerModeloAggregationResult(
-            modelo="111",
-            period=_P_2025_Q1,
-            provider=PerModeloAggregationContributor.COUNTERPART,
-            aggregation=aggregation_payload,
-            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
-            log_fields=PerModeloAggregationLogFields(
+        with pytest.raises(
+            ValidationError,
+            match=r"aggregation\.service\.errors\.envelope_provider_payload_mismatch",
+        ):
+            PerModeloAggregationResult(
                 modelo="111",
                 period=_P_2025_Q1,
                 provider=PerModeloAggregationContributor.COUNTERPART,
-                observation_count=1,
-                source_kind_count=1,
-                result_row_count=1,
-            ),
-        )
+                aggregation=aggregation_payload,
+                source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
+                log_fields=PerModeloAggregationLogFields(
+                    modelo="111",
+                    period=_P_2025_Q1,
+                    provider=PerModeloAggregationContributor.COUNTERPART,
+                    observation_count=1,
+                    source_kind_count=1,
+                    result_row_count=1,
+                ),
+            )
 
 
 # --- Retenciones dispatch collapse is behaviour-preserving --------------------
@@ -645,20 +659,22 @@ def _mixed_scheme_retencion_observations() -> tuple[RetencionObservation, ...]:
 
 @pytest.mark.parametrize("modelo", ["111", "115", "123", "180", "190", "193"])
 def test_retenciones_collapse_service_and_mesh_reproduce_prior_core_exactly(modelo: str) -> None:
-    observations = _mixed_scheme_retencion_observations()
-    period = _RETENCIONES_PERIOD[modelo]
-    expected = _RETENCIONES_CORE_ORACLE[modelo](observations, period=period)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observations = _mixed_scheme_retencion_observations()
+        period = _RETENCIONES_PERIOD[modelo]
+        expected = _RETENCIONES_CORE_ORACLE[modelo](observations, period=period)
 
-    # The one canonical mesh-resolver aggregation entry point (the calculate path uses
-    # this via ``resolve``) and the per-modelo service (which now delegates to it).
-    mesh_value = RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period)
-    service_value = aggregate_per_modelo(
-        PerModeloAggregationCommand(modelo=modelo, period=period, retencion_observations=observations),
-    ).aggregation
+        # The one canonical mesh-resolver aggregation entry point (the calculate path uses
+        # this via ``resolve``) and the per-modelo service (which now delegates to it).
+        mesh_value = RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period)
+        service_value = aggregate_per_modelo(
+            PerModeloAggregationCommand(modelo=modelo, period=period, retencion_observations=observations),
+            operation=_authority_operation_for_test,
+        ).aggregation
 
-    assert mesh_value == expected
-    assert service_value == expected
-    assert isinstance(service_value, RetencionesAggregation)
+        assert mesh_value == expected
+        assert service_value == expected
+        assert isinstance(service_value, RetencionesAggregation)
 
 
 def test_retenciones_collapse_dispatch_is_not_cross_wired() -> None:

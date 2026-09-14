@@ -39,7 +39,9 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
+    InvoiceAuthorityFixture,
     _make_svc,
+    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
@@ -80,6 +82,7 @@ def _confirm(
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
     notes: str = "",
+    authority: InvoiceAuthorityFixture,
 ) -> InvoiceConfirmationResult:
     """Confirm the attached document, optionally restating what the operator saw."""
     return confirm_invoice_draft_from_evidence(
@@ -88,7 +91,7 @@ def _confirm(
         counterparty_country="ES",
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID),
+        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
         counterparty_name=counterparty_name,
         invoice_number=invoice_number,
         retention_rate=retention_rate,
@@ -101,6 +104,7 @@ def test_an_unchanged_reconfirm_returns_the_stored_invoice_as_a_no_op(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The retry outcome: same document, same resolved fields, one record.
 
@@ -114,8 +118,18 @@ def test_an_unchanged_reconfirm_returns_the_stored_invoice_as_a_no_op(
     )
     repository = InvoiceCatalogueRepository(objects=secure_objects)
 
-    first = _confirm(evidence_id=evidence_id, isolated_settings=isolated_settings, repository=repository)
-    second = _confirm(evidence_id=evidence_id, isolated_settings=isolated_settings, repository=repository)
+    first = _confirm(
+        evidence_id=evidence_id,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        authority=invoice_authority,
+    )
+    second = _confirm(
+        evidence_id=evidence_id,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        authority=invoice_authority,
+    )
 
     assert first.created is True
     assert second.created is False
@@ -127,6 +141,7 @@ def test_a_reconfirm_correcting_an_identity_field_refuses_instead_of_duplicating
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The duplication outcome: a corrected invoice number must not mint a second record.
 
@@ -141,7 +156,12 @@ def test_a_reconfirm_correcting_an_identity_field_refuses_instead_of_duplicating
         tmp_path=tmp_path,
     )
     repository = InvoiceCatalogueRepository(objects=secure_objects)
-    first = _confirm(evidence_id=evidence_id, isolated_settings=isolated_settings, repository=repository)
+    first = _confirm(
+        evidence_id=evidence_id,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        authority=invoice_authority,
+    )
 
     with pytest.raises(InvoiceValidationError) as refusal:
         _confirm(
@@ -149,6 +169,7 @@ def test_a_reconfirm_correcting_an_identity_field_refuses_instead_of_duplicating
             isolated_settings=isolated_settings,
             repository=repository,
             invoice_number="CORRECTED-0001",
+            authority=invoice_authority,
         )
 
     assert "invoice_number" in str(refusal.value)
@@ -160,6 +181,7 @@ def test_a_reconfirm_correcting_a_field_outside_the_hash_is_not_swallowed(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """The subtle outcome the contract names: a changed field must never vanish.
 
@@ -180,6 +202,7 @@ def test_a_reconfirm_correcting_a_field_outside_the_hash_is_not_swallowed(
         isolated_settings=isolated_settings,
         repository=repository,
         counterparty_name="Mistyped Proveedor SL",
+        authority=invoice_authority,
     )
 
     with pytest.raises(InvoiceValidationError) as refusal:
@@ -191,6 +214,7 @@ def test_a_reconfirm_correcting_a_field_outside_the_hash_is_not_swallowed(
             retention_rate=Decimal("0.15"),
             retention_amount=Decimal("15.00"),
             notes="corrected after checking the paper",
+            authority=invoice_authority,
         )
 
     message = str(refusal.value)
@@ -207,6 +231,7 @@ def test_the_same_bytes_re_attached_under_a_new_evidence_id_are_one_document(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """Identity is the document's bytes, not the evidence record wrapping them.
 
@@ -231,7 +256,12 @@ def test_the_same_bytes_re_attached_under_a_new_evidence_id_are_one_document(
     assert second_evidence != first_evidence
 
     repository = InvoiceCatalogueRepository(objects=secure_objects)
-    _confirm(evidence_id=first_evidence, isolated_settings=isolated_settings, repository=repository)
+    _confirm(
+        evidence_id=first_evidence,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        authority=invoice_authority,
+    )
 
     with pytest.raises(InvoiceValidationError):
         _confirm(
@@ -239,6 +269,7 @@ def test_the_same_bytes_re_attached_under_a_new_evidence_id_are_one_document(
             isolated_settings=isolated_settings,
             repository=repository,
             invoice_number="CORRECTED-0001",
+            authority=invoice_authority,
         )
 
     assert len(repository.load().invoices) == 1
@@ -248,6 +279,7 @@ def test_public_confirmation_overrides_are_checked_on_reconfirm(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
     """A changed public confirmation statement is refused rather than swallowed."""
     evidence_id = _attach_the_document(
@@ -261,6 +293,7 @@ def test_public_confirmation_overrides_are_checked_on_reconfirm(
         isolated_settings=isolated_settings,
         repository=repository,
         counterparty_name="Original Proveedor SL",
+        authority=invoice_authority,
     )
 
     corrections = (
@@ -278,6 +311,7 @@ def test_public_confirmation_overrides_are_checked_on_reconfirm(
                 evidence_id=evidence_id,
                 isolated_settings=isolated_settings,
                 repository=repository,
+                authority=invoice_authority,
                 **overrides,
             )
         assert field in str(refusal.value)

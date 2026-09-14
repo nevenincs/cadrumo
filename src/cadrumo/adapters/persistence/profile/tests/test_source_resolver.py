@@ -50,7 +50,7 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLin
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349CountryPrefixContextError, Modelo349OperadorRow
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -1134,7 +1134,8 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
     classifier reads both facts together, not either one.
     """
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
+            context=_profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
             facts=_third_party_fee_collector_profile_facts(),
@@ -1275,7 +1276,8 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
     classification, proving the role alone is not sufficient.
     """
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
+            context=_profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
             facts=_public_administration_profile_facts(),
@@ -1386,7 +1388,8 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
     would misclassify the second as D too.
     """
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
+            context=_profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
             facts=_statutory_information_duty_profile_facts(),
@@ -1911,7 +1914,8 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
 ) -> None:
     """A D-role filer's RECEIVED invoice with the fact undeclared surfaces an advisory; declaring it clears it."""
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
+            context=_profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
             facts=_statutory_information_duty_profile_facts(),

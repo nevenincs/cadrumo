@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
 from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.tests.storage_scope import storage_env_overrides
 
 from .test_config_reset import (
@@ -331,51 +332,54 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
     tmp_path: Path,
     boundary: str,
 ) -> None:
-    from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
-    from cadrumo.application.auth.operator import configure_operator_auth
-    from cadrumo.application.config_reset_models import (
-        ConfigResetOperation,
-        ConfigResetOperationStatus,
-        ConfigResetTargetPhase,
-    )
-    from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
-    from cadrumo.core.bucket_pointer import read_pointer
-
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
-        with open_test_profile_session(_PROFILE_A_ID):
-            configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-        if boundary == "snapshotted":
-            _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="7")
-        dispose_engine()
-
-        crashed = _run_crashing_start(root, boundary)
-
-        assert crashed.returncode == _CRASH_EXIT_CODE, (
-            boundary,
-            crashed.stdout,
-            crashed.stderr,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
+        from cadrumo.application.auth.operator import configure_operator_auth
+        from cadrumo.application.config_reset_models import (
+            ConfigResetOperation,
+            ConfigResetOperationStatus,
+            ConfigResetTargetPhase,
         )
-        repository = ConfigResetJournalRepository()
-        interrupted = repository.latest()
-        assert interrupted is not None
-        expected_phase = boundary.removesuffix("_after_effect")
-        assert interrupted.targets[0].phase.value == expected_phase
-        if boundary == "pointer_reconciling_after_effect":
-            assert read_pointer(root).bucket_id is None
-        if boundary == "deleting_after_effect":
-            assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
+        from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
+        from cadrumo.core.bucket_pointer import read_pointer
 
-        resumed_process = _run_fresh_resume(root, interrupted.operation_id)
-        resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
-        assert resumed.status is ConfigResetOperationStatus.COMPLETE
-        assert resumed.summary is not None
-        assert resumed.summary.target_count == 1
-        assert resumed.summary.deleted_count == 1
-        assert resumed.targets[0].phase is ConfigResetTargetPhase.DELETED
-        assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
-        assert read_pointer(root).bucket_id is None
-        assert repository.load(interrupted.operation_id) == resumed
+        with _isolated_reset_root(tmp_path) as root:
+            _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+            with open_test_profile_session(_PROFILE_A_ID):
+                configure_operator_auth(
+                    "certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=_authority_operation_for_test
+                )
+            if boundary == "snapshotted":
+                _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="7")
+            dispose_engine()
+
+            crashed = _run_crashing_start(root, boundary)
+
+            assert crashed.returncode == _CRASH_EXIT_CODE, (
+                boundary,
+                crashed.stdout,
+                crashed.stderr,
+            )
+            repository = ConfigResetJournalRepository()
+            interrupted = repository.latest()
+            assert interrupted is not None
+            expected_phase = boundary.removesuffix("_after_effect")
+            assert interrupted.targets[0].phase.value == expected_phase
+            if boundary == "pointer_reconciling_after_effect":
+                assert read_pointer(root).bucket_id is None
+            if boundary == "deleting_after_effect":
+                assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
+
+            resumed_process = _run_fresh_resume(root, interrupted.operation_id)
+            resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
+            assert resumed.status is ConfigResetOperationStatus.COMPLETE
+            assert resumed.summary is not None
+            assert resumed.summary.target_count == 1
+            assert resumed.summary.deleted_count == 1
+            assert resumed.targets[0].phase is ConfigResetTargetPhase.DELETED
+            assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
+            assert read_pointer(root).bucket_id is None
+            assert repository.load(interrupted.operation_id) == resumed
 
 
 def test_pointer_reconciling_resume_refuses_a_later_absent_tombstone(tmp_path: Path) -> None:

@@ -24,6 +24,7 @@ def _repositories(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_I
 
 
 def _create_parent(
+    objects: SecureObjectRepository,
     transaction_repository: TransactionCatalogueRepository,
     event_repository: BucketEventHistoryRepository,
     *,
@@ -39,10 +40,14 @@ def _create_parent(
         description="materials",
         actor="operator-A",
     )
-    return create_manual_transaction(
-        command,
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        return create_manual_transaction(
+            command,
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )

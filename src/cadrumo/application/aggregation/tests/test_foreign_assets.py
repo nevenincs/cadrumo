@@ -9,6 +9,8 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ....core.period import Period
@@ -256,10 +258,13 @@ class TestAggregateBasic:
 
 class TestThreshold720:
     def test_threshold_is_resolved_from_the_2025_registry_revision(self) -> None:
-        thresholds = foreign_asset_declaration_thresholds(modelo="720", filing_year=2025)
-        assert thresholds[
-            ForeignAssetObligationGroup._from_registry("cuentas")
-        ].initial_declaration_floor_eur == Decimal("50000.00")
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            thresholds = foreign_asset_declaration_thresholds(
+                modelo="720", filing_year=2025, operation=_authority_operation_for_test
+            )
+            assert thresholds[
+                ForeignAssetObligationGroup._from_registry("cuentas")
+            ].initial_declaration_floor_eur == Decimal("50000.00")
 
     def test_declarable_strict_above_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),)

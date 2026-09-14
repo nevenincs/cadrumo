@@ -22,6 +22,7 @@ Real adapters: the resident registry authority and a real
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -35,6 +36,7 @@ from dev.registry.tests.profile_schema_support import (
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -42,6 +44,13 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ..profile_binding import _derived_binding_diagnostics, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one authority generation for the resolver under test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000512"
 _T0 = datetime(2026, 8, 4, 10, 0, tzinfo=UTC)
@@ -64,12 +73,18 @@ def _record(*facts: UserProfileFact) -> UserProfileRecord:
     )
 
 
-def _derived_advisories(record: UserProfileRecord, *, year: int = 2024) -> tuple[str, ...]:
+def _derived_advisories(
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+    year: int = 2024,
+) -> tuple[str, ...]:
     """Binding ids the derived-scoped advisory fired for, via the real resolver."""
     resolution = resolve_profile_sourced_bindings(
         _snapshot(year),
         bucket_id=_BUCKET,
         profile_record=record,
+        operation=operation,
     )
     return tuple(
         str(diagnostic.binding_id) for diagnostic in resolution.diagnostics if diagnostic.reason == _ADVISORY_REASON
@@ -81,7 +96,9 @@ def _derived_advisories(record: UserProfileRecord, *, year: int = 2024) -> tuple
 # ---------------------------------------------------------------------------
 
 
-def test_descendants_without_childcare_spend_do_not_fire_the_advisory() -> None:
+def test_descendants_without_childcare_spend_do_not_fire_the_advisory(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The majority case: real descendants, no guardería spend, no advisory.
 
     This is the exact shape that would have false-fired while the guardería
@@ -93,26 +110,36 @@ def test_descendants_without_childcare_spend_do_not_fire_the_advisory() -> None:
     )
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
 
-    assert _derived_advisories(record) == ()
+    assert _derived_advisories(record, operation=authority_operation) == ()
 
 
-def test_childless_profile_does_not_fire_the_advisory() -> None:
+def test_childless_profile_does_not_fire_the_advisory(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A genuinely childless filer resolves every derived path to a legal zero."""
-    assert _derived_advisories(_record(UserProfileFact(path="tax_residence.ccaa", value="cataluna"))) == ()
+    assert _derived_advisories(
+        _record(UserProfileFact(path="tax_residence.ccaa", value="cataluna")),
+        operation=authority_operation,
+    ) == ()
 
 
-def test_empty_profile_does_not_fire_the_advisory() -> None:
+def test_empty_profile_does_not_fire_the_advisory(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A profile carrying nothing at all still leaves no derived path unwritten."""
-    assert _derived_advisories(_record()) == ()
+    assert _derived_advisories(_record(), operation=authority_operation) == ()
 
 
 @pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
-def test_no_advisory_on_any_covered_filing_year(year: int) -> None:
+def test_no_advisory_on_any_covered_filing_year(
+    year: int,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Every year the registry declares derived bindings for resolves them all."""
     descendientes = (DescendantInfo(birth_date=date(2015, 7, 4)),)
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
 
-    assert _derived_advisories(record, year=year) == ()
+    assert _derived_advisories(record, year=year, operation=authority_operation) == ()
 
 
 # ---------------------------------------------------------------------------
@@ -149,7 +176,9 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
     assert all("derives" in d.message or "derived" in d.message for d in fired)
 
 
-def test_every_derived_binding_actually_resolves_for_an_ordinary_profile() -> None:
+def test_every_derived_binding_actually_resolves_for_an_ordinary_profile(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The positive control behind the silence: the bindings resolve to real values.
 
     Four assertions of "no advisory" mean nothing if the derived bindings were
@@ -159,7 +188,12 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile() -> No
     """
     descendientes = (DescendantInfo(birth_date=date(2023, 2, 10)),)
     record = _record(*(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes)))
-    resolution = resolve_profile_sourced_bindings(_snapshot(2024), bucket_id=_BUCKET, profile_record=record)
+    resolution = resolve_profile_sourced_bindings(
+        _snapshot(2024),
+        bucket_id=_BUCKET,
+        profile_record=record,
+        operation=authority_operation,
+    )
 
     resolved = resolution.binding_values
     for binding_id in (

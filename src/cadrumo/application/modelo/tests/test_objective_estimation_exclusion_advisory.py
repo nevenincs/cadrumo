@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IVARegime
 
 from ....core.period import Period
@@ -181,27 +182,29 @@ def test_objective_estimation_exclusion_advisory_does_not_project_beyond_officia
 
 
 def test_revision_verification_collects_objective_estimation_exclusion_advisory() -> None:
-    work_unit = _work_unit(modelo="131", filing_year=2024)
-    profile = _objective_profile(
-        objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        work_unit = _work_unit(modelo="131", filing_year=2024)
+        profile = _objective_profile(
+            objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
+        )
 
-    findings, _resolved, _missing, _failures_by_finding_id = _collect_revision_verification_findings(
-        work_unit=work_unit,
-        target=_calculation_revision(work_unit),
-        profile=profile,
-        transaction_repository=None,
-    )
+        findings, _resolved, _missing, _failures_by_finding_id = _collect_revision_verification_findings(
+            work_unit=work_unit,
+            target=_calculation_revision(work_unit),
+            profile=profile,
+            transaction_repository=None,
+            operation=_authority_operation_for_test,
+        )
 
-    matching = [
-        finding
-        for finding in findings
-        if finding.message_facts.get("profile_field_id") == "objective_estimation_prior_year_gross_income_eur"
-    ]
-    assert len(matching) == 1
-    assert matching[0].kind is ModeloVerificationFindingKind.ADVISORY
-    assert matching[0].severity is ModeloVerificationFindingSeverity.WARNING
-    assert "ley-35-2006:dt-32" in matching[0].legal_refs
+        matching = [
+            finding
+            for finding in findings
+            if finding.message_facts.get("profile_field_id") == "objective_estimation_prior_year_gross_income_eur"
+        ]
+        assert len(matching) == 1
+        assert matching[0].kind is ModeloVerificationFindingKind.ADVISORY
+        assert matching[0].severity is ModeloVerificationFindingSeverity.WARNING
+        assert "ley-35-2006:dt-32" in matching[0].legal_refs
 
 
 def test_objective_estimation_exclusion_advisory_does_not_apply_direct_estimation_profile() -> None:

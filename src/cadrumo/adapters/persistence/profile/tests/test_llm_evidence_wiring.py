@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from cadrumo.application.ledger.llm_classification import resolve_llm_evidence, suggest_llm_classification
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -211,28 +212,30 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
     transaction row, the documented baseline ``--llm`` input. This locks the
     "no evidence = no upload = no consent needed" invariant.
     """
-    txn = _transaction(evidence_id=None)
-    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-    repository.save(TransactionCatalogue.from_transactions((txn,)))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        txn = _transaction(evidence_id=None)
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(TransactionCatalogue.from_transactions((txn,)))
 
-    # No consent posture left to assert: the read is on-host either way. What
-    # this case is actually about -- a transaction carrying NO evidence -- is
-    # unchanged by the gate's removal.
-    classifier = SubprocessLLMClassifier(
-        name="test-provider",
-        command=(sys.executable, "-c", _NO_EVIDENCE_CLASSIFIER_SCRIPT),
-        model="test-model",
-    )
+        # No consent posture left to assert: the read is on-host either way. What
+        # this case is actually about -- a transaction carrying NO evidence -- is
+        # unchanged by the gate's removal.
+        classifier = SubprocessLLMClassifier(
+            name="test-provider",
+            command=(sys.executable, "-c", _NO_EVIDENCE_CLASSIFIER_SCRIPT),
+            model="test-model",
+        )
 
-    suggestion = suggest_llm_classification(
-        bucket_id=_BUCKET_ID,
-        transaction_id=txn.transaction_id,
-        classifier=classifier,
-        transaction_repository=repository,
-        read_evidence=True,
-        settings=profile.settings,
-    )
+        suggestion = suggest_llm_classification(
+            bucket_id=_BUCKET_ID,
+            transaction_id=txn.transaction_id,
+            classifier=classifier,
+            transaction_repository=repository,
+            read_evidence=True,
+            settings=profile.settings,
+            operation=_authority_operation_for_test,
+        )
 
-    # No refusal raised; the subprocess classifier would fail if evidence text crossed the boundary.
-    assert suggestion.evidence_id is None
-    assert suggestion.classification is BusinessClassification.BUSINESS
+        # No refusal raised; the subprocess classifier would fail if evidence text crossed the boundary.
+        assert suggestion.evidence_id is None
+        assert suggestion.classification is BusinessClassification.BUSINESS

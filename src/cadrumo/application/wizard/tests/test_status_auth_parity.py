@@ -18,6 +18,8 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...state_projection_auth import build_auth_readiness
 from ...workflow.state_models import WorkflowState
@@ -57,45 +59,50 @@ def _canonical(state: WorkflowState):
 
 def test_unknown_provider_is_not_reported_as_a_ready_session() -> None:
     """The audit's probe: persisted ``provider="bogus"`` with a timestamp."""
-    state = _state_with_auth("bogus")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        state = _state_with_auth("bogus")
 
-    report = build_wizard_status(state)
+        report = build_wizard_status(state, operation=_authority_operation_for_test)
 
-    assert report.login_ready is False
-    assert report.auth_provider == ""
+        assert report.login_ready is False
+        assert report.auth_provider == ""
 
 
 def test_unknown_provider_value_is_never_echoed_back() -> None:
     """Failing closed includes not republishing the invalid selector."""
-    report = build_wizard_status(_state_with_auth("bogus"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        report = build_wizard_status(_state_with_auth("bogus"), operation=_authority_operation_for_test)
 
-    assert "bogus" not in report.auth_provider
-    assert report.next_action is None
+        assert "bogus" not in report.auth_provider
+        assert report.next_action is None
 
 
 def test_a_certificate_selection_without_a_certificate_is_not_ready() -> None:
     """``authenticated_at`` alone does not make an unusable provider usable."""
-    report = build_wizard_status(_state_with_auth("certificate"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        report = build_wizard_status(_state_with_auth("certificate"), operation=_authority_operation_for_test)
 
-    assert report.login_ready is False
+        assert report.login_ready is False
 
 
 @pytest.mark.parametrize("provider", ["bogus", "certificate", "", None, "CERTIFICATE", "clave"])
 def test_wizard_auth_fields_match_the_canonical_projection(provider: str | None) -> None:
     """The invariant as a relation, so the two cannot drift apart again."""
-    state = _state_with_auth(provider)
-    canonical = _canonical(state)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        state = _state_with_auth(provider)
+        canonical = _canonical(state)
 
-    report = build_wizard_status(state)
+        report = build_wizard_status(state, operation=_authority_operation_for_test)
 
-    assert report.auth_provider == canonical.provider, provider
-    assert report.login_ready is canonical.authenticated, provider
+        assert report.auth_provider == canonical.provider, provider
+        assert report.login_ready is canonical.authenticated, provider
 
 
 def test_no_auth_state_omits_an_unaddressable_configuration_action() -> None:
     """The status projection has no certificate file to materialise a command."""
-    report = build_wizard_status(WorkflowState())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        report = build_wizard_status(WorkflowState(), operation=_authority_operation_for_test)
 
-    assert report.auth_provider == ""
-    assert report.login_ready is False
-    assert report.next_action is None
+        assert report.auth_provider == ""
+        assert report.login_ready is False
+        assert report.next_action is None

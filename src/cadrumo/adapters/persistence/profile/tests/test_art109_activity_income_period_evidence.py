@@ -41,6 +41,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -269,17 +270,19 @@ def _verify_art109_findings(
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
 
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator-test",
-        workflow_profile=workflow_profile().model_copy(
-            update={"art109_activity_income_withholding_ge_70pct": profile_flag},
-        ),
-        clock=_T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="operator-test",
+            workflow_profile=workflow_profile().model_copy(
+                update={"art109_activity_income_withholding_ge_70pct": profile_flag},
+            ),
+            clock=_T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     return [
         finding
         for finding in report.findings

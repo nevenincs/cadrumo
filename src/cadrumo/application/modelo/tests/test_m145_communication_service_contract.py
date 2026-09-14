@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.modelo import Modelo
 from ..m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
@@ -29,43 +31,45 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_m145_communication_service_contract_is_backend_owned_and_registry_backed() -> None:
-    contract = build_m145_communication_service_contract()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        contract = build_m145_communication_service_contract(operation=_authority_operation_for_test)
 
-    assert contract.service_owner == M145_COMMUNICATION_SERVICE_OWNER
-    assert contract.modelo == Modelo("145").value
-    assert contract.period_token == "ANNUAL"
-    assert contract.revision_id == "2012-01-31-y-siguientes"
-    assert contract.surfaces == ("communication", "payer_delivery", "export")
-    assert contract.actions == (
-        M145CommunicationAction.CREATE,
-        M145CommunicationAction.VALIDATE,
-        M145CommunicationAction.EXPORT,
-        M145CommunicationAction.MARK_DELIVERED_TO_PAYER,
-        M145CommunicationAction.MARK_LOCALLY_COMPLETED,
-    )
-    assert contract.export_layout_ids == ("modelo-145-dr-v20-fixed-width",)
-    assert "rd-439-2007:art-88" in contract.legal_refs
-    assert "aeat-modelo-145-form" in contract.source_refs
-    assert "aeat-dr-145-v20" in contract.source_refs
+        assert contract.service_owner == M145_COMMUNICATION_SERVICE_OWNER
+        assert contract.modelo == Modelo("145").value
+        assert contract.period_token == "ANNUAL"
+        assert contract.revision_id == "2012-01-31-y-siguientes"
+        assert contract.surfaces == ("communication", "payer_delivery", "export")
+        assert contract.actions == (
+            M145CommunicationAction.CREATE,
+            M145CommunicationAction.VALIDATE,
+            M145CommunicationAction.EXPORT,
+            M145CommunicationAction.MARK_DELIVERED_TO_PAYER,
+            M145CommunicationAction.MARK_LOCALLY_COMPLETED,
+        )
+        assert contract.export_layout_ids == ("modelo-145-dr-v20-fixed-width",)
+        assert "rd-439-2007:art-88" in contract.legal_refs
+        assert "aeat-modelo-145-form" in contract.source_refs
+        assert "aeat-dr-145-v20" in contract.source_refs
 
 
 def test_m145_communication_service_contract_excludes_filing_surfaces_and_terms() -> None:
-    contract = build_m145_communication_service_contract()
-    vocabulary = {
-        *contract.surfaces,
-        *(action.value for action in contract.actions),
-    }
-
-    assert vocabulary.isdisjoint(
-        {
-            "filing",
-            "file",
-            "filed",
-            "deadline",
-            "live_read",
-            "portal",
-            "submit",
-            "receipt",
-            "amendment",
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        contract = build_m145_communication_service_contract(operation=_authority_operation_for_test)
+        vocabulary = {
+            *contract.surfaces,
+            *(action.value for action in contract.actions),
         }
-    )
+
+        assert vocabulary.isdisjoint(
+            {
+                "filing",
+                "file",
+                "filed",
+                "deadline",
+                "live_read",
+                "portal",
+                "submit",
+                "receipt",
+                "amendment",
+            }
+        )

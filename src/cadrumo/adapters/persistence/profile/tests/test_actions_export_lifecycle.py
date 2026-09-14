@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import Any
 
 import pytest
 
@@ -24,69 +23,45 @@ from .ledger_action_persistence_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _create_manual_transaction(command: Any, **kwargs: Any) -> Any:
-    transaction_repository = kwargs.pop("transaction_repository")
-    bucket_event_repository = kwargs.pop("bucket_event_repository")
-    return create_manual_transaction(
-        command,
-        ports=ledger_ports_for_test(
-            bucket_id=command.bucket_id,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=bucket_event_repository,
-        ),
-        **kwargs,
-    )
-
-
-def _stash_manual_transaction(**kwargs: Any) -> Any:
-    transaction_repository = kwargs.pop("transaction_repository")
-    bucket_event_repository = kwargs.pop("bucket_event_repository")
-    return stash_manual_transaction(
-        ports=ledger_ports_for_test(
-            bucket_id=kwargs["bucket_id"],
-            transaction_repository=transaction_repository,
-            bucket_event_repository=bucket_event_repository,
-        ),
-        **kwargs,
-    )
-
-
 def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    active = _create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("250.00"),
-            direction=TransactionDirection.INCOMING,
-            description="client payment",
-            idempotency_key="export-active",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-    )
-    inactive = _create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="stashed payment",
-            idempotency_key="export-inactive",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
-    )
-    _stash_manual_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=inactive.ref.transaction_id,
-        actor="operator-A",
+        objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
-    )
+    ) as ports:
+        active = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("250.00"),
+                direction=TransactionDirection.INCOMING,
+                description="client payment",
+                idempotency_key="export-active",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+        inactive = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="stashed payment",
+                idempotency_key="export-inactive",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
+        )
+        stash_manual_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=inactive.ref.transaction_id,
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
+        )
 
     active_only = export_ledger_transactions(
         LedgerExportCommand(bucket_id=_BUCKET_ID),

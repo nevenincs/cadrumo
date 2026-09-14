@@ -16,6 +16,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence, resolve_llm_evidence
@@ -25,7 +28,7 @@ from .....core.config import Settings
 from .....core.image_media_type import ImageMediaType
 from .....domain.transactions.llm import prompt_spec_with_saturation_fields
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
-from .....domain.user_profile.values import ProfileSetupState
+from .....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from .....tests.llm_vision_evidence_support import png_image
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..models import MultimodalImageInput
@@ -113,11 +116,12 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     """
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
-    from .....domain.user_profile.values import UserProfileFact, UserProfileRecord
+    from .....domain.user_profile.values import UserProfileFact
 
     clock = datetime(2026, 1, 1, tzinfo=UTC)
     seed_test_profile_record(
-        UserProfileRecord(
+        create_user_profile_record(
+            context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -147,36 +151,40 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
     profile: TestRuntimeProfile,
 ) -> None:
     """A real reader connection failure carries its machine facts and exact verdict."""
-    settings = profile.settings.model_copy(
-        update={
-            "cadrumo_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
-            "cadrumo_llm_vision_read_timeout_s": 1,
-        },
-    )
-    evidence = ResolvedEvidence(
-        reference="reader-unavailable",
-        text=None,
-        images=(
-            MultimodalImageInput.from_base64(
-                base64.b64encode(png_image()).decode("ascii"),
-                ImageMediaType.PNG,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        settings = profile.settings.model_copy(
+            update={
+                "cadrumo_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
+                "cadrumo_llm_vision_read_timeout_s": 1,
+            },
+        )
+        evidence = ResolvedEvidence(
+            reference="reader-unavailable",
+            text=None,
+            images=(
+                MultimodalImageInput.from_base64(
+                    base64.b64encode(png_image()).decode("ascii"),
+                    ImageMediaType.PNG,
+                ),
             ),
-        ),
-    )
-    reader = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(year=2025), settings=settings)
-
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        classify_with_evidence(
-            vision_transaction("reader-unavailable"),
-            evidence,
-            text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(year=2025),
-            vision_classifier=reader,
-            vision_model=None,
+        )
+        reader = LocalVisionLLMClassifier(
+            spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
             settings=settings,
         )
 
-    verdict = raised.value.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
-    assert verdict.evidence[0].values["runtime_reachable"] is False
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+            classify_with_evidence(
+                vision_transaction("reader-unavailable"),
+                evidence,
+                text_classifier=None,
+                spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
+                vision_classifier=reader,
+                vision_model=None,
+                settings=settings,
+            )
+
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
+        assert verdict.evidence[0].values["runtime_reachable"] is False

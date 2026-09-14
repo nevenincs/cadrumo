@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 from unittest.mock import Mock
 
 import pytest
@@ -173,22 +174,23 @@ def _filing_ports(
     )
 
 
+@contextmanager
 def _ledger_ports(
     *,
+    objects: SecureObjectRepository,
     tx_repo: TransactionCatalogueRepository,
     event_repo: BucketEventHistoryRepository,
     invoice_repo: InvoiceCatalogueRepository | None = None,
-) -> LedgerActionPorts:
-    """Compose canonical ledger ports while retaining isolated test stores."""
-    return cast(
-        LedgerActionPorts,
-        ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
-            invoice_repository=invoice_repo,
-        ),
-    )
+) -> Iterator[LedgerActionPorts]:
+    """Yield canonical ledger ports while retaining isolated test stores."""
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=objects,
+        transaction_repository=tx_repo,
+        bucket_event_repository=event_repo,
+        invoice_repository=invoice_repo,
+    ) as ports:
+        yield ports
 
 
 _IVA_RATE = Decimal("0.21")
@@ -571,14 +573,15 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
             ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)
 
-        attached = attach_manual_transaction_evidence(
-            bucket_id=_BUCKET_ID,
-            transaction_id=purchase.transaction_id,
-            purchase_invoice_evidence_id=evidence.record.evidence_id,
-            actor="operator",
-            ports=_ledger_ports(tx_repo=tx_repo, event_repo=event_repo),
-            occurred_at=_VERIFIED_AT,
-        )
+        with _ledger_ports(objects=profile.repository, tx_repo=tx_repo, event_repo=event_repo) as ports:
+            attached = attach_manual_transaction_evidence(
+                bucket_id=_BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                purchase_invoice_evidence_id=evidence.record.evidence_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_VERIFIED_AT,
+            )
 
         assert attached.transaction.purchase_invoice_evidence_id == evidence.record.evidence_id
         reloaded = tx_repo.load().get(purchase.transaction_id)
@@ -684,14 +687,20 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
             ports=catalogue_ports,
         )
 
-        linked = link_manual_transaction_invoice(
-            bucket_id=_BUCKET_ID,
-            transaction_id=purchase.transaction_id,
-            invoice_id=created.invoice.invoice_id,
-            actor="operator",
-            ports=_ledger_ports(tx_repo=tx_repo, event_repo=event_repo, invoice_repo=invoice_repo),
-            occurred_at=_VERIFIED_AT,
-        )
+        with _ledger_ports(
+            objects=profile.repository,
+            tx_repo=tx_repo,
+            event_repo=event_repo,
+            invoice_repo=invoice_repo,
+        ) as ports:
+            linked = link_manual_transaction_invoice(
+                bucket_id=_BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                invoice_id=created.invoice.invoice_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_VERIFIED_AT,
+            )
 
         linked_transaction = linked.transactions.get(purchase.transaction_id)
         assert linked_transaction is not None
@@ -819,14 +828,15 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)
-        attach_manual_transaction_evidence(
-            bucket_id=_BUCKET_ID,
-            transaction_id=purchase.transaction_id,
-            purchase_invoice_evidence_id=evidence.record.evidence_id,
-            actor="operator",
-            ports=_ledger_ports(tx_repo=tx_repo, event_repo=event_repo),
-            occurred_at=_VERIFIED_AT,
-        )
+        with _ledger_ports(objects=profile.repository, tx_repo=tx_repo, event_repo=event_repo) as ports:
+            attach_manual_transaction_evidence(
+                bucket_id=_BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                purchase_invoice_evidence_id=evidence.record.evidence_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_VERIFIED_AT,
+            )
 
         granted = _verify()
         assert granted.granted_verificado_completo is True

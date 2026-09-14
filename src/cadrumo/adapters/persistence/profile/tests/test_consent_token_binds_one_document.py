@@ -40,6 +40,7 @@ from cadrumo.adapters.outbound.llm.errors import LLMConsentError
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
@@ -86,32 +87,34 @@ class TestConsentTokenBinding:
         tmp_path: Path,
     ) -> None:
         """The defect: this document, sent under that document's acknowledgement."""
-        _, first_address = _stored(
-            _FIRST,
-            "first.xml",
-            isolated_settings=isolated_settings,
-            secure_objects=secure_objects,
-            tmp_path=tmp_path,
-        )
-        second_id, second_address = _stored(
-            _SECOND,
-            "second.xml",
-            isolated_settings=isolated_settings,
-            secure_objects=secure_objects,
-            tmp_path=tmp_path,
-        )
-        assert first_address != second_address, "the two documents must differ for this to test anything"
-
-        with pytest.raises(LLMConsentError):
-            extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                evidence_id=second_id,
-                settings=isolated_settings,
-                consent_token=EvidenceConsentToken(
-                    surface=_SURFACE,
-                    evidence_content_address=first_address,
-                ),
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            _, first_address = _stored(
+                _FIRST,
+                "first.xml",
+                isolated_settings=isolated_settings,
+                secure_objects=secure_objects,
+                tmp_path=tmp_path,
             )
+            second_id, second_address = _stored(
+                _SECOND,
+                "second.xml",
+                isolated_settings=isolated_settings,
+                secure_objects=secure_objects,
+                tmp_path=tmp_path,
+            )
+            assert first_address != second_address, "the two documents must differ for this to test anything"
+
+            with pytest.raises(LLMConsentError):
+                extract_invoice_draft_from_evidence(
+                    bucket_id=_BUCKET_ID,
+                    evidence_id=second_id,
+                    settings=isolated_settings,
+                    consent_token=EvidenceConsentToken(
+                        surface=_SURFACE,
+                        evidence_content_address=first_address,
+                    ),
+                    operation=_authority_operation_for_test,
+                )
 
     def test_a_token_minted_for_this_document_is_accepted(
         self,
@@ -126,22 +129,24 @@ class TestConsentTokenBinding:
         it in exactly one fact -- which document the token names -- so the
         refusal cannot be misread as covering the matching case too.
         """
-        evidence_id, address = _stored(
-            _FIRST,
-            "matching.xml",
-            isolated_settings=isolated_settings,
-            secure_objects=secure_objects,
-            tmp_path=tmp_path,
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id, address = _stored(
+                _FIRST,
+                "matching.xml",
+                isolated_settings=isolated_settings,
+                secure_objects=secure_objects,
+                tmp_path=tmp_path,
+            )
 
-        draft = extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
-            evidence_id=evidence_id,
-            settings=isolated_settings,
-            consent_token=EvidenceConsentToken(surface=_SURFACE, evidence_content_address=address),
-        )
+            draft = extract_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                evidence_id=evidence_id,
+                settings=isolated_settings,
+                consent_token=EvidenceConsentToken(surface=_SURFACE, evidence_content_address=address),
+                operation=_authority_operation_for_test,
+            )
 
-        assert draft is not None
+            assert draft is not None
 
     def test_an_on_host_read_needs_no_token_at_all(
         self,
@@ -155,21 +160,23 @@ class TestConsentTokenBinding:
         binding would refuse the common case; that decision belongs at the
         dispatch point, which refuses an off-host send without one.
         """
-        evidence_id, _ = _stored(
-            _FIRST,
-            "on-host.xml",
-            isolated_settings=isolated_settings,
-            secure_objects=secure_objects,
-            tmp_path=tmp_path,
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            evidence_id, _ = _stored(
+                _FIRST,
+                "on-host.xml",
+                isolated_settings=isolated_settings,
+                secure_objects=secure_objects,
+                tmp_path=tmp_path,
+            )
 
-        draft = extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
-            evidence_id=evidence_id,
-            settings=isolated_settings,
-        )
+            draft = extract_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                evidence_id=evidence_id,
+                settings=isolated_settings,
+                operation=_authority_operation_for_test,
+            )
 
-        assert draft is not None
+            assert draft is not None
 
     def test_the_refusal_names_the_address_the_bytes_were_read_under(
         self,
@@ -183,33 +190,35 @@ class TestConsentTokenBinding:
         is what lets a reader tell a stale token from a misrouted one without
         reading this module.
         """
-        _, first_address = _stored(
-            _FIRST,
-            "one.xml",
-            isolated_settings=isolated_settings,
-            secure_objects=secure_objects,
-            tmp_path=tmp_path,
-        )
-        second_id, second_address = _stored(
-            _SECOND,
-            "two.xml",
-            isolated_settings=isolated_settings,
-            secure_objects=secure_objects,
-            tmp_path=tmp_path,
-        )
-
-        with pytest.raises(LLMConsentError) as raised:
-            extract_invoice_draft_from_evidence(
-                bucket_id=_BUCKET_ID,
-                evidence_id=second_id,
-                settings=isolated_settings,
-                consent_token=EvidenceConsentToken(
-                    surface=_SURFACE,
-                    evidence_content_address=first_address,
-                ),
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            _, first_address = _stored(
+                _FIRST,
+                "one.xml",
+                isolated_settings=isolated_settings,
+                secure_objects=secure_objects,
+                tmp_path=tmp_path,
+            )
+            second_id, second_address = _stored(
+                _SECOND,
+                "two.xml",
+                isolated_settings=isolated_settings,
+                secure_objects=secure_objects,
+                tmp_path=tmp_path,
             )
 
-        context = raised.value.context
-        assert context is not None
-        assert context["evidence_content_address"] == second_address
-        assert context["consent_token_binding_valid"] is False
+            with pytest.raises(LLMConsentError) as raised:
+                extract_invoice_draft_from_evidence(
+                    bucket_id=_BUCKET_ID,
+                    evidence_id=second_id,
+                    settings=isolated_settings,
+                    consent_token=EvidenceConsentToken(
+                        surface=_SURFACE,
+                        evidence_content_address=first_address,
+                    ),
+                    operation=_authority_operation_for_test,
+                )
+
+            context = raised.value.context
+            assert context is not None
+            assert context["evidence_content_address"] == second_address
+            assert context["consent_token_binding_valid"] is False

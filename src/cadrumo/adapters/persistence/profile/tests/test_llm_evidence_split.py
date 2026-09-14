@@ -36,6 +36,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.llm_classification import suggest_evidence_split
 from cadrumo.application.ledger.llm_classification_ports import LLMSplitSuggestion
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -51,68 +52,74 @@ __all__ = ["repositories"]
 def test_suggest_derives_child_amounts_summing_to_parent(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
-    repository, _events, _objects = repositories
-    gross = Decimal("121.00")
-    tx_id = _seed_parent(repository, amount=gross)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        repository, _events, _objects = repositories
+        gross = Decimal("121.00")
+        tx_id = _seed_parent(repository, amount=gross)
 
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
+        suggestion = suggest_evidence_split(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            transaction_repository=repository,
+            read_evidence=False,
+            operation=_authority_operation_for_test,
+        )
 
-    assert isinstance(suggestion, LLMSplitSuggestion)
-    assert suggestion.parent_amount == gross
-    assert len(suggestion.children) == 2
-    # The derived amounts sum EXACTLY to the parent gross to the cent.
-    assert sum((child.amount for child in suggestion.children), Decimal("0")) == gross
-    # 60/40 of 121.00.
-    assert suggestion.children[0].amount == Decimal("72.60")
-    assert suggestion.children[1].amount == Decimal("48.40")
-    assert suggestion.provenance == "llm:claude:test-model"
+        assert isinstance(suggestion, LLMSplitSuggestion)
+        assert suggestion.parent_amount == gross
+        assert len(suggestion.children) == 2
+        # The derived amounts sum EXACTLY to the parent gross to the cent.
+        assert sum((child.amount for child in suggestion.children), Decimal("0")) == gross
+        # 60/40 of 121.00.
+        assert suggestion.children[0].amount == Decimal("72.60")
+        assert suggestion.children[1].amount == Decimal("48.40")
+        assert suggestion.provenance == "llm:claude:test-model"
 
 
 def test_suggest_derives_each_child_substrate_from_registry(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
-    repository, _events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        repository, _events, _objects = repositories
+        tx_id = _seed_parent(repository, amount=Decimal("121.00"))
 
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
+        suggestion = suggest_evidence_split(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            transaction_repository=repository,
+            read_evidence=False,
+            operation=_authority_operation_for_test,
+        )
 
-    for child in suggestion.children:
-        assert child.iva_category == IvaCategory("domestic_general")
-        assert child.rate_derivable is True
-        # The registry rate, not a model-emitted number.
-        assert child.iva_rate == Decimal("0.21")
-        # base + iva reconstitutes the derived child amount to the cent.
-        assert child.taxable_base is not None and child.iva_amount is not None
-        assert child.taxable_base + child.iva_amount == child.amount
+        for child in suggestion.children:
+            assert child.iva_category == IvaCategory("domestic_general")
+            assert child.rate_derivable is True
+            # The registry rate, not a model-emitted number.
+            assert child.iva_rate == Decimal("0.21")
+            # base + iva reconstitutes the derived child amount to the cent.
+            assert child.taxable_base is not None and child.iva_amount is not None
+            assert child.taxable_base + child.iva_amount == child.amount
 
 
 def test_suggest_no_linked_evidence_does_not_require_cloud_acknowledgement(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
-    repository, _events, _objects = repositories
-    # No linked evidence -> _resolve_evidence_text returns (None, None) and the
-    # suggestion carries no evidence id; read_evidence does not require cloud
-    # acknowledgement when there is nothing to read.
-    tx_id = _seed_parent(repository)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        repository, _events, _objects = repositories
+        # No linked evidence -> _resolve_evidence_text returns (None, None) and the
+        # suggestion carries no evidence id; read_evidence does not require cloud
+        # acknowledgement when there is nothing to read.
+        tx_id = _seed_parent(repository)
 
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
-        transaction_repository=repository,
-        read_evidence=True,
-    )
+        suggestion = suggest_evidence_split(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            transaction_repository=repository,
+            read_evidence=True,
+            operation=_authority_operation_for_test,
+        )
 
-    assert suggestion.evidence_id is None
+        assert suggestion.evidence_id is None

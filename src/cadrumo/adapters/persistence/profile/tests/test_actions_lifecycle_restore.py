@@ -31,58 +31,51 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("50.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="stashed by mistake",
-            idempotency_key="restore-stash-row",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-    stash_manual_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        actor="operator-A",
-        reason="needs supporting statement",
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="stashed by mistake",
+                idempotency_key="restore-stash-row",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+        stash_manual_transaction(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+            transaction_id=created.ref.transaction_id,
+            actor="operator-A",
+            reason="needs supporting statement",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
-    stashed_summary = summarize_manual_transactions(
-        bucket_id=_BUCKET_ID,
-        ports=ledger_ports_for_test(
+        stashed_summary = summarize_manual_transactions(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-    )
-    assert stashed_summary.active_count == 0
-    assert stashed_summary.stashed_count == 1
+            ports=ports,
+        )
 
-    restored = restore_manual_transaction(
-        bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        actor="operator-B",
-        reason="stashed by mistake",
-        ports=ledger_ports_for_test(
+        restored = restore_manual_transaction(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
-    )
+            transaction_id=created.ref.transaction_id,
+            actor="operator-B",
+            reason="stashed by mistake",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
+        )
+
+        restored_summary = summarize_manual_transactions(
+            bucket_id=_BUCKET_ID,
+            ports=ports,
+        )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)
     assert persisted is not None
@@ -92,14 +85,6 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
     assert persisted.lifecycle_lineage[-1].reason == "stashed by mistake"
     assert persisted.lifecycle_lineage[-1].bucket_event_id == restored.bucket_event_ids[0]
 
-    restored_summary = summarize_manual_transactions(
-        bucket_id=_BUCKET_ID,
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-    )
     assert restored_summary.active_count == 1
     assert restored_summary.stashed_count == 0
 
@@ -116,47 +101,41 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
 
 def test_restore_archived_transaction_returns_it_to_active(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("72.50"),
-            direction=TransactionDirection.OUTGOING,
-            description="archived by mistake",
-            idempotency_key="restore-archive-row",
-        ),
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-    archive_manual_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        actor="operator-A",
-        reason="wrong row archived",
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("72.50"),
+                direction=TransactionDirection.OUTGOING,
+                description="archived by mistake",
+                idempotency_key="restore-archive-row",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+        archive_manual_transaction(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+            transaction_id=created.ref.transaction_id,
+            actor="operator-A",
+            reason="wrong row archived",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
-    restored = restore_manual_transaction(
-        bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        actor="operator-B",
-        reason="archived by mistake",
-        ports=ledger_ports_for_test(
+        restored = restore_manual_transaction(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
-    )
+            transaction_id=created.ref.transaction_id,
+            actor="operator-B",
+            reason="archived by mistake",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
+        )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)
     assert persisted is not None

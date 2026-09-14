@@ -55,6 +55,9 @@ from cadrumo.application.auth.certificate_source_operations import (
 )
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
 from cadrumo.application.auth.operator_results import CertificateSourceNotFoundError
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+)
 
 from .ephemeral_master_key import EphemeralMasterKeyProvider
 
@@ -193,162 +196,189 @@ def test_secure_storage_backend_request_witness_is_stable_keyed_and_secret_free(
 
 def test_set_operator_certificate_source_secret_requires_a_registered_source() -> None:
     """Binding a secret to an unregistered source name is refused, not silently created."""
-    _register_operator_profile()
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
 
-    with pytest.raises(CertificateSourceNotFoundError):
-        set_operator_certificate_source_secret(
-            certificate_secret_backend_factory=build_certificate_secret_backend,
-            name="ghost",
-            secret=SecretStr("passphrase"),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with pytest.raises(CertificateSourceNotFoundError):
+            set_operator_certificate_source_secret(
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+                name="ghost",
+                secret=SecretStr("passphrase"),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
+            )
 
 
 def test_set_then_resolve_roundtrips_the_secret(tmp_path: Path) -> None:
     """A secret set via the operator verb is resolvable via the operator resolver."""
-    _register_operator_profile()
-    cert_path = tmp_path / "personal.p12"
-    cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(
-        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=cert_path,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    result = set_operator_certificate_source_secret(
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-        name="personal",
-        secret=SecretStr("correct-horse-battery-staple"),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        result = set_operator_certificate_source_secret(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            name="personal",
+            secret=SecretStr("correct-horse-battery-staple"),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    assert result.name == "personal"
-    assert result.has_secret is True
-    assert result.rotated is False
+        assert result.name == "personal"
+        assert result.has_secret is True
+        assert result.rotated is False
 
-    resolved = resolve_certificate_source_secret(
-        name="personal",
-        bucket_id=_BUCKET_ID,
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-    )
-    assert resolved is not None
-    assert resolved.get_secret_value() == "correct-horse-battery-staple"
+        resolved = resolve_certificate_source_secret(
+            name="personal",
+            bucket_id=_BUCKET_ID,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+        )
+        assert resolved is not None
+        assert resolved.get_secret_value() == "correct-horse-battery-staple"
 
 
 def test_set_operator_certificate_source_secret_never_carries_secret_in_result(
     tmp_path: Path,
 ) -> None:
     """The mutation result never carries the secret value itself, only its presence."""
-    _register_operator_profile()
-    cert_path = tmp_path / "personal.p12"
-    cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(
-        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=cert_path,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    result = set_operator_certificate_source_secret(
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-        name="personal",
-        secret=SecretStr("do-not-leak-me"),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        result = set_operator_certificate_source_secret(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            name="personal",
+            secret=SecretStr("do-not-leak-me"),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    assert "do-not-leak-me" not in repr(result)
-    assert "do-not-leak-me" not in result.model_dump_json()
+        assert "do-not-leak-me" not in repr(result)
+        assert "do-not-leak-me" not in result.model_dump_json()
 
 
 def test_set_operator_certificate_source_secret_twice_reports_rotated(
     tmp_path: Path,
 ) -> None:
     """A second ``set`` call on the same source reports ``rotated=True``."""
-    _register_operator_profile()
-    cert_path = tmp_path / "personal.p12"
-    cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(
-        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=cert_path,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    first = set_operator_certificate_source_secret(
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-        name="personal",
-        secret=SecretStr("old-passphrase"),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    second = set_operator_certificate_source_secret(
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-        name="personal",
-        secret=SecretStr("new-passphrase"),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+        first = set_operator_certificate_source_secret(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            name="personal",
+            secret=SecretStr("old-passphrase"),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+        second = set_operator_certificate_source_secret(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            name="personal",
+            secret=SecretStr("new-passphrase"),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
-    assert first.rotated is False
-    assert second.rotated is True
-    resolved = resolve_certificate_source_secret(
-        name="personal",
-        bucket_id=_BUCKET_ID,
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-    )
-    assert resolved is not None
-    assert resolved.get_secret_value() == "new-passphrase"
+        assert first.rotated is False
+        assert second.rotated is True
+        resolved = resolve_certificate_source_secret(
+            name="personal",
+            bucket_id=_BUCKET_ID,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+        )
+        assert resolved is not None
+        assert resolved.get_secret_value() == "new-passphrase"
 
 
 def test_remove_operator_certificate_source_secret_is_idempotent(
     tmp_path: Path,
 ) -> None:
     """Removing a certificate source's secret twice is a no-op the second time."""
-    _register_operator_profile()
-    cert_path = tmp_path / "personal.p12"
-    cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(
-        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-    set_operator_certificate_source_secret(
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-        name="personal",
-        secret=SecretStr("passphrase"),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-
-    first = remove_operator_certificate_source_secret(
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-        name="personal",
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-    second = remove_operator_certificate_source_secret(
-        certificate_secret_backend_factory=build_certificate_secret_backend,
-        name="personal",
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
-
-    assert first.removed is True
-    assert second.removed is False
-    assert (
-        resolve_certificate_source_secret(
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        register_operator_certificate_source(
             name="personal",
-            bucket_id=_BUCKET_ID,
-            certificate_secret_backend_factory=build_certificate_secret_backend,
+            certificate_path=cert_path,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
         )
-        is None
-    )
+        set_operator_certificate_source_secret(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            name="personal",
+            secret=SecretStr("passphrase"),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
+
+        first = remove_operator_certificate_source_secret(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            name="personal",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
+        second = remove_operator_certificate_source_secret(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            name="personal",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
+
+        assert first.removed is True
+        assert second.removed is False
+        assert (
+            resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_BUCKET_ID,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            )
+            is None
+        )
 
 
 def test_resolve_certificate_source_secret_is_none_when_never_set(
     tmp_path: Path,
 ) -> None:
     """A registered source with no bound secret resolves to ``None``."""
-    _register_operator_profile()
-    cert_path = tmp_path / "personal.p12"
-    cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(
-        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-    )
-
-    assert (
-        resolve_certificate_source_secret(
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        _register_operator_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        register_operator_certificate_source(
             name="personal",
-            bucket_id=_BUCKET_ID,
-            certificate_secret_backend_factory=build_certificate_secret_backend,
+            certificate_path=cert_path,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
         )
-        is None
-    )
+
+        assert (
+            resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_BUCKET_ID,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            )
+            is None
+        )
 
 
 # ---------------------------------------------------------------------------

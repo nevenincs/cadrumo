@@ -45,6 +45,7 @@ from cadrumo.application.filing.tests.filing_support import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloDraft
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -199,35 +200,37 @@ def test_tampered_review_checksum_is_refused_on_refresh(tmp_path: Path) -> None:
     The probe uses the real encrypted repository: approve, persist, replace only
     the checksum, reload through the production read path, refresh.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        schema_provider = build_runtime_schema_provider(
-            modelos=("130",),
-            filing_year=_Q1_2026.filing_year,
-            period=_Q1_2026,
-        )
-        approved = _approve(profile.bucket_id)
-        assert approved.status is ModeloDraftStatus.APROBADO
-        assert approved.review_checksum is not None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+            schema_provider = build_runtime_schema_provider(
+                modelos=("130",),
+                filing_year=_Q1_2026.filing_year,
+                period=_Q1_2026,
+            )
+            approved = _approve(profile.bucket_id)
+            assert approved.status is ModeloDraftStatus.APROBADO
+            assert approved.review_checksum is not None
 
-        repository = ModeloDraftRepository(bucket_id=profile.bucket_id)
-        # Only the checksum moves; every basis field and the draft's own
-        # content address stay exactly as approved.
-        repository.save(approved.model_copy(update={"review_checksum": "0" * 64}))
+            repository = ModeloDraftRepository(bucket_id=profile.bucket_id)
+            # Only the checksum moves; every basis field and the draft's own
+            # content address stay exactly as approved.
+            repository.save(approved.model_copy(update={"review_checksum": "0" * 64}))
 
-        reloaded = repository.load(approved.draft_id)
-        assert reloaded is not None
-        assert reloaded.approval_basis == approved.approval_basis
+            reloaded = repository.load(approved.draft_id)
+            assert reloaded is not None
+            assert reloaded.approval_basis == approved.approval_basis
 
-        refreshed = refresh_review_status(
-            reloaded,
-            bucket_id=profile.bucket_id,
-            schema_provider=schema_provider,
-            ports=_draft_review_ports(profile.bucket_id),
-            prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
-            profile_activity_fingerprint=empty_profile_activity_fingerprint(),
-        )
+            refreshed = refresh_review_status(
+                reloaded,
+                bucket_id=profile.bucket_id,
+                schema_provider=schema_provider,
+                ports=_draft_review_ports(profile.bucket_id),
+                prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
+                profile_activity_fingerprint=empty_profile_activity_fingerprint(),
+                operation=_authority_operation_for_test,
+            )
 
-    assert refreshed.status is not ModeloDraftStatus.APROBADO
+        assert refreshed.status is not ModeloDraftStatus.APROBADO
 
 
 def test_untampered_approved_draft_survives_refresh(tmp_path: Path) -> None:
@@ -236,31 +239,33 @@ def test_untampered_approved_draft_survives_refresh(tmp_path: Path) -> None:
     Without it the tamper test would also pass if refresh simply demoted every
     draft it was handed.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        schema_provider = build_runtime_schema_provider(
-            modelos=("130",),
-            filing_year=_Q1_2026.filing_year,
-            period=_Q1_2026,
-        )
-        approved = _approve(profile.bucket_id)
-        repository = ModeloDraftRepository(bucket_id=profile.bucket_id)
-        repository.save(approved)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+            schema_provider = build_runtime_schema_provider(
+                modelos=("130",),
+                filing_year=_Q1_2026.filing_year,
+                period=_Q1_2026,
+            )
+            approved = _approve(profile.bucket_id)
+            repository = ModeloDraftRepository(bucket_id=profile.bucket_id)
+            repository.save(approved)
 
-        reloaded = repository.load(approved.draft_id)
-        assert reloaded is not None
+            reloaded = repository.load(approved.draft_id)
+            assert reloaded is not None
 
-        refreshed = refresh_review_status(
-            reloaded,
-            bucket_id=profile.bucket_id,
-            schema_provider=schema_provider,
-            ports=_draft_review_ports(profile.bucket_id),
-            prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
-            profile_activity_fingerprint=empty_profile_activity_fingerprint(),
-        )
+            refreshed = refresh_review_status(
+                reloaded,
+                bucket_id=profile.bucket_id,
+                schema_provider=schema_provider,
+                ports=_draft_review_ports(profile.bucket_id),
+                prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
+                profile_activity_fingerprint=empty_profile_activity_fingerprint(),
+                operation=_authority_operation_for_test,
+            )
 
-    assert refreshed.status is ModeloDraftStatus.APROBADO
-    assert approved.approval_basis is not None
-    assert refreshed.review_checksum == compute_review_checksum(approved.approval_basis)
+        assert refreshed.status is ModeloDraftStatus.APROBADO
+        assert approved.approval_basis is not None
+        assert refreshed.review_checksum == compute_review_checksum(approved.approval_basis)
 
 
 def test_approved_at_is_utc(tmp_path: Path) -> None:

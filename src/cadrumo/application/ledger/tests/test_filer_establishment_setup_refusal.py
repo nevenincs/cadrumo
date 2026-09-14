@@ -34,6 +34,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.operator_action_enums import NoRecoveryOutcome
@@ -82,7 +83,11 @@ def test_a_declared_postcode_resolves_the_filers_own_territory(
     expected: IvaTerritorialScope,
 ) -> None:
     """The whole point of the fact: the operator side is answered without the paper."""
-    assert resolve_filer_territorial_scope(profile_record=_profile(postcode)) is expected
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            resolve_filer_territorial_scope(profile_record=_profile(postcode), operation=_authority_operation_for_test)
+            is expected
+        )
 
 
 @pytest.mark.parametrize(
@@ -105,8 +110,9 @@ def test_an_unresolvable_own_territory_refuses_rather_than_defaulting(postcode: 
     -- it is "something was present and nobody could read it", which is exactly
     the case a permissive parse turns into a confident mainland answer.
     """
-    with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        resolve_filer_territorial_scope(profile_record=_profile(postcode))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(PurchaseInvoiceEvidenceInputError):
+            resolve_filer_territorial_scope(profile_record=_profile(postcode), operation=_authority_operation_for_test)
 
 
 def test_no_unresolvable_input_ever_returns_a_territory() -> None:
@@ -118,33 +124,43 @@ def test_no_unresolvable_input_ever_returns_a_territory() -> None:
     quietly answering for the malformed shapes, so the absence of any returned
     value is asserted over the set rather than per case.
     """
-    returned = []
-    for postcode in (None, "", "   ", "2801", "280134", "28O13", "Madrid"):
-        try:
-            returned.append((postcode, resolve_filer_territorial_scope(profile_record=_profile(postcode))))
-        except PurchaseInvoiceEvidenceInputError:
-            continue
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        returned = []
+        for postcode in (None, "", "   ", "2801", "280134", "28O13", "Madrid"):
+            try:
+                returned.append(
+                    (
+                        postcode,
+                        resolve_filer_territorial_scope(
+                            profile_record=_profile(postcode), operation=_authority_operation_for_test
+                        ),
+                    )
+                )
+            except PurchaseInvoiceEvidenceInputError:
+                continue
 
-    assert not returned, f"these unresolvable inputs were answered instead of refused: {returned}"
+        assert not returned, f"these unresolvable inputs were answered instead of refused: {returned}"
 
 
 def test_a_missing_profile_refuses_rather_than_assuming_a_territory() -> None:
     """No profile is not an empty profile, and neither is a territory."""
-    with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        resolve_filer_territorial_scope(profile_record=None)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(PurchaseInvoiceEvidenceInputError):
+            resolve_filer_territorial_scope(profile_record=None, operation=_authority_operation_for_test)
 
 
 def test_confirm_boundary_preserves_the_exact_profile_precondition_refusal() -> None:
     """Confirm does not flatten a profile precondition into review-item prose."""
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _filer_scope(_profile(None))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+            _filer_scope(_profile(None), operation=_authority_operation_for_test)
 
-    verdict = raised.value.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == LedgerPreconditionCondition.FILER_POSTCODE_VALID.value
-    assert verdict.evidence[0].values == {"filer_postcode_present": False}
-    assert verdict.action is None
-    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == LedgerPreconditionCondition.FILER_POSTCODE_VALID.value
+        assert verdict.evidence[0].values == {"filer_postcode_present": False}
+        assert verdict.action is None
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 class TestTheRefusalIsActionable:
@@ -152,21 +168,23 @@ class TestTheRefusalIsActionable:
 
     def test_the_refusal_names_the_missing_fact(self) -> None:
         """Naming the fact path is what makes the gap addressable rather than abstract."""
-        with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
-            resolve_filer_territorial_scope(profile_record=_profile(None))
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
+                resolve_filer_territorial_scope(profile_record=_profile(None), operation=_authority_operation_for_test)
 
-        assert FILER_POSTCODE_FACT_PATH in str(caught.value)
+            assert FILER_POSTCODE_FACT_PATH in str(caught.value)
 
     def test_the_refusal_names_the_verb_that_supplies_it(self) -> None:
         """The recovery path travels with the refusal, not in documentation elsewhere."""
-        with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
-            resolve_filer_territorial_scope(profile_record=_profile(None))
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
+                resolve_filer_territorial_scope(profile_record=_profile(None), operation=_authority_operation_for_test)
 
-        assert caught.value.terminal_precondition_verdict is not None
-        assert caught.value.terminal_precondition_verdict.failed_condition_id == (
-            LedgerPreconditionCondition.FILER_POSTCODE_VALID.value
-        )
-        assert caught.value.terminal_precondition_verdict.evidence[0].values == {"filer_postcode_present": False}
+            assert caught.value.terminal_precondition_verdict is not None
+            assert caught.value.terminal_precondition_verdict.failed_condition_id == (
+                LedgerPreconditionCondition.FILER_POSTCODE_VALID.value
+            )
+            assert caught.value.terminal_precondition_verdict.evidence[0].values == {"filer_postcode_present": False}
 
     def test_an_unreadable_value_says_so_rather_than_reporting_it_absent(self) -> None:
         """Two different gaps that a single message would make indistinguishable.
@@ -175,7 +193,10 @@ class TestTheRefusalIsActionable:
         need different operator actions, and an agent told the fact is missing
         when it is actually malformed will re-supply the same malformed value.
         """
-        with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
-            resolve_filer_territorial_scope(profile_record=_profile("Madrid"))
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
+                resolve_filer_territorial_scope(
+                    profile_record=_profile("Madrid"), operation=_authority_operation_for_test
+                )
 
-        assert "Madrid" in str(caught.value)
+            assert "Madrid" in str(caught.value)

@@ -104,7 +104,8 @@ from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import (
     build_calculation_action_ports,
     build_filing_action_ports,
@@ -478,7 +479,8 @@ def _wallet_decision(
 def _store_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
+            context=compiled_bundled_authority().profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -511,7 +513,8 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
 def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed Irene SL's IVA profile for the late-local-file persona path."""
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
+            context=compiled_bundled_authority().profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(

@@ -5,7 +5,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -38,9 +37,10 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -51,7 +51,7 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
     """The filing decision boundary cannot consume values under a drifted schema."""
     wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -71,18 +71,16 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), stale))
 
-    with pytest.raises(WorkUnitRevisionDivergenceError):
+    with pytest.raises(WorkUnitRevisionDivergenceError), bundled_indexed_authority().operation() as operation:
         file_modelo_revision(
             revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-A",
             workflow_profile=workflow_profile(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=filing_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
         )
 
 
@@ -94,7 +92,7 @@ def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
     wu_repo, cr_repo, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
 
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -131,7 +129,7 @@ def test_verify_emits_passed_event_on_success(repos: Repos) -> None:
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -180,7 +178,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos) -> None:
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
     work_unit = seed_modelo_180_work_unit(wu_repo)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -197,15 +195,17 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos) -> None:
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
     )
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        clock=T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            clock=T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert report.granted_verificado_completo is False
 
     catalogue = bv_repo.load()
@@ -228,7 +228,7 @@ def test_file_emits_modelo_filed_event(repos: Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -286,7 +286,7 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
 
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision_one = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -320,7 +320,7 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
         clock=T3,
     )
 
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision_two = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),

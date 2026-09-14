@@ -15,6 +15,8 @@ from __future__ import annotations
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.period import Period
 from ....domain.calculations.registry.bindings_previous_filing import periodic_carry_bindings_for_period
 from ..m303_arrivals import _transition_period_applicability_from_registry
@@ -62,22 +64,46 @@ def test_every_edition_declares_the_periodic_carry_the_applicability_is_read_fro
 
 @pytest.mark.parametrize("filing_year", _QUARTERLY_YEARS)
 def test_the_fourth_quarter_is_a_transition_period(filing_year: int) -> None:
-    assert _transition_period_applicability_from_registry(Period.from_year_and_code(filing_year, "4T")) is True
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            _transition_period_applicability_from_registry(
+                Period.from_year_and_code(filing_year, "4T"), operation=_authority_operation_for_test
+            )
+            is True
+        )
 
 
 @pytest.mark.parametrize("filing_year", _MONTHLY_YEARS)
 def test_december_is_a_transition_period(filing_year: int) -> None:
-    assert _transition_period_applicability_from_registry(Period.from_year_and_code(filing_year, "12")) is True
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            _transition_period_applicability_from_registry(
+                Period.from_year_and_code(filing_year, "12"), operation=_authority_operation_for_test
+            )
+            is True
+        )
 
 
 @pytest.mark.parametrize("filing_year", _QUARTERLY_YEARS)
 def test_the_first_quarter_is_not_a_transition_period(filing_year: int) -> None:
-    assert _transition_period_applicability_from_registry(Period.from_year_and_code(filing_year, "1T")) is False
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            _transition_period_applicability_from_registry(
+                Period.from_year_and_code(filing_year, "1T"), operation=_authority_operation_for_test
+            )
+            is False
+        )
 
 
 @pytest.mark.parametrize("filing_year", _MONTHLY_YEARS)
 def test_january_is_not_a_transition_period(filing_year: int) -> None:
-    assert _transition_period_applicability_from_registry(Period.from_year_and_code(filing_year, "01")) is False
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            _transition_period_applicability_from_registry(
+                Period.from_year_and_code(filing_year, "01"), operation=_authority_operation_for_test
+            )
+            is False
+        )
 
 
 def test_a_revision_without_a_periodic_carry_answers_nothing_rather_than_guessing() -> None:

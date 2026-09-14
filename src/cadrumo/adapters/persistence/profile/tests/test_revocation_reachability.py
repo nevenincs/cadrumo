@@ -32,6 +32,9 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
 from cadrumo.core.config import load_settings
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+)
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -52,63 +55,70 @@ def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_b
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
-    from cadrumo.application.auth.certificate_source_operations import (
-        register_operator_certificate_source,
-        set_operator_certificate_source_secret,
-    )
-    from cadrumo.application.auth.operator import reset_operator_auth
-    from cadrumo.application.auth.operator_scope import operator_auth_revocation_is_reachable
-
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        with open_test_profile_session(_PROFILE_ID):
-            register_minimal_profile(profile_id=_PROFILE_ID, display_name="Alpha operator")
-        write_pointer(root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
-
-        certificate_path = tmp_path / "operator.p12"
-        certificate_path.write_bytes(b"test certificate")
-        with open_test_profile_session(_PROFILE_ID):
-            register_operator_certificate_source(
-                name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-            )
-            set_operator_certificate_source_secret(
-                certificate_secret_backend_factory=certificate_secret_backend_factory,
-                name="personal",
-                secret=SecretStr("test-passphrase"),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
-            assert _certificate_secret_present(_PROFILE_ID, certificate_secret_backend_factory) is True
-
-        # Cold: no session serves the profile, so a revocation cannot open it.
-        assert (
-            operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-            is False
+    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+        from cadrumo.application.auth.certificate_source_operations import (
+            register_operator_certificate_source,
+            set_operator_certificate_source_secret,
         )
+        from cadrumo.application.auth.operator import reset_operator_auth
+        from cadrumo.application.auth.operator_scope import operator_auth_revocation_is_reachable
 
-        with open_test_profile_session(_PROFILE_ID):
+        with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+            with open_test_profile_session(_PROFILE_ID):
+                register_minimal_profile(profile_id=_PROFILE_ID, display_name="Alpha operator")
+            write_pointer(root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
+
+            certificate_path = tmp_path / "operator.p12"
+            certificate_path.write_bytes(b"test certificate")
+            with open_test_profile_session(_PROFILE_ID):
+                register_operator_certificate_source(
+                    name="personal",
+                    certificate_path=certificate_path,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=_certificate_authority_operation_for_test,
+                )
+                set_operator_certificate_source_secret(
+                    certificate_secret_backend_factory=certificate_secret_backend_factory,
+                    name="personal",
+                    secret=SecretStr("test-passphrase"),
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=_certificate_authority_operation_for_test,
+                )
+                assert _certificate_secret_present(_PROFILE_ID, certificate_secret_backend_factory) is True
+
+            # Cold: no session serves the profile, so a revocation cannot open it.
             assert (
                 operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-                is True
-            )
-            # An open session for ONE profile is not an open session for another:
-            # a predicate that reported reachability from any session at all
-            # would let a caller revoke against whichever bucket happened to be
-            # bound, which is the confusion the underlying span refuses.
-            assert (
-                operator_auth_revocation_is_reachable(
-                    bucket_id=_OTHER_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS
-                )
                 is False
             )
 
-            result = reset_operator_auth(
-                all_providers=True,
-                certificate_secret_backend_factory=certificate_secret_backend_factory,
-                target_bucket_id=_PROFILE_ID,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with open_test_profile_session(_PROFILE_ID):
+                assert (
+                    operator_auth_revocation_is_reachable(
+                        bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                    )
+                    is True
+                )
+                # An open session for ONE profile is not an open session for another:
+                # a predicate that reported reachability from any session at all
+                # would let a caller revoke against whichever bucket happened to be
+                # bound, which is the confusion the underlying span refuses.
+                assert (
+                    operator_auth_revocation_is_reachable(
+                        bucket_id=_OTHER_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                    )
+                    is False
+                )
 
-        assert result.removed_certificate_secrets == 1
-        assert _certificate_secret_present(_PROFILE_ID, certificate_secret_backend_factory) is False
+                result = reset_operator_auth(
+                    all_providers=True,
+                    certificate_secret_backend_factory=certificate_secret_backend_factory,
+                    target_bucket_id=_PROFILE_ID,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                )
+
+            assert result.removed_certificate_secrets == 1
+            assert _certificate_secret_present(_PROFILE_ID, certificate_secret_backend_factory) is False
 
 
 def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(

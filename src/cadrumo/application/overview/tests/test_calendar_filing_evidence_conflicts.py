@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
@@ -15,6 +16,7 @@ from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange
 from .calendar_test_support import (
     BUCKET_ID as _BUCKET_ID,
 )
+from .calendar_test_support import calendar_operation
 from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )
@@ -49,7 +51,9 @@ from .calendar_test_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disagree() -> None:
+def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disagree(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A verified filed-history row must not hide a different local AEAT evidence reference."""
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
     remote_ref = "12345678901234567890"
@@ -102,6 +106,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        operation=calendar_operation,
         today=date(2025, 4, 10),
         events=event,
         filing_evidence=evidence,
@@ -126,7 +131,9 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
     }
 
 
-def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history_csv() -> None:
+def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history_csv(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A local live-capture CSV and filed-history expediente can point to the same receipt."""
     csv = "CSVFILED3031T2025"
     expediente_id = "12345678901234567890"
@@ -155,6 +162,7 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        operation=calendar_operation,
         today=date(2025, 4, 10),
         filing_evidence=evidence,
     )
@@ -170,7 +178,9 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
     assert "filing.aeat_evidence_conflict" not in {warning.code for warning in calendar.warnings}
 
 
-def test_calendar_does_not_conflict_matching_verified_csv_across_reference_namespaces() -> None:
+def test_calendar_does_not_conflict_matching_verified_csv_across_reference_namespaces(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """CSV-backed local evidence and expediente-backed filed-history evidence can describe the same receipt."""
     csv = "JUST3032025X1T7"
     expediente_id = "12345678901234567890"
@@ -203,6 +213,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        operation=calendar_operation,
         today=date(2025, 4, 10),
         filing_evidence=evidence,
     )

@@ -32,6 +32,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
@@ -158,8 +160,14 @@ def test_the_table_silence_branch_is_defensive_and_currently_unreachable() -> No
     the premise is measured: 2 % pairs with 0,26 % only inside the October to
     December 2024 window, and the table declines outside it.
     """
-    assert recargo_rate_for_applied_rate(Decimal("0.02"), date(2024, 11, 15)) == Decimal("0.0026")
-    assert recargo_rate_for_applied_rate(Decimal("0.02"), date(2025, 6, 15)) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert recargo_rate_for_applied_rate(
+            Decimal("0.02"), date(2024, 11, 15), operation=_authority_operation_for_test
+        ) == Decimal("0.0026")
+        assert (
+            recargo_rate_for_applied_rate(Decimal("0.02"), date(2025, 6, 15), operation=_authority_operation_for_test)
+            is None
+        )
 
 
 def test_an_invoice_bearing_no_recargo_is_not_this_screens_business() -> None:

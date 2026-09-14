@@ -7,6 +7,8 @@ import json
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence
 from .....application.provisioning import (
@@ -132,55 +134,59 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
     refusal that survives is about the runtime being unreachable, represented
     by the canonical provisioning verdict rather than transport-specific prose.
     """
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        classify_with_evidence(
-            vision_transaction("ev-1"),
-            None,
-            text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(year=2025),
-            vision_classifier=None,
-            vision_model=None,
-            settings=load_settings(),
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+            classify_with_evidence(
+                vision_transaction("ev-1"),
+                None,
+                text_classifier=None,
+                spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
+                vision_classifier=None,
+                vision_model=None,
+                settings=load_settings(),
+            )
 
-    verdict = raised.value.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
-    assert verdict.evidence[0].values["runtime_reachable"] is False
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
+        assert verdict.evidence[0].values["runtime_reachable"] is False
 
 
 def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> None:
     """An unreachable on-host reader carries the canonical provisioning verdict."""
-    evidence = ResolvedEvidence(
-        reference="ev-1",
-        text=None,
-        images=(MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
-    )
-    unreachable_settings = load_settings().model_copy(
-        update={
-            "cadrumo_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
-            "cadrumo_llm_vision_read_timeout_s": 1,
-        },
-    )
-    classifier = LocalVisionLLMClassifier(
-        spec=prompt_spec_with_saturation_fields(year=2025),
-        settings=unreachable_settings,
-    )
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        classify_with_evidence(
-            vision_transaction("ev-1"),
-            evidence,
-            text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(year=2025),
-            vision_classifier=classifier,
-            vision_model=None,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        evidence = ResolvedEvidence(
+            reference="ev-1",
+            text=None,
+            images=(
+                MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),
+            ),
+        )
+        unreachable_settings = load_settings().model_copy(
+            update={
+                "cadrumo_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
+                "cadrumo_llm_vision_read_timeout_s": 1,
+            },
+        )
+        classifier = LocalVisionLLMClassifier(
+            spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
             settings=unreachable_settings,
         )
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+            classify_with_evidence(
+                vision_transaction("ev-1"),
+                evidence,
+                text_classifier=None,
+                spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
+                vision_classifier=classifier,
+                vision_model=None,
+                settings=unreachable_settings,
+            )
 
-    verdict = raised.value.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
-    assert verdict.evidence[0].values["runtime_reachable"] is False
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
+        assert verdict.evidence[0].values["runtime_reachable"] is False
 
 
 def test_vision_model_override_selects_the_named_model() -> None:

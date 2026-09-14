@@ -22,6 +22,7 @@ from cadrumo.application.filing.tests.filing_support import build_registry_filin
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -58,49 +59,55 @@ _MODELO_130_BINDING_INPUTS = {
 
 
 def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path: Path) -> None:
-    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026)
-    draft = _ready_modelo_130_draft()
-
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID),
-        pytest.raises(StorageValidationError) as refusal,
-    ):
-        compute_current_approval_basis(
-            draft,
-            bucket_id=_BUCKET_ID,
-            schema_provider=schema_provider,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        schema_provider = build_runtime_schema_provider(
+            modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026
         )
+        draft = _ready_modelo_130_draft()
 
-    # The key, not the rendered sentence: the prose alternation this replaced
-    # named two older wordings and matched neither once the refusal was localized.
-    assert refusal.value.translated_message == "errors.storage.runtime.not_ready"
+        with (
+            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID),
+            pytest.raises(StorageValidationError) as refusal,
+        ):
+            compute_current_approval_basis(
+                draft, bucket_id=_BUCKET_ID, schema_provider=schema_provider, operation=_authority_operation_for_test
+            )
+
+        # The key, not the rendered sentence: the prose alternation this replaced
+        # named two older wordings and matched neither once the refusal was localized.
+        assert refusal.value.translated_message == "errors.storage.runtime.not_ready"
 
 
 def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_default(tmp_path: Path) -> None:
-    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026)
-    draft = _ready_modelo_130_draft()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        schema_provider = build_runtime_schema_provider(
+            modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026
+        )
+        draft = _ready_modelo_130_draft()
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
-            TransactionCatalogue.from_transactions((_transaction("initial"),)),
-        )
-        approved = approve_draft(
-            draft,
-            bucket_id=profile.bucket_id,
-            approved_by="operator",
-            schema_provider=schema_provider,
-        )
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
+                TransactionCatalogue.from_transactions((_transaction("initial"),)),
+            )
+            approved = approve_draft(
+                draft,
+                bucket_id=profile.bucket_id,
+                approved_by="operator",
+                schema_provider=schema_provider,
+                operation=_authority_operation_for_test,
+            )
 
-        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
-            TransactionCatalogue.from_transactions((_transaction("changed"),)),
-        )
-        reasons = approval_stale_reasons(
-            approved,
-            bucket_id=profile.bucket_id,
-            schema_provider=schema_provider,
-        )
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
+                TransactionCatalogue.from_transactions((_transaction("changed"),)),
+            )
+            reasons = approval_stale_reasons(
+                approved,
+                bucket_id=profile.bucket_id,
+                schema_provider=schema_provider,
+                operation=_authority_operation_for_test,
+            )
 
-    assert ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED in reasons
+        assert ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED in reasons
 
 
 def _ready_modelo_130_draft() -> ModeloDraft:

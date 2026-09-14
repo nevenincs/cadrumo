@@ -24,6 +24,7 @@ correctly and still matches no selector is exactly the failure worth catching.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -31,6 +32,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicability
 from cadrumo.domain.iva.schema import IvaCategory
 
@@ -45,6 +47,13 @@ from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for supplier/recipient binding projections."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BASE = Decimal("1000.00")
 _DEVENGO = date(2024, 3, 15)
@@ -121,7 +130,7 @@ def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
     )
 
 
-def _resolved_for(invoice: Invoice) -> dict[str, Decimal]:
+def _resolved_for(invoice: Invoice, *, operation: PinnedAuthorityOperation) -> dict[str, Decimal]:
     """Project the invoice's single line the way the screen does, then resolve."""
     line = invoice.lines[0]
     base_amount_eur = invoice.line_amount_eur(line.subtotal)
@@ -139,19 +148,31 @@ def _resolved_for(invoice: Invoice) -> dict[str, Decimal]:
     )
     if observation is None:
         return {}
-    return {str(k): v for k, v in resolve_iva_ledger_binding_values(_revision(), (observation,)).items()}
+    return {
+        str(k): v
+        for k, v in resolve_iva_ledger_binding_values(
+            _revision(),
+            (observation,),
+            operation=operation,
+        ).items()
+    }
 
 
-def test_the_supplier_side_base_reaches_casilla_122() -> None:
+def test_the_supplier_side_base_reaches_casilla_122(authority_operation: PinnedAuthorityOperation) -> None:
     """The turnover arrives in the box AEAT names for it."""
-    resolved = _resolved_for(_invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED))
+    resolved = _resolved_for(
+        _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
+        operation=authority_operation,
+    )
 
     assert resolved.get(_CASILLA_122) == _BASE, (
         f"the supplier-side reverse-charge base never reached casilla 122: {resolved.get(_CASILLA_122)!r}"
     )
 
 
-def test_the_supplier_side_declares_a_base_and_no_cuota_anywhere() -> None:
+def test_the_supplier_side_declares_a_base_and_no_cuota_anywhere(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """No cuota box may receive anything, because no cuota arises on this side.
 
     Run as a paired assertion rather than trusting the positive test alone: a
@@ -160,13 +181,18 @@ def test_the_supplier_side_declares_a_base_and_no_cuota_anywhere() -> None:
     repercutes nothing, so every resolved value other than casilla 122 must be
     absent or zero.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED))
+    resolved = _resolved_for(
+        _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
+        operation=authority_operation,
+    )
 
     leaked = {k: v for k, v in resolved.items() if k != _CASILLA_122 and v}
     assert not leaked, f"the supplier's side carries no cuota by law, but values reached {sorted(leaked)}"
 
 
-def test_the_recipient_side_does_not_reach_casilla_122() -> None:
+def test_the_recipient_side_does_not_reach_casilla_122(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The SAME category on a received invoice is the other party's operation.
 
     Casilla 122 declares operations the taxpayer SUPPLIES under the reverse
@@ -176,7 +202,10 @@ def test_the_recipient_side_does_not_reach_casilla_122() -> None:
     route both sides into 122 and double the declared volume across a pair of
     trading taxpayers.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.RECEIVED))
+    resolved = _resolved_for(
+        _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.RECEIVED),
+        operation=authority_operation,
+    )
 
     assert not resolved.get(_CASILLA_122), (
         f"a RECEIVED reverse charge is the recipient's self-assessment, not supplied turnover: "
@@ -184,7 +213,9 @@ def test_the_recipient_side_does_not_reach_casilla_122() -> None:
     )
 
 
-def test_a_domestic_exemption_does_not_reach_casilla_122() -> None:
+def test_a_domestic_exemption_does_not_reach_casilla_122(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Discrimination control: a cuota-less line is not automatically a reverse charge.
 
     A domestic exemption under LIVA art. 20 prints the same exempt slot and
@@ -192,12 +223,17 @@ def test_a_domestic_exemption_does_not_reach_casilla_122() -> None:
     than on the declared category, this base would be reported as reverse-charge
     turnover the taxpayer never supplied under that regime.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory("domestic_exempt"), kind=InvoiceKind.ISSUED))
+    resolved = _resolved_for(
+        _invoice(category=IvaCategory("domestic_exempt"), kind=InvoiceKind.ISSUED),
+        operation=authority_operation,
+    )
 
     assert not resolved.get(_CASILLA_122)
 
 
-def test_the_new_arm_does_not_divert_the_intracom_and_export_bases() -> None:
+def test_the_new_arm_does_not_divert_the_intracom_and_export_bases(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Control on the neighbours: casillas 59 and 60 keep their own traffic.
 
     The new arm sits immediately before the base-only branch that serves 59 and
@@ -206,7 +242,10 @@ def test_the_new_arm_does_not_divert_the_intracom_and_export_bases() -> None:
     would show up as those tests failing for a reason that names this change
     nowhere.
     """
-    reverse_charge = _resolved_for(_invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED))
+    reverse_charge = _resolved_for(
+        _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
+        operation=authority_operation,
+    )
 
     assert not reverse_charge.get(_CASILLA_59), "a domestic reverse charge is not an intra-community supply"
     assert not reverse_charge.get(_CASILLA_60), "a domestic reverse charge is not an export"
@@ -215,7 +254,9 @@ def test_the_new_arm_does_not_divert_the_intracom_and_export_bases() -> None:
 _CASILLA_120 = "modelo-303-casilla-120-no-sujetas-localizacion-base"
 
 
-def test_an_eu_b2b_service_base_reaches_casilla_120() -> None:
+def test_an_eu_b2b_service_base_reaches_casilla_120(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A service located where the EU recipient is established is volumen, not silence.
 
     LIVA art. 69.Uno.1 puts the operation outside the Spanish hecho imponible,
@@ -225,14 +266,19 @@ def test_an_eu_b2b_service_base_reaches_casilla_120() -> None:
     category before any binding could select it -- the same upstream loss that
     kept casilla 122 blank.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED))
+    resolved = _resolved_for(
+        _invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED),
+        operation=authority_operation,
+    )
 
     assert resolved.get(_CASILLA_120) == _BASE, (
         f"the not-subject service base never reached casilla 120: {resolved.get(_CASILLA_120)!r}"
     )
 
 
-def test_the_two_informacion_adicional_boxes_do_not_collect_each_other() -> None:
+def test_the_two_informacion_adicional_boxes_do_not_collect_each_other(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Casillas 120 and 122 declare different operations and must not cross.
 
     Run as a pair rather than as two separate positives: a selector keyed on
@@ -240,8 +286,14 @@ def test_the_two_informacion_adicional_boxes_do_not_collect_each_other() -> None
     each single-box test on its own. Only the cross-check catches that, and
     crossing them doubles the declared volumen across the two lines.
     """
-    service = _resolved_for(_invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED))
-    reverse_charge = _resolved_for(_invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED))
+    service = _resolved_for(
+        _invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED),
+        operation=authority_operation,
+    )
+    reverse_charge = _resolved_for(
+        _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
+        operation=authority_operation,
+    )
 
     assert service.get(_CASILLA_120) == _BASE
     assert not service.get(_CASILLA_122), "a not-subject service is not a reverse charge"
@@ -249,7 +301,9 @@ def test_the_two_informacion_adicional_boxes_do_not_collect_each_other() -> None
     assert not reverse_charge.get(_CASILLA_120), "a reverse charge IS subject; it is not a localizacion case"
 
 
-def test_an_article_7_not_subject_operation_does_not_reach_casilla_120() -> None:
+def test_an_article_7_not_subject_operation_does_not_reach_casilla_120(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Discrimination control: not-subject BY NATURE is not not-subject BY LOCATION.
 
     LIVA art. 7 excludes operations such as the transmision of a going concern.
@@ -258,6 +312,9 @@ def test_an_article_7_not_subject_operation_does_not_reach_casilla_120() -> None
     Routing them here would report as located abroad an operation that was never
     located anywhere else.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory("operacion_no_sujeta"), kind=InvoiceKind.ISSUED))
+    resolved = _resolved_for(
+        _invoice(category=IvaCategory("operacion_no_sujeta"), kind=InvoiceKind.ISSUED),
+        operation=authority_operation,
+    )
 
     assert not resolved.get(_CASILLA_120)

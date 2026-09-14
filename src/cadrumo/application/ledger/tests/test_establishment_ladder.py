@@ -36,6 +36,8 @@ from typing import override
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.errors import IvaCatalogueError
@@ -172,12 +174,13 @@ def test_spain_named_is_the_postal_trigger_not_an_exhausted_rung(
     unknown rather than a wrong value. Asserted against the rung's own refusal so
     the trigger is proven to survive it.
     """
-    assert territorial_scope_for_country("ES") is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
 
-    resolved = _resolve(repository, country_name="España", postal_code=_MADRID)
+        resolved = _resolve(repository, country_name="España", postal_code=_MADRID)
 
-    assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
-    assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
+        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+        assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
 
 
 def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
@@ -189,14 +192,15 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
     assertion is what makes this a test of ORDER: it establishes that the postal
     rung, had it been consulted, would have returned a different territory.
     """
-    resolved = _resolve(repository, country_name="France", postal_code=_PARIS)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        resolved = _resolve(repository, country_name="France", postal_code=_PARIS)
 
-    assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
-    assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
+        assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
+        assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
-    skipped_rung_answer = territorial_scope_for_spanish_postal_code(_PARIS)
-    assert skipped_rung_answer is IvaTerritorialScope._from_registry("es_mainland")
-    assert skipped_rung_answer is not resolved.scope
+        skipped_rung_answer = territorial_scope_for_spanish_postal_code(_PARIS, operation=_authority_operation_for_test)
+        assert skipped_rung_answer is IvaTerritorialScope._from_registry("es_mainland")
+        assert skipped_rung_answer is not resolved.scope
 
 
 def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
@@ -209,10 +213,13 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
     Spanish province, it is a party the classifier would treat as not subject to
     the tax at all.
     """
-    resolved = _resolve(repository, country_name="France", postal_code=_CEUTA)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        resolved = _resolve(repository, country_name="France", postal_code=_CEUTA)
 
-    assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
-    assert territorial_scope_for_spanish_postal_code(_CEUTA) is IvaTerritorialScope._from_registry("es_ceuta_melilla")
+        assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
+        assert territorial_scope_for_spanish_postal_code(
+            _CEUTA, operation=_authority_operation_for_test
+        ) is IvaTerritorialScope._from_registry("es_ceuta_melilla")
 
 
 def test_a_registration_disagreeing_with_the_address_settles_neither(
@@ -231,21 +238,24 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
     resolve this page to Canarias and the old top rung to EU_MEMBER, so the
     assertion cannot pass by every rung agreeing — it fails if either side wins.
     """
-    resolved = _resolve(
-        repository,
-        tax_identifier=_GERMAN_IVA,
-        country_name="España",
-        postal_code=_LAS_PALMAS,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        resolved = _resolve(
+            repository,
+            tax_identifier=_GERMAN_IVA,
+            country_name="España",
+            postal_code=_LAS_PALMAS,
+        )
 
-    assert resolved.conflicted
-    assert resolved.scope is None
-    assert resolved.rung is None
+        assert resolved.conflicted
+        assert resolved.scope is None
+        assert resolved.rung is None
 
-    lower_rung_answer = territorial_scope_for_spanish_postal_code(_LAS_PALMAS)
-    assert lower_rung_answer is IvaTerritorialScope._from_registry("es_canarias")
-    assert resolved.scope is not lower_rung_answer
-    assert resolved.scope is not IvaTerritorialScope._from_registry("eu_member")
+        lower_rung_answer = territorial_scope_for_spanish_postal_code(
+            _LAS_PALMAS, operation=_authority_operation_for_test
+        )
+        assert lower_rung_answer is IvaTerritorialScope._from_registry("es_canarias")
+        assert resolved.scope is not lower_rung_answer
+        assert resolved.scope is not IvaTerritorialScope._from_registry("eu_member")
 
 
 def test_a_greek_iva_prefix_resolves_through_its_iso_code(
@@ -256,20 +266,21 @@ def test_a_greek_iva_prefix_resolves_through_its_iso_code(
     Left untranslated, a Greek party matches no Member State and is placed in a
     third country -- an intra-community acquisition reclassified as an import.
     """
-    assert country_code_for_printed_tax_identifier(_GREEK_IVA) == "GR"
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert country_code_for_printed_tax_identifier(_GREEK_IVA, operation=_authority_operation_for_test) == "GR"
 
-    resolved = _resolve(repository, tax_identifier=_GREEK_IVA)
+        resolved = _resolve(repository, tax_identifier=_GREEK_IVA)
 
-    # The divergence now bites on the fact a registration actually settles. Left
-    # untranslated the number names no Member State at all, so the party's
-    # identification would read as unestablished rather than as Greek.
-    assert resolved.identification_state is EUMemberState._from_registry("gr")
+        # The divergence now bites on the fact a registration actually settles. Left
+        # untranslated the number names no Member State at all, so the party's
+        # identification would read as unestablished rather than as Greek.
+        assert resolved.identification_state is EUMemberState._from_registry("gr")
 
-    # And it carries through to the territory once something corroborates it,
-    # which is where a mistranslation would have reclassified an intra-community
-    # acquisition as an import.
-    corroborated = _resolve(repository, tax_identifier=_GREEK_IVA, country_name="Grecia")
-    assert corroborated.scope is IvaTerritorialScope._from_registry("eu_member")
+        # And it carries through to the territory once something corroborates it,
+        # which is where a mistranslation would have reclassified an intra-community
+        # acquisition as an import.
+        corroborated = _resolve(repository, tax_identifier=_GREEK_IVA, country_name="Grecia")
+        assert corroborated.scope is IvaTerritorialScope._from_registry("eu_member")
 
 
 def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
@@ -290,16 +301,25 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
     prints no prefix and so states no identification at all: reading that
     absence as Spanish would manufacture the fact from silence.
     """
-    assert identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
-    assert identification_state_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is EUMemberState._from_registry("es")
-    # The rung this test is named for is the ESTABLISHMENT one, and neither
-    # spelling opens it.
-    assert country_code_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            identification_state_for_printed_tax_identifier(_SPANISH_CIF, operation=_authority_operation_for_test)
+            is None
+        )
+        assert identification_state_for_printed_tax_identifier(
+            f"ES{_SPANISH_CIF}", operation=_authority_operation_for_test
+        ) is EUMemberState._from_registry("es")
+        # The rung this test is named for is the ESTABLISHMENT one, and neither
+        # spelling opens it.
+        assert (
+            country_code_for_printed_tax_identifier(f"ES{_SPANISH_CIF}", operation=_authority_operation_for_test)
+            is None
+        )
 
-    resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
+        resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
 
-    assert resolved.scope is None
-    assert resolved.rung is None
+        assert resolved.scope is None
+        assert resolved.rung is None
 
 
 def test_a_prefix_on_arbitrary_text_is_not_a_country(
@@ -606,48 +626,52 @@ class TestDraftRouting:
         number states rather than an inference drawn from it, and a resolution
         that took the wrong party could not leave it empty.
         """
-        draft = InvoiceDraft(
-            supplier_tax_id=_GERMAN_IVA,
-            customer_tax_id=_SPANISH_CIF,
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = InvoiceDraft(
+                supplier_tax_id=_GERMAN_IVA,
+                customer_tax_id=_SPANISH_CIF,
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=draft,
-            kind=InvoiceKind.ISSUED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=draft,
+                kind=InvoiceKind.ISSUED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is None
-        assert resolved.identification_state is None
-        assert identification_state_for_printed_tax_identifier(draft.supplier_tax_id) is EUMemberState._from_registry(
-            "de"
-        )
+            assert resolved.scope is None
+            assert resolved.identification_state is None
+            assert identification_state_for_printed_tax_identifier(
+                draft.supplier_tax_id, operation=_authority_operation_for_test
+            ) is EUMemberState._from_registry("de")
 
     def test_a_received_document_takes_the_issuing_party(
         self,
         repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """On an invoice the filer received, the counterparty is the supplier."""
-        draft = InvoiceDraft(
-            supplier_tax_id=_GERMAN_IVA,
-            customer_tax_id=_SPANISH_CIF,
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = InvoiceDraft(
+                supplier_tax_id=_GERMAN_IVA,
+                customer_tax_id=_SPANISH_CIF,
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=draft,
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=draft,
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        # Proven on the identification rather than the territory, and it is the
-        # sharper probe: the prefix settles that fact terminally, so a DE reading
-        # can only have come from the supplier's number. The territory is
-        # deliberately unsettled on this page — neither party printed an address —
-        # which is now the honest answer rather than a routing failure.
-        assert resolved.identification_state is EUMemberState._from_registry("de")
-        assert resolved.scope is None
+            # Proven on the identification rather than the territory, and it is the
+            # sharper probe: the prefix settles that fact terminally, so a DE reading
+            # can only have come from the supplier's number. The territory is
+            # deliberately unsettled on this page — neither party printed an address —
+            # which is now the honest answer rather than a routing failure.
+            assert resolved.identification_state is EUMemberState._from_registry("de")
+            assert resolved.scope is None
 
     def test_the_selection_never_falls_back_to_the_other_side(
         self,
@@ -710,17 +734,19 @@ class TestRungReachabilityFromADraft:
         repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The rung the read path's country field exists to feed now fires from a draft."""
-        draft = InvoiceDraft(supplier_country="Alemania", supplier_postal_code=_BERLIN)
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = InvoiceDraft(supplier_country="Alemania", supplier_postal_code=_BERLIN)
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=draft,
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=draft,
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
-        assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
+            assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
+            assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     def test_a_printed_spanish_country_name_reaches_the_postal_rung(
         self,
@@ -732,21 +758,23 @@ class TestRungReachabilityFromADraft:
         that the country resolver deliberately refuses to answer, and the postal
         code separates the three Spanish territories behind it.
         """
-        draft = InvoiceDraft(
-            supplier_tax_id=_SPANISH_CIF,
-            supplier_country="España",
-            supplier_postal_code=_LAS_PALMAS,
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = InvoiceDraft(
+                supplier_tax_id=_SPANISH_CIF,
+                supplier_country="España",
+                supplier_postal_code=_LAS_PALMAS,
+            )
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=draft,
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=draft,
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
-        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+            assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
+            assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_the_side_selector_carries_each_party_country_to_its_own_rung(self) -> None:
         """The country follows the direction selection, or the rung reads the wrong party's."""
@@ -766,20 +794,22 @@ class TestRungReachabilityFromADraft:
         Unchanged by the reading contract gaining a country field: a document that
         prints no country still states none.
         """
-        draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF, supplier_postal_code=_LAS_PALMAS)
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF, supplier_postal_code=_LAS_PALMAS)
 
-        resolved = resolve_draft_counterparty_establishment(
-            bucket_id=_BUCKET_ID,
-            draft=draft,
-            kind=InvoiceKind.RECEIVED,
-            repository=repository,
-        )
+            resolved = resolve_draft_counterparty_establishment(
+                bucket_id=_BUCKET_ID,
+                draft=draft,
+                kind=InvoiceKind.RECEIVED,
+                repository=repository,
+                operation=_authority_operation_for_test,
+            )
 
-        assert resolved.scope is None
-        assert resolved.rung is None
-        assert territorial_scope_for_spanish_postal_code(_LAS_PALMAS) is IvaTerritorialScope._from_registry(
-            "es_canarias"
-        )
+            assert resolved.scope is None
+            assert resolved.rung is None
+            assert territorial_scope_for_spanish_postal_code(
+                _LAS_PALMAS, operation=_authority_operation_for_test
+            ) is IvaTerritorialScope._from_registry("es_canarias")
 
 
 # -- the rate walk must see every carrier a reader can fill -----------------
@@ -840,9 +870,10 @@ def test_the_two_authorities_on_charged_tax_agree_about_the_flat_carrier() -> No
 
 def test_the_collected_flat_rate_reaches_the_spanish_registry_lookup() -> None:
     """Collecting it is worthless unless it survives to the question it feeds."""
-    rates = _charged_iva_rates(_FLAT_RATE_DRAFT)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        rates = _charged_iva_rates(_FLAT_RATE_DRAFT)
 
-    assert _spanish_iva_was_charged(rates, on_date=date(2026, 5, 12))
+        assert _spanish_iva_was_charged(rates, on_date=date(2026, 5, 12), operation=_authority_operation_for_test)
 
 
 def test_a_draft_charging_nothing_still_reports_no_rate() -> None:
@@ -857,15 +888,17 @@ def test_reading_the_flat_carrier_is_what_makes_the_lane_visible() -> None:
     returns empty for a draft that plainly charges 21%, and every signal derived
     from it goes quiet -- which is the silent lane blindness this closes.
     """
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
 
-    def _structured_carriers_only(draft: InvoiceDraft) -> tuple[Decimal, ...]:
-        rates = [line.iva_rate for line in draft.lines if line.iva_rate is not None]
-        rates.extend(sub.iva_rate for sub in draft.iva_breakdown if sub.iva_rate is not None)
-        return tuple(rates)
+        def _structured_carriers_only(draft: InvoiceDraft) -> tuple[Decimal, ...]:
+            rates = [line.iva_rate for line in draft.lines if line.iva_rate is not None]
+            rates.extend(sub.iva_rate for sub in draft.iva_breakdown if sub.iva_rate is not None)
+            return tuple(rates)
 
-    assert _structured_carriers_only(_FLAT_RATE_DRAFT) == ()
-    assert not _spanish_iva_was_charged(
-        _structured_carriers_only(_FLAT_RATE_DRAFT),
-        on_date=date(2026, 5, 12),
-    )
-    assert _charged_iva_rates(_FLAT_RATE_DRAFT) != ()
+        assert _structured_carriers_only(_FLAT_RATE_DRAFT) == ()
+        assert not _spanish_iva_was_charged(
+            _structured_carriers_only(_FLAT_RATE_DRAFT),
+            on_date=date(2026, 5, 12),
+            operation=_authority_operation_for_test,
+        )
+        assert _charged_iva_rates(_FLAT_RATE_DRAFT) != ()

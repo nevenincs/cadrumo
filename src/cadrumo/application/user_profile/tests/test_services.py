@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
@@ -10,10 +12,18 @@ from pydantic import ValidationError
 from ....core.errors.severity import BaseSeverity
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority_artifact import ProfileCreateContext
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.profile_grounding import ProfileKeyGrounding
 from ....domain.user_profile.labels import profile_field_label
 from ....domain.user_profile.schema import ProfileSchemaDefinition
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from ..commands import ProfilePreflightRequirement
 from ..preflight import ProfilePreflightService, build_profile_preflight_requirement
 from ..validation import ProfileValidationService
@@ -33,6 +43,26 @@ _NON_ISO_DATE_VALUES = (
 @pytest.fixture(scope="module")
 def schema() -> ProfileSchemaDefinition:
     return load_user_profile_schema()
+
+
+@pytest.fixture(autouse=True)
+def _governed_facts_in_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
+    with validating_governed_facts(operation):
+        yield
+
+
+def _record(
+    schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
+    *,
+    facts: tuple[UserProfileFact, ...] = (),
+) -> UserProfileRecord:
+    return create_user_profile_record(
+        context=ProfileCreateContext(schema=schema, generation=operation.generation),
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id="11111111-1111-4111-8111-111111111111",
+        facts=facts,
+    )
 
 
 def test_validation_rejects_unknown_field_path(schema: ProfileSchemaDefinition) -> None:
@@ -169,7 +199,10 @@ def test_every_declared_enum_value_is_accepted(schema: ProfileSchemaDefinition) 
                 )
 
 
-def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(schema: ProfileSchemaDefinition) -> None:
+def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(
+    schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """``ready=True`` here reflects zero schema-required fields examined, not a complete profile.
 
     No shipped schema field declares a ``modelo_200`` selector - the shipped
@@ -184,9 +217,9 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(schema
     bill of health.
     """
     svc = ProfilePreflightService(schema=schema)
-    record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id="11111111-1111-4111-8111-111111111111",
+    record = _record(
+        schema,
+        operation,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
     report = svc.report(
@@ -200,7 +233,10 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(schema
     assert report.per_operation_requirements_assessed is False
 
 
-def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: ProfileSchemaDefinition) -> None:
+def test_preflight_modelo_100_per_operation_axis_now_contributes(
+    schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """``identity.tax_id`` is grounded for modelo 100 - the axis is not universally empty.
 
     ``identity.tax_id`` is ``required=true`` and carries
@@ -212,11 +248,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
     svc = ProfilePreflightService(schema=schema)
     period = Period.from_year_and_code(2024, "0A")
 
-    empty_record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id="11111111-1111-4111-8111-111111111111",
-        facts=(),
-    )
+    empty_record = _record(schema, operation)
     missing_report = svc.report(
         record=empty_record,
         modelo="100",
@@ -226,9 +258,9 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
     assert missing_report.per_operation_requirements_assessed is True
     assert any(item.section_key == "identity" and item.field_key == "tax_id" for item in missing_report.missing)
 
-    complete_record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id="11111111-1111-4111-8111-111111111111",
+    complete_record = _record(
+        schema,
+        operation,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
     ready_report = svc.report(
@@ -243,17 +275,14 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
 
 def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaration(
     schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Both boolean declarations are complete; absence remains a refusal."""
     service = ProfilePreflightService(schema=schema)
     period = Period.from_year_and_code(2026, "1T")
 
     missing = service.report(
-        record=UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id="11111111-1111-4111-8111-111111111111",
-            facts=(),
-        ),
+        record=_record(schema, operation),
         modelo=Modelo("111").value,
         revision_id="2019-y-siguientes",
         period=period,
@@ -267,9 +296,9 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
 
     for declared in (False, True):
         ready = service.report(
-            record=UserProfileRecord(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id="11111111-1111-4111-8111-111111111111",
+            record=_record(
+                schema,
+                operation,
                 facts=(UserProfileFact(path="withholding.colegio_concertado", value=declared),),
             ),
             modelo=Modelo("111").value,
@@ -282,13 +311,10 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
 
 def test_preflight_does_not_require_the_m111_declaration_for_another_modelo(
     schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     report = ProfilePreflightService(schema=schema).report(
-        record=UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id="11111111-1111-4111-8111-111111111111",
-            facts=(),
-        ),
+        record=_record(schema, operation),
         modelo=Modelo("200").value,
         revision_id="2024",
         period=Period.from_year_and_code(2024, "0A"),
@@ -297,12 +323,15 @@ def test_preflight_does_not_require_the_m111_declaration_for_another_modelo(
     assert not any(item.field_key == "colegio_concertado" for item in report.missing)
 
 
-def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: ProfileSchemaDefinition) -> None:
+def test_preflight_accepts_legal_entity_legal_name_for_export_headers(
+    schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
+) -> None:
     period = Period.from_year_and_code(2026, "1P")
     snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period=period.registry_token)
-    record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id="11111111-1111-4111-8111-111111111111",
+    record = _record(
+        schema,
+        operation,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="Rocio Ferrer Administracion Sociedad Limitada"),
@@ -325,6 +354,7 @@ def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: Pr
 
 def test_preflight_rejects_legal_entity_export_identity_fragments(
     schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     period = Period.from_year_and_code(2026, "1P")
     snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period=period.registry_token)
@@ -333,9 +363,9 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
         ("surnames-only", UserProfileFact(path="identity.surnames", value="Ferrer")),
         ("short-name-only", UserProfileFact(path="identity.name", value="Rocio")),
     ):
-        record = UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id="11111111-1111-4111-8111-111111111111",
+        record = _record(
+            schema,
+            operation,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="B12345674"),
                 identity_fact,
@@ -359,12 +389,13 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
     assert not failures, "\n".join(failures)
 
 
-def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinition) -> None:
+def test_preflight_carries_request_fields_through(
+    schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
+) -> None:
     svc = ProfileValidationService(schema=schema)  # warm domain
     pre = ProfilePreflightService(schema=schema)
-    record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE, profile_id="11111111-1111-4111-8111-111111111111", facts=()
-    )
+    record = _record(schema, operation)
     report = pre.report(
         record=record,
         modelo="303",
@@ -434,6 +465,7 @@ def test_preflight_requirement_never_invents_grounding_for_unknown_path(
 
 def test_preflight_requirement_builder_matches_service_report_output_for_tax_id(
     schema: ProfileSchemaDefinition,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Parity: the shared builder reproduces what the service's own walk produces.
 
@@ -446,11 +478,7 @@ def test_preflight_requirement_builder_matches_service_report_output_for_tax_id(
     """
     svc = ProfilePreflightService(schema=schema)
     period = Period.from_year_and_code(2024, "0A")
-    record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id="11111111-1111-4111-8111-111111111111",
-        facts=(),
-    )
+    record = _record(schema, operation)
 
     report = svc.report(record=record, modelo="100", revision_id="2024-y-siguientes", period=period)
     (from_report,) = [item for item in report.missing if item.field_key == "tax_id"]

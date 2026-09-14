@@ -20,6 +20,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -34,20 +35,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_filer_setup_refusal_reaches_the_shared_cli_projection_intact() -> None:
     """The shared boundary sees the original condition, facts, and outcome."""
-    profile = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id="11111111-1111-4111-8111-111111111111",
-        facts=(UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value="X1234567L"),),
-        context=_profile_creation_context_for_test(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        profile = _create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id="11111111-1111-4111-8111-111111111111",
+            facts=(UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value="X1234567L"),),
+            context=_profile_creation_context_for_test(),
+        )
 
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        resolve_filer_territorial_scope(profile_record=profile)
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+            resolve_filer_territorial_scope(profile_record=profile, operation=_authority_operation_for_test)
 
-    projection = cli_policy_refusal_projection(raised.value)
-    assert projection is not None
-    action = projection.precondition_action
-    assert action.failed_condition_id == LedgerPreconditionCondition.FILER_POSTCODE_VALID.value
-    assert action.evidence[0].values == {"filer_postcode_present": False}
-    assert action.action is None
-    assert action.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+        projection = cli_policy_refusal_projection(raised.value)
+        assert projection is not None
+        action = projection.precondition_action
+        assert action.failed_condition_id == LedgerPreconditionCondition.FILER_POSTCODE_VALID.value
+        assert action.evidence[0].values == {"filer_postcode_present": False}
+        assert action.action is None
+        assert action.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION

@@ -60,6 +60,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -84,6 +85,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.live_state_composition import compose_filed_observation_persistence_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -160,17 +162,32 @@ def _synthetic_register_row(period_code: str) -> FiledDeclaracionObservation:
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
+        registry_snapshot_ref=compiled_bundled_authority()
+        .snapshot("130", filing_year=_YEAR, period=period_code)
+        .snapshot_ref,
     )
 
 
-def _pull_the_m130_history() -> tuple[str, ...]:
+def _pull_the_m130_history(
+    *,
+    bucket_id: str,
+    objects: SecureObjectRepository,
+    output_root: Path,
+) -> tuple[str, ...]:
     """Persist the four synthetic register rows through the production pull path.
 
     Returns the observation keys the persistence function reports, so the caller
     can assert the pull actually landed four rows before drawing any conclusion
     from what the engine then computes.
     """
-    return tuple(persist_filed_calculation_observation(_synthetic_register_row(period)) for period in _M130_QUARTERS)
+    ports = compose_filed_observation_persistence_ports(
+        bucket_id=bucket_id,
+        output_root=output_root,
+        objects=objects,
+    )
+    return tuple(
+        persist_filed_calculation_observation(_synthetic_register_row(period), ports=ports) for period in _M130_QUARTERS
+    )
 
 
 def _seed_taxpayer_profile(*, bucket_id: str) -> None:
@@ -314,10 +331,13 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository, *, bucket_id:
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values=_non_relation_zero_bindings(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=bucket_id,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ),
         clock=_T1,
     )
     return result, str(work_unit.revision_id)
@@ -338,7 +358,11 @@ def test_the_pulled_history_pole_lands_four_register_rows(tmp_path: Path) -> Non
     a reason that has nothing to do with what the engine consumes.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PULLED_HISTORY_BUCKET) as profile:
-        keys = _pull_the_m130_history()
+        keys = _pull_the_m130_history(
+            bucket_id=_PULLED_HISTORY_BUCKET,
+            objects=profile.repository,
+            output_root=tmp_path / "filed-history",
+        )
         assert len(keys) == len(_M130_QUARTERS)
         assert len(set(keys)) == len(_M130_QUARTERS), f"each quarter must key distinctly; got {keys}"
 
@@ -393,7 +417,11 @@ def test_pulled_history_and_no_history_profiles_compute_different_annual_credits
         bare_credit = bare_result.revision.casilla_values.get(_M100_PAGOS_CASILLA)
 
     with isolated_runtime_profile(tmp_path=tmp_path / "pulled", bucket_id=_PULLED_HISTORY_BUCKET) as pulled:
-        pulled_keys = _pull_the_m130_history()
+        pulled_keys = _pull_the_m130_history(
+            bucket_id=_PULLED_HISTORY_BUCKET,
+            objects=pulled.repository,
+            output_root=tmp_path / "pulled" / "filed-history",
+        )
         assert len(pulled_keys) == len(_M130_QUARTERS)
         pulled_result, pulled_revision_id = _calculate_m100_annual(
             pulled.repository,

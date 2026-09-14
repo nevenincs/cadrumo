@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -19,6 +20,7 @@ from ....core.aggregation import CalculationSourceLineageRole
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.config import Settings
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationWalletObservationProtocol,
@@ -31,6 +33,13 @@ from ..source_mesh import CalculationSourceContext
 from ..source_profile import ProfileSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation through direct and source-mesh profile resolution."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
@@ -127,7 +136,9 @@ def _wallet(amount: Decimal) -> IvaCompensationWalletObservationProtocol:
     )
 
 
-def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> None:
+def test_profile_source_resolver_matches_direct_profile_binding_resolution(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     snapshot = _modelo_100_snapshot()
     profile_record = _profile_with_ccaa("madrid")
 
@@ -135,10 +146,12 @@ def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> 
         snapshot,
         bucket_id=_BUCKET_ID,
         profile_record=profile_record,
+        operation=authority_operation,
     )
     resolution = ProfileSourceResolver(
         registry_snapshot=snapshot,
         profile_record=profile_record,
+        operation=authority_operation,
     ).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
@@ -162,7 +175,9 @@ def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> 
     }
 
 
-def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
+def test_profile_source_resolver_respects_caller_owned_precedence(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     snapshot = _modelo_100_snapshot()
     profile_record = _profile_with_ccaa("cataluna")
 
@@ -170,6 +185,7 @@ def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
         registry_snapshot=snapshot,
         profile_record=profile_record,
         caller_binding_ids=(_CCAA_BINDING,),
+        operation=authority_operation,
     ).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
@@ -227,6 +243,7 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
     binding_id: str,
     channel: str,
     expected_value: Decimal | str,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Every registered profile-source revision projects its fact and provenance through the live mesh."""
     # Reading a profile FACT through the mesh needs only the rung that declares
@@ -241,6 +258,7 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
     resolution = ProfileSourceResolver(
         registry_snapshot=snapshot,
         profile_record=_registered_modelo_profile(),
+        operation=authority_operation,
     ).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
