@@ -362,6 +362,8 @@ from itertools import pairwise
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
+
 from ..source_default_rule import edition_source_default
 from .coverage_dispositions import (
     DISPOSABLE_KINDS,
@@ -913,6 +915,10 @@ class EditionStatus:
     export_surface: bool = False
     members: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
     rows_by_id: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Typed for shape only.  This raw screen has not run the compiler's
+    # membership/evidence validation, so consumers must still check the exact
+    # predecessor edge and the materialised identity before using a sidecar.
+    lineage_attestations: tuple[LineageAttestation, ...] = ()
     stated_keys: tuple[RowKey, ...] = ()
     retired_lineages: frozenset[str] = frozenset()
     #: Generic keyed-family retirements from ``identifier_evolutions``.  The
@@ -2141,6 +2147,18 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
         status.authority_grade = str(table.get("authority_grade", ""))
         status.review_status = str(table.get("review_status", ""))
         status.reviewed_against = str(table.get("reviewed_against", ""))
+        raw_attestations = table.get("lineage_attestations")
+        if isinstance(raw_attestations, list):
+            parsed: list[LineageAttestation] = []
+            for raw_attestation in raw_attestations:
+                try:
+                    parsed.append(LineageAttestation.model_validate(raw_attestation))
+                except (TypeError, ValueError):
+                    # A raw diagnostic must not upgrade malformed metadata to
+                    # grounded evidence.  The validating compiler owns the
+                    # refusal detail; this screen simply excludes the claim.
+                    continue
+            status.lineage_attestations = tuple(parsed)
         selector = table.get("period_selector")
         if isinstance(selector, dict):
             years = selector.get("years")

@@ -30,10 +30,28 @@ from .transformation_proof import prove_transformation, snapshot_definition
 
 
 def semantic_value(definition: ModeloDefinition) -> dict[str, object]:
-    """Compare all fields except the two explicitly representation-local casilla fields."""
+    """Compare business data and exact evidence independently of its authored home."""
     value = cast(dict[str, object], complete_value(definition))
     revisions = cast(dict[str, dict[str, object]], value["revisions"])
     for revision in revisions.values():
+        rows = cast(list[dict[str, object]], revision["casillas"])
+        by_chain = {row["continuidad_id"]: row for row in rows if row["continuidad_id"] is not None}
+        # A sidecar's edge and identity were validated by the loader. Its claim
+        # is now projected onto this exact target row. Omit the redundant typed
+        # carrier only if ALL evidence and ordered references match that row;
+        # extra/different citations remain visible to the equality proof.
+        revision["lineage_attestations"] = [
+            claim
+            for claim in cast(list[dict[str, object]], revision["lineage_attestations"])
+            if not (
+                claim["family"] == "casillas"
+                and (row := by_chain.get(claim["continuidad_id"])) is not None
+                and claim["origin"] == row["continuidad_origin"]
+                and claim["evidence"] == row["continuidad_evidence"]
+                and claim["legal_refs"] == row["legal_refs"]
+                and claim["source_refs"] == row["source_refs"]
+            )
+        ]
         for casilla in cast(list[dict[str, object]], revision["casillas"]):
             del casilla["inherited_from"]
             keys = cast(list[str], casilla["localization_keys"])
@@ -99,16 +117,6 @@ def compact_deltas(directory: Path, work: Path, *, apply: bool = False) -> dict[
         for family in edition.families:
             if not family.dropped:
                 continue
-            if family.lineage_attestations:
-                rejected.append(
-                    {
-                        "revision": edition.revision_id,
-                        "family": family.section,
-                        "members": family.dropped,
-                        "reason": "requires evidence relocation, not pure omission",
-                    }
-                )
-                continue
             selected = family
             while selected.dropped:
                 trials += 1
@@ -137,7 +145,13 @@ def compact_deltas(directory: Path, work: Path, *, apply: bool = False) -> dict[
                 )
                 if remaining == selected.dropped:
                     break
-                selected = replace(selected, dropped=remaining)
+                selected = replace(
+                    selected,
+                    dropped=remaining,
+                    lineage_attestations=tuple(
+                        claim for claim in selected.lineage_attestations if claim.identity in remaining
+                    ),
+                )
     with modelo_fact_scope(directory):
         after = load_modelo_directory(staged)
     if differences(before, after):

@@ -18,6 +18,77 @@ from dev.registry.delta_compact import compact_deltas, differences
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def lineage_tree(tmp_path: Path, *, grandchild: bool = False) -> Path:
+    """Real authored casillas, including an edge claim on an unchanged row."""
+    directory = tree(tmp_path)
+    for year in (2024, 2025):
+        section = directory / "revisions" / str(year) / "casillas"
+        section.mkdir()
+        (section / "0001-declarations.toml").write_text(
+            f'[[revisions."{year}".casillas]]\nid = "0001"\nnumber = "1"\n'
+            'section = ["test"]\ndata_type = "money"\ncontinuidad_id = "test-chain"\n'
+            + (
+                'continuidad_origin = "grounded"\ncontinuidad_evidence = "Official fixture, page 1"\n'
+                if year == 2025
+                else ""
+            )
+            + 'legal_refs = ["ley-58-2003:art-29"]\nsource_refs = ["aeat-manual"]\n',
+            encoding="utf-8",
+        )
+    if grandchild:
+        edition = directory / "revisions" / "2026"
+        edition.mkdir()
+        previous = directory / "revisions" / "2025" / "revision.toml"
+        text = (
+            previous.read_text(encoding="utf-8")
+            .replace("2025", "2026")
+            .replace('predecessor = "2024"', 'predecessor = "2025"')
+        )
+        (edition / "revision.toml").write_text(text, encoding="utf-8")
+    return directory
+
+
+def test_evidence_relocation_preserves_typed_claim_without_inheriting_it(tmp_path: Path) -> None:
+    directory = lineage_tree(tmp_path, grandchild=True)
+    before = load_modelo_directory(directory)
+    receipt = compact_deltas(directory, tmp_path / "work", apply=True)
+    after = load_modelo_directory(directory)
+    assert receipt["dropped_members"] == 2
+    assert differences(before, after) == []
+    assert not (directory / "revisions" / "2025" / "casillas").exists()
+    assert after.revisions["2025"].casillas[0].continuidad_evidence == "Official fixture, page 1"
+    assert len(after.revisions["2025"].lineage_attestations) == 1
+    assert after.revisions["2026"].casillas[0].continuidad_origin is None
+    assert after.revisions["2026"].casillas[0].continuidad_evidence is None
+    assert not after.revisions["2026"].lineage_attestations
+    assert compact_deltas(directory, tmp_path / "again")["dropped_members"] == 0
+
+
+def test_duplicate_evidence_ownership_is_refused(tmp_path: Path) -> None:
+    directory = lineage_tree(tmp_path)
+    original = directory / "revisions" / "2025" / "casillas" / "0001-declarations.toml"
+    text = original.read_text(encoding="utf-8")
+    compact_deltas(directory, tmp_path / "work", apply=True)
+    original.parent.mkdir()
+    original.write_text(text, encoding="utf-8")
+    with pytest.raises(ValueError, match="duplicates lineage evidence ownership"):
+        load_modelo_directory(directory)
+
+
+@pytest.mark.parametrize("field,value", [("evidence", "Different evidence"), ("source_refs", ["another-source"])])
+def test_evidence_proof_refuses_changed_claim_or_citations(tmp_path: Path, field: str, value: object) -> None:
+    directory = lineage_tree(tmp_path)
+    before = load_modelo_directory(directory)
+    compact_deltas(directory, tmp_path / "work", apply=True)
+    import rtoml
+
+    manifest = directory / "revisions" / "2025" / "revision.toml"
+    data = rtoml.load(manifest)
+    data["revisions"]["2025"]["lineage_attestations"][0][field] = value
+    manifest.write_text(rtoml.dumps(data), encoding="utf-8")
+    assert differences(before, load_modelo_directory(directory))
+
+
 def tree(tmp_path: Path) -> Path:
     directory = tmp_path / "999"
     directory.mkdir()

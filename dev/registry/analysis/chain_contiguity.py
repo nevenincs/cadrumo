@@ -491,7 +491,12 @@ def grounding_by_chain(
     condition currently reports on (322, 309, 308) authors every edition in
     full, so the two coincide there. On a delta-authored modelo they would not,
     and the reading to keep is that a chain's cost is the grounding work it
-    needs, not the distance it travels.
+    needs, not the distance it travels.  The sole exception is a typed casilla
+    lineage attestation on an exact predecessor edge: it preserves the
+    successor occurrence and its grounding claim after the corresponding row
+    is omitted as inherited.  This raw screen checks shape, edge, retirement,
+    and materialised predecessor membership; it does not call that evidence
+    compiler-validated.
     """
     per_chain: dict[str, tuple[int, int]] = {}
     by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
@@ -508,7 +513,31 @@ def grounding_by_chain(
                     continue
                 carried[chain].append(status)
                 origins[(chain, status.edition)] = str(row.get("continuidad_origin", ""))
+        stated = {status.edition: _chains_of(status) for status in ordered}
+        materialised = _materialised_chains(ordered, stated)
+        by_edition = {status.edition: status for status in ordered}
+        for status in ordered:
+            for attestation in status.lineage_attestations:
+                chain = str(attestation.continuidad_id) if attestation.continuidad_id is not None else ""
+                if (
+                    attestation.family != "casillas"
+                    or not chain
+                    or attestation.origin.value != _GROUNDED
+                    or attestation.to_revision != status.edition
+                    or status.predecessor_id != attestation.from_revision
+                    or attestation.from_revision not in by_edition
+                    or chain not in materialised.get(attestation.from_revision, ())
+                    or chain in status.retired_lineages
+                ):
+                    continue
+                # Do not manufacture another stated row.  Add only the logical
+                # target occurrence that the exact-edge sidecar displaced.
+                holders = carried[chain]
+                if all(holder.edition != status.edition for holder in holders):
+                    holders.append(status)
+                origins[(chain, status.edition)] = _GROUNDED
         for chain, holders in carried.items():
+            holders.sort(key=lambda holder: ordered.index(holder))
             links = len(holders) - 1
             if links < 1:
                 continue
