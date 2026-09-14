@@ -63,9 +63,10 @@ from .operator_surface_reconciliation import current_operator_surface_reconcilia
 # static duality, with no Any escape.
 def _published_modelo_codes() -> list[str]:
     """Return the identifiers admitted by the bundled published authority."""
-    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
-    return sorted(modelo.id for modelo in bundled_authority().modelos)
+    with bundled_indexed_authority().operation() as operation:
+        return sorted(operation.modelo_ids())
 
 
 MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
@@ -92,6 +93,7 @@ if TYPE_CHECKING:
     from ...application.operator_surface.command_ports import VerbInputSchema
     from ...application.workflow.state_models import WorkflowState
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloDraft
     from ...domain.invoices.models import InvoiceCatalogue
@@ -114,9 +116,45 @@ __all__ = [
     "format_of",
     "no_active_profile_refusal",
     "notice_lines",
+    "profile_grounding_index_for_operation",
     "resolve_lifecycle_continuation_notice",
     "resolve_notice_action",
 ]
+
+
+def profile_grounding_index_for_operation(operation: PinnedAuthorityOperation):
+    """Build profile grounding from the operation's explicit revision inventory.
+
+    CLI refusal rendering needs the same legal/source unions as profile
+    preflight, but the indexed authority intentionally has no whole-model
+    object graph. Walking the bounded revision-id inventory keeps that
+    projection generation-pinned while avoiding a legacy eager authority.
+    """
+    from ...core.aggregation import BindingSourceKind
+    from ...core.modelo import Modelo
+    from ...domain.calculations.registry.profile_grounding import ProfileKeyGrounding, binding_profile_keys
+
+    modelos: dict[str, set[str]] = {}
+    legal_refs: dict[str, set[str]] = {}
+    source_refs: dict[str, set[str]] = {}
+    for modelo_id, revision_id in operation.revision_ids():
+        revision = operation.revision(modelo_id, revision_id)
+        for binding in revision.bindings:
+            if getattr(binding.source, "value", binding.source) != BindingSourceKind.PROFILE.value:
+                continue
+            for key in binding_profile_keys(binding):
+                modelos.setdefault(key, set()).add(modelo_id)
+                legal_refs.setdefault(key, set()).update(binding.legal_refs)
+                source_refs.setdefault(key, set()).update(binding.source_refs)
+    return {
+        key: ProfileKeyGrounding(
+            profile_key=key,
+            modelos=tuple(Modelo(code) for code in sorted(modelos[key])),
+            legal_refs=tuple(sorted(legal_refs[key])),
+            source_refs=tuple(sorted(source_refs[key])),
+        )
+        for key in sorted(modelos)
+    }
 
 
 REQUESTED_CLI_LEAF_META_KEY = "cadrumo.requested_cli_leaf"
@@ -985,16 +1023,9 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from .errors import CliRefusedBoundaryError
 
     record = state.active_profile_record()
-    # The registry authority is reached only on this refusal path, so it is
-    # imported here rather than at module scope: `common` is loaded by the
-    # CLI bootstrap, and a module-level edge made every command -- including
-    # every state-free one -- pay for the whole calculation registry.
-    from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
-
     verdict = inspect_filing_taxpayer_identity_precondition(
         declared_tax_id=declared_tax_id(record),
         profile_name=record.profile_id if record is not None else None,
@@ -1007,6 +1038,10 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
         )
         if profile_schema is None:
             raise RuntimeError("filing refusal requires a schema pinned to the authenticated operation")
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            grounding_index = profile_grounding_index_for_operation(operation)
         raise attach_cli_policy_verdict(
             CliRefusedBoundaryError(
                 translated_message="cli.common.errors.filing_requires_declared_tax_id",
@@ -1015,7 +1050,7 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
                         format_profile_selector_requirements(
                             [_TAX_ID_SELECTOR],
                             schema=profile_schema,
-                            grounding_index=build_profile_grounding_index(_bundled_authority()),
+                            grounding_index=grounding_index,
                         ),
                     ),
                 },

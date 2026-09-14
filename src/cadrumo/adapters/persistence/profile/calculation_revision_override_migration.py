@@ -49,13 +49,12 @@ log record here. The migration reports identifiers only.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import cache
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core.logging import get_logger
-from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryError
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -129,8 +128,14 @@ class CalculationRevisionOverrideMigrationResult(BaseModel):
         return bool(self.rekeyed_revisions)
 
 
-@cache
-def _declared_binding_ids_at(modelo: str, filing_year: int, period: str, revision_id: str) -> frozenset[BindingId]:
+def _declared_binding_ids_at(
+    modelo: str,
+    filing_year: int,
+    period: str,
+    revision_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[BindingId]:
     """Return every binding id the revision at these coordinates declares.
 
     The coordinates are taken apart rather than passed as the typed ref because
@@ -142,13 +147,13 @@ def _declared_binding_ids_at(modelo: str, filing_year: int, period: str, revisio
     untouched; classifying it by the join alone would refuse it forever, and the
     operator's figure would be unreachable rather than merely stale.
 
-    A snapshot the bundled authority cannot build leaves the declared set empty,
+    A snapshot the selected authority cannot build leaves the declared set empty,
     which restores the join-only classification: that direction refuses rather
     than drops, so an unbuildable snapshot costs an operator an error, never a
     silently discarded override.
     """
     try:
-        snapshot = bundled_authority().snapshot(
+        snapshot = operation.snapshot(
             modelo,
             filing_year=filing_year,
             period=period,
@@ -161,13 +166,18 @@ def _declared_binding_ids_at(modelo: str, filing_year: int, period: str, revisio
     return frozenset(declared)
 
 
-def _declared_binding_ids(snapshot_ref: RegistrySnapshotRef) -> frozenset[BindingId]:
+def _declared_binding_ids(
+    snapshot_ref: RegistrySnapshotRef,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[BindingId]:
     """Return every binding id the revision named by *snapshot_ref* declares."""
     return _declared_binding_ids_at(
         str(snapshot_ref.modelo),
         int(snapshot_ref.modelo_year),
         str(snapshot_ref.period),
         str(snapshot_ref.revision_id),
+        operation=operation,
     )
 
 
@@ -176,6 +186,7 @@ def _rekeyed_overrides_for_revision(
     *,
     join: Mapping[RelationId, BindingId],
     join_targets: frozenset[BindingId],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[dict[BindingId, str], tuple[RelationOverrideRekey, ...]]:
     """Return one revision's binding-keyed overrides and the moves that produced them.
 
@@ -185,7 +196,10 @@ def _rekeyed_overrides_for_revision(
             a binding the revision's own registry snapshot declares; or two
             retired keys fold onto one binding carrying different values.
     """
-    current_binding_ids = join_targets | _declared_binding_ids(revision.registry_snapshot_ref)
+    current_binding_ids = join_targets | _declared_binding_ids(
+        revision.registry_snapshot_ref,
+        operation=operation,
+    )
     rekeyed: dict[BindingId, str] = {}
     moves: list[RelationOverrideRekey] = []
     orphans: list[str] = []
@@ -239,6 +253,8 @@ def _rekeyed_overrides_for_revision(
 
 def rekey_calculation_revision_overrides(
     catalogue: CalculationRevisionCatalogue,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> CalculationRevisionOverrideMigrationResult:
     """Rekey every stored relation override onto its binding id, in memory.
 
@@ -250,6 +266,8 @@ def rekey_calculation_revision_overrides(
 
     Args:
         catalogue: The catalogue as read from storage.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
 
     Returns:
         The migrated catalogue plus the identifier-only record of what moved.
@@ -258,6 +276,9 @@ def rekey_calculation_revision_overrides(
         OrphanedRelationOverrideError: A stored override key could not be
             resolved, or two keys folded onto one binding with different values.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return rekey_calculation_revision_overrides(catalogue, operation=indexed_operation)
     join = bundled_relation_binding_join()
     join_targets = bundled_relation_binding_join_targets()
     migrated: dict[str, CalculationRevision] = {}
@@ -269,6 +290,7 @@ def rekey_calculation_revision_overrides(
             revision,
             join=join,
             join_targets=join_targets,
+            operation=operation,
         )
         if not revision_moves and rekeyed == dict(revision.relation_overrides):
             migrated[revision.calculation_revision_id] = revision
@@ -318,6 +340,8 @@ def rekey_calculation_revision_overrides(
 
 def migrate_stored_relation_overrides_to_binding_ids(
     repository: CalculationRevisionCatalogueRepository,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> CalculationRevisionOverrideMigrationResult:
     """Rekey one profile's stored overrides and persist the result atomically.
 
@@ -332,6 +356,8 @@ def migrate_stored_relation_overrides_to_binding_ids(
 
     Args:
         repository: The bucket-bound calculation-revision catalogue repository.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
 
     Returns:
         The identifier-only record of what moved, carrying the migrated
@@ -341,8 +367,11 @@ def migrate_stored_relation_overrides_to_binding_ids(
         OrphanedRelationOverrideError: A stored override key could not be
             resolved to a binding.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return migrate_stored_relation_overrides_to_binding_ids(repository, operation=indexed_operation)
     catalogue, expected_revision_id = repository.load_revisioned()
-    result = rekey_calculation_revision_overrides(catalogue)
+    result = rekey_calculation_revision_overrides(catalogue, operation=operation)
     if not result.changed:
         return result
     repository.save_with_secure_object_writes(

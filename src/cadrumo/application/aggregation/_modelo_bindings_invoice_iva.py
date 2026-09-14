@@ -15,10 +15,9 @@ from decimal import Decimal
 from ...core.i18n.translatable import Translatable as t
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -46,19 +45,21 @@ from .source_resolution_operations import source_diagnostics_for as _diagnostics
 M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
 
 
-def _resolve_invoice_iva_registry_declarations(*, effective_date: date) -> tuple[object, ...]:
+def _resolve_invoice_iva_registry_declarations(
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[object, ...]:
     """Resolve the selected M303/M390 bindings and typed IVA mapping facts."""
-    authority = bundled_authority()
-    query_service = RegistryQueryService(authority)
-    modelo_303 = query_service.describe_modelo("303")
-    modelo_390 = query_service.describe_modelo("390")
+    modelo_303 = operation.modelo_directory("303")
+    modelo_390 = operation.modelo_directory("390")
     fact_ids = (
         "iva-invoice-classification-catalogue",
         "iva-category-component-catalogue",
         "iva-deduction-applicability-catalogue",
     )
     facts = tuple(
-        authority.resolve_governed_fact(
+        operation.resolve_governed_fact(
             MappingFactQuery(
                 fact_id=fact_id,
                 date_axis=DateAxis.FILING_PERIOD,
@@ -590,7 +591,17 @@ def screened_invoice_iva_observations(
     period: Period,
     ledger_observations: Sequence[IvaLedgerObservation] = (),
     ports: InvoiceCatalogueReadPorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ScreenedInvoiceIva:
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return screened_invoice_iva_observations(
+                context=context,
+                period=period,
+                ledger_observations=ledger_observations,
+                ports=ports,
+                operation=indexed_operation,
+            )
     try:
         catalogue = ports.invoice_reader.load()
     except InvoiceCatalogueReadPersistenceError:
@@ -602,7 +613,7 @@ def screened_invoice_iva_observations(
         # result here made an unreadable catalogue indistinguishable from an
         # empty one, which switched the silence guard off without a signal.
         return ScreenedInvoiceIva(storage_degraded=True)
-    _resolve_invoice_iva_registry_declarations(effective_date=period.end_date)
+    _resolve_invoice_iva_registry_declarations(effective_date=period.end_date, operation=operation)
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []

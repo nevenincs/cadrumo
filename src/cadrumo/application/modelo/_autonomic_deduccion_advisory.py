@@ -47,7 +47,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -72,6 +71,7 @@ from .profile_binding import (
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"
@@ -110,6 +110,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
     profile_decode_context: ProfileDecodeContext | None = None,
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm Madrid nacimiento/adopción eligibility for an indeterminate unit.
@@ -135,9 +136,6 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     does not declare the casilla-1039 semantic role, or any of the firing
     conditions above is not met.
     """
-    if not is_madrid_autonomic_deduccion_filing_year(snapshot.filing_year):
-        return None
-
     try:
         casilla_id = casilla_id_for_unique_semantic_role(snapshot, _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE)
     except AmbiguousSemanticRoleCasillaError as exc:
@@ -149,7 +147,11 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
         # The auto-trigger already populated the casilla; nothing to advise.
         return None
 
-    fact_index = _load_fact_index(bucket_id, profile_decode_context=profile_decode_context)
+    fact_index = _load_fact_index(
+        bucket_id,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
     if fact_index is None:
         return None
 
@@ -159,9 +161,9 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
         return None
 
     coordinate = date(snapshot.filing_year, 12, 31)
-    family_context = FamilyFactResolutionContext(
-        authority=bundled_authority(), filing_period=coordinate, devengo_date=coordinate
-    )
+    family_context = FamilyFactResolutionContext(authority=operation, filing_period=coordinate, devengo_date=coordinate)
+    if not is_madrid_autonomic_deduccion_filing_year(snapshot.filing_year, context=family_context):
+        return None
     weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(
         fact_index,
         snapshot.filing_year,
@@ -187,8 +189,13 @@ def _load_fact_index(
     bucket_id: str,
     *,
     profile_decode_context: ProfileDecodeContext | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> dict[str, UserProfileFactValue] | None:
     """Return the bucket's profile fact index, or ``None`` when no profile exists."""
+    if profile_decode_context is None:
+        if operation is None:
+            raise TypeError("profile advisory facts require a pinned authority operation")
+        profile_decode_context = operation.profile_decode_context()
     try:
         repository = ProfileRecordRepository.for_current_session(
             bucket_id,
@@ -205,6 +212,7 @@ def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
     profile_decode_context: ProfileDecodeContext | None = None,
 ) -> ModeloVerificationFinding | None:
     """Convenience wrapper reading ``bucket_id`` off a :class:`WorkUnit`."""
@@ -212,6 +220,7 @@ def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
         snapshot,
         casilla_values,
         bucket_id=work_unit.bucket_id,
+        operation=operation,
         profile_decode_context=profile_decode_context,
     )
 

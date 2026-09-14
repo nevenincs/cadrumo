@@ -31,13 +31,14 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState, iva_compensation_period_sort_key
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
@@ -46,6 +47,9 @@ from ..calculations.iva_compensation_history import correct_iva_compensation_per
 from .iva_wallet_gate import taxpayer_nif_for_bucket
 from .iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class ModeloIvaWalletSeedError(ModeloError):
@@ -382,6 +386,7 @@ def record_iva_compensation_override_for_bucket(
     reason: str,
     evidence_locator: str,
     ports: ModeloIvaWalletSeedPorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> IvaCompensationReconciliationDecision:
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
@@ -438,6 +443,17 @@ def record_iva_compensation_override_for_bucket(
         Replay gate that ensures exported/filed revisions still match the
         persisted decision.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return record_iva_compensation_override_for_bucket(
+                bucket_id=bucket_id,
+                period=period,
+                amount=amount,
+                reason=reason,
+                evidence_locator=evidence_locator,
+                ports=ports,
+                operation=indexed_operation,
+            )
     _require_non_negative_wallet_amount(amount)
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
@@ -474,7 +490,7 @@ def record_iva_compensation_override_for_bucket(
     from ...core.time.clock import now
     from ...domain.iva_compensation.reconciliation import IvaCompensationOverride
 
-    snapshot = bundled_authority().snapshot(
+    snapshot = operation.snapshot(
         Modelo("303").value,
         filing_year=period.filing_year,
         period=period.registry_token,

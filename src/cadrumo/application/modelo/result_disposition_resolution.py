@@ -42,6 +42,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreValidationError
@@ -54,7 +55,7 @@ from ...core.result_disposition import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
-from ...domain.calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
@@ -76,6 +77,9 @@ from .action_errors import (
     ModeloRefundElectionNotEligibleError,
 )
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 #: Provisional fallback "Tipo de declaración" disposition for a modelo that
 #: declares the header but has no diseño-grounded result-disposition
 #: spec. ``INGRESO`` ("I") is wrong for a credit/zero result, so a new modelo
@@ -92,6 +96,7 @@ def resolve_modelo_result_disposition(
     period: Period,
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ResultDisposition:
     """Resolve the single fichero "Tipo de declaración" result disposition.
 
@@ -131,9 +136,25 @@ def resolve_modelo_result_disposition(
             ``DEVOLVER`` but the period is not a lawful refund period for a
             non-REDEME taxpayer.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return resolve_modelo_result_disposition(
+                work_unit=work_unit,
+                revision=revision,
+                workflow_profile=workflow_profile,
+                period=period,
+                refund_election=refund_election,
+                payment_election=payment_election,
+                operation=indexed_operation,
+            )
     base = derive_result_disposition(
         work_unit.modelo,
-        _result_disposition_values_for_revision(work_unit=work_unit, revision=revision, period=period),
+        _result_disposition_values_for_revision(
+            work_unit=work_unit,
+            revision=revision,
+            period=period,
+            operation=operation,
+        ),
     )
     base_disposition = base or DECLARATION_TYPE_FALLBACK
     return _resolve_elected_disposition(
@@ -221,6 +242,7 @@ def _result_disposition_values_for_revision(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[CasillaId, Decimal]:
     """Validate a full :class:`CalculationRevision` value map and return result casillas.
 
@@ -238,16 +260,11 @@ def _result_disposition_values_for_revision(
     # assert_snapshot_matches_work_unit_revision so the two resolution sites
     # cannot drift in wording or refusal type.
     try:
-        snapshot = bundled_authority().snapshot(
+        snapshot = operation.snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=period.registry_token,
         )
-    except FileNotFoundError as exc:
-        raise CalculationRegistryUnavailableError(
-            translated_message="application.modelo.errors.calculation_registry_root_missing",
-            context={"registry_root": bundled_authority_artifact_path()},
-        ) from exc
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(
             translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",

@@ -6,7 +6,7 @@ from typing import NoReturn, Protocol
 
 from ...application.filing.producer_snapshot import AmendmentEvidence
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
@@ -45,8 +45,21 @@ def resolve_persisted_amendment_export_evidence(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol | None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> AmendmentEvidence | None:
     """Resolve immutable amendment evidence exclusively from persisted authority."""
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return resolve_persisted_amendment_export_evidence(
+                command,
+                revision,
+                work_unit=work_unit,
+                workflow_profile=workflow_profile,
+                work_unit_repository=work_unit_repository,
+                filing_repository=filing_repository,
+                justificante_repository=justificante_repository,
+                operation=indexed_operation,
+            )
     identity = revision.amendment_identity
     if identity is None:
         if command.amendment_evidence is not None:
@@ -71,6 +84,7 @@ def resolve_persisted_amendment_export_evidence(
         records=records,
         justificantes=justificantes,
         receipt=receipt,
+        operation=operation,
     )
     persisted = AmendmentEvidence(
         kind=identity.kind,
@@ -158,6 +172,7 @@ def _evidence(
     records: ModeloRecordCatalogue,
     justificantes: tuple[Justificante, ...],
     receipt: Justificante,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[M303RectificativaMotive | None, str]:
     receipt_number = receipt.presentation_id
     if receipt_number is None:
@@ -171,7 +186,7 @@ def _evidence(
             filing_records=records,
             justificantes=justificantes,
             registry_snapshots={
-                work_unit.work_unit_id: bundled_authority().snapshot(
+                work_unit.work_unit_id: operation.snapshot(
                     Modelo("303").value,
                     filing_year=work_unit.filing_year,
                     period=work_unit.period.registry_token,

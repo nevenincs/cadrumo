@@ -37,7 +37,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
@@ -46,7 +46,7 @@ from ...core.modelo import Modelo
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -116,6 +116,7 @@ def _load_amendment_baseline[CasillaKey](
     from_filing_record_id: str,
     overrides: Mapping[CasillaKey, Decimal],
     ports: AmendmentActionPorts,
+    operation: PinnedAuthorityOperation,
 ):
     """Load and validate the current externally evidenced baseline filing."""
     filing_catalogue = ports.filing_repository.load()
@@ -177,6 +178,7 @@ def _load_amendment_baseline[CasillaKey](
         filing_year=baseline.filing_year,
         period=baseline.period,
         overrides=overrides,
+        operation=operation,
     )
     return (
         filing_catalogue,
@@ -196,11 +198,13 @@ def _resolve_m303_rectificativa_motive_before_identity(
     baseline_revision: CalculationRevision,
     amendment_kind: CalculationRevisionAmendmentKind,
     supplied: M303RectificativaMotive | None,
+    operation: PinnedAuthorityOperation,
 ) -> M303RectificativaMotive | None:
     """Resolve the closed motive against exact retained authority before hashing."""
     applicable = _m303_rectificativa_motive_is_applicable(
         work_unit=work_unit,
         baseline_revision=baseline_revision,
+        operation=operation,
     )
     requires_motive = (
         work_unit.modelo == Modelo("303").value and amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
@@ -224,6 +228,7 @@ def _m303_rectificativa_motive_is_applicable(
     *,
     work_unit: WorkUnit,
     baseline_revision: CalculationRevision,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     if work_unit.modelo != Modelo("303").value:
         return False
@@ -234,7 +239,7 @@ def _m303_rectificativa_motive_is_applicable(
             context={"work_unit_id": work_unit.work_unit_id, "filing_instance_evidence_present": False},
         )
     regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot
-    snapshot = bundled_authority().snapshot(
+    snapshot = operation.snapshot(
         Modelo("303").value,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -283,6 +288,7 @@ def amend_modelo_revision[CasillaKey](
     actor: str,
     ports: AmendmentActionPorts,
     clock: datetime | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloRecord:
     """Build and file an amendment over an externally filed return.
 
@@ -319,6 +325,20 @@ def amend_modelo_revision[CasillaKey](
             Builds the :class:`CasillaObservation`
             rows persisted on the amendment revision.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return amend_modelo_revision(
+                from_filing_record_id=from_filing_record_id,
+                overrides=overrides,
+                amendment_kind=amendment_kind,
+                m303_rectificativa_motive=m303_rectificativa_motive,
+                detail_rows=detail_rows,
+                reason=reason,
+                actor=actor,
+                ports=ports,
+                clock=clock,
+                operation=indexed_operation,
+            )
     (
         filing_catalogue,
         baseline,
@@ -332,6 +352,7 @@ def amend_modelo_revision[CasillaKey](
         from_filing_record_id=from_filing_record_id,
         overrides=overrides,
         ports=ports,
+        operation=operation,
     )
 
     now = clock or _utc_now()
@@ -364,6 +385,7 @@ def amend_modelo_revision[CasillaKey](
         baseline_revision=baseline_revision,
         amendment_kind=amendment_kind,
         supplied=m303_rectificativa_motive,
+        operation=operation,
     )
 
     amendment_identity = CalculationRevisionAmendmentIdentity(
@@ -373,6 +395,7 @@ def amend_modelo_revision[CasillaKey](
     )
     amendment_detail_rows = _require_amendment_detail_rows(
         modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
         supplied=detail_rows,
     )
     if (
@@ -412,7 +435,7 @@ def amend_modelo_revision[CasillaKey](
     # persisted amendment revision and its CLI emit preserve
     # legal_refs / source_refs (and baseline formula provenance for
     # non-overridden casillas) instead of an empty observations tuple.
-    registry_snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
+    registry_snapshot = _resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
     amendment_observations = _amendment_observations(
         corrected_values=corrected_values,
         overrides=canonical_overrides,
@@ -432,7 +455,7 @@ def amend_modelo_revision[CasillaKey](
         filing_records=filing_catalogue,
         justificantes=justificantes,
         registry_snapshots={
-            work_unit.work_unit_id: bundled_authority().snapshot(
+            work_unit.work_unit_id: operation.snapshot(
                 Modelo("303").value,
                 filing_year=work_unit.filing_year,
                 period=work_unit.period.registry_token,
@@ -518,6 +541,7 @@ def amend_modelo_revision[CasillaKey](
 def _require_amendment_detail_rows(
     *,
     modelo: str,
+    filing_year: int,
     supplied: Sequence[ModeloDetailRow] | None,
 ) -> tuple[ModeloDetailRow, ...]:
     """Return the rows an amendment declares, refusing to guess them.
@@ -531,7 +555,7 @@ def _require_amendment_detail_rows(
     Every other modelo has no detail rows to declare, so ``None`` there is
     simply their normal shape and yields the empty tuple.
     """
-    if modelo not in detail_row_declaration_modelos():
+    if modelo not in detail_row_declaration_modelos(effective_date=date(filing_year, 12, 31)):
         return tuple(supplied or ())
     if supplied is None:
         raise AmendmentDetailRowsRequiredError(

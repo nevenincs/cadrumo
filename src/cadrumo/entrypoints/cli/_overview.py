@@ -43,7 +43,6 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, strict_round_trip
 from ...core.logging import get_logger
 from ...core.time.clock import today_madrid
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos.work_unit import WorkUnit
 from ._date_parsing import _parse_iso_date
 from ._overview_evidence import (
@@ -81,6 +80,7 @@ from .common import (
     load_drafts,
     load_invoices,
     no_active_profile_refusal,
+    profile_grounding_index_for_operation,
     profile_to_taxpayer,
     transaction_catalogue_repo,
 )
@@ -99,6 +99,14 @@ if TYPE_CHECKING:
     from .errors import CliRefusedBoundaryError
 
 logger = get_logger(__name__)
+
+
+def _profile_grounding_index():
+    """Return grounded profile metadata from one pinned indexed operation."""
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        return profile_grounding_index_for_operation(operation)
 
 
 def _profile_schema_for_record(record: object) -> ProfileSchemaDefinition:
@@ -131,13 +139,12 @@ def _grounded_warning_summary(
     already showed for them.
     """
     from ...application.user_profile.preflight import format_profile_selector_requirements
-    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
     return ", ".join(
         format_profile_selector_requirements(
             (warning.code for warning in warnings),
             schema=schema,
-            grounding_index=build_profile_grounding_index(bundled_authority()),
+            grounding_index=_profile_grounding_index(),
         ),
     )
 
@@ -206,7 +213,6 @@ def _undeclared_taxpayer_model_refusal(
         cli_exception_no_recovery_verdict,
     )
     from ...application.user_profile.preflight import format_profile_selector_requirements
-    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.contribuyente.entity_type import entity_type_natural_person_token
     from .common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
@@ -224,7 +230,7 @@ def _undeclared_taxpayer_model_refusal(
                     format_profile_selector_requirements(
                         missing,
                         schema=schema,
-                        grounding_index=build_profile_grounding_index(bundled_authority()),
+                        grounding_index=_profile_grounding_index(),
                     ),
                 ),
             },

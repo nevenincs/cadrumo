@@ -23,6 +23,7 @@ survive draft/export replay without synthetic binding ids.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING, cast
 
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ...core.casilla_id import CasillaId
@@ -31,7 +32,7 @@ from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import (
@@ -55,6 +56,9 @@ from ...domain.modelos.row_models import (
     m349_nif_number_for_export,
 )
 from ...domain.modelos.work_unit import WorkUnit
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _ZERO_DECIMAL_TEXT = canonical_decimal_string(Decimal("0"))
 _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
@@ -81,6 +85,7 @@ def revision_filing_replay_inputs(
     revision: CalculationRevision,
     work_unit: WorkUnit,
     workflow_profile: TaxpayerProfile | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloInputs:
     """Return replayable filing inputs for one :class:`CalculationRevision`.
 
@@ -93,7 +98,15 @@ def revision_filing_replay_inputs(
     See also :class:`TaxpayerProfile` for the optional profile applicability
     context used by relation-zero synthesis. No engine formulas are rerun here.
     """
-    snapshot = _snapshot_for_work_unit(work_unit)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return revision_filing_replay_inputs(
+                revision=revision,
+                work_unit=work_unit,
+                workflow_profile=workflow_profile,
+                operation=indexed_operation,
+            )
+    snapshot = _snapshot_for_work_unit(work_unit, operation=operation)
     bound_binding_replay_inputs = _observation_backed_bound_binding_replay_inputs(
         revision=revision,
         snapshot=snapshot,
@@ -265,7 +278,7 @@ def _m349_row_binding_value(
 ) -> ModeloInputScalar:
     if attr == "nif_comunitario":
         return m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
-    return getattr(row, attr)
+    return cast(ModeloInputScalar, getattr(row, attr))
 
 
 def _m349_row_binding_replay_inputs(
@@ -314,10 +327,14 @@ def _m232_detail_row_replay_inputs(
     }
 
 
-def _snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot | None:
+def _snapshot_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> RegistrySnapshot | None:
     """Return the law-determined registry snapshot for ``work_unit``, if loadable."""
     try:
-        return bundled_authority().snapshot(
+        return operation.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,

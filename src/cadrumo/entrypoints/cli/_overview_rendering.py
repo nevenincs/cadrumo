@@ -62,7 +62,7 @@ from ...core.json_contract import (
 )
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ...domain.calculations.registry.schema_base import DateAxis
 from ._ledger_payloads import LedgerStatusResult
@@ -309,13 +309,14 @@ def _deemed_served_legal_ref(*, effective_date: date) -> str:
     evidence; resolving it here keeps the notice's context attached to the
     same authority row that drives service-state calculation.
     """
-    resolved = bundled_authority().resolve_governed_fact(
-        ScalarFactQuery(
-            fact_id="dehu-tacit-rejection-natural-days",
-            date_axis=DateAxis.SUBMISSION_DATE,
-            effective_date=effective_date,
+    with bundled_indexed_authority().operation() as operation:
+        resolved = operation.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id="dehu-tacit-rejection-natural-days",
+                date_axis=DateAxis.SUBMISSION_DATE,
+                effective_date=effective_date,
+            )
         )
-    )
     if not isinstance(resolved, ResolvedScalarFact) or not resolved.legal_refs:
         raise RuntimeError("dehu tacit-rejection fact has no legal-reference provenance")
     return str(resolved.legal_refs[0])

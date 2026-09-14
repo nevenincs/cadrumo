@@ -10,21 +10,24 @@ from ...core.i18n.render import tr as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import ProrrataEspecialTransitionKind
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.bindings_previous_filing import periodic_carry_bindings_for_period
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
     revocacion_prorrata_transition,
 )
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.iva.schema import is_iva_cash_accounting_supplier_regime
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from .errors import AggregationValidationError
 from .iva_ledger import IvaLedgerAggregation
 
 
-def _transition_period_applicability_from_registry(period: Period) -> bool:
+def _transition_period_applicability_from_registry(
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> bool:
     """Resolve transition-period applicability from selected registry declarations.
 
     The prorrata especial transition applies only to the final declared period
@@ -38,25 +41,20 @@ def _transition_period_applicability_from_registry(period: Period) -> bool:
             classified as transition-bearing or not, and a filing-bound answer
             must not be guessed in either direction.
     """
-    authority = bundled_authority()
-    report = RegistryQueryService(authority).describe_modelo_for_scope(
+    revision = operation.revision_for_context(
         "303",
         filing_year=period.filing_year,
         period=period.registry_token,
+        on=period.end_date,
     )
-    registry_period = report.period or period.registry_token
-    snapshot = authority.snapshot(
-        report.code,
-        filing_year=period.filing_year,
-        period=registry_period,
-    )
-    schedules = tuple(snapshot.revision.filing_schedules)
-    carries = periodic_carry_bindings_for_period(snapshot.revision)
+    registry_period = period.registry_token
+    schedules = tuple(revision.filing_schedules)
+    carries = periodic_carry_bindings_for_period(revision)
     if not schedules or not carries:
         raise AggregationValidationError(
             t("aggregation.m303_arrivals.errors.prorrata_transition_declarations_unavailable"),
             context={
-                "modelo": report.code,
+                "modelo": "303",
                 "filing_year": period.filing_year,
                 "period": registry_period,
                 "filing_schedule_count": len(schedules),
@@ -278,9 +276,17 @@ def resolve_m303_prorrata_transition_arrival(
     *,
     period: Period,
     prorrata_register: ProrrataRegister,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> M303ProrrataTransitionArrival:
     """Resolve a registry-selected prorrata transition from register evidence."""
-    if not _transition_period_applicability_from_registry(period):
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return resolve_m303_prorrata_transition_arrival(
+                period=period,
+                prorrata_register=prorrata_register,
+                operation=indexed_operation,
+            )
+    if not _transition_period_applicability_from_registry(period, operation=operation):
         return M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=())
     if not prorrata_register.has_complete_current_entry_coverage(period.filing_year):
         raise AggregationValidationError(

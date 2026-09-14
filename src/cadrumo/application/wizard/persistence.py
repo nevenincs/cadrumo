@@ -16,11 +16,12 @@ from collections.abc import Collection, Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict, cast
 
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.contribuyente.descendant import DescendantInfo
     from ...domain.contribuyente.family_types import GuarderiaMonthSpend
     from ...domain.user_profile.values import UserProfileRecord
@@ -31,7 +32,7 @@ from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.time.clock import today_madrid
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_default_token,
@@ -204,9 +205,9 @@ def _instance_count(raw: str) -> int:
 _DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-grade-catalogue"
 
 
-def _accepted_disability_grades() -> frozenset[int]:
+def _accepted_disability_grades(*, operation: PinnedAuthorityOperation) -> frozenset[int]:
     """Read the accepted disability-grade tokens from the governed catalogue."""
-    resolved = bundled_authority().resolve_governed_fact(
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_DISABILITY_BAND_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -226,15 +227,22 @@ def _accepted_disability_grades() -> frozenset[int]:
         raise RegistryValidationError("descendant disability catalogue has invalid accepted_grades") from exc
 
 
-def _discapacidad_grade(raw: str) -> int | None:
+def _discapacidad_grade(
+    raw: str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Literal[0, 33, 65] | None:
     """Narrow a discapacidad answer token through the governed grade catalogue."""
     if not raw:
         return None
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _discapacidad_grade(raw, operation=indexed_operation)
     try:
         grade = int(raw)
     except ValueError:
         return None
-    return grade if grade in _accepted_disability_grades() else None
+    return cast(Literal[0, 33, 65], grade) if grade in _accepted_disability_grades(operation=operation) else None
 
 
 def _safe_entry_date(birth_raw: str, entry_raw: str | None) -> date | None:
@@ -258,6 +266,8 @@ def _safe_entry_date(birth_raw: str, entry_raw: str | None) -> date | None:
 
 def _safe_relacion_and_entry_dates(
     row: Mapping[str, str],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[DescendantRelacion | None, date | None, date | None]:
     """Read one instance's relación and the two entry dates it may legitimately carry.
 
@@ -273,7 +283,7 @@ def _safe_relacion_and_entry_dates(
     final submit, so the operator is told rather than silently trimmed.
     """
     raw_relacion = (row.get("relacion") or "").strip()
-    authority = bundled_authority()
+    authority = operation
     try:
         relacion = require_descendant_relacion(raw_relacion, authority=authority) if raw_relacion else None
     except (RegistryValidationError, ValueError):
@@ -294,7 +304,7 @@ def _safe_relacion_and_entry_dates(
     return relacion, inscripcion, acogimiento
 
 
-def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
+def _descendant_from_row(row: Mapping[str, str], *, operation: PinnedAuthorityOperation) -> DescendantInfo:
     """Reconstruct one ``DescendantInfo`` from an instance's canonical answers.
 
     Blank optional answers fall back to the record's own defaults
@@ -316,7 +326,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     # because only an explicit yes assimilates and only an unset value may
     # later be answered.
     dependencia = _optional_bool_token(dependencia_raw)
-    relacion, inscripcion_date, acogimiento_date = _safe_relacion_and_entry_dates(row)
+    relacion, inscripcion_date, acogimiento_date = _safe_relacion_and_entry_dates(row, operation=operation)
     # Operator-typed euros, so the strict grammar with the money cap: a bare
     # Decimal() admitted '1e3', '+100', 'NaN' and 'Infinity', and read the
     # Spanish thousands shape '1.000' as one euro. The cap refuses that shape
@@ -345,7 +355,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         inscripcion_registro_civil_date=inscripcion_date,
         acogimiento_resolucion_date=acogimiento_date,
         death_date=parse_iso8601_date(row.get("fallecimiento", "")),
-        discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
+        discapacidad_grado=_discapacidad_grade(row.get("discapacidad", ""), operation=operation),
         # Both read through the canonical vocabulary, and both resolve an
         # unreadable or unanswered value to the NON-CLAIMING direction.
         #
@@ -468,7 +478,11 @@ def _safe_guarderia_spend(row: Mapping[str, str]) -> _GuarderiaSpend:
     return {"gastos_guarderia_euros": annual, "gastos_guarderia_mensuales": ()}
 
 
-def descendant_facts_from_answers(answers: Mapping[str, str]) -> list[tuple[str, str]]:
+def descendant_facts_from_answers(
+    answers: Mapping[str, str],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> list[tuple[str, str]]:
     """Project the descendant repeating-group answers into profile facts.
 
     The setup flow's descendant repeating group keys each instance answer
@@ -484,6 +498,9 @@ def descendant_facts_from_answers(answers: Mapping[str, str]) -> list[tuple[str,
     count page carries no answer), so a descendant-free profile writes no
     descendant fact.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return descendant_facts_from_answers(answers, operation=indexed_operation)
     if DESCENDANTS_COUNT_PAGE_ID not in answers:
         return []
     from ...domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -495,11 +512,15 @@ def descendant_facts_from_answers(answers: Mapping[str, str]) -> list[tuple[str,
         row = {page_id: answers.get(f"{prefix}.{page_id}", "") for page_id in DESCENDANT_PAGE_IDS}
         if not row["birth-date"]:
             continue
-        descendientes.append(_descendant_from_row(row))
+        descendientes.append(_descendant_from_row(row, operation=operation))
     return descendant_facts_from_list(descendientes)
 
 
-def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str, str]:
+def descendant_answers_from_record(
+    record: UserProfileRecord | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> dict[str, str]:
     """Re-project a record's descendant facts into repeating-group answers.
 
     The inverse of :func:`descendant_facts_from_answers`: reads the
@@ -522,9 +543,14 @@ def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str
     Args:
         record: The :class:`UserProfileRecord` whose descendant facts are
             re-projected into repeating-group answers, or ``None``.
+        operation: Optional caller-held pinned authority operation used for
+            registry relationship tokens.
     """
     if record is None:
         return {}
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return descendant_answers_from_record(record, operation=indexed_operation)
     from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
     from ..user_profile.projections import record_to_path_values
 
@@ -534,11 +560,16 @@ def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str
     answers: dict[str, str] = {DESCENDANTS_COUNT_PAGE_ID: str(len(descendientes))}
     for index, descendant in enumerate(descendientes):
         prefix = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}{index}"
-        answers.update(_descendant_instance_answers(descendant, prefix=prefix))
+        answers.update(_descendant_instance_answers(descendant, prefix=prefix, operation=operation))
     return answers
 
 
-def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> dict[str, str]:
+def _descendant_instance_answers(
+    descendant: DescendantInfo,
+    *,
+    prefix: str,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, str]:
     """Emit one descendant's page-keyed answers under its instance prefix.
 
     An absent optional field emits NO answer rather than a stored default,
@@ -550,7 +581,7 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
         f"{prefix}.custodia-compartida": "true" if descendant.custodia_compartida else "false",
         f"{prefix}.declaracion-propia": "true" if descendant.presenta_declaracion_propia else "false",
     }
-    answers.update(_prefixed_optional_answers(prefix, _descendant_identity_answers(descendant)))
+    answers.update(_prefixed_optional_answers(prefix, _descendant_identity_answers(descendant, operation=operation)))
     answers.update(_prefixed_optional_answers(prefix, _descendant_guarderia_answers(descendant)))
     answers.update(_prefixed_optional_answers(prefix, _descendant_declaration_answers(descendant)))
     return answers
@@ -565,6 +596,8 @@ def _prefixed_optional_answers(
 
 def _descendant_identity_answers(
     descendant: DescendantInfo,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[tuple[str, object | None], ...]:
     """Return the relation and civil-identity answers in page order."""
     return (
@@ -573,7 +606,9 @@ def _descendant_identity_answers(
         # original walk never gave, and the two legs would stop matching.
         (
             "relacion",
-            descendant.relacion.value if descendant.relacion != descendant_relacion_default_token() else None,
+            descendant.relacion.value
+            if descendant.relacion != descendant_relacion_default_token(authority=operation)
+            else None,
         ),
         ("inscripcion-registro-civil", _optional_isoformat(descendant.inscripcion_registro_civil_date)),
         ("acogimiento-resolucion", _optional_isoformat(descendant.acogimiento_resolucion_date)),

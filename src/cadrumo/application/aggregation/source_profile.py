@@ -14,7 +14,7 @@ from collections.abc import Iterable
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from .source_mesh import (
@@ -35,10 +35,12 @@ class ProfileSourceResolver:
         caller_binding_ids: Iterable[BindingId] = (),
         registry_snapshot: RegistrySnapshot | None = None,
         profile_record: object | None = None,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         self._caller_binding_ids = frozenset(caller_binding_ids)
         self._registry_snapshot = registry_snapshot
         self._profile_record = profile_record
+        self._operation = operation
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve all ``source="profile"`` bindings for the given calculation context.
@@ -61,11 +63,19 @@ class ProfileSourceResolver:
         """
         snapshot = self._registry_snapshot
         if snapshot is None:
-            snapshot = bundled_authority().snapshot(
-                context.modelo,
-                filing_year=context.filing_year,
-                period=context.period.registry_token,
-            )
+            if self._operation is None:
+                with bundled_indexed_authority().operation() as indexed_operation:
+                    snapshot = indexed_operation.snapshot(
+                        context.modelo,
+                        filing_year=context.filing_year,
+                        period=context.period.registry_token,
+                    )
+            else:
+                snapshot = self._operation.snapshot(
+                    context.modelo,
+                    filing_year=context.filing_year,
+                    period=context.period.registry_token,
+                )
 
         from ..modelo.profile_binding import resolve_profile_sourced_bindings
 

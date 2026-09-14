@@ -121,14 +121,10 @@ def _treaty_rate(
     """Resolve the shared dated treaty fact and apply its typed result."""
     income_kind = require_tipo_renta_irnr(tipo_renta)
 
-    override = (
-        resolve_m210_convenio_override(
-            country_code=country_code,
-            tipo_renta=income_kind,
-            devengo_date=devengo_date,
-        )
-        if income_kind is not None
-        else None
+    override = resolve_m210_convenio_override(
+        country_code=country_code,
+        tipo_renta=income_kind,
+        devengo_date=devengo_date,
     )
     legal_refs: tuple[LegalRefId, ...] = tuple(baseline.legal_refs)
     source_refs: tuple[SourceRefId, ...] = tuple(baseline.source_refs)
@@ -161,7 +157,9 @@ def _treaty_rate(
     return None, []
 
 
-# fact-relocation: M210 rate selection and convenio applicability are resolved through generic registry/fact queries; authored authority publication remains external.
+# fact-relocation: M210 rate selection and convenio applicability are resolved
+# through generic registry/fact queries; authored authority publication remains
+# external.
 def resolve_m210_rate(
     profile: TaxpayerProfile,
     tipo_renta: str,

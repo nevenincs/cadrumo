@@ -170,6 +170,9 @@ def candidate_source(tmp_path_factory: pytest.TempPathFactory) -> Path:
     snapshot(REPO_ROOT, repository_files(REPO_ROOT), source)
     destination = source / "src" / "cadrumo" / "_data" / "registry" / "authority"
     destination.mkdir(parents=True, exist_ok=True)
+    for stale_database in destination.glob("authority-*.sqlite3"):
+        if _DATABASE_NAME.fullmatch(stale_database.name):
+            stale_database.unlink()
     shutil.copy2(descriptor, destination / descriptor.name)
     shutil.copy2(database, destination / database.name)
     return source

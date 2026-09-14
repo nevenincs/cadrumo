@@ -11,15 +11,14 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_dated_value
-from ...domain.calculations.registry.queries import RegistryQueryService
-from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.contribuyente.descendant import DescendantInfo
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
@@ -27,6 +26,9 @@ from ...domain.contribuyente.family_fact_context import FamilyFactResolutionCont
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
@@ -64,7 +66,7 @@ class _RegistryScope(NamedTuple):
     """The typed registry declarations selected for one calculation scope."""
 
     revision: ModeloRevision
-    bindings: tuple[object, ...]
+    bindings: tuple[BindingDefinition, ...]
     filing_year: int
     period_token: str
 
@@ -127,23 +129,9 @@ def _selected_registry_scope(
         return None
     if type(filing_year) is not int or filing_year <= 0 or not period_token.strip():
         raise RegistryValidationError("descendant advisory registry scope is incomplete")
-    report = RegistryQueryService(bundled_authority()).bindings_for_scope(
-        modelo,
-        filing_year=filing_year,
-        period=period_token,
-    )
-    if str(report.revision) != str(revision.id):
-        raise RegistryValidationError(
-            "descendant advisory registry scope selected a different revision "
-            f"({report.revision!r} != {revision.id!r})",
-        )
-    if report.filing_year != filing_year or str(report.period) != period_token:
-        raise RegistryValidationError(
-            "descendant advisory registry scope does not match the selected filing coordinates",
-        )
     return _RegistryScope(
         revision=revision,
-        bindings=tuple(report.rows),
+        bindings=tuple(revision.bindings),
         filing_year=filing_year,
         period_token=period_token,
     )
@@ -152,7 +140,7 @@ def _selected_registry_scope(
 def _validate_binding_report(scope: _RegistryScope) -> None:
     """Require the query report to carry every typed, grounded binding row."""
     declared_ids = {str(binding.id) for binding in scope.revision.bindings}
-    reported_ids = {str(binding.binding_id) for binding in scope.bindings}
+    reported_ids = {str(binding.id) for binding in scope.bindings}
     if declared_ids != reported_ids:
         raise RegistryValidationError(
             "selected descendant advisory binding report does not match the revision declarations",
@@ -190,10 +178,21 @@ def _registry_named_descendant_limit(scope: _RegistryScope) -> int:
     return int(value)
 
 
-def _family_fact_context(filing_year: int) -> FamilyFactResolutionContext:
+def _family_fact_context(
+    filing_year: int,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> FamilyFactResolutionContext:
     """Compose the advisory's explicit family fact coordinates."""
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _family_fact_context(filing_year, operation=indexed_operation)
     coordinate = date(filing_year, 12, 31)
-    return FamilyFactResolutionContext(authority=bundled_authority(), filing_period=coordinate, devengo_date=coordinate)
+    return FamilyFactResolutionContext(
+        authority=operation,
+        filing_period=coordinate,
+        devengo_date=coordinate,
+    )
 
 
 def collect_minimo_descendientes_undeclared_diagnostics(
@@ -450,6 +449,8 @@ def collect_guarderia_spend_shape_diagnostics(
             supplies the devengo year the turning-three test is anchored to.
         casilla_values: The computed engine values keyed by :class:`CasillaId`.
         modelo: The modelo identifier of the filing being calculated.
+        filing_year: Filing year used to select the descendant fact coordinate.
+        period_token: Registry period token used to confirm the selected scope.
         bucket_id: Bucket whose profile carries the descendant facts.
 
     Returns:
@@ -579,6 +580,8 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
             advisory is scoped to the zero, since a positive increase means the
             months were declared.
         modelo: The modelo identifier of the filing being calculated.
+        filing_year: Filing year used to select the descendant fact coordinate.
+        period_token: Registry period token used to confirm the selected scope.
         bucket_id: Bucket whose profile carries the descendant facts.
 
     Returns:

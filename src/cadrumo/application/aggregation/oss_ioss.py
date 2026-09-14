@@ -36,7 +36,7 @@ from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
@@ -137,7 +137,11 @@ class OssIossLedgerCandidate(BaseModel):
         return self
 
 
-def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
+def _expected_iva_amount(
+    candidate: OssIossLedgerCandidate,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Decimal:
     """Return the IVA amount derived from the candidate's base and rate.
 
     Looks up the destination Member State's rate for the candidate's
@@ -148,6 +152,7 @@ def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
     Args:
         candidate: The substrate-classified ledger line whose base amount
             and rate kind are used to derive the expected IVA amount.
+        operation: Generation-pinned authority operation used for the rate lookup.
 
     Returns:
         The expected IVA amount rounded to two decimal places.
@@ -156,6 +161,7 @@ def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
         candidate.destination_member_state,
         candidate.rate_kind,
         candidate.transaction_date,
+        operation=operation,
     )
     derived = candidate.base_amount * rate.pct / Decimal("100")
     return round_to_cents(derived)
@@ -163,6 +169,8 @@ def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
 
 def validate_oss_ioss_observation(
     candidate: OssIossLedgerCandidate,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> OssIossLedgerObservation:
     """Validate ``candidate`` and return the registry-ready observation.
 
@@ -174,6 +182,8 @@ def validate_oss_ioss_observation(
 
     Args:
         candidate: The substrate-classified ledger line to validate.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
 
     Returns:
         A registry-ready :class:`OssIossLedgerObservation` carrying
@@ -185,7 +195,10 @@ def validate_oss_ioss_observation(
             disagrees with the destination MS rate by more than the
             one-cent tolerance.
     """
-    expected = _expected_iva_amount(candidate)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return validate_oss_ioss_observation(candidate, operation=indexed_operation)
+    expected = _expected_iva_amount(candidate, operation=operation)
     persisted = round_to_cents(candidate.iva_amount)
     # Ledger amounts are rounded to two decimal places at persistence time, so a
     # difference of one cent or less is rounding noise rather than a data-quality
@@ -220,22 +233,31 @@ def validate_oss_ioss_observation(
 
 def validate_oss_ioss_observations(
     candidates: Iterable[OssIossLedgerCandidate],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[OssIossLedgerObservation, ...]:
     """Validate every candidate; raise on the first failure.
 
     Args:
         candidates: The substrate-classified ledger lines to validate.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
 
     Returns:
         A tuple of registry-ready
         :class:`OssIossLedgerObservation` records in input order.
     """
-    return tuple(validate_oss_ioss_observation(candidate) for candidate in candidates)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return validate_oss_ioss_observations(candidates, operation=indexed_operation)
+    return tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
 
 
 def aggregate_oss_ioss_bindings(
     revision: ModeloRevision,
     candidates: Sequence[OssIossLedgerCandidate],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> dict[BindingId, Decimal]:
     """Validate candidates then resolve every ``ledger_oss_aggregation`` binding.
 
@@ -253,18 +275,25 @@ def aggregate_oss_ioss_bindings(
         revision: The Modelo 369 :class:`ModeloRevision` whose
             ``ledger_oss_aggregation`` bindings should be resolved.
         candidates: Substrate-classified ledger lines for the period.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
 
     Returns:
         A mapping from each binding id on the revision to its
         aggregated Decimal value.
     """
-    observations = validate_oss_ioss_observations(candidates)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_oss_ioss_bindings(revision, candidates, operation=indexed_operation)
+    observations = validate_oss_ioss_observations(candidates, operation=operation)
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)
 
 
 def _exterior_detail_binding_values(
     revision: ModeloRevision,
     observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
     """Project Exterior service rows from validated invoice observations.
 
@@ -275,19 +304,23 @@ def _exterior_detail_binding_values(
     """
     if revision.id != "esquema-exterior":
         return {}, {}
-    grouped = _group_exterior_service_observations(observations)
+    grouped = _group_exterior_service_observations(observations, operation=operation)
     if not grouped:
         return {}, {}
-    declarations = _exterior_projection_declarations(observations[0].transaction_date)
-    return _bind_exterior_detail_values(revision, grouped, declarations)
+    declarations = _exterior_projection_declarations(observations[0].transaction_date, operation=operation)
+    return _bind_exterior_detail_values(revision, grouped, declarations, operation=operation)
 
 
 _MODELO_369_EXTERIOR_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
 
 
-def _exterior_projection_declarations(effective_date: date) -> dict[str, str]:
+def _exterior_projection_declarations(
+    effective_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, str]:
     """Resolve the dated Modelo 369 Exterior rate-code catalogue."""
-    resolved = bundled_authority().resolve_governed_fact(
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_MODELO_369_EXTERIOR_PROJECTION_FACT_ID,
             date_axis=DateAxis.TRANSACTION_DATE,
@@ -315,28 +348,35 @@ def _exterior_projection_declarations(effective_date: date) -> dict[str, str]:
 
 def _group_exterior_service_observations(
     observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]]:
     """Group Exterior service observations by destination and supported rate."""
     grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
     effective_date = observations[0].transaction_date if observations else date.today()
-    transaction_catalogue = resolve_transaction_kind_catalogue(effective_date)
+    transaction_catalogue = resolve_transaction_kind_catalogue(effective_date, authority=operation)
     external_kinds = transaction_catalogue.kinds_for_oss_regime("external_scheme")
     external_regime = resolve_oss_ioss_regime_catalogue(
         effective_date=effective_date,
+        authority=operation,
     ).regime_for_transaction_kind(next(iter(external_kinds)).value)
     for observation in observations:
         if observation.regime != external_regime:
             continue
         if observation.transaction_kind not in external_kinds:
             continue
-        _validate_exterior_rate_kind(observation)
+        _validate_exterior_rate_kind(observation, operation=operation)
         grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
     return grouped
 
 
-def _validate_exterior_rate_kind(observation: OssIossLedgerObservation) -> None:
+def _validate_exterior_rate_kind(
+    observation: OssIossLedgerObservation,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Refuse Exterior rate tiers that have no official positional code."""
-    declarations = _exterior_projection_declarations(observation.transaction_date)
+    declarations = _exterior_projection_declarations(observation.transaction_date, operation=operation)
     if f"rate_code.{observation.rate_kind.value}" in declarations:
         return
     raise AggregationValidationError(
@@ -354,9 +394,16 @@ def _exterior_detail_row_fields(
     rate_kind: IvaRateKind,
     observations: Sequence[OssIossLedgerObservation],
     declarations: dict[str, str],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[dict[str, str], dict[str, Decimal]]:
     """Build the workbook field values for one destination/rate row."""
-    rate = lookup_rate(country, rate_kind, observations[0].transaction_date).pct
+    rate = lookup_rate(
+        country,
+        rate_kind,
+        observations[0].transaction_date,
+        operation=operation,
+    ).pct
     fields = {
         f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country.name,
         f"3-prestaciones-de-servicios-tipo-iva-{row}": declarations[f"rate_code.{rate_kind.value}"],
@@ -379,12 +426,21 @@ def _bind_exterior_detail_values(
     revision: ModeloRevision,
     grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]],
     declarations: dict[str, str],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
     """Resolve generated revision selectors against Exterior row fields."""
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
     for row, ((country, rate_kind), rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
-        fields, decimals = _exterior_detail_row_fields(row, country, rate_kind, rows, declarations)
+        fields, decimals = _exterior_detail_row_fields(
+            row,
+            country,
+            rate_kind,
+            rows,
+            declarations,
+            operation=operation,
+        )
         _assign_exterior_detail_bindings(revision, fields, decimals, decimal_values, enum_values)
     return decimal_values, enum_values
 
@@ -513,6 +569,10 @@ def project_oss_ioss_invoices_from_repositories(
         period: Filing period whose date span filters issued invoices.
         ports: Required application-owned catalogue read capabilities for the
             composed profile bucket.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
 
     Returns:
         The candidates for the period beside the invoices they were projected
@@ -578,6 +638,7 @@ def aggregate_oss_ioss_from_repositories(
     *,
     period: Period,
     ports: InvoiceCatalogueReadPorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> dict[BindingId, Decimal]:
     """Resolve Modelo 369 OSS/IOSS bindings from the live invoice catalogue.
 
@@ -587,12 +648,18 @@ def aggregate_oss_ioss_from_repositories(
         ports: Required application-owned catalogue read capabilities for the
             composed profile bucket.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_oss_ioss_from_repositories(
+                revision,
+                period=period,
+                ports=ports,
+                operation=indexed_operation,
+            )
     return aggregate_oss_ioss_bindings(
         revision,
-        oss_ioss_candidates_from_repositories(
-            period=period,
-            ports=ports,
-        ),
+        oss_ioss_candidates_from_repositories(period=period, ports=ports),
+        operation=operation,
     )
 
 
@@ -658,15 +725,22 @@ class OssIossLedgerSourceResolver:
                 more than one cent.
         """
         try:
-            projection = (
-                project_oss_ioss_invoices_from_repositories(
-                    period=context.period,
-                    ports=self._ports,
+            with bundled_indexed_authority().operation() as indexed_operation:
+                projection = (
+                    project_oss_ioss_invoices_from_repositories(
+                        period=context.period,
+                        ports=self._ports,
+                    )
+                    if self._candidates is None
+                    else OssIossInvoiceProjection(candidates=self._candidates)
                 )
-                if self._candidates is None
-                else OssIossInvoiceProjection(candidates=self._candidates)
-            )
-            candidates = projection.candidates
+                candidates = projection.candidates
+                observations = validate_oss_ioss_observations(candidates, operation=indexed_operation)
+                exterior_values, exterior_enum_values = _exterior_detail_binding_values(
+                    context.revision,
+                    observations,
+                    operation=indexed_operation,
+                )
         except InvoiceCatalogueReadPersistenceError as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
@@ -680,8 +754,6 @@ class OssIossLedgerSourceResolver:
                 owned_sources=self.owned_sources,
                 diagnostics=self._no_live_source_diagnostics(context),
             )
-        observations = validate_oss_ioss_observations(candidates)
-        exterior_values, exterior_enum_values = _exterior_detail_binding_values(context.revision, observations)
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # OSS line whose classification tuple matches no ledger_oss_aggregation
         # binding would otherwise be silently dropped (no-silent-under-declaration).

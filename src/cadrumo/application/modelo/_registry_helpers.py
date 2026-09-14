@@ -14,8 +14,8 @@ payloads by re-deriving their content-addressed identifiers and checking
 before stored payloads are trusted by verification or filing workflows.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry.authority.bundled_authority`
-        Canonical registry authority used by snapshot-backed guards.
+    :func:`cadrumo.domain.calculations.registry.authority.bundled_indexed_authority`
+        Generation-pinned authority used by snapshot-backed guards.
     :func:`validate_casilla_input_ids`
         Boundary validator for operator-supplied casilla maps.
     :func:`assert_revision_content_integrity`
@@ -30,7 +30,11 @@ from decimal import Decimal
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
+from ...domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_authority_descriptor_path,
+    bundled_indexed_authority,
+)
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
@@ -90,9 +94,23 @@ class _ResolvedRegistryCasillaInputs:
     unknown_only: tuple[CasillaId, ...]
 
 
-def _resolve_registry_snapshot(*, modelo: str, filing_year: int, period: Period) -> RegistrySnapshot:
+def _resolve_registry_snapshot(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation | None = None,
+) -> RegistrySnapshot:
     """Resolve the law-selected registry snapshot for one filing target."""
-    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _resolve_registry_snapshot(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                operation=indexed_operation,
+            )
+    return operation.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
 
 
 def _normalise_registry_casilla_inputs[CasillaKey](
@@ -102,9 +120,15 @@ def _normalise_registry_casilla_inputs[CasillaKey](
     period: Period,
     casilla_values: Mapping[CasillaKey, Decimal],
     surface: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> _ResolvedRegistryCasillaInputs:
     """Resolve a snapshot and classify a casilla map against its declared ids."""
-    snapshot = _resolve_registry_snapshot(modelo=modelo, filing_year=filing_year, period=period)
+    snapshot = _resolve_registry_snapshot(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        operation=operation,
+    )
     malformed: list[str] = []
     canonical_values: dict[CasillaId, Decimal] = {}
     for casilla_id, value in casilla_values.items():
@@ -339,6 +363,7 @@ def reject_unknown_override_casillas[CasillaKey](
     filing_year: int,
     period: Period,
     overrides: Mapping[CasillaKey, Decimal],
+    operation: PinnedAuthorityOperation | None = None,
 ) -> dict[CasillaId, Decimal]:
     """Refuse amendment override casillas outside the resolved revision.
 
@@ -360,11 +385,12 @@ def reject_unknown_override_casillas[CasillaKey](
             period=period,
             casilla_values=overrides,
             surface="amendment override casilla",
+            operation=operation,
         )
     except FileNotFoundError as exc:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_registry_root_missing",
-            context={"registry_root": bundled_authority_artifact_path()},
+            context={"registry_root": bundled_authority_descriptor_path()},
         ) from exc
     except RegistrySnapshotError as exc:
         raise AmendmentOverrideCasillaError(
@@ -418,6 +444,7 @@ def reject_unknown_import_casillas[CasillaKey](
     filing_year: int,
     period: Period,
     casilla_values: Mapping[CasillaKey, Decimal],
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[RegistrySnapshot, dict[CasillaId, Decimal]]:
     """Validate imported casilla ids and return the resolved registry snapshot.
 
@@ -437,11 +464,12 @@ def reject_unknown_import_casillas[CasillaKey](
             period=period,
             casilla_values=casilla_values,
             surface="external import casilla",
+            operation=operation,
         )
     except FileNotFoundError as exc:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_root_missing",
-            context={"registry_root": bundled_authority_artifact_path()},
+            context={"registry_root": bundled_authority_descriptor_path()},
         ) from exc
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(

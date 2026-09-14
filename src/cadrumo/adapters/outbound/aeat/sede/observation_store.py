@@ -47,7 +47,7 @@ from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.period import Period
 from .....core.time.clock import now
-from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from .....domain.calculations.registry.errors import RegistrySnapshotError
 from ....persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
@@ -315,13 +315,21 @@ class FiledDeclaracionObservationStore:
             )
         return record.payload
 
-    def persist_observation(self, observation: FiledDeclaracionObservation) -> Path:
+    def persist_observation(
+        self,
+        observation: FiledDeclaracionObservation,
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> Path:
         """Persist a normalized observation manifest and return its logical object path.
 
         The envelope row is stored under
         :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
         """
-        _validate_observation_casilla_ids(observation)
+        if operation is None and observation.casillas:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return self.persist_observation(observation, operation=indexed_operation)
+        _validate_observation_casilla_ids(observation, operation=operation)
         with self._crypto_scope():
             self._observations.save(observation)
         return _logical_path(_OBSERVATION_NAMESPACE, self._observations.extract_identifier(observation))
@@ -421,12 +429,20 @@ def _logical_path(namespace: str, object_key: str) -> Path:
     return Path("db://secure_objects") / namespace / object_key
 
 
-def _validate_observation_casilla_ids(observation: FiledDeclaracionObservation) -> None:
+def _validate_observation_casilla_ids(
+    observation: FiledDeclaracionObservation,
+    *,
+    operation: PinnedAuthorityOperation | None,
+) -> None:
     """Reject filed observations whose casilla rows are not registry ids."""
     if not observation.casillas:
         return
+    if operation is None:
+        raise SedeValidationError(
+            "filed-declaration casilla validation requires a generation-pinned authority operation"
+        )
     try:
-        snapshot = bundled_authority().snapshot(
+        snapshot = operation.snapshot(
             observation.modelo,
             filing_year=observation.ejercicio,
             period=observation.period.registry_token,

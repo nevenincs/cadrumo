@@ -66,7 +66,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
     from ...adapters.inbound.borrador.schema import BorradorParseMode
     from ...core.i18n.render import tr
     from ...core.period import Period
-    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ...domain.calculations.registry.schema_extraction import ExtractionSurface
 
     bucket_id = active_bucket_id_or_refuse()
@@ -75,7 +75,8 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
     except ValueError as exc:
         raise typer.BadParameter(tr("cli.app.live.borrador.import_period_invalid")) from exc
 
-    registry = bundled_authority().snapshot("100", filing_year=filing_year, period=period)
+    with bundled_indexed_authority().operation() as operation:
+        registry = operation.snapshot("100", filing_year=filing_year, period=period)
     profiles = tuple(
         profile
         for profile in registry.revision.extraction_profiles

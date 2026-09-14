@@ -36,7 +36,7 @@ from ._modelo_support_matrix_payloads import (
     ModeloRenamePayload,
     ModeloSupportMatrixEntryPayload,
 )
-from .common import resolve_notice_action
+from .common import profile_grounding_index_for_operation, resolve_notice_action
 from .modelo_aux_payloads import ModeloRowPayload
 
 
@@ -131,8 +131,7 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     """
     from ...application.user_profile.preflight import format_profile_path_requirements
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...domain.calculations.registry.authority import bundled_authority
-    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     if not checklist.unresolved_profile_keys:
         return ""
@@ -145,11 +144,13 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
         ).session.profile_decode_context.schema
     except ProfileNotFoundError:
         return ""
+    with bundled_indexed_authority().operation() as operation:
+        grounding_index = profile_grounding_index_for_operation(operation)
     return ", ".join(
         format_profile_path_requirements(
             checklist.unresolved_profile_keys,
             schema=schema,
-            grounding_index=build_profile_grounding_index(bundled_authority()),
+            grounding_index=grounding_index,
         )
     )
 

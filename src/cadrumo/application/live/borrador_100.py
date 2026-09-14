@@ -22,7 +22,7 @@ from ...core.identity.hex_ids import SnapshotId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -213,13 +213,17 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         binding_values: Mapping[BindingId, _BorradorValue],
     ) -> Borrador100Snapshot:
         """Execute this public contract operation."""
+        with bundled_indexed_authority().operation() as operation:
+            snapshot_ref = operation.snapshot(
+                Modelo("100").value,
+                filing_year=filing_year,
+                period=period.registry_token,
+            ).snapshot_ref
         return self._capture_with_lifecycle(
             _Borrador100CaptureRequest(
                 filing_year=filing_year,
                 period=period,
-                registry_snapshot_ref=bundled_authority()
-                .snapshot(Modelo("100").value, filing_year=filing_year, period=period.registry_token)
-                .snapshot_ref,
+                registry_snapshot_ref=snapshot_ref,
                 captured_at=captured_at,
                 source_url=source_url,
                 binding_values=binding_values,

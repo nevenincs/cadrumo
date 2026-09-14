@@ -103,23 +103,24 @@ def build_filing_obligation_advisories(
 
     # Authority composition is application work.  The domain evaluator only
     # accepts this explicit context and never reads bundled facts itself.
-    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     coordinate = date(filing_year, 12, 31)
-    facts = _DeadlineFactResolutionContext(
-        authority=bundled_authority(),
-        filing_period=coordinate,
-        submission_date=coordinate,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        facts = _DeadlineFactResolutionContext(
+            authority=operation,
+            filing_period=coordinate,
+            submission_date=coordinate,
+        )
 
-    if _evaluate_multiple_pagadores_obligation(
-        pagadores_count,
-        secondary_income,
-        total_work_income,
-        filing_year=filing_year,
-        facts=facts,
-    ):
-        return (_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY,)
+        if _evaluate_multiple_pagadores_obligation(
+            pagadores_count,
+            secondary_income,
+            total_work_income,
+            filing_year=filing_year,
+            facts=facts,
+        ):
+            return (_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY,)
     return ()
 
 

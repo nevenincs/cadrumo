@@ -34,7 +34,7 @@ from ...core.operations import (
 from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
@@ -248,11 +248,12 @@ def _require_active_profile_subject(
 
 def _resolve_snapshot(modelo: ModeloId, period: Period) -> RegistrySnapshot:
     """Use the one registry authority for temporal snapshot selection."""
-    return bundled_authority().snapshot(
-        modelo,
-        filing_year=period.filing_year,
-        period=period.registry_token,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return operation.snapshot(
+            modelo,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
 
 
 def _unconfigured_google_sheets_export_prepare_port(_profile_id: str) -> GoogleSheetsExportPreparedPort:

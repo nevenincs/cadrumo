@@ -26,6 +26,7 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal_strict
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import (
     EntitySetFactQuery,
     MappingFactQuery,
@@ -45,7 +46,7 @@ from ...domain.modelos.verification_report import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
     from ...domain.modelos.work_unit import WorkUnit
 
 
@@ -59,7 +60,7 @@ def _objective_estimation_exclusion_advisory_findings(
     *,
     work_unit: WorkUnit,
     profile: TaxpayerProfile,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: ValidatedRegistryAuthority | PinnedAuthorityOperation | None = None,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return warnings for objective-estimation exclusion excesses.
 
@@ -87,7 +88,15 @@ def _objective_estimation_exclusion_advisory_findings(
         :class:`TaxpayerProfile`:
             Owns the profile fields read by the advisory.
     """
-    # fact-relocation: objective-estimation scope and applicability are resolved through registry authority; authored fact publication remains external.
+    if authority is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _objective_estimation_exclusion_advisory_findings(
+                work_unit=work_unit,
+                profile=profile,
+                authority=indexed_operation,
+            )
+    # fact-relocation: objective-estimation scope and applicability are resolved
+    # through registry authority; authored fact publication remains external.
     modelo = str(getattr(work_unit.modelo, "value", work_unit.modelo))
     if not _uses_objective_estimation(profile):
         return ()
@@ -172,15 +181,17 @@ def _uses_objective_estimation(profile: TaxpayerProfile) -> bool:
 def _resolve_objective_estimation_model_scope(
     *,
     filing_year: int,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: ValidatedRegistryAuthority | PinnedAuthorityOperation | None = None,
 ) -> ResolvedEntitySetFact:
     """Resolve the Modelo scope entity set at the filing-period coordinate."""
     from ...domain.calculations.registry.errors import RegistryError
 
     if authority is None:
-        from ...domain.calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _resolve_objective_estimation_model_scope(
+                filing_year=filing_year,
+                authority=indexed_operation,
+            )
     try:
         resolved = authority.resolve_governed_fact(
             EntitySetFactQuery(
@@ -222,15 +233,17 @@ def _resolve_objective_estimation_model_scope(
 def _resolve_objective_estimation_profile_fact_map(
     *,
     filing_year: int,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: ValidatedRegistryAuthority | PinnedAuthorityOperation | None = None,
 ) -> ResolvedMappingFact:
     """Resolve the profile-field to threshold-fact mapping from registry authority."""
     from ...domain.calculations.registry.errors import RegistryError
 
     if authority is None:
-        from ...domain.calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _resolve_objective_estimation_profile_fact_map(
+                filing_year=filing_year,
+                authority=indexed_operation,
+            )
     try:
         resolved = authority.resolve_governed_fact(
             MappingFactQuery(
@@ -293,15 +306,18 @@ def _resolve_objective_estimation_threshold(
     *,
     fact_id: str,
     filing_year: int,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: ValidatedRegistryAuthority | PinnedAuthorityOperation | None = None,
 ) -> ResolvedScalarFact:
     """Resolve an advisory threshold at the filing-year coordinate with legal provenance."""
     from ...domain.calculations.registry.errors import RegistryError
 
     if authority is None:
-        from ...domain.calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _resolve_objective_estimation_threshold(
+                fact_id=fact_id,
+                filing_year=filing_year,
+                authority=indexed_operation,
+            )
     try:
         resolved = authority.resolve_governed_fact(
             ScalarFactQuery(

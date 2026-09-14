@@ -40,7 +40,7 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
     BindingDefinition,
@@ -330,6 +330,7 @@ class Modelo100BorradorSourceResolver:
         caller_enum_binding_values: Mapping[BindingId, str],
         registry_snapshot: RegistrySnapshot | None = None,
         snapshot_repository: Borrador100SnapshotRepository | None = None,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Bind the borrador snapshot and the caller-supplied binding values."""
         self._borrador_snapshot_id = borrador_snapshot_id
@@ -337,6 +338,7 @@ class Modelo100BorradorSourceResolver:
         self._caller_enum_binding_values = caller_enum_binding_values
         self._registry_snapshot = registry_snapshot
         self._snapshot_repository = snapshot_repository
+        self._operation = operation
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the optional borrador tier for ``context``.
@@ -347,7 +349,17 @@ class Modelo100BorradorSourceResolver:
         """
         snapshot = self._registry_snapshot
         if snapshot is None:
-            snapshot = bundled_authority().snapshot(
+            if self._operation is None:
+                with bundled_indexed_authority().operation() as indexed_operation:
+                    return type(self)(
+                        borrador_snapshot_id=self._borrador_snapshot_id,
+                        caller_binding_values=self._caller_binding_values,
+                        caller_enum_binding_values=self._caller_enum_binding_values,
+                        registry_snapshot=self._registry_snapshot,
+                        snapshot_repository=self._snapshot_repository,
+                        operation=indexed_operation,
+                    ).resolve(context)
+            snapshot = self._operation.snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,

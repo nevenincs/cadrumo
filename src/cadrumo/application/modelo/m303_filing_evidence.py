@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -23,6 +23,9 @@ from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_profile,
 )
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _EVIDENCE_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _EVIDENCE_SCENARIO_PREFIX = "modelo.work.calculate.m303_filing_evidence"
@@ -54,6 +57,7 @@ def validate_m303_filing_instance_evidence_for_revision(
     evidence: FilingInstanceEvidence | None,
     casilla_values: Mapping[CasillaId, Decimal],
     observations: Sequence[CasillaObservation],
+    operation: PinnedAuthorityOperation | None = None,
 ) -> FilingInstanceEvidence | None:
     """Validate the complete revision evidence against every canonical owner."""
     if work_unit.modelo != Modelo("303"):
@@ -89,6 +93,7 @@ def validate_m303_filing_instance_evidence_for_revision(
         work_unit=work_unit,
         registry_snapshot=registry_snapshot,
         evidence=m303,
+        operation=operation,
     )
     _validate_m303_exonerado_filing_evidence(
         work_unit=work_unit,
@@ -105,6 +110,7 @@ def _validate_m303_simplified_filing_evidence(
     work_unit: WorkUnit,
     registry_snapshot: RegistrySnapshot,
     evidence: M303FilingInstanceEvidence,
+    operation: PinnedAuthorityOperation | None,
 ) -> None:
     """Validate the simplified-regime evidence against profile and rows."""
     regimen = evidence.regimen_simplificado
@@ -144,7 +150,7 @@ def _validate_m303_simplified_filing_evidence(
         rows=regimen.rows,
         regimen_snapshot=regimen.regimen_snapshot,
         dana_2024_eligibility=regimen.dana_2024_eligibility,
-        authority=bundled_authority(),
+        operation=operation,
     )
     if regimen.calculation_result != expected_result:
         raise M303FilingEvidenceError(
