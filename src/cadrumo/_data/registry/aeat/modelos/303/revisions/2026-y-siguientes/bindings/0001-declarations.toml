@@ -174,20 +174,6 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [[revisions.2026-y-siguientes.bindings]]
-id = "modelo-303-autoconsumo-promotor-base"
-provider = { kind = "profile", profile_key = "iva.autoconsumo_promotor_base" }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2026-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["Modelo 303. IVA. Autoliquidación."]
-
-[revisions.2026-y-siguientes.bindings.aggregation]
-op = "copy"
-
-[[revisions.2026-y-siguientes.bindings]]
 id = "modelo-303-profile-state-attribution-ratio"
 provider = { kind = "profile", profile_key = "tax_residence.state_attribution_ratio" }
 value = { data_type = "money", channel = "decimal" }

@@ -70,3 +70,21 @@ source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-131-2007-form",
 ]
+
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: # Modelo 131 casilla 05: volumen de ingresos del trimestre de las actividades
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: # agricolas, ganaderas y forestales, que la casilla 06 multiplica por el 2 por
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: # ciento del art 110.1.c.
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: # Los dos filtros que separan esta agregacion de la del Modelo 130 son legales,
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: # no incidentales, y viven en la proyeccion porque deciden que filas EXISTEN
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: # como observaciones, no que observaciones reclama un binding:
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #  - actividad: solo las filas cuyo tipo de actividad del Modelo 036 figura en
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #    el selector rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #    agrario-objetiva. Una fila sin actividad declarada NO entra: el silencio no
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #    puede significar agrario, porque encaminaria el ingreso de un declarante no
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #    agrario a una casilla agraria.
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #  - concepto: se excluyen subvenciones de capital e indemnizaciones, segun
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #    rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario. Las
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #    subvenciones CORRIENTES si computan, y las instrucciones AEAT del modelo lo
+# Original bindings modelo-131-volumen-ingresos-agrario commentary: #    dicen expresamente.

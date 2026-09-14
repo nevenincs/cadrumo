@@ -14,13 +14,18 @@ from dataclasses import replace
 from pathlib import Path
 from typing import cast
 
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
+    casilla_occurrence_locale_key,
+    resolve_modelo_localization,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from .compact import canonical, fingerprint, publish_staged_tree
 from .compiler.loader import load_modelo_directory, modelo_fact_scope
 from .default_elision import complete_value
 from .edition_delta_migration import plan_drop, stage_declaration_drop
-from .edition_round_trip import localization_differences
 from .transformation_proof import prove_transformation, snapshot_definition
 
 
@@ -31,7 +36,23 @@ def semantic_value(definition: ModeloDefinition) -> dict[str, object]:
     for revision in revisions.values():
         for casilla in cast(list[dict[str, object]], revision["casillas"]):
             del casilla["inherited_from"]
-            del casilla["localization_keys"]
+            keys = cast(list[str], casilla["localization_keys"])
+            occurrence_keys = {
+                casilla_occurrence_locale_key(
+                    str(definition.id), sibling, str(casilla["id"]), ModeloLocalizationFieldKind.LABEL
+                )
+                for sibling in definition.revisions
+            }
+            casilla["localization_keys"] = keys[:1] + [key for key in keys[1:] if key not in occurrence_keys]
+            casilla["resolved_labels"] = {
+                language: resolve_modelo_localization(tuple(keys), locale=language)
+                for language in SUPPORTED_OUTPUT_LANGUAGES
+            }
+            help_keys = tuple(f"{key.removesuffix('.label')}.help" for key in keys)
+            casilla["resolved_help"] = {
+                language: resolve_modelo_localization(help_keys, locale=language)
+                for language in SUPPORTED_OUTPUT_LANGUAGES
+            }
     return value
 
 
@@ -41,18 +62,7 @@ def differences(before: ModeloDefinition, after: ModeloDefinition) -> list[str]:
         snapshot_definition(semantic_value(before), locale_fields={}),
         snapshot_definition(semantic_value(after), locale_fields={}),
     )
-    found = [] if proof.is_equivalent else [str(proof.first_mismatch)]
-    for identity, revision in before.revisions.items():
-        if identity in after.revisions:
-            found.extend(
-                localization_differences(
-                    modelo_id=str(before.id),
-                    sibling_revision_ids=frozenset(before.revisions) - {identity},
-                    reference=revision,
-                    live=after.revisions[identity],
-                )
-            )
-    return found
+    return [] if proof.is_equivalent else [str(proof.first_mismatch)]
 
 
 def changed_identities(before: ModeloDefinition, after: ModeloDefinition, section: str) -> set[str]:
@@ -170,7 +180,13 @@ def main() -> int:
         )
         results.append(result)
         (work / "summary.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
-        print(identity, result["dropped_members"], result["rejected"], flush=True)
+        print(
+            identity,
+            result["dropped_members"],
+            "rejected_groups",
+            len(cast(list[object], result["rejected"])),
+            flush=True,
+        )
     return 0
 
 
