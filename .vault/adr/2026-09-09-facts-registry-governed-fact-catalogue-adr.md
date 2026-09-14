@@ -3,15 +3,17 @@ tags:
   - '#adr'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-11'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f0470533f8a3fadef544899b700604f0f84d4384fa6c2b20134aca6dbcce1d1'
+body_hash: 'sha256:1642436f85477aa153c02ac01df61564020a35e89c8336d82946e3cb25eea79d'
 related:
-  - "[[2026-09-09-facts-registry-discovery-blast-radius-research]]"
-  - "[[2026-09-09-facts-registry-schema-persistence-research]]"
-  - "[[2026-09-09-facts-registry-authority-plumbing-research]]"
-  - "[[2026-09-09-facts-registry-dev-tooling-research]]"
+  - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
+  - '[[2026-09-09-facts-registry-schema-persistence-research]]'
+  - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
+  - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-11-fact-relocation-research]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-research]]'
 ---
 
 # `facts-registry` adr: `Unify governed tax facts under a sibling registry catalogue` | (**status:** `accepted`)
@@ -120,13 +122,7 @@ Introduce a sibling `GovernedFactCatalogue` on `RegistryCatalogues`, compiled
 and validated by `ValidatedRegistryAuthority` after legal and source catalogues.
 The modelo/casilla loading path stays unchanged.
 
-Persist normalised authored facts under
-`src/cadrumo/_data/registry/aeat/facts/` as flat TOML fragments named
-`NNNN-<stable-slug>.toml`. Each file owns one stable semantic fact and its
-legally distinct variants. The prefix controls review order only. `fact_id`
-excludes value, date, and modelo revision; immutable `variant_id` identifies a
-legal redaction or interval. Filenames and declaration order never establish
-runtime identity or precedence.
+Persist normalised authored facts as `NNNN-<stable-slug>.toml` fragments beneath the registered provider-owned `src/cadrumo/_data/registry/aeat/facts/` subtree, including nested review directories. Each fragment owns one stable semantic fact and its legally distinct variants. `fact_id` excludes value, date and modelo revision; immutable `variant_id` identifies a legal redaction or interval. Relative path, filename prefix, nesting and declaration order establish neither semantic identity nor precedence. Providers recursively enumerate their owned subtrees, and construction recursively refuses governed fact declarations outside every registered subtree or omitted from compilation.
 
 Use a fixed envelope for identity, closed family and payload kind, typed
 selectors, one declared temporal axis and windows, variant-level evidence,
@@ -135,9 +131,7 @@ Closed registry-owned payload families preserve scalar, bracket, mapping,
 entity-set, override, event, and multi-output semantics. Adding a family
 enrolls schema, compiler, query, validation, and tooling together.
 
-A single provider registry declares directories, compilation, validation,
-fingerprints, authority and memoisation identity, resets, and ownership.
-Construction refuses unowned governed directories or partial enrollment.
+A single provider registry owns subtree census, compilation, validation, fingerprints, authority and memoisation identity, resets and executable dependency domains. Each dependency domain must resolve to captured compiler inputs and participate in component/publication identity; unknown, missing, cyclic or partially enrolled dependencies fail closed. Family enrollment must match the schema enum and payload union, typed query and result unions, resolver, codec, validation and facts tooling. Full canonical publication remains mandatory; dependency receipts alone do not authorise selective publication.
 
 Canonical resolution accepts a closed union of typed family queries and returns
 a closed `ResolvedGovernedFact` union with payload, identities, matched
@@ -181,9 +175,7 @@ Attaching it to `RegistryCatalogues` uses the narrowest existing authority seam.
 Provider-derived correctness prevents facade-only centralisation. Grounding:
 `2026-09-09-facts-registry-authority-plumbing-research`.
 
-A flat `facts/` family preserves one-concept review granularity without
-equating facts to casillas or inventing premature taxonomy. Grounding:
-`2026-09-09-facts-registry-schema-persistence-research`.
+A provider-owned facts subtree preserves one-concept review granularity while permitting nested review organisation. Paths remain outside semantic identity and precedence. The indexed-storage source-enrollment reference grounds the observed topology and census defect.
 
 Separate fact gates preserve the trusted modelo denominator while applying its
 resolved-surface and exhaustive-enrollment discipline to the new domain.

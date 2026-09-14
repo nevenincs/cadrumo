@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:985c206c75c382f3c2b32e4ef8c8221adaec1ed59ebc495a9563cd54eee7067e'
+body_hash: 'sha256:e428d2707c9637b72c930f3849ba037518dbe01d8ba4b4eb16e4ed697ff4552a'
 related:
   - '[[2026-09-14-registry-corpus-pruning-ownership-reference]]'
 ---
@@ -58,3 +58,11 @@ Retain the formula-bearing, currently unattested Modelo 200 XLSX until its deriv
 First define distinct source, derivative, annotation, semantic-structure and test-fixture roles using the existing artifact catalogue where appropriate. Then correct XML/media routing and attribution, make discovery failures visible and invalidate runtime search on corpus changes. Decouple manual-source evidence from optional structured-manual coverage. Only then consolidate duplicate representations and retire obsolete tools with their consumers updated.
 
 Acceptance must compare canonical source hashes, anchored/versioned text, exact citations and indexed population before and after; it must report lost or newly excluded evidence. A directory census, zero dangling paths or matching hashes alone is not an evidence-quality completion signal. The independent consumer audit and direct probes support the findings above; no live index contents, external legal freshness or whole-authority recompilation were claimed.
+
+
+
+### Follow-up: separate manual source identity from authored structure
+
+`verify_source_file` no longer calls the structured-manual loader. The previous call made byte-identity verification depend on authored chapter availability and review metadata, and ran only for local sources, not companion-resolved binaries. The separate legal-reference manual-section validator remains unchanged. No manual structures or primary PDFs were deleted. Removed the unused loader protocol, helper and helper-only tests; replacement tests prove absent/corrupt optional structure cannot alter source identity while same-length byte tampering and size changes still fail.
+
+All 23 declared manual PDFs pass exact source verification. The targeted source-identity, companion and structured-section checks completed with 10 passed (exit 0); targeted Ruff and diff checks passed. The wider catalogue-verifier run completed with 25 passed and 26 failures, including obsolete calls missing required `source_root` and `effective_date` arguments; this is not a whole-catalogue success claim. Search descriptions now distinguish normative lexical coverage from signed exact citations and broader development RAG. The environment reference was regenerated through its owner and passes its freshness check.

@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:e3303d7c84a4ce252ddc22a42c4b3aed0997d8953640acdabdf1a19d5413904c'
+body_hash: 'sha256:b65323bba9fed160606d9e7faf708b4b863a73a8249d7d917384e5f84d640444'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-W01-P01-S01]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W01-P02-S02]]'
@@ -70,6 +70,11 @@ related:
   - '[[2026-09-13-registry-authority-artifact-boundary-installed-v4-boundary-proof-audit]]'
   - '[[2026-09-13-registry-authority-artifact-boundary-v4-artifact-regeneration-audit]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-readiness-audit]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-research]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-plan]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-remediation-result-reference]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-storage-loaders-and-facts-scratch-research]]'
@@ -83,7 +88,8 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 
 ### adr
 
-- `2026-09-10-registry-authority-artifact-boundary-adr` - `registry-authority-artifact-boundary` adr: immutable runtime publication | (**status:** `accepted`)
+- `2026-09-10-registry-authority-artifact-boundary-adr` - `registry-authority-artifact-boundary` adr: immutable runtime publication | (**status:** `superseded`)
+- `2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr` - `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
 
 ### audit
 
@@ -115,6 +121,7 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-13-registry-authority-artifact-boundary-installed-v4-boundary-proof-audit` - `registry-authority-artifact-boundary` audit: `Installed v4 boundary proof`
 - `2026-09-13-registry-authority-artifact-boundary-v4-artifact-regeneration-audit` - `registry-authority-artifact-boundary` audit: `v4 artifact regeneration and compactness`
 - `2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit` - `registry-authority-artifact-boundary` audit: `authority backend final review`
+- `2026-09-14-registry-authority-artifact-boundary-indexed-storage-readiness-audit` - Authority storage readiness and profile facts schema enrollment
 
 ### exec
 
@@ -151,15 +158,18 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 ### plan
 
 - `2026-09-10-registry-authority-artifact-boundary-plan` - `registry-authority-artifact-boundary` plan
+- `2026-09-14-registry-authority-artifact-boundary-plan` - `registry-authority-artifact-boundary` plan
 
 ### reference
 
 - `2026-09-12-registry-authority-artifact-boundary-installed-behavioral-proof-reference` - `registry-authority-artifact-boundary` reference: `installed behavioral proof`
 - `2026-09-12-registry-authority-artifact-boundary-tax-id-bootstrap-boundary-reference` - `registry-authority-artifact-boundary` reference: `tax id bootstrap boundary`
+- `2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference` - Authority source enrollment and runtime access map
 - `2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference` - `registry-authority-artifact-boundary` reference: `Post-delta authority backend architecture review`
 - `2026-09-14-registry-authority-artifact-boundary-remediation-result-reference` - Authority backend implementation and performance review
 
 ### research
 
 - `2026-09-10-registry-authority-artifact-boundary-research` - `registry-authority-artifact-boundary` research: immutable runtime publication
-- `2026-09-14-registry-authority-artifact-boundary-storage-loaders-and-facts-scratch-research` - `registry-authority-artifact-boundary` research: `Authority storage and layered loaders: scratch findings and facts enrollment gap`
+- `2026-09-14-registry-authority-artifact-boundary-indexed-storage-research` - Indexed authority storage and on-demand loading
+- `2026-09-14-registry-authority-artifact-boundary-storage-loaders-and-facts-scratch-research` - Authority storage and loaders: scratch findings

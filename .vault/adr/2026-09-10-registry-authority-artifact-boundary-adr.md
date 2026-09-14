@@ -1,16 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#registry-authority-artifact-boundary'
+  - "#adr"
+  - "#registry-authority-artifact-boundary"
 date: '2026-09-10'
+related:
+  - "[[2026-09-10-registry-authority-artifact-boundary-research]]"
+  - "[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]"
+superseded_by: '2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:99b133f0c88cb039398bd4afcf858669d7de0b3cc34d0cebd0133fcf07a00799'
-related:
-  - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
-  - '[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]'
+body_hash: 'sha256:8dc9bbe54db5ccf6a7f8a7c69fc52c5550b6fb6c5188e57dbf092404af4d6374'
 ---
-# `registry-authority-artifact-boundary` adr: immutable runtime publication | (**status:** `accepted`)
+# `registry-authority-artifact-boundary` adr: immutable runtime publication | (**status:** `superseded`)
 
 ## Problem Statement
 
