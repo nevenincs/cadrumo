@@ -134,16 +134,16 @@ def _choice_metavar(values: list[str]) -> str:
 def _ccaa_choice_values() -> list[str]:
     """Return the CCAA choice tokens accepted by ``--tax-residence-ccaa``.
 
-    The list includes all 15 common-regime values from the ``CCAA`` enum
-    plus the two foral-regime tokens (``pais_vasco``, ``navarra``).  The
+    The list includes all common-regime values from the governed CCAA catalogue
+    plus the operator-facing foral-regime redirects from the catalogue.  The
     foral tokens are accepted by Click so the operator receives a
     localised redirect rather than a generic "not one of" error, but they
     are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
-    from ...domain.contribuyente.ccaa import CCAA
+    from ...domain.calculations.registry.ccaa_catalogue import ccaa_choices, foral_cli_choices
 
-    common = [member.value for member in CCAA]
-    foral = ["pais_vasco", "navarra"]
+    common = [member.value for member in ccaa_choices()]
+    foral = list(foral_cli_choices())
     return common + foral
 
 
@@ -163,21 +163,22 @@ _FISCAL_RESIDENCY_CHOICE_VALUES: list[str] = _fiscal_residency_choice_values()
 def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], list[str]]:
     """Return choice tokens for the taxpayer-type and IRPF-regime enums.
 
-    Derived from the canonical domain enums (``EntityType``,
-    ``LegalEntityForm``, ``IrpfIncomeCategory``, ``IrpfEstimationRegime``)
+    Derived from canonical domain and registry projections (``EntityType``,
+    ``LegalEntityForm``, the IRPF income-category catalogue, and
+    ``IrpfEstimationRegime``)
     so the ``--entity-type``, ``--legal-entity-form``,
     ``--irpf-income-categories``, and ``--irpf-estimation-regime``
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
     from ...domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
+    from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_choices
     from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_tokens
-    from ...domain.deadlines.models import IrpfIncomeCategory
 
     return (
         [member.value for member in entity_type_tokens()],
         [member.value for member in legal_entity_form_tokens()],
-        [member.value for member in IrpfIncomeCategory],
+        [member.value for member in irpf_income_category_choices()],
         [member.value for member in irpf_estimation_regime_tokens()],
     )
 
@@ -191,15 +192,12 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
 
 
 def _third_party_declaration_role_choice_values() -> list[str]:
-    """Return choice tokens for the Modelo 347 declaring-role enum.
+    """Return the current facts-registry declaring-role choices."""
+    from ...domain.calculations.registry.third_party_declaration_roles import (
+        third_party_declaration_role_choices,
+    )
 
-    Derived from :class:`ThirdPartyDeclarationRole` so the
-    ``--declaration-roles`` flag choices never drift from the
-    values the wizard catalogue and the profile schema validate against.
-    """
-    from ...core.aggregation import ThirdPartyDeclarationRole
-
-    return [member.value for member in ThirdPartyDeclarationRole]
+    return [member.value for member in third_party_declaration_role_choices()]
 
 
 _THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES: list[str] = _third_party_declaration_role_choice_values()
@@ -208,17 +206,17 @@ _THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES: list[str] = _third_party_declaratio
 def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     """Return choice tokens for IRPF-personal enums.
 
-    Derived from the canonical domain enums (``IrpfSpecialRegime``,
-    ``SituacionFamiliar``) so the ``--irpf-special-regime`` and
+    Derived from the canonical registry catalogues so the
+    ``--irpf-special-regime`` and
     ``--situacion-familiar`` flag choices never drift from the values
     the wizard catalogue and the profile schema validate against.
     """
-    from ...domain.contribuyente.renta_codes import SituacionFamiliar
     from ...domain.calculations.registry.irpf_regimes import irpf_special_regime_tokens
+    from ...domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
 
     return (
         [member.value for member in irpf_special_regime_tokens()],
-        [member.value for member in SituacionFamiliar],
+        [member.value for member in situacion_familiar_choices()],
     )
 
 
@@ -1684,13 +1682,13 @@ def _ccaa_was_defaulted(
     path prompts for the value and is likewise excluded, as is ``edit``
     (whose CCAA already exists on the profile).
     """
-    from ...domain.contribuyente.ccaa import CCAA
+    from ...domain.calculations.registry.ccaa_catalogue import default_ccaa
 
     return (
         mode == "create"
         and non_interactive
         and "tax-residence-ccaa" not in explicit_flags
-        and profile_values.get("tax_residence.ccaa") == CCAA.MADRID.value
+        and profile_values.get("tax_residence.ccaa") == default_ccaa().value
     )
 
 
@@ -1739,7 +1737,7 @@ def _emit_wizard_success(
     callers).
     """
     from ...core.click_context import json_output_requested
-    from ...domain.contribuyente.ccaa import CCAA
+    from ...domain.calculations.registry.ccaa_catalogue import default_ccaa
     from ..operator_output.emit import emit_operator_json_success
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
@@ -1760,7 +1758,7 @@ def _emit_wizard_success(
         if modify_descendants_message is not None
         else tr("application.wizard.notices.modify_descendants_via_door")
     )
-    ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=CCAA.MADRID.value)
+    ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=default_ccaa().value)
     notices = _wizard_success_notices(
         mode,
         next_command=next_command,
@@ -1891,7 +1889,7 @@ def _wizard_success_notices(
     entered with, not one a mid-walk output-language switch left behind.
     """
     from ...core.json_contract import Notice, NoticeSeverity
-    from ...domain.contribuyente.ccaa import CCAA
+    from ...domain.calculations.registry.ccaa_catalogue import default_ccaa
 
     verb_key = "create" if mode == "create" else "edit"
     # The next-step hint is text-surface only. ``Notice`` reserves executable
@@ -1927,7 +1925,7 @@ def _wizard_success_notices(
                 severity=NoticeSeverity.WARNING,
                 code=f"config.profile.{verb_key}.ccaa_defaulted",
                 message=ccaa_message,
-                context={"assumed_ccaa": CCAA.MADRID.value},
+                context={"assumed_ccaa": default_ccaa().value},
             ),
         )
     return notices

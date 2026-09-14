@@ -10,7 +10,8 @@ from ...domain.contribuyente.entity_type import (
     entity_type_natural_person_token,
 )
 from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
-from ...domain.deadlines.models import IrpfIncomeCategory, irnr_representante_fiscal_required
+from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
+from ...domain.deadlines.models import irnr_representante_fiscal_required
 from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
 
 if TYPE_CHECKING:
@@ -165,7 +166,7 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     categories = {
         token.strip() for token in _token(values.get(IRPF_INCOME_CATEGORIES_PATH)).split(",") if token.strip()
     }
-    return IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value in categories
+    return irpf_income_category_actividad_economica_token().value in categories
 
 
 def profile_value_is_present(value: object) -> bool:

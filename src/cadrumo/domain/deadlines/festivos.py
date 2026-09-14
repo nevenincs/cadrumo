@@ -41,9 +41,10 @@ from collections.abc import Iterable
 from datetime import date, timedelta
 from enum import StrEnum
 from functools import lru_cache
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints
+from pydantic import BaseModel, Field, GetCoreSchemaHandler, NonNegativeInt, StringConstraints
+from pydantic_core import CoreSchema, core_schema
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -63,38 +64,88 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 
-class CalendarCCAA(StrEnum):
-    """Spanish autonomous communities and the two autonomous cities, keyed by ISO 3166-2:ES code.
+class _CalendarCCAAType(type):
+    """Expose registry-declared calendar choices through the old type surface."""
 
-    AEAT filing deadlines may shift when the close date coincides with
-    a holiday in the taxpayer's CCAA of tax residence (domicilio
-    fiscal). The two autonomous cities of Ceuta and Melilla each
-    publish their own holiday calendar and behave like a CCAA for this
-    purpose.
+    def __iter__(cls):  # type: ignore[no-untyped-def]
+        from ..calculations.registry.calendar_ccaa_catalogue import calendar_ccaa_choices
 
-    The codes match the ISO 3166-2:ES standard and the BOE-published
-    holiday resolutions.
+        return iter(calendar_ccaa_choices())
+
+    def __getattr__(cls, name: str) -> CalendarCCAA:
+        # Pydantic and Python introspection probe private/dunder attributes
+        # while building schemas. They are never registry member names; avoid
+        # importing the resolver for those probes, which would recurse while
+        # the resolver itself imports CalendarCCAA.
+        if name.startswith("_"):
+            raise AttributeError(name)
+        from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
+
+        try:
+            return resolve_calendar_ccaa_catalogue().require_member_name(name)
+        except (KeyError, ValueError) as exc:
+            raise AttributeError(name) from exc
+
+
+class CalendarCCAA(str, metaclass=_CalendarCCAAType):
+    """Registry-projected ISO 3166-2:ES deadline-calendar territory token.
+
+    Fact 0143 owns the nineteen territory codes used by the deadline calendar,
+    including the foral communities and autonomous cities that are intentionally
+    outside fact 0129's fifteen-member tax-residence vocabulary.  Direct token
+    construction resolves through that dated fact and refuses undeclared codes.
     """
 
-    ANDALUCIA = "ES-AN"
-    ARAGON = "ES-AR"
-    ASTURIAS = "ES-AS"
-    ILLES_BALEARS = "ES-IB"
-    CANARIAS = "ES-CN"
-    CANTABRIA = "ES-CB"
-    CASTILLA_LA_MANCHA = "ES-CM"
-    CASTILLA_Y_LEON = "ES-CL"
-    CATALUNA = "ES-CT"
-    EXTREMADURA = "ES-EX"
-    GALICIA = "ES-GA"
-    LA_RIOJA = "ES-RI"
-    MADRID = "ES-MD"
-    MURCIA = "ES-MC"
-    NAVARRA = "ES-NC"
-    PAIS_VASCO = "ES-PV"
-    VALENCIA = "ES-VC"
-    CEUTA = "ES-CE"
-    MELILLA = "ES-ML"
+    __slots__ = ()
+
+    def __new__(cls, value: object, *, _registry_validated: bool = False) -> Self:
+        if _registry_validated:
+            if not isinstance(value, str) or not value:
+                raise ValueError("calendar CCAA code must be a non-empty string")
+            return str.__new__(cls, value)
+        from ..calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
+        from ..calculations.registry.errors import RegistryValidationError
+
+        try:
+            return require_calendar_ccaa(value)
+        except RegistryValidationError as exc:
+            raise ValueError(str(exc)) from exc
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise ValueError("CalendarCCAA must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Accept only a projected calendar token and serialize it as text."""
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical ISO code."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the registry-declared diagnostic member name."""
+        from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
+
+        return resolve_calendar_ccaa_catalogue().definition(self).member_name
 
 
 class HolidayJurisdiction(StrEnum):
@@ -270,10 +321,20 @@ def holiday_calendar_from_authority(
             raise DeadlineValidationError(f"holiday event for {year} is incomplete")
         jurisdiction = HolidayJurisdiction(jurisdiction_value)
         ccaa_value = selectors.get("ccaa_code")
+        from ..calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
+
         holiday = Holiday(
             holiday_date=resolved.payload.event_date,
             jurisdiction=jurisdiction,
-            ccaa_code=CalendarCCAA(ccaa_value) if isinstance(ccaa_value, str) else None,
+            ccaa_code=(
+                require_calendar_ccaa(
+                    ccaa_value,
+                    effective_date=variant.valid_from,
+                    authority=authority,
+                )
+                if isinstance(ccaa_value, str)
+                else None
+            ),
             name=name,
         )
         if jurisdiction is HolidayJurisdiction.NATIONAL:
@@ -307,7 +368,7 @@ def _holidays_on(
             matches.append(holiday)
     if ccaa_code is not None:
         for holiday in calendar.ccaa:
-            if holiday.holiday_date == candidate and holiday.ccaa_code is ccaa_code:
+            if holiday.holiday_date == candidate and holiday.ccaa_code == ccaa_code:
                 matches.append(holiday)
     return tuple(matches)
 

@@ -12,9 +12,9 @@ inputs are the period's IVA ledger.
 This module is the cross-year behavior coverage for Modelo
 322. The ≥2-distinct-renta-years contract is met by driving the REAL
 registry calculation engine for the same monthly period (December) of two
-distinct renta years (2025, 2026) over a real encrypted-SQLite-backed
-isolated profile, feeding the five ledger_iva_aggregation cuota bindings
-from real IVA ledger observations. Both years are recorded through the
+distinct renta years (2025, 2026) over deterministic application-owned
+IVA ledger observations, feeding the five ledger_iva_aggregation cuota bindings.
+Both years are recorded through the
 ``cross-year observation`` and cross-checked against the authorization
 manifest via ``the cross-year behavior assertion``.
 
@@ -37,11 +37,9 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.calculations.registry.authority import bundled_authority
@@ -147,7 +145,7 @@ def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     return result, len(result.values)
 
 
-def test_322_monthly_result_is_devengada_minus_deducible(tmp_path: Path) -> None:
+def test_322_monthly_result_is_devengada_minus_deducible() -> None:
     """The 322 monthly régimen-general result equals devengada minus deducible.
 
     The load-bearing engine wiring invariant for one renta year: the computed
@@ -155,8 +153,7 @@ def test_322_monthly_result_is_devengada_minus_deducible(tmp_path: Path) -> None
     ``iva.cuota-deducible-total``, and the devengada total equals the
     ledger-aggregated repercutido cuota. Engine-_produced; non-tautological.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        result, _produced = _calculate_322(filing_year=_RENTA_YEARS[0])
+    result, _produced = _calculate_322(filing_year=_RENTA_YEARS[0])
 
     assert _produced > 0
     devengada = result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
@@ -167,7 +164,7 @@ def test_322_monthly_result_is_devengada_minus_deducible(tmp_path: Path) -> None
     assert deducible == soportado
 
 
-def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_322_enrolls_two_renta_years() -> None:
     """End-to-end enrollment: 322 individual monthly REGE across two renta years.
 
     Drives the REAL 322 backend for December of both renta years (the
@@ -177,10 +174,9 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
     distinct-year set against the cross-year claim claim. A single-year or
     stub run would raise, turning the gate RED.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        for filing_year in _RENTA_YEARS:
-            result, _produced = _calculate_322(filing_year=filing_year)
-            # Wiring invariant per year: result == devengada - deducible.
-            assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == (
-                result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA] - result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
-            )
+    for filing_year in _RENTA_YEARS:
+        result, _produced = _calculate_322(filing_year=filing_year)
+        # Wiring invariant per year: result == devengada - deducible.
+        assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == (
+            result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA] - result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        )

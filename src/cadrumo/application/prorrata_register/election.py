@@ -15,31 +15,10 @@ entry the taxpayer cannot defend. The rules live here so both readings of art.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final
-
 from ...core.prorrata_register import ProrrataProvisionalProvenance
-
-#: The provenances a taxpayer states. ``INTERRUMPIDA_TRES_ULTIMOS`` is absent on
-#: purpose: art. 105.Cinco's interrupted-activity percentage is COMPUTED from
-#: the register's own stored volumes over the last three active years, so
-#: accepting it as a declaration would let an operator assert a figure the law
-#: says is derived — and a fabricated one would silently replace the
-#: computation for that ejercicio.
-ELECTABLE_PROVENANCES: Final[tuple[ProrrataProvisionalProvenance, ...]] = (
-    ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-    ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
-    ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
-)
-
-#: The provenances that stand on a document. An AEAT-authorised percentage
-#: (art. 105.Dos) has an authorisation; an inicio-de-actividades percentage
-#: (art. 105.Tres via art. 111.Dos) has a proposal. Recording either without its
-#: reference stores a percentage whose authority cannot be produced later.
-REFERENCED_PROVENANCES: Final[frozenset[ProrrataProvisionalProvenance]] = frozenset(
-    {
-        ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
-        ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
-    }
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    prorrata_electable_provenances,
+    prorrata_referenced_provenances,
 )
 
 
@@ -83,13 +62,14 @@ def validate_prorrata_election(
             declarable, when a document-backed provenance carries no reference,
             or when a reference accompanies a provenance that has none.
     """
-    if provenance not in ELECTABLE_PROVENANCES:
-        accepted = ", ".join(member.value for member in ELECTABLE_PROVENANCES)
+    electable = prorrata_electable_provenances()
+    if provenance not in electable:
+        accepted = ", ".join(member.value for member in electable)
         raise ProrrataElectionError(
             ProrrataElectionRefusal.PROVENANCE_NOT_ELECTABLE,
             f"provenance {provenance.value!r} is computed rather than declarable; accepted: {accepted}",
         )
-    referenced = provenance in REFERENCED_PROVENANCES
+    referenced = provenance in prorrata_referenced_provenances()
     if referenced and (reference is None or not reference.strip()):
         raise ProrrataElectionError(
             ProrrataElectionRefusal.REFERENCE_REQUIRED,
@@ -104,8 +84,6 @@ def validate_prorrata_election(
 
 
 __all__ = [
-    "ELECTABLE_PROVENANCES",
-    "REFERENCED_PROVENANCES",
     "ProrrataElectionError",
     "ProrrataElectionRefusal",
     "validate_prorrata_election",

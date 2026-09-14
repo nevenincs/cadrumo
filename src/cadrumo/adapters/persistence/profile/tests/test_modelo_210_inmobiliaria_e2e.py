@@ -50,7 +50,7 @@ while still exercising the real calculate-then-verify pipeline end to end.
 
 from __future__ import annotations
 
-from cadrumo.application.modelo.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -74,7 +74,7 @@ from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision

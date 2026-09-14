@@ -14,8 +14,8 @@ from ....application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from ....core.config import override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile.values import UserProfileFact
-from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, set_active_test_profile_facts
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ._cli_json_support import _json_object
 from ._ledger_llm_support import _import_one_transaction
 from .cli_runner import invoke_cached_cli

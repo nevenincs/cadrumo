@@ -12,8 +12,8 @@ wrap.
 
 ``sign`` / ``verify-signature`` / ``counter-sign`` / ``verify-receipt`` wire
 the Ed25519 authenticity layer
-(:mod:`~application.modelo._review_package_signing`,
-:mod:`~application.modelo._review_package_counter_sign`) onto the CLI so
+(:mod:`~application.modelo.review_package_signing`,
+:mod:`~application.modelo.review_package_counter_sign`) onto the CLI so
 the full operator-shares / accountant-receives / accountant-counter-signs /
 operator-verifies workflow is reachable without touching the application
 layer directly. Every signing/counter-signing keypair is minted and persisted
@@ -30,7 +30,7 @@ the CLI: a package sealed with ``encrypt-for-recipient`` can be opened only by
 the holder of the matching X25519 private key, unlike ``sign``/``counter-sign``,
 which leave the archive itself in plaintext ZIP form.
 ``encrypt-for-recipient`` looks up the recipient's registered public key via
-:class:`~application.modelo.RecipientFingerprintRegistryRepository`
+the required application recipient-registry capability
 (populated by ``aeat config collab recipient add``); ``decrypt`` mints-or-loads
 the running bucket's OWN X25519 keypair (mirroring the signing keypair's
 mint-once-persist-as-ciphertext contract exactly, via
@@ -48,8 +48,8 @@ See Also:
         Ed25519 authenticity primitive wired by ``sign``.
     :func:`~application.modelo.encrypt_review_package_for_recipient`
         X25519 confidentiality primitive wired by ``encrypt-for-recipient``.
-    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
-        Trusted-recipient public-key registry used before encryption.
+    :class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`
+        Trusted-recipient public-key capability used before encryption.
     :mod:`~entrypoints.cli._modelo_review_package_payloads`
         Typed JSON payload schemas emitted by this CLI group.
     :mod:`~entrypoints.cli.config._collab`
@@ -99,7 +99,7 @@ from ...application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
 )
 from ...application.modelo.review_package_recipient_registry import (
-    RecipientFingerprintRegistryRepository,
+    get_recipient_fingerprint,
     RecipientNotRegisteredError,
 )
 from ...application.modelo.review_package_signing import (
@@ -123,7 +123,9 @@ from ._modelo_export_cli import export_modelo_revision_for_cli
 from .state_projection_support import (
     calculation_action_ports_factory,
     modelo_export_ports_factory,
+    recipient_fingerprint_registry_ports_factory,
     recipient_encryption_capability_factory,
+    review_package_signing_keypair_capability_factory,
 )
 from ._modelo_review_package_rendering import (
     review_package_build_result_lines,
@@ -161,6 +163,9 @@ def review_package_build(
                 "cli.app.modelo.review_package.errors.output_required",
             )
         )
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=resolve_explicit_or_active_bucket_id(operator_input.bucket_id),
+    )
     selected_revision = resolve_exportable_revision_for_cli(
         revision=operator_input.revision,
         work_unit_id=operator_input.work_unit_id,
@@ -170,13 +175,14 @@ def review_package_build(
         registry_revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
         select=operator_input.select,
-        calculation_ports=calculation_action_ports_factory(ctx)(
-            bucket_id=resolve_explicit_or_active_bucket_id(operator_input.bucket_id),
-        ),
+        calculation_ports=calculation_ports,
     )
     target_revision_id = selected_revision.calculation_revision_id
     resolved_actor = operator_input.actor or resolve_default_actor()
-    work_unit = get_work_unit(selected_revision.work_unit_id)
+    work_unit = get_work_unit(
+        selected_revision.work_unit_id,
+        ports=calculation_ports.work_lifecycle_ports,
+    )
     operator_input.output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
         prefix="cadrumo-review-package-draft-", dir=operator_input.output.parent
@@ -249,10 +255,10 @@ def review_package_sign(ctx: typer.Context, package: Path, output: Path, bucket_
     from ._modelo_cli_support import bad_parameter_from_error
 
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-
-    repository = secure_object_repository_for_bucket(resolved_bucket_id)
-    keypair = ensure_review_package_signing_keypair(bucket_id=resolved_bucket_id, repository=repository)
+    keypair = ensure_review_package_signing_keypair(
+        bucket_id=resolved_bucket_id,
+        signing_keypair=review_package_signing_keypair_capability_factory(ctx)(bucket_id=resolved_bucket_id),
+    )
     try:
         signed = sign_review_package(package, keypair=keypair)
     except FileNotFoundError as exc:
@@ -316,10 +322,10 @@ def review_package_counter_sign(
     except ValueError as exc:
         raise bad_parameter_from_error(ReviewPackageSigningError(str(exc))) from exc
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-
-    repository = secure_object_repository_for_bucket(resolved_bucket_id)
-    counter_signer_keypair = ensure_review_package_signing_keypair(bucket_id=resolved_bucket_id, repository=repository)
+    counter_signer_keypair = ensure_review_package_signing_keypair(
+        bucket_id=resolved_bucket_id,
+        signing_keypair=review_package_signing_keypair_capability_factory(ctx)(bucket_id=resolved_bucket_id),
+    )
     try:
         receipt = counter_sign_review_package(signed, counter_signer_keypair=counter_signer_keypair, note=note)
     except ReviewPackageCounterSigningError as exc:
@@ -400,9 +406,11 @@ def review_package_encrypt_for_recipient(
         )
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
     recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
-    registry = RecipientFingerprintRegistryRepository(bucket_id=resolved_bucket_id)
     try:
-        recipient = registry.get(recipient_id)
+        recipient = get_recipient_fingerprint(
+            recipient_id,
+            ports=recipient_fingerprint_registry_ports_factory(ctx)(bucket_id=resolved_bucket_id),
+        )
     except RecipientNotRegisteredError as exc:
         raise bad_parameter_from_error(exc) from exc
     if valid_for_days is not None and valid_for_days <= 0:
@@ -508,9 +516,11 @@ def review_package_encrypt_feedback(
 
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
     recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
-    registry = RecipientFingerprintRegistryRepository(bucket_id=resolved_bucket_id)
     try:
-        originator = registry.get(originator_id)
+        originator = get_recipient_fingerprint(
+            originator_id,
+            ports=recipient_fingerprint_registry_ports_factory(ctx)(bucket_id=resolved_bucket_id),
+        )
     except RecipientNotRegisteredError as exc:
         raise bad_parameter_from_error(exc) from exc
     counter_signed_receipt: CounterSignedReceipt | None = None

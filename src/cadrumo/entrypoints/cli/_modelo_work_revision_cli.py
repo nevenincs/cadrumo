@@ -23,10 +23,10 @@ from ...application.modelo.action_errors import CalculationRevisionNotFoundError
 from ...application.modelo.calculate_input import modelo_202_modality_for_work_unit
 from ...application.modelo.calculation_actions import list_calculation_revisions
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
-from ...core.bucket_pointer import require_active_bucket_id
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
 from ._modelo_payloads import (
@@ -264,11 +264,14 @@ def work_revision(
         modality_payload = {"modality": modality_summary.modality, "modality_reason": modality_summary.reason}
         modality_lines = [f"modality\t{modality_summary.modality}"]
     result = WorkRevisionResult.model_validate(
-        {**calculation_revision_payload(selected_revision).model_dump(mode="python"), **modality_payload}
+        {
+            **calculation_revision_payload(selected_revision, work_unit=unit_for_modality).model_dump(mode="python"),
+            **modality_payload,
+        }
     )
     lines = [
         "operation\tmodelo.work.revision",
-        *calculation_revision_lines(selected_revision, verbose=verbose),
+        *calculation_revision_lines(selected_revision, work_unit=unit_for_modality, verbose=verbose),
         *modality_lines,
     ]
     emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
@@ -307,7 +310,7 @@ def work_observations(
         selector=select,
         calculation_ports=calculation_ports,
     )
-    revision_payload = calculation_revision_payload(selected_revision)
+    revision_payload = calculation_revision_payload(selected_revision, include_result_summary=False)
     result = WorkObservationsResult.model_validate(
         {
             "calculation_revision_id": revision_payload.calculation_revision_id,

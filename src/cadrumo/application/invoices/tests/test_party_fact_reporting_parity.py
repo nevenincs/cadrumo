@@ -18,8 +18,10 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.aggregation import IntracomOperationType
 from ....domain.iva.classification import PartyFact, classifiable_categories
-from ..source_resolver import _CLAVE_BY_KIND_AND_CATEGORY
+from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -40,7 +42,22 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
     def test_every_clave_reported_category_has_a_declaring_rule(self) -> None:
         declaring = classifiable_categories(consuming=PartyFact.IVA_IDENTIFICATION_STATE)
         mintable = classifiable_categories()
-        reported = {category for _, category in _CLAVE_BY_KIND_AND_CATEGORY}
+        catalogue = resolve_iva_category_catalogue()
+        reported = {
+            category
+            for operation_key in (
+                "issued.intra_community_supply",
+                "issued.intra_community_service_supply",
+                "received.intra_community_acquisition_reverse_charge",
+                "received.intra_community_service_acquisition_reverse_charge",
+            )
+            for category in (
+                iva_category_for_operation_type(
+                    IntracomOperationType(catalogue.operation_type(operation_key)),
+                ),
+            )
+            if category is not None
+        }
         undeclared = sorted(category.value for category in (reported & mintable) - declaring)
         assert undeclared == []
 

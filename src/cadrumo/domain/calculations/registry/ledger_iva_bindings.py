@@ -16,10 +16,16 @@ from ....core.aggregation import (
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.unit_proportion import UnitProportion
-from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
-from ...iva.flow import IvaFlowDirection, is_deducible_flow
-from ...iva.prorrata import InputClassification
 from ...iva.components import registry_category_projection
+from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
+from ...iva.flow import (
+    IvaFlowDirection,
+    is_deducible_flow,
+    is_standard_issued_or_received_flow,
+    issued_flow_direction,
+    received_flow_direction,
+)
+from ...iva.prorrata import InputClassification
 from ...iva.schema import (
     IvaCashAccountingTreatment,
     IvaCategory,
@@ -40,15 +46,21 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .iva_category_catalogue import resolve_iva_category_catalogue
 from .iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     require_registry_declared_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
 )
-from .iva_category_catalogue import resolve_iva_category_catalogue
-from .iva_schema_vocabulary import require_iva_cash_accounting_treatment, require_iva_exemption_article
+from .prorrata_vocabulary import require_input_classification
+from .iva_schema_vocabulary import (
+    require_iva_cash_accounting_treatment,
+    require_iva_exemption_article,
+    require_registry_declared_iva_cash_accounting_treatment,
+)
 from .ledger_binding_selector_support import LedgerIvaFact, LedgerIvaFactValue
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
+from .iva_flow_catalogue import require_iva_flow_direction
 from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_tuple
 
 if TYPE_CHECKING:
@@ -178,6 +190,14 @@ class IvaLedgerObservation(BaseModel):
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
     rectifies_ledger_id: str | None = Field(default=None, min_length=1, max_length=128)
 
+    @field_validator("input_classification", mode="before")
+    @classmethod
+    def _input_classification_registry_declared(cls, value: object) -> object:
+        """Project raw input-use tokens through the dated prorrata catalogue."""
+        if value is None or isinstance(value, InputClassification):
+            return value
+        return require_input_classification(value)
+
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
         require_iva_rate_kind(self.rate_kind, effective_date=self.transaction_date)
@@ -235,7 +255,7 @@ class LedgerIvaProvider(BaseModel):
     rate_kinds: Annotated[tuple[IvaRateKind, ...], BeforeValidator(coerce_enum_tuple(IvaRateKind))] = Field(
         min_length=1,
     )
-    flow_direction: Annotated[IvaFlowDirection, BeforeValidator(coerce_enum_member(IvaFlowDirection))]
+    flow_direction: Annotated[IvaFlowDirection, BeforeValidator(require_iva_flow_direction)]
     observation_roles: Annotated[
         tuple[IvaLedgerObservationRole, ...],
         BeforeValidator(coerce_enum_tuple(IvaLedgerObservationRole)),
@@ -292,7 +312,7 @@ class LedgerIvaProvider(BaseModel):
         value: tuple[IvaCashAccountingTreatmentCode, ...],
     ) -> tuple[IvaCashAccountingTreatmentCode, ...]:
         for token in value:
-            require_iva_cash_accounting_treatment(token)
+            require_registry_declared_iva_cash_accounting_treatment(token, effective_date=date.today())
         if len(set(value)) != len(value):
             raise RegistryValidationError("cash_accounting_treatments entries must be unique")
         return value
@@ -387,19 +407,19 @@ def _invoice_ledger_screen_rate_slots(effective_date: date) -> tuple[_InvoiceLed
         _InvoiceLedgerScreenShape(
             (general_category,),
             (general,),
-            IvaFlowDirection.REPERCUTIDO,
+            issued_flow_direction(),
             LedgerIvaFact.IVA_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (reduced_category,),
             (reduced,),
-            IvaFlowDirection.REPERCUTIDO,
+            issued_flow_direction(),
             LedgerIvaFact.IVA_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (super_reduced_category,),
             (super_reduced,),
-            IvaFlowDirection.REPERCUTIDO,
+            issued_flow_direction(),
             LedgerIvaFact.IVA_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
@@ -409,25 +429,25 @@ def _invoice_ledger_screen_rate_slots(effective_date: date) -> tuple[_InvoiceLed
                 super_reduced_category,
             ),
             (general, reduced, super_reduced),
-            IvaFlowDirection.SOPORTADO,
+            received_flow_direction(),
             LedgerIvaFact.IVA_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (general_category,),
             (general,),
-            IvaFlowDirection.REPERCUTIDO,
+            issued_flow_direction(),
             LedgerIvaFact.RECARGO_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (reduced_category,),
             (reduced,),
-            IvaFlowDirection.REPERCUTIDO,
+            issued_flow_direction(),
             LedgerIvaFact.RECARGO_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (super_reduced_category,),
             (super_reduced,),
-            IvaFlowDirection.REPERCUTIDO,
+            issued_flow_direction(),
             LedgerIvaFact.RECARGO_AMOUNT_SUM,
         ),
     )
@@ -466,7 +486,7 @@ def _is_invoice_ledger_screen_candidate(
         selector.exemption_articles is None
         and selector.observation_roles == _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES
         and (cash_accounting_treatments is None or selector.cash_accounting_treatments == cash_accounting_treatments)
-        and selector.flow_direction in {IvaFlowDirection.REPERCUTIDO, IvaFlowDirection.SOPORTADO}
+        and is_standard_issued_or_received_flow(selector.flow_direction)
         and selector.fact in _INVOICE_LEDGER_SCREEN_FACTS
         and set(selector.categories).issubset(
             {
@@ -748,7 +768,7 @@ def _iva_ledger_observation_matches_selector(
         return False
     if observation.rate_kind not in rate_kinds:
         return False
-    if observation.flow_direction is not selector.flow_direction:
+    if observation.flow_direction != selector.flow_direction:
         return False
     if observation.cash_accounting_treatment not in set(selector.cash_accounting_treatments):
         return False

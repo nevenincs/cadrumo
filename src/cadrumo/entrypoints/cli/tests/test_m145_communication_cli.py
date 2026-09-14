@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ....application.modelo.m145_communication_records import (
     M145CommunicationRecordState,
@@ -224,7 +225,11 @@ def test_m145_create_validate_export_and_transitions_delegate_to_real_service(
     assert completed.exit_code == 0, completed.output
     completed_payload = unwrap_schema_envelope(completed.output)
     assert completed_payload["record"]["state"] == "locally_completed"
-    persisted = read_m145_communication_record(communication_record_id[:12], bucket_id=isolated_m145_cli_backend)
+    persisted = read_m145_communication_record(
+        communication_record_id[:12],
+        bucket_id=isolated_m145_cli_backend,
+        ports=build_m145_communication_records_ports(bucket_id=isolated_m145_cli_backend),
+    )
     assert persisted.state is M145CommunicationRecordState.LOCALLY_COMPLETED
     assert persisted.delivered_to_payer_at is not None
     assert persisted.locally_completed_at is not None

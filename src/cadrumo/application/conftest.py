@@ -24,22 +24,16 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Protocol, cast, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 import pytest
 
-from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..tests.env import temporary_env
-from .user_profile.custody_ports import ProfileCustodySecureObjectRepositoryPort
 
 
 @runtime_checkable
 class _MarkerNode(Protocol):
     def get_closest_marker(self, name: str) -> object | None: ...
-
-
-class _RequestWithModule(Protocol):
-    module: object
 
 
 @pytest.fixture(autouse=True, name="_isolated_aeat_root")
@@ -54,17 +48,3 @@ def isolated_aeat_root(request: pytest.FixtureRequest, tmp_path: Path) -> Iterat
         return
     with temporary_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path)):
         yield
-
-
-@pytest.fixture
-def secure_objects(
-    tmp_path: Path,
-    request: pytest.FixtureRequest,
-) -> Iterator[ProfileCustodySecureObjectRepositoryPort]:
-    """Yield the real encrypted-SQLite object repository for a module bucket."""
-    request_with_module = cast(_RequestWithModule, request)
-    bucket_id = getattr(request_with_module.module, "_BUCKET_ID", None)
-    if not isinstance(bucket_id, str) or not bucket_id:
-        raise RuntimeError("secure_objects requires a non-empty module _BUCKET_ID")
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
-        yield profile.repository

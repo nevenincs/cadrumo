@@ -20,7 +20,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.modelo.action_errors import ModeloLocalObservationError
+from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
@@ -36,10 +40,6 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo.action_errors import ModeloLocalObservationError
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -60,14 +60,14 @@ def _work_unit(bucket_id: str) -> WorkUnit:
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
-            modelo=Modelo.M303.value,
+            modelo=Modelo("303").value,
             filing_year=2026,
             period=period,
             revision_id="2026-y-siguientes",
         ),
         bucket_id=bucket_id,
         name="303-2026-1T",
-        modelo=Modelo.M303.value,
+        modelo=Modelo("303").value,
         filing_year=2026,
         period=period,
         revision_id="2026-y-siguientes",
@@ -124,7 +124,7 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
     )
 
 
-def _persist(work_unit: WorkUnit, *, repository, history_repository=None) -> str:
+def _persist(work_unit: WorkUnit, *, repository, history_repository: IvaCompensationHistoryRepository) -> str:
     return persist_filed_revision_observation(
         revision=_revision(work_unit),
         work_unit=work_unit,
@@ -138,17 +138,16 @@ def _persist(work_unit: WorkUnit, *, repository, history_repository=None) -> str
 
 
 def test_history_defaults_into_the_observation_repository_store(tmp_path: Path) -> None:
-    """With no override, both rows land in the observation repository's own store.
-
-    The default previously resolved the ACTIVE bucket while the observation
-    repository was whatever the caller threaded in, so the two could diverge
-    without any override at all.
-    """
+    """A composed history capability writes into the observation repository's store."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_A) as profile:
         observations = CalculationObservationRepository(objects=profile.repository)
         work_unit = _work_unit(profile.bucket_id)
 
-        _persist(work_unit, repository=observations)
+        _persist(
+            work_unit,
+            repository=observations,
+            history_repository=IvaCompensationHistoryRepository(objects=profile.repository),
+        )
 
         history = IvaCompensationHistoryRepository(objects=profile.repository)
         stored = tuple(history.iter_records())

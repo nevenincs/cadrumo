@@ -9,10 +9,22 @@ import typer
 from .common import active_bucket_id_or_refuse, emit_envelope
 
 
-def _evidence_bundle_service():
+def _evidence_bundle_service(*, bucket_id: str):
+    from ...adapters.persistence.profile.evidence_bundles import (
+        EvidenceBundleRepository,
+        EvidenceBundleWorkUnitRepository,
+    )
     from ...application.evidence.service import EvidenceBundleService
+    from ...application.evidence.ports import EvidenceBundlePorts
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
-    return EvidenceBundleService()
+    objects = secure_object_repository_for_bucket(bucket_id)
+    return EvidenceBundleService(
+        ports=EvidenceBundlePorts(
+            repository=EvidenceBundleRepository(objects=objects),
+            work_units=EvidenceBundleWorkUnitRepository(bucket_id=bucket_id, objects=objects),
+        ),
+    )
 
 
 def audit_view(
@@ -21,7 +33,7 @@ def audit_view(
 ) -> None:
     """Render an evidence bundle's manifest and referenced record list."""
     bucket_id = active_bucket_id_or_refuse()
-    bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
+    bundle = _evidence_bundle_service(bucket_id=bucket_id).show(bucket_id=bucket_id, bundle_id=bundle_id)
     from .modelo_aux_payloads import EvidenceRecordRefPayload, ModeloAuditViewResult
 
     result = ModeloAuditViewResult(
@@ -62,7 +74,7 @@ def audit_check(
 ) -> None:
     """Re-verify the evidence bundle's integrity without mutating state."""
     bucket_id = active_bucket_id_or_refuse()
-    report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
+    report = _evidence_bundle_service(bucket_id=bucket_id).check(bucket_id=bucket_id, bundle_id=bundle_id)
     from .modelo_aux_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditCheckResult
 
     result = ModeloAuditCheckResult(
@@ -96,7 +108,7 @@ def audit_export(
 ) -> None:
     """Write the evidence bundle as a ZIP archive to ``--output``."""
     bucket_id = active_bucket_id_or_refuse()
-    service = _evidence_bundle_service()
+    service = _evidence_bundle_service(bucket_id=bucket_id)
     output_path = service.export(
         bucket_id=bucket_id,
         bundle_id=bundle_id,

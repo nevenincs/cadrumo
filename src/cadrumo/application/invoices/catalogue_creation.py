@@ -7,8 +7,8 @@ carries
 ``linked_transaction_ids`` and is the reconciliation authority ``link`` targets.
 
 :func:`create_catalogue_invoice` builds a strict :class:`Invoice` from
-operator-friendly fields and persists it through the sanctioned
-:class:`InvoiceCatalogueRepository` (no parallel write path). A caller that
+operator-friendly fields and persists it through the required catalogue
+creation port bundle (no parallel write path). A caller that
 supplies no line set gets a single line synthesised from the taxable base and
 IVA rate; a caller that supplies one gets those lines, which is how an invoice
 carrying several IVA rates is expressed.
@@ -31,8 +31,6 @@ from functools import lru_cache
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
@@ -40,29 +38,32 @@ from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.currency.service import ExchangeRateProvider, resolve_fx_conversion_stamp
+from ...domain.currency.service import resolve_fx_conversion_stamp
 from ...domain.invoices.enums import (
+    default_invoice_class,
     InvoiceClass,
-    InvoiceOperationDateRole,
     IvaRate,
     PaymentStatus,
+    operation_performed_role,
 )
 from ...domain.invoices.enums import (
     resolve_iva_rate_slot as resolve_iva_rate_slot_for_date,
 )
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import IvaCategory
-from ._catalogue_mutation import mutate_catalogue
+from .catalogue_creation_ports import (
+    CatalogueCreationPorts,
+    CatalogueInvoiceEventRepositoryPort,
+    CatalogueInvoiceRateProviderPort,
+)
 
 
 class CatalogueInvoiceCreateResult(BaseModel):
@@ -108,7 +109,7 @@ def emit_catalogue_invoice_event(
     invoice: Invoice,
     bucket_id: str,
     slot: int,
-    event_repository: BucketEventHistoryRepositoryProtocol | None,
+    event_repository: CatalogueInvoiceEventRepositoryPort,
     occurred_at: datetime,
     actor: str,
 ) -> tuple[str, ...]:
@@ -124,16 +125,10 @@ def emit_catalogue_invoice_event(
     that already exists rather than minting a parallel one; the six members
     outlive the slim store that used to be their only emitter.
     """
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-
-    repository = event_repository or BucketEventHistoryRepository(
-        objects=secure_object_repository_for_bucket(bucket_id),
-    )
     event_type = _EVENT_TYPES_BY_KIND[invoice.kind][slot]
     object_type = _EVENT_OBJECT_BY_KIND[invoice.kind]
     event = emit_bucket_event(
-        repository=repository,
+        repository=event_repository,
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
@@ -343,7 +338,7 @@ def _apply_operator_asserted_invoice_facts(
         # received, art. 25 entregas excluded) and is not something this
         # operator-supplied date can assert, so it is not offered here.
         invoice_payload["operation_date"] = operation_date.isoformat()
-        invoice_payload["operation_date_role"] = InvoiceOperationDateRole.OPERATION_PERFORMED.value
+        invoice_payload["operation_date_role"] = operation_performed_role().value
     if retention_rate is not None:
         invoice_payload["retention_rate"] = format(retention_rate, "f")
     if retention_amount is not None:
@@ -355,12 +350,12 @@ def _apply_fx_conversion_stamp(
     *,
     currency: str,
     issued_at: date,
-    rate_provider: ExchangeRateProvider | None,
+    rate_provider: CatalogueInvoiceRateProviderPort,
 ) -> None:
     fx_stamp = resolve_fx_conversion_stamp(
         currency=currency,
         on_date=issued_at,
-        rate_provider=rate_provider or default_ecb_rate_provider(),
+        rate_provider=rate_provider,
     )
     if fx_stamp is not None:
         invoice_payload["fx_rate"] = format(fx_stamp.rate, "f")
@@ -387,12 +382,12 @@ def build_catalogue_invoice(
     operation_date: date | None = None,
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
-    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    invoice_class: InvoiceClass | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo_amount: Decimal | None = None,
     lines: Sequence[InvoiceLine] | None = None,
-    rate_provider: ExchangeRateProvider | None = None,
+    rate_provider: CatalogueInvoiceRateProviderPort,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
 
@@ -429,7 +424,7 @@ def build_catalogue_invoice(
     ``invoice_class``, ``series``, ``rectifies_invoice_number`` and
     ``recargo_amount`` reach axes the aggregate has always modelled and no
     write path could set. Until they existed here every canonically-written
-    invoice was ORDINARIA with no series and no recargo **by construction**,
+    invoice was ordinary with no series and no recargo **by construction**,
     and a rectificativa was unrepresentable — so the aggregate claimed a
     vocabulary the writer could not speak.
 
@@ -478,7 +473,7 @@ def build_catalogue_invoice(
         "payment_status": payment_status.value,
         "lines": payload_lines,
         "notes": notes,
-        "invoice_class": invoice_class.value,
+        "invoice_class": (invoice_class or default_invoice_class()).value,
     }
     _apply_operator_asserted_invoice_facts(
         invoice_payload,
@@ -509,8 +504,7 @@ def build_catalogue_invoice(
 def create_catalogue_invoice(
     *,
     invoice: Invoice,
-    repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: CatalogueCreationPorts,
     occurred_at: datetime | None = None,
     actor: str = "cli",
 ) -> CatalogueInvoiceCreateResult:
@@ -524,8 +518,6 @@ def create_catalogue_invoice(
     bucket_id = invoice.bucket_id
     if bucket_id is None:
         raise InvoiceValidationError("a catalogue invoice must declare its bucket_id before persistence")
-    repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-
     def _add(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
         """Rebuild the catalogue with this invoice, refusing an identity it already holds."""
         if invoice.invoice_id in catalogue:
@@ -545,7 +537,7 @@ def create_catalogue_invoice(
     # never read -- and a dropped invoice under-declares. Re-running the
     # duplicate check on each attempt is the point: it must be judged against
     # the catalogue actually being written to, not the one first read.
-    new_catalogue = mutate_catalogue(repo, _add)
+    new_catalogue = ports.invoice_repository.mutate(_add)
     # Emitted AFTER the save, so the audit trail never records a creation that
     # did not persist. The reverse order would leave an event pointing at an
     # invoice that is not there, which is worse than a missing event: it reads
@@ -554,7 +546,7 @@ def create_catalogue_invoice(
         invoice=invoice,
         bucket_id=bucket_id,
         slot=0,
-        event_repository=event_repository,
+        event_repository=ports.event_repository,
         occurred_at=occurred_at or now(),
         actor=actor,
     )

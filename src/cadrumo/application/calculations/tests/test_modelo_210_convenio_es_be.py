@@ -16,30 +16,26 @@ interest 0.10. Grounded verbatim from the bundled BOE corpus (non-tautological).
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.calculations.registry.authority import bundled_authority
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_be_dividend_resolves_treaty_ceiling_of_15_percent(tmp_path: Path) -> None:
+def test_be_dividend_resolves_treaty_ceiling_of_15_percent() -> None:
     """BE-resident dividend: min(domestic 0.19, treaty 0.15) = 0.15 (art 10.2.a)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="BE", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="BE", base="1000.00")
 
     assert tipo == Decimal("0.15")
     assert cuota == Decimal("150.00")
 
 
-def test_be_interest_resolves_treaty_ceiling_of_10_percent(tmp_path: Path) -> None:
+def test_be_interest_resolves_treaty_ceiling_of_10_percent() -> None:
     """BE-resident interest: min(domestic 0.19, treaty 0.10) = 0.10 (art 11.2)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="interest", country_code="BE", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="interest", country_code="BE", base="1000.00")
 
     assert tipo == Decimal("0.10")
     assert cuota == Decimal("100.00")

@@ -7,10 +7,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from pydantic import AnyHttpUrl, ValidationError
+from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import bundled_authority
@@ -20,7 +18,9 @@ from ....domain.deadlines.models import IVARegime, ObligationStatus, TaxpayerPro
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.notifications import PersistedNotificationsSnapshot
+from ...live.notification_ports import RemoteNotification
 from ..calendar import (
     _registry_window_for_work_unit,
     build_overview_calendar,
@@ -518,7 +518,7 @@ def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
         source_url=_SOURCE_URL,
         authenticated_identity="X1234567L",
         declarations=(
-            Declaracion(
+            ExpedientesDeclaration(
                 modelo="303",
                 ejercicio=2025,
                 period=_PERIOD_2025_1T,
@@ -555,7 +555,7 @@ def test_expedientes_snapshot_for_wrong_identity_does_not_project_filing_event()
         source_url=_SOURCE_URL,
         authenticated_identity="Y7654321G",
         declarations=(
-            Declaracion(
+            ExpedientesDeclaration(
                 modelo="303",
                 ejercicio=2025,
                 period=_PERIOD_2025_1T,
@@ -589,7 +589,7 @@ def test_notification_snapshots_project_message_events_on_notification_date() ->
         fecha_notificacion=date(2025, 3, 12),
         modo_notificacion="DEHú",
         leida=False,
-        source_url=AnyHttpUrl(_SOURCE_URL),
+        source_url=_SOURCE_URL,
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
@@ -626,7 +626,7 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
         fecha_notificacion=date(2025, 3, 12),
         modo_notificacion="DEHú",
         leida=False,
-        source_url=AnyHttpUrl(_SOURCE_URL),
+        source_url=_SOURCE_URL,
     )
     other_taxpayer = RemoteNotification(
         certificado_id="2699101808461",
@@ -640,7 +640,7 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
         fecha_notificacion=None,
         modo_notificacion="DEHú",
         leida=True,
-        source_url=AnyHttpUrl(_SOURCE_URL),
+        source_url=_SOURCE_URL,
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
@@ -674,7 +674,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         fecha_notificacion=date(2025, 3, 12),
         modo_notificacion="DEHú",
         leida=False,
-        source_url=AnyHttpUrl(_SOURCE_URL),
+        source_url=_SOURCE_URL,
     )
     explicit_other_taxpayer = RemoteNotification(
         certificado_id="2699101808461",
@@ -688,7 +688,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         fecha_notificacion=None,
         modo_notificacion="DEHú",
         leida=True,
-        source_url=AnyHttpUrl(_SOURCE_URL),
+        source_url=_SOURCE_URL,
     )
     matching_snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
@@ -740,7 +740,7 @@ def test_build_overview_calendar_accepts_observed_events() -> None:
                         destinatario_nombre="Test S.L.",
                         fecha_emision=date(2025, 3, 10),
                         leida=True,
-                        source_url=AnyHttpUrl(_SOURCE_URL),
+                        source_url=_SOURCE_URL,
                     ),
                 ),
                 persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),

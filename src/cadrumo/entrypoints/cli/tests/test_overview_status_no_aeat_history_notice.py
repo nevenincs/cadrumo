@@ -17,7 +17,7 @@ import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....tests.profile_capsule import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]

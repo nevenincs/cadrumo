@@ -1,20 +1,18 @@
 """Independent guard: retenciones count source refuses an empty perceptor store.
 
 Modelo 180's perceptor-count binding declares
-``source = "retenciones_aggregation"``. With an empty encrypted retención
-observation store, the live resolver must raise before a zero count can be
-materialised. The test keeps the guard on the real resolver and store path while
-building only the typed binding surface it consumes.
+``source = "retenciones_aggregation"``. With an empty observation capability,
+the application resolver must raise before a zero count can be materialised.
+The concrete encrypted adapter is covered at its persistence seam; this test
+keeps the guard on the real resolver with an inward empty-port fake.
 """
 
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -22,6 +20,8 @@ from ....domain.calculations.registry.schema_references import PeriodSelector
 from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..retencion_observations_repository import RetencionObservationPorts
+from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -42,6 +42,13 @@ _M180_RETENCIONES_SOURCE_REFS = (
     "boe-modelo-180-2014-form",
     "boe-modelo-180-2023-form",
 )
+
+
+class _EmptyRetencionObservationRepository:
+    """Application-port fake representing an empty observation window."""
+
+    def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
+        return ()
 
 
 def _m180_retenciones_revision() -> ModeloRevision:
@@ -70,12 +77,13 @@ def _m180_retenciones_revision() -> ModeloRevision:
     )
 
 
-def test_real_resolver_empty_store_fails_before_silent_zero(tmp_path: Path) -> None:
+def test_resolver_empty_application_port_fails_before_silent_zero() -> None:
     with (
-        isolated_runtime_profile(tmp_path=tmp_path),
         pytest.raises(AggregationValidationError) as exc_info,
     ):
-        RetencionesAggregationSourceResolver().resolve(
+        RetencionesAggregationSourceResolver(
+            ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="180",

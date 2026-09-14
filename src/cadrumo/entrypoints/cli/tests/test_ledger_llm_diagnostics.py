@@ -31,7 +31,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import set_classification
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
 from .._ledger_rule_payloads import (

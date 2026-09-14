@@ -31,7 +31,7 @@ from ...domain.calculations.registry.applicability import (
 from ...domain.calculations.registry.applicability import (
     modelo_requires_iva_regime as _modelo_requires_iva_regime,
 )
-from ...domain.calculations.registry.applicability_payer_facts import PayerFact as _PayerFact
+from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_simplificado_token
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
@@ -81,16 +81,6 @@ _PROFILE_FIELD_WARNING_META: MappingProxyType[str, tuple[str, str]] = MappingPro
         "iva.regime": ("cli.overview.warning.iva_regime_unset", _PROFILE_EDIT_ACTION_ID),
     },
 )
-
-_PAYER_FACT_PROFILE_KEYS: dict[_PayerFact, tuple[str, ...]] = {
-    _PayerFact.PAYS_WITHHELD_INCOME: (
-        "has_employees",
-        "pays_professionals_with_retencion",
-    ),
-    _PayerFact.PAYS_RENT_WITH_RETENCION: ("pays_rent_with_retencion",),
-    _PayerFact.TRADES_INTRACOMMUNITY: ("does_intracomunitario",),
-    _PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: ("third_party_transactions_above_347_threshold",),
-}
 
 _ESTIMATION_REGIME_PROFILE_KEY: dict[str, tuple[str, str]] = {
     irpf_estimation_regime_objetiva_token(): (
@@ -152,7 +142,7 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
 
     for rule in _iter_modelo_applicability_rules():
         if rule.required_payer_fact is not None:
-            for profile_key in _PAYER_FACT_PROFILE_KEYS.get(rule.required_payer_fact, ()):
+            for profile_key in payer_fact_profile_keys(rule.required_payer_fact):
                 _record_gating_field(
                     profile_key=profile_key,
                     modelo=rule.modelo,
@@ -243,7 +233,7 @@ def calendar_applicability_profile_keys_for_modelo(modelo: str) -> tuple[str, ..
             if regime in _ESTIMATION_REGIME_PROFILE_KEY:
                 keys.add(_ESTIMATION_REGIME_PROFILE_KEY[regime][0])
         if rule.required_payer_fact is not None:
-            keys.update(_PAYER_FACT_PROFILE_KEYS.get(rule.required_payer_fact, ()))
+            keys.update(payer_fact_profile_keys(rule.required_payer_fact))
         break
     keys.update(_deadline_window_profile_keys_by_modelo().get(modelo, ()))
     if _modelo_requires_iva_regime(modelo):

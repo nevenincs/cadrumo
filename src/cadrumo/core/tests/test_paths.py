@@ -183,7 +183,7 @@ def test_effective_storage_root_falls_back_to_the_settings_default_when_no_overr
 def test_effective_storage_root_prefers_an_explicit_settings_object_over_reloading() -> None:
     """A caller-supplied ``settings=`` is read directly rather than triggering ``load_settings()`` again.
 
-    Every one of the six converged call sites in ``_config_reset_repository.py``
+    Every one of the six converged call sites in ``config_reset_repository.py``
     and ``_bundle_export_operation.py`` already holds a resolved ``Settings``
     instance when it has one, and must not pay for a second load just to
     resolve the fallback root.

@@ -29,21 +29,15 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.period import Period
-from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.components import registry_category_projection
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..modelo_bindings import LedgerIvaAggregationSourceResolver
-from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -179,67 +173,3 @@ def test_the_out_of_scope_declaration_is_not_a_re_export_of_cuota_less() -> None
     assert IvaCategory.REGIMEN_SIMPLIFICADO in cuota_less
     assert IvaCategory.DOMESTIC_ZERO in unroutable
     assert IvaCategory.REGIMEN_SIMPLIFICADO not in unroutable
-
-
-def test_the_advisory_fires_live_for_a_present_unroutable_category(tmp_path: Path) -> None:
-    """Positive control end to end: live wiring, scoped to this ledger's own categories."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-        repository.save(TransactionCatalogue.from_transactions((_domestic_zero_sale(),)))
-        resolution = LedgerIvaAggregationSourceResolver(
-            transaction_repository=repository,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id=_BUCKET_ID,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=_Q1_2025,
-                revision=_m303_revision(),
-            ),
-        )
-
-    advisories = [
-        diagnostic
-        for diagnostic in resolution.diagnostics
-        if diagnostic.reason == "structurally_unroutable_base_category"
-    ]
-    assert len(advisories) == 1, "the live domestic_zero residue must surface exactly one advisory"
-    message = advisories[0].message
-    assert "domestic_zero" in message
-    assert "no tax is lost" in message
-
-
-def test_the_advisory_stays_silent_when_the_category_never_appears(tmp_path: Path) -> None:
-    """Negative control: an unroutable category not present in this ledger must not fire.
-
-    Scoping the live advisory to present categories is deliberate (a taxpayer
-    with no domestic_zero row should not see a blanket registry dump), and
-    this is the assertion that would catch a regression to "fire on every
-    unroutable category regardless of relevance."
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-        repository.save(TransactionCatalogue.from_transactions((_domestic_general_sale(),)))
-        resolution = LedgerIvaAggregationSourceResolver(
-            transaction_repository=repository,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id=_BUCKET_ID,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=_Q1_2025,
-                revision=_m303_revision(),
-            ),
-        )
-
-    assert not [
-        diagnostic
-        for diagnostic in resolution.diagnostics
-        if diagnostic.reason == "structurally_unroutable_base_category"
-    ]

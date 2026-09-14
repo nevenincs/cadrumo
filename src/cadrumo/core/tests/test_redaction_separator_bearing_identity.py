@@ -28,8 +28,8 @@ from __future__ import annotations
 
 import pytest
 
+from ..identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
 from ..identity.documents import (
-    SPANISH_TAX_ID_BOOTSTRAP_FORMAT,
     IdentityError,
     validate_identity,
 )
@@ -162,6 +162,6 @@ def test_the_separated_forms_the_gates_reject_are_left_alone() -> None:
     lookalike = "B-1234567-9"
 
     with pytest.raises(IdentityError):
-        validate_identity(normalise_nif_iva(lookalike), SPANISH_TAX_ID_BOOTSTRAP_FORMAT)
+        validate_identity(normalise_nif_iva(lookalike), SPANISH_TAX_ID_FORMAT)
 
     assert redact_for_cli_output(lookalike) == lookalike

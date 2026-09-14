@@ -58,7 +58,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.translatable import Translatable as t
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.iva.components import IvaRetencionRole, category_components
+from ...domain.iva.components import category_components, registry_retencion_role_token
 from .errors import AggregationValidationError
 from .retenciones import RetencionObservation
 
@@ -372,8 +372,8 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]
     """
     if invoice.iva_category is None:
         yield InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED
-    elif category_components(invoice.iva_category, invoice.kind).retencion_role is not (
-        IvaRetencionRole.TAXPAYER_LIABILITY
+    elif category_components(invoice.iva_category, invoice.kind).retencion_role != registry_retencion_role_token(
+        "taxpayer_liability",
     ):
         yield InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY
     if invoice.retention_amount is None or invoice.retention_amount == Decimal("0"):

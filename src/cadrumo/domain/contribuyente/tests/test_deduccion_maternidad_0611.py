@@ -34,10 +34,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.descendant_relacion import (
-    ART_58_2_ENTITLING_RELACIONES,
-    DescendantRelacion,
-)
+from ....core.descendant_relacion import DescendantRelacion
+from ...calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
 from ...calculations.registry.authority import bundled_authority
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
@@ -652,9 +650,9 @@ class TestArt811PopulationGate:
         Were the two ever merged, that carer would collect again.
         """
         assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in _ART_81_1_MATERNITY_RELATIONS
-        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in ART_58_2_ENTITLING_RELACIONES
+        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in descendant_relacion_entitling_tokens()
         assert DescendantRelacion.TUTELA in _ART_81_1_MATERNITY_RELATIONS
-        assert DescendantRelacion.TUTELA not in ART_58_2_ENTITLING_RELACIONES
+        assert DescendantRelacion.TUTELA not in descendant_relacion_entitling_tokens()
 
     def test_every_admitted_relacion_still_contributes(self) -> None:
         """The gate must exclude one member, not narrow the population generally.

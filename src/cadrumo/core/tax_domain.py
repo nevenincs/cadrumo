@@ -24,6 +24,7 @@ class TaxDomain(str):
     __slots__ = ()
 
     def __new__(cls, value: str) -> TaxDomain:
+        """Validate and construct one syntax-only tax-domain identifier."""
         raw = str(value)
         if _TAX_DOMAIN_PATTERN.fullmatch(raw) is None:
             raise CoreValidationError(f"invalid tax-domain identifier: {value!r}")

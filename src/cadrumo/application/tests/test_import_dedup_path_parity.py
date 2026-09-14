@@ -16,17 +16,18 @@ both of them over the same rows and compares the outcomes.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ...adapters.inbound.financial.providers.base import ParsedLedgerRow
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger.actions_import import evaluate_import_rows
+from ..ledger.protocols import ParsedLedgerRowProtocol
 from ..transactions.import_diagnostics import import_ledger_with_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -58,9 +59,17 @@ def _raw(provider_id: str, *, amount: Decimal = Decimal("121.00"), description: 
     )
 
 
-def _parsed(raw: RawTransaction) -> ParsedLedgerRow:
+@dataclass(frozen=True, slots=True)
+class _ParsedLedgerRowFake:
+    """Application-owned parsed-row double for the import classification seam."""
+
+    raw: RawTransaction
+    direction: TransactionDirection
+
+
+def _parsed(raw: RawTransaction) -> ParsedLedgerRowProtocol:
     """Pair a row with the direction the provider read at the parse boundary."""
-    return ParsedLedgerRow(raw=raw, direction=_DIRECTION)
+    return _ParsedLedgerRowFake(raw=raw, direction=_DIRECTION)
 
 
 def _preview(rows: tuple[RawTransaction, ...], catalogue: TransactionCatalogue) -> tuple[int, int]:

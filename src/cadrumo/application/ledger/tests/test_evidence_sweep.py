@@ -15,23 +15,15 @@ from __future__ import annotations
 
 import pytest
 
-from ....adapters.outbound.google.document_link_resolver import DriveFolderDocument
-from ....adapters.outbound.storage.errors import (
-    OutboundStorageNetworkError,
-    OutboundStoragePermissionError,
-    OutboundStorageValidationError,
-)
 from ..evidence_sweep import EvidenceSweepRefusal, classify_evidence_sweep_failure, sweep_evidence_folder
+from ..evidence_sweep_ports import EvidenceSweepDocument, EvidenceSweepFileNotReachableError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_a_file_outside_the_granted_scope_refuses_only_that_file() -> None:
     """The 403/404 case, and the only one the sweep survives."""
-    error = OutboundStoragePermissionError(
-        "Drive file 'abc' is not reachable under the drive.file scope",
-        context={"file_id": "abc", "required_scope": "drive.readonly"},
-    )
+    error = EvidenceSweepFileNotReachableError()
 
     assert classify_evidence_sweep_failure(error) is EvidenceSweepRefusal.FILE_NOT_REACHABLE
 
@@ -43,17 +35,14 @@ def test_a_transport_failure_ends_the_sweep() -> None:
     folder as scope-refused and send the operator to grant a scope that would
     not have helped.
     """
-    error = OutboundStorageNetworkError("Drive files.get_media failed", context={"file_id": "abc"})
+    error = ConnectionError("Drive files.get_media failed")
 
     assert classify_evidence_sweep_failure(error) is None
 
 
 def test_a_malformed_media_payload_ends_the_sweep() -> None:
     """A non-bytes body says the transport is misbehaving, not that the file is private."""
-    error = OutboundStorageValidationError(
-        "Drive files.get_media returned a non-bytes payload",
-        context={"file_id": "abc"},
-    )
+    error = ValueError("Drive files.get_media returned a non-bytes payload")
 
     assert classify_evidence_sweep_failure(error) is None
 
@@ -77,15 +66,12 @@ def test_exactly_one_refusal_continues_a_sweep() -> None:
     assert list(EvidenceSweepRefusal) == [EvidenceSweepRefusal.FILE_NOT_REACHABLE]
 
 
-def _document(file_id: str, name: str = "factura.pdf") -> DriveFolderDocument:
-    return DriveFolderDocument.model_validate({"id": file_id, "name": name, "mimeType": "application/pdf"})
+def _document(file_id: str, name: str = "factura.pdf") -> EvidenceSweepDocument:
+    return EvidenceSweepDocument(file_id=file_id, name=name, mime_type="application/pdf")
 
 
-def _unreachable() -> OutboundStoragePermissionError:
-    return OutboundStoragePermissionError(
-        "Drive file is not reachable under the drive.file scope",
-        context={"required_scope": "drive.readonly"},
-    )
+def _unreachable() -> EvidenceSweepFileNotReachableError:
+    return EvidenceSweepFileNotReachableError()
 
 
 def test_one_unreachable_file_does_not_abort_the_rest_of_the_sweep() -> None:
@@ -99,7 +85,7 @@ def test_one_unreachable_file_does_not_abort_the_rest_of_the_sweep() -> None:
     """
     fetched: list[str] = []
 
-    def fetch(document: DriveFolderDocument) -> str:
+    def fetch(document: EvidenceSweepDocument) -> str:
         if document.file_id == "b":
             raise _unreachable()
         fetched.append(document.file_id)
@@ -119,7 +105,7 @@ def test_every_listed_document_gets_exactly_one_row_in_order() -> None:
     files present and positioned, not omitted.
     """
 
-    def fetch(document: DriveFolderDocument) -> str:
+    def fetch(document: EvidenceSweepDocument) -> str:
         if document.file_id == "b":
             raise _unreachable()
         return f"att-{document.file_id}"
@@ -139,13 +125,13 @@ def test_a_transport_failure_stops_the_sweep_at_the_document_that_failed() -> No
     """
     attempted: list[str] = []
 
-    def fetch(document: DriveFolderDocument) -> str:
+    def fetch(document: EvidenceSweepDocument) -> str:
         attempted.append(document.file_id)
         if document.file_id == "b":
-            raise OutboundStorageNetworkError("Drive files.get_media failed", context={})
+            raise ConnectionError("Drive files.get_media failed")
         return f"att-{document.file_id}"
 
-    with pytest.raises(OutboundStorageNetworkError):
+    with pytest.raises(ConnectionError):
         sweep_evidence_folder(documents=[_document("a"), _document("b"), _document("c")], fetch=fetch)
 
     assert attempted == ["a", "b"]
@@ -159,7 +145,7 @@ def test_the_counts_cannot_disagree_with_the_rows() -> None:
     underneath it said otherwise.
     """
 
-    def fetch(document: DriveFolderDocument) -> str:
+    def fetch(document: EvidenceSweepDocument) -> str:
         if document.file_id in {"b", "d"}:
             raise _unreachable()
         return f"att-{document.file_id}"
@@ -174,7 +160,7 @@ def test_the_counts_cannot_disagree_with_the_rows() -> None:
 def test_a_row_never_claims_both_an_attachment_and_a_refusal() -> None:
     """Fetched and refused are mutually exclusive, and each row proves it."""
 
-    def fetch(document: DriveFolderDocument) -> str:
+    def fetch(document: EvidenceSweepDocument) -> str:
         if document.file_id == "b":
             raise _unreachable()
         return f"att-{document.file_id}"

@@ -29,6 +29,7 @@ from .common import (
     active_bucket_id_or_refuse as _inventory_bucket_id,
 )
 from .common import emit_envelope
+from .state_projection_support import inventory_service_ports_factory
 from .ledger_business_payloads import (
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
@@ -38,8 +39,8 @@ from .ledger_business_payloads import (
 )
 
 
-def _inventory_service() -> InventoryService:
-    return InventoryService()
+def _inventory_service(ctx: typer.Context, *, bucket_id: str) -> InventoryService:
+    return InventoryService(ports=inventory_service_ports_factory(ctx)(bucket_id=bucket_id))
 
 
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
@@ -102,7 +103,7 @@ def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCost | N
 def inventory_list(ctx: typer.Context) -> None:
     """List per-actividad ledgers via :meth:`InventoryService.list_all`."""
     bucket_id = _inventory_bucket_id()
-    rows = _inventory_service().list_all(bucket_id=bucket_id)
+    rows = _inventory_service(ctx, bucket_id=bucket_id).list_all(bucket_id=bucket_id)
     payload = {
         "bucket_id": bucket_id,
         "rows": [row.model_dump(mode="json") for row in rows],
@@ -131,7 +132,7 @@ def inventory_create(
 ) -> None:
     """Create a ledger via :meth:`InventoryService.create`."""
     bucket_id = _inventory_bucket_id()
-    result = _inventory_service().create(
+    result = _inventory_service(ctx, bucket_id=bucket_id).create(
         bucket_id=bucket_id,
         actividad_id=actividad_id,
         year=year,
@@ -179,7 +180,7 @@ def inventory_movement_add(
         taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
         acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
     )
-    result = _inventory_service().movement_add(
+    result = _inventory_service(ctx, bucket_id=bucket_id).movement_add(
         bucket_id=bucket_id,
         actividad_id=actividad_id,
         year=year,
@@ -209,7 +210,11 @@ def inventory_valuation_preview(
 ) -> None:
     """Preview valuation via :meth:`InventoryService.valuation_preview`."""
     bucket_id = _inventory_bucket_id()
-    result = _inventory_service().valuation_preview(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
+    result = _inventory_service(ctx, bucket_id=bucket_id).valuation_preview(
+        bucket_id=bucket_id,
+        actividad_id=actividad_id,
+        year=year,
+    )
     preview = result.preview
     emit_envelope(
         ctx,
@@ -236,10 +241,11 @@ def inventory_closing_authority_record(
     """Record one complete typed authority document from its canonical file input."""
     from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 
+    bucket_id = _inventory_bucket_id()
     try:
         record = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
-        result = _inventory_service().closing_authority_record(
-            bucket_id=_inventory_bucket_id(),
+        result = _inventory_service(ctx, bucket_id=bucket_id).closing_authority_record(
+            bucket_id=bucket_id,
             actividad_id=actividad_id,
             year=year,
             authority_record=record,

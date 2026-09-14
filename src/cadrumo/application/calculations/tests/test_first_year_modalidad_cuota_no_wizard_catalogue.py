@@ -61,6 +61,7 @@ from cadrumo.application.calculations.relation_prefill import (
     activity_start_date_for_bucket,
     _first_year_modalidad_cuota_no_m202,
 )
+from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.period import Period
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -71,7 +72,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
@@ -121,9 +122,36 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     )
     seed_test_profile_record(record)
 
+    class _ProfilePathValuesReader:
+        def __init__(self, values):
+            self._values = values
+
+        def load_path_values(self, *, bucket_id):
+            del bucket_id
+            return self._values
+
+    profile_path_values_reader = _ProfilePathValuesReader(record_to_path_values(record))
+
     # The decoupled helpers must resolve off the projection with NO catalogue.
-    print("FIRST_YEAR:" + str(_first_year_modalidad_cuota_no_m202(_BUCKET, filing_year=2025)))
-    print("ACTIVITY_START:" + str(activity_start_date_for_bucket(_BUCKET)))
+    print(
+        "FIRST_YEAR:"
+        + str(
+            _first_year_modalidad_cuota_no_m202(
+                _BUCKET,
+                filing_year=2025,
+                profile_path_values_reader=profile_path_values_reader,
+            )
+        )
+    )
+    print(
+        "ACTIVITY_START:"
+        + str(
+            activity_start_date_for_bucket(
+                _BUCKET,
+                profile_path_values_reader=profile_path_values_reader,
+            )
+        )
+    )
 
     secure_objects = profile.repository
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)

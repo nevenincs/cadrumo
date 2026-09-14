@@ -454,6 +454,7 @@ def modelo_spreadsheet_verify(
     scenario_path: Path | None = None,
 ) -> None:
     """Run a three-way parity check across AEAT oracle, local Decimal runtime, and Sheets."""
+    from ..adapter_composition import build_calc_sheets_parity_apply_port
     from ...application.storage.calc_sheets.parity_harness import verify_modelo_parity
     from ...application.user_profile.capabilities import resolve_active_capability
     from ...core.capabilities import ServiceCapability
@@ -471,7 +472,16 @@ def modelo_spreadsheet_verify(
     snapshot = load_snapshot(modelo, filing_period_or_refusal(modelo=modelo, period=period, year=year))
     scenario = _load_parity_scenario(scenario_path)
 
-    report = verify_modelo_parity(snapshot, scenario, credentials=credentials, root_folder_id=root_folder_id)
+    try:
+        report = verify_modelo_parity(
+            snapshot,
+            scenario,
+            credentials=credentials,
+            root_folder_id=root_folder_id,
+            apply_port=build_calc_sheets_parity_apply_port(),
+        )
+    except OutboundStorageError as exc:
+        raise google_refusal(exc) from exc
     emit_envelope(
         ctx,
         command="modelo.spreadsheet.verify",

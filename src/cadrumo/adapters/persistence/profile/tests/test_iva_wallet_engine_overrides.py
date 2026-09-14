@@ -1,6 +1,7 @@
 """Override behavior for AEAT IVA wallet decisions in Modelo 303."""
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date
 from decimal import Decimal
@@ -8,9 +9,17 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.application.calculations.observations_repository import CalculationObservationPorts
+from cadrumo.application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationOverride
@@ -23,7 +32,6 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.modelo.iva_wallet_seed import (
@@ -55,6 +63,20 @@ from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support impor
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _modelo_iva_wallet_seed_ports() -> ModeloIvaWalletSeedPorts:
+    """Compose the real persistence adapters for this adapter-layer test."""
+    objects = secure_object_repository_for_bucket(_BUCKET_ID)
+    return ModeloIvaWalletSeedPorts(
+        work_unit_repository=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+        bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+        calculation_observation_ports=CalculationObservationPorts(
+            observation_repository=CalculationObservationRepository(objects=objects),
+            iva_wallet_decision_repository=IvaWalletDecisionRepository(objects=objects),
+        ),
+    )
+
+
 def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine_prefill(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         _store_operator_profile()
@@ -65,6 +87,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             snapshot,
             repository=observation_repo,
             captured_at=_DECIDED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -152,6 +175,7 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
             amount=Decimal("450.00"),
             reason="Operator asserts the prior-quarter cuota a compensar.",
             evidence_locator="operator-review:m303-prior-quarter",
+            ports=_modelo_iva_wallet_seed_ports(),
         )
         assert decision.selected_authority == "taxpayer_override"
         assert decision.blocked is False
@@ -221,6 +245,7 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
                 amount=Decimal("450.00"),
                 reason="x",
                 evidence_locator="y",
+                ports=_modelo_iva_wallet_seed_ports(),
             )
 
 
@@ -238,4 +263,5 @@ def test_override_refused_when_fresh_wallet_decision_exists(tmp_path: Path) -> N
                 amount=Decimal("999.00"),
                 reason="x",
                 evidence_locator="y",
+                ports=_modelo_iva_wallet_seed_ports(),
             )

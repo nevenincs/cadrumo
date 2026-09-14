@@ -19,6 +19,7 @@ from importlib.metadata import version
 import pytest
 
 from ....core.field_origin import FieldOrigin
+from ....core.document_shape import DocumentShape
 from ....tests.pdf_fixtures import multi_page_text_pdf_bytes
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -28,6 +29,7 @@ from ..evidence_textlayer import (
     text_layer_transcriber_identity,
     transcribe_text_layer,
 )
+from ._evidence_textlayer_test_support import refusing_text_layer_ports, text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -49,11 +51,15 @@ _PAGE_TWO_LINES = (
     "Continuacion pagina 2",
     f"Total factura {_PRINTED_TOTAL}",
 )
+_TEXT_LAYER_PORTS = text_layer_ports_for_pages(
+    ("\n".join(_PAGE_ONE_LINES), "\n".join(_PAGE_TWO_LINES))
+)
 
 
-def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
+def _evidence_input(data: bytes, mime_type: str, *, document_shape: DocumentShape) -> EvidenceInput:
     return EvidenceInput(
         mime_type=mime_type,
+        document_shape=document_shape,
         data=data,
         content_sha256=hashlib.sha256(data).hexdigest(),
         attachment_id="b" * 64,
@@ -65,12 +71,13 @@ def invoice_evidence() -> EvidenceInput:
     return _evidence_input(
         multi_page_text_pdf_bytes(_PAGE_ONE_LINES, _PAGE_TWO_LINES),
         "application/pdf",
+        document_shape=DocumentShape.PDF_TEXT_LAYER,
     )
 
 
 @pytest.fixture
 def transcription(invoice_evidence: EvidenceInput) -> DocumentTranscription:
-    return transcribe_text_layer(invoice_evidence)
+    return transcribe_text_layer(invoice_evidence, text_layer_ports=_TEXT_LAYER_PORTS)
 
 
 class TestPrintedFormsSurviveVerbatim:
@@ -143,19 +150,27 @@ class TestRefusals:
         self,
         invoice_evidence: EvidenceInput,
     ) -> None:
-        assert transcribe_text_layer(invoice_evidence).page_count == 2
+        assert transcribe_text_layer(invoice_evidence, text_layer_ports=_TEXT_LAYER_PORTS).page_count == 2
 
     def test_image_evidence_is_refused(self) -> None:
-        image = _evidence_input(b"\x89PNG\r\n\x1a\nnot-a-pdf", "image/png")
+        image = _evidence_input(
+            b"\x89PNG\r\n\x1a\nnot-a-pdf",
+            "image/png",
+            document_shape=DocumentShape.IMAGE,
+        )
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
-            transcribe_text_layer(image)
+            transcribe_text_layer(image, text_layer_ports=_TEXT_LAYER_PORTS)
 
     def test_pdf_without_a_text_layer_is_refused(self) -> None:
-        blank = _evidence_input(multi_page_text_pdf_bytes(()), "application/pdf")
+        blank = _evidence_input(
+            multi_page_text_pdf_bytes(()),
+            "application/pdf",
+            document_shape=DocumentShape.PDF_TEXT_LAYER,
+        )
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
-            transcribe_text_layer(blank)
+            transcribe_text_layer(blank, text_layer_ports=refusing_text_layer_ports())
 
 
 def test_defining_modules_own_the_acquisition_record() -> None:

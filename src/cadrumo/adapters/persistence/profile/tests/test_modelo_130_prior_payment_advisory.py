@@ -59,11 +59,11 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo._prior_payment_advisory import (
+from cadrumo.application.modelo.prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
     collect_prior_payment_not_deducted_diagnostics,
 )

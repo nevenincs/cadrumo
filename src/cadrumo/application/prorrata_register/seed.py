@@ -33,9 +33,13 @@ from typing import Final
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    carried_prior_definitiva_prorrata_provenance,
+    general_prorrata_register_regime,
+    prorrata_referenced_provenances,
+)
 from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register.register import ProrrataRegisterEntry
 from ..calculations.cross_period_models import CrossPeriodCleanStateBlocker
@@ -171,7 +175,7 @@ def cross_check_prorrata_entry_against_prior_observation(
         evaluation.findings,
         fallback=seed.stamped_revision_id,
     )
-    if entry.provisional_provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA:
+    if entry.provisional_provenance == carried_prior_definitiva_prorrata_provenance():
         contradiction_detail = _carried_entry_contradiction_detail(entry, seed.entry)
         if contradiction_detail is None:
             return evaluation.findings
@@ -185,8 +189,7 @@ def cross_check_prorrata_entry_against_prior_observation(
         )
 
     if (
-        entry.provisional_provenance
-        in {ProrrataProvisionalProvenance.AEAT_AUTORIZADA, ProrrataProvisionalProvenance.INICIO_ACTIVIDAD}
+        entry.provisional_provenance in prorrata_referenced_provenances()
         and entry.provisional_percentage != seed.entry.provisional_percentage
     ):
         return (
@@ -208,11 +211,11 @@ def _seed_from_source(
 ) -> ProrrataPriorDefinitivaSeed:
     entry = ProrrataRegisterEntry(
         ejercicio=ejercicio,
-        regime=ProrrataRegisterRegime.GENERAL,
+        regime=general_prorrata_register_regime(),
         especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=source.percentage,
-        provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        provisional_provenance=carried_prior_definitiva_prorrata_provenance(),
         source_observation_ref=_source_observation_ref(source),
         source_registry_snapshot_refs=(
             RegistrySnapshotRef(

@@ -5,9 +5,8 @@ citations, regulations, catalogues, verification reports — is defined here.
 The schema is frozen and strict wherever the loader idiom permits it,
 matching the current registry-backed legal grounding conventions.
 
-The IVA category, rate-kind, cash-treatment, and exemption vocabularies are
-registry-projected opaque tokens; :class:`EUMemberState` remains a
-:class:`enum.StrEnum`. Every prose field
+The IVA category, rate-kind, cash-treatment, exemption, and member-state
+vocabularies are registry-projected opaque tokens. Every prose field
 is stored inline and Spanish-authoritative: a citation's ``quoted_text`` is
 verbatim BOE text, which is evidence rather than a label, and so has no
 locale-resolved form.
@@ -19,7 +18,7 @@ from collections.abc import Iterator, Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Protocol, override
+from typing import Annotated, Protocol, override
 
 from pydantic import (
     BaseModel,
@@ -229,43 +228,74 @@ class IvaArt69DosService(str):
         }
 
 
-class EUMemberState(StrEnum):
-    """Current EU IVA country prefixes accepted at IVA-facing boundaries.
+class EUMemberState(str):
+    """Opaque EU IVA member-state token projected from fact 0131."""
 
-    The canonical 27 EU member states use ISO 3166-1 alpha-2 codes. ``XI`` is
-    the post-Brexit Northern Ireland IVA prefix accepted for goods movements in
-    Modelo 349 / intra-community IVA contexts; predicates that need strict
-    member-state membership must exclude it explicitly.
-    """
+    __slots__ = ()
 
-    AT = "at"
-    BE = "be"
-    BG = "bg"
-    CY = "cy"
-    CZ = "cz"
-    DE = "de"
-    DK = "dk"
-    EE = "ee"
-    ES = "es"
-    FI = "fi"
-    FR = "fr"
-    GR = "gr"
-    HR = "hr"
-    HU = "hu"
-    IE = "ie"
-    IT = "it"
-    LT = "lt"
-    LU = "lu"
-    LV = "lv"
-    MT = "mt"
-    NL = "nl"
-    PL = "pl"
-    PT = "pt"
-    RO = "ro"
-    SE = "se"
-    SI = "si"
-    SK = "sk"
-    XI = "xi"
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> EUMemberState:
+        """Reject direct construction outside the facts-registry projection."""
+        if not _registry_validated:
+            raise TypeError("EUMemberState tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("EU member-state token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> EUMemberState:
+        """Construct a token only at the typed registry projection boundary."""
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Validate Pydantic values against the selected member-state fact."""
+        from pydantic_core import core_schema
+
+        return core_schema.no_info_after_validator_function(
+            cls._project_pydantic,
+            core_schema.str_schema(min_length=2, max_length=2),
+        )
+
+    @classmethod
+    def _project_pydantic(cls, value: object) -> EUMemberState:
+        return require_eu_member_state(value)
+
+    @property
+    def value(self) -> str:
+        """Return the persisted registry token for serialization."""
+        return str(self)
+
+
+def require_eu_member_state(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: object | None = None,
+) -> EUMemberState:
+    """Project one EU member-state token through fact 0131."""
+    from ..calculations.registry.eu_member_state_catalogue import (
+        require_eu_member_state as _require_eu_member_state,
+    )
+
+    return _require_eu_member_state(
+        value,
+        effective_date=effective_date,
+        authority=authority,
+    )
+
+
+def require_registry_declared_eu_member_state(value: object, *, effective_date: date) -> EUMemberState:
+    """Project a member-state token from the facts currently under validation."""
+    from ..calculations.registry.eu_member_state_catalogue import (
+        require_registry_declared_eu_member_state as _require_registry_declared_eu_member_state,
+    )
+
+    return _require_registry_declared_eu_member_state(value, effective_date=effective_date)
+
+
+def spanish_eu_member_state(*, effective_date: date | None = None, authority: object | None = None) -> EUMemberState:
+    """Return the registry-declared Spain token for domestic IVA projections."""
+    return require_eu_member_state("ES", effective_date=effective_date, authority=authority)
 
 
 class IvaRateKind(str):
@@ -393,9 +423,9 @@ def _require_grounded_rate_refs(record: IvaRateRecord) -> None:
         raise IvaValidationError(f"{label}: source_refs must be unique")
     if not record.legal_refs and not record.source_refs:
         raise IvaValidationError(f"{label}: missing registry legal_refs/source_refs")
-    if record.member_state is EUMemberState.ES and not record.legal_refs:
+    if record.member_state == spanish_eu_member_state() and not record.legal_refs:
         raise IvaValidationError(f"{label}: Spanish rates require binding registry legal_refs")
-    if record.member_state is not EUMemberState.ES and not record.source_refs:
+    if record.member_state != spanish_eu_member_state() and not record.source_refs:
         raise IvaValidationError(f"{label}: foreign rates require registry source_refs")
 
 

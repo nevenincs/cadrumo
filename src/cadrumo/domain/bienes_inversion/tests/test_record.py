@@ -19,15 +19,14 @@ from ..register import (
     BienesInversionIvaRegister,
     BienesInversionSectorContribution,
     BienInversionDisposal,
-    BienInversionDisposalRegime,
     BienInversionIvaRecord,
-    BienInversionKind,
     BienInversionValidationError,
     RegularizacionDireccion,
     compute_registro_regularizacion,
     compute_registro_transmisiones,
     validate_investment_asset_reciprocity,
 )
+from ..vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ..regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,

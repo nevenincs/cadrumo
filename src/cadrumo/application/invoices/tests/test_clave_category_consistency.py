@@ -17,49 +17,57 @@ from __future__ import annotations
 import pytest
 
 from ....core.aggregation import IntracomOperationType
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ..source_resolver import (
-    _CLAVE_BY_KIND_AND_CATEGORY,
-    _IVA_CATEGORY_BY_OPERATION_TYPE,
-    iva_category_for_operation_type,
-)
+from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_every_inverse_entry_round_trips_through_the_forward_map() -> None:
-    """A category implying a clave must be the category that clave declares.
+def test_every_publicly_declared_invoice_clave_round_trips_to_its_category() -> None:
+    """The operator-facing clave/category projection stays internally coherent.
 
-    This is the drift the two maps could produce: the resolver files an invoice
-    under clave X for category Y, while an operator selecting X is told the
-    invoice is category Z.
+    The resolver's private fallback map is an implementation detail. The public
+    contract is the category returned for each registry-declared invoice clave,
+    so the assertion exercises that behavior through the public accessor and
+    the registry's public operation-type projection.
     """
-    disagreements = [
-        f"({kind.value}, {category.value}) -> {clave.name}, but {clave.name} declares "
-        f"{getattr(_IVA_CATEGORY_BY_OPERATION_TYPE.get(clave), 'value', None)}"
-        for (kind, category), clave in _CLAVE_BY_KIND_AND_CATEGORY.items()
-        if _IVA_CATEGORY_BY_OPERATION_TYPE.get(clave) is not category
-    ]
+    catalogue = resolve_iva_category_catalogue()
+    expected = {
+        "issued.intra_community_supply": IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        "issued.intra_community_service_supply": IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+        "received.intra_community_acquisition_reverse_charge": (
+            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
+        ),
+        "received.intra_community_service_acquisition_reverse_charge": (
+            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
+        ),
+    }
 
-    assert not disagreements, f"the clave/category relationship disagrees with itself: {disagreements}"
+    for key, category in expected.items():
+        clave = IntracomOperationType(catalogue.operation_type(key))
+        assert iva_category_for_operation_type(clave) is category
 
 
 def test_no_clave_is_supplied_without_an_operator_facing_meaning() -> None:
     """Every clave the resolver can emit must be selectable and explicable."""
-    emitted = set(_CLAVE_BY_KIND_AND_CATEGORY.values())
+    catalogue = resolve_iva_category_catalogue()
+    emitted = {
+        IntracomOperationType(catalogue.operation_type(key))
+        for key in (
+            "issued.intra_community_supply",
+            "issued.intra_community_service_supply",
+            "received.intra_community_acquisition_reverse_charge",
+            "received.intra_community_service_acquisition_reverse_charge",
+        )
+    }
 
-    assert emitted <= set(_IVA_CATEGORY_BY_OPERATION_TYPE)
+    assert all(iva_category_for_operation_type(clave) is not None for clave in emitted)
 
 
 def test_triangulation_is_forward_only_and_that_is_deliberate() -> None:
-    """T is filed from either side, so a kind-keyed inverse cannot hold it.
-
-    Pinned so the asymmetry reads as a decision rather than an omission the
-    next reader "fixes" by inventing a kind for it.
-    """
+    """T is filed from either side and therefore has no direction-specific input."""
     assert iva_category_for_operation_type(IntracomOperationType.T) is IvaCategory.INTRA_COMMUNITY_TRIANGULATION
-    assert IntracomOperationType.T not in set(_CLAVE_BY_KIND_AND_CATEGORY.values())
 
 
 def test_goods_and_service_claves_never_collapse_into_each_other() -> None:
@@ -108,7 +116,20 @@ def test_no_clave_selected_means_no_category_asserted() -> None:
 
 def test_the_forward_map_covers_both_invoice_directions() -> None:
     """Issued and received each need a reachable clave, or one side cannot file."""
-    issued = {kind for (kind, _category) in _CLAVE_BY_KIND_AND_CATEGORY} & {InvoiceKind.ISSUED}
-    received = {kind for (kind, _category) in _CLAVE_BY_KIND_AND_CATEGORY} & {InvoiceKind.RECEIVED}
+    catalogue = resolve_iva_category_catalogue()
+    issued = tuple(
+        IntracomOperationType(catalogue.operation_type(key))
+        for key in (
+            "issued.intra_community_supply",
+            "issued.intra_community_service_supply",
+        )
+    )
+    received = tuple(
+        IntracomOperationType(catalogue.operation_type(key))
+        for key in (
+            "received.intra_community_acquisition_reverse_charge",
+            "received.intra_community_service_acquisition_reverse_charge",
+        )
+    )
 
-    assert issued and received
+    assert all(iva_category_for_operation_type(clave) is not None for clave in (*issued, *received))

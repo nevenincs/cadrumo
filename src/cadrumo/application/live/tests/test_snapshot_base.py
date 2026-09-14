@@ -8,16 +8,10 @@ from typing import Any, override
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ....adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ....adapters.persistence.storage.envelope.contract import Envelope
-from ....adapters.persistence.storage.secure_object_namespaces import TEST_SNAPSHOT_BASE_PROBE_NAMESPACE
-from ....adapters.persistence.storage.sql.secure_object_records import SecureObjectRecord
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.classification.policies import SensitivityClass
 from ....core.errors.hierarchy import CadrumoError
 from ....core.hashing import content_hash_hex
 from ....core.identity.bucket import BucketId
-from ..borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
+from ..borrador_100 import BorradorSnapshotNotFoundError
 from ..errors import LiveApplicationInputError
 from ..snapshot_base import (
     SnapshotLifecycleState,
@@ -31,11 +25,8 @@ from ..snapshot_base import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_PROBE_NAMESPACE = "cadrumo.application.live.test_snapshot_base_probe"
-_PROBE_VERSION = 1
 _BUCKET_ID = "52525252-5252-4252-8252-525252525252"
 _OTHER_BUCKET_ID = "53535353-5353-4353-8353-535353535353"
-_PROTO_BUCKET_ID = "54545454-5454-4454-8454-545454545454"
 
 
 # ---- Test payload ---------------------------------------------------------
@@ -79,56 +70,33 @@ class _ProbeCaptureRequest(BaseModel):
     payload_text: str
 
 
-def _probe_object_key(bucket_id: str, snapshot_id: str) -> str:
-    return f"snapshot-base-probe:{bucket_id}:{snapshot_id}"
-
-
-def _probe_from_record(record: SecureObjectRecord) -> ProbeSnapshot:
-    envelope = Envelope[ProbeSnapshot].model_validate_json(record.payload.decode("utf-8"))
-    return envelope.payload
-
-
 # ---- Test repository ------------------------------------------------------
 
 
 class ProbeRepository:
-    """SecureObjectRepository-backed repository satisfying SnapshotRepository[ProbeSnapshot]."""
+    """In-memory inward fake satisfying ``SnapshotRepository[ProbeSnapshot]``."""
 
-    def __init__(self, *, bucket_id: str, objects: SecureObjectRepository) -> None:
+    def __init__(self, *, bucket_id: str) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise LiveApplicationInputError("bucket_id must not be blank")
-        self._objects = objects
+        self._snapshots: dict[str, ProbeSnapshot] = {}
 
     @property
     def bucket_id(self) -> str:
         return self._bucket_id
 
     def exists(self, snapshot_id: str) -> bool:
-        return self._objects.exists(_PROBE_NAMESPACE, _probe_object_key(self._bucket_id, snapshot_id))
+        return snapshot_id in self._snapshots
 
     def load(self, snapshot_id: str) -> ProbeSnapshot:
-        record = self._objects.load(
-            _PROBE_NAMESPACE,
-            _probe_object_key(self._bucket_id, snapshot_id),
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_PROBE_VERSION,
-        )
-        if record is None:
-            raise LiveApplicationInputError(f"probe snapshot {snapshot_id!r} not found")
-        return _probe_from_record(record)
+        try:
+            return self._snapshots[snapshot_id]
+        except KeyError as exc:
+            raise LiveApplicationInputError(f"probe snapshot {snapshot_id!r} not found") from exc
 
     def list_snapshots(self) -> tuple[ProbeSnapshot, ...]:
-        snapshots = [
-            _probe_from_record(record)
-            for record in self._objects.list_records(
-                _PROBE_NAMESPACE,
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=_PROBE_VERSION,
-            )
-        ]
-        bucket_snapshots = [snapshot for snapshot in snapshots if snapshot.bucket_id == self._bucket_id]
-        return tuple(sorted(bucket_snapshots, key=lambda s: (s.captured_at, s.snapshot_id)))
+        return tuple(sorted(self._snapshots.values(), key=lambda s: (s.captured_at, s.snapshot_id)))
 
     def resolve(self, snapshot_id: str) -> ProbeSnapshot:
         trimmed = snapshot_id.strip()
@@ -146,20 +114,7 @@ class ProbeRepository:
         return matches[0]
 
     def save(self, snapshot: ProbeSnapshot) -> None:
-        envelope = Envelope[ProbeSnapshot](
-            schema_version=_PROBE_VERSION,
-            written_at=snapshot.captured_at,
-            classification=SensitivityClass.FINANCIAL,
-            payload=snapshot,
-        )
-        self._objects.save(
-            namespace=_PROBE_NAMESPACE,
-            object_key=_probe_object_key(self._bucket_id, snapshot.snapshot_id),
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=_PROBE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+        self._snapshots[snapshot.snapshot_id] = snapshot
 
 
 # ---- Test service ---------------------------------------------------------
@@ -317,8 +272,8 @@ def test_active_snapshot_passes_with_no_pointers_or_audit() -> None:
 # ---- SnapshotService roundtrip tests -------------------------------------
 
 
-def test_service_capture_persists_active_snapshot(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_service_capture_persists_active_snapshot() -> None:
+    repository = ProbeRepository(bucket_id=_BUCKET_ID)
     service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     snapshot = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
@@ -328,8 +283,8 @@ def test_service_capture_persists_active_snapshot(secure_objects: SecureObjectRe
     assert repository.load(snapshot.snapshot_id) == snapshot
 
 
-def test_service_capture_deduplicates_by_content_id(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_service_capture_deduplicates_by_content_id() -> None:
+    repository = ProbeRepository(bucket_id=_BUCKET_ID)
     service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     first = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
@@ -339,10 +294,8 @@ def test_service_capture_deduplicates_by_content_id(secure_objects: SecureObject
     assert len(repository.list_snapshots()) == 1
 
 
-def test_service_capture_supersedes_prior_active_on_same_axis(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_service_capture_supersedes_prior_active_on_same_axis() -> None:
+    repository = ProbeRepository(bucket_id=_BUCKET_ID)
     service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     first = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
@@ -361,8 +314,8 @@ def test_service_capture_supersedes_prior_active_on_same_axis(
     assert first_loaded.superseded_by_snapshot_id == second.snapshot_id
 
 
-def test_service_capture_demotes_late_arrival(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_service_capture_demotes_late_arrival() -> None:
+    repository = ProbeRepository(bucket_id=_BUCKET_ID)
     service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     newer = service.capture(
@@ -379,10 +332,8 @@ def test_service_capture_demotes_late_arrival(secure_objects: SecureObjectReposi
     assert older_loaded.superseded_by_snapshot_id == newer.snapshot_id
 
 
-def test_service_capture_does_not_supersede_across_axis(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_service_capture_does_not_supersede_across_axis() -> None:
+    repository = ProbeRepository(bucket_id=_BUCKET_ID)
     service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     first = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
@@ -396,8 +347,8 @@ def test_service_capture_does_not_supersede_across_axis(
     assert repository.load(second.snapshot_id).state is SnapshotLifecycleState.ACTIVE
 
 
-def test_service_resolve_snapshot_supports_prefix(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_service_resolve_snapshot_supports_prefix() -> None:
+    repository = ProbeRepository(bucket_id=_BUCKET_ID)
     service = ProbeService(bucket_id=_BUCKET_ID, repository=repository)
 
     captured = service.capture(axis_label="renta-2025", captured_at=_CAPTURED_AT, payload_text="alpha")
@@ -405,8 +356,8 @@ def test_service_resolve_snapshot_supports_prefix(secure_objects: SecureObjectRe
     assert resolved == captured
 
 
-def test_service_constructor_rejects_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
-    repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+def test_service_constructor_rejects_bucket_mismatch() -> None:
+    repository = ProbeRepository(bucket_id=_BUCKET_ID)
     with pytest.raises(LiveApplicationInputError) as excinfo:
         ProbeService(bucket_id=_OTHER_BUCKET_ID, repository=repository)
 
@@ -449,206 +400,6 @@ def test_borrador_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     assert error.translated_message == "application.live.borrador.errors.snapshot_not_found"
     mro = SnapshotNotFoundError.__mro__
     assert mro.index(CadrumoError) < mro.index(KeyError)
-
-
-# ---- SnapshotRepository structural-conformance gate (contract) -----------------
-# Rule 9-A: conformance is STRUCTURAL (isinstance against the @runtime_checkable
-# Protocol), NOT explicit inheritance. Concrete repos must NOT inherit from
-# SnapshotRepository — the isinstance check verifies structural conformance.
-
-
-def test_borrador100_snapshot_repository_conforms_to_protocol(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Borrador100SnapshotRepository satisfies SnapshotRepository[…] structurally."""
-    repo = Borrador100SnapshotRepository(bucket_id=_PROTO_BUCKET_ID, objects=secure_objects)
-    assert isinstance(repo, SnapshotRepository)
-    # Rule 9-A: structural conformance only — no explicit inheritance.
-    assert SnapshotRepository not in type(repo).__mro__
-
-
-def test_secure_snapshot_repository_conforms_to_protocol(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """SecureSnapshotRepository satisfies SnapshotRepository[…] structurally.
-
-    Uses the expedientes namespace+model to exercise the generic class.
-    """
-    from ....adapters.persistence.storage.secure_object_namespaces import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-    from ..expedientes import (
-        PersistedExpedientesSnapshot,
-        expedientes_snapshot_object_key,
-    )
-
-    repo: SecureSnapshotRepository[PersistedExpedientesSnapshot] = SecureSnapshotRepository(
-        bucket_id=_PROTO_BUCKET_ID,
-        payload_model=PersistedExpedientesSnapshot,
-        namespace_definition=LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
-        object_key=expedientes_snapshot_object_key,
-        not_found_factory=lambda sid: KeyError(sid),
-        ambiguous_prefix_factory=lambda sid, ids: KeyError(sid),
-        domain_label="expedientes",
-        input_error_cls=LiveApplicationInputError,
-        objects=secure_objects,
-    )
-    assert isinstance(repo, SnapshotRepository)
-
-
-def test_secure_snapshot_repository_list_rejects_payload_bucket_mismatch(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    snapshot = ProbeSnapshot(
-        snapshot_id="misrouted-snapshot",
-        bucket_id=_OTHER_BUCKET_ID,
-        axis_label="renta-2025",
-        captured_at=_CAPTURED_AT,
-        payload_text="misrouted",
-        state=SnapshotLifecycleState.ACTIVE,
-    )
-    envelope = Envelope[ProbeSnapshot](
-        schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
-        written_at=_CAPTURED_AT,
-        classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
-        payload=snapshot,
-    )
-    secure_objects.save(
-        namespace=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.namespace,
-        object_key=_probe_object_key(_BUCKET_ID, snapshot.snapshot_id),
-        classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
-        schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
-        written_at=envelope.written_at,
-        payload=envelope.model_dump_json().encode("utf-8"),
-    )
-    repo: SecureSnapshotRepository[ProbeSnapshot] = SecureSnapshotRepository(
-        bucket_id=_BUCKET_ID,
-        payload_model=ProbeSnapshot,
-        namespace_definition=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
-        object_key=_probe_object_key,
-        not_found_factory=lambda sid: LiveApplicationInputError(f"probe snapshot {sid!r} not found"),
-        ambiguous_prefix_factory=lambda sid, ids: LiveApplicationInputError(
-            f"probe snapshot prefix {sid!r} is ambiguous",
-        ),
-        domain_label="probe",
-        input_error_cls=LiveApplicationInputError,
-        objects=secure_objects,
-    )
-
-    with pytest.raises(LiveApplicationInputError) as exc_info:
-        repo.list_snapshots()
-
-    assert exc_info.value.translated_message == "application.live.snapshot_base.errors.snapshot_bucket_mismatch"
-    assert exc_info.value.context == {
-        "domain_label": "probe",
-        "snapshot_bucket": _OTHER_BUCKET_ID,
-        "repository_bucket": _BUCKET_ID,
-    }
-
-
-def _probe_secure_repository(secure_objects: SecureObjectRepository) -> SecureSnapshotRepository[ProbeSnapshot]:
-    """Return a :class:`SecureSnapshotRepository` bound to the probe payload and bucket."""
-    return SecureSnapshotRepository(
-        bucket_id=_BUCKET_ID,
-        payload_model=ProbeSnapshot,
-        namespace_definition=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
-        object_key=_probe_object_key,
-        not_found_factory=lambda sid: LiveApplicationInputError(f"probe snapshot {sid!r} not found"),
-        ambiguous_prefix_factory=lambda sid, ids: LiveApplicationInputError(
-            f"probe snapshot prefix {sid!r} is ambiguous",
-        ),
-        domain_label="probe",
-        input_error_cls=LiveApplicationInputError,
-        objects=secure_objects,
-    )
-
-
-def _save_probe_under_key(
-    secure_objects: SecureObjectRepository,
-    snapshot: ProbeSnapshot,
-    *,
-    object_key_snapshot_id: str,
-) -> None:
-    """Persist a valid ``snapshot`` envelope under ``object_key_snapshot_id``'s row key."""
-    envelope = Envelope[ProbeSnapshot](
-        schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
-        written_at=_CAPTURED_AT,
-        classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
-        payload=snapshot,
-    )
-    secure_objects.save(
-        namespace=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.namespace,
-        object_key=_probe_object_key(_BUCKET_ID, object_key_snapshot_id),
-        classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
-        schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
-        written_at=envelope.written_at,
-        payload=envelope.model_dump_json().encode("utf-8"),
-    )
-
-
-def _probe_snapshot(snapshot_id: str) -> ProbeSnapshot:
-    return ProbeSnapshot(
-        snapshot_id=snapshot_id,
-        bucket_id=_BUCKET_ID,
-        axis_label="renta-2025",
-        captured_at=_CAPTURED_AT,
-        payload_text="body",
-        state=SnapshotLifecycleState.ACTIVE,
-    )
-
-
-def test_secure_snapshot_repository_list_returns_a_snapshot_under_its_own_key(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    snapshot = _probe_snapshot("snapshot-a")
-    _save_probe_under_key(secure_objects, snapshot, object_key_snapshot_id="snapshot-a")
-
-    assert _probe_secure_repository(secure_objects).list_snapshots() == (snapshot,)
-
-
-def test_secure_snapshot_repository_list_rejects_a_snapshot_under_a_foreign_key(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """A valid snapshot re-encrypted under another snapshot's key must not enumerate.
-
-    ``load`` already refused this row; before the list path re-addressed each
-    record, enumeration returned it and every ``latest``/``resolve`` consumer
-    built on enumeration surfaced the foreign snapshot identity.
-    """
-    foreign = _probe_snapshot("snapshot-b")
-    _save_probe_under_key(secure_objects, foreign, object_key_snapshot_id="snapshot-a")
-    repo = _probe_secure_repository(secure_objects)
-
-    with pytest.raises(LiveApplicationInputError) as exc_info:
-        repo.list_snapshots()
-
-    assert exc_info.value.translated_message == "application.live.snapshot_base.errors.snapshot_key_mismatch"
-    assert exc_info.value.context == {
-        "domain_label": "probe",
-        "snapshot_id": "snapshot-b",
-        "repository_bucket": _BUCKET_ID,
-    }
-
-
-def test_secure_snapshot_repository_targeted_load_of_the_same_row_already_refused_it(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    foreign = _probe_snapshot("snapshot-b")
-    _save_probe_under_key(secure_objects, foreign, object_key_snapshot_id="snapshot-a")
-
-    with pytest.raises(LiveApplicationInputError, match="does not match requested snapshot"):
-        _probe_secure_repository(secure_objects).load("snapshot-a")
-
-
-def test_secure_snapshot_repository_resolve_cannot_read_past_the_refusal(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    foreign = _probe_snapshot("snapshot-b")
-    _save_probe_under_key(secure_objects, foreign, object_key_snapshot_id="snapshot-a")
-    repo = _probe_secure_repository(secure_objects)
-
-    with pytest.raises(LiveApplicationInputError) as exc_info:
-        repo.resolve("snapshot-b")
-
-    assert exc_info.value.translated_message == "application.live.snapshot_base.errors.snapshot_key_mismatch"
 
 
 def test_snapshot_repository_protocol_anti_tautology() -> None:

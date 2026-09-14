@@ -39,7 +39,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.tests.profile_capsule import load_test_profile_record, replace_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_review import (
     ModeloWorkOriginAnomaly,

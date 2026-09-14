@@ -4,34 +4,28 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Generator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.period import Period
-from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.ids import BindingId, RelationId
-from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.source_mesh import CalculationSourceContext
-from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
+from ...live.borrador_100 import (
+    Borrador100Snapshot,
+    Borrador100SnapshotRepository,
+    BorradorSnapshotNotFoundError,
+)
 from ...live.snapshot_base import SnapshotLifecycleState
 from .._registry_helpers import validate_casilla_input_ids
 from ..borrador_binding import (
@@ -41,8 +35,6 @@ from ..borrador_binding import (
     _decimal_value,
     resolve_modelo_100_borrador_bindings,
 )
-from ..calculation_actions import calculate_modelo_revision
-from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -71,35 +63,58 @@ _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_i
 )
 
 
-@pytest.fixture
-def snapshot_repository(tmp_path: Path) -> Generator[Borrador100SnapshotRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield Borrador100SnapshotRepository(
-            bucket_id=_BUCKET_ID,
-            objects=profile.repository,
+class _InMemoryBorradorSnapshotRepository:
+    """Inward fake for resolver tests; no storage layout or adapter is involved."""
+
+    def __init__(self, *, bucket_id: str) -> None:
+        self._bucket_id = bucket_id
+        self._snapshots: dict[str, Borrador100Snapshot] = {}
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    def exists(self, snapshot_id: str) -> bool:
+        return snapshot_id in self._snapshots
+
+    def load(self, snapshot_id: str) -> Borrador100Snapshot:
+        try:
+            return self._snapshots[snapshot_id]
+        except KeyError as exc:
+            raise BorradorSnapshotNotFoundError(
+                translated_message="application.live.borrador.errors.snapshot_not_found",
+                context={"snapshot_id": snapshot_id},
+            ) from exc
+
+    def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
+        return tuple(self._snapshots[snapshot_id] for snapshot_id in sorted(self._snapshots))
+
+    def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
+        trimmed_snapshot_id = snapshot_id.strip()
+        matches = tuple(
+            snapshot
+            for snapshot in self.list_snapshots()
+            if snapshot.snapshot_id == trimmed_snapshot_id or snapshot.snapshot_id.startswith(trimmed_snapshot_id)
         )
+        if not matches:
+            raise BorradorSnapshotNotFoundError(
+                translated_message="application.live.borrador.errors.snapshot_not_found",
+                context={"snapshot_id": snapshot_id},
+            )
+        if len(matches) > 1:
+            raise BorradorSnapshotNotFoundError(
+                translated_message="application.live.borrador.errors.snapshot_prefix_ambiguous",
+                context={"snapshot_id": snapshot_id, "match_count": len(matches)},
+            )
+        return matches[0]
 
-
-_ServiceRepositories = tuple[
-    WorkUnitCatalogueRepository,
-    CalculationRevisionCatalogueRepository,
-    BucketEventHistoryRepository,
-    Borrador100SnapshotRepository,
-    SecureObjectRepository,
-]
+    def save(self, snapshot: Borrador100Snapshot) -> None:
+        self._snapshots[snapshot.snapshot_id] = snapshot
 
 
 @pytest.fixture
-def service_repositories(tmp_path: Path) -> Generator[_ServiceRepositories]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        objects = profile.repository
-        yield (
-            WorkUnitCatalogueRepository(objects=objects),
-            CalculationRevisionCatalogueRepository(objects=objects),
-            BucketEventHistoryRepository(objects=objects),
-            Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=objects),
-            objects,
-        )
+def snapshot_repository() -> Generator[Borrador100SnapshotRepository]:
+    yield _InMemoryBorradorSnapshotRepository(bucket_id=_BUCKET_ID)
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:
@@ -225,6 +240,7 @@ def _save_snapshot(
         modelo="100",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
+        registry_snapshot_ref=_modelo_100_registry_snapshot().snapshot_ref,
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_R210_SIMULATOR_URL,
         state=state,
@@ -258,73 +274,6 @@ def _command(
         caller_binding_values=caller_binding_values or {},
         caller_enum_binding_values=caller_enum_binding_values or {},
     )
-
-
-def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
-    """Zero-fill caller decimal bindings while leaving the profile-sourced
-    date/enum/profile bindings unset so :func:`resolve_profile_sourced_bindings`
-    can populate them from the seeded :class:`UserProfileRecord`."""
-    snapshot = _modelo_100_registry_snapshot()
-    alternate_binding_ids = {
-        binding_id for casilla in snapshot.revision.casillas for binding_id in casilla.alternate_bindings
-    }
-    exclusions = {_DECIMAL_BINDING, _ENUM_BINDING, *alternate_binding_ids}
-    return {
-        binding.id: Decimal("0")
-        for binding in snapshot.revision.bindings
-        if binding.id not in exclusions and binding.source != "profile"
-    }
-
-
-def _non_borrador_enum_binding_values() -> dict[BindingId, str]:
-    return {}
-
-
-def _zero_relation_values() -> dict[RelationId, Decimal]:
-    return {
-        binding.id: Decimal("0")
-        for binding, _ in relation_prefill_bindings_for_period(_modelo_100_registry_snapshot().revision)
-    }
-
-
-def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
-    """Persist a minimal UserProfileRecord so the M100 2025 profile-sourced
-    bindings (age_at_year_end birth-date plus declaration-type) resolve from
-    the bucket profile during calculate."""
-    record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID,
-        # Must agree with the bucket manifest label set by isolated_runtime_profile.
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            # Seed derived marriage facts directly (unmarried -> all zero) so the
-            # formula-consumed bindings resolve without a renta_taxpayer.marriage_date.
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-        ),
-        created_at=datetime(2026, 4, 1, tzinfo=UTC),
-        updated_at=datetime(2026, 4, 1, tzinfo=UTC),
-    )
-    seed_test_profile_record(record)
 
 
 def test_borrador_binding_command_rejects_unknown_fields() -> None:
@@ -486,127 +435,12 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
     assert {item.fingerprint for item in resolution.provenance} == {expected_fingerprint}
 
 
-def test_calculate_modelo_revision_consumes_borrador_snapshot_through_application_service(
-    service_repositories: _ServiceRepositories,
-) -> None:
-    work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
-        service_repositories
-    )
-    _seed_profile_with_birth_date(objects)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
-        revision_id="2025",
-        repository=work_unit_repository,
-    )
-    snapshot_id = _save_snapshot(
-        snapshot_repository,
-        {
-            _DECIMAL_BINDING: Decimal("125.50"),
-            _ENUM_BINDING: "madrid",
-        },
-    )
-
-    relation_values = _zero_relation_values()
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={},
-        binding_values=_non_borrador_decimal_binding_values(),
-        enum_binding_values=_non_borrador_enum_binding_values(),
-        borrador_snapshot_id=snapshot_id,
-        relation_values=relation_values,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        bucket_event_repository=bucket_event_repository,
-        borrador_snapshot_repository=snapshot_repository,
-    )
-
-    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
-    assert revision.binding_overrides[_ENUM_BINDING] == "madrid"
-    assert set(revision.relation_overrides) == set(relation_values)
-    assert all(Decimal(value) == Decimal("0") for value in revision.relation_overrides.values())
-    assert set(revision.binding_overrides).isdisjoint(revision.relation_overrides)
-    assert revision.borrador_snapshot_id == snapshot_id
-    assert revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
-    fresh_calculation_repository = CalculationRevisionCatalogueRepository(objects=objects)
-    stored_revision = fresh_calculation_repository.load().get(revision.calculation_revision_id)
-    assert stored_revision == revision
-    assert stored_revision is not None
-    assert stored_revision.borrador_snapshot_id == snapshot_id
-    assert stored_revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
-    assert Decimal(stored_revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
-    assert stored_revision.relation_overrides == revision.relation_overrides
-    calculation_events = [
-        event
-        for event in bucket_event_repository.load().for_bucket(_BUCKET_ID)
-        if event.event_type is BucketEventType.MODELO_CALCULATION_CREATED
-    ]
-    assert len(calculation_events) == 1
-    event = calculation_events[0]
-    assert event.object_id == revision.calculation_revision_id
-    assert event.payload_version == 2
-    assert event.payload["calculation_revision_id"] == revision.calculation_revision_id
-    assert event.payload["borrador_snapshot_id"] == snapshot_id
-    assert event.payload["borrador_participated"] == "true"
-    assert event.payload["borrador_binding_count"] == "2"
-    assert (
-        event.payload["borrador_bindings_trace_sha256"]
-        == hashlib.sha256("\n".join((_DECIMAL_BINDING, _ENUM_BINDING)).encode("utf-8")).hexdigest()
-    )
-
-
 def test_borrador_binding_error_has_stable_service_error_code() -> None:
     code = get_registered_error_code(Modelo100BorradorBindingError)
 
     assert code.code == "REFUSED_MODELO_100_BORRADOR_BINDING"
     assert code.category is ErrorCategory.REFUSED
     assert code.message_key == "errors.refused.refused_modelo_100_borrador_binding"
-
-
-def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_backend(
-    service_repositories: _ServiceRepositories,
-) -> None:
-    work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
-        service_repositories
-    )
-    _seed_profile_with_birth_date(objects)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
-        revision_id="2025",
-        repository=work_unit_repository,
-    )
-    snapshot_id = _save_snapshot(
-        snapshot_repository,
-        {
-            _DECIMAL_BINDING: Decimal("125.50"),
-            _ENUM_BINDING: "madrid",
-        },
-    )
-
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={},
-        binding_values=_non_borrador_decimal_binding_values(),
-        enum_binding_values={**_non_borrador_enum_binding_values(), _ENUM_BINDING: "cataluna"},
-        backend_binding_values={_DECIMAL_BINDING: Decimal("1.00")},
-        borrador_snapshot_id=snapshot_id,
-        relation_values=_zero_relation_values(),
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        bucket_event_repository=bucket_event_repository,
-        borrador_snapshot_repository=snapshot_repository,
-    )
-
-    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
-    assert revision.binding_overrides[_ENUM_BINDING] == "cataluna"
-    assert revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING,)
 
 
 def test_borrador_snapshot_id_participates_in_calculation_revision_identity() -> None:

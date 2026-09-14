@@ -8,7 +8,7 @@ import pytest
 from click.testing import Result
 
 from ....core.i18n.render import tr
-from ....tests.profile_capsule import set_active_test_profile_facts
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from ._strict_cli_fixture_support import inventory_isolated_backend
 from .cli_runner import invoke_cached_cli
 

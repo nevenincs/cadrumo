@@ -27,7 +27,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....tests.cli_envelope import unwrap_envelope_notices
-from ....tests.profile_capsule import seed_modelo_ready_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -51,7 +51,8 @@ def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
     """Seed the modelo readiness baseline through the canonical seeder.
 
     The fact tuple this used to restate lived here in four identical
-    copies. It is declared once in `tests.profile_capsule` now, because
+    copies. It is declared once in the storage profile-capsule test support
+    now, because
     the readiness gate decides what modelo work may run at all and every
     copy was another place for that answer to drift.
     """

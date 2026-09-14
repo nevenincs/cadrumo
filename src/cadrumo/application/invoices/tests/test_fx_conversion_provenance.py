@@ -18,10 +18,9 @@ see that it did. The face-value test watches OVER-declaration -- a foreign
 amount read as euro overstates the base the taxpayer pays on, and nothing else
 in this repository is aimed at that direction.
 
-The rate values used below are ECB euro reference-rate observations, quoted
-EUR-base as the ECB publishes them and inverted by the provider under test. The
-expected euro figures are derived from those published quotes, never from the
-conversion code's own output.
+The application policy is exercised with a deterministic rate capability. The
+real ECB provider and its published-rate inversion are covered at the outbound
+adapter seam, so this module does not import or construct that adapter.
 """
 
 from __future__ import annotations
@@ -32,34 +31,36 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
 from ....domain.currency.service import resolve_fx_conversion_stamp
 from ....domain.iva.classification import InvoiceKind
-from ....tests.ecb_stub import ecb_csv_fetch
 from ..catalogue_creation import build_catalogue_invoice
+from ..catalogue_creation_ports import CatalogueInvoiceRateProviderPort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "39393939-3939-4939-8939-393939393939"
 
-# Published ECB euro reference rate for 2025-03-14 (EUR-base: 1 EUR = 1.0889 USD).
 _QUOTE_DATE = date(2025, 3, 14)
-_ECB_USD_QUOTE = Decimal("1.0889")
-# The provider inverts an EUR-base quote into the USD -> EUR multiplier.
-_EXPECTED_USD_RATE = Decimal("1") / _ECB_USD_QUOTE
-
+_TEST_USD_RATE = Decimal("0.918273645")
+_TEST_RATE_SOURCE = "deterministic-test"
 _BASE = Decimal("1000.00")
 
 
-def _rated_provider() -> EcbReferenceRateProvider:
-    """A real provider over a stubbed transport: the inversion is exercised.
+class _StaticRateProvider:
+    """Deterministic application-facing rate capability for policy tests."""
 
-    The real :class:`EcbReferenceRateProvider` rather than a hand-rolled double,
-    so the EUR-base-to-multiplier inversion and the source identity are the
-    production ones. Only the HTTP transport is replaced, which is what keeps
-    the suite off the network without replacing the logic under test.
-    """
-    return EcbReferenceRateProvider(fetch=ecb_csv_fetch({"USD": {_QUOTE_DATE: _ECB_USD_QUOTE}}))
+    @property
+    def rate_source_id(self) -> str:
+        return _TEST_RATE_SOURCE
+
+    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+        if currency == "USD" and rate_date == _QUOTE_DATE:
+            return _TEST_USD_RATE
+        return None
+
+
+def _rated_provider() -> CatalogueInvoiceRateProviderPort:
+    return _StaticRateProvider()
 
 
 def _invoice(*, currency: str, provider):
@@ -89,12 +90,12 @@ def test_a_rated_conversion_reaches_the_record_with_its_full_provenance() -> Non
     invoice = _invoice(currency="USD", provider=_rated_provider())
 
     assert invoice.currency == "USD"
-    assert invoice.fx_rate == _EXPECTED_USD_RATE
+    assert invoice.fx_rate == _TEST_USD_RATE
     assert invoice.fx_rate_date == _QUOTE_DATE, "the rate must be taken at the invoice's own date (Ley 46/1998 art. 36)"
-    assert invoice.fx_rate_source == ECB_RATE_SOURCE_ID, (
+    assert invoice.fx_rate_source == _TEST_RATE_SOURCE, (
         "a stored euro figure that cannot name its rate authority cannot be audited"
     )
-    assert invoice.base_total_eur == (_BASE * _EXPECTED_USD_RATE).quantize(Decimal("0.01"))
+    assert invoice.base_total_eur == (_BASE * _TEST_USD_RATE).quantize(Decimal("0.01"))
 
 
 def test_an_unresolvable_rate_leaves_the_record_unconverted_rather_than_guessed() -> None:

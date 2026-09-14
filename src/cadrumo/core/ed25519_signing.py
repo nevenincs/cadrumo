@@ -3,7 +3,7 @@
 The review-package signer signs a checksum-manifest digest with Ed25519 and
 keeps its profile key in encrypted secure storage. Its custody, envelope
 metadata, and error vocabulary stay in
-:mod:`~application.modelo._review_package_signing`; the cryptography lives
+:mod:`~application.modelo.review_package_signing`; the cryptography lives
 here.
 
 What this module owns is deliberately narrow: key generation, the raw-bytes
@@ -20,7 +20,7 @@ signature, and the failure would look like key mismatch rather than an
 encoding bug.
 
 See Also:
-    :mod:`~application.modelo._review_package_signing`
+    :mod:`~application.modelo.review_package_signing`
         Review-package signing built on this primitive.
 """
 

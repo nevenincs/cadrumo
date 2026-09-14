@@ -10,8 +10,9 @@ compiled from, so development can tell when it is out of date. This module
 neither knows a registry root nor compiles, repairs, or validates authoring
 inputs on a failed read.
 
-The current format is a canonical JSON frame holding exactly ``payload`` and
-``payload_sha256``, the SHA-256 of the canonical JSON payload. The payload
+The current format is a canonical JSON frame holding exactly ``format``,
+``payload``, and ``payload_sha256``, the SHA-256 of the canonical JSON payload.
+The explicit format value is ``cadrumo-authority-artifact-v4``. The payload
 projects every required schema field and every non-default value. A field is
 omitted only when its schema declares a default and its typed value equals that
 default; the strict schema restores it while decoding. A model that declares
@@ -23,7 +24,7 @@ single-key tagged object -- ``{"$decimal": "0.40"}``, ``{"$date":
 "2025-01-01"}``, ``{"$int": 5}``, ``{"$bool": true}`` -- and a string atom stays
 a bare string. The reader decodes under the same strict schema and refuses an
 unknown tag, a malformed or non-canonical payload, an untagged non-string atom,
-and any frame member beyond the two above.
+and any frame member beyond the three above.
 """
 
 from __future__ import annotations
@@ -38,7 +39,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path, PurePath
-from threading import Lock
+from threading import Lock, local
 from typing import Final, cast, get_args
 
 from pydantic import BaseModel, ValidationError
@@ -46,6 +47,7 @@ from pydantic import BaseModel, ValidationError
 from ....core.atomic_write import atomic_write_bytes
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
+from .errors import RegistryValidationError
 from .facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
     FactAtomField,
@@ -66,14 +68,19 @@ __all__ = [
     "AuthorityArtifactIntegrityError",
     "AuthorityArtifactUnavailableError",
     "AuthorityEvidenceProjection",
+    "FactsAuthorityMergeBase",
     "PublishedLegalEvidence",
     "PublishedSourceEvidence",
     "read_authority_artifact",
+    "read_facts_authority_merge_base",
     "read_shared_authority_artifact",
     "write_authority_artifact",
+    "write_facts_authority_artifact",
 ]
 
-_FRAME_MEMBERS: Final = frozenset({"payload", "payload_sha256"})
+_ARTIFACT_FORMAT: Final = "cadrumo-authority-artifact-v4"
+_SUPERSEDED_ARTIFACT_FORMAT = re.compile(r"cadrumo-authority-artifact-v[1-3]")
+_FRAME_MEMBERS: Final = frozenset({"format", "payload", "payload_sha256"})
 #: The validators that mark a governed-fact atom position, read from the schema's own field types.
 _FACT_ATOM_VALIDATORS: Final = frozenset(
     (get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]),
@@ -236,11 +243,76 @@ class AuthorityArtifact:
             raise TypeError("authority artifact evidence must be an AuthorityEvidenceProjection")
 
 
+@dataclass(frozen=True, slots=True)
+class FactsAuthorityMergeBase:
+    """Authenticated authority document used by the facts-only publisher.
+
+    The merge base has passed the frame and payload digest checks, and its
+    governed-facts catalogue has been rebuilt through the typed facts schema.
+    The remaining payload is retained as authenticated JSON so a facts-only
+    publication can replace exactly ``catalogues.facts`` without constructing
+    or validating the unrelated Modelo graph.  The normal runtime reader still
+    performs the complete typed reconstruction.
+    """
+
+    payload: Mapping[str, object]
+    facts: GovernedFactCatalogue
+    identity_digest: str
+
+    def __post_init__(self) -> None:
+        """Reject an incomplete or untyped merge-base proof."""
+        if not isinstance(self.payload, Mapping):
+            raise TypeError("facts authority merge base payload must be a mapping")
+        if not isinstance(self.facts, GovernedFactCatalogue):
+            raise TypeError("facts authority merge base facts must be a GovernedFactCatalogue")
+        if _IDENTITY_DIGEST.fullmatch(self.identity_digest) is None:
+            raise ValueError("facts authority merge base identity_digest must be a lowercase SHA-256 digest")
+
+
 def write_authority_artifact(path: Path, artifact: AuthorityArtifact) -> None:
     """Atomically publish ``artifact`` as a digest-checked canonical JSON frame."""
     if not isinstance(artifact, AuthorityArtifact):
         raise TypeError("authority artifact writer requires an AuthorityArtifact")
     atomic_write_bytes(path, _encode_artifact(artifact))
+
+
+def write_facts_authority_artifact(
+    path: Path,
+    merge_base: FactsAuthorityMergeBase,
+    facts: GovernedFactCatalogue,
+    *,
+    identity_digest: str,
+) -> None:
+    """Atomically replace only the facts section of an authenticated artifact.
+
+    The merge base is not treated as an unchecked fallback document: its frame,
+    payload digest, identity, and typed facts catalogue were verified by
+    :func:`read_facts_authority_merge_base`.  This writer preserves every other
+    payload member byte-for-byte at the parsed canonical-value level. It fully
+    reconstructs and validates the candidate graph before the atomic cutover.
+    """
+    if not isinstance(merge_base, FactsAuthorityMergeBase):
+        raise TypeError("facts authority merge base writer requires a FactsAuthorityMergeBase")
+    if not isinstance(facts, GovernedFactCatalogue):
+        raise TypeError("facts authority writer requires a GovernedFactCatalogue")
+    if _IDENTITY_DIGEST.fullmatch(identity_digest) is None:
+        raise ValueError("facts authority identity_digest must be a lowercase SHA-256 digest")
+    tax_id_format_from_catalogue(facts)
+    catalogues = _required_mapping(merge_base.payload, "catalogues")
+    payload = dict(merge_base.payload)
+    updated_catalogues = dict(catalogues)
+    updated_catalogues["facts"] = _json_value(facts)
+    payload["catalogues"] = updated_catalogues
+    payload["identity_digest"] = identity_digest
+    payload_bytes = canonical_json_bytes(payload)
+    frame = {
+        "format": _ARTIFACT_FORMAT,
+        "payload": payload,
+        "payload_sha256": sha256_hex(payload_bytes),
+    }
+    encoded = canonical_json_bytes(frame)
+    _decode_artifact(encoded)
+    atomic_write_bytes(path, encoded)
 
 
 def read_authority_artifact(path: Path) -> AuthorityArtifact:
@@ -250,6 +322,51 @@ def read_authority_artifact(path: Path) -> AuthorityArtifact:
     except OSError as exc:
         raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
     return _decode_artifact(raw)
+
+
+def read_facts_authority_merge_base(path: Path) -> FactsAuthorityMergeBase:
+    """Read frame integrity and typed facts without decoding unrelated models.
+
+    This is intentionally narrower than :func:`read_authority_artifact`: the
+    facts-only publication boundary needs provider-owned facts and their
+    provenance, while the existing Modelo graph is retained as authenticated
+    payload and is validated by the normal reader only after publication.
+    """
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
+    frame = _decode_json_object(raw, subject="published authority artifact")
+    unexpected = sorted(set(frame) - _FRAME_MEMBERS)
+    if unexpected:
+        raise AuthorityArtifactFormatError(f"published authority artifact frame has unexpected members {unexpected}")
+    _require_current_artifact_format(frame)
+    payload = _required_mapping(frame, "payload")
+    recorded_digest = _required_string(frame, "payload_sha256")
+    expected_digest = sha256_hex(canonical_json_bytes(payload))
+    if recorded_digest != expected_digest:
+        raise AuthorityArtifactIntegrityError("published authority artifact failed its content digest check")
+    identity_digest = _required_string(payload, "identity_digest")
+    if _IDENTITY_DIGEST.fullmatch(identity_digest) is None:
+        raise AuthorityArtifactFormatError(
+            "published authority artifact identity_digest must be a lowercase SHA-256 hexadecimal digest"
+        )
+    _required_sequence(payload, "modelos")
+    catalogues = _required_mapping(payload, "catalogues")
+    evidence = _required_mapping(payload, "evidence")
+    _required_sequence(evidence, "legal")
+    _required_sequence(evidence, "sources")
+    facts_document = _required_mapping(catalogues, "facts")
+    try:
+        facts = GovernedFactCatalogue.model_validate(
+            _immutable_json_value(facts_document), strict=False, context=_TAGGED_DECODE_CONTEXT
+        )
+        tax_id_format_from_catalogue(facts)
+    except (ValidationError, TypeError, ValueError) as exc:
+        raise AuthorityArtifactFormatError(
+            "published authority artifact has an invalid governed-facts catalogue"
+        ) from exc
+    return FactsAuthorityMergeBase(payload=payload, facts=facts, identity_digest=identity_digest)
 
 
 @dataclass(frozen=True, slots=True)
@@ -265,6 +382,7 @@ class _ArtifactFileIdentity:
 
 _shared_artifact_lock = Lock()
 _shared_artifacts: dict[str, tuple[_ArtifactFileIdentity, AuthorityArtifact]] = {}
+_decoding_artifact = local()
 
 
 def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
@@ -278,15 +396,34 @@ def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
     republication or an in-place rewrite is decoded and verified afresh rather
     than served stale. A refused read is never cached: a missing or corrupt
     artifact is refused on every call.
+
+    Decoding validates the document it has just read, and it does so while
+    holding the lock. Anything that validation reaches must therefore not ask
+    for a published artifact: the request would wait on a lock this thread
+    already holds, and the process would stop with no error and no output. That
+    re-entry is refused rather than left to block, because a validator reaching
+    the bundle is a layering defect to fix at its call site, not a lock to make
+    reentrant.
     """
     key = os.path.abspath(path)
+    if getattr(_decoding_artifact, "in_progress", False):
+        raise RegistryValidationError(
+            f"published authority artifact {key} was requested while it was being decoded; "
+            "decoding validates the document under a non-reentrant lock, so this read would "
+            "block forever. Registry validation must resolve its vocabulary from the governed "
+            "facts being validated, never from the published authority artifact",
+        )
     identity = _artifact_file_identity(path)
     with _shared_artifact_lock:
         cached = _shared_artifacts.get(key)
         if cached is not None and cached[0] == identity:
             return cached[1]
         _shared_artifacts.pop(key, None)
-        artifact = read_authority_artifact(path)
+        _decoding_artifact.in_progress = True
+        try:
+            artifact = read_authority_artifact(path)
+        finally:
+            _decoding_artifact.in_progress = False
         _shared_artifacts[key] = (identity, artifact)
         return artifact
 
@@ -310,7 +447,13 @@ def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
     artifact.catalogues.runtime.require_complete()
     tax_id_format_from_catalogue(artifact.catalogues.facts)
     payload = _artifact_document(artifact)
-    return canonical_json_bytes({"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload))})
+    return canonical_json_bytes(
+        {
+            "format": _ARTIFACT_FORMAT,
+            "payload": payload,
+            "payload_sha256": sha256_hex(canonical_json_bytes(payload)),
+        }
+    )
 
 
 def _decode_artifact(raw: bytes) -> AuthorityArtifact:
@@ -319,12 +462,25 @@ def _decode_artifact(raw: bytes) -> AuthorityArtifact:
     unexpected = sorted(set(frame) - _FRAME_MEMBERS)
     if unexpected:
         raise AuthorityArtifactFormatError(f"published authority artifact frame has unexpected members {unexpected}")
+    _require_current_artifact_format(frame)
     payload = _required_mapping(frame, "payload")
     recorded_digest = _required_string(frame, "payload_sha256")
     expected_digest = sha256_hex(canonical_json_bytes(payload))
     if recorded_digest != expected_digest:
         raise AuthorityArtifactIntegrityError("published authority artifact failed its content digest check")
     return _artifact_from_document(payload)
+
+
+def _require_current_artifact_format(frame: Mapping[str, object]) -> None:
+    """Require the explicit current wire format before decoding its payload."""
+    format_name = _required_string(frame, "format")
+    if format_name == _ARTIFACT_FORMAT:
+        return
+    if _SUPERSEDED_ARTIFACT_FORMAT.fullmatch(format_name) is not None:
+        raise AuthorityArtifactFormatError(
+            f"published authority artifact uses superseded format {format_name!r}; republish it as {_ARTIFACT_FORMAT!r}"
+        )
+    raise AuthorityArtifactFormatError(f"published authority artifact uses unsupported format {format_name!r}")
 
 
 def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:

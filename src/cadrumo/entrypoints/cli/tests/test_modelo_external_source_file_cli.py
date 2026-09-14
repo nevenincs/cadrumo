@@ -10,8 +10,8 @@ import pytest
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from ....application.modelo.calculation_actions import get_calculation_revision
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -282,7 +282,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_MODELO_PRIOR_DOMICILIATION_ELECTION",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_modelo_prior_domiciliation_election",
+            message_key="errors.refused.refused_modeloprior_domiciliation_election",
             retryable=False,
             runbook_id=None,
         ),

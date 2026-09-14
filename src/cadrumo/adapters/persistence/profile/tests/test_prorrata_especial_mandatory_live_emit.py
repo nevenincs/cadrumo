@@ -4,7 +4,7 @@ The mandatory-especial builder
 (:func:`~application.calculations.build_prorrata_especial_mandatory_advisory`)
 shipped with zero production callers — a dormant advisory now wired into the live
 Modelo 303 settlement collector
-(:func:`~application.modelo._prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`)
+(:func:`~application.modelo.prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`)
 with a real +10% check where both regime totals are
 honestly computable, a classify-to-enable PROMPT for the general filer whose
 especial total is not yet derivable).
@@ -18,11 +18,11 @@ from the LIVA art. 104 (single whole-entity percentage) and art. 106.Uno reglas
 (``aeat-quality-gates``): the FIRES cases are paired with SILENT
 non-breach cases so the check is proven to bite, not merely to always fire. At
 least one FIRES case is asserted through the actual calculate fan-out
-(:func:`~application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`),
+(:func:`~application.modelo.calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`),
 proving the emit is not dormant.
 
 See Also:
-    :mod:`~application.modelo._prorrata_regularizacion_advisory`
+    :mod:`~application.modelo.prorrata_regularizacion_advisory`
         Collector carrying the settlement branch under test.
     :func:`~application.aggregation.compute_annual_deducible_totals_by_regime`
         The dual-regime annual totals helper the branch consumes.
@@ -41,6 +41,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.modelo import Modelo
@@ -59,8 +60,8 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.prorrata_register.service import ProrrataRegisterService
-from cadrumo.application.modelo._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from cadrumo.application.modelo._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
+from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from cadrumo.application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -166,6 +167,8 @@ def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple[CalculationSourceD
         filing_year=_EJERCICIO,
         bucket_id=_BUCKET,
         observation_repository=CalculationObservationRepository(),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
     )
 
 
@@ -398,6 +401,10 @@ def test_fires_through_live_calculate_fan_out(tmp_path: Path) -> None:
             period_token=_SETTLEMENT_PERIOD,
             filing_year=_EJERCICIO,
             bucket_id=_BUCKET,
+            observation_repository=CalculationObservationRepository(),
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         )
 
     obligation = [d for d in diagnostics if d.reason == "prorrata_especial_obligatoria"]

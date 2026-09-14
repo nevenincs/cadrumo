@@ -14,37 +14,100 @@ the interval the amendment exists to correct.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
-from ....domain.transactions.models import TransactionCatalogue
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..amendment_actions import _amendment_ledger_anchor
-from .test_modelo_303_deductible_evidence_gate import _BUCKET_ID, _calculate_irene_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# The `secure_objects` fixture reads this from the requesting module, so it is
-# a fixture requirement rather than a convenience alias.
-_BUCKET_ID = _BUCKET_ID
 _AMENDED_AT = datetime(2026, 6, 11, 9, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_IVA_RATE = Decimal("0.21")
+_OBSERVATION = SimpleNamespace(legal_refs=("art-75",), source_refs=("test-ledger-anchor",))
 
 
-def test_a_revision_with_no_contributors_anchors_to_nothing_and_says_so(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def _raw_transaction(provider_id: str, *, amount: Decimal) -> RawTransaction:
+    booked_date = date(2026, 2, 15)
+    return RawTransaction(
+        provider_transaction_id=provider_id,
+        booked_date=booked_date,
+        value_date=booked_date,
+        amount=amount,
+        currency="EUR",
+        description=f"IVA transaction {provider_id}",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="e" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=_T0,
+            provider_name="manual-ledger",
+        ),
+        raw_fields={"source_kind": "ledger_transaction"},
+    )
+
+
+def _iva_transaction(
+    provider_id: str,
+    *,
+    direction: TransactionDirection,
+    taxable_base: Decimal,
+) -> Transaction:
+    iva_amount = (taxable_base * _IVA_RATE).quantize(Decimal("0.01"))
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(provider_id, amount=taxable_base + iva_amount),
+            "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "category_id": "test_iva_operation",
+            "taxable_base": taxable_base,
+            "iva_rate": _IVA_RATE,
+            "iva_amount": iva_amount,
+            "classified_at": _T0,
+            "classified_by": "manual",
+        },
+    )
+
+
+def _revision(*source_transaction_ids: str):
+    return SimpleNamespace(
+        source_transaction_ids=tuple(source_transaction_ids),
+        observations=(_OBSERVATION,),
+        input_values_by_casilla_id={},
+        m210_gross_income_source_mode=None,
+    )
+
+
+class _TransactionRepository:
+    """Inward fake for the application transaction-catalogue port."""
+
+    def __init__(self, catalogue: TransactionCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def load(self) -> TransactionCatalogue:
+        return self._catalogue
+
+    def save(self, catalogue: TransactionCatalogue) -> None:
+        self._catalogue = catalogue
+
+
+def test_a_revision_with_no_contributors_anchors_to_nothing_and_says_so() -> None:
     """``None`` rather than an empty snapshot, which would read as a checked ledger."""
-    revision, _sale, _purchase, wu_repo, _cr, _filing, _vr, _events, tx_repo = _calculate_irene_revision(secure_objects)
-    work_unit = wu_repo.load().get(revision.work_unit_id)
-    assert work_unit is not None
-
     snapshot, evidence = _amendment_ledger_anchor(
-        amendment_draft=revision.model_copy(update={"source_transaction_ids": ()}),
-        work_unit=work_unit,
-        transaction_repository=tx_repo,
+        amendment_draft=_revision(),
+        work_unit=object(),
+        transaction_repository=_TransactionRepository(TransactionCatalogue.from_transactions(())),
         now=_AMENDED_AT,
     )
 
@@ -52,9 +115,7 @@ def test_a_revision_with_no_contributors_anchors_to_nothing_and_says_so(
     assert evidence is None
 
 
-def test_the_anchor_describes_the_ledger_at_amend_time_not_at_baseline_time(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_the_anchor_describes_the_ledger_at_amend_time_not_at_baseline_time() -> None:
     """The freshness claim, asserted against a row that moved after the baseline.
 
     The contributing purchase is restated after the baseline revision exists.
@@ -62,10 +123,18 @@ def test_the_anchor_describes_the_ledger_at_amend_time_not_at_baseline_time(
     row fingerprint would match the ORIGINAL row; a fresh capture matches the
     restated one.
     """
-    revision, sale, purchase, wu_repo, _cr, _filing, _vr, _events, tx_repo = _calculate_irene_revision(secure_objects)
-    work_unit = wu_repo.load().get(revision.work_unit_id)
-    assert work_unit is not None
-    assert revision.source_transaction_ids, "the fixture must contribute rows for this to mean anything"
+    sale = _iva_transaction(
+        "irene-sale-no-evidence",
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("1000.00"),
+    )
+    purchase = _iva_transaction(
+        "irene-purchase-no-evidence",
+        direction=TransactionDirection.OUTGOING,
+        taxable_base=Decimal("200.00"),
+    )
+    revision = _revision(purchase.transaction_id)
+    tx_repo = _TransactionRepository(TransactionCatalogue.from_transactions((sale, purchase)))
 
     # Base and cuota restated against the SAME gross, because the catalogue
     # enforces the identity and derives the transaction id from `raw`.
@@ -76,7 +145,7 @@ def test_the_anchor_describes_the_ledger_at_amend_time_not_at_baseline_time(
 
     snapshot, evidence = _amendment_ledger_anchor(
         amendment_draft=revision,
-        work_unit=work_unit,
+        work_unit=object(),
         transaction_repository=tx_repo,
         now=_AMENDED_AT,
     )
@@ -89,17 +158,24 @@ def test_the_anchor_describes_the_ledger_at_amend_time_not_at_baseline_time(
     assert fingerprints[purchase.transaction_id] != row_fingerprint(purchase)
 
 
-def test_the_anchor_bundles_evidence_covering_every_fingerprinted_contributor(
-    secure_objects: SecureObjectRepository,
-) -> None:
+def test_the_anchor_bundles_evidence_covering_every_fingerprinted_contributor() -> None:
     """Snapshot and evidence must describe the same rows or neither explains the filing."""
-    revision, _sale, _purchase, wu_repo, _cr, _filing, _vr, _events, tx_repo = _calculate_irene_revision(secure_objects)
-    work_unit = wu_repo.load().get(revision.work_unit_id)
-    assert work_unit is not None
+    sale = _iva_transaction(
+        "irene-sale-no-evidence",
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("1000.00"),
+    )
+    purchase = _iva_transaction(
+        "irene-purchase-no-evidence",
+        direction=TransactionDirection.OUTGOING,
+        taxable_base=Decimal("200.00"),
+    )
+    revision = _revision(purchase.transaction_id)
+    tx_repo = _TransactionRepository(TransactionCatalogue.from_transactions((sale, purchase)))
 
     snapshot, evidence = _amendment_ledger_anchor(
         amendment_draft=revision,
-        work_unit=work_unit,
+        work_unit=object(),
         transaction_repository=tx_repo,
         now=_AMENDED_AT,
     )

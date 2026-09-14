@@ -19,11 +19,13 @@ from .....application.user_profile.login_handover import (
 )
 from .....application.user_profile.profile_pointer import ActiveProfilePointerTransactionError
 from .....core.hashing import (
+    bounded_canonical_json_bytes,
     reject_duplicate_json_members,
     reject_json_constant,
 )
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
+
 _HANDOVER_JOURNAL_FILENAME = "profile-login-handover.v2.json"
 _HANDOVER_PREDECESSOR: dict[HandoverPhase, HandoverPhase] = {
     HandoverPhase.POINTER_PUBLISHED: HandoverPhase.PREPARED,

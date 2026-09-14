@@ -26,6 +26,7 @@ from .common import (
     emit_help_text,
     transaction_catalogue_repo,
 )
+from .state_projection_support import participation_index_rebuild_ports_factory
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
@@ -115,7 +116,9 @@ def participation_rebuild(ctx: typer.Context) -> None:
     from ._ledger_payloads import LedgerParticipationRebuildResult
 
     bucket_id = active_bucket_id_or_bad(current_workflow_state())
-    stats = rebuild_participation_index(bucket_id=bucket_id)
+    stats = rebuild_participation_index(
+        ports=participation_index_rebuild_ports_factory(ctx)(bucket_id=bucket_id),
+    )
     emit_envelope(
         ctx,
         command="ledger.participation.rebuild",

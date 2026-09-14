@@ -38,7 +38,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
@@ -107,7 +106,7 @@ _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota
 _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 
 
-def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path: Path) -> None:
+def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota() -> None:
     """A reverse-charge intracom cuota feeds BOTH devengada-total AND deducible-total.
 
     LIVA art. 84.Uno.2 makes the acquirer the sujeto pasivo (output IVA, devengada);
@@ -117,22 +116,21 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path:
     leg drops the intracom casilla.
     """
     intracom_cuota = Decimal("42.00")
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
-        binding_values = {
-            _INTRACOM_BINDING: intracom_cuota,
-            _AUTOCONSUMO_BINDING: Decimal("0"),
-            _STATE_RATIO_BINDING: Decimal("100"),
-            _PRIOR_COMPENSATION_BINDING: Decimal("0"),
-            **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
-        }
-        inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            binding_values=binding_values,
-            date_context={"filing_period": date(_YEAR, 12, 31)},
-        )
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
+    binding_values = {
+        _INTRACOM_BINDING: intracom_cuota,
+        _AUTOCONSUMO_BINDING: Decimal("0"),
+        _STATE_RATIO_BINDING: Decimal("100"),
+        _PRIOR_COMPENSATION_BINDING: Decimal("0"),
+        **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
+    }
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(_YEAR, 12, 31)},
+    )
 
     # The intracom cuota self-assesses as output IVA (devengada leg, art. 84)...
     assert result.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA] == intracom_cuota
@@ -143,29 +141,28 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path:
     assert result.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA] == Decimal("0.00")
 
 
-def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -> None:
+def test_intracom_cuota_is_not_silently_dropped_from_deducible() -> None:
     """Anti-tautology: a NON-zero intracom cuota must move the deducible-total off zero.
 
     If the deducible-total formula ever dropped the autorepercutido leg, this would
     show deducible-total == 0 while devengada-total == 42 (output IVA with no offset)
     — a net positive result that over-states the IVA payable on a neutral acquisition.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
-        binding_values = {
-            _INTRACOM_BINDING: Decimal("42.00"),
-            _AUTOCONSUMO_BINDING: Decimal("0"),
-            _STATE_RATIO_BINDING: Decimal("100"),
-            _PRIOR_COMPENSATION_BINDING: Decimal("0"),
-            **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
-        }
-        inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            binding_values=binding_values,
-            date_context={"filing_period": date(_YEAR, 12, 31)},
-        )
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
+    binding_values = {
+        _INTRACOM_BINDING: Decimal("42.00"),
+        _AUTOCONSUMO_BINDING: Decimal("0"),
+        _STATE_RATIO_BINDING: Decimal("100"),
+        _PRIOR_COMPENSATION_BINDING: Decimal("0"),
+        **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
+    }
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(_YEAR, 12, 31)},
+    )
     assert result.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] > Decimal("0"), (
         "intracom autorepercutido cuota was dropped from the deducible total — "
         "reverse-charge acquisition would over-state IVA payable"
@@ -208,7 +205,7 @@ def _recargo_purchase() -> Transaction:
     )
 
 
-def test_recargo_equivalencia_is_surfaced_not_silently_deducted(tmp_path: Path) -> None:
+def test_recargo_equivalencia_is_surfaced_not_silently_deducted() -> None:
     """A recargo-equivalencia purchase is surfaced as non-declarable, never silently deducted.
 
     LIVA arts. 148-163: the recargo-equivalencia retailer does not deduct input IVA
@@ -218,14 +215,13 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted(tmp_path: Path) 
     anomaly. Reds if the category ever produces a silent declarable deducible
     observation.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        report = aggregate_iva_ledger_observations(
-            TransactionCatalogue.from_transactions((_recargo_purchase(),)),
-            period=Period.from_year_and_code(_YEAR, _PERIOD),
-            ledger_profile_id="m303-special-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="m303-special-test",
-        )
+    report = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((_recargo_purchase(),)),
+        period=Period.from_year_and_code(_YEAR, _PERIOD),
+        ledger_profile_id="m303-special-test",
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id="m303-special-test",
+    )
 
     # No declarable deducible observation was _produced for the recargo purchase...
     assert all(obs.category is not IvaCategory.RECARGO_EQUIVALENCIA for obs in report.observations), (

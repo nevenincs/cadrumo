@@ -37,14 +37,13 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.categories.spending_category import (
     HOME_OFFICE_FAMILIES,
-    SpendingCategory,
     family_for,
     home_office_categories,
 )
-from ...domain.iva.schema import IvaCategory
-from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
+from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.transactions.enums import (
     BusinessClassification,
     TransactionDirection,
@@ -65,7 +64,7 @@ from ..aggregation.iva_ledger import (
 )
 from ..user_profile.censo_sync import bound_raw_afectacion_ratio_for_bucket
 from .transaction_repository import transaction_catalogue_repository
-from .usage_ratio_repository import usage_ratio_profile_with_censo_guard
+from .usage_ratio_repository import UsageRatioProfileLoader, usage_ratio_profile_with_censo_guard
 
 
 class LedgerPreflightIssueReason(StrEnum):
@@ -152,6 +151,7 @@ def preflight_ledger_tax_readiness(
     *,
     bucket_id: str,
     period: Period,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     raw_afectacion_ratio: Decimal | None = None,
 ) -> LedgerPreflightReport:
@@ -161,6 +161,8 @@ def preflight_ledger_tax_readiness(
         bucket_id: Bucket whose ledger catalogue is being checked.
         period: Filing period used to decide whether each transaction belongs in
             the readiness window.
+        usage_ratio_profile_loader: Required application-owned read capability
+            for resolving declared usage-ratio profiles.
         transaction_repository: Optional transaction-catalogue port used to
             load the bucket-local catalogue; the outward-composed repository
             is resolved when ``None``.
@@ -193,6 +195,7 @@ def preflight_ledger_tax_readiness(
         missing_home_office_afectacion_detail = _missing_home_office_afectacion_detail(
             bucket_id=bucket_id,
             year=period.filing_year,
+            usage_ratio_profile_loader=usage_ratio_profile_loader,
         )
     return preflight_transaction_catalogue(
         bucket_id=bucket_id,
@@ -293,7 +296,12 @@ def _period_transactions(*, period: Period, transactions: TransactionCatalogue) 
     )
 
 
-def _missing_home_office_afectacion_detail(*, bucket_id: str, year: int) -> str | None:
+def _missing_home_office_afectacion_detail(
+    *,
+    bucket_id: str,
+    year: int,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
+) -> str | None:
     """Report the absence of any proportion a home-office row could deduct on.
 
     Asked through the same resolver the calculation uses, so the question is
@@ -307,7 +315,11 @@ def _missing_home_office_afectacion_detail(*, bucket_id: str, year: int) -> str 
     """
     from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 
-    ratios = resolve_effective_usage_ratios(bucket_id=bucket_id, year=year)
+    ratios = resolve_effective_usage_ratios(
+        bucket_id=bucket_id,
+        year=year,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
+    )
     if any(category in ratios for category in home_office_categories()):
         return None
     return (
@@ -339,8 +351,8 @@ def _is_home_office_usage_ratio_id(value: str | None) -> bool:
     if value is None:
         return False
     try:
-        category = SpendingCategory(value.strip())
-    except ValueError:
+        category = require_spending_category(value.strip())
+    except (TypeError, ValueError):
         return False
     return family_for(category) in HOME_OFFICE_FAMILIES
 

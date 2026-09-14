@@ -44,8 +44,8 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .. import _modelo_work_wizard_cli
 from .._modelo_behavior_support import resolve_work_unit_for_cli
 from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload

@@ -53,7 +53,7 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.repository import upsert_work_unit
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .....tests.aeat_literal_fixtures import aeat_url
-from .....tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository

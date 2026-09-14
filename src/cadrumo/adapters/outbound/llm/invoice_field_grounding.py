@@ -13,7 +13,7 @@ filing looking exactly like a read one. Every field here is therefore checked
 against an independent authority -- the AEAT checksum algorithm
 (:func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_spanish_tax_id`),
 the EU VIES structural format
-table (:data:`~core.identity.nif_iva.NIF_IVA_FORMATS`), the date parser
+table (:func:`~cadrumo.domain.calculations.registry.nif_iva_catalogue.nif_iva_format_for_country`), the date parser
 (:func:`~core.parsing.parse_date`), the finite European-decimal authority
 (:func:`~core.decimal.coerce_finite_european_decimal`) -- and a field that fails
 its check becomes ``None``. ``None`` is safe because the confirm path treats a
@@ -28,7 +28,7 @@ See Also:
         Typed draft every grounded reader returns.
     :func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_spanish_tax_id`
         Spanish NIF/NIE/CIF checksum authority.
-    :func:`~core.identity.nif_iva.nif_iva_format_for_country`
+    :func:`~cadrumo.domain.calculations.registry.nif_iva_catalogue.nif_iva_format_for_country`
         EU intra-community NIF-IVA structural format authority.
 """
 
@@ -51,12 +51,13 @@ from ....core.errors.hierarchy import CoreValidationError
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.identity.documents import IdentityError
-from ....core.identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
+from ....core.identity.nif_iva import normalise_nif_iva
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.parsing.codes import normalise_iso_4217_currency
 from ....core.parsing.dates import parse_date
 from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
+from ....domain.calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ....domain.iva.establishment import country_code_for_printed_country_name
 from .invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,

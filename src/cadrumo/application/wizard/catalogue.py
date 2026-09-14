@@ -10,17 +10,17 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n.translatable import Translatable as tr
 from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.wizard_catalogue import register_wizard_catalogue
-from ...domain.contribuyente.ccaa import CCAA
+from ...domain.calculations.registry.ccaa_catalogue import ccaa_choices, default_ccaa
 from ...domain.contribuyente.entity_type import (
     entity_type_attribution_entity_token,
     entity_type_legal_entity_token,
     entity_type_natural_person_token,
     entity_type_tokens,
+    legal_entity_form_choice_description_tokens,
     legal_entity_form_sin_fines_lucrativos_token,
     legal_entity_form_tokens,
 )
@@ -28,13 +28,16 @@ from ...domain.contribuyente.renta_codes import (
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
-    SituacionFamiliar,
 )
-from ...domain.deadlines.models import IrpfIncomeCategory, M303RegimeComposition
 from ...domain.calculations.registry.iva_schema_vocabulary import (
     default_iva_regime,
     iva_regime_choices,
+    m303_regime_composition_choices,
     m303_tax_territory_choices,
+)
+from ...domain.calculations.registry.irpf_income_categories import (
+    irpf_income_category_actividad_economica_token,
+    irpf_income_category_choices,
 )
 from ...domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_objetiva_token,
@@ -42,6 +45,8 @@ from ...domain.calculations.registry.irpf_regimes import (
     irpf_special_regime_impatriado_token,
     irpf_special_regime_tokens,
 )
+from ...domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
+from ...domain.calculations.registry.third_party_declaration_roles import third_party_declaration_role_choices
 from ...domain.calculations.registry.renta_codes_catalogue import (
     default_fiscal_residency,
     fiscal_residency_choices,
@@ -126,23 +131,14 @@ _M303_TAX_TERRITORY_CHOICES: tuple[WizardChoice, ...] = tuple(
     for token in m303_tax_territory_choices()
 )
 
-_M303_REGIME_COMPOSITION_LABELS: dict[M303RegimeComposition, tr] = {
-    M303RegimeComposition.GENERAL: tr(
-        "wizard.setup.iva.m303-regime-composition.choices.general.label",
-    ),
-    M303RegimeComposition.SIMPLIFIED: tr(
-        "wizard.setup.iva.m303-regime-composition.choices.simplified.label",
-    ),
-    M303RegimeComposition.MIXED: tr(
-        "wizard.setup.iva.m303-regime-composition.choices.mixed.label",
-    ),
-}
 _M303_REGIME_COMPOSITION_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
-        value=member.value,
-        label=_M303_REGIME_COMPOSITION_LABELS[member],
+        value=token.value,
+        label=tr(
+            f"wizard.setup.iva.m303-regime-composition.choices.{token.value}.label",
+        ),
     )
-    for member in M303RegimeComposition
+    for token in m303_regime_composition_choices()
 )
 
 
@@ -155,9 +151,12 @@ _ENTITY_TYPE_CHOICES: tuple[WizardChoice, ...] = tuple(
     for member in entity_type_tokens()
 )
 
-# Only the forms whose choice carries curated explainer copy; the rest render
-# label-only (an unlisted member must never mint an unresolvable description ref).
-_DESCRIBED_LEGAL_ENTITY_FORMS = frozenset({"sl", "sin_fines_lucrativos"})
+# Only the forms whose choice carries curated explainer copy; the registry
+# metadata owns this selector so an unlisted member never mints an
+# unresolvable description ref.
+_DESCRIBED_LEGAL_ENTITY_FORMS = frozenset(
+    member.value for member in legal_entity_form_choice_description_tokens()
+)
 
 _LEGAL_ENTITY_FORM_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
@@ -180,7 +179,7 @@ _IRPF_INCOME_CATEGORY_CHOICES: tuple[WizardChoice, ...] = tuple(
             f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.description",
         ),
     )
-    for member in IrpfIncomeCategory
+    for member in irpf_income_category_choices()
 )
 
 _THIRD_PARTY_DECLARATION_ROLE_CHOICES: tuple[WizardChoice, ...] = tuple(
@@ -191,7 +190,7 @@ _THIRD_PARTY_DECLARATION_ROLE_CHOICES: tuple[WizardChoice, ...] = tuple(
             f"wizard.setup.taxpayer-type.declaration-roles.choices.{member.value.replace('_', '-')}.description",
         ),
     )
-    for member in ThirdPartyDeclarationRole
+    for member in third_party_declaration_role_choices()
 )
 
 _IRPF_ESTIMATION_REGIME_CHOICES: tuple[WizardChoice, ...] = tuple(
@@ -243,7 +242,7 @@ _CCAA_CHOICES: tuple[WizardChoice, ...] = tuple(
         value=member.value,
         label=tr(f"wizard.setup.residence.ccaa.choices.{member.value}.label"),
     )
-    for member in CCAA
+    for member in ccaa_choices()
 )
 
 _OUTPUT_LANGUAGE_CHOICES: tuple[WizardChoice, ...] = tuple(
@@ -301,32 +300,15 @@ _MARITAL_STATUS_CHOICES: tuple[WizardChoice, ...] = (
     ),
 )
 
-_SITUACION_FAMILIAR_CHOICES: tuple[WizardChoice, ...] = (
+_SITUACION_FAMILIAR_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
-        value=SituacionFamiliar.CASADO.value,
-        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.casado.label"),
-        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.casado.description"),
-    ),
-    WizardChoice(
-        value=SituacionFamiliar.PAREJA_HECHO_REGISTRADA.value,
-        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-registrada.label"),
-        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-registrada.description"),
-    ),
-    WizardChoice(
-        value=SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA.value,
-        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-no-registrada.label"),
-        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-no-registrada.description"),
-    ),
-    WizardChoice(
-        value=SituacionFamiliar.SOLTERO.value,
-        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.soltero.label"),
-        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.soltero.description"),
-    ),
-    WizardChoice(
-        value=SituacionFamiliar.SEPARADO_DIVORCIADO.value,
-        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.label"),
-        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.description"),
-    ),
+        value=member.value,
+        label=tr(f"wizard.setup.taxpayer.situacion-familiar.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(
+            f"wizard.setup.taxpayer.situacion-familiar.choices.{member.value.replace('_', '-')}.description",
+        ),
+    )
+    for member in situacion_familiar_choices()
 )
 
 _DISABILITY_GRADE_CHOICES: tuple[WizardChoice, ...] = (
@@ -374,14 +356,20 @@ _LEY_49_2002_RENUNCIATION_DECLARED = WizardCondition(
 _HAS_ACTIVITY = WizardVisibility(
     any_of=(
         _ENTITY_LEGAL,
-        WizardCondition(question_id="irpf-income-categories", contains=IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value),
+        WizardCondition(
+            question_id="irpf-income-categories",
+            contains=irpf_income_category_actividad_economica_token().value,
+        ),
     ),
 )
 _IVA_REGIME_VISIBLE = WizardVisibility(
     any_of=(
         _ENTITY_LEGAL,
         _ENTITY_ATTRIBUTION,
-        WizardCondition(question_id="irpf-income-categories", contains=IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value),
+        WizardCondition(
+            question_id="irpf-income-categories",
+            contains=irpf_income_category_actividad_economica_token().value,
+        ),
     ),
 )
 
@@ -532,7 +520,7 @@ _RESIDENCE_SECTION = WizardSection(
             widget=WizardWidget.SELECT,
             prompt=tr("wizard.setup.residence.tax-residence-ccaa.prompt"),
             choices=_CCAA_CHOICES,
-            default=CCAA.MADRID.value,
+            default=default_ccaa().value,
             required=False,
             visible_when=WizardCondition(
                 question_id="fiscal-residency",

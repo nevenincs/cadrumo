@@ -111,6 +111,7 @@ def work_compare_taxation(
 
     activate_subcommand_output_language(ctx, output_language)
 
+    from ...adapters.persistence.profile.taxation_comparison import build_taxation_comparison_ports
     from ...application.modelo.action_errors import WorkUnitNotFoundError
     from ...application.modelo.taxation_comparison import TaxationComparisonError, compare_taxation_for_work_address
 
@@ -123,7 +124,10 @@ def work_compare_taxation(
             revision=revision,
             bucket_id=bucket_id,
         )
-        comparison = compare_taxation_for_work_address(address)
+        comparison = compare_taxation_for_work_address(
+            address,
+            ports=build_taxation_comparison_ports(bucket_id=bucket_id or require_active_bucket_id()),
+        )
     except (
         ModeloWorkAddressNotFoundError,
         ModeloWorkVisibleTargetAmbiguousError,

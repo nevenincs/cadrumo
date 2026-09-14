@@ -19,7 +19,6 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from typing import Final, NamedTuple, cast
 
-from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId
@@ -37,6 +36,7 @@ from ...domain.calculations.registry.relations import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
@@ -120,7 +120,7 @@ class _CleanStateRepositories(NamedTuple):
     filing_catalogue: ModeloRecordCatalogue
     calculation_catalogue: CalculationRevisionCatalogue
     verification_catalogue: VerificationReportCatalogue
-    justificante_repository: JustificanteRepository
+    justificante_repository: JustificanteRepositoryProtocol
 
 
 class _CleanStateRequirementScope(NamedTuple):
@@ -417,14 +417,14 @@ def _load_clean_state_repositories(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
-    justificante_repository: JustificanteRepository | None,
+    justificante_repository: JustificanteRepositoryProtocol,
 ) -> _CleanStateRepositories:
     """Load all persistence inputs once for a clean-state evaluation."""
     return _CleanStateRepositories(
         filing_catalogue=filing_repository.load(),
         calculation_catalogue=calculation_repository.load(),
         verification_catalogue=require_verification_report_coordinates_current(verification_repository.load()),
-        justificante_repository=justificante_repository or JustificanteRepository(),
+        justificante_repository=justificante_repository,
     )
 
 
@@ -627,7 +627,7 @@ def evaluate_cross_period_clean_state(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
-    justificante_repository: JustificanteRepository | None = None,
+    justificante_repository: JustificanteRepositoryProtocol,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
@@ -1074,7 +1074,7 @@ def _aggregate_member_history(
     filing_catalogue: ModeloRecordCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue,
     verification_catalogue: VerificationReportCatalogue,
-    justificante_repository: JustificanteRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
     taxpayer_tax_id: str | None,
     observation_source_kind: ObservationSourceKind | None,
     value_member_payloads: tuple[ObservationPayload, ...],
@@ -1109,7 +1109,7 @@ def _evaluate_requirement(
     filing_catalogue: ModeloRecordCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue,
     verification_catalogue: VerificationReportCatalogue,
-    justificante_repository: JustificanteRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
     taxpayer_tax_id: str | None,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
 ) -> CrossPeriodDependencyEvidence:
@@ -1255,7 +1255,7 @@ def _evaluate_member_history(
     filing_catalogue: ModeloRecordCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue,
     verification_catalogue: VerificationReportCatalogue,
-    justificante_repository: JustificanteRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
     taxpayer_tax_id: str | None,
     observation_source_kind: ObservationSourceKind | None,
 ) -> _FilingHistory:
@@ -1336,7 +1336,7 @@ def _evaluate_filing_history(
     filing_catalogue: ModeloRecordCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue,
     verification_catalogue: VerificationReportCatalogue,
-    justificante_repository: JustificanteRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
     taxpayer_tax_id: str | None,
     observation_source_kind: ObservationSourceKind | None,
     observation_source_metadata: Mapping[str, str] | None,

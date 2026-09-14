@@ -17,7 +17,7 @@ from ....adapters.persistence.storage.errors import (
 from ....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .. import errors
 from ..common import cli_policy_refusal_projection
 

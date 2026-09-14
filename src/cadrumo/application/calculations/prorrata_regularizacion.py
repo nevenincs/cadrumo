@@ -22,7 +22,7 @@ casillas that carry the provisional/definitive percentages, and consumes a
 See Also:
     :func:`~domain.iva.compute_regularizacion_prorrata_anual`
         Pure LIVA art. 105.Cuatro computation consumed by this projection.
-    :mod:`~application.modelo._prorrata_regularizacion_advisory`
+    :mod:`~application.modelo.prorrata_regularizacion_advisory`
         Calculate-path collector that calls this advisory projection from
         Modelo 303 values and prior-year observations.
     :mod:`~application.aggregation.iva_ledger`
@@ -45,19 +45,12 @@ from typing import ClassVar, Final
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.prorrata_register import (
-    ProrrataRegisterRegime,
-    regime_apportions_deduction,
-)
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -72,6 +65,10 @@ from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionProvider,
     prorrata_source_casilla_ids,
 )
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    especial_prorrata_register_regime,
+    regime_apportions_deduction,
+)
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ...domain.calculations.registry.schema import (
@@ -79,7 +76,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.iva.flow import IvaFlowDirection
+from ...domain.iva.flow import is_issued_flow_direction
 from ...domain.iva.prorrata import (
     RegularizacionProrrataDireccion,
     RegularizacionProrrataResult,
@@ -103,6 +100,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..persistence_errors import PersistenceDegradationError
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .observations_repository import CalculationObservationRepositoryProtocol
 from .revision_carry_gate import revision_carry_outcome
@@ -112,10 +110,6 @@ from .revision_carry_gate import revision_carry_outcome
 # evidence mechanics only.
 
 _SOURCE_KIND: Final = BindingSourceKind.PRORRATA_REGULARIZACION
-STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
-    *_STORAGE_DEGRADATION_ERRORS,
-    ProrrataRegisterError,
-)
 _LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
 
 
@@ -466,7 +460,7 @@ def _prorrata_volume_side(
     *,
     con_derecho_categories: frozenset[IvaCategory] | None = None,
 ) -> str | None:
-    if observation.flow_direction is not IvaFlowDirection.REPERCUTIDO:
+    if not is_issued_flow_direction(observation.flow_direction):
         return None
     if con_derecho_categories is not None and observation.category in con_derecho_categories:
         return "con_derecho"
@@ -1109,7 +1103,7 @@ class ProrrataRegularizacionSourceResolver:
                 revision=revision,
                 filing_year=context.filing_year,
             )
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except (PersistenceDegradationError, ProrrataRegisterError) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -1140,7 +1134,7 @@ class ProrrataRegularizacionSourceResolver:
                 modelo=context.modelo,
                 revision=revision,
             )
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except (PersistenceDegradationError, ProrrataRegisterError) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -1196,7 +1190,7 @@ class ProrrataRegularizacionSourceResolver:
         )
 
 
-def build_prorrata_regularizacion_advisory(
+def buildprorrata_regularizacion_advisory(
     *,
     cuotas_soportadas_deducibles: Decimal,
     prorrata_provisional_pct: Decimal,
@@ -1341,7 +1335,7 @@ def build_prorrata_especial_mandatory_advisory(
         message=message,
         context={
             "ejercicio": str(ejercicio),
-            "regime": ProrrataRegisterRegime.ESPECIAL.value,
+            "regime": especial_prorrata_register_regime().value,
             "deduction_under_general": str(deduction_under_general),
             "deduction_under_especial": str(deduction_under_especial),
             # The art. 103.Dos.2.º margin actually applied, and whether reaching
@@ -1363,7 +1357,7 @@ __all__ = [
     "build_prorrata_declared_volume_divergence_advisory",
     "build_prorrata_especial_mandatory_advisory",
     "build_prorrata_missing_provisional_advisory",
-    "build_prorrata_regularizacion_advisory",
+    "buildprorrata_regularizacion_advisory",
     "derive_prorrata_applicability",
     "project_prorrata_regularizacion_feed",
     "prorrata_registry_declarations",

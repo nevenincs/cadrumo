@@ -12,7 +12,7 @@ the answer far more often than it looks.
 on this axis is a deterministic lookup against bounded registry data, and the
 country rung is no exception: a code the catalogues do not carry is an unmatched
 token that fires nothing. It was once a shape check instead, so any well-formed
-pair resolved to :attr:`IvaTerritorialScope.THIRD_COUNTRY` -- and third country
+pair resolved to the registry-projected third-country token -- and third country
 on the issued side is export treatment, zero-rated, so ``XX``, ``ZZ`` and ``QQ``
 exempted an operation silently from a value with no referent. The ISO
 user-assigned ranges denote nothing by construction; shape-validity is not
@@ -39,7 +39,7 @@ contains three different IVA territories: the peninsula and Balearics inside the
 territorio de aplicación del impuesto, the Canary Islands under IGIC, and Ceuta
 and Melilla under IPSI -- the latter two outside LIVA entirely (Ley 37/1992 art.
 3.Dos). A country code cannot distinguish them, so resolving ``ES`` to
-:attr:`IvaTerritorialScope.ES_MAINLAND` would place every Canarian and Ceutan
+the registry-projected mainland token would place every Canarian and Ceutan
 party inside a territory their operations are not subject to, which is exactly
 the silent domestic capture above. Discriminating them needs sub-national printed
 evidence -- the address province or postal code -- which this module does not
@@ -80,16 +80,16 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final, NamedTuple
 
-from ...core.identity.nif_iva import (
-    iso_country_for_nif_iva_prefix,
-    nif_iva_format_for_country,
-    nif_iva_prefix_for_country,
-    normalise_nif_iva,
-)
+from ...core.identity.nif_iva import normalise_nif_iva
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
+from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+from ..calculations.registry.nif_iva_catalogue import resolve_nif_iva_catalogue
 from . import country_vocabulary as _country_vocabulary
-from .classification import IvaTerritorialScope
-from .schema import EUMemberState
+from .classification import (
+    IvaTerritorialScope,
+    iva_territorial_scope_alias,
+    require_iva_territorial_scope,
+)
 
 __all__ = [
     "SPAIN_COUNTRY_CODE",
@@ -116,18 +116,13 @@ resolver's refusal, and the gate that proves the refusal holds. A literal spelle
 twice is the drift this codebase keeps closing.
 """
 
-_EU_MEMBER_CODES: Final[frozenset[str]] = frozenset(
-    member.value.upper() for member in EUMemberState if member.value.upper() != SPAIN_COUNTRY_CODE
-)
-"""Every Member State code except Spain, derived from the closed catalogue.
-
-Derived rather than listed so a State entering or leaving the catalogue moves
-here with it -- a hand-written copy of this set once shipped covering half a
-taxonomy elsewhere in this tree. Northern Ireland (``XI``) is a member of that
-catalogue for goods under the Protocol and is deliberately not special-cased out:
-the catalogue is the authority on who is inside, and second-guessing it here
-would be a second opinion with no provision behind it.
-"""
+def _eu_member_codes() -> frozenset[str]:
+    """Return non-Spanish EU codes projected from fact 0131."""
+    return frozenset(
+        str(member).upper()
+        for member in resolve_eu_member_state_catalogue().all_states
+        if str(member).upper() != SPAIN_COUNTRY_CODE
+    )
 
 
 _USER_ASSIGNED_ALPHA2: Final[frozenset[str]] = frozenset(
@@ -262,7 +257,7 @@ def _territory_carve_outs() -> dict[str, _CarveOut]:
     return {
         code: _CarveOut(
             assimilated_to=record.assimilated_to,
-            scope=IvaTerritorialScope(record.scope) if record.scope is not None else None,
+            scope=require_iva_territorial_scope(record.scope) if record.scope is not None else None,
             establishes_nothing=record.establishes_nothing,
         )
         for code, record in bundled_authority().catalogues.runtime.territory_carve_outs.items()
@@ -295,7 +290,7 @@ def _catalogued_country_codes() -> frozenset[str]:
     """
     return (
         frozenset(_country_vocabulary.country_codes_by_printed_name().values())
-        | _EU_MEMBER_CODES
+        | _eu_member_codes()
         | {SPAIN_COUNTRY_CODE}
         | frozenset(_territory_carve_outs())
     )
@@ -366,9 +361,9 @@ def _scope_for_catalogued_country(country_code: str) -> IvaTerritorialScope | No
         return _scope_for_carve_out(carve_out)
     if country_code == SPAIN_COUNTRY_CODE:
         return None
-    if country_code in _EU_MEMBER_CODES:
-        return IvaTerritorialScope.EU_MEMBER
-    return IvaTerritorialScope.THIRD_COUNTRY
+    if country_code in _eu_member_codes():
+        return iva_territorial_scope_alias("eu_member")
+    return iva_territorial_scope_alias("third_country")
 
 
 def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialScope | None:
@@ -383,7 +378,7 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
 
     **Why shape is not enough, in the direction that costs money.** Any
     well-formed pair once resolved to
-    :attr:`IvaTerritorialScope.THIRD_COUNTRY`, so ``XX``, ``ZZ`` and ``QQ``
+        the registry-projected third-country token, so ``XX``, ``ZZ`` and ``QQ``
     settled a party outside the EU -- and on the issued side third country is
     export treatment, zero-rated. An issuer typo, a placeholder or a truncated
     field therefore exempted an operation silently, from evidence the ladder
@@ -418,8 +413,8 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
             without an exception being used for ordinary control flow.
 
     Returns:
-        :attr:`IvaTerritorialScope.EU_MEMBER` for a Member State other than
-        Spain, :attr:`IvaTerritorialScope.THIRD_COUNTRY` for a CATALOGUED
+        the registry-projected EU-member token for a Member State other than
+        Spain, the registry-projected third-country token for a CATALOGUED
         country outside that catalogue, or ``None`` when the code is absent,
         malformed, Spanish, or names no country the vocabulary carries.
 
@@ -488,13 +483,14 @@ def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> s
     if len(normalised) < _ALPHA2_LENGTH:
         return None
     candidate = normalised[:_ALPHA2_LENGTH]
-    prefix = nif_iva_prefix_for_country(candidate)
+    catalogue = resolve_nif_iva_catalogue()
+    prefix = catalogue.prefix_for_country(candidate)
     if prefix is None:
         return None
-    spec = nif_iva_format_for_country(prefix.value)
+    spec = catalogue.format_for_country(prefix)
     if spec is None or not spec.pattern.match(normalised):
         return None
-    return iso_country_for_nif_iva_prefix(prefix)
+    return catalogue.iso_country_for_prefix(prefix)
 
 
 _POSTAL_PREFIX_LENGTH: Final[int] = 2
@@ -521,7 +517,7 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
     from ..calculations.registry.authority import bundled_authority
 
     return {
-        prefix: IvaTerritorialScope(record.scope)
+        prefix: require_iva_territorial_scope(record.scope)
         for prefix, record in bundled_authority().catalogues.runtime.spanish_postal_territories.items()
     }
 
@@ -541,9 +537,8 @@ def territorial_scope_for_spanish_postal_code(postal_code: str | None) -> IvaTer
             unreadable evidence is a normal outcome of reading.
 
     Returns:
-        :attr:`IvaTerritorialScope.ES_CANARIAS` or
-        :attr:`IvaTerritorialScope.ES_CEUTA_MELILLA` for a prefix the registry
-        excludes, :attr:`IvaTerritorialScope.ES_MAINLAND` for a well-formed code
+        the registry-projected Canarias or Ceuta/Melilla token for a prefix the
+        registry excludes, and the registry-projected mainland token for a well-formed code
         outside those, or ``None`` when no code was readable.
 
         ``None`` rather than the mainland for an absent or malformed code, and
@@ -563,7 +558,7 @@ def territorial_scope_for_spanish_postal_code(postal_code: str | None) -> IvaTer
     if len(candidate) != _POSTAL_CODE_LENGTH or not candidate.isdigit():
         return None
     excluded = _excluded_territories_by_prefix()
-    return excluded.get(candidate[:_POSTAL_PREFIX_LENGTH], IvaTerritorialScope.ES_MAINLAND)
+    return excluded.get(candidate[:_POSTAL_PREFIX_LENGTH], iva_territorial_scope_alias("mainland"))
 
 
 def country_code_for_stated_country_code(stated_code: str | None) -> str | None:

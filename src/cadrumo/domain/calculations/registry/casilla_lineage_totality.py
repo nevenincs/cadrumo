@@ -39,7 +39,12 @@ whoever did or did not examine it.
 Completeness is judged against an explicit exception set keyed per row. An
 unresolved row that no exception names is UNCOVERED. An exception naming a
 row that is not unresolved in the corpus given is STALE, whether the row now
-resolves, has been removed, or belongs to a modelo the corpus does not hold.
+resolves, has been removed, belongs to a modelo the corpus does not hold, or
+sits in an edition this rule never judges at all -- a first edition, or a
+none-rooted edition concurrent with the one before it. That last cause means
+the opposite of the others: not "no longer needed" but "never assessable
+here", and the report cannot tell them apart. An unjudged row emits nothing,
+and nothing emitted is not evidence the row is covered.
 Pass the whole corpus, or every exception outside it reads as stale.
 
 Where this rule stops:
@@ -58,7 +63,13 @@ Where this rule stops:
   whose other editions declare the key;
 - whether the named edition is a legal predecessor is not judged here: the
   forest and date-agreement rules own that, and ran when the modelo loaded;
-- the first edition, and any edition declaring no predecessor, is not judged;
+- the first edition is not judged, having no earlier edition to be judged
+  against; and a none-rooted edition whose validity OVERLAPS the edition
+  before it is not judged, being a concurrent sibling rather than a
+  successor. A none-rooted edition following a CLOSED earlier edition IS
+  judged: the declaration says this edition cannot be produced from the
+  one before it by the merge, not that its individual casillas do not
+  continue;
 - exceptions are matched by key alone. Their classification and reason belong
   to whoever keeps the exception set, and are not read here.
 """

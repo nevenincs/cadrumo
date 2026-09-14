@@ -9,8 +9,7 @@ ciphertext replayed a second time against the same recipient bucket is
 refused rather than silently re-accepted.
 
 The nonce ledger is a bucket-scoped append-only consumption record, following
-the exact governed-repository shape of
-:class:`~application.modelo.RecipientFingerprintRegistryRepository`: one
+the exact governed-repository shape of the trusted-recipient registry: one
 ``FINANCIAL``-sensitivity secure-object singleton per bucket, an empty ledger
 when absent, and ``mark_consumed`` refuses a nonce already on file. This is
 the ``aeat-architecture-boundaries`` companion to that
@@ -43,7 +42,7 @@ See Also:
     :mod:`~application.modelo.review_package_recipient_encryption`
         Mints the ``envelope_nonce_hex`` this ledger consumes and defines the
         paired expiry fields.
-    :mod:`~application.modelo._review_package_recipient_registry`
+    :mod:`~application.modelo.review_package_recipient_registry`
         The structural template this repository mirrors.
 """
 
@@ -119,7 +118,7 @@ class RecipientReplayGuardRepository:
     :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE`
     and persisted through
     :class:`~adapters.persistence.storage.SecureObjectRepository`, mirroring
-    :class:`~application.modelo.RecipientFingerprintRegistryRepository`.
+    :class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`.
     """
 
     def __init__(

@@ -24,9 +24,9 @@ that:
 illegal kind can never reach the catalogue.
 
 See Also:
-    :func:`~core.resolve_amendment_kind_regime`:
-        Declared per-modelo, period-aware permitted-kind table this module
-        binds to :class:`~CalculationRevisionAmendmentKind`.
+    :func:`~domain.calculations.registry.amendment_regime_policy.resolve_amendment_kind_regime_for_period`:
+        Registry-projected per-modelo, period-aware permitted-kind policy this
+        module binds to :class:`~CalculationRevisionAmendmentKind`.
     :func:`~application.modelo.amend_modelo_revision`:
         The composition path that calls this module's guard before building
         the amendment revision.
@@ -40,10 +40,10 @@ from decimal import Decimal
 from ...core.amendment_kind_regime import (
     AmendmentLiabilityDirection,
     classify_amendment_liability_direction,
-    resolve_amendment_kind_regime,
 )
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
+from ...domain.calculations.registry.amendment_regime_policy import resolve_amendment_kind_regime_for_period
 from ...core.result_disposition import result_disposition_casilla_ids
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from .action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
@@ -64,8 +64,8 @@ def assert_amendment_kind_permitted(
     """Refuse ``amendment_kind`` unless the resolved period legally permits it.
 
     Reads the declared regime from
-    :func:`~core.resolve_amendment_kind_regime` for ``modelo`` and
-    ``period`` and checks ``amendment_kind`` against the permitted set. A
+    :func:`~domain.calculations.registry.amendment_regime_policy.resolve_amendment_kind_regime_for_period`
+    for ``modelo`` and ``period`` and checks ``amendment_kind`` against the permitted set. A
     modelo with no declared rectificativa-adoption boundary (e.g. M130/M131,
     which carry no bundled rectificativa grounding) always resolves to the
     pre-rectificativa complementaria/sustitutiva pair, so requesting
@@ -77,7 +77,7 @@ def assert_amendment_kind_permitted(
             resolved period's permitted set. The refusal names both the
             requested kind and the full accepted set.
     """
-    regime = resolve_amendment_kind_regime(modelo, period)
+    regime = resolve_amendment_kind_regime_for_period(modelo, period)
     if amendment_kind.value in regime.permitted_kinds:
         return
     accepted = ", ".join(sorted(regime.permitted_kinds))
@@ -144,7 +144,7 @@ def assert_complementaria_liability_direction_permitted(
     """Refuse a pre-rectificativa ``complementaria`` that decreases liability.
 
     Only load-bearing for a pre-rectificativa period (see
-    :func:`~core.resolve_amendment_kind_regime`): once rectificativa
+    :func:`~domain.calculations.registry.amendment_regime_policy.resolve_amendment_kind_regime_for_period`): once rectificativa
     applies, both directions route through the unified mechanism and this
     guard is a no-op. For a pre-rectificativa period requesting
     ``COMPLEMENTARIA``, sums the modelo's declared final-result casilla(s)
@@ -164,7 +164,7 @@ def assert_complementaria_liability_direction_permitted(
     """
     if amendment_kind is not CalculationRevisionAmendmentKind.COMPLEMENTARIA:
         return
-    if resolve_amendment_kind_regime(modelo, period).rectificativa_effective:
+    if resolve_amendment_kind_regime_for_period(modelo, period).rectificativa_effective:
         return
 
     baseline_result = _summed_result(modelo, baseline_casilla_values)

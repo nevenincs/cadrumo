@@ -8,10 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ._registry_scenarios_support import (
-    _REGISTRY_ROOT,
     _estimacion_objetiva_modulos_archetype_scenario,
     _expected,
     _final_settlement_scenario,
@@ -38,11 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def matching_registry_scenario_report() -> RegistryScenarioRunReport:
-    return run_registry_calculation_scenario(
-        _simplified_direct_estimation_cap_scenario(),
-        registry_root=_REGISTRY_ROOT,
-        source_root=bundled_path(),
-    )
+    return run_registry_calculation_scenario(_simplified_direct_estimation_cap_scenario())
 
 
 def test_registry_scenario_report_accepts_a_consistent_match(
@@ -82,14 +76,7 @@ def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payment
         _tributacion_conjunta_family_joint_archetype_scenario(),
         _minimo_familiar_descendientes_discapacidad_archetype_scenario(),
     )
-    reports = [
-        run_registry_calculation_scenario(
-            scenario,
-            registry_root=_REGISTRY_ROOT,
-            source_root=bundled_path(),
-        )
-        for scenario in scenarios
-    ]
+    reports = [run_registry_calculation_scenario(scenario) for scenario in scenarios]
 
     for report in reports:
         # Four coordinates: modelo, revision, filing year, period. The revision
@@ -126,11 +113,7 @@ def test_modelo_100_scenario_rejects_undeclared_hand_typed_inventory_acquisition
         RegistryValidationError,
         match=r"0181 \(binding 'renta-inventory-activity-acquisition-cost-0181'\)",
     ):
-        run_registry_calculation_scenario(
-            undeclared,
-            registry_root=_REGISTRY_ROOT,
-            source_root=bundled_path(),
-        )
+        run_registry_calculation_scenario(undeclared)
 
 
 def test_registry_scenario_reports_trace_contract_mismatches() -> None:
@@ -147,11 +130,7 @@ def test_registry_scenario_reports_trace_contract_mismatches() -> None:
         },
     )
 
-    report = run_registry_calculation_scenario(
-        scenario,
-        registry_root=_REGISTRY_ROOT,
-        source_root=bundled_path(),
-    )
+    report = run_registry_calculation_scenario(scenario)
 
     assert report.status == "mismatch"
     assert report.comparisons[0].actual_value == Decimal("2000.00")
@@ -195,11 +174,7 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
         ),
     )
 
-    report = run_registry_calculation_scenario(
-        scenario,
-        registry_root=_REGISTRY_ROOT,
-        source_root=bundled_path(),
-    )
+    report = run_registry_calculation_scenario(scenario)
 
     assert_registry_scenario_matches(report)
 
@@ -218,11 +193,7 @@ def test_registry_scenario_reports_operand_casilla_ref_mismatches() -> None:
         },
     )
 
-    report = run_registry_calculation_scenario(
-        scenario,
-        registry_root=_REGISTRY_ROOT,
-        source_root=bundled_path(),
-    )
+    report = run_registry_calculation_scenario(scenario)
 
     assert report.status == "mismatch"
     assert report.comparisons[0].actual_value == Decimal("2000.00")
@@ -245,11 +216,7 @@ def test_registry_scenario_requires_declared_operand_casilla_refs() -> None:
         },
     )
 
-    report = run_registry_calculation_scenario(
-        scenario,
-        registry_root=_REGISTRY_ROOT,
-        source_root=bundled_path(),
-    )
+    report = run_registry_calculation_scenario(scenario)
 
     assert report.status == "mismatch"
     detail = report.comparisons[0].detail or ""
@@ -311,8 +278,4 @@ def test_registry_scenario_requires_declared_revision_to_match_snapshot() -> Non
     scenario = _simplified_direct_estimation_cap_scenario().model_copy(update={"revision": "2024"})
 
     with pytest.raises(RegistrySnapshotError, match="revision='2024'"):
-        run_registry_calculation_scenario(
-            scenario,
-            registry_root=_REGISTRY_ROOT,
-            source_root=bundled_path(),
-        )
+        run_registry_calculation_scenario(scenario)

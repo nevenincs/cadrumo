@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from unittest.mock import Mock
 
 import pytest
 
@@ -39,9 +40,8 @@ from ....domain.iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
-from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from ..calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -59,9 +59,6 @@ _TOTAL_CASILLA: CasillaId = validated_casilla_id(
     surface="test.rate_box.total",
 )
 _BOX_4PCT: CasillaId = validated_casilla_id("02", surface="test.rate_box.box")
-
-
-_bucket = active_profile_isolated_backend_fixture(bucket_id=_BUCKET_ID, name="_bucket")
 
 
 def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> BindingDefinition:
@@ -131,6 +128,10 @@ def _coordinator_diagnostics(values: dict[CasillaId, Decimal]) -> tuple[Calculat
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
+        observation_repository=Mock(),
+        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=Mock(),
+        transaction_repository=Mock(bucket_id=_BUCKET_ID),
     )
 
 

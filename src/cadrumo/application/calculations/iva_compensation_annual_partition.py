@@ -14,9 +14,6 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import ClassVar, Final
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
@@ -64,13 +61,13 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..persistence_errors import PersistenceDegradationError
 from .m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from .revision_carry_gate import revision_carry_outcome
 
 _log = get_logger(__name__)
 
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 _SOURCE_KIND: Final = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
 _303_GENERADA_ID: Final[CasillaId] = M303_GENERADA_CASILLA
 _303_APLICADA_ID: Final[CasillaId] = M303_COMPENSACION_APLICADA_CASILLA
@@ -103,7 +100,7 @@ def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation
         )
 
 
-def _period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> IvaCompensationPeriodState:
+def period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> IvaCompensationPeriodState:
     """Build one FIFO state from a validated filed Modelo 303 envelope."""
     validated = validate_normalized_m303_carry_observation_envelope(envelope)
     observation = validated.observation
@@ -167,7 +164,7 @@ def resolve_iva_compensation_annual_partition_binding_values(
     if requirement is None:
         return {}
     states = tuple(
-        _period_state_from_303_envelope(envelope)
+        period_state_from_303_envelope(envelope)
         for envelope in envelopes
         if envelope.observation.modelo == Modelo("303").value and envelope.observation.filing_year == filing_year
     )
@@ -279,7 +276,7 @@ def _load_partition_envelopes_or_degrade(
             filing_year=filing_year,
             repository=repository,
         )
-    except STORAGE_DEGRADATION_ERRORS as exc:
+    except PersistenceDegradationError as exc:
         return storage_degradation_resolution(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
@@ -390,5 +387,6 @@ class IvaCompensationAnnualPartitionSourceResolver:
 
 __all__ = [
     "IvaCompensationAnnualPartitionSourceResolver",
+    "period_state_from_303_envelope",
     "resolve_iva_compensation_annual_partition_binding_values",
 ]

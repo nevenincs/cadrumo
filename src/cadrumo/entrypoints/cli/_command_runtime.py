@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable, Mapping
+from enum import Enum
 from functools import cache
 from types import GenericAlias
 from typing import Any, cast
 
 import typer
-from click import Choice
+from click import Choice, Context, Parameter, ParamType
+from pydantic import TypeAdapter, ValidationError
 
 from ...core.i18n.render import tr
 from ._command_target import resolve_deferred_target
@@ -34,6 +36,22 @@ from .command_suggestions import CadrumoTyperGroup, LazyFactoryTarget, LazySubco
 
 class CommandSpecTyperGroup(CadrumoTyperGroup):
     """Runtime group whose lazy table is namespaced to CommandSpec authority."""
+
+
+class _PydanticStringParamType(ParamType):
+    """Convert an opaque string annotation through its declared Pydantic schema."""
+
+    name = "registry value"
+
+    def __init__(self, annotation: type[str]) -> None:
+        self._adapter = TypeAdapter(annotation)
+        self.name = annotation.__name__
+
+    def convert(self, value: Any, param: Parameter | None, ctx: Context | None) -> object:
+        try:
+            return self._adapter.validate_python(value)
+        except (TypeError, ValueError, ValidationError) as exc:
+            self.fail(str(exc), param, ctx)
 
 
 @cache
@@ -120,6 +138,14 @@ def _parameter_value_projection(
         if spec.value.click_type is None
         else resolve_deferred_target(spec.value.click_type)
     )
+    if (
+        click_type is None
+        and isinstance(annotation, type)
+        and annotation is not str
+        and issubclass(annotation, str)
+        and not issubclass(annotation, Enum)
+    ):
+        click_type = _PydanticStringParamType(annotation)
     if isinstance(click_type, type):
         click_type = click_type()
     choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
@@ -189,11 +215,23 @@ def _option_parameter(
             "shell_complete": completion,
         }
     )
-    # Typer derives flag semantics from the boolean annotation and paired
-    # declarations. Its legacy ``is_flag`` / ``flag_value`` parameters are
-    # deprecated and ignored, so projecting them would add warnings without
-    # preserving any contract fact.
-    typer_default = option_factory(default, *spec.declarations, **option_kwargs)
+    # Typer expresses a positive/negative boolean pair as one slash-delimited
+    # declaration. The command graph keeps the two operator-facing tokens
+    # separately so consumers can enumerate them, therefore join only the
+    # canonical ``--x`` / ``--no-x`` shape at this adapter boundary. Passing
+    # those tokens separately makes both aliases select ``True``.
+    declarations = spec.declarations
+    if (
+        spec.is_flag
+        and len(declarations) == 2
+        and declarations[0].startswith("--")
+        and declarations[1] == f"--no-{declarations[0][2:]}"
+    ):
+        declarations = (f"{declarations[0]}/{declarations[1]}",)
+    # Typer derives flag semantics from the boolean annotation and declaration.
+    # Its legacy ``is_flag`` / ``flag_value`` parameters are deprecated and
+    # ignored, so projecting them would add warnings without preserving facts.
+    typer_default = option_factory(default, *declarations, **option_kwargs)
     return inspect.Parameter(
         spec.name,
         inspect.Parameter.KEYWORD_ONLY,

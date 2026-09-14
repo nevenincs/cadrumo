@@ -19,10 +19,9 @@ from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionDisposal,
-    BienInversionDisposalRegime,
     BienInversionIvaRecord,
-    BienInversionKind,
 )
+from cadrumo.domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,

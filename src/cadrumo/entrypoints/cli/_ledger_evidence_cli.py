@@ -32,7 +32,7 @@ from ...core.config import load_settings
 from ...core.config_support import LLMProvider
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.invoices.enums import InvoiceClass
+from ...domain.invoices.enums import InvoiceClass, require_invoice_class
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
@@ -55,7 +55,12 @@ from .ledger_business_payloads import (
     EvidenceUpdateResult,
     EvidenceViewResult,
 )
-from .state_projection_support import ledger_evidence_ports_factory
+from .state_projection_support import (
+    catalogue_creation_ports_factory,
+    counterparty_establishment_repository_factory,
+    invoice_confirmation_ports_factory,
+    ledger_evidence_ports_factory,
+)
 
 
 class _InvoiceClassKwarg(TypedDict, total=False):
@@ -519,7 +524,7 @@ def evidence_confirm(
     currency: str | None = None,
     operation_type: IntracomOperationType | None = None,
     supply_nature: SupplyNature | None = None,
-    invoice_class: InvoiceClass | None = None,
+    invoice_class: str | None = None,
     rectifies: str | None = None,
     series: str | None = None,
     notes: str = "",
@@ -688,7 +693,7 @@ def _run_evidence_confirm(
     currency: str | None,
     operation_type: IntracomOperationType | None,
     supply_nature: SupplyNature | None,
-    invoice_class: InvoiceClass | None,
+    invoice_class: str | None,
     rectifies: str | None,
     series: str | None,
     notes: str,
@@ -698,6 +703,11 @@ def _run_evidence_confirm(
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
     bucket_id = transaction_repository.bucket_id
     evidence_ports = ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id)
+    catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
+    invoice_confirmation_ports = invoice_confirmation_ports_factory(ctx)(bucket_id=bucket_id)
+    counterparty_establishment_repository = counterparty_establishment_repository_factory(ctx)(
+        bucket_id=bucket_id,
+    )
     resolutions: list[FindingResolution] = [parse_finding_resolution(raw) for raw in resolve]
     try:
         result = confirm_invoice_draft_from_evidence(
@@ -721,6 +731,9 @@ def _run_evidence_confirm(
             series=series,
             notes=notes,
             resolutions=resolutions,
+            catalogue_creation_ports=catalogue_ports,
+            invoice_confirmation_ports=invoice_confirmation_ports,
+            counterparty_establishment_repository=counterparty_establishment_repository,
             evidence_ports=evidence_ports,
             extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
         )
@@ -768,11 +781,11 @@ def _resolved_outcome(result: InvoiceConfirmationResult) -> str | None:
     return result.establishment.category.outcome.value
 
 
-def _invoice_class_kwarg(invoice_class: InvoiceClass | None) -> _InvoiceClassKwarg:
+def _invoice_class_kwarg(invoice_class: str | None) -> _InvoiceClassKwarg:
     """Keep an omitted invoice class omitted so document-derived defaults survive."""
     if invoice_class is None:
         return {}
-    return {"invoice_class": invoice_class}
+    return {"invoice_class": require_invoice_class(invoice_class)}
 
 
 def _evidence_service(*, ctx: typer.Context, bucket_id: str) -> PurchaseInvoiceEvidenceService:

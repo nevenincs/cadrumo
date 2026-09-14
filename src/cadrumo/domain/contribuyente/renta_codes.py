@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
+from functools import cache
 from types import MappingProxyType
 from typing import Self
 
@@ -99,26 +100,38 @@ def modelo100_ecivil_export_code(value: object) -> str:
 # unreachable from :class:`CCAA`, which is the ordinary common-regime catalogue:
 # the autonomous cities raise ``ForalRegimeError`` and "no residente" is not a
 # comunidad. Códigos 14 and 15 are assigned to nothing in the AEAT table.
-RENTA_MODELO100_CCAA_CODIGOS: Mapping[CCAA, str] = MappingProxyType(
+_MODELO100_CCAA_CODIGOS_BY_NAME: Mapping[str, str] = MappingProxyType(
     {
-        CCAA.ANDALUCIA: "01",
-        CCAA.ARAGON: "02",
-        CCAA.ASTURIAS: "03",
-        CCAA.BALEARES: "04",
-        CCAA.CANARIAS: "05",
-        CCAA.CANTABRIA: "06",
-        CCAA.CASTILLA_LA_MANCHA: "07",
-        CCAA.CASTILLA_Y_LEON: "08",
-        CCAA.CATALUNA: "09",
-        CCAA.EXTREMADURA: "10",
-        CCAA.GALICIA: "11",
-        CCAA.MADRID: "12",
-        CCAA.MURCIA: "13",
-        CCAA.LA_RIOJA: "16",
-        CCAA.COMUNIDAD_VALENCIANA: "17",
+        "ANDALUCIA": "01",
+        "ARAGON": "02",
+        "ASTURIAS": "03",
+        "BALEARES": "04",
+        "CANARIAS": "05",
+        "CANTABRIA": "06",
+        "CASTILLA_LA_MANCHA": "07",
+        "CASTILLA_Y_LEON": "08",
+        "CATALUNA": "09",
+        "EXTREMADURA": "10",
+        "GALICIA": "11",
+        "MADRID": "12",
+        "MURCIA": "13",
+        "LA_RIOJA": "16",
+        "COMUNIDAD_VALENCIANA": "17",
     },
 )
-"""Official Modelo 100 CCAA códigos accepted by the bundled XSD."""
+
+
+@cache
+def renta_modelo100_ccaa_codigos() -> Mapping[CCAA, str]:
+    """Return the official Modelo 100 CCAA códigos accepted by the bundled XSD.
+
+    Keyed lazily rather than at module scope because :class:`CCAA` members are
+    projected from the governed facts registry: naming one resolves the
+    catalogue, and resolving it while this module is being imported reaches the
+    registry authority through an import cycle. The códigos themselves are the
+    form's own datum and stay here.
+    """
+    return MappingProxyType({getattr(CCAA, name): codigo for name, codigo in _MODELO100_CCAA_CODIGOS_BY_NAME.items()})
 
 
 def modelo100_ccaa_codigo(value: CCAA | str) -> str:
@@ -144,9 +157,10 @@ def modelo100_ccaa_codigo(value: CCAA | str) -> str:
         community: CCAA | None = CCAA(value)
     except ValueError:
         community = None
-    codigo = RENTA_MODELO100_CCAA_CODIGOS.get(community) if community is not None else None
+    codigos = renta_modelo100_ccaa_codigos()
+    codigo = codigos.get(community) if community is not None else None
     if codigo is None:
-        valid = ", ".join(sorted(member.value for member in RENTA_MODELO100_CCAA_CODIGOS))
+        valid = ", ".join(sorted(member.value for member in codigos))
         raise ValueError(f"no Modelo 100 CCAA código is assigned to {value!r}; communities carrying a código: {valid}")
     return codigo
 
@@ -212,88 +226,110 @@ class FiscalResidency(str):
         return str(self)
 
 
-class SituacionFamiliar(StrEnum):
-    """Legal family situation for the Art. 82 LIRPF unidad-familiar eligibility test.
+class SituacionFamiliar(str):
+    """Opaque Art. 82 family-situation token projected from the facts registry.
 
-    Determines which of the two Art. 82.1 unidad-familiar modalities a
-    tributación conjunta (joint) declaration may form:
-
-    - ``casado``: married and not legally separated; conjunta available as a
-      couple (Art. 82.1.1ª), with the couple's minor / judicially-incapacitated
-      children if any — children are optional.
-    - ``pareja_hecho_registrada`` / ``pareja_hecho_no_registrada``: a de-facto
-      couple, registered or not. Art. 82.1.2ª keys the second modality on the
-      absence of a *marriage bond* ("cuando no existiera vínculo matrimonial"),
-      which is registration-agnostic: a de-facto couple has no marriage bond,
-      so conjunta is available only as a monoparental unit (one parent with the
-      qualifying children), never as a couple.
-    - ``soltero`` / ``separado_divorciado``: single, or legally separated /
-      divorced; conjunta available only as a monoparental unit (Art. 82.1.2ª)
-      when qualifying children are present.
+    The registry owns the five-token vocabulary and the joint-taxation
+    eligibility mapping.  This type retains only the stable wire-token shape;
+    callers obtain a value through the typed registry projection.
     """
 
-    CASADO = "casado"
-    PAREJA_HECHO_REGISTRADA = "pareja_hecho_registrada"
-    PAREJA_HECHO_NO_REGISTRADA = "pareja_hecho_no_registrada"
-    SOLTERO = "soltero"
-    SEPARADO_DIVORCIADO = "separado_divorciado"
+    __slots__ = ()
 
-    def monoparental_required(self) -> bool:
-        """True when conjunta is available only as a monoparental unit.
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("SituacionFamiliar tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("SituacionFamiliar token must be a non-empty string")
+        return str.__new__(cls, value)
 
-        Per Art. 82.1.2ª LIRPF the monoparental unidad familiar applies
-        whenever no marriage bond exists — legal separation, single, or a
-        de-facto couple whether or not it is registered. The modality is
-        registration-agnostic, and every such situation may opt for conjunta
-        only as a single-parent unit, which requires qualifying children. Only
-        ``CASADO`` (Art. 82.1.1ª, the married couple) may opt as a couple.
-        """
-        return self in (
-            SituacionFamiliar.SOLTERO,
-            SituacionFamiliar.SEPARADO_DIVORCIADO,
-            SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
-            SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("SituacionFamiliar must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Register strict projected-token validation with Pydantic."""
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
         )
 
+    @property
+    def value(self) -> str:
+        """Return the persisted registry token."""
+        return str(self)
 
-class SituacionFamiliarM145(StrEnum):
-    """Trinary "Situación familiar" axis declared on Modelo 145 (box 1).
+    @property
+    def name(self) -> str:
+        """Return the persisted token for diagnostics."""
+        return str(self)
 
-    The Modelo 145 form (Comunicación de datos al pagador, BOE-A-2011-208,
-    art. 88 RIRPF) collects the recipient's family-situation trinary that the
-    pagador uses to apply Art. 81 RIRPF withholding adjustments. It is a
-    distinct axis from :class:`SituacionFamiliar`, which encodes the Art. 82
-    LIRPF unidad-familiar conjunta-eligibility test — Art. 81 retención
-    arithmetic and Art. 82 conjunta arithmetic do not share categories.
 
-    Form-numbered values (mirroring the three numbered boxes on the
-    physical mod145 form):
+class SituacionFamiliarM145(str):
+    """Opaque Modelo 145 family-situation token projected from the facts registry.
 
-    - ``familia_1``: viudo/a o casado/a separado/a legalmente con
-      descendientes que dan derecho a la totalidad del mínimo por
-      descendientes. Eligible for the supplementary withholding reduction
-      under RIRPF art. 81.1.1°.
-    - ``familia_2``: casado/a y no separado/a legalmente cuyo cónyuge no
-      obtiene rentas anuales > €1,500 (excluidas las exentas).  Eligible
-      for the supplementary withholding reduction under RIRPF art. 81.1.2°.
-    - ``familia_3``: situación familiar distinta de las anteriores. The
-      default; no supplementary withholding reduction.
+    Fact 0142 owns the three form values, their legal descriptions, and the
+    supplementary-reduction eligibility mapping. This type retains only the
+    stable wire-token shape; callers obtain values through the typed registry
+    projection in ``situacion_familiar_m145_catalogue``.
     """
 
-    FAMILIA_1 = "familia_1"
-    FAMILIA_2 = "familia_2"
-    FAMILIA_3 = "familia_3"
+    __slots__ = ()
 
-    def is_eligible_for_supplementary_reduction(self) -> bool:
-        """True when the situation grants the RIRPF art. 81.1.1°/2° reduction."""
-        return self in (
-            SituacionFamiliarM145.FAMILIA_1,
-            SituacionFamiliarM145.FAMILIA_2,
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("SituacionFamiliarM145 tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("SituacionFamiliarM145 token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("SituacionFamiliarM145 must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Register strict projected-token validation with Pydantic."""
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
         )
+
+    @property
+    def value(self) -> str:
+        """Return the persisted registry token."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the persisted token for diagnostics."""
+        return str(self)
 
 
 __all__ = [
-    "RENTA_MODELO100_CCAA_CODIGOS",
     "RENTA_MODELO100_ECIVIL_EXPORT_CODES",
     "FiscalResidency",
     "RentaDisabilityGrade",
@@ -303,4 +339,5 @@ __all__ = [
     "SituacionFamiliarM145",
     "modelo100_ccaa_codigo",
     "modelo100_ecivil_export_code",
+    "renta_modelo100_ccaa_codigos",
 ]

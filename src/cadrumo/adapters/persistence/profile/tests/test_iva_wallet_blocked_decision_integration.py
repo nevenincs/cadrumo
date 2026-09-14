@@ -1,6 +1,7 @@
 """Blocked IVA wallet decision integration tests for Modelo 303."""
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date, timedelta
 from decimal import Decimal
@@ -98,6 +99,7 @@ def _blocked_wallet_decision(
         snapshot,
         repository=observation_repo,
         captured_at=_DECIDED_AT,
+        iva_history_repository=IvaCompensationHistoryRepository(),
     )
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
@@ -122,6 +124,7 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
             snapshot,
             repository=observation_repo,
             captured_at=_DECIDED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -222,6 +225,7 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
             snapshot,
             repository=observation_repo,
             captured_at=_DECIDED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -253,5 +257,5 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-blocked-decision"
                 ),
-            )
-        assert len(calc_repo.load()) == 0
+        )
+    assert len(calc_repo.load()) == 0

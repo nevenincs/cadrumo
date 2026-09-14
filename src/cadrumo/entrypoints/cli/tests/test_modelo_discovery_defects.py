@@ -29,7 +29,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 )
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit as _create_111_work_unit,
 )

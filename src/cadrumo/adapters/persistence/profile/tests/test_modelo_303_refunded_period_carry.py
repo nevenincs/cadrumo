@@ -48,7 +48,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
-from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 
@@ -272,6 +272,7 @@ def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> Non
             captured_at=_CLOCK,
             result_disposition=ResultDisposition.DEVOLUCION,
             taxpayer_nif="12345678Z",
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
 
         carry_in = _carry_in_for_year_n_plus_1(obs_repo)
@@ -309,6 +310,7 @@ def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) ->
             captured_at=_CLOCK,
             result_disposition=ResultDisposition.COMPENSACION,
             taxpayer_nif="12345678Z",
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
 
         carry_in = _carry_in_for_year_n_plus_1(obs_repo)

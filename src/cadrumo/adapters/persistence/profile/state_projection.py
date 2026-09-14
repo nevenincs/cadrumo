@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ....application.diagnostics_ports import DiagnosticsPorts
 from ....application.state_projection_ports import (
     StateProjectionProfileRead,
     StateProjectionReadError,
@@ -20,6 +21,10 @@ from .transactions import TransactionCatalogueRepository
 
 class StateProjectionPersistenceAdapter:
     """Translate profile persistence records into projection-owned DTOs."""
+
+    def __init__(self, *, diagnostics_ports: DiagnosticsPorts) -> None:
+        """Bind the required secure-object diagnostic capability."""
+        self._diagnostics_ports = diagnostics_ports
 
     def read_workspace(self, *, bucket_id: str) -> StateProjectionWorkspaceRead:
         """Read and count every workspace catalogue for ``bucket_id``."""
@@ -41,7 +46,7 @@ class StateProjectionPersistenceAdapter:
                 work_units=active_work_units,
                 discarded_work_units=discarded_work_units,
                 calculation_revisions=len(revisions),
-                unreadable_rows=secure_object_unreadable_total(),
+                unreadable_rows=secure_object_unreadable_total(ports=self._diagnostics_ports),
             )
         except Exception as exc:
             raise StateProjectionReadError("workspace") from exc

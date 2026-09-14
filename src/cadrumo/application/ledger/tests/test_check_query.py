@@ -18,14 +18,11 @@ from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....core.invoice_link import LinkInconsistencyDirection
-from ....domain.invoices.service import LinkInconsistency
+from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -76,29 +73,43 @@ def _transaction(
     )
 
 
-def _no_links(*, bucket_id: str) -> tuple[LinkInconsistency, ...]:
-    del bucket_id
-    return ()
+class _InvoiceReader:
+    """Inward fake for the application-owned invoice read capability."""
+
+    def __init__(self, catalogue: InvoiceCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def load(self) -> InvoiceCatalogue:
+        return self._catalogue
 
 
-def _one_link(*, bucket_id: str) -> tuple[LinkInconsistency, ...]:
-    del bucket_id
-    return (
-        LinkInconsistency(
-            invoice_id="inv-1",
-            transaction_id="a" * 64,
-            direction=LinkInconsistencyDirection.INVOICE_ONLY,
-        ),
+class _TransactionReader:
+    """Inward fake for the application-owned transaction read capability."""
+
+    def __init__(self, catalogue: TransactionCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def load(self) -> TransactionCatalogue:
+        return self._catalogue
+
+
+def _read_ports(*, one_sided_link: bool = False) -> InvoiceCatalogueReadPorts:
+    transactions = TransactionCatalogue()
+    if one_sided_link:
+        transaction = _transaction(provider_id="link", booked=date(2024, 4, 10)).model_copy(
+            update={"invoice_id": "inv-1"},
+        )
+        transactions = TransactionCatalogue.from_transactions((transaction,))
+    return InvoiceCatalogueReadPorts(
+        invoice_reader=_InvoiceReader(InvoiceCatalogue()),
+        transaction_reader=_TransactionReader(transactions),
     )
 
 
 @contextmanager
 def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogue]:
-    """Persist rows through the real repository, then hand back the catalogue."""
-    with TemporaryDirectory() as tmp, isolated_runtime_profile(tmp_path=Path(tmp), bucket_id=_BUCKET) as profile:
-        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        repository.save(TransactionCatalogue.from_transactions(transactions))
-        yield TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+    """Build the deterministic catalogue consumed by the application query."""
+    yield TransactionCatalogue.from_transactions(transactions)
 
 
 def test_the_years_swept_come_from_the_rows_not_the_calendar() -> None:
@@ -122,7 +133,7 @@ def test_an_empty_ledger_spans_no_years() -> None:
 def test_a_clean_ledger_with_no_link_problems_is_ready() -> None:
     """The baseline both other cases are measured against."""
     with _stored(_transaction(provider_id="a", booked=date(2024, 4, 10))) as catalogue:
-        check = read_ledger_check(bucket_id=_BUCKET, transactions=catalogue, link_reader=_no_links)
+        check = read_ledger_check(bucket_id=_BUCKET, transactions=catalogue, ports=_read_ports())
 
     assert check.ready is True
     assert check.link_inconsistencies == ()
@@ -136,7 +147,7 @@ def test_a_one_sided_invoice_link_alone_makes_a_ledger_not_ready() -> None:
     the operator would file against catalogues that disagree.
     """
     with _stored(_transaction(provider_id="a", booked=date(2024, 4, 10))) as catalogue:
-        check = read_ledger_check(bucket_id=_BUCKET, transactions=catalogue, link_reader=_one_link)
+        check = read_ledger_check(bucket_id=_BUCKET, transactions=catalogue, ports=_read_ports(one_sided_link=True))
 
     assert check.issues == ()
     assert len(check.link_inconsistencies) == 1
@@ -147,8 +158,8 @@ def test_an_empty_ledger_is_ready_only_when_its_links_are_clean() -> None:
     """The empty branch used the same conjunction, not a shortcut."""
     empty = TransactionCatalogue()
 
-    clean = read_ledger_check(bucket_id=_BUCKET, transactions=empty, link_reader=_no_links)
-    dirty = read_ledger_check(bucket_id=_BUCKET, transactions=empty, link_reader=_one_link)
+    clean = read_ledger_check(bucket_id=_BUCKET, transactions=empty, ports=_read_ports())
+    dirty = read_ledger_check(bucket_id=_BUCKET, transactions=empty, ports=_read_ports(one_sided_link=True))
 
     assert clean.ready is True
     assert clean.periods == ()
@@ -168,7 +179,7 @@ def test_an_explicit_period_reports_only_that_period() -> None:
             bucket_id=_BUCKET,
             transactions=catalogue,
             period=Period.from_year_and_code(2024, "0A"),
-            link_reader=_no_links,
+            ports=_read_ports(),
         )
 
     assert len(check.periods) == 1

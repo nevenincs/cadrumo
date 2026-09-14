@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....tests.profile_capsule import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -59,7 +59,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
 
         from ....application.user_profile.projections import fact_value
         from ....application.workflow.profile_bucket_scan import read_profile_bucket
-        from ....tests.profile_capsule import load_test_profile_record
+        from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 
         # The bucket directory is named by the minted UUID; resolve it
         # from the operator label "default" carried in the manifest.

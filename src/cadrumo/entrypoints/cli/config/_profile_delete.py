@@ -47,6 +47,7 @@ from ..errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ....application.bucket_maintenance.contracts import BucketDeletionAssessment
+    from ....application.user_profile.custody_ports import ProfileBucketStoragePort
     from ..config_payloads import ConfigProfileDeleteResult
 
 
@@ -69,12 +70,14 @@ def _refuse_deleting_the_active_profile(*, bucket_id: str, label: str) -> None:
     )
 
 
-def _assess(bucket_id: str) -> BucketDeletionAssessment:
+def _assess(bucket_id: str, *, bucket_storage: ProfileBucketStoragePort) -> BucketDeletionAssessment:
     """Observe the target without unlocking it, or refuse when it is gone."""
     from ....application.bucket_maintenance.contracts import AssessBucketDeletionCommand
     from ....application.bucket_maintenance.service import BucketMaintenanceService
 
-    assessment = BucketMaintenanceService().assess_deletion(AssessBucketDeletionCommand(bucket_id=bucket_id))
+    assessment = BucketMaintenanceService(bucket_storage=bucket_storage).assess_deletion(
+        AssessBucketDeletionCommand(bucket_id=bucket_id),
+    )
     if not assessment.exists:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.unknown_profile",
@@ -200,12 +203,13 @@ def config_profile_delete(
     output_language: OutputLanguage | None = None,
 ) -> None:
     from ._profile_support import resolve_profile_by_label
+    from ..state_projection_support import bucket_storage
 
     """Destroy one named profile capsule, after a preflight the operator confirms."""
     _activate_subcommand_output_language(ctx, output_language)
     pointer = resolve_profile_by_label(name)
     _refuse_deleting_the_active_profile(bucket_id=pointer.bucket_id, label=pointer.label)
-    assessment = _assess(pointer.bucket_id)
+    assessment = _assess(pointer.bucket_id, bucket_storage=bucket_storage(ctx))
     _refuse_erase_inside_the_retention_floor(assessment)
     completed_at = _destroy(pointer.bucket_id, label=pointer.label) if yes else None
     result, lines, notices = _result_and_lines(

@@ -301,6 +301,7 @@ def auth_login(
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
     _activate_subcommand_output_language(ctx, output_language)
+    from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
     from ....application.auth.operator import login_operator_auth
     from ..config_payloads import AuthLoginPayload
     from ..state_projection_support import certificate_secret_backend_factory, operator_probe_ports, operator_scope_ports
@@ -310,6 +311,7 @@ def auth_login(
             login_operator_auth(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+                browser_session_factory=default_browser_session_factory,
                 operator_probe_ports=operator_probe_ports(ctx),
                 operator_scope_ports=operator_scope_ports(ctx),
                 fresh=fresh,

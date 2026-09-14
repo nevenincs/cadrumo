@@ -134,8 +134,8 @@ def test_the_committed_bundled_artifact_loads_and_reads_back_canonically(tmp_pat
     assert republished.read_bytes() == artifact_path.read_bytes()
 
 
-def test_runtime_uses_a_published_artifact_and_isolates_later_consumers(tmp_path: Path) -> None:
-    """A product authority snapshots a published model without its source tree, and no consumer reaches another's."""
+def test_runtime_uses_one_authority_cache_per_published_artifact_identity(tmp_path: Path) -> None:
+    """One immutable publication owns the authority and snapshot cache used by every consumer."""
     artifact_path = _stage_runtime_publication(tmp_path)
 
     first = published_authority(artifact_path)
@@ -158,8 +158,8 @@ def test_runtime_uses_a_published_artifact_and_isolates_later_consumers(tmp_path
     capture.require_current(first.read_current_coordinate())
     assert "consumer-injected" not in later.catalogues.legal
     assert "consumer-injected" not in later.modelos[0].revisions
-    assert later is not first
-    assert later._snapshots is not first._snapshots
+    assert later is first
+    assert later._snapshots is first._snapshots
 
 
 def test_a_republished_artifact_is_decoded_afresh_rather_than_served_stale(tmp_path: Path) -> None:

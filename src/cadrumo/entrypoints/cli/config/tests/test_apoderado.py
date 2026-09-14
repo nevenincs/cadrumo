@@ -6,13 +6,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....tests.profile_storage_root_fixture import profile_storage_root_fixture
+from .....adapters.persistence.storage.tests.profile_storage_root_fixture import profile_storage_root_fixture
 from ...tests.cli_runner import invoke_typer_app
 
 __all__ = ["profile_storage_root_fixture"]
 
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from .....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ...config_payloads import (
     ApoderadoCheckResult,
     ApoderadoClearResult,

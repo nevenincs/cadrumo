@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from ....application.live.notification_ports import NotificationDocumentProtocol
 from ....domain.notifications.sancion import SancionLiquidacion
 from ..pdf.page_text_extraction import extract_pages_text_from_bytes
@@ -33,6 +35,7 @@ class NotificationDocumentReader:
                     "\n".join(pages),
                     certificado_id=str(document.certificado_id),
                     document_sha256=document.pdf_sha256,
+                    effective_date=date.today(),
                 ),
                 None,
             )

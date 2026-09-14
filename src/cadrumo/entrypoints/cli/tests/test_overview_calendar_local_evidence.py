@@ -20,8 +20,8 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests.inventory import FIXTURES_DIR
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from .._overview_evidence import local_calendar_filing_evidence
 from ._overview_calendar_support import (
     _SOURCE_URL,

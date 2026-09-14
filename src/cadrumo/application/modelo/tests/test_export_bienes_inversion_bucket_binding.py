@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
-from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienInversionKind
+from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienesInversionIvaRegister
+from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...aggregation.iva_ledger import IvaLedgerAggregation
@@ -32,7 +30,7 @@ def _record(identifier: str, *, initial_percentage: Decimal) -> BienInversionIva
     )
 
 
-def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(tmp_path: Path) -> None:
+def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register() -> None:
     """Primary evidence cannot bleed into the secondary M303 export arrival."""
     period = Period.from_year_and_code(2026, "4T")
     prorrata_register = ProrrataRegister(
@@ -50,23 +48,18 @@ def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(tmp_path: 
             ),
         ),
     )
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        BienesInversionIvaRegisterRepository(objects=runtime.primary.repository).add(
-            _record("primary-bien", initial_percentage=Decimal("95")),
-        )
-        with runtime.switch_to_secondary():
-            secondary_repository = BienesInversionIvaRegisterRepository(objects=runtime.secondary.repository)
-            secondary_repository.add(_record("secondary-bien", initial_percentage=Decimal("80")))
-            secondary_register = secondary_repository.load()
-
-        contributions, resolved_register, regularisation, _bienes_parameters = _resolve_m303_export_arrivals(
-            period=period,
-            prorrata_register=prorrata_register,
-            iva_aggregation=IvaLedgerAggregation(period=period),
-            bienes_register=secondary_register,
-        )
-
-        primary_register = BienesInversionIvaRegisterRepository(objects=runtime.primary.repository).load()
+    primary_register = BienesInversionIvaRegister(
+        records=(_record("primary-bien", initial_percentage=Decimal("95")),),
+    )
+    secondary_register = BienesInversionIvaRegister(
+        records=(_record("secondary-bien", initial_percentage=Decimal("80")),),
+    )
+    contributions, resolved_register, regularisation, _bienes_parameters = _resolve_m303_export_arrivals(
+        period=period,
+        prorrata_register=prorrata_register,
+        iva_aggregation=IvaLedgerAggregation(period=period),
+        bienes_register=secondary_register,
+    )
 
     assert contributions == ()
     assert tuple(record.identifier for record in resolved_register.records) == ("secondary-bien",)

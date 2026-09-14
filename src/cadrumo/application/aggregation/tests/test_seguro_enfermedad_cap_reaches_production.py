@@ -33,10 +33,11 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..renta_ledger import aggregate_renta_ledger_expenses
-from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID
 from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 _FILING_YEAR = 2025
 _ANNUAL = _period(_FILING_YEAR, "0A")

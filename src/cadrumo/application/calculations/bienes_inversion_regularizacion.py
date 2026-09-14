@@ -28,7 +28,6 @@ from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
-from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
@@ -60,6 +59,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from .observations_repository import CalculationObservationRepositoryProtocol
 from .revision_carry_gate import revision_carry_outcome
 
@@ -288,16 +288,15 @@ def _resolve_regularizacion_parameters(
 
 
 def _load_register(
-    repository: BienesInversionIvaRegisterRepository | None,
+    repository: BienesInversionIvaRegisterRepositoryProtocol,
     *,
     bucket_id: str,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> BienesInversionIvaRegister | CalculationSourceResolution:
     """Load the bucket-scoped register, preserving storage degradation as typed output."""
-    register_repository = repository or BienesInversionIvaRegisterRepository(bucket_id=bucket_id)
     try:
-        return register_repository.load()
+        return repository.load()
     except BienInversionRecordError as exc:
         return storage_degradation_resolution(
             resolver_id=resolver_id,
@@ -615,7 +614,7 @@ class BienesInversionRegularizacionSourceResolver:
         current_year_values: Mapping[CasillaId, Decimal] | None = None,
         missing_current_year_casilla_ids: tuple[CasillaId, ...] = (),
         unresolved_current_year_casilla_ids: tuple[CasillaId, ...] = (),
-        register_repository: BienesInversionIvaRegisterRepository | None = None,
+        register_repository: BienesInversionIvaRegisterRepositoryProtocol,
         observation_repository: CalculationObservationRepositoryProtocol,
     ) -> None:
         """Initialize the resolver with the current-year values and repositories it draws on."""

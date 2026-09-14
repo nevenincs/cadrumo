@@ -1,12 +1,13 @@
-"""Ledger filing evidence: capture, fingerprint binding, encrypted roundtrip.
+"""Ledger filing evidence: projection, fingerprint binding, and coverage.
 
 Asserts the bundled fact basis for modelo export evidence parity:
 - ``compute_ledger_filing_evidence`` projects the typed tax facts and binds each
   row to its fingerprint;
-- the evidence rides inside the encrypted ``CalculationRevision`` envelope and
-  reconstitutes byte-for-byte (every defaultable field populated non-default);
 - the no-silent-omission guard refuses an evidence bundle that does not cover the
   fingerprint snapshot.
+
+The encrypted ``CalculationRevision`` roundtrip is covered at the profile
+persistence adapter seam.
 """
 
 from __future__ import annotations
@@ -17,25 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.iva.schema import IvaCategory
-from ....domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
 from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
-from ....domain.modelos.work_unit import derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ..ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
@@ -46,9 +34,6 @@ from ..ledger_filing_snapshot import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
-_BUCKET_ID = "13131313-1313-4313-8313-131313131313"
-
-
 _MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
@@ -129,95 +114,6 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
     assert row.direction == "OUTGOING"
     assert row.lifecycle_state == "ACTIVE"
     assert evidence.manual_entries[0].casilla_id == _MANUAL_FACT_CASILLA
-
-
-def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
-    period = Period.from_year_and_code(2025, "1T")
-    registry_snapshot_ref = bundled_authority().snapshot("303", filing_year=2025, period="1T").snapshot_ref
-    work_unit_id = derive_work_unit_id(
-        bucket_id=_BUCKET_ID,
-        modelo="303",
-        filing_year=2025,
-        period=period,
-        revision_id=registry_snapshot_ref.revision_id,
-    )
-    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-filing-evidence")
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
-        binding_overrides={},
-        casilla_values={_REVISION_CASILLA: Decimal("1")},
-        source_transaction_ids=(tx_id,),
-        filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
-    )
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit_id,
-        registry_snapshot_ref=registry_snapshot_ref,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
-        binding_overrides={},
-        source_transaction_ids=(tx_id,),
-        casilla_values={_REVISION_CASILLA: Decimal("1")},
-        observations=registry_grounded_observations(
-            modelo="303",
-            filing_year=2025,
-            period=period.registry_token,
-            casilla_values={_REVISION_CASILLA: Decimal("1")},
-        ),
-        created_at=_NOW,
-        updated_at=_NOW,
-        verified_at=_NOW,
-        verified_by="operator",
-        ledger_filing_evidence=evidence,
-        filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
-    )
-
-
-def test_evidence_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
-    txn = _txn()
-    catalogue = TransactionCatalogue.from_transactions((txn,))
-    snapshot = compute_ledger_filing_snapshot(
-        source_transaction_ids=(txn.transaction_id,),
-        catalogue=catalogue,
-        captured_at=_NOW,
-    )
-    evidence = compute_ledger_filing_evidence(
-        source_transaction_ids=(txn.transaction_id,),
-        catalogue=catalogue,
-        snapshot_fingerprint=snapshot.snapshot_fingerprint,
-        captured_at=_NOW,
-        legal_refs=_LEGAL_REFS,
-        source_refs=_SOURCE_REFS,
-        manual_entries=(
-            ManualFactBasisEntry(
-                casilla_id=_MANUAL_FACT_CASILLA,
-                value="140000.00",
-                note="resultado contable",
-                legal_refs=_LEGAL_REFS,
-                source_refs=_SOURCE_REFS,
-            ),
-        ),
-    )
-    original = _revision_with_evidence(evidence=evidence, tx_id=txn.transaction_id)
-    repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    repo.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
-
-    loaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load()
-    loaded_revision = loaded.revisions[original.calculation_revision_id]
-    # Strict equality across the encrypted boundary: the bundled evidence survives.
-    assert loaded_revision == original
-    assert loaded_revision.ledger_filing_evidence == evidence
-    loaded_evidence = loaded_revision.ledger_filing_evidence
-    assert loaded_evidence is not None
-    assert loaded_evidence.rows[0].iva_category == "domestic_general"
-
-    # Anti-tautology: a revision with evidence must NOT equal the same revision
-    # with its evidence stripped — the field carries real state.
-    stripped = original.model_copy(update={"ledger_filing_evidence": None})
-    assert stripped != original
 
 
 def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:

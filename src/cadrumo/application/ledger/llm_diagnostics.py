@@ -3,20 +3,18 @@
 Folds the two metric stores the system already persists into one typed,
 operator-facing report:
 
-* the encrypted LLM usage log written by
-  :class:`~adapters.outbound.llm.UsageRecorder` (per call: provider,
-  model, input/output tokens, estimated cost, cache-hit flag); and
+* the encrypted LLM usage log (per call: provider, model, input/output tokens,
+  estimated cost, cache-hit flag); and
 * the classification confidence stamped on each ledger
   :class:`~domain.transactions.Transaction` whose active decision came
   from an LLM classifier (``classified_by`` shaped ``llm:<provider>:<model>``
   with a ``classification_confidence`` in ``[0, 1]``), loaded from the active
-  bucket's :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
-  when callers do not inject transactions directly.
+  bucket when supplied by the outer transaction diagnostics reader.
 
 No new tracking is introduced here: every figure is aggregated from records
 already on disk. The usage store and the classification store use distinct
-provider namespaces (the completion adapter's :class:`LLMProvider` versus the
-subprocess classifier provenance), so the report presents them as two parallel
+provider namespaces (the completion usage reader versus the subprocess
+classifier provenance), so the report presents them as two parallel
 sections rather than a lossy cross-namespace join.
 
 The report reads only accounting metadata (token counts, cost, confidence
@@ -26,10 +24,8 @@ financial content, honouring ``sensitive-financial-data-secure-storage-only``.
 See Also:
     :func:`build_llm_diagnostics_report`:
         Public aggregator that folds the usage log and ledger confidence rows.
-    :class:`~adapters.outbound.llm.UsageRecorder`:
-        Storage boundary for provider/token/cost accounting records.
-    :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`:
-        Bucket-scoped ledger catalogue reader used for confidence diagnostics.
+    :class:`~application.ledger.llm_diagnostics_ports.LlmDiagnosticsPorts`:
+        Required application-owned readers for the two metric stores.
 """
 
 from __future__ import annotations
@@ -41,11 +37,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints
 
-from ...adapters.outbound.llm.models import UsageRecord
-from ...adapters.outbound.llm.usage import UsageRecorder
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.transactions.models import Transaction
+from .llm_diagnostics_ports import LlmDiagnosticsPorts, LlmUsageDiagnosticRecord
 
 __all__ = [
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
@@ -86,9 +79,10 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
 class LlmUsageCostProviderMetrics(BaseModel):
     """Per-provider aggregate of the LLM usage/cost log.
 
-    Aggregated from :class:`~llm.UsageRecord` rows for a
-    single :attr:`provider`. ``calls`` counts every recorded call (cache hits
-    included); ``cache_hits`` counts the subset served from the local cache.
+    Aggregated from :class:`~application.ledger.llm_diagnostics_ports.LlmUsageDiagnosticRecord`
+    rows for a single :attr:`provider`. ``calls`` counts every recorded call
+    (cache hits included); ``cache_hits`` counts the subset served from the
+    local cache.
     """
 
     model_config = _STRICT_FROZEN
@@ -161,12 +155,10 @@ class LlmDiagnosticsReport(BaseModel):
 
 def build_llm_diagnostics_report(
     *,
+    ports: LlmDiagnosticsPorts,
     since: date | None = None,
     until: date | None = None,
     low_confidence_threshold: Decimal = DEFAULT_LOW_CONFIDENCE_THRESHOLD,
-    usage_recorder: UsageRecorder | None = None,
-    bucket_id: str | None = None,
-    transactions: Iterable[Transaction] | None = None,
 ) -> LlmDiagnosticsReport:
     """Aggregate the existing usage and confidence metric stores into a report.
 
@@ -175,22 +167,18 @@ def build_llm_diagnostics_report(
         until: Inclusive upper usage-record date bound, or ``None``.
         low_confidence_threshold: Confidence floor below which a classification
             counts as low-confidence.
-        usage_recorder: Injected recorder; defaults to the active-bucket
-            :class:`~adapters.outbound.llm.UsageRecorder`.
-        bucket_id: Ledger bucket whose
-            :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
-            supplies confidence rows; defaults to the active bucket. Ignored
-            when ``transactions`` is supplied.
-        transactions: Injected transaction iterable; when ``None`` the active
-            (or ``bucket_id``) ledger catalogue is loaded.
+        ports: Required application-owned readers for usage and transaction
+            diagnostics. The executable composition root binds them to concrete
+            encrypted stores.
 
     Returns:
         The populated :class:`LlmDiagnosticsReport`.
     """
-    recorder = usage_recorder or UsageRecorder()
-    usage_providers = _aggregate_usage(recorder.load_records(since=since, until=until))
-    resolved_transactions = _resolve_transactions(transactions, bucket_id)
-    confidence_providers = _aggregate_confidence(resolved_transactions, low_confidence_threshold)
+    usage_providers = _aggregate_usage(ports.usage_reader.load_records(since=since, until=until))
+    confidence_providers = _aggregate_confidence(
+        ports.transaction_reader.load_transactions(),
+        low_confidence_threshold,
+    )
     return _build_diagnostics_report(
         since=since,
         until=until,
@@ -198,13 +186,6 @@ def build_llm_diagnostics_report(
         usage_providers=usage_providers,
         confidence_providers=confidence_providers,
     )
-
-
-def _resolve_transactions(
-    transactions: Iterable[Transaction] | None,
-    bucket_id: str | None,
-) -> tuple[Transaction, ...]:
-    return tuple(transactions) if transactions is not None else _load_bucket_transactions(bucket_id)
 
 
 def _build_diagnostics_report(
@@ -238,16 +219,7 @@ def _total_usage_cost(usage_providers: Sequence[LlmUsageCostProviderMetrics]) ->
     return sum((row.cost_estimate_usd or Decimal("0") for row in usage_providers), start=Decimal("0"))
 
 
-def _load_bucket_transactions(bucket_id: str | None) -> tuple[Transaction, ...]:
-    """Load the target bucket's transactions, or empty when no bucket is active."""
-    resolved = bucket_id or resolve_active_bucket_id()
-    if resolved is None:
-        return ()
-    catalogue = TransactionCatalogueRepository(bucket_id=resolved).load()
-    return tuple(catalogue.values())
-
-
-def _aggregate_usage(records: Sequence[UsageRecord]) -> tuple[LlmUsageCostProviderMetrics, ...]:
+def _aggregate_usage(records: Sequence[LlmUsageDiagnosticRecord]) -> tuple[LlmUsageCostProviderMetrics, ...]:
     """Fold usage records into one metric row per provider, provider-sorted."""
     calls: dict[str, int] = {}
     cache_hits: dict[str, int] = {}
@@ -259,7 +231,7 @@ def _aggregate_usage(records: Sequence[UsageRecord]) -> tuple[LlmUsageCostProvid
     # would hand the operator a smaller number wearing the shape of a total.
     unpriced: dict[str, int] = {}
     for record in records:
-        provider = record.provider.value
+        provider = record.provider
         calls[provider] = calls.get(provider, 0) + 1
         cache_hits[provider] = cache_hits.get(provider, 0) + (1 if record.cache_hit else 0)
         input_tokens[provider] = input_tokens.get(provider, 0) + record.input_tokens

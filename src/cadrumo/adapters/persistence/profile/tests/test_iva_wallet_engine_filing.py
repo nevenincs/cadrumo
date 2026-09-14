@@ -21,10 +21,10 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
-from cadrumo.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
-from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -241,7 +241,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert history.status == "app_filing"
         assert history.generated_amount == generated_carry
         assert history.available_end_amount == generated_carry
-        balance = query_iva_wallet_balance(as_of_year=2026)
+        balance = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
         assert balance.total_balance == generated_carry
         assert balance.lot_count == 1
 

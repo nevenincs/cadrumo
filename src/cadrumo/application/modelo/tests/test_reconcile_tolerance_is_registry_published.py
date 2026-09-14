@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from .._reconcile_casilla import (
+from ..reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )

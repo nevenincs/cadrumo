@@ -1,6 +1,7 @@
 """Modelo export output-path and fichero emission tests."""
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -14,6 +15,8 @@ from cadrumo.adapters.persistence.profile.tests._export_test_support import isol
 __all__ = ["isolated_backend"]
 
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.core.directory_scan import (
@@ -369,7 +372,7 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
     assert not output_path.exists()
 
 
-def test_prior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_proof(
+def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_proof(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
@@ -498,6 +501,10 @@ def test_prior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_p
         result_disposition=result.resolved_result_disposition,
         prior_domiciliation_election=result.prior_domiciliation_election,
         taxpayer_nif=taxpayer_nif,
+        calculation_observation_repository=CalculationObservationRepository(),
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+        participation_index_repository=TransactionParticipationIndexRepository(bucket_id=bucket_id),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id),
     )
     filed_event = event_repo.load().for_bucket(
         bucket_id,

@@ -13,8 +13,8 @@ payload. They share this module because they share a substrate, a projection
 row and an ordering; they are not layered on one another, because neither
 narrows to the other.
 
-The catalogue substrate is the bucket-scoped append-only event log loaded from
-:class:`BucketEventHistoryRepository`. Events scoped to a work unit land under
+The catalogue substrate is the bucket-scoped append-only event log exposed by
+:class:`~cadrumo.domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`. Events scoped to a work unit land under
 four :class:`cadrumo.domain.buckets.BucketEventObjectType` values:
 ``WORK_UNIT``, ``CALCULATION_REVISION``, ``VERIFICATION_REPORT``, and
 ``FILING_RECORD``. The assembler walks each related object id and merges the

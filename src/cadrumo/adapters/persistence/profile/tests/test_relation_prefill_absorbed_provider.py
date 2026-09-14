@@ -37,6 +37,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.calculations.relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -128,6 +129,7 @@ def test_the_real_resolver_folds_the_quarters_into_the_slot_values(tmp_path: Pat
 
         resolution = RelationPrefillSourceResolver(
             repository=repository,
+            profile_read_ports=empty_profile_read_ports(),
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
@@ -164,6 +166,7 @@ def test_resolved_provenance_names_the_filed_casilla_terminal_origin(tmp_path: P
 
         resolution = RelationPrefillSourceResolver(
             repository=repository,
+            profile_read_ports=empty_profile_read_ports(),
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(

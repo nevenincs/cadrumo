@@ -14,7 +14,6 @@ from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
-
 _FACT_ID = "iva-rate-slot-catalogue"
 _ORDER_KEY = "rate_kind.order"
 _POSITIVE_ORDER_KEY = "rate_kind.positive_order"

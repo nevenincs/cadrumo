@@ -38,6 +38,7 @@ registry grounding gate.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 
@@ -84,7 +85,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.tests.env_scope import ready_clave_settings
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.modelo.action_errors import ModeloCrossPeriodCleanStateError
@@ -568,6 +569,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
         repository=CalculationObservationRepository(objects=secure_objects),
         captured_at=_FILE_AT,
         result_disposition=ResultDisposition.INGRESO,
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
     )
     return revision
 

@@ -20,7 +20,6 @@ checked over its annual period.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, NonNegativeInt
@@ -29,6 +28,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.invoices.service import LinkInconsistency
 from ..invoices.catalogue_reads import verify_invoice_repository_links
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .preflight import LedgerPreflightIssue, preflight_transaction_catalogue
 
 if TYPE_CHECKING:
@@ -36,9 +36,6 @@ if TYPE_CHECKING:
 
 #: The AEAT period code covering a whole filing year, used by the sweep.
 _ANNUAL_PERIOD_CODE = "0A"
-
-type LinkInconsistencyReaderV1 = Callable[..., tuple[LinkInconsistency, ...]]
-
 
 class LedgerCheckV1(BaseModel):
     """One readiness verdict with the findings that produced it."""
@@ -71,23 +68,22 @@ def read_ledger_check(
     *,
     bucket_id: str,
     transactions: TransactionCatalogue,
+    ports: InvoiceCatalogueReadPorts,
     period: Period | None = None,
-    link_reader: LinkInconsistencyReaderV1 = verify_invoice_repository_links,
 ) -> LedgerCheckV1:
     """Assess one ledger's readiness over a period, or over everything it spans.
 
     Args:
         bucket_id: The owning profile bucket.
         transactions: The live ledger to assess.
+        ports: Required invoice and transaction catalogue read capabilities.
         period: One period to check; when omitted, every year the ledger spans
             is swept over its annual period.
-        link_reader: The invoice-link consistency read, injectable so the
-            readiness conjunction can be exercised without a live catalogue.
 
     Returns:
         The verdict, the periods it covers, and the findings behind it.
     """
-    link_inconsistencies = tuple(link_reader(bucket_id=bucket_id))
+    link_inconsistencies = tuple(verify_invoice_repository_links(ports=ports))
 
     if period is not None:
         report = preflight_transaction_catalogue(bucket_id=bucket_id, period=period, transactions=transactions)
@@ -122,4 +118,4 @@ def read_ledger_check(
     )
 
 
-__all__ = ["LedgerCheckV1", "LinkInconsistencyReaderV1", "ledger_check_years", "read_ledger_check"]
+__all__ = ["LedgerCheckV1", "ledger_check_years", "read_ledger_check"]

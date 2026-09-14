@@ -9,6 +9,7 @@ not add adapter imports merely to satisfy verification's required dependency.
 from __future__ import annotations
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -40,6 +41,7 @@ def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
         iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
         participation_index=TransactionParticipationIndexRepository(bucket_id=bucket_id, objects=objects),
         workflow_run=WorkflowRunRepository(objects=objects),
+        justificante=JustificanteRepository(objects=objects),
     )
 
 

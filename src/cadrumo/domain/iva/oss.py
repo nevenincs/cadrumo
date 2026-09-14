@@ -13,7 +13,7 @@ from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedM
 from ..calculations.registry.schema_base import DateAxis
 
 if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 
 _FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
@@ -94,9 +94,7 @@ class OssIossRegimeCatalogue:
     def regime_for_transaction_kind(self, transaction_kind: str) -> OssIossRegime:
         """Return the unique registry regime admitting a transaction kind."""
         matches = tuple(
-            definition.token
-            for definition in self.definitions
-            if transaction_kind in definition.transaction_kinds
+            definition.token for definition in self.definitions if transaction_kind in definition.transaction_kinds
         )
         if len(matches) != 1:
             raise RegistryValidationError(
@@ -134,7 +132,7 @@ def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
 def resolve_oss_ioss_regime_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> OssIossRegimeCatalogue:
     """Resolve the complete OSS / IOSS regime catalogue through facts authority."""
     if authority is None:
@@ -177,7 +175,7 @@ def require_oss_ioss_regime(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> OssIossRegime:
     """Return one registry-declared OSS/IOSS token or refuse it."""
     return resolve_oss_ioss_regime_catalogue(

@@ -16,7 +16,8 @@ tributación conjunta (joint taxation):
 
 The single flow validator this module registers enforces the modalidad-2ª
 children requirement at ``familia`` section exit. A joint declaration whose
-family situation is a non-married modality (:meth:`SituacionFamiliar.monoparental_required`)
+family situation is a non-married modality resolved by the typed
+``situacion_familiar_monoparental_required`` projection
 and which declares no minor children in the unit cannot form a valid unidad
 familiar, so it fails and blocks forward navigation with a typed verdict. A
 married declaration (modalidad 1ª) and a monoparental declaration that does
@@ -30,6 +31,11 @@ from collections.abc import Mapping
 
 from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...domain.contribuyente.renta_codes import SituacionFamiliar
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.situacion_familiar_catalogue import (
+    require_situacion_familiar,
+    situacion_familiar_monoparental_required,
+)
 from ..flows.definition import FlowDefinition, FlowSection
 from ..flows.validators import ValidationVerdict, register_cross_field_validator
 from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
@@ -59,8 +65,8 @@ _TRUE_TOKENS = frozenset({"true", "yes", "1", "y"})
 
 def _parse_situacion(token: str) -> SituacionFamiliar | None:
     try:
-        return SituacionFamiliar(token)
-    except ValueError:
+        return require_situacion_familiar(token)
+    except RegistryValidationError:
         return None
 
 
@@ -85,7 +91,7 @@ def validate_unidad_familiar_conjunta(answers: Mapping[str, str]) -> tuple[Valid
     if answers.get(_TAXATION_TYPE_PAGE, "") != RentaDeclaracionType.JOINT.value:
         return (ValidationVerdict.passed(),)
     situacion = _parse_situacion(answers.get(_SITUACION_FAMILIAR_PAGE, ""))
-    if situacion is None or not situacion.monoparental_required():
+    if situacion is None or not situacion_familiar_monoparental_required(situacion):
         return (ValidationVerdict.passed(),)
     if answers.get(_MINOR_CHILDREN_PAGE, "").strip().lower() in _TRUE_TOKENS:
         return (ValidationVerdict.passed(),)

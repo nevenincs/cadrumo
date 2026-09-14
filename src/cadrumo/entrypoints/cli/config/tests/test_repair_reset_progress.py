@@ -15,7 +15,7 @@ from .....adapters.persistence.storage.tests.secure_sql import (
 from .....application.workflow.persistence import workflow_state_repository
 from .....application.workflow.state_models import WorkflowState
 from .....domain.buckets.event import BucketEventType
-from .....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

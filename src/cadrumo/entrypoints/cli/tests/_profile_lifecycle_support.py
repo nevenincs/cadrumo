@@ -25,8 +25,8 @@ import hashlib
 from uuid import UUID
 
 from ....domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_cli_profile, register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile, register_minimal_profile
 
 
 def _profile_id_for_label(label: str) -> str:

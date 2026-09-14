@@ -17,7 +17,6 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
@@ -107,7 +106,7 @@ def select_modelo_calculation_revision(
     *,
     selector: ModeloCalculationRevisionSelector,
     calculation_revision_id: CalculationRevisionId | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> ModeloCalculationRevisionSelection:
     """Select one persisted calculation revision as :class:`ModeloCalculationRevisionSelection`.
 
@@ -176,7 +175,7 @@ def resolve_modelo_calculation_revision_pick(
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     calculation_revision_id: CalculationRevisionId | None = None,
     default_for: ModeloCalculationRevisionDefault | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> ModeloCalculationRevisionSelection:
     """Resolve a command-specific :class:`ModeloCalculationRevisionSelection` pick under one work unit.
 
@@ -209,7 +208,7 @@ def resolve_modelo_calculation_revision_pick(
 def select_current_verified_revision(
     work_unit: WorkUnit,
     *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> ModeloCalculationRevisionSelection:
     """Select the current verified-complete revision for filing.
 
@@ -265,7 +264,7 @@ def _current_exportable_revision(
 def _verified_exportable_fallback(
     work_unit: WorkUnit,
     *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> ModeloCalculationRevisionSelection:
     """Resolve the unambiguous verified-revision fallback for export."""
     verified = tuple(
@@ -292,7 +291,7 @@ def _verified_exportable_fallback(
 def select_exportable_revision(
     work_unit: WorkUnit,
     *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> ModeloCalculationRevisionSelection:
     """Select the default exportable :class:`ModeloCalculationRevisionSelection` for a work unit.
 
@@ -330,9 +329,9 @@ def select_exportable_revision(
 def _revisions_for_work_unit(
     work_unit: WorkUnit,
     *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> tuple[CalculationRevision, ...]:
-    catalogue = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    catalogue = calculation_repository.load()
     revisions = tuple(sorted(catalogue.for_work_unit(work_unit.work_unit_id), key=lambda revision: revision.created_at))
     for revision in revisions:
         require_calculation_revision_coordinates_current(revision)
@@ -343,9 +342,9 @@ def _explicit_revision_for_work_unit(
     *,
     work_unit: WorkUnit,
     calculation_revision_id: CalculationRevisionId,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> CalculationRevision:
-    catalogue = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    catalogue = calculation_repository.load()
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
         raise ModeloCalculationRevisionSelectorNotFoundError(
@@ -364,7 +363,7 @@ def _revision_by_pointer(
     work_unit: WorkUnit,
     pointer_value: str | None,
     *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     pointer_name: str,
 ) -> CalculationRevision:
     revision = _optional_revision_by_pointer(
@@ -384,7 +383,7 @@ def _optional_revision_by_pointer(
     work_unit: WorkUnit,
     pointer_value: str | None,
     *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> CalculationRevision | None:
     if pointer_value is None:
         return None

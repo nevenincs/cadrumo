@@ -1,7 +1,7 @@
 """Repository-backed Renta deductible-expense (gasto) aggregation.
 
-Loads ledger rows through
-:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+Loads ledger rows through the application-facing
+:class:`~domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`.
 
 Used by the source mesh for the selected deductible-expense target.
 
@@ -48,7 +48,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as t
 from ...core.identity.transaction_ids import TransactionId
@@ -180,7 +179,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
     modelo: str,
     target_casilla_id: CasillaId,
     accept_activity_marker: bool,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     profile_record: UserProfileRecord | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
 ) -> RentaGastoLedgerAggregation:
@@ -195,7 +194,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
 
     Returns a :class:`RentaGastoLedgerAggregation`.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),

@@ -51,9 +51,10 @@ from __future__ import annotations
 
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import validate_spanish_tax_id
+from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.tax_id_format import runtime_tax_id_format, tax_id_format_value
 from .establishment import country_code_for_printed_tax_identifier
-from .schema import EUMemberState
+from .schema import EUMemberState, require_eu_member_state
 
 __all__ = ["identification_state_for_printed_tax_identifier"]
 
@@ -87,8 +88,8 @@ def identification_state_for_printed_tax_identifier(
     if code is None:
         return _spanish_identification(printed_identifier)
     try:
-        return EUMemberState(code.lower())
-    except ValueError:
+        return require_eu_member_state(code.lower())
+    except (TypeError, ValueError, RegistryValidationError):
         # A prefix naming a country outside the rate-schedule catalogue states a
         # registration this fact's closed type cannot carry. Unestablished is
         # the honest answer; inventing a member would be worse than silence.
@@ -133,4 +134,4 @@ def _spanish_identification(printed_identifier: str | None) -> EUMemberState | N
         # Spanish identification; it is a misread or a different country's
         # number wearing the wrong prefix. Silence is the honest answer.
         return None
-    return EUMemberState.ES
+    return require_eu_member_state("ES")

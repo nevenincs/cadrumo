@@ -39,19 +39,18 @@ from ..classifier_inputs import ClassifierInputs
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFacts,
     ConfirmedCounterpartyFactsInputError,
-    ConfirmedCounterpartyFactsRepository,
     CounterpartyEstablishmentConflictError,
     confirmed_counterparty_facts_key,
     forget_confirmed_counterparty_facts,
     record_confirmed_counterparty_facts,
     resolve_confirmed_counterparty_facts,
 )
-from ._counterparty_fact_fixtures import runtime_profile
+from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from ._ledger_value_fixtures import repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-__all__ = ["repository", "runtime_profile"]
+__all__ = ["repository"]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _SUPPLIER_CIF = "B12345674"
@@ -60,7 +59,7 @@ _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 
 
 def _confirm(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     *,
     tax_identifier: str = _SUPPLIER_CIF,
     scope: IvaTerritorialScope = IvaTerritorialScope.ES_CANARIAS,
@@ -84,7 +83,7 @@ def _confirm(
 
 @pytest.mark.parametrize("scope", list(IvaTerritorialScope))
 def test_an_empty_store_never_answers_with_any_territory(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     scope: IvaTerritorialScope,
 ) -> None:
     """No member of the enum is reachable from an empty store.
@@ -106,7 +105,7 @@ def test_an_empty_store_never_answers_with_any_territory(
 
 
 def test_the_bare_cif_domestic_invoice_resolves_to_nothing(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The commonest ingested document, and it must produce no territory at all.
 
@@ -128,7 +127,7 @@ def test_the_bare_cif_domestic_invoice_resolves_to_nothing(
 
 
 def test_a_document_printing_no_identifier_resolves_to_nothing(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """No identifier means no entity to have remembered anything about."""
     _confirm(repository)
@@ -144,7 +143,7 @@ def test_a_document_printing_no_identifier_resolves_to_nothing(
 
 
 def test_an_unverifiable_identifier_has_no_key_and_finds_nothing(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A reading that does not verify addresses no record, in either direction.
 
@@ -176,7 +175,7 @@ def test_an_unverifiable_identifier_has_no_key_and_finds_nothing(
 
 
 def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_country(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """An intra-community IVA number states its own country, so it has an identity.
 
@@ -218,7 +217,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
 
 @pytest.mark.parametrize("printed", ["B12345674", "ESB12345674", "B-1234567-4", "  b12345674 "])
 def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     printed: str,
 ) -> None:
     """The confirmation is remembered against the entity, not against a string.
@@ -240,7 +239,7 @@ def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
 
 
 def test_a_different_counterparty_is_not_answered_by_this_one(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A fact confirmed about one entity must not leak onto another."""
     _confirm(repository)
@@ -255,7 +254,7 @@ def test_a_different_counterparty_is_not_answered_by_this_one(
 
 
 def test_the_remembered_fact_is_attributed_to_the_operator(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A classification standing on this must record that a person said so.
 
@@ -299,7 +298,7 @@ def test_a_document_sourced_fact_is_refused_by_the_model() -> None:
 
 
 def test_agreeing_printed_evidence_corroborates_rather_than_contradicts(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """Evidence matching the confirmed fact leaves the fact usable."""
     _confirm(repository)
@@ -317,7 +316,7 @@ def test_agreeing_printed_evidence_corroborates_rather_than_contradicts(
 
 
 def test_disagreeing_printed_evidence_yields_a_contradiction_and_no_fact(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """Neither side wins, and the caller is left nothing to proceed on.
 
@@ -347,7 +346,7 @@ def test_disagreeing_printed_evidence_yields_a_contradiction_and_no_fact(
 
 
 def test_reconfirming_the_same_territory_is_a_no_op(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A retry returns the stored record, unre-stamped.
 
@@ -372,7 +371,7 @@ def test_reconfirming_the_same_territory_is_a_no_op(
 
 
 def test_asserting_a_different_territory_refuses_rather_than_overwriting(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """A silent overwrite would reclassify every invoice already derived under the old answer."""
     _confirm(repository)
@@ -394,7 +393,7 @@ def test_asserting_a_different_territory_refuses_rather_than_overwriting(
 
 
 def test_withdrawing_a_fact_is_the_route_to_correcting_one(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """Correction is a deliberate two-step, so retracting an answer is visible."""
     _confirm(repository)
@@ -429,7 +428,7 @@ def test_withdrawing_a_fact_is_the_route_to_correcting_one(
 
 
 def test_the_remembered_fact_unblocks_the_criteria_assembly(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """The pair that shows the row's purpose: blocked without it, derived with it.
 

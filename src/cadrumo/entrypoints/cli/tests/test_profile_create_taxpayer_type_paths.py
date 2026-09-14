@@ -55,7 +55,7 @@ import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from ....core.i18n.render import tr
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]

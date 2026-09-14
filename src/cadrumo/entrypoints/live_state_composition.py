@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
 from ..adapters.outbound.aeat.sede.filed_data_capture_port import SedeFiledDataCapturePort
 from ..adapters.outbound.aeat.sede.filed_observation_persistence import (
@@ -39,6 +40,7 @@ from ..adapters.outbound.aeat.sede.notifications import fetch_notifications_quer
 from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ..adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ..adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..adapters.persistence.profile.justificante import JustificanteRepository
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -56,7 +58,7 @@ from ..application.auth.certificate_secret_backend import CertificateSecretBacke
 from ..application.auth.session_types import AeatSession
 from ..application.auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
 from ..application.auth.operator_scope_ports import OperatorScopePorts
-from ..application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from ..application.auth.protocols import BrowserSessionFactoryPort
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -68,9 +70,10 @@ from ..application.live.filed_data_capture import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort
 from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
-    persist_iva_compensation_history_observations_strict,
+    persistiva_compensation_history_observations_strict,
 )
 from ..application.live.filed_observation_ports import FiledObservationPersistencePorts
+from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ..application.live.iva_remote_state_ports import IvaRemoteStatePort
 from ..application.live.notification_ports import (
     NotificationSnapshotQueryProtocol,
@@ -202,6 +205,7 @@ class LiveStateComposition:
     iva_remote_state_port: IvaRemoteStatePort
     notifications_ports: NotificationsPorts
     certificate_secret_backend_factory: CertificateSecretBackendFactory
+    browser_session_factory: BrowserSessionFactoryPort
     operator_scope_ports: OperatorScopePorts
 
 
@@ -216,6 +220,10 @@ def compose_filed_observation_persistence_ports(
     calculation_revision_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects)
     filing_repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
     bucket_event_repository = BucketEventHistoryRepository(objects=objects)
+    work_lifecycle_ports = WorkLifecyclePorts(
+        work_unit_repository=work_unit_repository,
+        bucket_event_repository=bucket_event_repository,
+    )
     justificante_repository = JustificanteRepository(objects=objects)
     calculation_repository = CalculationObservationRepository(bucket_id=bucket_id, objects=objects)
     iva_history_repository = IvaCompensationHistoryRepository(bucket_id=bucket_id, objects=objects)
@@ -230,10 +238,9 @@ def compose_filed_observation_persistence_ports(
         filing_repository=FilingRepositoryAdapter(repository=filing_repository),
         bucket_event_repository=BucketEventRepositoryAdapter(repository=bucket_event_repository),
         baseline_import=BaselineImportAdapter(
-            work_unit_repository=work_unit_repository,
+            work_lifecycle_ports=work_lifecycle_ports,
             calculation_repository=calculation_revision_repository,
             filing_repository=filing_repository,
-            bucket_event_repository=bucket_event_repository,
             justificante_repository=justificante_repository,
             observation_repository=calculation_repository,
         ),
@@ -259,15 +266,18 @@ def compose_live_state(
         objects=secure_objects,
     )
     certificate_secret_backend_factory = build_certificate_secret_backend
+    browser_session_factory = default_browser_session_factory
     operator_scope_ports = build_operator_scope_ports()
     filed_data_port = SedeFiledDataCapturePort(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
     )
     remote_port = AppIvaRemoteStatePort(
         objects=secure_objects,
         filed_observation_ports=filed_ports,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
     )
     return LiveStateComposition(
@@ -279,6 +289,7 @@ def compose_live_state(
         iva_remote_state_port=remote_port,
         notifications_ports=compose_notifications_ports(settings=settings),
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
     )
 
@@ -292,12 +303,14 @@ class AppIvaRemoteStatePort:
         objects: SecureObjectRepository,
         filed_observation_ports: FiledObservationPersistencePorts,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
     ) -> None:
         """Bind the port to one secure backend and filed-observation bundle."""
         self._objects = objects
         self._filed_observation_ports = filed_observation_ports
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._browser_session_factory = browser_session_factory
         self._operator_scope_ports = operator_scope_ports
 
     @property
@@ -321,6 +334,7 @@ class AppIvaRemoteStatePort:
         """Resolve the active authenticated AEAT session."""
         return await active_verified_session(
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            browser_session_factory=self._browser_session_factory,
             operation=operation,
             target_url=target_url,
             operator_scope_ports=self._operator_scope_ports,
@@ -337,6 +351,7 @@ class AppIvaRemoteStatePort:
         return ensure_authenticated_aeat_session(
             settings,
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            browser_session_factory=self._browser_session_factory,
             operation=operation,
             target_url=target_url,
             operator_scope_ports=self._operator_scope_ports,
@@ -412,7 +427,7 @@ class AppIvaRemoteStatePort:
                     )
                     casilla_count += len(observation.casillas)
                     observations.append(observation)
-        keys = persist_iva_compensation_history_observations_strict(
+        keys = persistiva_compensation_history_observations_strict(
             tuple(observations),
             ports=self._filed_observation_ports,
         )
@@ -484,6 +499,9 @@ def persist_and_reconcile_iva_compensation_wallet(
             context={"reason": "secure_backend_required"},
         )
     resolved_repository = repository or CalculationObservationRepository(objects=objects)
+    history_repository = IvaCompensationHistoryRepository(
+        objects=resolved_repository.secure_object_repository,
+    )
     store = FiledDeclaracionObservationStore(
         output_root,
         objects=resolved_repository.secure_object_repository,
@@ -508,6 +526,7 @@ def persist_and_reconcile_iva_compensation_wallet(
     recurrence, prefill = extract_modelo_303_local_iva_compensation_recurrence(
         snapshot,
         repository=resolved_repository,
+        iva_history_repository=history_repository,
         captured_at=decided_at,
     )
     reconciliation = reconcile_modelo_303_iva_compensation(
@@ -586,6 +605,7 @@ async def pull_filed_history_with_shared_composition(
     iva_remote_state_port: IvaRemoteStatePort,
     notifications_ports: NotificationsPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ):
     """Invoke the filed-history service with the explicitly composed bundle."""
@@ -593,6 +613,7 @@ async def pull_filed_history_with_shared_composition(
 
     return await pull_filed_history(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
         filed_data_port=filed_data_port,
         iva_remote_state_port=iva_remote_state_port,

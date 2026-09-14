@@ -4,25 +4,30 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from ....core.config import Settings
-from ..counterparty_establishment import ConfirmedCounterpartyFactsRepository
+from ..counterparty_establishment import ConfirmedCounterpartyFacts
+from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
+
+
+class _InMemoryCounterpartyEstablishmentRepository(CounterpartyEstablishmentRepositoryProtocol):
+    """Inward fake for application tests that do not exercise encrypted storage."""
+
+    def __init__(self) -> None:
+        self._records: dict[str, ConfirmedCounterpartyFacts] = {}
+
+    def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
+        return self._records.get(identifier)
+
+    def save(self, payload: ConfirmedCounterpartyFacts) -> None:
+        self._records[payload.counterparty_key] = payload
+
+    def delete(self, identifier: str) -> bool:
+        return self._records.pop(identifier, None) is not None
 
 
 @pytest.fixture
-def repository(runtime_profile: TestRuntimeProfile) -> ConfirmedCounterpartyFactsRepository:
-    return ConfirmedCounterpartyFactsRepository(objects=runtime_profile.repository)
-
-
-@pytest.fixture
-def isolated_settings(runtime_profile: TestRuntimeProfile) -> Settings:
-    return runtime_profile.settings
-
-
-@pytest.fixture
-def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
-    return runtime_profile.repository
+def repository() -> CounterpartyEstablishmentRepositoryProtocol:
+    """Return a fresh inward capability for application-policy tests."""
+    return _InMemoryCounterpartyEstablishmentRepository()
 
 
 @pytest.fixture
@@ -32,4 +37,4 @@ def pdf_file(tmp_path: Path) -> Path:
     return path
 
 
-__all__ = ["isolated_settings", "pdf_file", "repository", "secure_objects"]
+__all__ = ["pdf_file", "repository"]

@@ -31,7 +31,7 @@ from __future__ import annotations
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
-from ....tests.profile_capsule import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 __all__ = ["isolated_profile_storage"]
 from ._profile_cli_support import (

@@ -43,7 +43,6 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.identity.nif_iva import nif_iva_format_for_country
 from ...core.irnr import M210PayerMode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -51,6 +50,7 @@ from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact
 from ..calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
+from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema_base import DateAxis
 from ..transactions.m210_income_classification import resolve_m210_payer_mode

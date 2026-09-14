@@ -20,7 +20,7 @@ See Also:
         X25519 ECIES primitive behind the encrypt verb.
     :func:`~application.modelo.decrypt_review_package_for_recipient`
         Decryption primitive behind the decrypt verb.
-    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+    :class:`~adapters.persistence.profile.review_package_recipient_registry.RecipientFingerprintRegistryAdapter`
         Trusted-recipient registry used by ``encrypt-for-recipient``.
     :func:`~application.modelo.ensure_recipient_encryption_keypair`
         Mint-or-load path for the bucket's recipient decryption key.
@@ -54,12 +54,13 @@ from ....application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
 )
 from ....adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
-from ....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
+from ....adapters.persistence.profile.review_package_recipient_registry import build_recipient_fingerprint_registry_ports
+from ....application.modelo.review_package_recipient_registry import add_recipient_fingerprint
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.user_profile.values import UserProfileFact
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.profile_capsule import set_active_test_profile_facts
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from ._modelo_review_package_support import build_review_package_via_cli
 from .cli_runner import invoke_cached_cli
 
@@ -118,8 +119,11 @@ def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> Path:
 
 
 def _register_recipient(recipient_id: str, *, public_key_hex: str) -> None:
-    registry = RecipientFingerprintRegistryRepository(bucket_id=_BUCKET_ID)
-    registry.add(recipient_id=recipient_id, public_key_hex=public_key_hex)
+    add_recipient_fingerprint(
+        recipient_id=recipient_id,
+        public_key_hex=public_key_hex,
+        ports=build_recipient_fingerprint_registry_ports(bucket_id=_BUCKET_ID),
+    )
 
 
 def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Path) -> None:

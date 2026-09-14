@@ -5,8 +5,8 @@ pure
 :class:`~domain.iva_compensation.IvaWalletBalanceReport` summary
 owned by the IVA-compensation domain. The summary projection and its record are
 exposed from :mod:`domain.iva_compensation`; this module is the application
-orchestration that wires
-:class:`~application.calculations.IvaCompensationHistoryRepository`
+orchestration that wires the required
+:class:`~application.calculations.iva_compensation_history_ports.IvaCompensationHistoryRepositoryProtocol`
 to that pure projection.
 
 See Also:
@@ -21,24 +21,27 @@ from __future__ import annotations
 
 from ...domain.iva_compensation.balance import IvaWalletBalanceReport, build_iva_wallet_balance_report
 from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
-from .iva_compensation_history import IvaCompensationHistoryRepository
+from .iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 
 
-def query_iva_wallet_balance(*, as_of_year: int) -> IvaWalletBalanceReport:
+def query_iva_wallet_balance(
+    *,
+    as_of_year: int,
+    repository: IvaCompensationHistoryRepositoryProtocol,
+) -> IvaWalletBalanceReport:
     """Load all stored IVA compensation period states and return the balance report.
 
     Reads
     :class:`~domain.iva_compensation.IvaCompensationPeriodState`
     rows from
-    :class:`~application.calculations.IvaCompensationHistoryRepository`,
+    :class:`~application.calculations.iva_compensation_history_ports.IvaCompensationHistoryRepositoryProtocol`,
     builds a
     :class:`~domain.iva_compensation.IvaCompensationCarryForwardReport`,
     and returns an
     :class:`~domain.iva_compensation.IvaWalletBalanceReport`
     summarising available compensation as of ``as_of_year``.
     """
-    repo = IvaCompensationHistoryRepository()
-    states = repo.list_periods()
+    states = repository.list_periods()
     carry_forward = build_iva_compensation_carry_forward_report(states, as_of_year=as_of_year)
     return build_iva_wallet_balance_report(carry_forward)
 

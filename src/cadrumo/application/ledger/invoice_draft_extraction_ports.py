@@ -17,7 +17,10 @@ from ...core.image_media_type import ImageMediaType
 from ...domain.iva.supply_nature import SupplyNature
 from .document_transcription import DocumentTranscription
 from .evidence_input import EvidenceInput
+from .evidence_input_ports import EvidenceInputPorts
+from .evidence_textlayer_ports import EvidenceTextLayerPorts
 from .invoice_draft_records import InvoiceDraft
+from .structured_invoice_ports import StructuredInvoiceReader
 
 
 class EvidenceConsentProof(Protocol):
@@ -52,7 +55,9 @@ class InvoiceDraftExtractionPorts:
     """Concrete capabilities supplied by an outer composition root."""
 
     resolve_evidence_input: Callable[[str, str | None, str | None, Settings], EvidenceInput]
-    parse_structured_invoice: Callable[[bytes], object]
+    evidence_input_ports: EvidenceInputPorts
+    text_layer_ports: EvidenceTextLayerPorts
+    parse_structured_invoice: StructuredInvoiceReader
     read_text: Callable[
         [DocumentTranscription, Settings, LLMProvider | None, EvidenceConsentProof | None, object], InvoiceDraft
     ]

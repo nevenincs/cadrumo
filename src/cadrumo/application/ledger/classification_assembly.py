@@ -87,6 +87,10 @@ from pydantic import BaseModel, Field
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.iva_category_catalogue import (
+    registry_category_projection,
+    require_iva_category,
+)
 from ...domain.iva.classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -95,8 +99,10 @@ from ...domain.iva.classification import (
     PartyFact,
     TransactionKind,
     classify_iva,
+    customer_tax_status_alias,
     domestic_categories_by_rate_kind,
     rate_kind_for_domestic_category,
+    resolve_iva_classification_catalogue,
 )
 from ...domain.iva.establishment import (
     SPAIN_COUNTRY_CODE,
@@ -106,10 +112,6 @@ from ...domain.iva.establishment import (
     territorial_scope_for_spanish_postal_code,
 )
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
-from ...domain.calculations.registry.iva_category_catalogue import (
-    registry_category_projection,
-    require_iva_category,
-)
 from ...domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ...domain.iva.supply_nature import SupplyNature
 from . import classification_assembly_rules as _rules
@@ -185,29 +187,34 @@ class _InitialClassificationState(NamedTuple):
 #: The probe ranges over the WHOLE enum rather than a curated subset, because a
 #: subset would be a second judgement about which statuses are plausible — and
 #: the point of the probe is to decide indifference without judging the customer
-#: at all. Deriving it from the enum also means a new member joins the sweep on
-#: the day it is declared instead of the day someone remembers this list.
-_STATUS_CANDIDATES: tuple[CustomerTaxStatus, ...] = tuple(CustomerTaxStatus)
+#: at all. Deriving it from the registry projection also means a new status joins
+#: the sweep when the selected fact revision declares it.
+def _status_candidates() -> tuple[CustomerTaxStatus, ...]:
+    """Return every status projected by the selected 0083 classification fact."""
+    return resolve_iva_classification_catalogue().customer_tax_statuses
 
 
 #: The status supplied on a branch whose treatment cannot turn on it.
 #:
-#: ``UNKNOWN`` and not a substantive member, and this is the safety asymmetry
-#: rather than a naming preference. Every status predicate in the rule table
-#: tests for a substantive member, so ``UNKNOWN`` satisfies none of them and
-#: cannot trigger a rule on evidence nobody supplied — where a substantive
+#: The unresolved status is not a substantive member, and this is the safety
+#: asymmetry rather than a naming preference. Every status predicate in the
+#: rule table tests for a substantive member, so the unresolved status
+#: satisfies none of them and cannot trigger a rule on evidence nobody supplied
+#: — where a substantive
 #: placeholder would rest entirely on the probe having been right. It is also
-#: simply true: the enum documents this member as "counterparty status
-#: unresolved", which is exactly what happened.
-_UNDETERMINED_STATUS: CustomerTaxStatus = CustomerTaxStatus.UNKNOWN
+#: simply true: the registry documents this projection as counterparty status
+#: unresolved, which is exactly what happened.
+def _undetermined_status() -> CustomerTaxStatus:
+    """Return the registry-declared unresolved-status projection."""
+    return customer_tax_status_alias("unknown")
 
 
 def _customer_tax_status_gap(inputs: ClassifierInputs) -> MissingClassifierInput:
     """Say why the evidence could not settle the customer's IVA status.
 
     The printed identifier is deliberately NOT consulted as a source of the
-    registered status. It establishes a taxable person; ``B2B_IVA_REGISTERED``
-    asserts a *valid* registration and is the trigger for the intra-community
+    registered status. It establishes a taxable person; the registry's
+    registered-status projection asserts a *valid* registration and is the trigger for the intra-community
     supply exemption, so bridging the two would let an unverified number
     zero-rate a taxable sale.
     """
@@ -540,7 +547,7 @@ def _status_axis_gap(
     """Demand the customer's IVA status only where the table's verdict turns on it."""
     if status is not None:
         return None
-    if not _rules.axis_forks_the_law(probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]):
+    if not _rules.axis_forks_the_law(probe, slices=[(_status_candidates(), (kind,)) for kind in kind_candidates]):
         return None
     return _customer_tax_status_gap(inputs)
 
@@ -619,7 +626,7 @@ def _unresolved_axis_gaps(
 
     # What each axis could still be. An established axis contributes its one
     # value, so it holds genuinely fixed while the other is judged.
-    status_candidates = (status,) if status is not None else _STATUS_CANDIDATES
+    status_candidates = (status,) if status is not None else _status_candidates()
     kind_candidates = (
         (_rules.transaction_kind_for_nature(supply_nature, effective_date=transaction_date),)
         if supply_nature is not None
@@ -694,7 +701,7 @@ def _initial_classification_state(
 
     # An undetermined status is passed as an OPEN axis rather than as a value,
     # so the tier is demanded alongside it instead of one round-trip later.
-    settled_status = None if status is _UNDETERMINED_STATUS else status
+    settled_status = None if status == _undetermined_status() else status
     if rate_tier is None and _rules.domestic_rate_tier_is_reachable(
         issuer_scope,
         customer_scope,
@@ -852,7 +859,7 @@ def assemble_classification_criteria(
 
     return ClassificationAssembly(
         criteria=_criteria_for(
-            status if status is not None else _UNDETERMINED_STATUS,
+            status if status is not None else _undetermined_status(),
             (
                 _rules.transaction_kind_for_nature(supply_nature, effective_date=transaction_date)
                 if supply_nature is not None

@@ -6,8 +6,11 @@ pins that bypass so it cannot regress silently.
 
 The test calls ``_raise_if_ledger_preflight_blocks_calculation`` directly with:
 - a real M303 revision (from the registry, so ledger_iva_aggregation bindings exist)
-- an unclassified ACTIVE transaction saved to real per-bucket storage in the
-  2026-Q1 window (which would block a GENERAL-regime calculate)
+- an unclassified ACTIVE transaction held by an inward in-memory repository
+  capability in the 2026-Q1 window (which blocks a GENERAL-regime calculation)
+
+The encrypted repository and profile-capsule roundtrips are covered by the
+profile-persistence adapter tests; this suite isolates the application policy.
 
 Anti-tautology proof: the GENERAL-regime case with the same inputs MUST raise
 ``ModeloAggregationBindingError``, confirming the bypass fires only for
@@ -16,6 +19,7 @@ Anti-tautology proof: the GENERAL-regime case with the same inputs MUST raise
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -23,19 +27,25 @@ from typing import cast
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import seed_test_profile_record
-from .._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
-from ..action_errors import ModeloAggregationBindingError
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.deadlines.models import IVARegime
+from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from cadrumo.domain.transactions.models import (
+    LedgerDatePartition,
+    OutOfWindowTransactionIndexEntry,
+    OutOfWindowTransactionSummary,
+    Transaction,
+    TransactionCatalogue,
+)
+from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.usage_ratios.model import UsageRatioProfile
+from cadrumo.application.modelo import _calculation_preparation
+from cadrumo.application.modelo._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
+from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -101,73 +111,121 @@ def _blocking_transaction() -> Transaction:
     )
 
 
-def _seed_profile(bucket_id: str, *, iva_regime: str, m303_regime_composition: str) -> None:
-    seed_test_profile_record(
-        UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=(
-                UserProfileFact(path="iva.regime", value=iva_regime),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.m303_regime_composition", value=m303_regime_composition),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-        ),
+class _InMemoryTransactionRepository:
+    """Minimal in-memory implementation of the application transaction port."""
+
+    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
+        self._bucket_id = bucket_id
+        self._catalogue = catalogue
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    def exists(self) -> bool:
+        return bool(self._catalogue.transactions)
+
+    def load(self) -> TransactionCatalogue:
+        return self._catalogue
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        return TransactionCatalogue.from_transactions(
+            transaction
+            for transaction in self._catalogue
+            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
+        )
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        requested = frozenset(transaction_ids)
+        return TransactionCatalogue.from_transactions(
+            transaction for transaction in self._catalogue if transaction.transaction_id in requested
+        )
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        in_window: list[Transaction] = []
+        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+        for transaction in self._catalogue:
+            filing_date = transaction.raw.value_date or transaction.raw.booked_date
+            if start <= filing_date <= end:
+                in_window.append(transaction)
+            else:
+                out_of_window.append(
+                    OutOfWindowTransactionIndexEntry(
+                        transaction_id=transaction.transaction_id,
+                        filing_date=filing_date,
+                    ),
+                )
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue.from_transactions(in_window),
+            out_of_window=tuple(out_of_window),
+            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
+            index_complete=True,
+        )
+
+    def save(self, catalogue: TransactionCatalogue) -> None:
+        self._catalogue = catalogue
+
+
+def _seed_blocking_transaction(bucket_id: str) -> TransactionCatalogueRepositoryProtocol:
+    tx = _blocking_transaction()
+    return _InMemoryTransactionRepository(
+        bucket_id=bucket_id,
+        catalogue=TransactionCatalogue(transactions={tx.transaction_id: tx}),
     )
 
 
-def _seed_blocking_transaction(bucket_id: str) -> TransactionCatalogueRepository:
-    tx = _blocking_transaction()
-    repo = TransactionCatalogueRepository(bucket_id=bucket_id)
-    repo.save(TransactionCatalogue(transactions={tx.transaction_id: tx}))
-    return repo
+def _empty_usage_ratio_profile(*, bucket_id: str) -> UsageRatioProfile:
+    del bucket_id
+    return UsageRatioProfile()
 
 
-def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassified(tmp_path: Path) -> None:
+def _set_iva_regime(monkeypatch: pytest.MonkeyPatch, regime: IVARegime) -> None:
+    monkeypatch.setattr(_calculation_preparation, "_iva_regime_for_bucket", lambda bucket_id: regime)
+
+
+def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassified(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """SIMPLIFICADO work unit must not be blocked even when unclassified transactions exist.
 
-    This is the real production scenario: a simplificado client has transaction
-    data in the ledger that was never classified for IVA (because simplificado
-    clients do not use the ledger aggregation path). The preflight check must
-    not block them from calculating M303 via the manual casillas 47-58 path.
+    A simplificado client can have transaction data that was never classified
+    for IVA (because simplificado clients do not use the ledger aggregation
+    path). The preflight check must not block M303 manual casillas 47-58.
     """
     bucket_id = _SIMPLIFICADO_PROFILE_ID
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        _seed_profile(bucket_id, iva_regime="SIMPLIFICADO", m303_regime_composition="simplified")
-        tx_repo = _seed_blocking_transaction(bucket_id)
-        work_unit = _build_work_unit(bucket_id)
-        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    _set_iva_regime(monkeypatch, IVARegime.SIMPLIFICADO)
+    tx_repo = _seed_blocking_transaction(bucket_id)
+    work_unit = _build_work_unit(bucket_id)
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
-        # Must not raise for SIMPLIFICADO even with a blocking transaction.
-        _raise_if_ledger_preflight_blocks_calculation(
-            work_unit=work_unit,
-            revision=snapshot.revision,
-            transaction_repository=tx_repo,
-        )
+    # Must not raise for SIMPLIFICADO even with a blocking transaction.
+    _raise_if_ledger_preflight_blocks_calculation(
+        work_unit=work_unit,
+        revision=snapshot.revision,
+        transaction_repository=tx_repo,
+        usage_ratio_profile_loader=_empty_usage_ratio_profile,
+    )
 
 
-def test_general_profile_raises_preflight_error_when_transactions_are_unclassified(tmp_path: Path) -> None:
+def test_general_profile_raises_preflight_error_when_transactions_are_unclassified(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Anti-tautology: GENERAL-regime work unit MUST be blocked by the same inputs.
 
     If this test ever stops raising, the bypass has widened beyond SIMPLIFICADO
     and the previous test becomes tautological.
     """
     bucket_id = _GENERAL_PROFILE_ID
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        _seed_profile(bucket_id, iva_regime="GENERAL", m303_regime_composition="general")
-        tx_repo = _seed_blocking_transaction(bucket_id)
-        work_unit = _build_work_unit(bucket_id)
-        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    _set_iva_regime(monkeypatch, IVARegime.GENERAL)
+    tx_repo = _seed_blocking_transaction(bucket_id)
+    work_unit = _build_work_unit(bucket_id)
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
-        with pytest.raises(ModeloAggregationBindingError) as exc_info:
-            _raise_if_ledger_preflight_blocks_calculation(
-                work_unit=work_unit,
-                revision=snapshot.revision,
-                transaction_repository=tx_repo,
-            )
-        assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+        _raise_if_ledger_preflight_blocks_calculation(
+            work_unit=work_unit,
+            revision=snapshot.revision,
+            transaction_repository=tx_repo,
+            usage_ratio_profile_loader=_empty_usage_ratio_profile,
+        )
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"

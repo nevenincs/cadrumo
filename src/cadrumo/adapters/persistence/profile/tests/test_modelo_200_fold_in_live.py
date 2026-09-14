@@ -79,7 +79,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.modelo.calculation_actions import (
@@ -478,7 +478,7 @@ def test_m200_first_ejercicio_filer_carries_zero_without_an_advisory(
 
     Nothing here suppresses the advisory specially. The declared activity start
     puts the prior ejercicio before the company existed, and
-    ``_scoped_relation_source_requirements`` removes those source periods upstream
+    ``scoped_relation_source_requirements`` removes those source periods upstream
     against the shared no-obligation predicate, so the requirements never reach the
     advisory at all. The zeros are identical to the sibling test; only the silence
     differs, and it differs because of a declared fact rather than a special case.

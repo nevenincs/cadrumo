@@ -8,9 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.invoice_link import LinkInconsistencyDirection
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -21,11 +18,10 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import link_invoice
 from ..catalogue_reads import verify_invoice_repository_links
+from ..catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..transaction_linking import link_invoice_transaction_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 
 
 def test_consistency_query_reports_one_sided_transaction_link() -> None:
@@ -45,20 +41,41 @@ def test_consistency_query_reports_one_sided_transaction_link() -> None:
     assert inconsistencies[0].direction is LinkInconsistencyDirection.TRANSACTION_ONLY
 
 
-def test_repository_consistency_query_binds_both_catalogues_to_requested_bucket(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        invoice = _invoice()
-        transaction = _transaction()
-        linked = link_invoice_transaction_catalogues(
-            InvoiceCatalogue.from_invoices([invoice]),
-            TransactionCatalogue.from_transactions([transaction]),
-            invoice_id=invoice.invoice_id,
-            transaction_id=transaction.transaction_id,
-        )
-        InvoiceCatalogueRepository(bucket_id=profile.bucket_id).save(linked.invoices)
-        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(linked.transactions)
+def test_repository_consistency_query_reads_both_required_catalogue_ports() -> None:
+    invoice = _invoice()
+    transaction = _transaction()
+    linked = link_invoice_transaction_catalogues(
+        InvoiceCatalogue.from_invoices([invoice]),
+        TransactionCatalogue.from_transactions([transaction]),
+        invoice_id=invoice.invoice_id,
+        transaction_id=transaction.transaction_id,
+    )
+    ports = InvoiceCatalogueReadPorts(
+        invoice_reader=_InvoiceCatalogueReader(linked.invoices),
+        transaction_reader=_TransactionCatalogueReader(linked.transactions),
+    )
 
-        assert verify_invoice_repository_links(bucket_id=profile.bucket_id) == ()
+    assert verify_invoice_repository_links(ports=ports) == ()
+
+
+class _InvoiceCatalogueReader:
+    """Inward test fake for the application invoice projection capability."""
+
+    def __init__(self, catalogue: InvoiceCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def load(self) -> InvoiceCatalogue:
+        return self._catalogue
+
+
+class _TransactionCatalogueReader:
+    """Inward test fake for the application transaction projection capability."""
+
+    def __init__(self, catalogue: TransactionCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def load(self) -> TransactionCatalogue:
+        return self._catalogue
 
 
 def _invoice(

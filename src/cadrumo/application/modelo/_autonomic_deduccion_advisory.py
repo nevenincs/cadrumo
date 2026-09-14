@@ -47,6 +47,8 @@ from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ...domain.modelos.errors import ModeloError
@@ -70,14 +72,37 @@ from .profile_binding import (
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"
-_ADVISORY_LEGAL_REFS = (
-    "ley-35-2006:art-77",
-    "madrid-dl-1-2010:art-4",
-    "madrid-dl-1-2010:art-18",
-)
 
 
-def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+def _advisory_legal_refs(snapshot: RegistrySnapshot, casilla_id: CasillaId) -> tuple[LegalRefId, ...]:
+    """Project the advisory's grounding from the selected registry formula.
+
+    The advisory concerns a computed casilla, so its legal grounding is the
+    formula's typed provenance rather than a second application-owned tuple.
+    Refuse an incomplete or out-of-snapshot declaration instead of emitting a
+    finding whose legal references cannot be checked against the selected
+    authority.
+    """
+    casilla = next((candidate for candidate in snapshot.revision.casillas if candidate.id == casilla_id), None)
+    if casilla is None or casilla.formula is None:
+        raise RegistryValidationError(
+            f"Madrid nacimiento/adopción advisory casilla {casilla_id!r} has no registry formula provenance",
+        )
+    formula = next((candidate for candidate in snapshot.revision.formulas if candidate.id == casilla.formula), None)
+    if formula is None or not formula.legal_refs:
+        raise RegistryValidationError(
+            f"Madrid nacimiento/adopción advisory formula {casilla.formula!r} has no legal provenance",
+        )
+    missing = tuple(ref for ref in formula.legal_refs if ref not in snapshot.legal)
+    if missing:
+        raise RegistryValidationError(
+            f"Madrid nacimiento/adopción advisory formula {formula.id!r} has legal refs absent from the selected "
+            f"authority: {missing!r}",
+        )
+    return tuple(formula.legal_refs)
+
+
+def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     snapshot: RegistrySnapshot,
     casilla_values: Mapping[CasillaId, Decimal],
     *,
@@ -150,7 +175,7 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
             "casilla_id": casilla_id,
             "weighted_count": weighted_count,
         },
-        legal_refs=_ADVISORY_LEGAL_REFS,
+        legal_refs=_advisory_legal_refs(snapshot, casilla_id),
     )
 
 
@@ -164,14 +189,14 @@ def _load_fact_index(bucket_id: str) -> dict[str, UserProfileFactValue] | None:
     return profile_fact_index(record, schema)
 
 
-def _madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
+def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
     snapshot: RegistrySnapshot,
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     work_unit: WorkUnit,
 ) -> ModeloVerificationFinding | None:
     """Convenience wrapper reading ``bucket_id`` off a :class:`WorkUnit`."""
-    return _madrid_nacimiento_adopcion_eligibility_advisory_finding(
+    return madrid_nacimiento_adopcion_eligibility_advisory_finding(
         snapshot,
         casilla_values,
         bucket_id=work_unit.bucket_id,
@@ -179,6 +204,6 @@ def _madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
 
 
 __all__ = [
-    "_madrid_nacimiento_adopcion_advisory_finding_for_work_unit",
-    "_madrid_nacimiento_adopcion_eligibility_advisory_finding",
+    "madrid_nacimiento_adopcion_advisory_finding_for_work_unit",
+    "madrid_nacimiento_adopcion_eligibility_advisory_finding",
 ]

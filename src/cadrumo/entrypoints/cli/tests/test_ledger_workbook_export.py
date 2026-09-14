@@ -16,7 +16,7 @@ import pytest
 from click.testing import Result
 from openpyxl import load_workbook
 
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.inventory import FIXTURES_DIR
 from .cli_runner import invoke_cached_cli
 

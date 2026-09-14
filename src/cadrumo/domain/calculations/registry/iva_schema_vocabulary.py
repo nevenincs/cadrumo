@@ -8,16 +8,15 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING, TypeVar
+from typing import TypeVar
 
-from ....domain.deadlines.models import IVARegime, M303TaxTerritory
+from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from ....domain.iva.schema import IvaArt69DosService, IvaCashAccountingTreatment, IvaExemptionArticle
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-
 
 _FACT_ID = "iva-statutory-schema-vocabulary"
 _CASH_ORDER_KEY = "cash_accounting.order"
@@ -33,15 +32,18 @@ _REGIME_SIMPLIFICADO_KEY = "iva_regime.simplificado_token"
 _REGIME_REAGP_KEY = "iva_regime.reagp_token"
 _REGIME_EXENTO_KEY = "iva_regime.exento_token"
 _TERRITORY_ORDER_KEY = "tax_territory.order"
+_COMPOSITION_ORDER_KEY = "m303_regime_composition.order"
 _CASH_PREFIX = "cash_accounting."
 _EXEMPTION_PREFIX = "exemption_article."
 _SERVICE_PREFIX = "art_69_dos_service."
 _REGIME_PREFIX = "iva_regime."
 _TERRITORY_PREFIX = "tax_territory."
+_COMPOSITION_PREFIX = "m303_regime_composition."
 
 TokenT = TypeVar(
     "TokenT",
     IVARegime,
+    M303RegimeComposition,
     IvaCashAccountingTreatment,
     IvaExemptionArticle,
     IvaArt69DosService,
@@ -180,6 +182,56 @@ class M303TaxTerritoryCatalogue:
         return token
 
     def definition(self, value: object) -> M303TaxTerritoryDefinition:
+        token = self.require(value)
+        return next(definition for definition in self.definitions if definition.token == token)
+
+
+@dataclass(frozen=True, slots=True)
+class M303RegimeCompositionDefinition:
+    """One registry-declared Modelo 303 regime-composition token and semantics."""
+
+    token: M303RegimeComposition
+    description: str
+    export_code: str
+    simplified_scope: str
+    legal_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class M303RegimeCompositionCatalogue:
+    """Typed projection of the dated Modelo 303 composition vocabulary."""
+
+    definitions: tuple[M303RegimeCompositionDefinition, ...]
+
+    @property
+    def all_compositions(self) -> frozenset[M303RegimeComposition]:
+        return frozenset(definition.token for definition in self.definitions)
+
+    @property
+    def choices(self) -> tuple[M303RegimeComposition, ...]:
+        return tuple(definition.token for definition in self.definitions)
+
+    def require(self, value: object) -> M303RegimeComposition:
+        if isinstance(value, M303RegimeComposition):
+            token = value
+        elif isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                raise RegistryValidationError("Modelo 303 regime-composition token must be non-empty")
+            if raw not in {str(member) for member in self.all_compositions}:
+                raise RegistryValidationError(
+                    f"Modelo 303 regime-composition token {raw!r} is not declared by the facts registry",
+                )
+            token = M303RegimeComposition._from_registry(raw)
+        else:
+            raise RegistryValidationError("Modelo 303 regime-composition token must be a string token")
+        if token not in self.all_compositions:
+            raise RegistryValidationError(
+                f"Modelo 303 regime-composition token {str(token)!r} is not declared by the facts registry",
+            )
+        return token
+
+    def definition(self, value: object) -> M303RegimeCompositionDefinition:
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
@@ -458,6 +510,52 @@ def resolve_m303_tax_territory_catalogue(
     return catalogue
 
 
+def resolve_m303_regime_composition_catalogue(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> M303RegimeCompositionCatalogue:
+    """Resolve the dated Modelo 303 regime-composition vocabulary."""
+    entries = _selected_entries(effective_date=effective_date, authority=authority)
+    definitions: list[M303RegimeCompositionDefinition] = []
+    for raw_token in _csv_tokens(entries, _COMPOSITION_ORDER_KEY):
+        try:
+            token = M303RegimeComposition._from_registry(raw_token)
+            declared_value = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.value")
+            description = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.description")
+            export_code = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.export_code")
+            simplified_scope = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.simplified_scope")
+        except (KeyError, TypeError, ValueError) as exc:
+            raise RegistryValidationError(
+                f"Modelo 303 regime-composition catalogue is missing or invalid for {raw_token!r}",
+            ) from exc
+        if declared_value != raw_token:
+            raise RegistryValidationError(
+                f"Modelo 303 regime-composition token {raw_token!r} declares a mismatched value",
+            )
+        if simplified_scope not in {"not_claimed", "evidence_required"}:
+            raise RegistryValidationError(
+                f"Modelo 303 regime-composition token {raw_token!r} has invalid simplified scope",
+            )
+        definitions.append(
+            M303RegimeCompositionDefinition(
+                token=token,
+                description=description,
+                export_code=export_code,
+                simplified_scope=simplified_scope,
+                legal_refs=_csv_refs(
+                    entries,
+                    f"{_COMPOSITION_PREFIX}{raw_token}.legal_refs",
+                    required=True,
+                ),
+            ),
+        )
+    catalogue = M303RegimeCompositionCatalogue(definitions=tuple(definitions))
+    if len(catalogue.all_compositions) != len(definitions):
+        raise RegistryValidationError("Modelo 303 regime-composition catalogue has duplicate tokens")
+    return catalogue
+
+
 def resolve_iva_exemption_article_catalogue(
     *,
     effective_date: date | None = None,
@@ -592,6 +690,58 @@ def m303_tax_territory_exclusively_foral_mark(
     return catalogue.definition(value).exclusively_foral_mark
 
 
+def require_m303_regime_composition(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> M303RegimeComposition:
+    """Project one Modelo 303 regime-composition token from the facts registry."""
+    return resolve_m303_regime_composition_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).require(value)
+
+
+def m303_regime_composition_choices(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> tuple[M303RegimeComposition, ...]:
+    """Return the registry-declared Modelo 303 composition choice order."""
+    return resolve_m303_regime_composition_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).choices
+
+
+def m303_regime_composition_export_code(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> str:
+    """Return the registry-declared Modelo 303 composition export code."""
+    return resolve_m303_regime_composition_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).definition(value).export_code
+
+
+def m303_regime_composition_simplified_scope(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> M303RegimenSimplificadoScope:
+    """Project the registry-declared simplified-regime scope for a composition."""
+    scope = resolve_m303_regime_composition_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).definition(value).simplified_scope
+    return M303RegimenSimplificadoScope._from_registry(scope)
+
+
 def iva_regime_choices(
     *,
     effective_date: date | None = None,
@@ -694,6 +844,33 @@ def require_iva_cash_accounting_treatment(
     ).require(value)
 
 
+def require_registry_declared_iva_cash_accounting_treatment(
+    value: object,
+    *,
+    effective_date: date,
+) -> IvaCashAccountingTreatment:
+    """Return one treatment token declared by the facts a validation is validating.
+
+    A registry validator resolves its vocabulary from the candidate in scope,
+    never from the published authority: the artifact reader validates the
+    document it has just decoded while holding the shared-artifact lock, so a
+    validator reaching for the bundle asks that lock for the artifact it is in
+    the middle of producing. Absence of a scope is a refusal rather than a
+    fallback, because the fallback is the deadlock.
+    """
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise RegistryValidationError(
+            "IVA cash-accounting validation requires the governed facts being validated to be "
+            "in scope; registry validation must not resolve a treatment through the published "
+            "authority artifact",
+        )
+    return resolve_iva_cash_accounting_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).require(value)
+
+
 def require_iva_exemption_article(
     value: object,
     *,
@@ -725,6 +902,8 @@ __all__ = [
     "IvaCashAccountingTreatmentDefinition",
     "IvaExemptionArticleCatalogue",
     "IvaExemptionArticleDefinition",
+    "M303RegimeCompositionCatalogue",
+    "M303RegimeCompositionDefinition",
     "M303TaxTerritoryCatalogue",
     "M303TaxTerritoryDefinition",
     "IvaRegimeCatalogue",
@@ -741,14 +920,20 @@ __all__ = [
     "m303_tax_territory_exclusively_foral_mark",
     "m303_tax_territory_is_foral",
     "m303_tax_territory_state_attribution_ratio",
+    "m303_regime_composition_choices",
+    "m303_regime_composition_export_code",
+    "m303_regime_composition_simplified_scope",
     "require_iva_art69_dos_service",
     "require_iva_cash_accounting_treatment",
+    "require_registry_declared_iva_cash_accounting_treatment",
     "require_iva_exemption_article",
     "require_iva_regime",
+    "require_m303_regime_composition",
     "require_m303_tax_territory",
     "resolve_iva_art69_dos_service_catalogue",
     "resolve_iva_cash_accounting_catalogue",
     "resolve_iva_exemption_article_catalogue",
     "resolve_iva_regime_catalogue",
+    "resolve_m303_regime_composition_catalogue",
     "resolve_m303_tax_territory_catalogue",
 ]

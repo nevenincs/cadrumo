@@ -10,8 +10,10 @@ from pydantic import ValidationError
 from .....core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,
+    BindingSourceKind,
 )
 from .....core.modelo import Modelo
+from ..binding_provider_registration import validator_for
 from ..binding_selector_utils import binding_row_set_selector
 from ..binding_value_contract import (
     BindingDataType,
@@ -45,6 +47,19 @@ def _selector(
         "row_field": operation,
         "target_casilla_id": target_casilla_id,
     }
+
+
+def _constructed_provider(operation: str, target_casilla_id: str) -> InventoryProvider:
+    """Build a provider bypassing validation, as a snapshot build may receive one."""
+    return InventoryProvider.model_construct(
+        modelo=Modelo("100"),
+        projection_grain="taxpayer_year_activity",
+        fact="row_field",
+        record="inventory_activity",
+        grouping="per_inventory_activity",
+        row_field=operation,
+        target_casilla_id=target_casilla_id,
+    )
 
 
 @pytest.mark.parametrize(("operation", "destination"), tuple(_OPERATION_DESTINATIONS.items()))
@@ -128,9 +143,7 @@ def test_inventory_binding_validator_preserves_the_operation_destination_failure
         # ``model_construct`` on both levels: the crossed operation/destination
         # pair is exactly what the provider's own validator refuses, and this
         # test proves the binding-level validator reports it too.
-        provider=InventoryProvider.model_construct(
-            **_selector("closing_minus_opening_positive", "0182"),
-        ),
+        provider=_constructed_provider("closing_minus_opening_positive", "0182"),
         value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
     )
@@ -179,3 +192,36 @@ def test_inventory_selector_is_frozen_and_has_only_the_three_unsigned_destinatio
     assert set(_OPERATION_DESTINATIONS.values()) == {"0177", "0181", "0182"}
     assert "0155" not in _OPERATION_DESTINATIONS.values()
     assert selector.model_config["frozen"] is True
+
+
+def test_enrolled_inventory_validator_reports_the_crossed_destination() -> None:
+    """The validator the dispatch table hands the snapshot build carries the same tooth."""
+    binding = BindingDefinition.model_construct(
+        id="inventory-stock-decrease",
+        provider=_constructed_provider("opening_minus_closing_positive", "0181"),
+        value=_MONEY_VALUE,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
+    validator = validator_for(BindingSourceKind.INVENTORY)
+
+    assert validator is not None
+    failures = validator(binding)
+
+    assert len(failures) == 1
+    assert "must target casilla '0182', not '0181'" in failures[0]
+
+
+def test_inventory_binding_validator_refuses_an_unknown_operation() -> None:
+    """An operation outside the declared vocabulary is unknown, never silently accepted."""
+    binding = BindingDefinition.model_construct(
+        id="inventory-invented",
+        provider=_constructed_provider("invented_operation", "0181"),
+        value=_MONEY_VALUE,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
+
+    failures = validate_inventory_binding(binding)
+
+    assert len(failures) == 1
+    assert "inventory-invented" in failures[0]
+    assert "invented_operation" in failures[0]

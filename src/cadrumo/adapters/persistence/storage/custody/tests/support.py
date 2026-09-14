@@ -37,4 +37,48 @@ def replace_test_profile_custody_label_file(
         )
 
 
-__all__ = ["replace_test_profile_custody_label_file"]
+def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | None = None) -> None:
+    """Forge a committed label that a supported writer would refuse.
+
+    This is a custody corruption fixture, so it belongs beside the custody
+    label-file mutation primitive rather than in shared test support.
+    """
+    from ..capsule import load_committed_profile_custody_label_record
+    from ..capsule_records import ProfileCustodyCapsuleLabel
+    from ..label_head_repository import ProfileLabelHeadRepository
+    from cadrumo.core.config import load_settings
+    from cadrumo.core.hashing import prefixed_digest
+
+    resolved_root = root if root is not None else load_settings().cadrumo_local_storage_root
+    if resolved_root is None:
+        raise RuntimeError("forging a capsule label requires a configured local storage root")
+
+    current = load_committed_profile_custody_label_record(profile_id, root=resolved_root)
+    heads = ProfileLabelHeadRepository(root=resolved_root)
+    heads.recover_pending(profile_id=profile_id, current_label=current)
+    current_head = heads.verify(label=current)
+    if current_head is None:
+        raise RuntimeError("forging a capsule label requires an existing label head")
+    replacement = ProfileCustodyCapsuleLabel.create(
+        profile_id=profile_id,
+        label=label,
+        label_revision=current.label_revision + 1,
+        previous_label_digest=current.content_digest,
+    )
+    heads.begin_advance(
+        current_head=current_head,
+        current_label=current,
+        replacement_label=replacement,
+    )
+    replace_test_profile_custody_label_file(
+        profile_id,
+        replacement.canonical_json_bytes(),
+        expected_sha256=prefixed_digest(current.canonical_json_bytes()),
+        root=resolved_root,
+    )
+    heads.recover_pending(profile_id=profile_id, current_label=replacement)
+    if heads.verify(label=replacement) is None:
+        raise RuntimeError("forged replacement label did not retain its head")
+
+
+__all__ = ["forge_colliding_capsule_label", "replace_test_profile_custody_label_file"]

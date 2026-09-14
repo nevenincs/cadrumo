@@ -55,8 +55,8 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

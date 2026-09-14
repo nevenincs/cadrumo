@@ -28,8 +28,8 @@ See Also:
     :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
         carry evidence.
-    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`:
-        Profile-scoped encrypted repository co-emitted for Modelo 303
+    :class:`~domain.prorrata_register.protocols.ProrrataRegisterRepositoryProtocol`:
+        Profile-scoped repository capability co-emitted for Modelo 303
         settlement prorrata writeback.
     :class:`~domain.prorrata_register.ProrrataRegisterEntry`:
         Typed row updated with definitive percentage and annual volume inputs.
@@ -41,13 +41,10 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import sha256_hex
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
-from ...core.prorrata_register import ProrrataRegisterRegime
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -62,6 +59,10 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    general_prorrata_register_regime,
+    ninguna_prorrata_register_regime,
+)
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
@@ -90,6 +91,7 @@ from ...domain.modelos.participation_index import TransactionRevisionParticipati
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
+    TransactionParticipationIndexRepositoryProtocol,
 )
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.row_models import ModeloDetailRow
@@ -101,6 +103,7 @@ from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     PriorDomiciliationElectionProjection,
 )
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..filing.retention import try_record_filing_retention_snapshot
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .action_errors import M303FilingEvidenceError
@@ -761,7 +764,7 @@ def _build_filed_participation_writes(
     filed_target: CalculationRevision,
     work_unit: WorkUnit,
     filing_record_id: str,
-    participation_index_repository: TransactionParticipationIndexRepository,
+    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
 ) -> tuple[SecureObjectWrite, ...]:
     """Build the per-transaction participation writes for a filed revision.
 
@@ -788,22 +791,6 @@ def _build_filed_participation_writes(
         updated = upsert_transaction_participation(index, participation)
         writes.append(participation_index_repository.to_secure_object_write(updated))
     return tuple(writes)
-
-
-def _participation_index_repository(
-    repository: TransactionParticipationIndexRepository | None,
-    *,
-    bucket_id: str,
-) -> TransactionParticipationIndexRepository:
-    return repository or TransactionParticipationIndexRepository(bucket_id=bucket_id)
-
-
-def _prorrata_register_repository(
-    repository: ProrrataRegisterRepositoryProtocol | None,
-    *,
-    bucket_id: str,
-) -> ProrrataRegisterRepositoryProtocol:
-    return repository or ProrrataRegisterRepository(bucket_id=bucket_id)
 
 
 def _build_prorrata_settlement_write(
@@ -895,7 +882,7 @@ def _settled_prorrata_register_entry(
             }
         )
 
-    regime = ProrrataRegisterRegime.GENERAL if volumen_sin_derecho > Decimal("0") else ProrrataRegisterRegime.NINGUNA
+    regime = general_prorrata_register_regime() if volumen_sin_derecho > Decimal("0") else ninguna_prorrata_register_regime()
     return ProrrataRegisterEntry(
         ejercicio=work_unit.filing_year,
         regime=regime,
@@ -984,7 +971,7 @@ def _supersede_prior_current_filing(
     return updated_filing_catalogue, revisions
 
 
-def _prior_domiciliation_payload(
+def prior_domiciliation_payload(
     election: PriorDomiciliationElectionProjection | None,
 ) -> dict[str, str]:
     """Project the prior-domiciliation election onto its ``MODELO_FILED`` payload keys.
@@ -1052,8 +1039,9 @@ def persist_filed_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepositoryProtocol,
-    participation_index_repository: TransactionParticipationIndexRepository | None = None,
-    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
+    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     result_disposition: ResultDisposition | None = None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
     taxpayer_nif: str | None = None,
@@ -1083,7 +1071,7 @@ def persist_filed_revision(
     For Modelo 303 settlement periods, the filed definitive prorrata percentage
     and annual volume inputs are also co-emitted to the profile
     :class:`~domain.prorrata_register.ProrrataRegister` through
-    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
+    :class:`~domain.prorrata_register.protocols.ProrrataRegisterRepositoryProtocol`
     in the same secure-object save as the filing catalogue and filed
     calculation revision.
     """
@@ -1138,18 +1126,16 @@ def persist_filed_revision(
     filed_target = _filed_calculation_revision(target=target, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, filed_target)
 
-    participation_repo = _participation_index_repository(participation_index_repository, bucket_id=work_unit.bucket_id)
     participation_writes = _build_filed_participation_writes(
         filed_target=filed_target,
         work_unit=work_unit,
         filing_record_id=new_filing_id,
-        participation_index_repository=participation_repo,
+        participation_index_repository=participation_index_repository,
     )
-    prorrata_repo = _prorrata_register_repository(prorrata_register_repository, bucket_id=work_unit.bucket_id)
     prorrata_write = _build_prorrata_settlement_write(
         filed_target=filed_target,
         work_unit=work_unit,
-        prorrata_register_repository=prorrata_repo,
+        prorrata_register_repository=prorrata_register_repository,
     )
     advanced_work_units = upsert_work_unit(
         work_units,
@@ -1196,7 +1182,7 @@ def persist_filed_revision(
                 "filing_year": str(work_unit.filing_year),
                 "period": work_unit.period.registry_token,
                 "supersedes_filing_record_id": prior_current.filing_record_id if prior_current is not None else "",
-                **_prior_domiciliation_payload(prior_domiciliation_election),
+                **prior_domiciliation_payload(prior_domiciliation_election),
             },
         ),
     )
@@ -1242,6 +1228,7 @@ def persist_filed_revision(
         revision=filed_target,
         work_unit=work_unit,
         repository=calculation_observation_repository,
+        iva_compensation_history_repository=iva_compensation_history_repository,
         captured_at=now,
         result_disposition=result_disposition,
         prior_domiciliation_election=prior_domiciliation_election,

@@ -37,7 +37,7 @@ See Also:
         gate's draft builder; owns :class:`ModeloValidationFinding`.
     :func:`~cadrumo.application.calculations.cross_period_clean_state.evaluate_cross_period_clean_state`:
         Shared cross-period gate used by verify, file, and export.
-    :mod:`~cadrumo.application.modelo._calculation_diagnostics`:
+    :mod:`~cadrumo.application.modelo.calculation_diagnostics`:
         Calculate-path diagnostics that feed advisory observations before verify.
     :mod:`~cadrumo.domain.modelos`:
         Finding kind, severity, and completeness-status authority.
@@ -131,7 +131,7 @@ from ..workflow.engine import WorkflowEngine
 from ..workflow.run_models import WorkflowPurpose
 from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
 from ._attribution_received_advisory import _attribution_received_omission_advisory_findings
-from ._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_advisory_finding_for_work_unit
+from ._autonomic_deduccion_advisory import madrid_nacimiento_adopcion_advisory_finding_for_work_unit
 from ._ledger_anchor_capture import capture_revision_ledger_evidence
 from ._ledger_drift_gate import ledger_drift_findings
 from ._m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
@@ -140,7 +140,7 @@ from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
-from ._pulled_filing_reconcile import pulled_filing_divergence_findings
+from .pulled_filing_reconcile import pulled_filing_divergence_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
@@ -262,7 +262,7 @@ def _optional_observation_refs(observations: Iterable[CasillaObservation | None]
 #: can be supplied on EVERY branch. ``tr()`` leaves an unsupplied placeholder in
 #: the rendered string rather than raising, so a conditionally-supplied fact
 #: reaches the operator as a literal ``%{binding_id}``. The marker is the
-#: established spelling for this on adjacent findings (``_pulled_filing_reconcile``,
+#: established spelling for this on adjacent findings (``pulled_filing_reconcile``,
 #: ``_attribution_received_advisory``) and says which case it is: an absent
 #: subject reads differently from one whose id is blank.
 _ABSENT_FACT: Final[str] = "absent"
@@ -352,7 +352,7 @@ def _cuota_less_without_base_findings(
     return findings
 
 
-def _missing_evidence_findings(
+def missing_evidence_findings(
     *,
     target: CalculationRevision,
     work_unit: WorkUnit,
@@ -558,7 +558,7 @@ def _collect_verification_gate_findings(
             blocking_finding_observer=_observe_cross_period_finding,
         ),
     )
-    missing_evidence_findings = _missing_evidence_findings(
+    evidence_findings = missing_evidence_findings(
         target=target,
         work_unit=work_unit,
         transaction_repository=transaction_repository,
@@ -582,7 +582,7 @@ def _collect_verification_gate_findings(
             ),
         ),
     )
-    findings.extend(missing_evidence_findings)
+    findings.extend(evidence_findings)
     # Beside the evidence gate and for the same reason: both refuse a draft whose
     # rows cannot support what it declares, and both block at verify so the later
     # export and filing refusals are unreachable rather than merely later.
@@ -933,7 +933,8 @@ def verify_modelo_revision_with_preconditions(
             actor=actor.strip(),
             clock=now,
             settings=settings,
-            observation_repository=repos.observation,
+            draft_review_ports=repos.draft_review_ports,
+            workflow_gate_ports=repos.workflow_gate_ports,
         )
         _run_revision_workflow_gate(
             engine=gate_engine,
@@ -1219,7 +1220,7 @@ def _append_revision_advisory_findings(
             context=modelo_fact_context,
         ),
         dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values),
-        _madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
+        madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
             snapshot,
             target.casilla_values,
             work_unit=work_unit,

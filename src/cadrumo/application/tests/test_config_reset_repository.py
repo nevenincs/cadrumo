@@ -18,7 +18,7 @@ from ...core.directory_scan import scan_directory
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
 from ...domain.user_profile.values import ProfileSetupState
-from .._config_reset_repository import (
+from ..config_reset_repository import (
     ConfigResetJournalAlreadyExistsError,
     ConfigResetJournalCorruptError,
     ConfigResetJournalError,
@@ -291,7 +291,7 @@ def test_concurrent_fresh_process_writers_leave_one_complete_document(
     script = (
         "from datetime import timedelta;"
         "from pathlib import Path;"
-        "from cadrumo.application._config_reset_repository import ConfigResetJournalRepository;"
+        "from cadrumo.application.config_reset_repository import ConfigResetJournalRepository;"
         "root=Path(__import__('sys').argv[1]);"
         "offset=int(__import__('sys').argv[2]);"
         "repo=ConfigResetJournalRepository(storage_root=root);"
@@ -321,7 +321,7 @@ def test_fresh_process_reloads_exact_journal(
     repository.create(_operation(updated_offset=7))
     script = (
         "from pathlib import Path;"
-        "from cadrumo.application._config_reset_repository import ConfigResetJournalRepository;"
+        "from cadrumo.application.config_reset_repository import ConfigResetJournalRepository;"
         "repo=ConfigResetJournalRepository(storage_root=Path(__import__('sys').argv[1]));"
         "op=repo.load(__import__('sys').argv[2]);"
         "print(op.model_dump_json())"

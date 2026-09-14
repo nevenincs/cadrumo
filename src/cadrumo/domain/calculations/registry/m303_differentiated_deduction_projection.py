@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Iterable
+from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
@@ -15,21 +16,13 @@ from ....core.filing_projection_ref import (
 )
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.prorrata_register import ProrrataRegisterRegime, regime_apportions_deduction
+from ....core.prorrata_register import ProrrataRegisterRegime
 from ...bienes_inversion.register import RegistroRegularizacionResult
 from ...prorrata_register.register import ProrrataRegister
 from .errors import RegistryValidationError
+from .iva_deduction_catalogue import is_iva_deduction_kind, iva_deduction_fact_kinds
+from .prorrata_register_catalogue import regime_apportions_deduction
 
-_KINDS = (
-    IvaDeductionFactKind.DOMESTIC_CURRENT,
-    IvaDeductionFactKind.DOMESTIC_INVESTMENT,
-    IvaDeductionFactKind.IMPORT_CURRENT,
-    IvaDeductionFactKind.IMPORT_INVESTMENT,
-    IvaDeductionFactKind.INTRA_EU_CURRENT,
-    IvaDeductionFactKind.INTRA_EU_INVESTMENT,
-    IvaDeductionFactKind.REAGP_COMPENSATION,
-    IvaDeductionFactKind.RECTIFICATION,
-)
 _FIELDS = tuple(M303DifferentiatedDeductionProjectionField)
 
 
@@ -112,8 +105,7 @@ def _sector_ids(register: ProrrataRegister) -> tuple[str, ...]:
 def _validate_ordinary_contributions(
     contributions: tuple[IvaDifferentiatedDeductionContributionProtocol, ...],
 ) -> None:
-    regularisation_kind = IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
-    if any(item.deduction_fact_kind is regularisation_kind for item in contributions):
+    if any(is_iva_deduction_kind(item.deduction_fact_kind, "kind.owner_only") for item in contributions):
         raise RegistryValidationError(
             "investment-goods regularisation cannot enter the ordinary deduction contribution channel"
         )
@@ -210,7 +202,12 @@ def _project_sector_row(
         raise RegistryValidationError(f"differentiated sector {sector_id!r} has no applicable regime for {ejercicio}")
     if entry.provisional_percentage is None:
         raise RegistryValidationError(f"differentiated sector {sector_id!r} has no resolved percentage for {ejercicio}")
-    amounts = _sector_amounts(sector_id, apportioned, regularisations)
+    amounts = _sector_amounts(
+        sector_id,
+        apportioned,
+        regularisations,
+        effective_date=date(ejercicio, 12, 31),
+    )
     return M303DifferentiatedDeductionRowProjection(
         slot=slot,
         sector_id=sector_id,
@@ -226,12 +223,14 @@ def _sector_amounts(
     sector_id: str,
     contributions: tuple[IvaDifferentiatedDeductionContributionProtocol, ...],
     regularisations: tuple[_RegularisationContributionProtocol, ...],
+    *,
+    effective_date: date,
 ) -> tuple[Decimal, ...]:
     amounts: list[Decimal] = []
     total = Decimal("0")
-    for kind in _KINDS:
+    for kind in iva_deduction_fact_kinds(effective_date=effective_date):
         selected = tuple(
-            item for item in contributions if item.sector_id == sector_id and item.deduction_fact_kind is kind
+            item for item in contributions if item.sector_id == sector_id and item.deduction_fact_kind == kind
         )
         if len(selected) != 1:
             raise RegistryValidationError(

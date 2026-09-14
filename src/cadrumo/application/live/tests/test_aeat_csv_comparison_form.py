@@ -24,13 +24,15 @@ See Also:
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....core.period import Period
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
@@ -44,10 +46,9 @@ from ....domain.modelos.filing_record import (
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ..filed_observation_persistence import (
     _existing_justificante_evidence_matches,
-    _filed_observation_source_metadata,
+    filed_observation_source_metadata,
 )
 from ..justificante import _existing_capture_evidence_matches_current_csv
-from ._filed_capture_history_support import _prior_303_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -66,6 +67,39 @@ _PADDED_MIXED_CSV = "  LiveCap130Abcd01  "
 _OTHER_CSV = "LIVECAP130ZZZZ99"
 
 
+@dataclass(frozen=True)
+class _PriorObservation:
+    """Minimal inward fake for the metadata projection seam under test."""
+
+    modelo: str
+    ejercicio: int
+    period: Period
+    expediente_id: str
+    status: str
+    presented_at: datetime
+    authenticated_identity: str
+    metadata: Mapping[str, str]
+
+
+def _prior_303_observation(
+    *,
+    pending_compensation: Decimal,
+    result: Decimal,
+) -> _PriorObservation:
+    """Build only the filed-observation surface the metadata seam consumes."""
+    del pending_compensation, result
+    return _PriorObservation(
+        modelo="303",
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        expediente_id="200030300000000Z",
+        status="ALTA",
+        presented_at=_CLOCK,
+        authenticated_identity="12345678Z",
+        metadata={},
+    )
+
+
 def _receipt(csv: str) -> Justificante:
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
     digest = hashlib.sha256(pdf_bytes).hexdigest()
@@ -80,7 +114,7 @@ def _receipt(csv: str) -> Justificante:
         total_a_ingresar=None,
         total_a_devolver=None,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-        source_pdf_path=source_pdf_reference_path(digest),
+        source_pdf_path=Path(".secure-source") / f"{digest}.pdf",
         source_pdf_sha256=digest,
         parsed_at=_CLOCK,
     )
@@ -173,7 +207,7 @@ def test_persisted_register_metadata_carries_one_entry_per_identifier() -> None:
         result=Decimal("-1.00"),
     )
 
-    metadata = _filed_observation_source_metadata(
+    metadata = filed_observation_source_metadata(
         observation,
         justificante_csvs=(_PADDED_MIXED_CSV, _LOWERCASE_CSV, _CANONICAL_CSV),
     )
@@ -191,7 +225,7 @@ def test_persisted_register_metadata_still_carries_two_genuine_references() -> N
         result=Decimal("-1.00"),
     )
 
-    metadata = _filed_observation_source_metadata(
+    metadata = filed_observation_source_metadata(
         observation,
         justificante_csvs=(_LOWERCASE_CSV, _OTHER_CSV),
     )

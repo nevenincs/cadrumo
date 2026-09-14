@@ -29,8 +29,8 @@ from cadrumo.domain.iva_compensation.errors import (
     IvaCompensationYearRangeError,
 )
 from cadrumo.application.calculations.errors import IvaCompensationModeloError
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.iva_compensation_history import (
-    IvaCompensationHistoryRepository,
     iva_compensation_annual_summary_from_filed_observation,
     iva_compensation_period_key,
     iva_compensation_state_from_observation_envelope,
@@ -39,7 +39,7 @@ from cadrumo.application.calculations.iva_compensation_history import (
 from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.tests._iva_compensation_history_support import (
+from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import (
     _M303_POSTERIOR_CASILLA,
     _M303_RESULTADO_CASILLA,
     _M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,
@@ -300,6 +300,7 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
             taxpayer_nif=_TAXPAYER_REF,
             period=Period.from_year_and_code(2024, "2T"),
             amount=Decimal("100.00"),
+            repository=IvaCompensationHistoryRepository(),
         )
 
         with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
@@ -307,6 +308,7 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
                 taxpayer_nif=_TAXPAYER_REF,
                 period=Period.from_year_and_code(2024, "2T"),
                 amount=Decimal("50.00"),
+                repository=IvaCompensationHistoryRepository(),
             )
 
         assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"

@@ -7,15 +7,12 @@ from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ...iva.schema import IvaCategory
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-
 
 _FACT_ID = "iva-category-component-catalogue"
 _ORDER_KEY = "category.order"

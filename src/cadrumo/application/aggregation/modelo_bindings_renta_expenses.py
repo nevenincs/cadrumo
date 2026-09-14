@@ -16,10 +16,10 @@ from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bind
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
 )
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
+from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from ._modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
@@ -62,14 +62,14 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
     def __init__(
         self,
         *,
-        transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+        ports: InvoiceCatalogueReadPorts,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+        usage_ratio_profile_loader: UsageRatioProfileLoader,
     ) -> None:
-        """Initialize the resolver with the repositories it aggregates expenses from."""
-        self._transaction_repository = transaction_repository
-        self._invoice_repository = invoice_repository
+        """Initialize the resolver with its required catalogue read capabilities."""
+        self._ports = ports
         self._prorrata_register_repository = prorrata_register_repository
+        self._usage_ratio_profile_loader = usage_ratio_profile_loader
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the ledger Renta gastos estimación directa aggregation binding for ``context``.
@@ -90,17 +90,17 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     filing_year=context.filing_year,
                     code=context.period.registry_token,
                 ),
-                transaction_repository=self._transaction_repository,
-                invoice_repository=self._invoice_repository,
+                ports=self._ports,
                 profile_year=context.filing_year,
                 usage_ratios=resolve_effective_usage_ratios(
                     bucket_id=context.bucket_id,
                     year=context.filing_year,
+                    usage_ratio_profile_loader=self._usage_ratio_profile_loader,
                 ),
                 modelo=context.modelo,
                 prorrata_register_repository=self._prorrata_register_repository,
             )
-        except STORAGE_DEGRADATION_ERRORS as exc:
+        except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

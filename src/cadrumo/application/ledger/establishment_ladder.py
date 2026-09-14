@@ -107,7 +107,7 @@ from ...domain.iva.establishment import (
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
 from ...domain.iva.legend_derivation import match_regime_legend
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
-from ...domain.iva.schema import EUMemberState
+from ...domain.iva.schema import EUMemberState, spanish_eu_member_state
 
 # `names_spain` is the sibling module's authority on what positively names
 # Spain, and is imported rather than restated: a second copy of that test is
@@ -115,11 +115,8 @@ from ...domain.iva.schema import EUMemberState
 # other does not. The import direction also keeps the pair acyclic, since the
 # declared-fact channel below is owned there too.
 from .classification_assembly import DeclaredFact, names_spain
-from .counterparty_establishment import (
-    ConfirmedCounterpartyFactsRepository,
-    CounterpartyEstablishmentContradiction,
-    resolve_confirmed_counterparty_facts,
-)
+from .counterparty_establishment import CounterpartyEstablishmentContradiction, resolve_confirmed_counterparty_facts
+from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 
 if TYPE_CHECKING:
     from datetime import date
@@ -350,7 +347,7 @@ def _spanish_iva_was_charged(
     if on_date is None:
         return False
     return any(
-        rate_kinds_for_declared_rate(EUMemberState.ES, rate / HUNDRED, on_date)
+        rate_kinds_for_declared_rate(spanish_eu_member_state(effective_date=on_date), rate / HUNDRED, on_date)
         for rate in charged_iva_rates
         # Zero is excluded before the lookup and not by it. The registry answers
         # that 0 % is always a legitimate Spanish ZERO-tier rate, which is true
@@ -529,7 +526,7 @@ def _printed_evidence(
     # absent from the identification vocabulary, so no Spanish number ever
     # reached it. Admitting ES made the accident visible, and the condition now
     # says what it always meant.
-    if identification is not None and identification is not EUMemberState.ES:
+    if identification is not None and identification != spanish_eu_member_state():
         indicating = _spain_indicating(
             country_code=country_code,
             postal_code=postal_code,
@@ -652,7 +649,7 @@ def resolve_counterparty_establishment_scope(
     regime_legend: str | None = None,
     charged_iva_rates: tuple[Decimal, ...] = (),
     on_date: date | None = None,
-    repository: ConfirmedCounterpartyFactsRepository | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> CounterpartyEstablishment:
     """Resolve where a counterparty is established, or settle nothing and say so.
 
@@ -831,7 +828,7 @@ def resolve_draft_counterparty_establishment(
     bucket_id: str,
     draft: InvoiceDraft,
     kind: InvoiceKind,
-    repository: ConfirmedCounterpartyFactsRepository | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> CounterpartyEstablishment:
     """Route a read document's COUNTERPARTY into the ladder, by direction.
 

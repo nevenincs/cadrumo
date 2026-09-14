@@ -35,8 +35,12 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ModeloRecord
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.cross_period_seeding import SEED_CLOCK, resolved_revision, seed_clean_cross_period_sources
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
+    SEED_CLOCK,
+    seed_clean_cross_period_sources,
+)
+from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.workflow.engine import WorkflowEngine
 from cadrumo.application.modelo.filing_actions import (    file_modelo_revision,
 )

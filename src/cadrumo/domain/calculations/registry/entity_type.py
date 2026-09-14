@@ -7,16 +7,12 @@ from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ...contribuyente.entity_type import EntityType, LegalEntityForm
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "taxpayer-entity-vocabulary"
 _ENTITY_TYPE_ORDER_KEY = "entity_type.order"
@@ -43,6 +39,7 @@ class LegalEntityFormDefinition:
     description: str
     entity_type: EntityType
     legal_refs: tuple[str, ...]
+    choice_description: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,6 +125,13 @@ def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     return values
 
 
+def _boolean(entries: Mapping[str, str], key: str) -> bool:
+    value = _required(entries, key).lower()
+    if value not in {"true", "false"}:
+        raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must be true or false")
+    return value == "true"
+
+
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
@@ -142,7 +146,7 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
 def _resolve_mapping_entries(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -166,18 +170,19 @@ def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
 def _selected_mapping_entries(
     *,
     effective_date: date | None,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
     coordinate = effective_date or date.today()
-    if authority is None:
-        return _bundled_mapping_entries(coordinate)
-    return _resolve_mapping_entries(effective_date=coordinate, authority=authority)
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is not None:
+        return _resolve_mapping_entries(effective_date=coordinate, authority=selected_authority)
+    return _bundled_mapping_entries(coordinate)
 
 
 def resolve_entity_vocabulary(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> EntityVocabulary:
     """Resolve and validate all entity types and legal forms from fact 0124."""
     entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
@@ -213,6 +218,7 @@ def resolve_entity_vocabulary(
                 description=_required(entries, f"{prefix}description"),
                 entity_type=entity_type,
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
+                choice_description=_boolean(entries, f"{prefix}choice_description"),
             ),
         )
     return EntityVocabulary(entity_types=vocabulary.entity_types, legal_entity_forms=tuple(legal_entity_forms))
@@ -222,7 +228,7 @@ def require_entity_type(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> EntityType:
     """Return an entity-type token only when fact 0124 declares it."""
     return resolve_entity_vocabulary(effective_date=effective_date, authority=authority).require_entity_type(value)
@@ -232,7 +238,7 @@ def require_legal_entity_form(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> LegalEntityForm:
     """Return a legal-form token only when fact 0124 declares it."""
     return resolve_entity_vocabulary(
@@ -244,7 +250,7 @@ def require_legal_entity_form(
 def entity_type_tokens(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[EntityType, ...]:
     """Return entity-type choices in the authored order."""
     return tuple(
@@ -256,7 +262,7 @@ def entity_type_tokens(
 def legal_entity_form_tokens(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[LegalEntityForm, ...]:
     """Return legal-form choices in the authored order."""
     return tuple(
@@ -265,11 +271,24 @@ def legal_entity_form_tokens(
     )
 
 
+def legal_entity_form_choice_description_tokens(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> tuple[LegalEntityForm, ...]:
+    """Return legal-form tokens whose registry metadata enables choice copy."""
+    return tuple(
+        item.token
+        for item in resolve_entity_vocabulary(effective_date=effective_date, authority=authority).legal_entity_forms
+        if item.choice_description
+    )
+
+
 def _entity_type_token(
     raw_token: str,
     *,
     effective_date: date | None,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
 ) -> EntityType:
     return require_entity_type(raw_token, effective_date=effective_date, authority=authority)
 
@@ -277,7 +296,7 @@ def _entity_type_token(
 def entity_type_natural_person_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> EntityType:
     return _entity_type_token("natural_person", effective_date=effective_date, authority=authority)
 
@@ -285,7 +304,7 @@ def entity_type_natural_person_token(
 def entity_type_legal_entity_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> EntityType:
     return _entity_type_token("legal_entity", effective_date=effective_date, authority=authority)
 
@@ -293,7 +312,7 @@ def entity_type_legal_entity_token(
 def entity_type_attribution_entity_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> EntityType:
     return _entity_type_token("attribution_entity", effective_date=effective_date, authority=authority)
 
@@ -301,7 +320,7 @@ def entity_type_attribution_entity_token(
 def legal_entity_form_sin_fines_lucrativos_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> LegalEntityForm:
     return resolve_entity_vocabulary(
         effective_date=effective_date,
@@ -317,6 +336,7 @@ __all__ = [
     "entity_type_legal_entity_token",
     "entity_type_natural_person_token",
     "entity_type_tokens",
+    "legal_entity_form_choice_description_tokens",
     "legal_entity_form_sin_fines_lucrativos_token",
     "legal_entity_form_tokens",
     "require_entity_type",

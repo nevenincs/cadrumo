@@ -34,7 +34,7 @@ from ...application.export.google_operation import build_google_sheets_export_op
 from ...application.modelo.calculation_actions import calculate_modelo_revision
 from ...application.modelo.external_import_actions import import_external_filing_evidence
 from ...application.modelo.operation_definitions import resolve_active_workflow_profile
-from ...application.modelo.tests.justificante_metadata import persist_justificante_metadata
+from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from ...application.modelo.verification_actions import verify_modelo_revision
 from ...application.modelo.work_lifecycle import create_work_unit
 from ...application.operations.composition import (
@@ -95,12 +95,12 @@ from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
-from ...tests.cross_period_seeding import (
+from ...adapters.persistence.profile.tests.cross_period_seeding import (
     SEEDED_SOURCE_TAX_ID,
-    resolved_revision,
     seed_clean_cross_period_sources,
 )
-from ...tests.profile_capsule import seed_modelo_ready_profile_record
+from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from ..censal_review import _run as run_censal_review_through_services
 from ..operation_composition import build_production_operation_registry
 

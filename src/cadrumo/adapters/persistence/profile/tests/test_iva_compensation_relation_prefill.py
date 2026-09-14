@@ -34,7 +34,7 @@ from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngress
 from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, ResultDispositionProjection
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
-from cadrumo.application.calculations.tests._iva_compensation_history_support import (
+from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import (
     _BOX_97_BINDING,
     _BOX_662_BINDING,
     _M303_COMPENSACION_APLICADA_CASILLA,

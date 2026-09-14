@@ -44,6 +44,7 @@ from ....core.aggregation import (
     RowSetGroupingKind,
 )
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
+from .binding_aggregation import binding_aggregation_op
 from .binding_provider import BindingProvider
 from .binding_terminal_origin import TerminalOriginClass
 from .binding_value_contract import BindingValueChannel
@@ -968,6 +969,21 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
     the aggregation operation, the scalar/rows agreement between the two, and
     the terminal-origin classes the family can actually produce. Provider shape
     stays with the family validator, which owns it.
+
+    The scalar/rows agreement is read off the EFFECTIVE operation
+    (:func:`~.binding_aggregation.binding_aggregation_op`) rather than off the
+    authored one, because that is the operation every row consumer dispatches
+    on: a binding declaring the ``row_set`` channel and no aggregation takes the
+    family default, which is not ``rows``, and the row assemblers then pass it
+    over -- the casilla resolves to no rows at all rather than to a refusal.
+    Gating the agreement on an authored ``aggregation`` block made omitting the
+    block the way to escape it.
+
+    The permitted-operation check stays on the authored operation. The family
+    default is a ``rows``/not-``rows`` marker rather than an authored intent --
+    it answers ``sum`` for families whose registration permits only ``copy`` --
+    so holding an undeclared binding to it would report the default table rather
+    than the declaration.
     """
     registration = registration_for(binding.source)
     diagnostics: list[str] = []
@@ -979,24 +995,23 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
             f"{channel.value!r} value channel (permitted: {permitted})",
         )
     aggregation = binding.aggregation
-    if aggregation is not None:
-        op = aggregation.op
-        if op not in registration.permitted_aggregation_ops:
-            permitted = ", ".join(sorted(member.value for member in registration.permitted_aggregation_ops))
-            diagnostics.append(
-                f"binding {binding.id!r}: provider {registration.kind.value!r} does not support the "
-                f"{op.value!r} aggregation operation (permitted: {permitted})",
-            )
-        if op is BindingAggregationOp.ROWS and channel is not BindingValueChannel.ROW_SET:
-            diagnostics.append(
-                f"binding {binding.id!r}: the {BindingAggregationOp.ROWS.value!r} aggregation operation "
-                f"requires the {BindingValueChannel.ROW_SET.value!r} value channel, not {channel.value!r}",
-            )
-        if op is not BindingAggregationOp.ROWS and channel is BindingValueChannel.ROW_SET:
-            diagnostics.append(
-                f"binding {binding.id!r}: the {BindingValueChannel.ROW_SET.value!r} value channel "
-                f"requires the {BindingAggregationOp.ROWS.value!r} aggregation operation, not {op.value!r}",
-            )
+    if aggregation is not None and aggregation.op not in registration.permitted_aggregation_ops:
+        permitted = ", ".join(sorted(member.value for member in registration.permitted_aggregation_ops))
+        diagnostics.append(
+            f"binding {binding.id!r}: provider {registration.kind.value!r} does not support the "
+            f"{aggregation.op.value!r} aggregation operation (permitted: {permitted})",
+        )
+    op = binding_aggregation_op(binding)
+    if op is BindingAggregationOp.ROWS and channel is not BindingValueChannel.ROW_SET:
+        diagnostics.append(
+            f"binding {binding.id!r}: the {BindingAggregationOp.ROWS.value!r} aggregation operation "
+            f"requires the {BindingValueChannel.ROW_SET.value!r} value channel, not {channel.value!r}",
+        )
+    if op is not BindingAggregationOp.ROWS and channel is BindingValueChannel.ROW_SET:
+        diagnostics.append(
+            f"binding {binding.id!r}: the {BindingValueChannel.ROW_SET.value!r} value channel "
+            f"requires the {BindingAggregationOp.ROWS.value!r} aggregation operation, not {op.value!r}",
+        )
     expected_grouping = registration.row_grouping
     declared_grouping = binding.value.row_grouping
     if channel is BindingValueChannel.ROW_SET:

@@ -11,6 +11,8 @@ the public carry readers only operate on registry-derived requirements.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -184,7 +186,7 @@ def _public_carry_outcomes(
             )
 
         binding_snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
-        binding_report = resolve_bindings_from_local_store(binding_snapshot, repository=repository)
+        binding_report = resolve_bindings_from_local_store(binding_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
         binding_refused = _M303_CARRY_BINDING_ID not in binding_report.binding_values
 
         cross_verdict = evaluate_cross_period_clean_state(
@@ -194,6 +196,7 @@ def _public_carry_outcomes(
             filing_repository=ModeloRecordCatalogueRepository(),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
             taxpayer_tax_id=_TAX_ID,
         )
         requirement_keys = {

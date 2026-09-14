@@ -23,11 +23,20 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
+from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from ..aggregation.inventory import InventoryLedgerRepositoryProtocol
+from ..aggregation.retencion_observations_repository import RetencionObservationPorts
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ..invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from .verification_repository_ports import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
+from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
+from ..user_profile.profile_read_ports import ProfileReadPorts
+from .work_lifecycle_ports import WorkLifecyclePorts
 
 
 class CalculationTransactionRepositoryProtocol(TransactionCatalogueRepositoryProtocol, Protocol):
@@ -71,16 +80,25 @@ class CalculationActionPorts:
     """Required persisted authorities for one Modelo calculation invocation."""
 
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
+    work_lifecycle_ports: WorkLifecyclePorts
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
     transaction_repository: CalculationTransactionRepositoryProtocol
+    usage_ratio_profile_loader: UsageRatioProfileLoader
+    profile_read_ports: ProfileReadPorts
     invoice_repository: InvoiceCatalogueRepositoryProtocol
+    invoice_catalogue_read_ports: InvoiceCatalogueReadPorts
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol
+    bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol
     inventory_repository: InventoryLedgerRepositoryProtocol
     observation_repository: CalculationObservationRepositoryProtocol
+    invoice_source_ports: InvoiceSourceResolverPorts
+    percepciones_observation_ports: PercepcionObservationPorts
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol
     iva_compensation_decision_repository: CalculationIvaWalletDecisionRepositoryProtocol
     borrador_snapshot_repository: CalculationBorradorSnapshotRepositoryProtocol
+    retencion_observation_ports: RetencionObservationPorts
     relation_override_migration: CalculationRevisionOverrideMigrationProtocol
 
 

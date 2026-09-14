@@ -10,16 +10,12 @@ it is refused here rather than at whichever surface collected it.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 from decimal import Decimal
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....domain.bienes_inversion.register import BienInversionDisposalRegime, BienInversionKind
+from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienesInversionIvaRegister
+from ....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ..declare_command import (
     BienInversionDeclarationCommand,
     BienInversionDisposalIncompleteError,
@@ -33,15 +29,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET = "88888888-8888-4888-8888-888888888888"
 
 
-@contextmanager
-def _register() -> Iterator[BienesInversionRegisterService]:
-    """The real register service over isolated encrypted storage.
+class _InMemoryRegisterRepository:
+    """Inward fake for the command's required register capability."""
 
-    No stand-in: what the command assembles has to survive persistence to be
-    worth asserting, and the repository is what decides that.
-    """
-    with TemporaryDirectory() as tmp, isolated_runtime_profile(tmp_path=Path(tmp), bucket_id=_BUCKET):
-        yield BienesInversionRegisterService()
+    def __init__(self) -> None:
+        self._register = BienesInversionIvaRegister()
+
+    def load(self) -> BienesInversionIvaRegister:
+        return self._register
+
+    def add(self, record: BienInversionIvaRecord) -> BienesInversionIvaRegister:
+        self._register = BienesInversionIvaRegister(records=(*self._register.records, record))
+        return self._register
+
+
+def _register() -> BienesInversionRegisterService:
+    """Build the application service over an inward in-memory capability fake."""
+    return BienesInversionRegisterService(repository=_InMemoryRegisterRepository())
 
 
 def _command(**overrides: object) -> BienInversionDeclarationCommand:
@@ -96,12 +100,12 @@ def test_both_halves_together_build_the_disposal() -> None:
 
 def test_the_declaration_reaches_the_register_intact() -> None:
     """Every operator-supplied fact must survive into the persisted record."""
-    with _register() as service:
-        outcome = declare_bien_inversion(
-            _command(prorrata_sector_id="sector-2"),
-            service=service,
-        )
-        stored = service.list_all().records
+    service = _register()
+    outcome = declare_bien_inversion(
+        _command(prorrata_sector_id="sector-2"),
+        service=service,
+    )
+    stored = service.list_all().records
 
     assert len(stored) == 1
     record = stored[0]
@@ -116,11 +120,11 @@ def test_the_declaration_reaches_the_register_intact() -> None:
 
 def test_a_declared_disposal_is_carried_onto_the_record() -> None:
     """The pairing is not merely validated; it lands on the persisted record."""
-    with _register() as service:
-        outcome = declare_bien_inversion(
-            _command(disposal_year=2026, disposal_regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
-            service=service,
-        )
+    service = _register()
+    outcome = declare_bien_inversion(
+        _command(disposal_year=2026, disposal_regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        service=service,
+    )
 
     assert outcome.record.disposal is not None
     assert outcome.record.disposal.year == 2026
@@ -129,8 +133,8 @@ def test_a_declared_disposal_is_carried_onto_the_record() -> None:
 
 def test_a_half_declared_disposal_never_reaches_the_register() -> None:
     """The refusal must fire before persistence, not after a partial write."""
-    with _register() as service:
-        with pytest.raises(BienInversionDisposalIncompleteError):
-            declare_bien_inversion(_command(disposal_year=2026), service=service)
+    service = _register()
+    with pytest.raises(BienInversionDisposalIncompleteError):
+        declare_bien_inversion(_command(disposal_year=2026), service=service)
 
-        assert service.list_all().records == ()
+    assert service.list_all().records == ()

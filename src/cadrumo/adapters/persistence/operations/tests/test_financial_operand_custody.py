@@ -16,6 +16,7 @@ from .....application.operations.financial_operand_custody import (
 )
 from .....application.operations.persistence.financial_operand_custody import (
     OperationFinancialOperandCustodyConflictError,
+    OperationFinancialOperandCustodyRepository,
 )
 from ...storage.errors import RepositoryError
 from ..financial_operand_custody import OperationFinancialOperandCustodyFilesystemRepository
@@ -139,6 +140,13 @@ def test_restart_reconciliation_sees_only_unsettled_waits(tmp_path: Path) -> Non
     remaining = asyncio.run(repository.unsettled())
 
     assert remaining == (unsettled,)
+
+
+def test_production_composition_binds_the_real_repository_to_its_protocol() -> None:
+    """The shipped filesystem store satisfies the contract callers depend on."""
+    assert issubclass(OperationFinancialOperandCustodyFilesystemRepository, OperationFinancialOperandCustodyRepository)
+    for name in ("read", "open", "advance", "unsettled"):
+        assert callable(getattr(OperationFinancialOperandCustodyFilesystemRepository, name))
 
 
 @pytest.mark.parametrize("interaction_id", ["", "../escape", "nested/id", ".hidden"])

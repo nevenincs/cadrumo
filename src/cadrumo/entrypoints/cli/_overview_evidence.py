@@ -184,11 +184,14 @@ def local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Notic
     instead.
     """
     try:
-        from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
         from ...application.modelo.work_lifecycle import list_work_units
+        from ..adapter_composition import build_work_lifecycle_ports
 
-        repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
-        return list_work_units(bucket_id=bucket_id, include_discarded=False, repository=repository), None
+        return list_work_units(
+            bucket_id=bucket_id,
+            include_discarded=False,
+            ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+        ), None
     except Exception:
         logger.warning(
             "overview: work-unit enrichment unavailable for bucket %s; deriving from schedule only",

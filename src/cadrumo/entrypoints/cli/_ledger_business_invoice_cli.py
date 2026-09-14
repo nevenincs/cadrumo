@@ -28,6 +28,7 @@ from ...application.invoices.bulk_import import (
     read_bulk_invoice_import_source,
 )
 from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from ...application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
     remove_catalogue_invoice,
@@ -36,6 +37,7 @@ from ...application.invoices.catalogue_lifecycle import (
 )
 from ...application.invoices.simplificada_advisory import (
     SimplificadaTaxIdAdvisory,
+    resolve_simplificada_tax_id_legal_refs,
     resolve_simplificada_tax_id_advisory,
 )
 from ...application.invoices.source_resolver import iva_category_for_operation_type
@@ -45,7 +47,7 @@ from ...core.field_role import FieldRole
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.type_guards import is_object_list_or_tuple
-from ...domain.invoices.enums import InvoiceClass
+from ...domain.invoices.enums import default_invoice_class, require_invoice_class
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.iva.classification import InvoiceKind
@@ -66,6 +68,7 @@ from .common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,
 )
 from .common import bad, emit_envelope
+from .state_projection_support import catalogue_creation_ports_factory, catalogue_lifecycle_ports_factory
 
 # The invoice fields every operator surface renders, declared once. Both
 # projections below read this tuple, so a field added to one surface cannot go
@@ -168,6 +171,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     """
     if resolve_simplificada_tax_id_advisory(invoice=invoice) is not SimplificadaTaxIdAdvisory.REQUIRED:
         return []
+    legal_refs = resolve_simplificada_tax_id_legal_refs()
     return [
         Notice(
             severity=NoticeSeverity.WARNING,
@@ -176,7 +180,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
             context={
                 "invoice_id": invoice.invoice_id,
                 "invoice_class": invoice.invoice_class.value,
-                "legal_ref": "rd-1619-2012:art-6.1.d",
+                "legal_ref": legal_refs[0],
             },
         ),
     ]
@@ -217,7 +221,7 @@ def _catalogue_invoice_lines(invoice: Invoice) -> list[str]:
 # renders identically for both verbs from one ``tr`` lookup.
 #: The destinatario's NIF. Optional because RD 1619/2012 art. 7 does not require
 #: it on a factura simplificada -- that relief is the point of the simplified
-#: form. The domain has always accepted its absence for an ISSUED SIMPLIFICADA;
+#: form. The domain has always accepted its absence for an issued simplified invoice;
 #: only this option forced one, so the state the art. 6.1.d advisory evaluates
 #: could not be reached through the CLI at all. Every other class still refuses
 #: an absent id at the domain boundary, with the accepted set named.
@@ -242,7 +246,7 @@ def invoice_add(
     operation_date: str | None = None,
     retention_rate: str | None = None,
     retention_amount: str | None = None,
-    invoice_class: InvoiceClass | None = None,
+    invoice_class: str | None = None,
     counterparty_nif: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
@@ -263,6 +267,7 @@ def invoice_add(
     a received invoice.
     """
     bucket_id = _business_invoice_bucket_id()
+    catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
     # An explicitly stated treatment WINS over the one derived from the M349
     # clave. The derivation exists so an intracomunitaria is not left
     # ungrounded when the operator only states the clave; it is a fallback, and
@@ -290,12 +295,17 @@ def invoice_add(
             ),
             retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
             retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
-            invoice_class=invoice_class or InvoiceClass.ORDINARIA,
+            invoice_class=(
+                default_invoice_class()
+                if invoice_class is None
+                else require_invoice_class(invoice_class)
+            ),
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
             recargo_amount=parse_optional_decimal_amount(recargo, label="recargo"),
+            rate_provider=catalogue_ports.rate_provider,
         )
-        result = create_catalogue_invoice(invoice=invoice)
+        result = create_catalogue_invoice(invoice=invoice, ports=catalogue_ports)
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None
@@ -325,7 +335,7 @@ def invoice_wizard(
     operation_date: str | None = None,
     retention_rate: str | None = None,
     retention_amount: str | None = None,
-    invoice_class: InvoiceClass | None = None,
+    invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo: str | None = None,
@@ -350,6 +360,7 @@ def invoice_wizard(
     from ...application.invoices.creation_wizard import create_invoice_via_wizard
 
     bucket_id = _business_invoice_bucket_id()
+    catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
     resolved_iva_category = iva_category or iva_category_for_operation_type(operation_type)
     try:
         wizard_result = create_invoice_via_wizard(
@@ -369,6 +380,7 @@ def invoice_wizard(
             operation_date=operation_date,
             retention_rate=retention_rate,
             retention_amount=retention_amount,
+            ports=catalogue_ports,
         )
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
@@ -411,6 +423,7 @@ def _run_invoice_import(
     bucket_id: str,
     kind: InvoiceKind,
     country: str | None,
+    ports: CatalogueCreationPorts,
 ) -> tuple[BulkInvoiceImportSource, BulkInvoiceImportResult, list[str]]:
     """Read and apply one invoice book through the application bulk service."""
     try:
@@ -421,6 +434,7 @@ def _run_invoice_import(
             bucket_id=bucket_id,
             kind=kind,
             declared_country=country.strip().upper() if country else None,
+            ports=ports,
         )
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
@@ -544,11 +558,13 @@ def invoice_import(
         raise bad(
             tr("cli.app.ledger.invoice.import_file_not_found", path=str(file)),
         )
+    catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
     source, result, mapping_reasons = _run_invoice_import(
         file,
         bucket_id=bucket_id,
         kind=kind,
         country=country,
+        ports=catalogue_ports,
     )
     lines = _invoice_import_summary_lines(bucket_id, result)
     lines.extend(_invoice_import_refusal_lines(result))
@@ -671,7 +687,8 @@ def invoice_view(
     invoice, is a typed refusal naming the candidates — never a silent miss.
     """
     bucket_id = _business_invoice_bucket_id()
-    invoice = resolve_catalogue_invoice_from_repository(bucket_id=bucket_id, invoice_id=invoice_id)
+    lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
+    invoice = resolve_catalogue_invoice_from_repository(invoice_id=invoice_id, ports=lifecycle_ports.read_ports)
     emit_envelope(
         ctx,
         command="ledger.invoice.view",
@@ -697,7 +714,8 @@ def invoice_remove(
             tr("cli.app.ledger.invoice.yes_required"),
         )
     bucket_id = _business_invoice_bucket_id()
-    result = remove_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id)
+    lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
+    result = remove_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id, ports=lifecycle_ports)
     emit_envelope(
         ctx,
         command="ledger.invoice.remove",
@@ -717,7 +735,7 @@ def invoice_update(
     operation_date: str | None = None,
     retention_rate: str | None = None,
     retention_amount: str | None = None,
-    invoice_class: InvoiceClass | None = None,
+    invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
 ) -> None:
@@ -740,12 +758,18 @@ def invoice_update(
         operation_date=(None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")),
         retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
         retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
-        invoice_class=invoice_class,
+        invoice_class=(None if invoice_class is None else require_invoice_class(invoice_class)),
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
     )
+    lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
     try:
-        result = update_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
+        result = update_catalogue_invoice(
+            bucket_id=bucket_id,
+            invoice_id=invoice_id,
+            patch=patch,
+            ports=lifecycle_ports,
+        )
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None

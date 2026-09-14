@@ -47,13 +47,13 @@ both the forward (accountant decrypts the original package) and reverse (the
 originator decrypts a feedback package) directions.
 
 See Also:
-    :mod:`~application.modelo._review_package_recipient_registry`
+    :mod:`~application.modelo.review_package_recipient_registry`
         Owns the recipient-fingerprint registry this module's
         register/remove events describe.
     :mod:`~application.modelo.review_package_recipient_encryption`
         Owns the encrypt/decrypt primitives this module's package events
         describe.
-    :mod:`~application.modelo._review_package_counter_sign`
+    :mod:`~application.modelo.review_package_counter_sign`
         Owns the counter-sign primitive this module's counter-signed event
         describes.
     :mod:`~application.modelo.review_package_feedback`

@@ -31,7 +31,7 @@ Ley 37/1992 art. 116.
 
 from __future__ import annotations
 
-from cadrumo.application.modelo.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -62,7 +62,7 @@ from cadrumo.domain.deadlines.models import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
 from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository

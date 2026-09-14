@@ -29,6 +29,7 @@ the prior-quarter negative result carried forward "sin signo".
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 
@@ -70,10 +71,10 @@ from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import ready_clave_settings
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -373,7 +374,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
     )
 
     q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo)
+    report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository())
 
     # Both M130 previous_filing bindings auto-resolve from the local store:
     # the prior-quarter carry-forward and the prior-year Renta net income.
@@ -406,7 +407,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     )
 
     q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo).binding_values
+    resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
 
     # Q2 cumulative (Jan-Jun): ingresos 8000, gastos 2000 -> rendimiento 6000,
     # casilla 04 = 1200. Both carry-forward casilla 15 and the prior-year net
@@ -488,7 +489,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
     )
 
     q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo).binding_values
+    resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
     assert resolved.get(_CARRY_FORWARD_BINDING) == Decimal("62.00")
     assert resolved.get(_PREV_YEAR_BINDING) == Decimal("20000")
 
@@ -620,7 +621,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     )
 
     snapshot_3t = bundled_authority().snapshot("130", filing_year=2026, period="3T")
-    resolved = resolve_bindings_from_local_store(snapshot_3t, repository=obs_repo).binding_values
+    resolved = resolve_bindings_from_local_store(snapshot_3t, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
 
     # Independent identity (a different code path than the span binding): the
     # positive part of each prior 07 minus each prior 16, computed here from the

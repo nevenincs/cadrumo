@@ -18,16 +18,17 @@ from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalog
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
 from .....application.auth.diagnostics import list_auth_diagnostics
-from .....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
 )
+from .....application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
 from .....application.filing.history_repository import ModeloHistoryRepository
 from .....application.live.borrador_100 import Borrador100SnapshotRepository
-from .....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....core.config import load_settings, override_settings
 from .....core.config_support import LLMProvider
@@ -99,6 +100,39 @@ from ._runtime_attached_repositories_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+
+class _StorageDiagnosticsPort:
+    """Translate the real storage repository for this outward adapter test."""
+
+    @staticmethod
+    def _repository():
+        return secure_object_repository_for_active_bucket_or_default_route()
+
+    @staticmethod
+    def _translate(row) -> DiagnosticSecureObjectNamespace:
+        return DiagnosticSecureObjectNamespace(
+            namespace=row.namespace,
+            readable=row.readable,
+            unreadable=row.unreadable,
+        )
+
+    def list_namespaces(self) -> tuple[str, ...]:
+        return self._repository().list_namespaces()
+
+    def probe_namespace_integrity(self, namespace: str) -> DiagnosticSecureObjectNamespace:
+        return self._translate(self._repository().probe_namespace_integrity(namespace))
+
+    def quarantine_unreadable_rows(self) -> tuple[DiagnosticSecureObjectNamespace, ...]:
+        return tuple(self._translate(row) for row in self._repository().quarantine_unreadable_rows())
+
+
+def _diagnostics_ports() -> DiagnosticsPorts:
+    """Provide the required application diagnostic capability bundle."""
+    return DiagnosticsPorts(
+        secure_object_repository=_StorageDiagnosticsPort(),
+        session_failure_classifier=lambda _error: False,
+    )
+
 _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("workflow_state", lambda: WorkflowStateRepository().load()),
     ("workflow_runs", lambda: WorkflowRunRepository().list()),
@@ -117,7 +151,12 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("llm_usage_load", lambda: UsageRecorder(root_dir=Path("runtime-usage")).load_records()),
     ("llm_run_telemetry", lambda: LLMRunTelemetryRecorder(root_dir=Path("runtime-telemetry")).load_records()),
     ("llm_consent_ledger", lambda: EvidenceConsentLedger().load_entries()),
-    ("review_recipient_registry", lambda: RecipientFingerprintRegistryRepository().load()),
+    (
+        "review_recipient_registry",
+        lambda: RecipientFingerprintRegistryAdapter(
+            repository=secure_object_repository_for_active_bucket_or_default_route(),
+        ).load(),
+    ),
     ("review_recipient_replay_guard", lambda: RecipientReplayGuardRepository().load()),
     (
         "sede_artefact",
@@ -212,7 +251,7 @@ def test_diagnostics_secure_object_total_degrades_on_missing_session(
         assert raised.value.context is not None
         assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value
 
-        assert secure_object_unreadable_total() == 0
+        assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
 
     assert "secure objects engine unreachable for repair probe" in caplog.text
     assert "errors.storage.runtime.not_ready" in caplog.text
@@ -235,7 +274,7 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
         assert raised.value.context is not None
         assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value
 
-        assert secure_object_unreadable_total() == 0
+        assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
 
     assert "secure objects engine unreachable for repair probe" in caplog.text
     assert "errors.storage.runtime.not_ready" in caplog.text
@@ -513,7 +552,7 @@ def test_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
         assert Borrador100SnapshotRepository(bucket_id=_BUCKET_B_ID).list_snapshots() == ()
         assert list_auth_diagnostics().row_count == 0
-        assert preview_quarantine_unreadable_secure_objects().namespaces == ()
+        assert preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports()).namespaces == ()
         Borrador100SnapshotRepository(bucket_id=_BUCKET_B_ID).save(_borrador_snapshot(_BUCKET_B_ID))
         _save_auth_diagnostic(_BUCKET_B_ID)
         _save_diagnostic_probe_row(_BUCKET_B_ID)
@@ -521,7 +560,7 @@ def test_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         snapshots = Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).list_snapshots()
         auth_report = list_auth_diagnostics()
-        diagnostic_report = preview_quarantine_unreadable_secure_objects()
+        diagnostic_report = preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
 
     assert tuple(snapshot.snapshot_id for snapshot in snapshots) == (_borrador_snapshot(_BUCKET_A_ID).snapshot_id,)
     assert auth_report.row_count == 1

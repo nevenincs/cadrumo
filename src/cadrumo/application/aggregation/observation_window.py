@@ -27,7 +27,6 @@ from typing import Protocol, cast
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.path_safety import safe_repository_id
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.i18n.translatable import Translatable as t
@@ -97,8 +96,12 @@ class _WindowKeyedPayload(Protocol):
     period: Period
 
 
-class _WindowRepository[PayloadT: BaseModel](Protocol):
-    """Minimum repository port required by the set-replace window algorithm."""
+class ObservationWindowRepository[PayloadT: BaseModel](Protocol):
+    """Required application capability for the set-replace window algorithm."""
+
+    def validate_observation_window_modelo(self, modelo: str) -> str:
+        """Validate the logical window owner at the outer persistence boundary."""
+        ...
 
     def extract_identifier(self, payload: PayloadT) -> str:
         """Return the natural identifier for one persisted payload."""
@@ -114,7 +117,7 @@ class _WindowRepository[PayloadT: BaseModel](Protocol):
 
 
 def replace_observation_window[ObservationT, PayloadT: BaseModel](
-    repository: _WindowRepository[PayloadT],
+    repository: ObservationWindowRepository[PayloadT],
     *,
     modelo: str,
     filing_year: int,
@@ -132,8 +135,8 @@ def replace_observation_window[ObservationT, PayloadT: BaseModel](
     its place. An empty ``observations`` clears the window, matching each
     repository's own no-silent-under-declaration contract on the caller side.
 
-    The clear and the write commit as ONE transaction through
-    :meth:`~adapters.persistence.storage.SecureBoundRepository.replace_records`.
+    The clear and the write commit as ONE transaction through the repository
+    port's ``replace_records`` operation.
     Deleting each stale row and then saving each replacement one at a time made
     every intermediate state observable: a failure part-way through the write
     loop left the window holding neither the old declared set nor the new one,
@@ -154,7 +157,7 @@ def replace_observation_window[ObservationT, PayloadT: BaseModel](
             now, resolved once so the whole set shares one instant.
         source_metadata: Capture metadata recorded on every written row.
     """
-    safe_repository_id(modelo, context="modelo")
+    repository.validate_observation_window_modelo(modelo)
     when = captured_at if captured_at is not None else now()
     replacements = tuple(
         build_payload(
@@ -190,4 +193,4 @@ def _in_window(payload: BaseModel, *, modelo: str, filing_year: int, period: Per
     )
 
 
-__all__ = ["hashed_tax_id_token", "replace_observation_window"]
+__all__ = ["ObservationWindowRepository", "hashed_tax_id_token", "replace_observation_window"]

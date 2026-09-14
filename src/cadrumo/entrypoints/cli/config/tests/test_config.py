@@ -32,8 +32,8 @@ from .....adapters.persistence.storage.tests.secure_sql import (
 )
 from .....core.config import override_settings
 from .....core.i18n.render import tr
-from .....tests.profile_capsule import open_test_profile_session
-from .....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 from ..errors import ConfigBoundaryError
 

@@ -50,7 +50,6 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
 from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from .scenarios import (
     RegistryCalculationScenario,
@@ -66,8 +65,6 @@ _M100_2024_MATERNIDAD_BINDINGS = {
     ),
 }
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 
 _CUOTA_INTEGRA_ESTATAL: CasillaId = validated_casilla_id("0545", surface="0545")
 _CUOTA_INTEGRA_AUTONOMICA: CasillaId = validated_casilla_id("0546", surface="0546")
@@ -150,7 +147,7 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
 
 
 def _values(scenario: RegistryCalculationScenario) -> dict[CasillaId, Decimal | None]:
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     return dict(report.calculation.values)
 
 

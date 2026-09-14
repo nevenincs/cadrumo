@@ -11,7 +11,7 @@ See Also:
         Reader under test.
     :func:`~llm.invoice_field_grounding.ground_extracted_fields`
         Grounded re-validation shared with the vision reader.
-    :func:`~core.identity.nif_iva.nif_iva_format_for_country`
+:func:`~cadrumo.domain.calculations.registry.nif_iva_catalogue.nif_iva_format_for_country`
         EU NIF-IVA structural authority the tax-id grounding now consults.
 """
 

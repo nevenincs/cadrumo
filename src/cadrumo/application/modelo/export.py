@@ -24,7 +24,7 @@ The CLI verb ``aeat app modelo export`` is a thin delegate over this
 service.
 
 See Also:
-    :func:`~cadrumo.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`:
+    :func:`~cadrumo.application.modelo.revision_replay_inputs.revision_filing_replay_inputs`:
         Reconstructs the filing inputs from the persisted revision.
     :func:`~cadrumo.application.filing.build_draft`:
         Builds the transient registry-backed draft that is exported.
@@ -108,6 +108,7 @@ from ..calculations.observations_repository import (
 )
 from ..filing.draft_construction import build_draft
 from ..filing.draft_review import approve_draft
+from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.export import export_draft, export_layout_renderability_reason
 from ..filing.export_verification import DeclaracionExportResult, assert_export_artifact_matches_receipt
 from ..filing.producer_snapshot import (
@@ -128,7 +129,7 @@ from ..filing.producer_snapshot import (
 from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
-from ._prior_domiciliation import resolve_prior_domiciliation_election
+from .prior_domiciliation import resolveprior_domiciliation_election
 from .profile_export_binding import (
     resolve_declaration_contact,
     resolve_export_identity,
@@ -137,7 +138,7 @@ from .profile_export_binding import (
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._revision_replay_inputs import revision_filing_replay_inputs
+from .revision_replay_inputs import revision_filing_replay_inputs
 from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import (
     CalculationRevisionNotFoundError,
@@ -149,7 +150,6 @@ from .action_errors import (
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from .export_ports import ModeloExportPorts
-from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
@@ -569,7 +569,7 @@ def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider:
     )
 
 
-def _require_prior_domiciliation_marker_layout(
+def _requireprior_domiciliation_marker_layout(
     *,
     work_unit: WorkUnit,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
@@ -588,7 +588,7 @@ def _require_prior_domiciliation_marker_layout(
     ):
         return
     raise ModeloPriorDomiciliationElectionRefusedError(
-        translated_message="errors.refused.refused_modelo_prior_domiciliation_election",
+        translated_message="errors.refused.refused_modeloprior_domiciliation_election",
         context={
             "modelo": str(work_unit.modelo),
             "revision_id": work_unit.revision_id,
@@ -607,12 +607,12 @@ def _approve_export_draft(
     approved_at: datetime,
     period: Period,
     schema_provider: RegistrySchemaAccessor,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
 ) -> tuple[Period, ModeloDraft]:
     """Build and approve the export draft for one :class:`~CalculationRevision`.
 
     The :class:`~cadrumo.domain.deadlines.TaxpayerProfile` is forwarded to
-    :func:`~cadrumo.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
+    :func:`~cadrumo.application.modelo.revision_replay_inputs.revision_filing_replay_inputs`
     so export uses the same profile-applicability relation inputs as the filing
     workflow gate. Returns the resolved :class:`~cadrumo.core.Period` and approved
     :class:`~domain.filing.ModeloDraft`.
@@ -636,7 +636,7 @@ def _approve_export_draft(
             bucket_id=work_unit.bucket_id,
             approved_by=actor,
             schema_provider=schema_provider,
-            observation_repository=observation_repository,
+            ports=ports,
             approved_at=approved_at,
         )
     except FilingExportError as exc:
@@ -1287,7 +1287,7 @@ def _require_modelo_export_clean_state(
     )
 
 
-def _resolve_modelo_export_prior_domiciliation(
+def _resolve_modelo_exportprior_domiciliation(
     command: ModeloExportCommand,
     *,
     work_unit: WorkUnit,
@@ -1311,7 +1311,7 @@ def _resolve_modelo_export_prior_domiciliation(
             "product/software identity is only admitted for the Modelo 303 filing envelope",
             context={"calculation_revision_id": command.calculation_revision_id},
         )
-    prior_domiciliation_election = resolve_prior_domiciliation_election(
+    prior_domiciliation_election = resolveprior_domiciliation_election(
         election=(
             command.prior_domiciliation_election
             if is_m303
@@ -1322,7 +1322,7 @@ def _resolve_modelo_export_prior_domiciliation(
         filing_repository=export_ports.filing,
         observation_repository=export_ports.observation,
     )
-    _require_prior_domiciliation_marker_layout(
+    _requireprior_domiciliation_marker_layout(
         work_unit=work_unit,
         prior_domiciliation_election=prior_domiciliation_election,
         schema_provider=schema_provider,
@@ -1382,7 +1382,7 @@ def _prepare_modelo_export(
         export_ports=export_ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
     )
-    prior_domiciliation_election = _resolve_modelo_export_prior_domiciliation(
+    prior_domiciliation_election = _resolve_modelo_exportprior_domiciliation(
         command,
         work_unit=work_unit,
         revision=revision,
@@ -1415,7 +1415,7 @@ def export_modelo_revision(
     draft headers and to replay profile-applicability relation inputs.
 
     Local-only: never contacts AEAT. Re-builds the filing draft from
-    :func:`~cadrumo.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
+    :func:`~cadrumo.application.modelo.revision_replay_inputs.revision_filing_replay_inputs`
     so the exported file reflects the same legal casilla and relation map that
     would be filed.
 
@@ -1483,7 +1483,7 @@ def export_modelo_revision(
         approved_at=now,
         period=export_period,
         schema_provider=schema_provider,
-        observation_repository=export_ports.observation,
+        ports=export_ports.draft_review_ports,
     )
     return _persist_exported_draft(
         command=command,

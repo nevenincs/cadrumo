@@ -5,7 +5,46 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    TestRuntimeProfile,
+    isolated_runtime_profile,
+    reset_secure_object_store,
+)
+from cadrumo.adapters.persistence.tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import _file_flow_runtime, _FileFlowRuntime, _Repos, _repos
+from .ledger_action_persistence_support import _BUCKET_ID
+
+# These suites exercise the profile-bound secure-object adapter through an
+# explicitly requested runtime.  The fixture body is composed by the outer
+# persistence test owner, not by an application test package.
+secure_engine = default_bucket_runtime_profile_fixture(autouse=False, name="secure_engine")
+
+
+@pytest.fixture(scope="module")
+def _ledger_module_runtime(tmp_path_factory: pytest.TempPathFactory) -> Iterator[TestRuntimeProfile]:
+    """Provision the expensive ledger-action bucket runtime once per module."""
+    tmp_path = tmp_path_factory.mktemp("ledger-action-runtime")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        yield profile
+
+
+_FILING_REVIEW_BUCKET_ID = "66666666-6666-4666-8666-666666666666"
+
+
+@pytest.fixture(scope="module")
+def _active_bucket_runtime(tmp_path_factory: pytest.TempPathFactory) -> Iterator[TestRuntimeProfile]:
+    """Provision the shared active bucket for filing review integration tests."""
+    tmp_path = tmp_path_factory.mktemp("filing-review-runtime")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILING_REVIEW_BUCKET_ID) as profile:
+        yield profile
+
+
+@pytest.fixture
+def secure_objects(_ledger_module_runtime: TestRuntimeProfile) -> Iterator[SecureObjectRepository]:
+    """Reset the ledger-action secure store before each integration test."""
+    reset_secure_object_store(_ledger_module_runtime.repository)
+    yield _ledger_module_runtime.repository
 
 
 @pytest.fixture

@@ -10,7 +10,8 @@ import pytest
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord, BienInversionKind
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
+from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind

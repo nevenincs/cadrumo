@@ -68,37 +68,48 @@ class IVARegime(str):
         return str(self)
 
 
-class IrpfIncomeCategory(StrEnum):
-    """An IRPF income category (rendimiento) a natural person declares.
+class IrpfIncomeCategory(str):
+    """Opaque IRPF income-category token projected from fact 0128."""
 
-    For a natural person the quarterly / informational modelo
-    obligations derive from the income category, not from being a
-    natural person as such. Grounded in Ley 35/2006 LIRPF
-    (BOE-A-2006-20764).
+    __slots__ = ()
 
-    Attributes:
-        ACTIVIDAD_ECONOMICA: Rendimientos de actividades económicas
-            (autónomo / empresario / profesional) — LIRPF Arts. 27-32.
-            The only category that triggers Modelo 130 / 131.
-        TRABAJO: Rendimientos del trabajo (employment) — LIRPF
-            Arts. 17-20.
-        CAPITAL_INMOBILIARIO: Rendimientos del capital inmobiliario
-            (immovable property / rental) — LIRPF Arts. 22-24.
-        CAPITAL_MOBILIARIO: Rendimientos del capital mobiliario
-            (dividends, interest) — LIRPF Arts. 25-26.
-        GANANCIAS_PATRIMONIALES: Ganancias y pérdidas patrimoniales
-            (capital gains) — LIRPF Arts. 33-39.
-        PENSION: Pensión — a rendimiento del trabajo for IRPF purposes
-            (LIRPF Art. 17.2.a), modelled separately so a pensioner
-            profile is explicit.
-    """
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("IRPF income-category tokens must be projected from the registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("IRPF income-category token must be a non-empty string")
+        return str.__new__(cls, value)
 
-    ACTIVIDAD_ECONOMICA = "actividad_economica"
-    TRABAJO = "trabajo"
-    CAPITAL_INMOBILIARIO = "capital_inmobiliario"
-    CAPITAL_MOBILIARIO = "capital_mobiliario"
-    GANANCIAS_PATRIMONIALES = "ganancias_patrimoniales"
-    PENSION = "pension"
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("IRPF income-category must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        return str(self)
 
 
 class IrpfEstimationRegime(str):
@@ -144,72 +155,47 @@ class IrpfEstimationRegime(str):
         return str(self)
 
 
-class IrpfActivityKind(StrEnum):
-    """Whether the taxpayer's activity is professional or sectorial, for retención.
+class IrpfActivityKind(str):
+    """Opaque IRPF activity-kind token projected from fact 0082."""
 
-    An ACTIVITY axis, independent of :class:`IrpfEstimationRegime` (a method)
-    and :class:`IrpfIncomeCategory` (a rendimiento type). The independence is
-    the reason it has to exist separately: a farmer may file estimación directa
-    and sit in IVA general, so neither of those establishes the activity.
+    __slots__ = ()
 
-    Deliberately TWO members, and the narrowness is grounded rather than
-    conservative. RIRPF art. 95 (RD 439/2007) states seven provisions that fix
-    only FOUR distinct rates, and six of the seven sit in rate-identical pairs:
-    inicio and the colectivos específicos both fix 7 %, agrícola/ganadera and
-    forestal both 2 %, engorde de porcino/avicultura and estimación objetiva
-    both 1 %. Only the 15 % general professional rate has a single legal source.
-    So the one distinction the rate table can consume is professional
-    (15 % / 7 %) against sectorial (2 % / 1 %); a member per activity would
-    spend names on splits that select the same figure and then have to be kept
-    true.
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("IRPF activity-kind tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("IRPF activity-kind token must be a non-empty string")
+        return str.__new__(cls, value)
 
-    Operator-declared OR derived, and the derivation now exists. This paragraph
-    used to say the authority was there but the input was missing, which was true
-    when it was written: the bundled Modelo 036 instrucciones carry the
-    tipo-de-actividad code table and the sentence binding each IAE sección to its
-    activity class -- exactly the granularity RIRPF art. 95.2.a keys on ("las
-    actividades incluidas en las Secciones Segunda y Tercera") -- and the
-    correspondence is registry data as the ``rirpf-art-95:selector-m036-*``
-    parameters, with their own ``legal_refs`` rather than an if-chain. What was
-    absent was a field holding a code.
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
 
-    A ledger row now holds one.
-    :func:`~domain.transactions.tipo_actividad_partitions.resolve_tipo_actividad_selector`
-    reads the registry selectors and returns a member of THIS enum, deliberately
-    rather than a second classifier of its own: the apartado-level detail that
-    agrícola/ganadera comes from art. 95.4.2.º and forestal from art. 95.5, both
-    yielding 2 %, stays on the registry parameters where its ``legal_refs`` live.
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("IRPF activity-kind must be a registry-projected token")
 
-    One limit is declared rather than latent. The Modelo 036 table's finest
-    ganadero grain is B02, so the art. 95.4.1.º engorde de porcino/avicultura
-    carve-out is not selectable and its parameter carries a deliberately EMPTY
-    code set; both it and the general agrarian case return ``SECTORIAL``, which is
-    right for both, and which of the two sectoral figures applies is not settled
-    from this axis. ``iae_epigraph`` cannot narrow it either: the same
-    instrucciones state the epígrafe is filled "solo para las actividades
-    comprendidas dentro de los códigos de actividad A01, A02, A03, A04 y A05", so
-    it is blank for precisely the B-series agrarian filers.
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
-    KNOWN GAP in the two-member shape. Four of the ten codes -- A01 Arrendadores,
-    A03 Resto empresariales, B04 Producción de mejillón, B05 Pesquera -- select
-    NO art. 95 partition, so they are absent from every selector rather than
-    forced into an arm. This enum cannot say that: ``None`` currently means
-    "undeclared", and an empresarial filer for whom no activity rate applies is
-    a different fact with different fail-closed behaviour. Whether that wants a
-    third member or a different shape depends on what ends up reading the field,
-    which is not settled while the field has no production consumer.
+    @property
+    def value(self) -> str:
+        return str(self)
 
-    Attributes:
-        PROFESIONAL: An actividad profesional under RIRPF art. 95.1 --
-            the 15 % general rate, or 7 % under the inicio or
-            colectivos-específicos arms.
-        SECTORIAL: An actividad agrícola, ganadera or forestal, or one whose
-            rendimiento neto is determined by estimación objetiva -- RIRPF
-            art. 95.4, 95.5 and 95.6.1.º, fixing 2 % or 1 %.
-    """
-
-    PROFESIONAL = "profesional"
-    SECTORIAL = "sectorial"
+    @property
+    def name(self) -> str:
+        return str(self)
 
 
 class IrpfSpecialRegime(str):
@@ -1006,15 +992,13 @@ def evaluate_multiple_pagadores_obligation(
 
 
 class RecargoBand(BaseModel):
-    """One Ley 58/2003 art-27 recargo band loaded from the registry TOML.
+    """One Ley 58/2003 art-27 recargo band projected by runtime authority.
 
-    The bracket table at
-    ``registry/aeat/legal/ley-58-2003-recargo-bands.toml`` carries the
-    surcharge schedule for self-assessments filed after the deadline
-    without prior AEAT notice. Each row materialises into one
-    :class:`RecargoBand`; the :class:`Recovery` value attached to an
-    OVERDUE :class:`ModeloDeadline` references the resolved band
-    by ``id``.
+    The published typed catalogue carries the surcharge schedule for
+    self-assessments filed after the deadline without prior AEAT notice. Each
+    projection materialises into one :class:`RecargoBand`; the
+    :class:`Recovery` value attached to an OVERDUE :class:`ModeloDeadline`
+    references the resolved band by ``id``.
 
     Attributes:
         id: Stable identifier (``completed_months_0``, ``after_12_months``,

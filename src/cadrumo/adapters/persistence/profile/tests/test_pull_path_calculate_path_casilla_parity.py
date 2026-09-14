@@ -66,6 +66,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.catalogue_reads import (
+    InvoiceCatalogueReadAdapter,
+    TransactionCatalogueReadAdapter,
+)
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -98,8 +102,9 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from cadrumo.application.aggregation.retenciones import RetencionObservation
@@ -111,7 +116,8 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from cadrumo.application.calculations.relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
-from cadrumo.application.calculations.tests._iva_compensation_history_support import m303_registry_snapshot_ref
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
+from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -460,6 +466,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     )
     relay_resolution = RelationPrefillSourceResolver(
         repository=obs_repo,
+        profile_read_ports=empty_profile_read_ports(),
         registry_snapshot=snap_180,
     ).resolve(context)
     retenciones_resolution = RetencionesAggregationSourceResolver().resolve(context)
@@ -597,7 +604,10 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
     )
     pull_resolution = LedgerIvaAggregationSourceResolver(
         transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
+        invoice_catalogue_read_ports=InvoiceCatalogueReadPorts(
+            invoice_reader=InvoiceCatalogueReadAdapter(repository=invoice_repository),
+            transaction_reader=TransactionCatalogueReadAdapter(repository=transaction_repository),
+        ),
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=_BUCKET_ID,
             objects=secure_objects,

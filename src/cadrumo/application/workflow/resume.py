@@ -323,9 +323,9 @@ def resolve_modelo_workflow_resume_target(
     if inputs.calculation_revision_id is not None:
         return _resolve_resume_from_calculation_revision(inputs.calculation_revision_id, ports=ports)
     if inputs.work_unit_id is not None:
-        return _resolve_resume_from_work_unit_id(inputs.work_unit_id, selector=inputs.selector)
+        return _resolve_resume_from_work_unit_id(inputs.work_unit_id, selector=inputs.selector, ports=ports)
     if inputs.visible_supplied:
-        return _resolve_resume_from_visible_inputs(inputs)
+        return _resolve_resume_from_visible_inputs(inputs, ports=ports)
     raise WorkflowError(translated_message="application.workflow.errors.resume_target_required")
 
 
@@ -393,7 +393,11 @@ def _classify_resume_target(inputs: _ResumeTargetInputs) -> _ResumeTargetInputs:
     )
 
 
-def _resolve_resume_from_visible_inputs(inputs: _ResumeTargetInputs) -> WorkflowResumeTargetResolution:
+def _resolve_resume_from_visible_inputs(
+    inputs: _ResumeTargetInputs,
+    *,
+    ports: CalculationActionPorts,
+) -> WorkflowResumeTargetResolution:
     """Validate and resolve a visible modelo filing selector."""
     if inputs.modelo is None or inputs.year is None or inputs.period is None:
         raise WorkflowError(
@@ -411,6 +415,7 @@ def _resolve_resume_from_visible_inputs(inputs: _ResumeTargetInputs) -> Workflow
         registry_revision_id=inputs.registry_revision_id,
         bucket_id=inputs.bucket_id,
         selector=inputs.selector,
+        ports=ports,
     )
 
 
@@ -432,7 +437,7 @@ def _resolve_resume_from_calculation_revision(
     from ..modelo.work_lifecycle import get_work_unit
 
     revision = get_calculation_revision(calculation_revision_id, ports=ports)
-    work_unit = get_work_unit(revision.work_unit_id)
+    work_unit = get_work_unit(revision.work_unit_id, ports=ports.work_lifecycle_ports)
     return _resolve_resume_from_work_unit(
         work_unit,
         source="calculation_revision_id",
@@ -440,13 +445,24 @@ def _resolve_resume_from_calculation_revision(
     )
 
 
-def _resolve_resume_from_work_unit_id(work_unit_id: str, *, selector: object | None) -> WorkflowResumeTargetResolution:
+def _resolve_resume_from_work_unit_id(
+    work_unit_id: str,
+    *,
+    selector: object | None,
+    ports: CalculationActionPorts,
+) -> WorkflowResumeTargetResolution:
     from ..modelo.work_addressing import ModeloExactWorkUnitTarget, resolve_modelo_work_address_unit
 
     target = ModeloExactWorkUnitTarget(work_unit_id=work_unit_id)
     catalogue, bucket_id = _captured_work_catalogue(None)
     if selector is not None:
-        _resolve_revision_for_resume_target(target=target, selector=selector, catalogue=catalogue, bucket_id=bucket_id)
+        _resolve_revision_for_resume_target(
+            target=target,
+            selector=selector,
+            catalogue=catalogue,
+            bucket_id=bucket_id,
+            ports=ports,
+        )
     return _resolve_resume_from_work_unit(
         resolve_modelo_work_address_unit(target.to_work_address(), catalogue=catalogue, bucket_id=bucket_id),
         source="work_unit_id",
@@ -462,6 +478,7 @@ def _resolve_resume_from_visible_target(
     registry_revision_id: RevisionId | None,
     bucket_id: str | None,
     selector: object | None,
+    ports: CalculationActionPorts,
 ) -> WorkflowResumeTargetResolution:
     from ..modelo.work_addressing import (
         ModeloExactWorkUnitTarget,
@@ -484,6 +501,7 @@ def _resolve_resume_from_visible_target(
             selector=selector,
             catalogue=catalogue,
             bucket_id=resolved_bucket_id,
+            ports=ports,
         )
         exact_target = ModeloExactWorkUnitTarget(work_unit_id=revision.work_unit_id)
         resolution = _resolve_resume_from_work_unit(
@@ -515,6 +533,7 @@ def _resolve_revision_for_resume_target(
     selector: object,
     catalogue: WorkUnitCatalogue,
     bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> ModeloResolvedRevisionProjection:
     from ..modelo.selectors import ModeloCalculationRevisionSelector
     from ..modelo.work_addressing import ModeloRevisionPick, resolve_modelo_revision_pick
@@ -535,6 +554,7 @@ def _resolve_revision_for_resume_target(
         pick=ModeloRevisionPick(selector=revision_selector),
         catalogue=catalogue,
         resolved_bucket_id=bucket_id,
+        calculation_repository=ports.calculation_repository,
     )
 
 

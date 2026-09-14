@@ -29,8 +29,8 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
-from ....tests.profile_capsule import load_test_profile_record, open_test_profile_session, replace_test_profile_record
-from ....tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, open_test_profile_session, replace_test_profile_record
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 __all__ = ["_isolated_backend"]
 

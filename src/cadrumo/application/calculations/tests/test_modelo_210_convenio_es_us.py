@@ -17,30 +17,26 @@ The 5%/0% dividend tiers and the art 11.2 interest exceptions are not modelled.
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.calculations.registry.authority import bundled_authority
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_us_dividend_resolves_treaty_ceiling_of_15_percent(tmp_path: Path) -> None:
+def test_us_dividend_resolves_treaty_ceiling_of_15_percent() -> None:
     """US-resident dividend: min(domestic 0.19, treaty 0.15) = 0.15 (art 10.2.b)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="US", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="US", base="1000.00")
 
     assert tipo == Decimal("0.15")
     assert cuota == Decimal("150.00")
 
 
-def test_us_interest_is_source_state_exempt(tmp_path: Path) -> None:
+def test_us_interest_is_source_state_exempt() -> None:
     """US-resident interest: source-state exemption (art 11.1) → 0."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="interest", country_code="US", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="interest", country_code="US", base="1000.00")
 
     assert tipo == Decimal("0")
     assert cuota == Decimal("0.00")

@@ -42,8 +42,8 @@ from ...domain.calculations.registry.profile_grounding import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
+from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
-from ...domain.deadlines.models import IrpfIncomeCategory
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
@@ -123,7 +123,7 @@ def _modelo_work_baseline_paths(record: UserProfileRecord, *, modelo: str | None
     income_categories = frozenset(
         token.strip() for token in values.get("taxpayer_type.irpf_income_categories", "").split(",") if token.strip()
     )
-    declares_economic_activity = IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value in income_categories
+    declares_economic_activity = irpf_income_category_actividad_economica_token().value in income_categories
     if modelo is None:
         if (
             values.get("taxpayer_type.entity_type") != entity_type_natural_person_token().value
@@ -313,7 +313,7 @@ def _report_for_target(
     )
 
 
-def _profile_activity_start_date(record: UserProfileRecord) -> date | None:
+def profile_activity_start_date(record: UserProfileRecord) -> date | None:
     """Read the effective ``censo.activity_start_date`` through the canonical projection.
 
     Which of several live facts at one path is *effective* is owned by
@@ -435,7 +435,7 @@ def pre_activity_period_refusal(
     modelo_code = modelo.strip()
     if modelo_code not in _PRE_ACTIVITY_LIFECYCLE_MODELOS or not period.has_date_span():
         return None
-    activity_start_date = _profile_activity_start_date(record)
+    activity_start_date = profile_activity_start_date(record)
     if activity_start_date is None:
         return None
     period_end_date = period.end_date
@@ -704,6 +704,7 @@ def require_profile_ready_for_work_unit(work_unit: WorkUnit, *, enforce_applicab
 __all__ = [
     "BLOCKING_APPLICABILITY_VERDICTS",
     "modelo_applicability_refusal",
+    "profile_activity_start_date",
     "modelo_work_profile_baseline_missing_paths",
     "modelo_work_profile_baseline_validation_issues",
     "modelo_work_profile_preflight_report",

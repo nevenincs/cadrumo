@@ -35,9 +35,10 @@ from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.calculations.relation_prefill import (
     RelationPrefillSourceResolver,
-    _scoped_relation_source_requirements,
+    scoped_relation_source_requirements,
     resolve_relations_from_local_store,
 )
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -102,6 +103,7 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         prefill = resolve_relations_from_local_store(snapshot, repository=repository)
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
+            profile_read_ports=empty_profile_read_ports(),
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
@@ -235,7 +237,7 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
     cross-modelo cold start.
 
     That rationale was measured and does not hold. Cold start is already handled
-    upstream: ``_scoped_relation_source_requirements`` removes source periods the
+    upstream: ``scoped_relation_source_requirements`` removes source periods the
     taxpayer had no obligation for, against the declared activity start, so a
     genuine first-ejercicio filer's carries never reach the advisory at all (pinned
     by the sibling first-ejercicio test in the Modelo 200 live module). What the
@@ -266,6 +268,7 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
+            profile_read_ports=empty_profile_read_ports(),
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
@@ -347,6 +350,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
         with caplog.at_level(logging.DEBUG, logger=logger_name):
             RelationPrefillSourceResolver(
                 repository=repository,
+                profile_read_ports=empty_profile_read_ports(),
                 registry_snapshot=snapshot,
             ).resolve(
                 CalculationSourceContext(
@@ -383,6 +387,7 @@ def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
+            profile_read_ports=empty_profile_read_ports(),
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
@@ -406,6 +411,7 @@ def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_pat
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
+            profile_read_ports=empty_profile_read_ports(),
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
@@ -457,6 +463,7 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
+            profile_read_ports=empty_profile_read_ports(),
             registry_snapshot=orphaned_snapshot,
         ).resolve(
             CalculationSourceContext(
@@ -489,6 +496,7 @@ def test_modelo_190_2025_empty_store_collapses_absent_m111_source_to_one_diagnos
         snapshot = _snapshot("190", 2025, "0A")
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
+            profile_read_ports=empty_profile_read_ports(),
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
@@ -541,7 +549,7 @@ def _m130_pagos_requirement(
     )
 
 
-def test_scoped_relation_source_requirements_drops_pre_activity_quarters() -> None:
+def testscoped_relation_source_requirements_drops_pre_activity_quarters() -> None:
     """A mid-year-start filer's pre-activity source quarters are scoped out of the fold (IRPF-1).
 
     Grounded in the activity-start first-filer rule (the same partition the
@@ -552,13 +560,13 @@ def test_scoped_relation_source_requirements_drops_pre_activity_quarters() -> No
     """
     snapshot = _snapshot("100", 2024, "0A")
     # Activity started 2024-04-01: 1T (ends 2024-03-31) is STRICTLY before it.
-    scoped = _scoped_relation_source_requirements(snapshot, date(2024, 4, 1))
+    scoped = scoped_relation_source_requirements(snapshot, date(2024, 4, 1))
     assert _m130_pagos_requirement(scoped).periods == ("2T", "3T", "4T")
     # Full-year filer (activity 2024-01-01): the alta-containing 1T is in scope; nothing dropped.
-    full = _scoped_relation_source_requirements(snapshot, date(2024, 1, 1))
+    full = scoped_relation_source_requirements(snapshot, date(2024, 1, 1))
     assert _m130_pagos_requirement(full).periods == ("1T", "2T", "3T", "4T")
     # None (fail-closed / non-operator context): no scoping.
-    none = _scoped_relation_source_requirements(snapshot, None)
+    none = scoped_relation_source_requirements(snapshot, None)
     assert _m130_pagos_requirement(none).periods == ("1T", "2T", "3T", "4T")
 
 

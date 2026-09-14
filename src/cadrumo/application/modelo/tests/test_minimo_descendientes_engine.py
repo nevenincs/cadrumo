@@ -7,18 +7,15 @@ the revision's own registry parameters, and the AUTONÓMICO aggregate,
 which resolves each birth-order tranche against the filer's declared
 tax-residence CCAA first — Comunidad de Madrid publishes its own divergent
 tranche amounts (Decreto Legislativo 1/2010, art. 2), every other CCAA mirrors
-the estatal aggregate exactly. Then :func:`resolve_profile_sourced_bindings`
-routes both aggregates into casillas 0513 (estatal) / 0514 (autonómico) via
-the ``renta-{year}-profile-minimo-descendientes-estatal`` /
-``-autonomico`` bindings, and finally the full calculate-path integration
-proves the registry formulas actually consume the injected aggregates end to
-end.
+the estatal aggregate exactly. The application cases below prove the injector
+routes both aggregates into the expected derived fact channels; profile-bound
+binding and full calculate-path integration are owned by the outward profile
+adapter test.
 
-Real adapters throughout: the resident registry authority for every loaded
-:class:`RegistrySnapshot`, a genuine encrypted bucket via
-``isolated_runtime_profile`` for the end-to-end calculate test, and
-:func:`descendant_facts_from_list` / :class:`ProfileRecordRepository`
-for the profile roundtrip — no mocks, stubs, or fakes. Expected euro amounts
+The engine and injector remain application policy tests: the resident registry
+authority is the canonical source for every loaded :class:`RegistrySnapshot`,
+while profile-bound persistence and calculate-path integration live in the
+outward profile adapter test owner. Expected euro amounts
 are read from the loaded revision's own ``renta-{year}-minimo-descendientes-*``
 parameters (including the Madrid-specific ``-madrid-*`` tranches), never
 hand-duplicated as a Decimal literal independent of the registry
@@ -29,25 +26,17 @@ revision's registry authoring drifted from the formula this engine consumes.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.contribuyente.descendant import DescendantInfo
-from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import seed_test_profile_record
-from ..profile_binding import inject_derived_minimo_descendientes_facts, resolve_profile_sourced_bindings
+from ..profile_binding import inject_derived_minimo_descendientes_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -248,120 +237,6 @@ def test_one_eligible_descendant_matches_registry_first_tranche_across_all_years
 
 
 # ---------------------------------------------------------------------------
-# End-to-end: profile-binding resolution routes the aggregate into the
-# Decimal channel the registry formula consumes.
-# ---------------------------------------------------------------------------
-
-
-_BUCKET = "00000000-0000-4000-8000-000000000516"
-_PROFILE_LABEL = "M100 minimo descendientes engine profile"
-_T0 = datetime(2026, 7, 2, 10, 0, tzinfo=UTC)
-
-
-def _binding_id_for_estatal(snapshot: RegistrySnapshot) -> str:
-    matches = [b.id for b in snapshot.revision.bindings if b.id.endswith("profile-minimo-descendientes-estatal")]
-    assert len(matches) == 1
-    return matches[0]
-
-
-def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
-        descendientes = (DescendantInfo(birth_date=date(2012, 4, 1)),)
-        facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        seed_test_profile_record(
-            UserProfileRecord(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=_BUCKET,
-                facts=tuple(facts),
-                created_at=_T0,
-                updated_at=_T0,
-            ),
-        )
-        snapshot = _snapshot(2024)
-        binding_id = _binding_id_for_estatal(snapshot)
-        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET)
-
-    tranches, _ = _registry_tranches(snapshot)
-    assert resolution.binding_values[binding_id] == tranches[0]
-
-
-def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_path: Path) -> None:
-    """Real profile descendientes feed 0513/0514 and the downstream cuota path.
-
-    The expected cuota is the LIRPF 2024 Art. 62-63 table oracle for a 35,400 EUR
-    general base and two descendants, one under 3:
-    tarifa(35400) - tarifa(13450) = 4,399.75 - 1,302.75 = 3,097.00 EUR.
-    """
-    snapshot = _snapshot(2024)
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
-        descendientes = (
-            DescendantInfo(birth_date=date(2015, 1, 1)),
-            DescendantInfo(birth_date=date(2023, 1, 15)),
-        )
-        facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        seed_test_profile_record(
-            UserProfileRecord(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=_BUCKET,
-                facts=(
-                    *facts,
-                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                    UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
-                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1975, 6, 15)),
-                    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-                ),
-                created_at=_T0,
-                updated_at=_T0,
-            ),
-        )
-        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET)
-
-    # 37,400 EUR in trabajo ingresos íntegros nets to a 35,400 EUR base after
-    # the 2,000 EUR Art. 19.2.f "otros gastos" deduction, matching the table
-    # oracle in test_modelo_100_tarifa_real.
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs={validated_casilla_id("0003", surface="test_minimo_descendientes_engine.casilla"): Decimal("37400")},
-        date_context={"filing_period": date(2024, 12, 31)},
-        binding_values={
-            **resolution.binding_values,
-            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
-            "renta-profile-guarderia-gastos-reales": Decimal("0"),
-            "renta-profile-incremento-guarderia": Decimal("0"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-            "renta-profile-descendientes-guarderia": Decimal("0"),
-            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
-        },
-        enum_binding_values=resolution.enum_binding_values,
-        date_binding_values=resolution.date_binding_values,
-        relation_values={
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
-            "renta-modelo-130-pagos-fraccionados": Decimal("0"),
-            "renta-modelo-131-pagos-fraccionados": Decimal("0"),
-        },
-    )
-
-    assert resolution.binding_values["renta-profile-minimo-descendientes-estatal"] == Decimal("7900.00")
-    assert resolution.binding_values["renta-profile-minimo-descendientes-autonomico"] == Decimal("7900.00")
-    assert result.values[validated_casilla_id("0513", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
-        "7900.00"
-    )
-    assert result.values[validated_casilla_id("0514", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
-        "7900.00"
-    )
-    assert result.values[validated_casilla_id("0545", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
-        "3097.00"
-    )
-
-
-# ---------------------------------------------------------------------------
 # The autonómico aggregate mirrors estatal by default; Madrid diverges.
 # ---------------------------------------------------------------------------
 
@@ -470,39 +345,3 @@ def test_madrid_resident_three_descendants_autonomico_exceeds_estatal() -> None:
         madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
         assert estatal_value == estatal_tranches[0] + estatal_tranches[1] + estatal_tranches[2], year
         assert autonomico_value == madrid_tranches[0] + madrid_tranches[1] + madrid_tranches[2], year
-
-
-def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channel(tmp_path: Path) -> None:
-    """End-to-end: a real Madrid profile resolves the autonómico binding to Madrid's own tercer tranche."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
-        descendientes = (
-            DescendantInfo(birth_date=date(2005, 1, 1)),
-            DescendantInfo(birth_date=date(2008, 1, 1)),
-            DescendantInfo(birth_date=date(2012, 1, 1)),
-        )
-        facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        seed_test_profile_record(
-            UserProfileRecord(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=_BUCKET,
-                facts=(*facts, UserProfileFact(path="tax_residence.ccaa", value="madrid")),
-                created_at=_T0,
-                updated_at=_T0,
-            ),
-        )
-        snapshot = _snapshot(2024)
-        estatal_binding_id = _binding_id_for_estatal(snapshot)
-        autonomico_binding_id = _binding_id_for_autonomico(snapshot)
-        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET)
-
-    estatal_tranches, _ = _registry_tranches(snapshot)
-    madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
-    expected_estatal = estatal_tranches[0] + estatal_tranches[1] + estatal_tranches[2]
-    expected_autonomico = madrid_tranches[0] + madrid_tranches[1] + madrid_tranches[2]
-    estatal_resolved = resolution.binding_values[estatal_binding_id]
-    autonomico_resolved = resolution.binding_values[autonomico_binding_id]
-    assert isinstance(estatal_resolved, Decimal), f"Expected Decimal, got {type(estatal_resolved)}"
-    assert isinstance(autonomico_resolved, Decimal), f"Expected Decimal, got {type(autonomico_resolved)}"
-    assert estatal_resolved == expected_estatal
-    assert autonomico_resolved == expected_autonomico
-    assert autonomico_resolved > estatal_resolved

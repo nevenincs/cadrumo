@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
-from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
@@ -24,18 +23,12 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
+from ..filing.draft_review_ports import DraftReviewPorts
 from .verification_repository_ports import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
-
-
-class BienesInversionIvaRegisterRepositoryProtocol(Protocol):
-    """Read-side contract for the persisted capital-goods IVA register."""
-
-    def load(self) -> BienesInversionIvaRegister:
-        """Return the register for the export target bucket."""
-        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +51,7 @@ class ModeloExportPorts:
     prorrata_register: ProrrataRegisterRepositoryProtocol
     bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol
     transaction: TransactionCatalogueRepositoryProtocol
+    draft_review_ports: DraftReviewPorts
 
 
 class ModeloExportPortsFactory(Protocol):
@@ -74,7 +68,6 @@ class ModeloExportPortsFactory(Protocol):
 
 
 __all__ = [
-    "BienesInversionIvaRegisterRepositoryProtocol",
     "ModeloExportPorts",
     "ModeloExportPortsFactory",
 ]

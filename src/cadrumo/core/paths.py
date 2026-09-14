@@ -318,7 +318,7 @@ def effective_storage_root(
     The single accessor for the "an explicit root override wins, otherwise
     fall back to ``Settings.cadrumo_local_storage_root``" fallback that six
     call sites across ``application/user_profile`` and
-    ``application/_config_reset_repository.py`` each re-implemented inline.
+    ``application/config_reset_repository.py`` each re-implemented inline.
     Comparing the six copies surfaced real drift, not just duplication: one
     normalised an override by calling bare :meth:`~pathlib.Path.resolve`,
     which for a *relative* override resolves against the process's current

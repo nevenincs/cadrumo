@@ -19,7 +19,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
 from ...core.i18n.translatable import Translatable as t
@@ -118,17 +117,16 @@ def aggregate_impatriado_income_ledger_from_repositories(
     target_casilla_id: CasillaId,
     source_jurisdictions: frozenset[str],
     eligible_income_categories: frozenset[str],
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> ImpatriadoIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate annual registry-admitted income.
 
-    When no protocol-compatible repository override is supplied, this loader uses
-    :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` scoped to
-    ``bucket_id``.
+    The caller supplies the bucket-bound transaction catalogue capability. The
+    application layer never constructs the persistence adapter.
 
     Returns an :class:`ImpatriadoIncomeLedgerAggregation`.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),

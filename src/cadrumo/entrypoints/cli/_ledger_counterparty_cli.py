@@ -58,6 +58,7 @@ from ._ledger_counterparty_payloads import (
 )
 from .common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from .common import bad, emit_envelope
+from .state_projection_support import counterparty_establishment_repository_factory
 
 if TYPE_CHECKING:
     from ...application.ledger.counterparty_establishment import (
@@ -124,6 +125,7 @@ def counterparty_confirm(
     )
 
     bucket_id = _counterparty_bucket_id()
+    repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
     asserted_by = actor or bucket_id or "operator"
     try:
         outcome = confirm_counterparty_establishment(
@@ -134,6 +136,7 @@ def counterparty_confirm(
             identification_state=identification_state,
             country_code=country_code,
             note=note,
+            repository=repository,
         )
     except ConfirmedCounterpartyFactsInputError as exc:
         raise bad(
@@ -199,10 +202,12 @@ def counterparty_withdraw(
         raise bad(
             tr("cli.ledger.counterparty.errors.unverifiable_identifier", identifier=tax_identifier),
         )
+    repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
     withdrawn = forget_confirmed_counterparty_facts(
         bucket_id=bucket_id,
         tax_identifier=tax_identifier,
         country_code=country_code,
+        repository=repository,
     )
     notices: list[Notice] = []
     if not withdrawn:
@@ -344,11 +349,14 @@ def counterparty_view(
     """
     from ...application.ledger.counterparty_establishment import resolve_confirmed_counterparty_facts
 
+    bucket_id = _counterparty_bucket_id()
+    repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
     resolution = resolve_confirmed_counterparty_facts(
-        bucket_id=_counterparty_bucket_id(),
+        bucket_id=bucket_id,
         tax_identifier=tax_identifier,
         country_code=country_code,
         evidenced_scope=evidenced_scope,
+        repository=repository,
     )
     notices = _counterparty_view_notices(tax_identifier, resolution)
     emit_envelope(

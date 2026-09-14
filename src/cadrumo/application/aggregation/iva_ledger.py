@@ -15,9 +15,8 @@ carries :class:`IvaLedgerProrrataApportionment`. The binding resolver applies
 that percentage only to deducible IVA cuota bindings; bases and output IVA
 cuotas stay unapportioned.
 
-The repository-backed entry point constructs a
-:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` for the active
-bucket when none is supplied. Pre-classified callers can use
+The repository-backed entry point requires the application-owned transaction
+catalogue capability for the active bucket. Pre-classified callers can use
 :class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidate_bindings`
 to run the same validation and registry binding path.
 
@@ -46,7 +45,6 @@ from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.decimal.constants import HUNDRED
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
@@ -58,7 +56,6 @@ from ...core.period import Period
 from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
-    regime_apportions_deduction,
 )
 from ...core.prose_elision import IssueDetail
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
@@ -66,8 +63,26 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.iva_schema_vocabulary import require_iva_cash_accounting_treatment, require_iva_exemption_article
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
+from ...domain.calculations.registry.iva_deduction_catalogue import (
+    is_iva_deduction_kind,
+    iva_deduction_fact_kinds,
+)
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    especial_prorrata_register_regime,
+    general_prorrata_register_regime,
+    ninguna_prorrata_register_regime,
+    regime_apportions_deduction,
+)
+from ...domain.calculations.registry.prorrata_vocabulary import (
+    default_input_classification,
+    input_classification_tokens,
+    require_input_classification,
+)
+from ...domain.calculations.registry.iva_schema_vocabulary import (
+    require_iva_cash_accounting_treatment,
+    require_iva_exemption_article,
+)
 from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -77,7 +92,7 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.iva.classification import IvaTerritorialScope
+from ...domain.iva.classification import iva_territorial_scope_alias
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ...domain.iva.errors import ProrrataInputError
 from ...domain.iva.establishment import (
@@ -101,6 +116,7 @@ from ...domain.iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
     default_iva_cash_accounting_treatment,
+    spanish_eu_member_state,
 )
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister
@@ -266,7 +282,7 @@ class IvaLedgerSectorApportionment(BaseModel):
 
     sector_id: str = Field(min_length=1, max_length=64)
     percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
-    regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL
+    regime: ProrrataRegisterRegime = Field(default_factory=general_prorrata_register_regime)
 
 
 class IvaLedgerProrrataApportionment(BaseModel):
@@ -281,7 +297,7 @@ class IvaLedgerProrrataApportionment(BaseModel):
 
     When ``sector_apportionments`` is non-empty (LIVA arts. 9.1.c / 101), every
     sector-owned input carries one exact declared sector. Cross-sector common
-    use is represented only by explicit :attr:`InputClassification.COMMON`;
+    use is represented only by the registry-declared mixed-use token;
     a bare missing sector never defaults to common. Empty
     ``sector_apportionments`` is the whole-entity register.
 
@@ -297,7 +313,7 @@ class IvaLedgerProrrataApportionment(BaseModel):
 
     percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
     provenance: ProrrataProvisionalProvenance
-    regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL
+    regime: ProrrataRegisterRegime = Field(default_factory=general_prorrata_register_regime)
     source_observation_ref: str | None = Field(default=None, min_length=1)
     authorisation_reference: str | None = Field(default=None, min_length=1)
     sector_apportionments: tuple[IvaLedgerSectorApportionment, ...] = ()
@@ -385,6 +401,14 @@ class IvaLedgerCandidate(BaseModel):
     observation_role: IvaLedgerObservationRole
     input_classification: InputClassification | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
+
+    @field_validator("input_classification", mode="before")
+    @classmethod
+    def _require_registry_input_classification(cls, value: object) -> object:
+        """Accept only art. 106 tokens declared by the selected 0116 fact."""
+        if value is None or isinstance(value, InputClassification):
+            return value
+        return require_input_classification(value)
 
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
@@ -485,7 +509,8 @@ class IvaLedgerAggregation(BaseModel):
         rectified_ids = [
             observation.rectifies_ledger_id
             for observation in self.observations
-            if observation.deduction_fact_kind is IvaDeductionFactKind.RECTIFICATION
+            if observation.deduction_fact_kind is not None
+            and is_iva_deduction_kind(observation.deduction_fact_kind, "kind.rectification")
         ]
         if len(rectified_ids) != len(set(rectified_ids)):
             raise AggregationValidationError(
@@ -521,7 +546,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     bucket_id: str,
     period: Period,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     investment_asset_register: BienesInversionIvaRegister | None = None,
     investment_asset_profile_id: str | None = None,
 ) -> IvaLedgerAggregation:
@@ -537,8 +562,7 @@ def aggregate_iva_ledger_observations_from_repositories(
             the active general-prorrata provisional percentage. Required, so no
             caller can fall back to an implicitly constructed register whose
             bucket nobody checked.
-        transaction_repository: Catalogue repository; defaults to the bucket's
-            own, which also supplies the bienes-inversion authority.
+        transaction_repository: Required bucket-bound catalogue capability.
         investment_asset_register: Bienes-inversion authority, mandatory
             whenever ``transaction_repository`` is injected.
         investment_asset_profile_id: Profile owning that register.
@@ -551,23 +575,7 @@ def aggregate_iva_ledger_observations_from_repositories(
                 "repository_bucket_id": prorrata_register_repository.bucket_id,
             },
         )
-    if transaction_repository is None:
-        concrete_repository = TransactionCatalogueRepository(bucket_id=bucket_id)
-        investment_asset_register = concrete_repository.migrate_iva_deduction_authority(asset_profile_id=bucket_id)
-        repository: TransactionCatalogueRepositoryProtocol = concrete_repository
-        investment_asset_profile_id = bucket_id
-    else:
-        repository = transaction_repository
-        if repository.bucket_id != bucket_id:
-            raise AggregationValidationError(
-                t("aggregation.iva_ledger.errors.bucket_mismatch"),
-                context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
-            )
-        if investment_asset_register is None or investment_asset_profile_id is None:
-            raise AggregationValidationError(
-                t("aggregation.iva_ledger.errors.injected_repositories_missing_bienes_inversion_authority"),
-                context={"bucket_id": bucket_id},
-            )
+    repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
@@ -628,7 +636,8 @@ def _validate_investment_asset_authority(
 ) -> None:
     """Require explicit owner inputs before an investment fact can aggregate."""
     has_investment_observation = any(
-        observation.deduction_fact_kind is not None and observation.deduction_fact_kind.is_investment_acquisition
+        observation.deduction_fact_kind is not None
+        and is_iva_deduction_kind(observation.deduction_fact_kind, "kind.investment_acquisition")
         for observation in observations
     )
     if not has_investment_observation and investment_asset_register is None:
@@ -925,7 +934,7 @@ def resolve_iva_ledger_binding_values(
             binding_values,
             prorrata_apportionment,
         )
-    if prorrata_apportionment.regime is ProrrataRegisterRegime.ESPECIAL:
+    if prorrata_apportionment.regime == especial_prorrata_register_regime():
         return _apply_especial_apportionment(
             revision,
             observations,
@@ -995,16 +1004,16 @@ def _partition_by_input_classification(
 ) -> dict[InputClassification, list[IvaLedgerObservation]]:
     """Bucket ``observations`` by their art. 106 input classification.
 
-    An unclassified observation defaults to :attr:`InputClassification.COMMON`
+    An unclassified observation defaults to the registry-declared mixed-use token
     (the mixed-use default). Shared by the general especial-regime
     apportionment and the per-partition primitive so both partition
     identically.
     """
     partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
-        classification: [] for classification in InputClassification
+        classification: [] for classification in input_classification_tokens()
     }
     for observation in observations:
-        classification = observation.input_classification or InputClassification.COMMON
+        classification = observation.input_classification or default_input_classification()
         partitions[classification].append(observation)
     return partitions
 
@@ -1029,7 +1038,7 @@ def _apportioned_deducible_cuota(
     sector.
     """
     result: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
-    if regime is ProrrataRegisterRegime.ESPECIAL:
+    if regime == especial_prorrata_register_regime():
         partitions = _partition_by_input_classification(observations)
         for classification, partition_observations in partitions.items():
             if not partition_observations:
@@ -1136,7 +1145,7 @@ def _append_common_sector_observation(
     partitions: dict[str | None, list[IvaLedgerObservation]],
     observation: IvaLedgerObservation,
 ) -> None:
-    if observation.input_classification is not InputClassification.COMMON:
+    if observation.input_classification != default_input_classification():
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.sectorized_input_missing_sector_identity"),
             context={"ledger_id": observation.ledger_id},
@@ -1153,7 +1162,7 @@ def _active_sector_apportionment(
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.sectorized_input_unknown_sector"), context={"sector_id": sector_key}
         )
-    if sector.regime is ProrrataRegisterRegime.NINGUNA:
+    if sector.regime == ninguna_prorrata_register_regime():
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.sectorized_input_inactive_sector"), context={"sector_id": sector_key}
         )
@@ -1164,7 +1173,7 @@ def _require_sector_input_classification(
     sector: IvaLedgerSectorApportionment,
     observation: IvaLedgerObservation,
 ) -> None:
-    if sector.regime is ProrrataRegisterRegime.ESPECIAL and observation.input_classification is None:
+    if sector.regime == especial_prorrata_register_regime() and observation.input_classification is None:
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.sectorized_especial_missing_input_classification"),
             context={"sector_id": sector.sector_id, "ledger_id": observation.ledger_id},
@@ -1198,8 +1207,7 @@ def resolve_iva_differentiated_deduction_contributions(
     return tuple(
         _differentiated_sector_contribution(revision, rows, sector_id, sector, kind, deducible_binding_ids)
         for sector_id, sector in by_sector.items()
-        for kind in IvaDeductionFactKind
-        if kind is not IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
+        for kind in iva_deduction_fact_kinds(effective_date=revision.valid_from)
     )
 
 
@@ -1207,7 +1215,11 @@ def _validate_differentiated_observation_identities(rows: tuple[IvaLedgerObserva
     ledger_ids = tuple(row.ledger_id for row in rows)
     if len(ledger_ids) != len(set(ledger_ids)):
         raise ValueError("differentiated deduction observations contain duplicate ledger identity")
-    if any(row.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION for row in rows):
+    if any(
+        row.deduction_fact_kind is not None
+        and is_iva_deduction_kind(row.deduction_fact_kind, "kind.owner_only")
+        for row in rows
+    ):
         raise ValueError("investment-goods regularisation is owned only by the bienes-inversion register")
 
 
@@ -1233,9 +1245,9 @@ def _validate_differentiated_sector_row(
     if sector_id is None:
         raise ValueError("differentiated deduction observation is missing explicit sector identity")
     sector = by_sector[sector_id]
-    if sector.regime is ProrrataRegisterRegime.NINGUNA:
+    if sector.regime == ninguna_prorrata_register_regime():
         raise ValueError(f"differentiated deduction sector {sector.sector_id!r} is inactive")
-    if sector.regime is ProrrataRegisterRegime.ESPECIAL and row.input_classification is None:
+    if sector.regime == especial_prorrata_register_regime() and row.input_classification is None:
         raise ValueError("common-use classification must be explicit under differentiated prorrata especial")
 
 
@@ -1247,7 +1259,7 @@ def _differentiated_sector_contribution(
     kind: IvaDeductionFactKind,
     deducible_binding_ids: frozenset[str],
 ) -> IvaDifferentiatedDeductionContribution:
-    selected = tuple(row for row in rows if row.prorrata_sector_id == sector_id and row.deduction_fact_kind is kind)
+    selected = tuple(row for row in rows if row.prorrata_sector_id == sector_id and row.deduction_fact_kind == kind)
     apportioned = _apportioned_deducible_cuota(
         revision,
         selected,
@@ -1398,7 +1410,7 @@ def compute_annual_deducible_totals_by_regime(
     ejercicio: int,
     revision: ModeloRevision,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> AnnualDeducibleTotalsByRegime | None:
     """Compute the ejercicio's deducible IVA cuota under both prorrata regimes.
 
@@ -1428,8 +1440,7 @@ def compute_annual_deducible_totals_by_regime(
         ejercicio: The filing year whose annual deducible totals are computed.
         revision: The target :class:`ModeloRevision` whose deducible cuota
             bindings are summed.
-        transaction_repository: Optional catalogue repository (defaults to the
-            active bucket's).
+        transaction_repository: Required bucket-bound catalogue capability.
         prorrata_register_repository: Canonical register repository for the
             same bucket as the transaction catalogue.
 
@@ -1457,8 +1468,8 @@ def compute_annual_deducible_totals_by_regime(
     if not deducible_binding_ids:
         return None
     observations = tuple(aggregation.observations)
-    general_apportionment = apportionment.model_copy(update={"regime": ProrrataRegisterRegime.GENERAL})
-    especial_apportionment = apportionment.model_copy(update={"regime": ProrrataRegisterRegime.ESPECIAL})
+    general_apportionment = apportionment.model_copy(update={"regime": general_prorrata_register_regime()})
+    especial_apportionment = apportionment.model_copy(update={"regime": especial_prorrata_register_regime()})
     general_values = resolve_iva_ledger_binding_values(
         revision,
         observations,
@@ -1517,7 +1528,9 @@ def _registry_export_categories() -> frozenset[IvaCategory]:
     if raw_categories is None:
         raise ValueError("IVA classification catalogue is missing counterparty.export_categories")
     try:
-        categories = frozenset(require_iva_category(token.strip()) for token in raw_categories.split(",") if token.strip())
+        categories = frozenset(
+            require_iva_category(token.strip()) for token in raw_categories.split(",") if token.strip()
+        )
     except ValueError as exc:
         raise ValueError("IVA classification catalogue contains an unknown export category") from exc
     if not categories:
@@ -1550,7 +1563,7 @@ def _export_establishment_is_answerable(counterparty_country: str | None) -> boo
     ISO-unassigned pair, each of which genuinely establishes nothing about
     where the party is.
     """
-    if territorial_scope_for_country(counterparty_country) is IvaTerritorialScope.THIRD_COUNTRY:
+    if territorial_scope_for_country(counterparty_country) == iva_territorial_scope_alias("third_country"):
         return True
     return stated_country_code_status(counterparty_country) is StatedCountryCodeStatus.UNCATALOGUED
 
@@ -1595,7 +1608,7 @@ def validate_intracom_export_counterparty(
                     "aggregation.iva_ledger.errors.missing_counterparty_identification_state",
                 ),
             )
-        if identification_state is EUMemberState.ES:
+        if identification_state == spanish_eu_member_state():
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
@@ -1742,7 +1755,7 @@ def iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
     would separate them. Callers that must report the rate itself carry it
     separately on the observation.
     """
-    matched = rate_kinds_for_declared_rate(EUMemberState.ES, rate, on_date)
+    matched = rate_kinds_for_declared_rate(spanish_eu_member_state(effective_date=on_date), rate, on_date)
     return matched[0] if matched else None
 
 

@@ -28,11 +28,37 @@ from ._record_field_renderer import (
     m303_complementaria_marker,
     m303_no_activity_marker,
     projection_field_value,
-    render_record,
+    render_record as _render_record_fields,
 )
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow, RenderedRecordOccurrence
+
+
+def render_record(
+    record: ExportRecordDefinition,
+    *,
+    draft: ModeloDraft,
+    producer_values: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
+    casilla_values: dict[CasillaId, object],
+    binding_values: dict[tuple[BindingId, int | None], object],
+    row: RecordRenderRow,
+    render_context: FilingRecordRenderContext | None,
+    projection_values: Mapping[ProjectionAddress, object],
+) -> str:
+    """Render one registry record through the canonical field renderer."""
+    return _render_record_fields(
+        record,
+        draft=draft,
+        producer_values=producer_values,
+        producer_snapshot=producer_snapshot,
+        casilla_values=casilla_values,
+        binding_values=binding_values,
+        row=row,
+        render_context=render_context,
+        projection_values=projection_values,
+    )
 
 
 def render_layout_records(

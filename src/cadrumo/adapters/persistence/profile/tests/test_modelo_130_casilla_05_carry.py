@@ -42,6 +42,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -297,6 +298,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
         filing_repository=ModeloRecordCatalogueRepository(),
         calculation_repository=CalculationRevisionCatalogueRepository(),
         verification_repository=VerificationReportCatalogueRepository(),
+        justificante_repository=JustificanteRepository(),
         activity_start_date=date(2026, 4, 15),
     )
 

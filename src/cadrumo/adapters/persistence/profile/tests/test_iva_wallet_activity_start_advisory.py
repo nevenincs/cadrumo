@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
-from cadrumo.tests.profile_capsule import load_test_profile_record, replace_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.application.modelo.iva_wallet_gate import lazily_reconcile_local_iva_compensation_for_work_unit
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (

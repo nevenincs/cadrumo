@@ -52,7 +52,7 @@ from ....application.user_profile.overview import ProfileOverview, build_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.time.clock import now
-from ....tests.profile_capsule import load_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ..components.host import ScreenHostApp
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal

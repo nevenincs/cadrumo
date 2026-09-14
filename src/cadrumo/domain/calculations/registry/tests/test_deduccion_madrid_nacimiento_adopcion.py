@@ -31,7 +31,6 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from .scenarios import (
     RegistryCalculationScenario,
@@ -42,8 +41,6 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 _CASILLA_1039: CasillaId = validated_casilla_id("1039", surface="_CASILLA_1039")
 _LEGAL_REFS = ("ley-35-2006:art-77", "madrid-dl-1-2010:art-4", "madrid-dl-1-2010:art-18")
 _SOURCE_REFS = (
@@ -111,7 +108,7 @@ def _scenario(
 
 
 def _run(scenario: RegistryCalculationScenario) -> None:
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 

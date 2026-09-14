@@ -7,15 +7,12 @@ from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ....core.irnr import TipoRentaIrnr
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-
 
 _FACT_ID = "detail-m349-m210-catalogues"
 _ORDER_KEY = "m210.tipo_renta.order"
@@ -24,6 +21,7 @@ _CODE_PROJECTION_ORDER_KEY = "m210.tipo_renta.code_projection_order"
 _FETCH_GATED_KEY = "m210.tipo_renta.fetch_gated_codes"
 _PREFIX = "m210.tipo_renta."
 _PENSION_VALUE_KEY = "m210.tipo_renta.pension.value"
+_INMOBILIARIA_VALUE_KEY = "m210.tipo_renta.inmobiliaria.value"
 
 
 @dataclass(frozen=True, slots=True)
@@ -308,6 +306,20 @@ def tipo_renta_pension_token(
     )
 
 
+def tipo_renta_inmobiliaria_token(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> TipoRentaIrnr:
+    """Return the real-estate income token declared by fact 0080."""
+    entries = _selected_entries(effective_date=effective_date, authority=authority)
+    return require_tipo_renta_irnr(
+        _required(entries, _INMOBILIARIA_VALUE_KEY),
+        effective_date=effective_date,
+        authority=authority,
+    )
+
+
 __all__ = [
     "M210TipoRentaCodeDefinition",
     "TipoRentaIrnrCatalogue",
@@ -316,5 +328,6 @@ __all__ = [
     "m210_tipo_renta_code_projection",
     "require_tipo_renta_irnr",
     "resolve_tipo_renta_irnr_catalogue",
+    "tipo_renta_inmobiliaria_token",
     "tipo_renta_pension_token",
 ]

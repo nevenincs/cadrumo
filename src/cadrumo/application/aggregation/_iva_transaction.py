@@ -20,7 +20,11 @@ from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
+from ...domain.iva.flow import (
+    IvaFlowDirection,
+    derive_flow_for_classification,
+    received_flow_direction,
+)
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import (
     IvaCashAccountingTreatment,
@@ -625,7 +629,7 @@ def _resolve_iva_prorrata_attachment(
         return None, raw_reference, None
     if raw_reference is None:
         return None, None, None
-    if flow_direction is not IvaFlowDirection.SOPORTADO:
+    if flow_direction != received_flow_direction():
         return (
             None,
             IvaLedgerAggregationIssue(

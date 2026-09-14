@@ -10,19 +10,24 @@ the logic lived in the CLI adapter.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....domain.buckets.event import BucketEventHistoryCatalogue
+from ....domain.transactions.models import (
+    LedgerDatePartition,
+    OutOfWindowTransactionIndexEntry,
+    OutOfWindowTransactionSummary,
+    Transaction,
+    TransactionCatalogue,
+)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..history_query import (
     LEDGER_EVIDENCE_HISTORY_EVENT_TYPES,
@@ -37,6 +42,68 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET = "33333333-3333-4333-8333-333333333333"
 _PRIOR = "d" * 64
 _SIBLING = "e" * 64
+
+
+class _EmptyBucketEventHistory:
+    """Inward read fake for history tests that do not seed events."""
+
+    def load(self) -> BucketEventHistoryCatalogue:
+        return BucketEventHistoryCatalogue()
+
+
+class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
+    """Deterministic inward fake for the history transaction read port."""
+
+    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
+        self._bucket_id = bucket_id
+        self._catalogue = catalogue
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    def exists(self) -> bool:
+        return bool(self._catalogue.transactions)
+
+    def load(self) -> TransactionCatalogue:
+        return self._catalogue
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        return TransactionCatalogue.from_transactions(
+            transaction
+            for transaction in self._catalogue
+            if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
+        )
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        requested = frozenset(transaction_ids)
+        return TransactionCatalogue.from_transactions(
+            transaction for transaction in self._catalogue if transaction.transaction_id in requested
+        )
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        in_window: list[Transaction] = []
+        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+        for transaction in self._catalogue:
+            filing_date = transaction.raw.value_date or transaction.raw.booked_date
+            if start <= filing_date <= end:
+                in_window.append(transaction)
+            else:
+                out_of_window.append(
+                    OutOfWindowTransactionIndexEntry(
+                        transaction_id=transaction.transaction_id,
+                        filing_date=filing_date,
+                    ),
+                )
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue.from_transactions(in_window),
+            out_of_window=tuple(out_of_window),
+            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
+            index_complete=True,
+        )
+
+    def save(self, catalogue: TransactionCatalogue) -> None:
+        self._catalogue = catalogue
 
 
 def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> Transaction:
@@ -73,12 +140,12 @@ def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> 
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueRepository]:
-    """Persist rows through the real repository the read requires."""
-    with TemporaryDirectory() as tmp, isolated_runtime_profile(tmp_path=Path(tmp), bucket_id=_BUCKET) as profile:
-        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        repository.save(TransactionCatalogue.from_transactions(transactions))
-        yield TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueRepositoryProtocol]:
+    """Build a deterministic catalogue through the application read protocol."""
+    yield _InMemoryTransactionRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions(transactions),
+    )
 
 
 def test_the_anchor_set_is_the_transaction_itself_when_it_has_no_lineage() -> None:
@@ -132,6 +199,7 @@ def test_a_history_read_reports_its_anchors_and_a_consistent_count() -> None:
             LedgerHistoryQuery(transaction_id=transaction.transaction_id),
             bucket_id=_BUCKET,
             transaction_repository=repository,
+            bucket_event_repository=_EmptyBucketEventHistory(),
         )
 
     assert history.bucket_id == _BUCKET
@@ -148,6 +216,7 @@ def test_the_assembled_chain_is_ordered_by_occurrence() -> None:
             LedgerHistoryQuery(transaction_id=transaction.transaction_id),
             bucket_id=_BUCKET,
             transaction_repository=repository,
+            bucket_event_repository=_EmptyBucketEventHistory(),
         )
 
     occurred = [event.occurred_at for event in history.events]

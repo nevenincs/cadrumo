@@ -21,7 +21,7 @@ See Also:
         Application primitive behind the CLI ``encrypt-feedback`` verb.
     :func:`~application.modelo.emit_collab_feedback_countersign_attached_event`
         Journal hook asserted after verified countersignature import.
-    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+    :class:`~adapters.persistence.profile.review_package_recipient_registry.RecipientFingerprintRegistryAdapter`
         Encrypted recipient public-key registry used to address the originator.
     :func:`~entrypoints.cli._modelo_review_package_cli.review_package_encrypt_feedback`
         CLI verb that seals feedback for the originator.
@@ -46,17 +46,18 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
+from ....adapters.persistence.profile.review_package_recipient_registry import build_recipient_fingerprint_registry_ports
 from ....application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
 )
-from ....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
+from ....application.modelo.review_package_recipient_registry import add_recipient_fingerprint
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.values import UserProfileFact
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, set_active_test_profile_facts
 from ._modelo_review_package_support import build_review_package_via_cli
 from .cli_runner import invoke_cached_cli
 
@@ -116,8 +117,11 @@ def _register_originator(recipient_id: str) -> str:
         recipient_encryption=RecipientEncryptionAdapter(repository=repository, bucket_id=_BUCKET_ID),
     )
     public_key = keypair
-    registry = RecipientFingerprintRegistryRepository(bucket_id=_BUCKET_ID)
-    registry.add(recipient_id=recipient_id, public_key_hex=public_key.public_key_hex)
+    add_recipient_fingerprint(
+        recipient_id=recipient_id,
+        public_key_hex=public_key.public_key_hex,
+        ports=build_recipient_fingerprint_registry_ports(bucket_id=_BUCKET_ID),
+    )
     return public_key.public_key_hex
 
 

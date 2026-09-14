@@ -46,11 +46,9 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -142,7 +140,7 @@ def _calculate_193(
     return result, aggregation
 
 
-def test_engine_computed_summary_totals_match_the_fixture_constants(tmp_path: Path) -> None:
+def test_engine_computed_summary_totals_match_the_fixture_constants() -> None:
     """Sanity anchor: the real engine reproduces the hand-derived relation sums + the aggregation count.
 
     Not the parity gate itself (covered below) — this pins that the fixture's
@@ -151,11 +149,10 @@ def test_engine_computed_summary_totals_match_the_fixture_constants(tmp_path: Pa
     parity tests below check the gate against real engine output, not against
     a number this test author invented independently of the registry formula.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        result, aggregation = _calculate_193(
-            relation_values=_RELATION_VALUES,
-            retencion_observations=_CONSISTENT_RETENCION_OBSERVATIONS,
-        )
+    result, aggregation = _calculate_193(
+        relation_values=_RELATION_VALUES,
+        retencion_observations=_CONSISTENT_RETENCION_OBSERVATIONS,
+    )
 
     assert result.values[_M193_BASE_TOTAL_CASILLA] == _EXPECTED_BASE_TOTAL
     assert result.values[_M193_RETENCIONES_TOTAL_CASILLA] == _EXPECTED_RETENCIONES_TOTAL
@@ -165,13 +162,12 @@ def test_engine_computed_summary_totals_match_the_fixture_constants(tmp_path: Pa
     assert aggregation.total_retencion == _EXPECTED_RETENCIONES_TOTAL
 
 
-def test_totals_parity_passes_when_retencion_store_reconstructs_the_summary(tmp_path: Path) -> None:
+def test_totals_parity_passes_when_retencion_store_reconstructs_the_summary() -> None:
     """A complete per-perceptor retención store that sums to the engine's summary totals is consistent."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        result, aggregation = _calculate_193(
-            relation_values=_RELATION_VALUES,
-            retencion_observations=_CONSISTENT_RETENCION_OBSERVATIONS,
-        )
+    result, aggregation = _calculate_193(
+        relation_values=_RELATION_VALUES,
+        retencion_observations=_CONSISTENT_RETENCION_OBSERVATIONS,
+    )
 
     parity = compute_retenciones_totals_parity(
         aggregation,
@@ -188,7 +184,7 @@ def test_totals_parity_passes_when_retencion_store_reconstructs_the_summary(tmp_
     assert parity.retenciones_aggregation_total == _EXPECTED_RETENCIONES_TOTAL
 
 
-def test_totals_parity_catches_a_dropped_perceptor_row(tmp_path: Path) -> None:
+def test_totals_parity_catches_a_dropped_perceptor_row() -> None:
     """Dropping one perceptor's row under-declares the store-level total below the resumen summary casilla.
 
     Grounded regression for the totals-parity gap: prior to this gate, the
@@ -198,18 +194,17 @@ def test_totals_parity_catches_a_dropped_perceptor_row(tmp_path: Path) -> None:
     per-perceptor entry (a data-loss bug, an incomplete import, or a tampered
     payer export) produced no finding at all.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        # Same real engine calculation (same relation-derived summary totals)
-        # as the consistent case, but the retención store detail omits
-        # Perceptor Two entirely.
-        result, _ = _calculate_193(
-            relation_values=_RELATION_VALUES,
-            retencion_observations=_CONSISTENT_RETENCION_OBSERVATIONS,
-        )
-        incomplete_aggregation = aggregate_retenciones_193(
-            _CONSISTENT_RETENCION_OBSERVATIONS[:1],
-            period=Period.from_year_and_code(_FILING_YEAR, "0A"),
-        )
+    # Same real engine calculation (same relation-derived summary totals)
+    # as the consistent case, but the retención store detail omits
+    # Perceptor Two entirely.
+    result, _ = _calculate_193(
+        relation_values=_RELATION_VALUES,
+        retencion_observations=_CONSISTENT_RETENCION_OBSERVATIONS,
+    )
+    incomplete_aggregation = aggregate_retenciones_193(
+        _CONSISTENT_RETENCION_OBSERVATIONS[:1],
+        period=Period.from_year_and_code(_FILING_YEAR, "0A"),
+    )
 
     parity = compute_retenciones_totals_parity(
         incomplete_aggregation,

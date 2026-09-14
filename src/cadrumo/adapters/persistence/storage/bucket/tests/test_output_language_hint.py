@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ......core.external_constants import OutputLanguage
-from ......tests.bucket_layout import provision_bucket_directory
+from ......adapters.persistence.storage.bucket.tests.bucket_layout import provision_bucket_directory
 from ..output_language_hint import (
     bucket_output_language_hint_path,
     clear_bucket_output_language_hint,

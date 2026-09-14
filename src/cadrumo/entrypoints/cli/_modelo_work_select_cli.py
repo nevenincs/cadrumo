@@ -15,6 +15,7 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
+from .state_projection_support import work_lifecycle_ports_factory
 
 __all__ = ["work_select"]
 
@@ -28,7 +29,15 @@ def work_select(
     """List modelo work units through the scripted command surface."""
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
-    units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
+    from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
+
+    units = list_work_units(
+        bucket_id=bucket_id,
+        include_discarded=include_discarded,
+        ports=work_lifecycle_ports_factory(ctx)(
+            bucket_id=resolve_explicit_or_active_bucket_id(bucket_id),
+        ),
+    )
 
     result = WorkSelectResult.model_validate(
         {

@@ -83,13 +83,13 @@ from ....core.aggregation import LedgerIncomeGrounding
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -364,11 +364,7 @@ def _scenario(
 
 
 def _run(scenario: RegistryCalculationScenario) -> RegistryScenarioRunReport:
-    return run_registry_calculation_scenario(
-        scenario,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-    )
+    return run_registry_calculation_scenario(scenario)
 
 
 def test_the_ingresos_casilla_is_bound_not_a_hand_typed_input() -> None:

@@ -230,7 +230,10 @@ def work_verify(
         default_for="verify",
         calculation_ports=calculation_ports,
     )
-    selected_work_unit = get_work_unit(selected_revision.work_unit_id)
+    selected_work_unit = get_work_unit(
+        selected_revision.work_unit_id,
+        ports=calculation_ports.work_lifecycle_ports,
+    )
     require_profile_ready_for_work_unit(selected_work_unit)
     workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
     already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
@@ -253,7 +256,10 @@ def work_verify(
     ]
     notices = verification_report_notices(report)
     plazo_resolution = calculated_m210_plazo_resolution(
-        work_unit=get_work_unit(selected_revision.work_unit_id),
+        work_unit=get_work_unit(
+            selected_revision.work_unit_id,
+            ports=calculation_ports.work_lifecycle_ports,
+        ),
         revision=selected_revision,
         workflow_profile=workflow_profile,
     )
@@ -313,6 +319,7 @@ def work_dependencies(
                 filing_repository=verification_repositories.filing,
                 calculation_repository=verification_repositories.calculation,
                 verification_repository=verification_repositories.verification,
+                justificante_repository=verification_repositories.justificante,
                 expected_member_sets=_profile_expected_member_sets(workflow_profile),
                 taxpayer_tax_id=workflow_profile.tax_id,
                 activity_start_date=workflow_profile.activity_start_date,
@@ -369,7 +376,10 @@ def work_file(
         default_for="file",
         calculation_ports=calculation_ports,
     )
-    selected_work_unit = get_work_unit(selected_revision.work_unit_id)
+    selected_work_unit = get_work_unit(
+        selected_revision.work_unit_id,
+        ports=calculation_ports.work_lifecycle_ports,
+    )
     require_profile_ready_for_work_unit(selected_work_unit)
     workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
     filing_ports = filing_action_ports_factory(ctx)(bucket_id=selected_work_unit.bucket_id)

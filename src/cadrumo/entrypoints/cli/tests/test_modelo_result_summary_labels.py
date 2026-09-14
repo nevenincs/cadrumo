@@ -8,6 +8,9 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....application.modelo.result_summary import calculation_result_summary
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
@@ -22,8 +25,12 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from .._modelo_rendering import result_summary_lines, result_summary_payload
+from .._modelo_rendering import (
+    calculation_revision_lines,
+    calculation_revision_payload,
+    result_summary_lines,
+    result_summary_payload,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -112,15 +119,15 @@ def test_result_summary_rows_render_requested_localized_label() -> None:
     revision = _m130_revision(work_unit)
 
     with override_settings(cadrumo_output_language="es"):
-        summary = calculation_result_summary(revision)
+        summary = calculation_result_summary(revision, work_unit=work_unit)
         assert summary is not None
         row = next(item for item in summary.rows if item.casilla_id == "03")
         assert row.label == "Rendimiento neto"
         assert "localized_labels" not in row.model_dump()
 
     with override_settings(cadrumo_output_language="ca"):
-        lines = result_summary_lines(revision)
-        payload = result_summary_payload(revision)
+        lines = result_summary_lines(revision, work_unit=work_unit)
+        payload = result_summary_payload(revision, work_unit=work_unit)
 
     rendered = "\n".join(lines)
     assert "key_figure\t03\t123.45\tRendiment net" in rendered
@@ -143,6 +150,19 @@ def test_result_summary_row_refuses_an_unknown_role() -> None:
 
     with pytest.raises(ValidationError):
         ResultSummaryRowPayload(casilla_id="03", label="Rendimiento neto", value="123.45", role="bogus")
+
+
+def test_headline_revision_rendering_refuses_to_silently_omit_its_work_unit() -> None:
+    """Headline projections fail closed unless omission is explicitly requested."""
+    work_unit = _seed_m130_work_unit()
+    revision = _m130_revision(work_unit)
+
+    with pytest.raises(TypeError, match="selected work unit"):
+        calculation_revision_payload(revision)
+    with pytest.raises(TypeError, match="selected work unit"):
+        calculation_revision_lines(revision)
+
+    assert calculation_revision_payload(revision, include_result_summary=False).result_summary == ()
 
 
 def test_result_summary_row_accepts_every_canonical_role() -> None:

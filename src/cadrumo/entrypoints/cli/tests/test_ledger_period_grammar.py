@@ -28,7 +28,7 @@ import pytest
 import typer
 
 from ....core.period import Period, StandardPeriodCode
-from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ..period_parsing import _canonical_period, _LedgerPeriodRefusal
 from .cli_runner import invoke_cached_cli
 

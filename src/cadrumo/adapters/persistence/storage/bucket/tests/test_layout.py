@@ -32,7 +32,7 @@ from pydantic import ValidationError
 from ......core.errors.error_codes import build_error_envelope
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
-from ......tests.bucket_layout import provision_bucket_directory
+from ......adapters.persistence.storage.bucket.tests.bucket_layout import provision_bucket_directory
 from ..directory_layout import (
     BucketPaths,
     bucket_paths,

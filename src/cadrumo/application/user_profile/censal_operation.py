@@ -49,6 +49,8 @@ from ..operations.registry import (
     operation_public_schema_reference,
 )
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.protocols import BrowserSessionFactoryPort
+from ..live.censo_ports import CensalFetchPort
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation
 from .censo_sync import (
@@ -352,7 +354,9 @@ class CensalOperationExecutor:
         self,
         *,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
+        censal_fetch_port: CensalFetchPort,
         acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
         apply: Callable[[CensalReviewedOperand], None] | None = None,
         before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
@@ -361,7 +365,9 @@ class CensalOperationExecutor:
         self._acquire = acquire or (
             lambda: _pull_censal_datos(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
+                browser_session_factory=browser_session_factory,
                 operator_scope_ports=operator_scope_ports,
+                censal_fetch_port=censal_fetch_port,
             )
         )
         self._apply = apply or _apply_reviewed_cotejo
@@ -479,14 +485,18 @@ class CensalOperationExecutor:
 async def _pull_censal_datos(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
+    censal_fetch_port: CensalFetchPort,
 ) -> CensalObservation:
     """Acquire through the sole public live application door."""
     from ..live.censo import pull_censal_datos
 
     return await pull_censal_datos(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
+        censal_fetch_port=censal_fetch_port,
     )
 
 
@@ -516,7 +526,9 @@ async def _ready_for_irreversible_section() -> None:
 def build_censal_operation_definition(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
+    censal_fetch_port: CensalFetchPort,
     acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
     apply: Callable[[CensalReviewedOperand], None] | None = None,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
@@ -526,7 +538,9 @@ def build_censal_operation_definition(
     def build() -> CensalOperationExecutor:
         return CensalOperationExecutor(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            browser_session_factory=browser_session_factory,
             operator_scope_ports=operator_scope_ports,
+            censal_fetch_port=censal_fetch_port,
             acquire=acquire,
             apply=apply,
             before_irreversible_section=before_irreversible_section,

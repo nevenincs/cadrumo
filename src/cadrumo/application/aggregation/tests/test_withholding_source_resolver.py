@@ -10,13 +10,12 @@ calculate), never a hard refusal.
 
 from __future__ import annotations
 
-from datetime import date
+from collections.abc import Mapping, Sequence
+from datetime import date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import (
     AggregationCaptureKind,
     BindingAggregation,
@@ -27,7 +26,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ..percepciones_observations_repository import PercepcionObservationRepository
+from ..percepciones_observations_repository import PercepcionObservationPorts
 from ..source_mesh import CalculationSourceContext
 from ..withholding_source import WithholdingSourceResolver
 
@@ -49,6 +48,30 @@ _M190_WITHHOLDING_SOURCE_REFS = (
     "aeat-modelo-190-instructions-2025",
     "boe-modelo-190-2025-form",
 )
+
+
+class _InMemoryPercepcionObservationRepository:
+    """Protocol-conforming inward fake for resolver behavior tests."""
+
+    def __init__(self) -> None:
+        self._windows: dict[tuple[str, int, str], tuple[WithholdingObservation, ...]] = {}
+
+    def replace_observations(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observations: Sequence[WithholdingObservation],
+        source_kind: AggregationCaptureKind,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> None:
+        del source_kind, captured_at, source_metadata
+        self._windows[(modelo, filing_year, period.registry_token)] = tuple(observations)
+
+    def load_observations(self, modelo: str, period: Period) -> tuple[WithholdingObservation, ...]:
+        return self._windows.get((modelo, period.filing_year, period.registry_token), ())
 
 
 def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
@@ -106,52 +129,54 @@ def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
     )
 
 
-def test_resolver_materialises_distinct_percepcion_count(tmp_path: Path) -> None:
+def test_resolver_materialises_distinct_percepcion_count() -> None:
     """One perceptor under two claves -> percepciones count of 2 from the store."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        binding = _percepcion_binding()
-        period = Period.from_year_and_code(2024, "0A")
-        PercepcionObservationRepository().replace_observations(
-            modelo="190",
-            filing_year=2024,
-            period=period,
-            observations=[
-                _obs("11111111H", RetencionClave.A),
-                _obs("11111111H", RetencionClave.G),
-                _obs("22222222J", RetencionClave.A),
-            ],
-            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        )
-        resolution = WithholdingSourceResolver().resolve(_context(_revision_with(binding)))
+    binding = _percepcion_binding()
+    period = Period.from_year_and_code(2024, "0A")
+    repository = _InMemoryPercepcionObservationRepository()
+    repository.replace_observations(
+        modelo="190",
+        filing_year=2024,
+        period=period,
+        observations=[
+            _obs("11111111H", RetencionClave.A),
+            _obs("11111111H", RetencionClave.G),
+            _obs("22222222J", RetencionClave.A),
+        ],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+    resolution = WithholdingSourceResolver(ports=PercepcionObservationPorts(repository=repository)).resolve(
+        _context(_revision_with(binding)),
+    )
 
-        assert resolution.binding_values == {binding.id: Decimal(3)}
-        assert resolution.diagnostics == ()
+    assert resolution.binding_values == {binding.id: Decimal(3)}
+    assert resolution.diagnostics == ()
 
 
-def test_resolver_materialises_zero_with_advisory_on_empty_store(tmp_path: Path) -> None:
+def test_resolver_materialises_zero_with_advisory_on_empty_store() -> None:
     """Empty store -> zero count materialised + a non-blocking advisory (not a refusal)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        binding = _percepcion_binding()
-        resolution = WithholdingSourceResolver().resolve(_context(_revision_with(binding)))
+    binding = _percepcion_binding()
+    ports = PercepcionObservationPorts(repository=_InMemoryPercepcionObservationRepository())
+    resolution = WithholdingSourceResolver(ports=ports).resolve(_context(_revision_with(binding)))
 
-        assert resolution.binding_values == {binding.id: Decimal(0)}
-        assert len(resolution.diagnostics) == 1
-        assert resolution.diagnostics[0].source_kind == "withholding"
-        assert "materialised as zero" in resolution.diagnostics[0].message
+    assert resolution.binding_values == {binding.id: Decimal(0)}
+    assert len(resolution.diagnostics) == 1
+    assert resolution.diagnostics[0].source_kind == "withholding"
+    assert "materialised as zero" in resolution.diagnostics[0].message
 
 
-def test_resolver_silent_when_revision_declares_no_withholding_binding(tmp_path: Path) -> None:
+def test_resolver_silent_when_revision_declares_no_withholding_binding() -> None:
     """A revision with no withholding binding resolves empty (no false advisory)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        resolution = WithholdingSourceResolver().resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="303",
-                filing_year=2024,
-                period=Period.from_year_and_code(2024, "1T"),
-                revision=_non_withholding_revision(),
-            ),
-        )
+    ports = PercepcionObservationPorts(repository=_InMemoryPercepcionObservationRepository())
+    resolution = WithholdingSourceResolver(ports=ports).resolve(
+        CalculationSourceContext(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "1T"),
+            revision=_non_withholding_revision(),
+        ),
+    )
 
-        assert resolution.binding_values == {}
-        assert resolution.diagnostics == ()
+    assert resolution.binding_values == {}
+    assert resolution.diagnostics == ()

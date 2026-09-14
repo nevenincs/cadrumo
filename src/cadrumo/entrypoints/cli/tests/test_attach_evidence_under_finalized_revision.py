@@ -40,7 +40,7 @@ from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
-from ....application.ledger.tests.remove_draft_revision_support import seed_revision_citing_transaction
+from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support import seed_revision_citing_transaction
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError

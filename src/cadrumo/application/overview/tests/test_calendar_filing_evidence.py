@@ -8,13 +8,13 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....core.hashing import sha256_hex
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.justificante import JustificanteCaptureSnapshot, derive_justificante_capture_snapshot_id
 from ...live.snapshot_base import SnapshotLifecycleState
 from ..calendar import (
@@ -435,7 +435,7 @@ def test_expedientes_event_marks_observed_submission_but_not_justificante_verifi
                 source_url=_SOURCE_URL,
                 authenticated_identity="X1234567L",
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,
@@ -473,7 +473,7 @@ def test_expedientes_event_for_wrong_authenticated_identity_is_not_submission_ev
                 source_url=_SOURCE_URL,
                 authenticated_identity="Y7654321G",
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,
@@ -505,7 +505,7 @@ def test_non_alta_expedientes_event_does_not_create_submission_evidence() -> Non
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,

@@ -44,7 +44,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...workflow.errors import WorkflowInputMismatchError
-from .._revision_replay_inputs import _informational_casilla_replay_inputs
+from ..revision_replay_inputs import _informational_casilla_replay_inputs
 from ..action_errors import ModeloAggregationBindingError
 from ..art20_advisory import art20_reduccion_advisory_finding
 from ..art52_advisory import art52_reduccion_advisory_finding

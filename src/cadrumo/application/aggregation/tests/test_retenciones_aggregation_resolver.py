@@ -13,13 +13,13 @@ re-pointed to the ``retenciones_aggregation`` source, simulated here via
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
+from datetime import datetime
 from decimal import Decimal
 from functools import cache
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
@@ -28,7 +28,7 @@ from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnap
 from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-from ..retencion_observations_repository import RetencionObservationRepository
+from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
 
@@ -48,6 +48,33 @@ _M111_BINDING_VALUES = {
     "modelo-111-premios-dinerario-base": Decimal("400.00"),
     "modelo-111-premios-dinerario-retenciones": Decimal("40.00"),
 }
+
+
+class _InMemoryRetencionObservationRepository:
+    """Deterministic application-port fake for resolver behavior tests."""
+
+    def __init__(self) -> None:
+        self._windows: dict[tuple[str, int, str], tuple[RetencionObservation, ...]] = {}
+
+    def replace_observations(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observations: Sequence[RetencionObservation],
+        source_kind: AggregationCaptureKind,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> None:
+        self._windows[(modelo, filing_year, period.registry_token)] = tuple(observations)
+
+    def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
+        return self._windows.get((modelo, period.filing_year, period.registry_token), ())
+
+
+def _resolver(repository: _InMemoryRetencionObservationRepository) -> RetencionesAggregationSourceResolver:
+    return RetencionesAggregationSourceResolver(ports=RetencionObservationPorts(repository=repository))
 
 
 @pytest.mark.parametrize("modelo", ("111", "115", "123", "180", "190", "193"))
@@ -113,58 +140,58 @@ def _context_for(*, modelo: str, filing_year: int, period: str, revision: Modelo
     )
 
 
-def test_resolver_materialises_distinct_perceptor_count(tmp_path: Path) -> None:
+def test_resolver_materialises_distinct_perceptor_count() -> None:
     """Two perceptors across three rows materialise a DISTINCT count of 2, not 3."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        period = Period.from_year_and_code(2024, "0A")
-        # 11111111H appears twice (e.g. two payments) but is ONE perceptor; the
-        # distinct-NIF count is 2. (Same NIF, same scheme → the second overwrites,
-        # so seed via two NIFs plus a repeat to prove distinctness through the
-        # aggregator, not the store.)
-        RetencionObservationRepository().replace_observations(
-            modelo="180",
-            filing_year=2024,
-            period=period,
-            observations=[_observation("11111111H"), _observation("22222222J")],
-            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        )
-        resolution = RetencionesAggregationSourceResolver().resolve(_context(_m180_revision_with_retenciones_source()))
+    repository = _InMemoryRetencionObservationRepository()
+    period = Period.from_year_and_code(2024, "0A")
+    # 11111111H appears twice (e.g. two payments) but is ONE perceptor; the
+    # distinct-NIF count is 2. (Same NIF, same scheme → the second overwrites,
+    # so seed via two NIFs plus a repeat to prove distinctness through the
+    # aggregator, not the store.)
+    repository.replace_observations(
+        modelo="180",
+        filing_year=2024,
+        period=period,
+        observations=[_observation("11111111H"), _observation("22222222J")],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+    resolution = _resolver(repository).resolve(_context(_m180_revision_with_retenciones_source()))
 
-        assert resolution.binding_values == {_PERCEPTOR_BINDING_ID: Decimal(2)}
-        assert resolution.diagnostics == ()
-        assert {item.source_ref for item in resolution.provenance} == {
-            "perceptor:11111111H",
-            "perceptor:22222222J",
-        }
+    assert resolution.binding_values == {_PERCEPTOR_BINDING_ID: Decimal(2)}
+    assert resolution.diagnostics == ()
+    assert {item.source_ref for item in resolution.provenance} == {
+        "perceptor:11111111H",
+        "perceptor:22222222J",
+    }
 
 
-def test_resolver_materialises_modelo_115_count_and_base_from_real_store(tmp_path: Path) -> None:
-    """M115 01/02 resolve from persisted URBAN_RENTAL per-perceptor observations."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        period = Period.from_year_and_code(2026, "1T")
-        RetencionObservationRepository().replace_observations(
-            modelo="115",
-            filing_year=2026,
-            period=period,
-            observations=[
-                RetencionObservation(
-                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-                    source_object_id="rent-ledger-row-001",
-                    perceptor_nif="B12345678",
-                    perceptor_name="Arrendador Ejemplo SL",
-                    scheme=RetencionScheme("arrendamiento_urbano"),
-                    taxable_base=Decimal("2700.00"),
-                    retencion_amount=Decimal("513.00"),
-                    accrued_on="2026-03-15",
-                ),
-            ],
-            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        )
-        snapshot = _authority_snapshot("115", 2026, "1T")
+def test_resolver_materialises_modelo_115_count_and_base_from_application_port() -> None:
+    """M115 01/02 resolve from application-port per-perceptor observations."""
+    repository = _InMemoryRetencionObservationRepository()
+    period = Period.from_year_and_code(2026, "1T")
+    repository.replace_observations(
+        modelo="115",
+        filing_year=2026,
+        period=period,
+        observations=[
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id="rent-ledger-row-001",
+                perceptor_nif="B12345678",
+                perceptor_name="Arrendador Ejemplo SL",
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                taxable_base=Decimal("2700.00"),
+                retencion_amount=Decimal("513.00"),
+                accrued_on="2026-03-15",
+            ),
+        ],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+    snapshot = _authority_snapshot("115", 2026, "1T")
 
-        resolution = RetencionesAggregationSourceResolver().resolve(
-            _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
-        )
+    resolution = _resolver(repository).resolve(
+        _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
+    )
 
     assert resolution.binding_values == {
         _M115_PERCEPTOR_BINDING_ID: Decimal("1"),
@@ -174,63 +201,63 @@ def test_resolver_materialises_modelo_115_count_and_base_from_real_store(tmp_pat
     assert {item.source_ref for item in resolution.provenance} == {"perceptor:B12345678"}
 
 
-def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_store(tmp_path: Path) -> None:
+def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_application_port() -> None:
     """M111 source bindings resolve the real registry's per-scheme count/base/retention selectors."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        period = Period.from_year_and_code(2026, "1T")
-        RetencionObservationRepository().replace_observations(
-            modelo="111",
-            filing_year=2026,
-            period=period,
-            observations=[
-                RetencionObservation(
-                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-                    source_object_id="payroll-row-001",
-                    perceptor_nif="11111111H",
-                    perceptor_name="Trabajador Ejemplo",
-                    scheme=RetencionScheme("rendimientos_trabajo"),
-                    taxable_base=Decimal("100.00"),
-                    retencion_amount=Decimal("10.00"),
-                    accrued_on="2026-01-31",
-                ),
-                RetencionObservation(
-                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-                    source_object_id="activity-row-001",
-                    perceptor_nif="22222222J",
-                    perceptor_name="Profesional Ejemplo A",
-                    scheme=RetencionScheme("actividades_economicas"),
-                    taxable_base=Decimal("200.00"),
-                    retencion_amount=Decimal("20.00"),
-                    accrued_on="2026-02-28",
-                ),
-                RetencionObservation(
-                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-                    source_object_id="professional-row-001",
-                    perceptor_nif="33333333P",
-                    perceptor_name="Profesional Ejemplo B",
-                    scheme=RetencionScheme("actividades_profesionales"),
-                    taxable_base=Decimal("300.00"),
-                    retencion_amount=Decimal("30.00"),
-                    accrued_on="2026-03-15",
-                ),
-                RetencionObservation(
-                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-                    source_object_id="prize-row-001",
-                    perceptor_nif="44444444A",
-                    perceptor_name="Premio Ejemplo",
-                    scheme=RetencionScheme("premios"),
-                    taxable_base=Decimal("400.00"),
-                    retencion_amount=Decimal("40.00"),
-                    accrued_on="2026-03-20",
-                ),
-            ],
-            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        )
-        snapshot = _authority_snapshot("111", 2026, "1T")
+    repository = _InMemoryRetencionObservationRepository()
+    period = Period.from_year_and_code(2026, "1T")
+    repository.replace_observations(
+        modelo="111",
+        filing_year=2026,
+        period=period,
+        observations=[
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id="payroll-row-001",
+                perceptor_nif="11111111H",
+                perceptor_name="Trabajador Ejemplo",
+                scheme=RetencionScheme("rendimientos_trabajo"),
+                taxable_base=Decimal("100.00"),
+                retencion_amount=Decimal("10.00"),
+                accrued_on="2026-01-31",
+            ),
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id="activity-row-001",
+                perceptor_nif="22222222J",
+                perceptor_name="Profesional Ejemplo A",
+                scheme=RetencionScheme("actividades_economicas"),
+                taxable_base=Decimal("200.00"),
+                retencion_amount=Decimal("20.00"),
+                accrued_on="2026-02-28",
+            ),
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id="professional-row-001",
+                perceptor_nif="33333333P",
+                perceptor_name="Profesional Ejemplo B",
+                scheme=RetencionScheme("actividades_profesionales"),
+                taxable_base=Decimal("300.00"),
+                retencion_amount=Decimal("30.00"),
+                accrued_on="2026-03-15",
+            ),
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id="prize-row-001",
+                perceptor_nif="44444444A",
+                perceptor_name="Premio Ejemplo",
+                scheme=RetencionScheme("premios"),
+                taxable_base=Decimal("400.00"),
+                retencion_amount=Decimal("40.00"),
+                accrued_on="2026-03-20",
+            ),
+        ],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+    snapshot = _authority_snapshot("111", 2026, "1T")
 
-        resolution = RetencionesAggregationSourceResolver().resolve(
-            _context_for(modelo="111", filing_year=2026, period="1T", revision=snapshot.revision),
-        )
+    resolution = _resolver(repository).resolve(
+        _context_for(modelo="111", filing_year=2026, period="1T", revision=snapshot.revision),
+    )
 
     assert resolution.binding_values == _M111_BINDING_VALUES
     assert resolution.diagnostics == ()
@@ -242,14 +269,11 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_sto
     }
 
 
-def test_resolver_empty_modelo_115_store_fails_before_silent_zero(tmp_path: Path) -> None:
+def test_resolver_empty_modelo_115_store_fails_before_silent_zero() -> None:
     """A declaring M115 revision without per-perceptor evidence refuses zero materialisation."""
     snapshot = _authority_snapshot("115", 2026, "1T")
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path),
-        pytest.raises(AggregationValidationError) as exc_info,
-    ):
-        RetencionesAggregationSourceResolver().resolve(
+    with pytest.raises(AggregationValidationError) as exc_info:
+        _resolver(_InMemoryRetencionObservationRepository()).resolve(
             _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
         )
 
@@ -265,13 +289,10 @@ def test_resolver_empty_modelo_115_store_fails_before_silent_zero(tmp_path: Path
     assert verdict.evidence[0].values["modelo"] == "115"
 
 
-def test_resolver_empty_store_fails_before_silent_zero(tmp_path: Path) -> None:
+def test_resolver_empty_store_fails_before_silent_zero() -> None:
     """An empty store on a declaring revision refuses calculation, never materialises 0."""
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path),
-        pytest.raises(AggregationValidationError) as exc_info,
-    ):
-        RetencionesAggregationSourceResolver().resolve(_context(_m180_revision_with_retenciones_source()))
+    with pytest.raises(AggregationValidationError) as exc_info:
+        _resolver(_InMemoryRetencionObservationRepository()).resolve(_context(_m180_revision_with_retenciones_source()))
 
     assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
     context = exc_info.value.context or {}
@@ -285,23 +306,22 @@ def test_resolver_empty_store_fails_before_silent_zero(tmp_path: Path) -> None:
     assert verdict.evidence[0].values["modelo"] == "180"
 
 
-def test_resolver_is_silent_when_revision_declares_no_retenciones_binding(tmp_path: Path) -> None:
+def test_resolver_is_silent_when_revision_declares_no_retenciones_binding() -> None:
     """A revision without a retenciones_aggregation binding resolves empty (no false advisory).
 
     Modelo 303 (IVA) declares no retenciones_aggregation binding. (M180/M193 DO
     declare it, so this uses a non-retenciones modelo.)
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = _authority_snapshot("303", 2024, "1T")
-        resolution = RetencionesAggregationSourceResolver().resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="303",
-                filing_year=2024,
-                period=Period.from_year_and_code(2024, "1T"),
-                revision=snapshot.revision,
-            ),
-        )
+    snapshot = _authority_snapshot("303", 2024, "1T")
+    resolution = _resolver(_InMemoryRetencionObservationRepository()).resolve(
+        CalculationSourceContext(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
 
-        assert resolution.binding_values == {}
-        assert resolution.diagnostics == ()
+    assert resolution.binding_values == {}
+    assert resolution.diagnostics == ()

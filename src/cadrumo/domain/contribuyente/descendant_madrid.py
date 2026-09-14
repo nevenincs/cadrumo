@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES
+from ..calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
 from .descendant_record import DescendantRecordBase
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
@@ -69,7 +69,10 @@ class DescendantMadridMixin(DescendantRecordBase):
         an under-grant reported to nobody, which is the one thing this disclosure
         exists to prevent.
         """
-        if self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+        if self.relacion not in descendant_relacion_entitling_tokens(
+            effective_date=context.filing_period,
+            authority=context.authority,
+        ):
             return False
         if not self.meets_non_income_conditions(
             filing_year,

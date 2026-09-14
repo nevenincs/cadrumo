@@ -43,7 +43,7 @@ class FilingEnvelopeModeloPolicy(BaseModel):
 
     #: Whether the modelo's records make the operator's prior-domiciliation
     #: election a mandatory explicit input rather than a defaulted one.
-    requires_prior_domiciliation_election: bool = False
+    requiresprior_domiciliation_election: bool = False
     #: The modelo's own exhaustive applicability gate, where it declares one.
     applicability_gate: FilingEnvelopeApplicabilityGate | None = None
 
@@ -68,7 +68,7 @@ class FilingEnvelopeModeloPolicy(BaseModel):
 
 _POLICY_BY_MODELO: Mapping[Modelo, FilingEnvelopeModeloPolicy] = {
     Modelo("303"): FilingEnvelopeModeloPolicy(
-        requires_prior_domiciliation_election=True,
+        requiresprior_domiciliation_election=True,
         applicability_gate=validate_m303_export_applicability,
     ),
 }

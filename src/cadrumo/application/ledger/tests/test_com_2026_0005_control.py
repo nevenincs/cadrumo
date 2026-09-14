@@ -35,6 +35,7 @@ import pytest
 from ....core.directory_scan import (
     scan_directory,
 )
+from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -44,6 +45,7 @@ from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 from ..invoice_draft_records import InvoiceDraft
+from ._evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -64,6 +66,9 @@ _SUPPLIER_CIF_BAD_CHECKSUM = "B1234567X"
 #: The OTHER identifier on the page -- the recipient's, which is valid. This is
 #: the id the defect returns as ``supplier_tax_id``.
 _RECIPIENT_CIF = "B17283946"
+_TEXT_LAYER_PORTS = text_layer_ports_for_pages(
+    (_SUPPLIER_CIF_BAD_CHECKSUM, _RECIPIENT_CIF, "SIN-NUMERO")
+)
 
 
 def _control_fixtures() -> dict[str, Path]:
@@ -136,10 +141,12 @@ def test_the_layout_minimal_document_prints_both_identifiers() -> None:
     transcription = transcribe_text_layer(
         EvidenceInput(
             mime_type="application/pdf",
+            document_shape=DocumentShape.PDF_TEXT_LAYER,
             data=payload,
             content_sha256=hashlib.sha256(payload).hexdigest(),
             attachment_id="b" * 64,
         ),
+        text_layer_ports=_TEXT_LAYER_PORTS,
     )
 
     assert _SUPPLIER_CIF_BAD_CHECKSUM in transcription.text

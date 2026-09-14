@@ -1,6 +1,7 @@
 """Backend integration for AEAT IVA wallet decisions in Modelo 303."""
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -63,6 +64,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             snapshot,
             repository=observation_repo,
             captured_at=_DECIDED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -180,6 +182,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
             snapshot,
             repository=observation_repo,
             captured_at=_DECIDED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -290,6 +293,7 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
             captured_at=decided_1t_at,
             result_disposition=ResultDisposition.INGRESO,
             taxpayer_nif=taxpayer_nif,
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
         revision_2t = calculate_modelo_revision(
             work_unit_2t.work_unit_id,
@@ -341,6 +345,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
             snapshot,
             repository=observation_repo,
             captured_at=_DECIDED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -479,6 +484,7 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
             captured_at=_DECIDED_AT,
             result_disposition=ResultDisposition.DEVOLUCION,
             taxpayer_nif=taxpayer_nif,
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
 
         work_unit_2t = _create_modelo_303_work_unit(
@@ -508,6 +514,7 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
             captured_at=_DECIDED_AT,
             result_disposition=ResultDisposition.INGRESO,
             taxpayer_nif=taxpayer_nif,
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
 
         work_unit_3t = _create_modelo_303_work_unit(
@@ -555,6 +562,7 @@ def test_compensated_filed_envelope_reports_its_validated_credit_to_wallet(tmp_p
             captured_at=_DECIDED_AT,
             result_disposition=ResultDisposition.COMPENSACION,
             taxpayer_nif=taxpayer_nif,
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
         target = _create_modelo_303_work_unit(_snapshot_303(period="2T"), work_unit_repository=work_repo)
         decision = lazily_reconcile_local_iva_compensation_for_work_unit(
@@ -595,6 +603,7 @@ def test_official_and_local_refund_envelopes_feed_the_same_wallet_recurrence(tmp
                     captured_at=_DECIDED_AT,
                     result_disposition=ResultDisposition.DEVOLUCION,
                     taxpayer_nif=taxpayer_nif,
+                    iva_compensation_history_repository=IvaCompensationHistoryRepository(),
                 )
             target = _create_modelo_303_work_unit(_snapshot_303(period="2T"), work_unit_repository=work_repo)
             decision = lazily_reconcile_local_iva_compensation_for_work_unit(
@@ -673,6 +682,7 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
             captured_at=_DECIDED_AT,
             result_disposition=prior_disposition,
             taxpayer_nif=taxpayer_nif,
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
         target = _create_modelo_303_work_unit(_snapshot_303(period="2T"), work_unit_repository=work_repo)
         initial = lazily_reconcile_local_iva_compensation_for_work_unit(

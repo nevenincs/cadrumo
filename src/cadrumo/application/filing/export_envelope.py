@@ -86,7 +86,7 @@ class FilingEnvelopeRenderRequest(BaseModel):
         _validate_envelope_filing_layout(self.layout, snapshot)
         _validate_envelope_filing_producer(self.draft, snapshot, self.producer_snapshot)
         policy = filing_envelope_modelo_policy(self.modelo)
-        if policy.requires_prior_domiciliation_election and (
+        if policy.requiresprior_domiciliation_election and (
             self.producer_snapshot.elections.prior_domiciliation is not self.prior_domiciliation_election
         ):
             raise ValueError("filing-envelope election must match the immutable producer snapshot election")

@@ -17,21 +17,18 @@ DE interest override (exempt, art 11) is left intact and re-asserted here.
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.calculations.registry.authority import bundled_authority
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_de_dividend_resolves_treaty_ceiling_of_15_percent(tmp_path: Path) -> None:
+def test_de_dividend_resolves_treaty_ceiling_of_15_percent() -> None:
     """DE-resident dividend: min(domestic 0.19, treaty 0.15) = 0.15 (art 10.2.b)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="DE", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="DE", base="1000.00")
 
     assert tipo == Decimal("0.15")
     assert cuota == Decimal("150.00")  # 1000 × 0.15
@@ -46,9 +43,8 @@ def test_de_dividend_legal_entry_is_grounded() -> None:
     assert "15 por ciento del importe bruto de los dividendos" in art10.required_text
 
 
-def test_de_interest_exempt_override_is_preserved(tmp_path: Path) -> None:
+def test_de_interest_exempt_override_is_preserved() -> None:
     """The pre-existing DE interest exemption (art 11) is untouched by #216."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, _cuota = resolve_convenio_rate(tipo_renta="interest", country_code="DE", base="1000.00")
+    tipo, _cuota = resolve_convenio_rate(tipo_renta="interest", country_code="DE", base="1000.00")
 
     assert tipo == Decimal("0")  # art 11 source-state exemption

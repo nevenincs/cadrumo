@@ -7,8 +7,8 @@ surfaces the error as a validation error in the enclosing
 ``Invoice`` model.
 
 The registry-grounded :func:`is_eu_member_state_code` helper anchors the EU
-axis to the substrate's :class:`cadrumo.domain.iva.EUMemberState`
-enum. Modelo 369 binding selectors and the OSS / IOSS classifier
+axis to the substrate's registry-projected :class:`cadrumo.domain.iva.EUMemberState`
+token. Modelo 369 binding selectors and the OSS / IOSS classifier
 boundary checks consume these helpers so the EU membership decision
 flows from the substrate, not from a hand-maintained list.
 """
@@ -18,13 +18,13 @@ from __future__ import annotations
 import re
 
 from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
-from ...core.identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
+from ...core.identity.nif_iva import normalise_nif_iva
+from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
-from ..iva.schema import EUMemberState
 from .errors import InvoiceValidationError
 
 __all__ = [
-    "EU_MEMBER_STATE_CODES",
     "is_eu_member_state_code",
     "validate_counterparty_tax_id",
     "validate_country_code",
@@ -38,12 +38,11 @@ _SPAIN_COUNTRY_CODE = "ES"
 _ISO_2_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
 
-EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(
-    member.value.upper() for member in EUMemberState if member is not EUMemberState.XI
-)
-"""Closed set of ISO-3166 alpha-2 codes (uppercase) for the 27 EU
-Member States, sourced from :class:`cadrumo.domain.iva.EUMemberState` while
-excluding the Northern Ireland IVA prefix ``XI``."""
+def _eu_member_state_codes() -> frozenset[str]:
+    """Return the 27 strict EU members, excluding the fact-declared ``XI`` prefix."""
+    catalogue = resolve_eu_member_state_catalogue()
+    northern_ireland = catalogue.require("XI")
+    return frozenset(str(member).upper() for member in catalogue.all_states if member != northern_ireland)
 
 
 def validate_country_code(value: str) -> str:
@@ -76,9 +75,9 @@ def is_eu_member_state_code(value: str) -> bool:
     """Return ``True`` when ``value`` matches one of the 27 EU Member State codes.
 
     The membership check is anchored to
-    :class:`cadrumo.domain.iva.EUMemberState`; if the substrate's enum
-    changes (Brexit-style additions or withdrawals) the helper picks
-    up the new shape automatically.
+    :class:`cadrumo.domain.iva.EUMemberState`; if fact 0131 changes
+    (Brexit-style additions or withdrawals) the helper picks up the
+    selected membership automatically.
 
     Args:
         value: Raw country code to check.
@@ -90,7 +89,7 @@ def is_eu_member_state_code(value: str) -> bool:
         normalized = validate_country_code(value)
     except InvoiceValidationError:
         return False
-    return normalized in EU_MEMBER_STATE_CODES
+    return normalized in _eu_member_state_codes()
 
 
 def validate_iva_number(value: str, country: str) -> str:

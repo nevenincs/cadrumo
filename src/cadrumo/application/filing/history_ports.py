@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Final, Protocol
 
 from ...core.classification.policies import SensitivityClass
 from .errors import ModeloApplicationError
@@ -18,7 +18,7 @@ from .history_models import ModeloHistory
 
 
 FILING_HISTORY_NAMESPACE = "cadrumo.application.filing.history"
-FILING_HISTORY_SENSITIVITY = SensitivityClass.AUDIT
+FILING_HISTORY_SENSITIVITY: Final[SensitivityClass] = SensitivityClass("audit")
 FILING_HISTORY_SCHEMA_VERSION = 1
 
 

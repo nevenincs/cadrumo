@@ -22,6 +22,7 @@ from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.llm import LLMClassificationResponse, LLMClassifier, LLMSplitResponse, PromptSpec
 from ...domain.transactions.models import Transaction
 from .evidence_input import EvidenceInput
+from .evidence_textlayer_ports import EvidenceTextLayerPorts
 from .models import ManualLedgerTransactionResult
 
 
@@ -175,6 +176,7 @@ class LLMClassificationPorts:
     """Outer-owned I/O required by the ledger LLM review use case."""
 
     resolve_evidence_input: Callable[[str, str | None, tuple[str, ...]], ResolvedEvidenceInput]
+    text_layer_ports: EvidenceTextLayerPorts
     rasterise_pdf: Callable[[bytes], tuple[str, ...]]
     make_text_classifier: Callable[[PromptSpec], LLMClassifier]
     make_vision_classifier: Callable[[PromptSpec, str | None], VisionClassifier]

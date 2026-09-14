@@ -10,21 +10,10 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
-from typing import Any, get_args
+from typing import get_args
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import select
-
-from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
-from ....adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
-from ....adapters.persistence.storage.sql.engine import get_engine
-from ....adapters.persistence.storage.sql.orm import SecureObjectRow
-from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
 from ....core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,
@@ -83,7 +72,7 @@ def _ref(value: str) -> FilingEvidenceReference:
     return FilingEvidenceReference(reference=value)
 
 
-def _ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> InventoryLedger:
+def inventory_ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> InventoryLedger:
     continuity = (PriorClosingContinuityEvidence(reference=_ref(f"prior-{actividad_id}"), content_digest="f" * 64),)
     acquisition = InventoryAcquisitionCost(
         consideration_excluding_iva=Decimal("100.00"),
@@ -270,8 +259,8 @@ def test_no_inventory_binding_is_allocation_and_repository_read_free() -> None:
 
 
 def test_inventory_row_templates_expand_complete_activities_in_canonical_rows() -> None:
-    alpha = _ledger("alpha")
-    zeta = _ledger("zeta")
+    alpha = inventory_ledger("alpha")
+    zeta = inventory_ledger("zeta")
     repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(zeta, alpha)))
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
@@ -304,8 +293,8 @@ def test_inventory_row_templates_expand_complete_activities_in_canonical_rows() 
 
 
 def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_changes_fingerprint() -> None:
-    alpha = _ledger("alpha")
-    zeta = _ledger("zeta")
+    alpha = inventory_ledger("alpha")
+    zeta = inventory_ledger("zeta")
     forward = InventorySourceResolver(
         inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(alpha, zeta)))
     ).resolve(_context(_revision(inventory=True)))
@@ -327,7 +316,7 @@ def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_cha
 
 
 def test_inventory_conflict_is_safe_per_activity_advisory() -> None:
-    ledger = _ledger("secret-activity", physical_closing=Decimal("250.00"))
+    ledger = inventory_ledger("secret-activity", physical_closing=Decimal("250.00"))
     result = InventorySourceResolver(
         inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(ledger,)))
     ).resolve(_context(_revision(inventory=True)))
@@ -346,7 +335,7 @@ def test_inventory_failure_is_atomic_value_free_and_loads_once(kind: str) -> Non
     elif kind == "unreadable":
         repository = _InventoryLedgerRepositoryScenario(error=True)
     else:
-        ledger = _ledger("secret-activity").model_copy(update={"closing_authority_record": None})
+        ledger = inventory_ledger("secret-activity").model_copy(update={"closing_authority_record": None})
         repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument.model_construct(ledgers=(ledger,)))
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
 
@@ -362,56 +351,11 @@ def test_inventory_failure_is_atomic_value_free_and_loads_once(kind: str) -> Non
 @pytest.mark.parametrize("actividad_id", [" alpha", "alpha ", "alpha\ncontrol"])
 def test_inventory_ledger_refuses_noncanonical_activity_identity(actividad_id: str) -> None:
     with pytest.raises(ValidationError) as exc_info:
-        _ledger("alpha").model_copy(update={"actividad_id": actividad_id}).model_dump_json()
+        inventory_ledger("alpha").model_copy(update={"actividad_id": actividad_id}).model_dump_json()
         InventoryLedger.model_validate(
-            _ledger("alpha").model_copy(update={"actividad_id": actividad_id}).model_dump(),
+            inventory_ledger("alpha").model_copy(update={"actividad_id": actividad_id}).model_dump(),
         )
     assert actividad_id not in str(exc_info.value)
-
-
-def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    bucket_id = "00000000-0000-4000-8000-000000000176"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as runtime:
-        repository = InventoryLedgerRepository(objects=runtime.repository)
-        absent = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
-        alpha = _ledger("alpha", physical_closing=Decimal("250.00"))
-        zeta = _ledger("zeta")
-        repository.save(InventoryLedgerDocument(ledgers=(zeta, alpha)))
-        complete = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
-
-        statement = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
-            SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
-        )
-
-        def orphan_authority(document: dict[str, Any]) -> None:
-            ledgers = document["ledgers"]
-            assert isinstance(ledgers, list) and isinstance(ledgers[0], dict)
-            assert "zeta" in repr(ledgers)
-            ledgers[0]["closing_authority_record"]["decision"]["actividad_id"] = "other"
-
-        mutate_encrypted_secure_object_json(
-            get_engine(runtime.settings),
-            row_statement=statement,
-            mutate=orphan_authority,
-        )
-        corrupted = InventorySourceResolver(inventory_repository=repository).resolve(
-            _context(_revision(inventory=True))
-        )
-
-    assert absent.row_binding_values == {}
-    assert absent.diagnostics[0].reason == "source_domain_not_ready"
-    assert complete.row_binding_values[("inventory-0181", 1)] == Decimal("100.00")
-    assert complete.row_source_identities[("inventory-0181", 1)].source_row_identity == "alpha"
-    assert complete.diagnostics[0].reason == "source_issue"
-    assert corrupted.row_binding_values == {}
-    assert corrupted.diagnostics[0].reason == "storage_degraded"
-    rendered = f"{corrupted!r} {corrupted.model_dump()!r} {caplog.text}"
-    for canary in ("alpha", "zeta", "250.00", "reviewer-secret", "inventory-secret-command", "a" * 64):
-        assert canary not in rendered
 
 
 def test_inventory_row_template_rejects_selector_coordinate_mismatch_without_repository_read() -> None:
@@ -432,7 +376,7 @@ def test_inventory_row_template_rejects_selector_coordinate_mismatch_without_rep
 def test_inventory_template_cohort_refuses_atomically_before_storage(shape: str) -> None:
     revision = _revision(inventory=True)
     bindings = revision.bindings[:-1] if shape == "missing" else (*revision.bindings, revision.bindings[0])
-    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(_ledger("alpha"),)))
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(
         _context(revision.model_copy(update={"bindings": bindings})),
@@ -485,7 +429,7 @@ def _terminal_origin_revision() -> ModeloRevision:
 def test_inventory_rows_carry_a_primary_detail_record_node_the_terminal_audit_admits() -> None:
     revision = _terminal_origin_revision()
     repository = _InventoryLedgerRepositoryScenario(
-        InventoryLedgerDocument(ledgers=(_ledger("zeta"), _ledger("alpha"))),
+        InventoryLedgerDocument(ledgers=(inventory_ledger("zeta"), inventory_ledger("alpha"))),
     )
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))

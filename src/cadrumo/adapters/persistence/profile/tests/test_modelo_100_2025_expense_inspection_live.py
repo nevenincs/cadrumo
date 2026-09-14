@@ -34,7 +34,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository

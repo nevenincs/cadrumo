@@ -23,6 +23,7 @@ from pydantic import ValidationError
 
 from ...application.ledger.action_ports import LedgerActionPorts
 from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
+from ...application.prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ...application.ledger.models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
@@ -34,8 +35,9 @@ from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.prorrata_exclusions import Art104TresExclusion
-from ...core.prorrata_register import ProrrataRegisterRegime
+from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
+from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import (
     BusinessClassification,
@@ -71,6 +73,7 @@ from ._ledger_support import (
     validate_category_id,
 )
 from .common import bad, current_workflow_state, emit_envelope, profile_to_taxpayer, transaction_catalogue_repo
+from .state_projection_support import prorrata_register_repository_factory
 from .ledger_lifecycle_cli import (
     ledger_archive,
     ledger_attach,
@@ -163,9 +166,10 @@ def _build_manual_add_command(
     source_jurisdiction: str | None,
 ) -> ManualLedgerTransactionCommand:
     """Translate CLI fields into the canonical manual-ledger command model."""
+    effective_date = _parse_iso_date(booked_date, label="date")
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
-        booked_date=_parse_iso_date(booked_date, label="date"),
+        booked_date=effective_date,
         value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
         amount=parse_amount_magnitude(amount),
         currency=currency,
@@ -187,7 +191,11 @@ def _build_manual_add_command(
         usage_ratio_id=usage_ratio_id,
         prorrata_reference=prorrata_reference,
         art_104_tres_exclusion=art_104_tres_exclusion,
-        input_classification=input_classification,
+        input_classification=(
+            require_input_classification(input_classification, effective_date=effective_date)
+            if input_classification is not None
+            else None
+        ),
         prorrata_sector_id=prorrata_sector,
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
@@ -225,6 +233,7 @@ def _manual_add_notices(
     *,
     command: ManualLedgerTransactionCommand,
     result: ManualLedgerTransactionResult,
+    prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
 ) -> tuple[list[Notice], list[str]]:
     """Project add advisories into the shared notice and text channels."""
     notices: list[Notice] = []
@@ -251,6 +260,7 @@ def _manual_add_notices(
         ejercicio=command.booked_date.year,
         input_classification=command.input_classification,
         sector_id=command.prorrata_sector_id,
+        prorrata_register_repository=prorrata_register_repository,
     )
     if especial_notice is not None:
         notices.append(especial_notice)
@@ -258,6 +268,7 @@ def _manual_add_notices(
     sector_notice = _prorrata_sector_unmatched_notice(
         bucket_id=result.ref.bucket_id,
         sector_id=command.prorrata_sector_id,
+        prorrata_register_repository=prorrata_register_repository,
     )
     if sector_notice is not None:
         notices.append(sector_notice)
@@ -271,6 +282,7 @@ def _prorrata_especial_inert_notice(
     ejercicio: int,
     input_classification: InputClassification | None,
     sector_id: str | None,
+    prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
 ) -> Notice | None:
     """Warn when --input-classification is set but no especial election applies.
 
@@ -283,12 +295,11 @@ def _prorrata_especial_inert_notice(
     """
     if input_classification is None:
         return None
-    from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ...application.prorrata_register.service import ProrrataRegisterService
 
-    service = ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=bucket_id))
+    service = ProrrataRegisterService(repository=prorrata_register_repository)
     entry = service.get(ejercicio, sector_id=sector_id)
-    if entry is not None and entry.regime is ProrrataRegisterRegime.ESPECIAL:
+    if entry is not None and entry.regime == especial_prorrata_register_regime():
         return None
     message = tr(
         "cli.ledger.add.input_classification_inert",
@@ -310,6 +321,7 @@ def _prorrata_sector_unmatched_notice(
     *,
     bucket_id: str,
     sector_id: str | None,
+    prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
 ) -> Notice | None:
     """Warn when --sector names a sector absent from the declared partition.
 
@@ -327,10 +339,9 @@ def _prorrata_sector_unmatched_notice(
     """
     if sector_id is None:
         return None
-    from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ...application.prorrata_register.service import ProrrataRegisterService
 
-    service = ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=bucket_id))
+    service = ProrrataRegisterService(repository=prorrata_register_repository)
     if service.list_all().sector_definition_for(sector_id) is not None:
         return None
     message = tr(
@@ -451,7 +462,11 @@ def ledger_add(
     # row and wrote nothing. Surface it as an info Notice on the typed channel
     # (never a bespoke result field) and fold the same text into the lines so
     # JSON and text output cannot drift.
-    notices, extra_lines = _manual_add_notices(command=command, result=result)
+    notices, extra_lines = _manual_add_notices(
+        command=command,
+        result=result,
+        prorrata_register_repository=prorrata_register_repository_factory(ctx)(bucket_id=result.ref.bucket_id),
+    )
     emit_update_result(
         ctx,
         result.transaction,

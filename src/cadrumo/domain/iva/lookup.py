@@ -19,6 +19,7 @@ from ..calculations.registry.iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
 )
+from ..calculations.registry.iva_rate_role_catalogue import IvaRateRole, require_iva_rate_role
 from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaRateNotFoundError
 from .rates import IVA_RATE_FACT_ID, iva_rate_record_from_fact
@@ -42,12 +43,14 @@ def resolve_iva_rate(
     kind: IvaRateKind,
     on_date: date,
     *,
-    rate_role: str = "ordinary",
+    rate_role: IvaRateRole | str | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ResolvedMappingFact:
     """Resolve one dated IVA rate fact and retain the complete authority provenance."""
-    kind = require_iva_rate_kind(kind, effective_date=on_date, authority=authority)
-    resolved = _authority(authority).resolve_governed_fact(
+    resolved_authority = _authority(authority)
+    kind = require_iva_rate_kind(kind, effective_date=on_date, authority=resolved_authority)
+    role = require_iva_rate_role(rate_role, effective_date=on_date, authority=resolved_authority)
+    resolved = resolved_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=IVA_RATE_FACT_ID,
             date_axis=DateAxis.DEVENGO_DATE,
@@ -55,7 +58,7 @@ def resolve_iva_rate(
             selectors=(
                 FactSelector(name="member_state", value=member_state.value),
                 FactSelector(name="kind", value=kind.value),
-                FactSelector(name="rate_role", value=rate_role),
+                FactSelector(name="rate_role", value=role.value),
             ),
         ),
     )
@@ -84,19 +87,20 @@ def _iva_rate_candidate_exists(
     kind: IvaRateKind,
     on_date: date,
     *,
-    rate_role: str = "ordinary",
+    rate_role: IvaRateRole | str | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> bool:
     """Separate a genuine absence from an ambiguous authority resolution."""
     resolved_authority = _authority(authority)
     resolved_authority.validate_registry()
+    role = require_iva_rate_role(rate_role, effective_date=on_date, authority=resolved_authority)
     fact = resolved_authority.catalogues.facts.facts.get(IVA_RATE_FACT_ID)
     if fact is None:
         return False
     expected = {
         "member_state": member_state.value,
         "kind": kind.value,
-        "rate_role": rate_role,
+        "rate_role": role.value,
     }
     return any(
         variant.date_axis is DateAxis.DEVENGO_DATE

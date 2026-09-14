@@ -1,27 +1,25 @@
 """Counter-signed accountant receipt roundtrip and anti-tautology proofs.
 
-Exercises :mod:`~application.modelo._review_package_counter_sign` end to
-end against a REAL built-and-checksummed review package
-(:func:`~application.modelo.build_review_package`), a REAL operator
-signature (:func:`~application.modelo.sign_review_package`), and a REAL
-accountant counter-signature over that signature -- both parties' keypairs
-minted and persisted through REAL encrypted
-:class:`~adapters.persistence.storage.SecureObjectRepository` instances
-scoped to two distinct genuine ``BUCKET_DEK_V1`` buckets
-(:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_two_bucket_runtime`, no mocks or
-fakes): operator signs, accountant counter-signs, both-layer verify passes;
-tamper the archive, the note, the counter-signature, or swap either party's
-public key, and verification fails.
+Exercises :mod:`~application.modelo.review_package_counter_sign` end to
+end against a real built-and-checksummed review package
+(:func:`~application.modelo.build_review_package`), a real operator
+signature (:func:`~application.modelo.sign_review_package`), and a real
+accountant counter-signature over that signature.  The application-owned
+signing capability is supplied by an in-memory fake for two deterministic
+bucket identities; encrypted key custody is covered by the outward profile
+adapter tests. Operator signing, accountant counter-signing, and both-layer
+verification are exercised here; tampering the archive, note,
+counter-signature, or either public key must fail.
 
 Mirrors the anti-tautology discipline established in
 ``test_review_package_signing.py``: every negative-path test names the exact
 way the system deviates from "clean" before asserting the refusal.
 
 See Also:
-    :mod:`~application.modelo._review_package_counter_sign`
+    :mod:`~application.modelo.review_package_counter_sign`
         Counter-sign receipt implementation exercised by the roundtrip and
         tamper cases.
-    :mod:`~application.modelo._review_package_signing`
+    :mod:`~application.modelo.review_package_signing`
         Operator Ed25519 signing layer that the accountant receipt signs over.
     :mod:`~application.modelo.review_package`
         Checksum-manifest package builder re-verified before signature checks.
@@ -35,6 +33,9 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
 import functools
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
@@ -45,10 +46,6 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
-from ....adapters.persistence.storage.sql.orm import SecureObjectRow
-from ....adapters.persistence.storage.sql.session import session_scope
-from ....adapters.persistence.storage.tests.secure_sql import MultiBucketTestRuntime, isolated_two_bucket_runtime
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
@@ -73,6 +70,7 @@ from ..review_package_signing import (
     sign_review_package,
 )
 from ._review_package_bytes_support import build_package_path
+from ._review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,6 +78,33 @@ _NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package_counter_sign")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package_counter_sign")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-COUNTER-SIGN-TEST"
+_SIGNING_CAPABILITY = InMemoryReviewPackageSigningKeypairCapability()
+_PRIMARY_BUCKET_ID = "2e510000-0000-4000-8000-000000000001"
+_SECONDARY_BUCKET_ID = "2e510000-0000-4000-8000-000000000002"
+
+
+@dataclass(frozen=True)
+class _TestBucket:
+    bucket_id: str
+
+
+@dataclass(frozen=True)
+class _TestTwoBucketRuntime:
+    primary: _TestBucket
+    secondary: _TestBucket
+
+    @contextmanager
+    def switch_to_secondary(self) -> Iterator[None]:
+        yield
+
+
+@contextmanager
+def _two_bucket_runtime() -> Iterator[_TestTwoBucketRuntime]:
+    """Provide deterministic bucket identities without opening persistence."""
+    yield _TestTwoBucketRuntime(
+        primary=_TestBucket(bucket_id=_PRIMARY_BUCKET_ID),
+        secondary=_TestBucket(bucket_id=_SECONDARY_BUCKET_ID),
+    )
 
 
 def _work_unit(*, bucket_id: str) -> WorkUnit:
@@ -162,7 +187,7 @@ def _raw_public_key_hex(private_key: Ed25519PrivateKey) -> str:
 
 
 def _sign_as_operator(
-    runtime: MultiBucketTestRuntime,
+    runtime: _TestTwoBucketRuntime,
     package_path: Path,
 ) -> tuple[ReviewPackageSigningKeypair, SignedReviewPackage]:
     """Mint (or load) the primary (operator) bucket's keypair and sign ``package_path``.
@@ -172,28 +197,22 @@ def _sign_as_operator(
     """
     keypair = ensure_review_package_signing_keypair(
         bucket_id=runtime.primary.bucket_id,
-        repository=runtime.primary.repository,
+        signing_keypair=_SIGNING_CAPABILITY,
     )
     return keypair, sign_review_package(package_path, keypair=keypair)
 
 
-def _mint_accountant_keypair(runtime: MultiBucketTestRuntime) -> ReviewPackageSigningKeypair:
-    """Mint (or load) the secondary (accountant) bucket's keypair.
-
-    The secondary bucket's repository is bound to its own session at
-    construction time (see ``isolated_two_bucket_runtime``), so any call
-    against it must run inside ``switch_to_secondary`` or the runtime's
-    session-freshness guard refuses the stale handle.
-    """
+def _mint_accountant_keypair(runtime: _TestTwoBucketRuntime) -> ReviewPackageSigningKeypair:
+    """Mint the secondary (accountant) bucket's in-memory keypair."""
     with runtime.switch_to_secondary():
         return ensure_review_package_signing_keypair(
             bucket_id=runtime.secondary.bucket_id,
-            repository=runtime.secondary.repository,
+            signing_keypair=_SIGNING_CAPABILITY,
         )
 
 
 def test_operator_signs_accountant_counter_signs_both_layers_verify(tmp_path: Path) -> None:
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with _two_bucket_runtime() as runtime:
         package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
 
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
@@ -240,7 +259,7 @@ def test_counter_sign_refuses_a_naive_or_non_utc_envelope_timestamp(
     counter_signed_at: datetime,
 ) -> None:
     """An accountant receipt must carry one explicit UTC instant."""
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with _two_bucket_runtime() as runtime:
         package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
         _, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
@@ -257,7 +276,7 @@ def test_verify_fails_when_original_package_tampered_after_counter_sign(tmp_path
     """Archive tamper is caught by the re-run integrity check before either signature layer."""
     import zipfile
 
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with _two_bucket_runtime() as runtime:
         package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
@@ -283,7 +302,7 @@ def test_verify_fails_when_original_package_tampered_after_counter_sign(tmp_path
 
 def test_verify_fails_when_note_edited_after_counter_sign(tmp_path: Path) -> None:
     """Editing the counter-signer's note invalidates the counter-signature (not just re-parses)."""
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with _two_bucket_runtime() as runtime:
         package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
@@ -308,7 +327,7 @@ def test_verify_fails_when_note_edited_after_counter_sign(tmp_path: Path) -> Non
 
 def test_verify_fails_when_counter_signature_bytes_are_corrupted(tmp_path: Path) -> None:
     """A structurally-valid but wrong counter-signature (same length, different bytes) must fail."""
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with _two_bucket_runtime() as runtime:
         package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
@@ -329,7 +348,7 @@ def test_verify_fails_when_counter_signature_bytes_are_corrupted(tmp_path: Path)
 
 
 def test_verify_fails_with_wrong_operator_public_key(tmp_path: Path) -> None:
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with _two_bucket_runtime() as runtime:
         package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
         _, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
@@ -349,7 +368,7 @@ def test_verify_fails_with_wrong_operator_public_key(tmp_path: Path) -> None:
 
 
 def test_verify_fails_with_wrong_counter_signer_public_key(tmp_path: Path) -> None:
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with _two_bucket_runtime() as runtime:
         package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
@@ -366,32 +385,6 @@ def test_verify_fails_with_wrong_counter_signer_public_key(tmp_path: Path) -> No
             )
             is False
         )
-
-
-def test_counter_signer_keys_never_stored_as_plaintext(tmp_path: Path) -> None:
-    """The accountant's counter-signing keypair is persisted only as ciphertext.
-
-    Mirrors ``test_private_key_is_never_stored_as_plaintext`` in
-    ``test_review_package_signing.py`` for the counter-signer's identity: this
-    module introduces no new key-custody mechanism, so the same guarantee
-    that primitive already proves must hold for whichever bucket the
-    counter-signer's keypair is scoped to.
-    """
-    from sqlalchemy import select
-
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        accountant_keypair = _mint_accountant_keypair(runtime)
-
-        with session_scope(runtime.secondary.repository._engine) as session:
-            row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
-                ),
-            ).scalar_one()
-            ciphertext_bytes = bytes(row.payload)
-
-        assert accountant_keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes
-        assert bytes.fromhex(accountant_keypair.private_key_hex) not in ciphertext_bytes
 
 
 __all__: list[str] = []

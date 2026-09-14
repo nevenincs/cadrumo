@@ -99,22 +99,28 @@ def _refuse_unsupported_filing_year(period: _Period) -> None:
             message names the year and that declaration, because a refusal an
             operator cannot act on is an outage rather than a guard.
     """
-    declaration = bundled_authority().catalogues.supported_filing_years
+    authority = bundled_authority()
+    try:
+        authority.project_filing_year(period.filing_year)
+        return
+    except _RegistrySnapshotError as exc:
+        refusal = exc
+    declaration = authority.catalogues.supported_filing_years
     if declaration is None:
-        return
-    if declaration.admits_filing_year(period.filing_year):
-        return
-    ceiling = declaration.hard_ceiling
+        supported_filing_years = "none declared"
+    else:
+        ceiling = declaration.hard_ceiling
+        supported_filing_years = (
+            f"{declaration.floor} and later" if ceiling is None else f"{declaration.floor} to {ceiling}"
+        )
     raise ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.unsupported_filing_year",
         context={
             "filing_year": str(period.filing_year),
-            "supported_filing_years": (
-                f"{declaration.floor} and later" if ceiling is None else f"{declaration.floor} to {ceiling}"
-            ),
+            "supported_filing_years": supported_filing_years,
             "declaration": "registry/aeat/legal/supported-filing-years.toml",
         },
-    )
+    ) from refusal
 
 
 def build_draft(

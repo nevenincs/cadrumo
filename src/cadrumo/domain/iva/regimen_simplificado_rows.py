@@ -7,14 +7,16 @@ this collection and are never persisted as a second set of scalar inputs.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
-from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, GetCoreSchemaHandler, StringConstraints, field_validator, model_validator
+from pydantic_core import CoreSchema, core_schema
 
 from ...core.filing_projection_ref import M303_MESA_FACTS, M303_REPEATING_FACTS, M303RegimenSimplificadoFact
 from ...core.filing_year import FilingYear
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..filing_evidence import FilingEvidenceReference
 from .errors import IvaValidationError
@@ -169,34 +171,69 @@ class DificilJustificacionOrdenAnual(BaseModel):
 
 
 class ReduccionLorcaOrdenAnual(BaseModel):
-    """The 2022 Annex-II Lorca IVA reduction before any activity calculation."""
+    """One registry-projected municipal IVA reduction before activity calculation."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    ejercicio: Literal[2022] = 2022
-    municipality: Literal["Lorca"] = "Lorca"
-    annex_scope: Literal["ANEXO II"] = "ANEXO II"
+    ejercicio: FilingYear
+    municipality: _Token
+    annex_scope: _Token
     percentage: _NonNegative
-    calculation_periods: tuple[Literal["trimestral", "anual"], Literal["trimestral", "anual"]] = (
-        "trimestral",
-        "anual",
-    )
+    calculation_periods: tuple[_Token, ...] = Field(min_length=1)
     legal_refs: tuple[_Token, ...] = Field(min_length=1, max_length=1)
     source_refs: tuple[_Token, ...] = Field(min_length=1, max_length=1)
     source_content_digest: _Token
 
+    @classmethod
+    def from_registry_source(
+        cls,
+        *,
+        ejercicio: FilingYear,
+        municipality: str,
+        percentage: Decimal,
+        legal_ref: str,
+        source_ref: str,
+        source_content_digest: str,
+    ) -> Self:
+        """Build the projection only after matching the selected facts authority."""
+        from ..calculations.registry.lorca_reduction import resolve_lorca_reduction
+
+        declared = resolve_lorca_reduction(effective_date=date(int(ejercicio), 12, 31))
+        if (
+            municipality != declared.municipality
+            or percentage != declared.percentage
+            or legal_ref != declared.legal_ref
+            or source_ref != declared.source_ref
+            or source_content_digest != declared.source_content_digest
+        ):
+            raise IvaValidationError("annual Orden reduction source disagrees with fact authority")
+        return cls(
+            ejercicio=declared.ejercicio,
+            municipality=declared.municipality,
+            annex_scope=declared.annex_scope,
+            percentage=declared.percentage,
+            calculation_periods=declared.calculation_periods,
+            legal_refs=(declared.legal_ref,),
+            source_refs=(declared.source_ref,),
+            source_content_digest=declared.source_content_digest,
+        )
+
     @model_validator(mode="after")
-    def _is_the_exact_lorca_2022_reduction(self) -> ReduccionLorcaOrdenAnual:
-        if self.percentage != Decimal("20"):
-            raise IvaValidationError("the Lorca 2022 annual Orden reduction must be exactly 20 percent")
-        if self.calculation_periods != ("trimestral", "anual"):
-            raise IvaValidationError("the Lorca 2022 reduction must cover quarterly and annual calculations")
-        if self.legal_refs != ("orden-hfp-1335-2021:da-4-lorca-2022-reduction:lorca-2022-reduction",):
-            raise IvaValidationError("the Lorca 2022 reduction must retain its exact HFP/1335 legal reference")
-        if self.source_refs != ("boe-orden-hfp-1335-2021-iva-authority",):
-            raise IvaValidationError("the Lorca 2022 reduction must retain its exact HFP/1335 source reference")
-        if self.source_content_digest != "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46":
-            raise IvaValidationError("the Lorca 2022 reduction must retain its exact HFP/1335 source digest")
+    def _matches_registry_reduction(self) -> Self:
+        from ..calculations.registry.lorca_reduction import resolve_lorca_reduction
+
+        declared = resolve_lorca_reduction(effective_date=date(int(self.ejercicio), 12, 31))
+        if (
+            self.ejercicio != declared.ejercicio
+            or self.municipality != declared.municipality
+            or self.annex_scope != declared.annex_scope
+            or self.percentage != declared.percentage
+            or self.calculation_periods != declared.calculation_periods
+            or self.legal_refs != (declared.legal_ref,)
+            or self.source_refs != (declared.source_ref,)
+            or self.source_content_digest != declared.source_content_digest
+        ):
+            raise IvaValidationError("annual Orden reduction does not match fact authority")
         return self
 
 
@@ -218,15 +255,52 @@ class AutoridadAgricolaOrdenAnualNoResuelta(BaseModel):
     )
 
 
-class M303RegimenSimplificadoScope(StrEnum):
-    """Closed M303 simplified-regime scope outcomes available before the simplified-regime evidence is resolved."""
+class M303RegimenSimplificadoScope(str):
+    """Opaque simplified-regime scope projected from the 0098 composition fact."""
 
-    REGIMEN_SIMPLIFICADO_NOT_CLAIMED = "regimen_simplificado_not_claimed"
-    REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED = "regimen_simplificado_evidence_required"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("M303 simplified-regime scope tokens must be projected from the registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("M303 simplified-regime scope token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("M303 simplified-regime scope must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        return str(self)
 
 
 class M303RegimenSimplificadoScopeDecision(BaseModel):
-    """Explicit closed scope input for the M303 simplified branch."""
+    """Explicit registry-projected scope input for the M303 simplified branch."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -234,8 +308,8 @@ class M303RegimenSimplificadoScopeDecision(BaseModel):
 
     @property
     def is_not_claimed(self) -> bool:
-        """Whether the explicit general-regime decision excludes the branch."""
-        return self.scope is M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED
+        """Whether the registry-declared scope excludes the simplified branch."""
+        return self.scope.value == "not_claimed"
 
 
 class HechoActividadSimplificado(BaseModel):

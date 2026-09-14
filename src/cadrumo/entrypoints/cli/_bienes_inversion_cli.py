@@ -14,11 +14,14 @@ import typer
 
 from ...application.bienes_inversion.service import BienesInversionRegisterService
 from ...core.i18n.render import tr
-from ...domain.bienes_inversion.register import (
-    BienInversionDisposalRegime,
-    BienInversionIvaRecord,
-    BienInversionKind,
+from ...domain.calculations.registry.bienes_inversion_catalogue import (
+    bien_inversion_disposal_regime_choices,
+    require_bien_inversion_disposal_regime,
+    require_bien_inversion_kind,
 )
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.bienes_inversion.register import BienInversionIvaRecord
+from ...domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ._bienes_inversion_payloads import (
     BienesInversionDeclareResult,
     BienesInversionListResult,
@@ -27,17 +30,18 @@ from ._bienes_inversion_payloads import (
 from ._decimal_parsing import parse_decimal_amount
 from .common import active_bucket_id_or_refuse as _register_bucket_id
 from .common import bad, emit_envelope
+from .state_projection_support import bienes_inversion_repository_factory
 
 
-def _parse_kind(raw: BienInversionKind) -> BienInversionKind:
-    return raw
+def _parse_kind(raw: str) -> BienInversionKind:
+    return require_bien_inversion_kind(raw)
 
 
 def _parse_disposal_regime(raw: str) -> BienInversionDisposalRegime:
     try:
-        return BienInversionDisposalRegime(raw)
-    except ValueError as exc:
-        accepted = ", ".join(member.value for member in BienInversionDisposalRegime)
+        return require_bien_inversion_disposal_regime(raw)
+    except RegistryValidationError as exc:
+        accepted = ", ".join(member.value for member in bien_inversion_disposal_regime_choices())
         raise bad(
             tr(
                 "cli.app.ledger.bienes_inversion.unknown_disposal_regime",
@@ -61,7 +65,7 @@ def bienes_inversion_declare(
     acquisition_ledger_id: str,
     cuota_soportada: str,
     prorrata_inicial_pct: str,
-    kind: BienInversionKind,
+    kind: str,
     art108_elegible: bool = True,
     prorrata_sector_id: str | None = None,
     disposal_year: int | None = None,
@@ -75,6 +79,9 @@ def bienes_inversion_declare(
     )
 
     bucket_id = _register_bucket_id()
+    service = BienesInversionRegisterService(
+        repository=bienes_inversion_repository_factory(ctx)(bucket_id=bucket_id),
+    )
     try:
         outcome = declare_bien_inversion(
             BienInversionDeclarationCommand(
@@ -89,7 +96,8 @@ def bienes_inversion_declare(
                 prorrata_sector_id=prorrata_sector_id,
                 disposal_year=disposal_year,
                 disposal_regime=_parse_disposal_regime(disposal_regime) if disposal_regime is not None else None,
-            )
+            ),
+            service=service,
         )
     except BienInversionDisposalIncompleteError as exc:
         raise bad(
@@ -124,7 +132,9 @@ def bienes_inversion_declare(
 def bienes_inversion_list(ctx: typer.Context) -> None:
     """List register records via :class:`BienesInversionRegisterService`."""
     bucket_id = _register_bucket_id()
-    register = BienesInversionRegisterService().list_all()
+    register = BienesInversionRegisterService(
+        repository=bienes_inversion_repository_factory(ctx)(bucket_id=bucket_id),
+    ).list_all()
     rows = [_record_payload(record) for record in register.records]
     payload = BienesInversionListResult(bucket_id=bucket_id, rows=rows, count=len(rows))
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]

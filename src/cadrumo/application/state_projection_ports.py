@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ..domain.user_profile.values import UserProfileRecord
+from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +66,9 @@ class StateProjectionReadPorts:
 
     workspace: StateProjectionWorkspaceReadPort
     profile: StateProjectionProfileReadPort
+    #: The persisted usage-ratio read is carried alongside profile readiness
+    #: because the ledger preflight is part of this same projection.
+    usage_ratio_profile_loader: UsageRatioProfileLoader
 
 
 __all__ = [

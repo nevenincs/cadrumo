@@ -4,11 +4,10 @@ Per the accepted Modelo 036/037 foundation decision, the local app never files a
 036. AEAT is the authority; the operator files the declaration through AEAT Sede or in person at
 a competent AEAT office, then records that fact locally through ``aeat app modelo m036
 {alta,modificacion,baja}``. This module owns the typed application service behind
-that surface: it persists encrypted
-:data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE` rows,
-emits the matching ``modelo.036.declaration.*`` bucket event, and exposes the
-same :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository` path for list/view
-read-back.
+that surface: it persists encrypted declaration rows through the required
+application-owned lifecycle ports, emits the matching
+``modelo.036.declaration.*`` bucket event, and exposes the same application
+capability for list/view read-back.
 
 The closed event-kind axis comes from
 :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`, whose values are
@@ -30,12 +29,8 @@ See Also:
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING
-
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage.secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -46,9 +41,7 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write, build_bucket_event
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ...domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
-
-if TYPE_CHECKING:
-    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
+from .m036_lifecycle_ports import M036DeclarationRepositoryPort, M036LifecyclePorts
 
 
 def derive_m036_declaration_id(
@@ -115,21 +108,27 @@ class M036DeclarationCommand(BaseModel):
     note: str | None = Field(default=None, max_length=512)
 
 
+class M036DeclarationNotFoundError(KeyError):
+    """Raised when a requested M036 declaration does not exist."""
+
+
+class M036DeclarationAmbiguousError(KeyError):
+    """Raised when an M036 declaration prefix addresses multiple records."""
+
+
 class M036DeclarationResult(BaseModel):
     """Outcome of a successful declaration-recording call.
 
     Carries the content-addressed declaration id (SHA-256 over the
     derived tuple), the canonical event-kind, the declared date, the
     bucket scope of the record, and the timestamp at which the local
-    record was written. The ``bucket_id`` field bridges the storage
-    cross-check `SecureSnapshotRepository` performs when loading and
-    saving records (it refuses payloads whose bucket disagrees with the
-    repository binding). Downstream consumers (stale-cascade engine, profile-state
+    record was written. The ``bucket_id`` field bridges the persistence
+    capability's bucket cross-check when loading and saving records (it refuses
+    payloads whose bucket disagrees with the repository binding). Downstream consumers (stale-cascade engine, profile-state
     re-derivation) read these fields to decide what to recompute.
 
-    The record is the payload model for
-    :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository` rows stored under
-    :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`.
+    The record is the payload model for the application-owned declaration
+    repository capability.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -147,7 +146,7 @@ class M036DeclarationResult(BaseModel):
     note: str | None = Field(default=None, max_length=512)
     recorded_at: datetime
 
-    # SNAPSHOT-ID-ALIAS: ``SecureSnapshotRepository`` locates payloads by a
+    # SNAPSHOT-ID-ALIAS: the persistence adapter locates payloads by a
     # ``snapshot_id`` attribute. The M036 record's natural id is the typed
     # content-address ``declaration_id``; the runtime property exposes it
     # under the generic name without duplicating storage and without
@@ -176,50 +175,34 @@ def m036_declaration_object_key(bucket_id: str, declaration_id: str) -> str:
     return f"m036-declaration:{bucket_id}:{declaration_id}"
 
 
-def _m036_declaration_not_found(declaration_id: str) -> KeyError:
-    return KeyError(f"M036 declaration {declaration_id!r} not found")
+def _m036_declaration_not_found(declaration_id: str) -> M036DeclarationNotFoundError:
+    return M036DeclarationNotFoundError(f"M036 declaration {declaration_id!r} not found")
 
 
-def _m036_declaration_ambiguous_prefix(declaration_id: str, full_ids: tuple[str, ...]) -> KeyError:
-    return KeyError(f"M036 declaration prefix {declaration_id!r} is ambiguous; matches {list(full_ids)!r}")
-
-
-def _m036_declaration_repository(bucket_id: BucketId) -> SecureSnapshotRepository[M036DeclarationResult]:
-    """Build the single secure-object repository the write and read paths share.
-
-    Both :func:`record_m036_declaration` (write) and the read-back surface
-    (:func:`list_m036_declarations` / :func:`read_m036_declaration`) route
-    through this one factory so there is no parallel read path: the
-    :class:`SecureSnapshotRepository` it returns owns the encrypted
-    :data:`LIVE_M036_DECLARATION_NAMESPACE` rows keyed by
-    ``m036-declaration:<bucket_id>:<declaration_id>``.
-    """
-    # The repository class itself is adapter-side and imports nothing from
-    # application, so it needs no deferral. The error class still does: it is
-    # owned by application.live, which depends transitively on this package for
-    # the work-unit aggregations.
-    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-    from ..live.errors import LiveApplicationInputError
-
-    return SecureSnapshotRepository(
-        bucket_id=bucket_id,
-        payload_model=M036DeclarationResult,
-        namespace_definition=LIVE_M036_DECLARATION_NAMESPACE,
-        object_key=m036_declaration_object_key,
-        not_found_factory=_m036_declaration_not_found,
-        ambiguous_prefix_factory=_m036_declaration_ambiguous_prefix,
-        domain_label="m036_declaration",
-        input_error_cls=LiveApplicationInputError,
+def _m036_declaration_ambiguous_prefix(
+    declaration_id: str,
+    full_ids: tuple[str, ...],
+) -> M036DeclarationAmbiguousError:
+    return M036DeclarationAmbiguousError(
+        f"M036 declaration prefix {declaration_id!r} is ambiguous; matches {list(full_ids)!r}",
     )
 
 
-def list_m036_declarations(*, bucket_id: BucketId) -> tuple[M036DeclarationResult, ...]:
+def _m036_declaration_repository(*, ports: M036LifecyclePorts) -> M036DeclarationRepositoryPort:
+    """Return the required declaration capability for this lifecycle call."""
+    return ports.declaration_repository
+
+
+def list_m036_declarations(
+    *,
+    bucket_id: BucketId,
+    ports: M036LifecyclePorts,
+) -> tuple[M036DeclarationResult, ...]:
     """Return every recorded M036 declaration in the active bucket.
 
-    Reads through the same :class:`SecureSnapshotRepository` the write path
-    persists into (no parallel read path), enumerating the encrypted
-    :data:`LIVE_M036_DECLARATION_NAMESPACE` rows scoped to ``bucket_id`` and
-    returning the typed :class:`M036DeclarationResult` records verbatim —
+    Reads through the same declaration capability the write path persists into
+    (no parallel read path), enumerating the encrypted rows scoped to
+    ``bucket_id`` and returning the typed :class:`M036DeclarationResult` records verbatim —
     every persisted field (``declaration_id``, ``event_kind``, ``declared_on``,
     ``recorded_at``, ``sede_justificante``, ``note``) is preserved, never
     collapsed to a flat mapping. An empty bucket returns an empty tuple, the
@@ -229,13 +212,18 @@ def list_m036_declarations(*, bucket_id: BucketId) -> tuple[M036DeclarationResul
         :func:`read_m036_declaration`
         :func:`record_m036_declaration`
     """
-    return _m036_declaration_repository(bucket_id).list_snapshots()
+    return _m036_declaration_repository(ports=ports).list_snapshots()
 
 
-def read_m036_declaration(declaration_id: str, *, bucket_id: BucketId) -> M036DeclarationResult:
+def read_m036_declaration(
+    declaration_id: str,
+    *,
+    bucket_id: BucketId,
+    ports: M036LifecyclePorts,
+) -> M036DeclarationResult:
     """Return one recorded M036 declaration by id or unambiguous prefix.
 
-    Reads through the owning :class:`SecureSnapshotRepository`, resolving the
+    Reads through the owning declaration capability, resolving the
     full content-addressed ``declaration_id`` or an unambiguous prefix of it
     to a single typed :class:`M036DeclarationResult`. Raises the repository's
     not-found error for an unknown id and the ambiguous-prefix error when a
@@ -244,9 +232,9 @@ def read_m036_declaration(declaration_id: str, *, bucket_id: BucketId) -> M036De
 
     See Also:
         :func:`list_m036_declarations`
-        :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository`
+        :class:`M036LifecyclePorts`
     """
-    return _m036_declaration_repository(bucket_id).resolve(declaration_id)
+    return _m036_declaration_repository(ports=ports).resolve(declaration_id)
 
 
 def _require_profile_owns_bucket(*, profile_id: ProfileId, bucket_id: BucketId) -> None:
@@ -345,6 +333,7 @@ def record_m036_declaration(
     command: M036DeclarationCommand,
     *,
     bucket_id: BucketId,
+    ports: M036LifecyclePorts,
 ) -> M036DeclarationResult:
     """Persist an M036 declaration record and emit its BucketEvent.
 
@@ -360,12 +349,12 @@ def record_m036_declaration(
     :attr:`~.CENSO_DECLARATION_MODIFICACION` /
     :attr:`~.CENSO_DECLARATION_BAJA`) carries the audit-trail entry the
     composition-service rule requires alongside the data write, saved via the
-    :class:`BucketEventHistoryRepository`.
+    bucket-event capability supplied in ``ports``.
 
     The persisted :class:`M036DeclarationResult` is encrypted into the
-    bucket-local :data:`LIVE_M036_DECLARATION_NAMESPACE` row keyed by
-    ``m036-declaration:<bucket_id>:<declaration_id>`` via the standard
-    :class:`SecureSnapshotRepository` machinery (shared with the
+    bucket-local declaration row keyed by
+    ``m036-declaration:<bucket_id>:<declaration_id>`` via the declaration
+    repository capability (shared with the
     :func:`list_m036_declarations` / :func:`read_m036_declaration` read-back
     surface through :func:`_m036_declaration_repository`).  ``bucket_id`` is
     checked against the repository binding at save time, so a cross-bucket
@@ -393,7 +382,7 @@ def record_m036_declaration(
     See Also:
         :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`
         :class:`cadrumo.domain.buckets.BucketEventType`
-        :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`
+        :class:`M036LifecyclePorts`
     """
     _require_profile_owns_bucket(profile_id=command.profile_id, bucket_id=bucket_id)
     declaration_id = derive_m036_declaration_id(
@@ -405,7 +394,7 @@ def record_m036_declaration(
     _require_m036_sequence_valid(
         command=command,
         declaration_id=declaration_id,
-        existing=list_m036_declarations(bucket_id=bucket_id),
+        existing=list_m036_declarations(bucket_id=bucket_id, ports=ports),
     )
     occurred_at = now()
     result = M036DeclarationResult(
@@ -447,9 +436,9 @@ def record_m036_declaration(
     # One unit of work: the declaration snapshot and its audit event. Saved
     # first and emitted afterwards, an event-storage failure left the M036
     # declaration durable with nothing in the history accounting for it.
-    _m036_declaration_repository(bucket_id).save_with_secure_object_writes(
+    _m036_declaration_repository(ports=ports).save_with_secure_object_writes(
         result,
-        (bucket_event_history_write(BucketEventHistoryRepository(), (declaration_event,)),),
+        (bucket_event_history_write(ports.bucket_event_repository, (declaration_event,)),),
     )
 
     return result
@@ -457,6 +446,8 @@ def record_m036_declaration(
 
 __all__ = [
     "M036DeclarationCommand",
+    "M036DeclarationAmbiguousError",
+    "M036DeclarationNotFoundError",
     "M036DeclarationResult",
     "derive_m036_declaration_id",
     "list_m036_declarations",

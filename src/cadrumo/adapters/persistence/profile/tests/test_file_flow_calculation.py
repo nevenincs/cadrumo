@@ -12,7 +12,7 @@ import pytest
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, list_calculation_revisions
 from cadrumo.application.modelo.filing_actions import file_modelo_revision

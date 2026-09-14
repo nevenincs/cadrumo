@@ -40,7 +40,9 @@ explicit instead of borrowing the digest of the artifact being replaced.
 class GovernedFactSource(Protocol):
     """Anything that can resolve one typed governed-fact query."""
 
-    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact: ...
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        """Resolve one typed governed-fact query."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)

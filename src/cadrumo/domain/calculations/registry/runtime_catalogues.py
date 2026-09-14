@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import unicodedata
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
@@ -12,11 +11,14 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, model_validator
 
 from ....core.frozen_mapping import FROZEN_MAPPING
+from ....core.text_fold import fold_printed_phrase
 from .errors import RegistryValidationError
 from .schema_base import RegistryModel
 
 
 class PublishedIvaCitation(RegistryModel):
+    """One dated legal citation embedded in an IVA operative rule."""
+
     legal_reference: str = Field(min_length=1)
     quoted_text: str = ""
     grounding: Literal["verified", "unresolved"] = "verified"
@@ -38,6 +40,8 @@ class PublishedIvaCitation(RegistryModel):
 
 
 class PublishedIvaRegulation(RegistryModel):
+    """One typed IVA category regulation and its legal grounding."""
+
     category: str = Field(min_length=1)
     requires_reverse_charge: bool
     requires_supplier_iva_id: bool
@@ -57,6 +61,8 @@ class PublishedIvaRegulation(RegistryModel):
 
 
 class PublishedIvaPlaceOfSupplyRule(RegistryModel):
+    """One dated place-of-supply rule published for runtime selection."""
+
     rule_id: str = Field(min_length=1)
     supply_nature: str | None = None
     legal_references: tuple[str, ...] = ()
@@ -84,6 +90,8 @@ class PublishedIvaPlaceOfSupplyRule(RegistryModel):
 
 
 class PublishedRecargoBand(RegistryModel):
+    """One contiguous late-filing surcharge band."""
+
     id: str = Field(min_length=1)
     min_completed_months: int = Field(ge=0)
     max_completed_months: int | None = Field(default=None, ge=0)
@@ -101,6 +109,8 @@ class PublishedRecargoBand(RegistryModel):
 
 
 class CountryVocabularyRecord(RegistryModel):
+    """One canonical country code and its accepted printed names."""
+
     code: str = Field(pattern=r"^[A-Z]{2}$")
     alpha3: str = Field(pattern=r"^[A-Z]{3}$")
     names: tuple[str, ...] = Field(min_length=1)
@@ -108,6 +118,8 @@ class CountryVocabularyRecord(RegistryModel):
 
 
 class SpanishPostalTerritory(RegistryModel):
+    """One Spanish postal-prefix classification for IVA territory."""
+
     postal_prefixes: tuple[str, ...] = Field(min_length=1)
     scope: str = Field(min_length=1)
     name: str = Field(min_length=1)
@@ -116,6 +128,8 @@ class SpanishPostalTerritory(RegistryModel):
 
 
 class TerritoryCarveOut(RegistryModel):
+    """One special territory's explicit IVA disposition."""
+
     code: str = Field(pattern=r"^[A-Z]{2}$")
     name: str = Field(min_length=1)
     assimilated_to: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
@@ -132,6 +146,8 @@ class TerritoryCarveOut(RegistryModel):
 
 
 class ApoderamientoScopeRecord(RegistryModel):
+    """One published authorization scope and its modelo coverage."""
+
     code: str = Field(pattern=r"^[A-Z][A-Z0-9_]*$")
     name_es: str = Field(min_length=1)
     name_en: str = Field(min_length=1)
@@ -219,13 +235,7 @@ class RuntimeRegistryCatalogues(RegistryModel):
         names: dict[str, str] = {}
         for code, record in self.countries.items():
             for name in record.names:
-                folded = " ".join(
-                    "".join(
-                        character
-                        for character in unicodedata.normalize("NFKD", name.casefold())
-                        if not unicodedata.combining(character)
-                    ).split()
-                )
+                folded = fold_printed_phrase(name)
                 if not folded:
                     raise RegistryValidationError(f"country {code!r} carries a blank printed name")
                 previous = names.setdefault(folded, code)

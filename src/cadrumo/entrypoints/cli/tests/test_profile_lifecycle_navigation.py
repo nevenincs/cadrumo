@@ -28,7 +28,7 @@ from click.testing import Result
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from ....core.config import load_settings
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -359,8 +359,8 @@ def test_logout_clears_a_stale_selection_without_an_open_session(_per_bucket_bac
     reaches the revocation authority directly, and the two together are what
     make the gate on the open session observable.
     """
-    from ....tests.profile_capsule import open_test_profile_session
-    from ....tests.user_profile import register_minimal_profile
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+    from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
     profile_id = "11111111-1111-4111-8111-111111111111"
     with open_test_profile_session(profile_id):

@@ -18,6 +18,7 @@ from .protocols import (
     InvoiceCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
+from .usage_ratio_repository import UsageRatioProfileLoader
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,7 @@ class LedgerActionPorts:
     invoice_repository: InvoiceCatalogueCoCommitWriterProtocol
     attachment_store: AttachmentStoreProtocol
     usage_ratio_profile: UsageRatioProfile
+    usage_ratio_profile_loader: UsageRatioProfileLoader
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     purchase_invoice_evidence_records: tuple[PurchaseInvoiceEvidence, ...]

@@ -33,8 +33,12 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.invoices.errors import InvoicePersistenceError
 from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....application.invoices.catalogue_reads_ports import (
+    InvoiceCatalogueReadPersistenceError,
+    InvoiceCatalogueReadPorts,
+)
 from .._modelo_bindings_invoice_iva import (
     screened_invoice_iva_observations,
 )
@@ -45,6 +49,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _YEAR = 2026
 _PERIOD_CODE = "2T"
+
+
+class _EmptyTransactionCatalogueReader:
+    def load(self) -> TransactionCatalogue:
+        return TransactionCatalogue()
+
+    def partition_by_date_range(self, start, end) -> LedgerDatePartition:
+        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
+
+
+def _read_ports(invoice_reader: object) -> InvoiceCatalogueReadPorts:
+    return InvoiceCatalogueReadPorts(
+        invoice_reader=invoice_reader,
+        transaction_reader=_EmptyTransactionCatalogueReader(),
+    )
 
 
 class _UnreadableInvoiceCatalogue:
@@ -64,10 +83,10 @@ class _UnreadableInvoiceCatalogue:
         return True
 
     def load(self) -> InvoiceCatalogue:
-        raise InvoicePersistenceError("invoice catalogue envelope could not be decrypted")
+        raise InvoiceCatalogueReadPersistenceError("invoice_catalogue_load")
 
     def save(self, catalogue: InvoiceCatalogue) -> None:
-        raise InvoicePersistenceError("invoice catalogue envelope could not be decrypted")
+        raise InvoiceCatalogueReadPersistenceError("invoice_catalogue_load")
 
 
 def _context() -> CalculationSourceContext:
@@ -91,7 +110,7 @@ def test_the_screen_records_that_it_could_not_read_the_catalogue() -> None:
     screened = screened_invoice_iva_observations(
         context=_context(),
         period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
-        invoice_repository=_UnreadableInvoiceCatalogue(),
+        ports=_read_ports(_UnreadableInvoiceCatalogue()),
     )
 
     assert screened.observations == ()
@@ -112,7 +131,7 @@ def test_the_silence_guard_carries_the_degradation_to_its_caller() -> None:
         context=_context(),
         period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
         transaction_binding_values={},
-        invoice_repository=_UnreadableInvoiceCatalogue(),
+        ports=_read_ports(_UnreadableInvoiceCatalogue()),
         prorrata_apportionment=None,
     )
 
@@ -145,7 +164,7 @@ def test_a_readable_empty_catalogue_is_not_reported_as_degraded() -> None:
     screened = screened_invoice_iva_observations(
         context=_context(),
         period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
-        invoice_repository=_EmptyCatalogue(),
+        ports=_read_ports(_EmptyCatalogue()),
     )
 
     assert screened.observations == ()

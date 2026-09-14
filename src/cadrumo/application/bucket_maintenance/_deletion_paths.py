@@ -13,13 +13,25 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...adapters.persistence.storage.bucket.directory_layout import BucketPaths, bucket_paths
 from ...core.link_safety import is_link_like
+from ..user_profile.custody_ports import ProfileBucketStoragePathsPort, ProfileBucketStoragePort
 
 
-def validated_bucket_deletion_paths(*, root: Path, bucket_id: str) -> BucketPaths:
+def validated_bucket_deletion_paths(
+    *,
+    root: Path,
+    bucket_id: str,
+    storage: ProfileBucketStoragePort,
+) -> ProfileBucketStoragePathsPort:
     """Return deletion paths only for a real, non-link bucket root."""
-    paths = bucket_paths(root, bucket_id)
+    try:
+        paths = storage.resolve(root, bucket_id)
+    except ValueError as exc:
+        # Persistence owns the layout validator and its concrete exception
+        # hierarchy.  The maintenance policy only exposes a neutral refusal at
+        # this boundary, so callers cannot depend on adapter error types or
+        # messages.
+        raise ValueError(f"bucket deletion path resolution refused for bucket {bucket_id!r}") from exc
     if is_link_like(paths.bucket_dir):
         raise ValueError(f"bucket deletion refuses linked bucket root: {paths.bucket_dir}")
     if not paths.bucket_dir.is_dir():

@@ -50,7 +50,7 @@ from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from cadrumo.application.calculations.cross_period_models import (    CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,

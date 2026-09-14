@@ -58,10 +58,8 @@ from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
@@ -69,12 +67,11 @@ from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.attachments.errors import AttachmentNotFoundError
+from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import link_attachment_invoice
-from ...domain.currency.service import ExchangeRateProvider
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
@@ -105,6 +102,8 @@ from .evidence_reference import find_bytes_bearing_evidence_record, refuse_refer
 from .invoice_draft_extraction import extract_invoice_draft_from_evidence
 from .invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+from .invoice_confirmation_ports import InvoiceConfirmationPorts
+from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 
 if TYPE_CHECKING:
     from .confirm_establishment import ConfirmedEstablishment
@@ -385,7 +384,7 @@ def _resolve_evidence_attachment_id(
 
 
 def _prior_invoices_this_document_minted(
-    store: AttachmentStore,
+    store: AttachmentStoreProtocol,
     *,
     attachment_id: str,
     catalogue: InvoiceCatalogue,
@@ -409,7 +408,7 @@ def _prior_invoices_this_document_minted(
 
 
 def _invoice_ids_this_document_already_minted(
-    store: AttachmentStore,
+    store: AttachmentStoreProtocol,
     *,
     attachment_id: str,
 ) -> tuple[str, ...]:
@@ -492,6 +491,7 @@ def _prepare_invoice_confirmation(
     iva_amount: Decimal | None,
     supply_nature: SupplyNature | None,
     settings: Settings | None,
+    counterparty_establishment_repository: CounterpartyEstablishmentRepositoryProtocol,
     evidence_ports: LedgerEvidencePorts,
     resolutions: Sequence[FindingResolution],
     counterparty_tax_id: str | None,
@@ -546,6 +546,7 @@ def _prepare_invoice_confirmation(
             operator_restated_amounts=operator_restated_amounts,
         ),
         supply_nature=supply_nature,
+        repository=counterparty_establishment_repository,
     )
     operator_overrides: dict[str, object | None] = {
         counterparty_side.tax_id_field: counterparty_tax_id,
@@ -595,7 +596,7 @@ def _build_confirmed_invoice_candidate(
     series: str | None,
     rectifies_invoice_number: str | None,
     notes: str,
-    rate_provider: ExchangeRateProvider | None,
+    catalogue_creation_ports: CatalogueCreationPorts,
     preparation: _InvoiceConfirmationPreparation,
 ) -> Invoice:
     """Resolve operator/document fields and build the exact catalogue candidate."""
@@ -667,7 +668,7 @@ def _build_confirmed_invoice_candidate(
         rectifies_invoice_number=resolved_rectifies,
         recargo_amount=resolved_recargo_amount,
         lines=confirmed_lines,
-        rate_provider=rate_provider,
+        rate_provider=catalogue_creation_ports.rate_provider,
     )
 
 
@@ -679,14 +680,15 @@ def _persist_confirmed_invoice(
     evidence_id: str | None,
     confirmed_by: str,
     resolutions: Sequence[FindingResolution],
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    catalogue_creation_ports: CatalogueCreationPorts,
+    invoice_confirmation_ports: InvoiceConfirmationPorts,
     evidence_ports: LedgerEvidencePorts,
 ) -> InvoiceConfirmationResult:
     """Apply idempotency, link evidence, and persist the confirmation record."""
     from .confirmation_record import re_stamped_provenance
 
-    repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, preparation.settings))
+    repository = catalogue_creation_ports.invoice_repository
+    attachment_store = invoice_confirmation_ports.attachment_store
     catalogue = repository.load()
     already_minted = _prior_invoices_this_document_minted(
         attachment_store,
@@ -738,7 +740,7 @@ def _persist_confirmed_invoice(
             total_discrepancy=printed_total_discrepancy(draft=preparation.draft, invoice=existing),
             establishment=preparation.establishment,
         )
-    result = create_catalogue_invoice(invoice=candidate, repository=repository)
+    result = create_catalogue_invoice(invoice=candidate, ports=catalogue_creation_ports)
     link_attachment_invoice(
         attachment_store,
         attachment_id=preparation.attachment_id,
@@ -800,8 +802,9 @@ def confirm_invoice_draft_from_evidence(
     resolutions: Sequence[FindingResolution] = (),
     confirmed_by: str = "operator",
     settings: Settings | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    rate_provider: ExchangeRateProvider | None = None,
+    catalogue_creation_ports: CatalogueCreationPorts,
+    invoice_confirmation_ports: InvoiceConfirmationPorts,
+    counterparty_establishment_repository: CounterpartyEstablishmentRepositoryProtocol,
     evidence_ports: LedgerEvidencePorts,
     extraction_ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceConfirmationResult:
@@ -889,15 +892,15 @@ def confirm_invoice_draft_from_evidence(
             one is answered individually; there is no bulk flag, deliberately.
         confirmed_by: Who is confirming, recorded in the confirmation
             provenance record.
-        settings: Resolved ``Settings``; ``load_settings()`` when ``None``.
-        invoice_repository: Optional injected
-            :class:`InvoiceCatalogueRepositoryProtocol` (testing seam).
-        rate_provider: The euro-conversion rate source for a foreign-currency
-            document. ``None`` uses the bundled ECB reference-rate provider,
-            which is the production path. Injectable because confirming a
-            foreign invoice otherwise reaches the ECB Data Portal over the
-            network, so the conversion policy could not be exercised without
-            it; a euro document never consults it at all.
+        settings: Resolved Settings; load_settings() when omitted.
+        counterparty_establishment_repository: Required remembered
+            counterparty-facts capability for the active bucket.
+        catalogue_creation_ports: Required invoice-catalogue repository, event
+            history, and exchange-rate capabilities for the active bucket.
+        invoice_confirmation_ports: Required attachment-manifest capability
+            for the active bucket.  The composition root binds its encrypted
+            implementation; this application service only sees the public
+            attachment protocol.
 
     Returns:
         :class:`InvoiceConfirmationResult`: The persisted (or pre-existing)
@@ -927,6 +930,7 @@ def confirm_invoice_draft_from_evidence(
         iva_amount=iva_amount,
         supply_nature=supply_nature,
         settings=settings,
+        counterparty_establishment_repository=counterparty_establishment_repository,
         evidence_ports=evidence_ports,
         resolutions=resolutions,
         counterparty_tax_id=counterparty_tax_id,
@@ -962,7 +966,7 @@ def confirm_invoice_draft_from_evidence(
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
         notes=notes,
-        rate_provider=rate_provider,
+        catalogue_creation_ports=catalogue_creation_ports,
         preparation=preparation,
     )
     return _persist_confirmed_invoice(
@@ -972,6 +976,7 @@ def confirm_invoice_draft_from_evidence(
         evidence_id=evidence_id,
         confirmed_by=confirmed_by,
         resolutions=resolutions,
-        invoice_repository=invoice_repository,
+        catalogue_creation_ports=catalogue_creation_ports,
+        invoice_confirmation_ports=invoice_confirmation_ports,
         evidence_ports=evidence_ports,
     )

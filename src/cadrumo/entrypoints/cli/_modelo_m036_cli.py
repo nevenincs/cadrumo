@@ -16,6 +16,7 @@ from ...core.i18n.render import tr
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ._modelo_behavior_support import require_active_profile
+from .state_projection_support import m036_lifecycle_ports_factory
 from ._modelo_payloads_m036 import (
     M036DeclarationListResult,
     M036DeclarationRecordResult,
@@ -71,7 +72,11 @@ def record_m036(
         sede_justificante=sede_justificante,
         note=note,
     )
-    result = record_m036_declaration(command, bucket_id=bucket_id)
+    result = record_m036_declaration(
+        command,
+        bucket_id=bucket_id,
+        ports=m036_lifecycle_ports_factory(ctx)(bucket_id=bucket_id),
+    )
     payload = M036DeclarationRecordResult(
         declaration_id=result.declaration_id,
         bucket_id=result.bucket_id,
@@ -141,7 +146,10 @@ def m036_list(ctx: typer.Context) -> None:
     """List the active profile's recorded M036 declarations."""
     require_active_profile()
     bucket_id = active_bucket_id_or_refuse()
-    declarations = list_m036_declarations(bucket_id=bucket_id)
+    declarations = list_m036_declarations(
+        bucket_id=bucket_id,
+        ports=m036_lifecycle_ports_factory(ctx)(bucket_id=bucket_id),
+    )
     result = M036DeclarationListResult(
         bucket_id=bucket_id,
         declaration_count=len(declarations),
@@ -176,7 +184,11 @@ def m036_view(ctx: typer.Context, declaration_id: str) -> None:
     require_active_profile()
     bucket_id = active_bucket_id_or_refuse()
     try:
-        declaration = read_m036_declaration(declaration_id, bucket_id=bucket_id)
+        declaration = read_m036_declaration(
+            declaration_id,
+            bucket_id=bucket_id,
+            ports=m036_lifecycle_ports_factory(ctx)(bucket_id=bucket_id),
+        )
     except KeyError as exc:
         raise typer.BadParameter(
             tr(

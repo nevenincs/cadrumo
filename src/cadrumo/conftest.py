@@ -190,7 +190,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .application.workflow.persistence import bind_workflow_persistence_port
-    from .tests.profile_persistence import composed_profile_persistence_ports
+    from .adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 
     with (
         composed_profile_persistence_ports(),

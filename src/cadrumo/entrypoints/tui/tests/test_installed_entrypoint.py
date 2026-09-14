@@ -25,7 +25,7 @@ def test_the_packaging_declares_one_console_entry_point_and_no_tui_alias() -> No
     spec = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     scripts = spec["project"]["scripts"]
 
-    assert scripts.get(_SCRIPT_NAME) == "cadrumo.entrypoints._cli_main:main"
+    assert scripts.get(_SCRIPT_NAME) == "cadrumo.entrypoints.cli.bootstrap:main"
     assert _RETIRED_SCRIPT_NAME not in scripts
 
 

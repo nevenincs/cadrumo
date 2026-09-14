@@ -209,7 +209,7 @@ def _validate_export_options(
         )
     if dictionary_values is not None:
         raise FilingExportValidationError("an envelope-prefix export does not admit XML dictionary values")
-    if filing_envelope_modelo_policy(modelo).requires_prior_domiciliation_election and (
+    if filing_envelope_modelo_policy(modelo).requiresprior_domiciliation_election and (
         prior_domiciliation_election is None
     ):
         raise FilingExportValidationError(
@@ -235,7 +235,7 @@ def _prepare_export_draft(
     layout = _select_export_layout(draft, subview=subview, registry_snapshot=registry_snapshot)
     renders_filing_envelope = layout.filing_envelope is not None
     renders_auxiliary_header = layout.auxiliary_envelope_header is not None
-    resolved_prior_domiciliation_election = _validate_export_options(
+    resolvedprior_domiciliation_election = _validate_export_options(
         modelo=Modelo(draft.modelo),
         renders_filing_envelope=renders_filing_envelope,
         renders_auxiliary_header=renders_auxiliary_header,
@@ -251,7 +251,7 @@ def _prepare_export_draft(
         registry_snapshot=registry_snapshot,
         layout=layout,
         producer_values=_filing_producer_values(producer_snapshot),
-        prior_domiciliation_election=resolved_prior_domiciliation_election,
+        prior_domiciliation_election=resolvedprior_domiciliation_election,
         renders_filing_envelope=renders_filing_envelope,
     )
 

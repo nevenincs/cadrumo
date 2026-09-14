@@ -12,7 +12,7 @@ from ..core.errors.hierarchy import CadrumoError
 from ..core.time.clock import now
 from ..domain.retention.errors import RetentionFloorError
 from ..domain.retention.floor import RetentionFloorAssessment, erase_is_blocked
-from ._config_reset_repository import (
+from .config_reset_repository import (
     ConfigResetJournalCorruptError,
     ConfigResetJournalIncompleteError,
     ConfigResetJournalNotFoundError,
@@ -40,6 +40,7 @@ from .config_reset_models import (
     new_config_reset_operation_id,
 )
 from .user_profile.custody_hold_models import ProfileCustodyRetentionOverride
+from .user_profile.custody_ports import ProfileBucketStoragePort
 from .user_profile.lifecycle import ProfileCapsuleLifecycle
 from .user_profile.profile_pointer import active_profile_pointer_transaction
 from .workflow.profile_bucket_scan import list_profile_buckets
@@ -84,6 +85,7 @@ def start_config_reset(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
+    bucket_storage: ProfileBucketStoragePort,
     confirmed: bool,
     acknowledge_retention_override: bool = False,
     retention_override_reason: str | None = None,
@@ -109,7 +111,8 @@ def start_config_reset(
             repository.refuse_if_incomplete()
         except ConfigResetJournalIncompleteError as exc:
             raise _already_running_error(exc) from exc
-        with BucketMaintenanceService().deletion_target_locks(
+        maintenance_service = BucketMaintenanceService(bucket_storage=bucket_storage)
+        with maintenance_service.deletion_target_locks(
             root=settings.cadrumo_local_storage_root,
             bucket_ids=target_ids,
             wait_seconds=settings.cadrumo_file_lock_timeout_s,
@@ -120,6 +123,7 @@ def start_config_reset(
                 target_ids=tuple(sorted(target_ids)),
                 acknowledge_retention_override=acknowledge_retention_override,
                 retention_override_reason=retention_override_reason,
+                maintenance_service=maintenance_service,
             )
             operation = _update_operation(
                 preflight.operation,
@@ -142,6 +146,7 @@ def start_config_reset(
                 operation=operation,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 operator_scope_ports=operator_scope_ports,
+                maintenance_service=maintenance_service,
             )
 
 
@@ -164,6 +169,7 @@ def resume_config_reset(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
+    bucket_storage: ProfileBucketStoragePort,
     confirmed: bool,
     acknowledge_retention_override: bool = False,
     retention_override_reason: str | None = None,
@@ -201,7 +207,8 @@ def resume_config_reset(
                     | ({current_pointer.record.bucket_id} if current_pointer.record.bucket_id is not None else set()),
                 ),
             )
-            with BucketMaintenanceService().deletion_target_locks(
+            maintenance_service = BucketMaintenanceService(bucket_storage=bucket_storage)
+            with maintenance_service.deletion_target_locks(
                 root=settings.cadrumo_local_storage_root,
                 bucket_ids=lock_ids,
                 wait_seconds=settings.cadrumo_file_lock_timeout_s,
@@ -209,6 +216,7 @@ def resume_config_reset(
                 pointer_preflight = _reconcile_pointer_snapshot_for_resume(
                     operation,
                     current_pointer=current_pointer,
+                    maintenance_service=maintenance_service,
                 )
                 operation = pointer_preflight.operation
                 if pointer_preflight.pause_reason is not None:
@@ -223,6 +231,7 @@ def resume_config_reset(
                     operation,
                     acknowledge_retention_override=acknowledge_retention_override,
                     retention_override_reason=retention_override_reason,
+                    maintenance_service=maintenance_service,
                 )
                 if preflight.pause_reason is not None:
                     operation = _pause_operation(
@@ -245,6 +254,7 @@ def resume_config_reset(
                     operation=operation,
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
                     operator_scope_ports=operator_scope_ports,
+                    maintenance_service=maintenance_service,
                 )
 
 
@@ -277,12 +287,12 @@ def _initial_preflight(
     target_ids: tuple[str, ...],
     acknowledge_retention_override: bool,
     retention_override_reason: str | None,
+    maintenance_service: BucketMaintenanceService,
 ) -> _Preflight:
-    service = BucketMaintenanceService()
     targets: list[ConfigResetTarget] = []
     blocked: list[str] = []
     for bucket_id in target_ids:
-        assessment = service.assess_deletion(
+        assessment = maintenance_service.assess_deletion(
             AssessBucketDeletionCommand(bucket_id=bucket_id),
         )
         target, resolved = _target_from_assessment(
@@ -379,6 +389,7 @@ def _reconcile_pointer_snapshot_for_resume(
     operation: ConfigResetOperation,
     *,
     current_pointer: ConfigResetPointerSnapshot,
+    maintenance_service: BucketMaintenanceService,
 ) -> _Preflight:
     if current_pointer == operation.pointer_snapshot:
         return _Preflight(operation=operation)
@@ -400,7 +411,7 @@ def _reconcile_pointer_snapshot_for_resume(
     if current_pointer.record.bucket_id is not None:
         paused_ids = (current_pointer.record.bucket_id,)
         if current_pointer.record.bucket_id not in target_ids:
-            assessment = BucketMaintenanceService().assess_deletion(
+            assessment = maintenance_service.assess_deletion(
                 AssessBucketDeletionCommand(bucket_id=current_pointer.record.bucket_id),
             )
             target, _ = _target_from_assessment(
@@ -507,8 +518,8 @@ def _resume_preflight(
     *,
     acknowledge_retention_override: bool,
     retention_override_reason: str | None,
+    maintenance_service: BucketMaintenanceService,
 ) -> _Preflight:
-    service = BucketMaintenanceService()
     updated_targets: list[ConfigResetTarget] = []
     changed: list[str] = []
     blocked: list[str] = []
@@ -516,7 +527,7 @@ def _resume_preflight(
         if target.phase is ConfigResetTargetPhase.DELETED:
             updated_targets.append(target)
             continue
-        assessment = service.assess_deletion(
+        assessment = maintenance_service.assess_deletion(
             AssessBucketDeletionCommand(bucket_id=target.bucket_id),
         )
         outcome = _resume_target_outcome(
@@ -571,15 +582,17 @@ def _roll_forward(
     operation: ConfigResetOperation,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
+    maintenance_service: BucketMaintenanceService,
 ) -> ConfigResetOperation:
     operation = _clear_auth_for_targets(
         repository,
         operation,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=operator_scope_ports,
+        maintenance_service=maintenance_service,
     )
     operation = _reconcile_pointer(repository, operation)
-    operation = _delete_targets(repository, operation)
+    operation = _delete_targets(repository, operation, maintenance_service=maintenance_service)
     completed_at = now()
     summary = ConfigResetSummary(
         target_count=len(operation.targets),
@@ -672,6 +685,7 @@ def _clear_auth_for_targets(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
+    maintenance_service: BucketMaintenanceService,
 ) -> ConfigResetOperation:
     for index, target in enumerate(operation.targets):
         if _phase_at_least(target.phase, ConfigResetTargetPhase.AUTH_CLEARED):
@@ -703,7 +717,7 @@ def _clear_auth_for_targets(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_scope_ports=operator_scope_ports,
         )
-        assessment = BucketMaintenanceService().assess_deletion(
+        assessment = maintenance_service.assess_deletion(
             AssessBucketDeletionCommand(bucket_id=target.bucket_id),
         )
         if not assessment.exists or assessment.fingerprint is None:
@@ -906,6 +920,8 @@ def _recognize_completed_erase(
 def _delete_targets(
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
+    *,
+    maintenance_service: BucketMaintenanceService,
 ) -> ConfigResetOperation:
     lifecycle = ProfileCapsuleLifecycle()
     for index, target in enumerate(operation.targets):
@@ -936,7 +952,7 @@ def _delete_targets(
         # snapshot said, however long ago. `_retention_decision_from_record`
         # carries the growth guard, so an approved override drops when the
         # retained set has grown beyond what the operator was shown.
-        assessment = BucketMaintenanceService().assess_deletion(
+        assessment = maintenance_service.assess_deletion(
             AssessBucketDeletionCommand(bucket_id=target.bucket_id),
         )
         target = _update_target(

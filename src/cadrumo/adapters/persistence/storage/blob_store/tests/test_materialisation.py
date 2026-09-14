@@ -11,7 +11,7 @@ from ......adapters.persistence.storage.tests.secure_sql import isolated_profile
 from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
 from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
-from ......tests.profile_capsule import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ...secret_store.store import SecretRecord
 from ...tests.storage_path_grammar import assert_path_matches_grammar
 from ..blob_store import EncryptedBlobStore

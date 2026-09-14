@@ -41,7 +41,16 @@ class CasillaLineageOrigin(StrEnum):
 
     @property
     def continues_a_chain(self) -> bool:
-        """Whether this origin asserts the row continues a predecessor-edition row."""
+        """Whether this origin asserts the row continues a predecessor-edition row.
+
+        NOT A GROUNDING PREDICATE, and it is the first thing a reader looking
+        for one finds. ``SEEDED`` asserts a continuation on the mechanical
+        predicate and GROUNDS NOTHING: a seeded link discharges no role
+        exemption and satisfies no grounding check. The two sets differ by the
+        whole seeded population, which is thousands of rows, so using this
+        property to answer "is this link grounded" silently over-counts by all
+        of them. For grounding, test against ``GROUNDED`` alone.
+        """
         return self in {CasillaLineageOrigin.GROUNDED, CasillaLineageOrigin.SEEDED}
 
     @property

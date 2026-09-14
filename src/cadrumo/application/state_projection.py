@@ -103,6 +103,7 @@ from .ledger.preflight import (
     LedgerPreflightReport,
     preflight_ledger_tax_readiness,
 )
+from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 from .operator_actions.models import PreconditionVerdict
 from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from .state_projection_ports import StateProjectionReadPorts
@@ -772,6 +773,7 @@ def _build_modelo_ledger_stage(
     *,
     bucket_id: str,
     period: Period,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
 ) -> _ModeloReadinessLedgerStage:
     """Evaluate ledger preflight only when the registry declares it."""
     if snapshot is None or not _snapshot_requires_ledger_preflight(snapshot):
@@ -779,6 +781,7 @@ def _build_modelo_ledger_stage(
     report: LedgerPreflightReport = preflight_ledger_tax_readiness(
         bucket_id=bucket_id,
         period=period,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
     )
     return _ModeloReadinessLedgerStage(
         required=True,
@@ -793,6 +796,7 @@ def _evaluate_modelo_readiness(
     request: ModeloReadinessRequest,
     *,
     context: _ModeloReadinessContext,
+    usage_ratio_profile_loader: UsageRatioProfileLoader,
 ) -> _ModeloReadinessEvaluation:
     """Evaluate profile, registry, binding, and ledger axes for one request."""
     period = _ledger_period_for_modelo_readiness(request)
@@ -803,7 +807,12 @@ def _evaluate_modelo_readiness(
         period=period,
         registry=registry,
     )
-    ledger = _build_modelo_ledger_stage(registry.snapshot, bucket_id=context.bucket_id, period=period)
+    ledger = _build_modelo_ledger_stage(
+        registry.snapshot,
+        bucket_id=context.bucket_id,
+        period=period,
+        usage_ratio_profile_loader=usage_ratio_profile_loader,
+    )
     missing_bindings = (
         _missing_calculation_bindings_for_readiness(
             registry.snapshot,
@@ -878,7 +887,14 @@ def _build_modelo_readiness(
     if context is None:
         return ()
     return tuple(
-        _project_modelo_readiness(_evaluate_modelo_readiness(request, context=context)) for request in requests
+        _project_modelo_readiness(
+            _evaluate_modelo_readiness(
+                request,
+                context=context,
+                usage_ratio_profile_loader=read_ports.usage_ratio_profile_loader,
+            )
+        )
+        for request in requests
     )
 
 

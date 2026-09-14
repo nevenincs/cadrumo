@@ -24,26 +24,17 @@ from .orden_anual_html import (
     row_values,
 )
 
-_LORCA_2022_HEADING_MARKERS = (
-    "Disposición adicional cuarta.",
-    "Reducción en 2022",
-    "término municipal de Lorca",
+_REDUCTION_HEADING_MARKERS = ("disposición adicional", "reducción")
+_REDUCTION_IVA_MARKERS = ("cuotas devengadas", "operaciones corrientes", "reduc")
+_REDUCTION_PERIOD_MARKERS = ("cálculo", "cuota")
+_REDUCTION_RATE_RE = re.compile(r"reducir\s+en\s+un\s+([0-9]+(?:,[0-9]+)?)\s+por\s+ciento", re.I)
+_REDUCTION_MUNICIPALITY_RE = re.compile(
+    r"\bt[eé]rmino\s+municipal\s+de\s+(?P<municipality>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ-]+)\b",
+    re.I,
 )
-_LORCA_2022_IVA_MARKERS = (
-    "2.",
-    "anexo II de esta Orden",
-    "régimen especial simplificado",
-    "20 por ciento",
-    "cuotas devengadas por operaciones corrientes",
-    "año 2022",
-)
-_LORCA_2022_PERIOD_MARKERS = (
-    "cuota trimestral",
-    "cuota anual",
-    "régimen especial simplificado",
-    "año 2022",
-)
-_LORCA_2022_RATE_RE = re.compile(r"reducir\s+en\s+un\s+([0-9]+(?:,[0-9]+)?)\s+por\s+ciento", re.I)
+_REDUCTION_EXERCISE_RE = re.compile(r"\b(?P<exercise>20\d{2})\b")
+_REDUCTION_ANNEX_RE = re.compile(r"\banexo\s+(?P<annex>I{1,3})\b", re.I)
+_REDUCTION_PERIOD_RE = re.compile(r"\bcuota\s+(?P<period>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ-]+)\b", re.I)
 
 
 def extract_agricultural_indexes(
@@ -133,15 +124,54 @@ def extract_lorca_2022_reduction(
     *,
     source_label: str,
 ) -> OrdenAnualIvaLorca2022Reduction | None:
-    """Return the sole exact 2022 Annex-II Lorca IVA reduction, when published."""
+    """Return the sole annual-Orden municipal reduction candidate, when published.
+
+    The parser identifies source structure and returns observed values.  It
+    intentionally does not decide which municipality, year, rate, annex, or
+    applicability window is governed.  That decision belongs to the compiler's
+    typed facts-authority projection.
+    """
     heading = _find_lorca_2022_heading(soup, source_label=source_label)
     if heading is None:
         return None
     paragraphs = _lorca_2022_paragraphs(heading)
     iva_clause, period_clause = _lorca_2022_clauses(paragraphs, source_label=source_label)
+    source_text = " ".join((normalise_html_text(heading.get_text(" ", strip=True)), iva_clause, period_clause))
+    exercises = tuple(sorted({int(match.group("exercise")) for match in _REDUCTION_EXERCISE_RE.finditer(source_text)}))
+    if len(exercises) != 1:
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} municipal reduction has ambiguous exercise identity",
+        )
+    municipalities = tuple(
+        dict.fromkeys(
+            match.group("municipality").strip()
+            for match in _REDUCTION_MUNICIPALITY_RE.finditer(iva_clause)
+        )
+    )
+    if len(municipalities) != 1:
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} municipal reduction has ambiguous municipality identity",
+        )
+    annexes = tuple(
+        dict.fromkeys(match.group("annex").upper() for match in _REDUCTION_ANNEX_RE.finditer(iva_clause))
+    )
+    if len(annexes) != 1:
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} municipal reduction has ambiguous annex scope",
+        )
+    periods = tuple(
+        dict.fromkeys(match.group("period").casefold() for match in _REDUCTION_PERIOD_RE.finditer(period_clause))
+    )
+    if not periods:
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} municipal reduction has no calculation period",
+        )
     return OrdenAnualIvaLorca2022Reduction(
-        municipality="Lorca",
+        ejercicio=exercises[0],
+        municipality=municipalities[0],
+        annex_scope=f"ANEXO {annexes[0]}",
         percentage=_lorca_2022_rate(iva_clause, source_label=source_label),
+        calculation_periods=periods,
         required_text=(
             normalise_html_text(heading.get_text(" ", strip=True)),
             iva_clause,
@@ -154,13 +184,17 @@ def _find_lorca_2022_heading(soup: BeautifulSoup, *, source_label: str) -> Tag |
     headings = tuple(
         tag
         for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
-        if _contains_all_markers(normalise_html_text(tag.get_text(" ", strip=True)), _LORCA_2022_HEADING_MARKERS)
+        if _contains_all_markers(normalise_html_text(tag.get_text(" ", strip=True)), _REDUCTION_HEADING_MARKERS)
+        and any(
+            _contains_all_markers(text, _REDUCTION_IVA_MARKERS)
+            for text in _lorca_2022_paragraphs(tag)
+        )
     )
     if not headings:
         return None
     if len(headings) != 1:
         raise OrdenAnualHtmlParseError(
-            f"annual Orden source {source_label!r} has ambiguous Lorca 2022 reduction headings",
+            f"annual Orden source {source_label!r} has ambiguous municipal reduction headings",
         )
     return headings[0]
 
@@ -183,25 +217,30 @@ def _lorca_2022_paragraphs(heading: Tag) -> tuple[str, ...]:
 
 
 def _lorca_2022_clauses(paragraphs: tuple[str, ...], *, source_label: str) -> tuple[str, str]:
-    iva_clauses = tuple(text for text in paragraphs if _contains_all_markers(text, _LORCA_2022_IVA_MARKERS))
-    period_clauses = tuple(text for text in paragraphs if _contains_all_markers(text, _LORCA_2022_PERIOD_MARKERS))
+    iva_clauses = tuple(text for text in paragraphs if _contains_all_markers(text, _REDUCTION_IVA_MARKERS))
+    period_clauses = tuple(
+        text
+        for text in paragraphs
+        if _contains_all_markers(text, _REDUCTION_PERIOD_MARKERS)
+        and len(tuple(_REDUCTION_PERIOD_RE.finditer(text))) >= 2
+    )
     if len(iva_clauses) != 1 or len(period_clauses) != 1:
         raise OrdenAnualHtmlParseError(
-            f"annual Orden source {source_label!r} has incomplete Lorca 2022 IVA reduction clauses",
+            f"annual Orden source {source_label!r} has incomplete municipal IVA reduction clauses",
         )
     return iva_clauses[0], period_clauses[0]
 
 
 def _lorca_2022_rate(iva_clause: str, *, source_label: str):
-    rate_match = _LORCA_2022_RATE_RE.search(iva_clause)
+    rate_match = _REDUCTION_RATE_RE.search(iva_clause)
     if rate_match is None:
         raise OrdenAnualHtmlParseError(
-            f"annual Orden source {source_label!r} has no numeric Lorca 2022 IVA reduction rate",
+            f"annual Orden source {source_label!r} has no numeric IVA reduction rate",
         )
     return parse_percent(
         rate_match.group(1),
         source_label=source_label,
-        context="Lorca 2022 IVA reduction",
+        context="municipal IVA reduction",
     )
 
 

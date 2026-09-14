@@ -22,6 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
@@ -83,11 +84,13 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(t
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         result = export_m145_communication_record(
             record.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             renderer=RegistryFixedWidthRecordRenderer(),
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
 
     nif = resolved.fields_by_id["modelo-145-dr-03-perceptor-nif"]
@@ -126,9 +129,11 @@ def test_export_m145_communication_record_applies_registry_numeric_and_money_pad
                 ),
             ),
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         result = export_m145_communication_record(
-            record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+            record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
 
     assert _payload_slice(result.payload, descendant_year) == b"2010"
@@ -152,9 +157,11 @@ def test_export_m145_communication_record_matches_canonical_encoder_for_money_an
                 ),
             ),
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         result = export_m145_communication_record(
-            record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+            record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
 
     # The adapter owns the body; this layer owns only the terminator the
@@ -188,10 +195,12 @@ def test_export_m145_communication_record_refuses_invalid_record(tmp_path: Path)
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(communication_year=2026, field_values=values),
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         with pytest.raises(ValueError, match="validation passes"):
             export_m145_communication_record(
-                record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+                record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+                ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
 
 
@@ -206,10 +215,12 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path
                 field_values=_field_values(**{"perceptor.primer-apellido": "A" * (first_surname.length + 1)}),
             ),
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         with pytest.raises(ValueError):
             export_m145_communication_record(
-                record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+                record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+                ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
 
 
@@ -218,9 +229,11 @@ def _seeded_export(runtime) -> M145CommunicationExportResult:
     record = create_m145_communication_record(
         M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
         bucket_id=runtime.bucket_id,
+        ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
     )
     return export_m145_communication_record(
-        record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+        record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+        ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
     )
 
 

@@ -700,4 +700,24 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.adapters.persistence.profile.m036_lifecycle._M036AdapterInputError",
+        ErrorCode(
+            code="FAIL_ADAPTER_M036_INPUT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.error.error_storage_bucket",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.persistence.profile.m145_communication_records._M145AdapterInputError",
+        ErrorCode(
+            code="FAIL_ADAPTER_M145_INPUT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.error.error_storage_bucket",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

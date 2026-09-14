@@ -27,10 +27,6 @@ from __future__ import annotations
 
 from pydantic import BaseModel, NonNegativeInt
 
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.modelos.calculation_revision import (
@@ -44,12 +40,8 @@ from ...domain.modelos.participation_index import (
     TransactionRevisionParticipationIndex,
     upsert_transaction_participation,
 )
-from ...domain.modelos.protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-)
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from .participation_index_rebuild_ports import ParticipationIndexRebuildPorts
 
 
 class ParticipationRebuildStats(BaseModel):
@@ -140,11 +132,7 @@ def _fold_participation(
 
 def rebuild_participation_index(
     *,
-    bucket_id: str | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    participation_index_repository: TransactionParticipationIndexRepository | None = None,
+    ports: ParticipationIndexRebuildPorts,
 ) -> ParticipationRebuildStats:
     """Regenerate the participation index from the finalized-revision catalogue.
 
@@ -161,16 +149,9 @@ def rebuild_participation_index(
     visible through the derived cache while the authoritative catalogue no longer
     records it. Returns a :class:`ParticipationRebuildStats` summary.
     """
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository(bucket_id=bucket_id)
-    participation_repo = participation_index_repository or TransactionParticipationIndexRepository(
-        bucket_id=bucket_id,
-    )
-
-    revisions = cr_repo.load()
-    work_units = wu_repo.load()
-    filings = fr_repo.load()
+    revisions = ports.calculation_repository.load()
+    work_units = ports.work_unit_repository.load()
+    filings = ports.filing_repository.load()
 
     rebuilt: dict[str, TransactionRevisionParticipationIndex] = {}
     participation_count = 0
@@ -184,7 +165,7 @@ def rebuild_participation_index(
         revision_count += 1
         participation_count += _fold_participation(rebuilt, participation, transaction_ids)
 
-    stale_removed_count = participation_repo.replace_all(rebuilt.values())
+    stale_removed_count = ports.participation_index_repository.replace_all(rebuilt.values())
 
     return ParticipationRebuildStats(
         transaction_count=len(rebuilt),

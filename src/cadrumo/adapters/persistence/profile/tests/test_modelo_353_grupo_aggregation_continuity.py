@@ -43,6 +43,7 @@ figure. Member 322 totals are engine-_produced.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date
 from decimal import Decimal
@@ -226,7 +227,7 @@ def _resolve_353_aggregate(
     322 for ``(322, filing_year, period)``.
     """
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
-    prefill = resolve_bindings_from_local_store(snapshot, repository=repository)
+    prefill = resolve_bindings_from_local_store(snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
     binding_values = {
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),
         **prefill.binding_values,

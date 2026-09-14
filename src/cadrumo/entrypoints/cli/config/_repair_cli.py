@@ -147,8 +147,9 @@ def repair(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is not None:
         return
     from ..config_payloads import ConfigRepairResult
+    from ..state_projection_support import diagnostics_ports
 
-    report = _build_config_repair_report()
+    report = _build_config_repair_report(ports=diagnostics_ports(ctx))
     result = strict_round_trip(ConfigRepairResult, _config_repair_result(report))
     emit_envelope(
         ctx,
@@ -239,7 +240,14 @@ def repair_quarantine(
     if _resolve_active_bucket_id() is None:
         _emit_no_active_quarantine(ctx, dry_run=dry_run)
         return
-    report = _preview_quarantine_unreadable_secure_objects() if dry_run else _quarantine_unreadable_secure_objects()
+    from ..state_projection_support import diagnostics_ports
+
+    ports = diagnostics_ports(ctx)
+    report = (
+        _preview_quarantine_unreadable_secure_objects(ports=ports)
+        if dry_run
+        else _quarantine_unreadable_secure_objects(ports=ports)
+    )
     emit_envelope(
         ctx,
         command="config.repair.quarantine",
@@ -323,8 +331,9 @@ def repair_integrity_objects(
 ) -> None:
     """Report duplicate secure-object keys and unreadable encrypted rows."""
     from ..config_payloads import RepairIntegrityObjectsResult
+    from ..state_projection_support import diagnostics_ports
 
-    report = _preview_quarantine_unreadable_secure_objects()
+    report = _preview_quarantine_unreadable_secure_objects(ports=diagnostics_ports(ctx))
     if namespace is not None:
         namespaces = tuple(item for item in report.namespaces if item.namespace == namespace)
         report = report.model_copy(

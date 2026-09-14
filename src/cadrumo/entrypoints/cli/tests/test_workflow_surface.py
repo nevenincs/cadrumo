@@ -21,8 +21,8 @@ from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType
-from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, set_active_test_profile_facts
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -144,7 +144,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     from ....application.user_profile.projections import fact_value
     from ....application.wizard.status import load_active_taxpayer_profile
     from ....application.workflow.persistence import workflow_state_repository
-    from ....tests.profile_capsule import load_test_profile_record
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 
     register_cli_profile(
         label="operator",

@@ -29,7 +29,7 @@ from ....domain.modelos.row_models import (
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...filing.draft_construction import build_draft
-from .._revision_replay_inputs import revision_filing_replay_inputs
+from ..revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

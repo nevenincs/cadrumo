@@ -8,12 +8,10 @@ Provides the :func:`approve_draft` / :func:`refresh_review_status` lifecycle on 
 :attr:`~domain.submission.ModeloDraftStatus.APROBADO` draft has been
 invalidated by upstream changes.
 
-The :func:`compute_current_approval_basis` helper accepts optional
-:class:`domain.transactions.TransactionCatalogue` and category-profile
-overrides. When the catalogue override is omitted, it loads the
-:class:`~domain.transactions.TransactionCatalogue` from the encrypted
-secure-object backend through
-:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+The :func:`compute_current_approval_basis` helper receives the required
+:class:`~cadrumo.application.filing.draft_review_ports.DraftReviewPorts`
+bundle.  The executable composition root binds its concrete repositories before
+the review lifecycle is invoked.
 
 See Also:
     :func:`application.filing.build_runtime_schema_provider`
@@ -33,7 +31,6 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Final, Protocol, cast
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
@@ -50,10 +47,8 @@ from ...domain.identifiers import canonical_decimal_string
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ...domain.user_profile.errors import ProfileNotFoundError
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
-from ..user_profile.profile_record_repository import ProfileRecordRepository
-from ..user_profile.projections import record_to_path_values
+from .draft_review_ports import DraftReviewPorts, DraftReviewProfileRepositoryProtocol
 
 
 class _StoredPriorObservation(Protocol):
@@ -175,17 +170,15 @@ def compute_current_approval_basis(
     *,
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
-    transaction_catalogue: TransactionCatalogue | None = None,
-    invoice_catalogue: InvoiceCatalogue | None = None,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> ModeloApprovalBasis:
     """Return the :class:`ModeloApprovalBasis` digests for current upstream state.
 
-    The basis hashes the draft identity and validation surface, the supplied or
-    persisted :class:`TransactionCatalogue`, the supplied or persisted
+    The basis hashes the draft identity and validation surface, the persisted
+    :class:`TransactionCatalogue`, the persisted
     :class:`~domain.invoices.InvoiceCatalogue` (a calculation source
     resolved through the source mesh), the bucket's prior filed observations (the
     ``previous_filing`` carry and relation fold-in source), the bucket's taxpayer
@@ -197,24 +190,18 @@ def compute_current_approval_basis(
     make an ``APROBADO`` draft stale when its upstream invoices, prior filed
     values, or relation-scoping profile facts change, closing the gap left by
     fingerprinting only the ledger transaction catalogue. Like the transaction
-    catalogue they are self-loaded from ``bucket_id`` so stale detection is
-    reproducible at refresh time without running the source mesh in the review
-    layer.
+    catalogue, the prior observations, and the profile projection are read
+    through the required ``ports`` bundle so stale detection is reproducible at
+    refresh time without running the source mesh in the review layer.
 
     Args:
         draft: The :class:`domain.filing.ModeloDraft` whose basis
             is being computed.
-        bucket_id: Stable bucket identifier; used to load the persisted
-            transaction and invoice catalogues and prior observations when no
-            override is supplied.
+        bucket_id: Stable bucket identifier used to scope the supplied ports.
         schema_provider: The active
             :class:`domain.filing.CasillaSchemaProvider`.
-        transaction_catalogue: Optional :class:`TransactionCatalogue` override.
-            When ``None``, the catalogue is loaded from the encrypted
-            :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
-        invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
-            override. When ``None``, the catalogue is loaded from the encrypted
-            :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`.
+        ports: Required application-owned persistence capabilities for the
+            transaction, invoice, observation, and profile authorities.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest. When ``None``, the digest is self-loaded from the bucket's
             :class:`~application.calculations.CalculationObservationRepositoryProtocol`.
@@ -229,17 +216,17 @@ def compute_current_approval_basis(
     Returns:
         A freshly computed :class:`ModeloApprovalBasis`.
     """
-    catalogue = transaction_catalogue if transaction_catalogue is not None else _load_transaction_catalogue(bucket_id)
-    invoices = invoice_catalogue if invoice_catalogue is not None else _load_invoice_catalogue(bucket_id)
+    catalogue = ports.transaction_repository.load()
+    invoices = ports.invoice_repository.load()
     prior_observations_fingerprint = (
         prior_filing_observations_fingerprint
         if prior_filing_observations_fingerprint is not None
-        else _load_prior_filing_observations_fingerprint(observation_repository)
+        else _load_prior_filing_observations_fingerprint(ports.observation_repository)
     )
     profile_fingerprint = (
         profile_activity_fingerprint
         if profile_activity_fingerprint is not None
-        else _load_profile_activity_fingerprint(bucket_id)
+        else _load_profile_activity_fingerprint(ports.profile_repository, bucket_id=bucket_id)
     )
     profiles = (
         category_profiles if category_profiles is not None else resolve_category_profiles(draft.period.filing_year)
@@ -306,9 +293,7 @@ def approval_stale_reasons(
     *,
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
-    transaction_catalogue: TransactionCatalogue | None = None,
-    invoice_catalogue: InvoiceCatalogue | None = None,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -325,9 +310,8 @@ def approval_stale_reasons(
             :func:`compute_current_approval_basis`.
         schema_provider: The active
             :class:`domain.filing.CasillaSchemaProvider`.
-        transaction_catalogue: Optional :class:`TransactionCatalogue` override.
-        invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
-            override; forwarded to :func:`compute_current_approval_basis`.
+        ports: Required application-owned persistence capabilities forwarded to
+            :func:`compute_current_approval_basis`.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest override; forwarded to :func:`compute_current_approval_basis`.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
@@ -354,9 +338,7 @@ def approval_stale_reasons(
         draft,
         bucket_id=bucket_id,
         schema_provider=schema_provider,
-        transaction_catalogue=transaction_catalogue,
-        invoice_catalogue=invoice_catalogue,
-        observation_repository=observation_repository,
+        ports=ports,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -370,9 +352,7 @@ def approve_draft(
     bucket_id: str,
     approved_by: str,
     schema_provider: CasillaSchemaProvider,
-    transaction_catalogue: TransactionCatalogue | None = None,
-    invoice_catalogue: InvoiceCatalogue | None = None,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -382,19 +362,15 @@ def approve_draft(
 
     Args:
         draft: The :class:`ModeloDraft` to approve. Must be
-            :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`. The optional
-            ``transaction_catalogue`` is a :class:`TransactionCatalogue`
-            consulted when computing the approval basis fingerprint; when
-            ``None`` it is loaded from the repository.
+            :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
         bucket_id: Stable bucket identifier; forwarded to
             :func:`compute_current_approval_basis`.
         approved_by: Operator identifier; rejected when blank after
             stripping.
         schema_provider: The active
             :class:`domain.filing.CasillaSchemaProvider`.
-        transaction_catalogue: Optional catalogue override.
-        invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
-            override; forwarded to :func:`compute_current_approval_basis`.
+        ports: Required application-owned persistence capabilities forwarded to
+            :func:`compute_current_approval_basis`.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest override; forwarded to :func:`compute_current_approval_basis`.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
@@ -426,9 +402,7 @@ def approve_draft(
         draft,
         bucket_id=bucket_id,
         schema_provider=schema_provider,
-        transaction_catalogue=transaction_catalogue,
-        invoice_catalogue=invoice_catalogue,
-        observation_repository=observation_repository,
+        ports=ports,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -495,9 +469,7 @@ def _refresh_approved_status(
     *,
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
-    transaction_catalogue: TransactionCatalogue | None,
-    invoice_catalogue: InvoiceCatalogue | None,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
     prior_filing_observations_fingerprint: str | None,
     profile_activity_fingerprint: str | None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None,
@@ -507,9 +479,7 @@ def _refresh_approved_status(
         draft,
         bucket_id=bucket_id,
         schema_provider=schema_provider,
-        transaction_catalogue=transaction_catalogue,
-        invoice_catalogue=invoice_catalogue,
-        observation_repository=observation_repository,
+        ports=ports,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -543,9 +513,7 @@ def refresh_review_status(
     *,
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
-    transaction_catalogue: TransactionCatalogue | None = None,
-    invoice_catalogue: InvoiceCatalogue | None = None,
-    observation_repository: CalculationObservationRepositoryProtocol,
+    ports: DraftReviewPorts,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -565,10 +533,8 @@ def refresh_review_status(
             :func:`approval_stale_reasons`.
         schema_provider: The active
             :class:`domain.filing.CasillaSchemaProvider`.
-        transaction_catalogue: Optional :class:`TransactionCatalogue` override used
-            when computing the approval basis fingerprint.
-        invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
-            override; forwarded to :func:`approval_stale_reasons`.
+        ports: Required application-owned persistence capabilities forwarded to
+            :func:`approval_stale_reasons`.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest override; forwarded to :func:`approval_stale_reasons`.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
@@ -596,9 +562,7 @@ def refresh_review_status(
         draft,
         bucket_id=bucket_id,
         schema_provider=schema_provider,
-        transaction_catalogue=transaction_catalogue,
-        invoice_catalogue=invoice_catalogue,
-        observation_repository=observation_repository,
+        ports=ports,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -664,18 +628,6 @@ def _require_registry_review_alignment(
     )
 
 
-def _load_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
-    """Load the transaction catalogue from the secure backend."""
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-
-    return TransactionCatalogueRepository(bucket_id=bucket_id).load()
-
-
-def _load_invoice_catalogue(bucket_id: str) -> InvoiceCatalogue:
-    """Load the bucket's invoice catalogue from the secure backend."""
-    return InvoiceCatalogueRepository(bucket_id=bucket_id).load()
-
-
 def _load_prior_filing_observations_fingerprint(repository: CalculationObservationRepositoryProtocol) -> str:
     """Digest all persisted prior-filing observations supplied by the application port."""
     return _prior_filing_observations_fingerprint(repository.iter_records())
@@ -728,23 +680,14 @@ def _normalize_prior_filing_observation(payload: _StoredPriorObservation) -> lis
     ]
 
 
-def _load_profile_activity_fingerprint(bucket_id: str) -> str:
-    """Digest the bucket's taxpayer profile facts from the secure backend.
-
-    Self-loads the bucket-scoped :class:`~application.user_profile.CommittedProfileRepository`
-    and fingerprints the wizard-free canonical projection
-    (:func:`~application.user_profile.record_to_path_values`) — the SAME projection
-    the relation resolver reads to scope relation resolution (activity-start date,
-    m111 no-retenciones attestations, declared income categories). So the digest
-    changes whenever a relation-scoping profile fact changes — reproducibly, from
-    ``bucket_id`` alone, without running the source mesh. An absent profile yields
-    the stable empty-projection digest.
-    """
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
-        return _profile_activity_fingerprint(None)
-    return _profile_activity_fingerprint(record_to_path_values(record))
+def _load_profile_activity_fingerprint(
+    repository: DraftReviewProfileRepositoryProtocol,
+    *,
+    bucket_id: str,
+) -> str:
+    """Digest the canonical taxpayer-profile projection supplied by the port."""
+    path_values = repository.load_path_values(bucket_id=bucket_id)
+    return _profile_activity_fingerprint(path_values)
 
 
 def _profile_activity_fingerprint(path_values: Mapping[str, str] | None) -> str:

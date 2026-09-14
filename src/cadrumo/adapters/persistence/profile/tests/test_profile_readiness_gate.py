@@ -28,7 +28,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError, WorkUnitMutationRefusedError
@@ -37,7 +37,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.profile_readiness_gate import (
-    _profile_activity_start_date,
+    profile_activity_start_date,
     modelo_applicability_refusal,
     pre_activity_period_refusal,
 )
@@ -942,7 +942,7 @@ def test_activity_start_reader_agrees_with_the_canonical_effective_projection() 
     record = _reversed_declaration_order_record()
 
     canonical = record_to_path_values(record)["censo.activity_start_date"]
-    resolved = _profile_activity_start_date(record)
+    resolved = profile_activity_start_date(record)
 
     assert resolved == date(2026, 1, 1)
     assert resolved is not None

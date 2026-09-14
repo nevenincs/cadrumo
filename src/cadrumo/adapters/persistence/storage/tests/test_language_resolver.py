@@ -19,7 +19,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import output_language
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from cadrumo.tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -91,24 +91,6 @@ class SpanishTaxIdFormat:
             raise ValueError("Spanish tax-ID format CIF control partitions must not repeat leaders")
 
 
-# Innermost safety code needs a deterministic structural classifier without
-# reaching outward into filing-policy registries.
-SPANISH_TAX_ID_BOOTSTRAP_FORMAT = SpanishTaxIdFormat(
-    width=9,
-    country_prefix="ES",
-    country_prefixed_width=11,
-    country_prefix_strip_width=2,
-    prefixed_nif_leaders="KLM",
-    nie_leaders="XYZ",
-    cif_leaders="ABCDEFGHJNPQRSUVW",
-    nif_letters="TRWAGMYFPDXBNJZSQVHLCKE",
-    nie_prefix_substitutions=(("X", "0"), ("Y", "1"), ("Z", "2")),
-    cif_digit_only_kinds="ABEH",
-    cif_letter_only_kinds="PQRSNW",
-    cif_letter_table="JABCDEFGHI",
-)
-
-
 def _nif_pattern(tax_id_format: SpanishTaxIdFormat) -> re.Pattern[str]:
     """Build the NIF shape gate from the authored width declaration."""
     return re.compile(rf"^(\d{{{tax_id_format.width - 1}}})([A-Z])$")
@@ -144,6 +126,26 @@ class IdentityDocument(StrEnum):
     NIF = "NIF"
     NIE = "NIE"
     CIF = "CIF"
+
+
+def is_identity_structurally_shaped(candidate: object) -> bool:
+    """Return whether *candidate* has a tax-identity lexical shape.
+
+    This is intentionally a syntax-only admission predicate for low-level
+    consumers such as redaction. It does not claim that the candidate is a
+    currently recognised Spanish NIF, NIE, or CIF: leader membership,
+    checksum tables, and control-character partitions remain supplied by an
+    explicit authority format to :func:`validate_identity`.
+    """
+    if not isinstance(candidate, str):
+        return False
+    normalised = candidate.strip().upper().replace("-", "").replace(" ", "").replace(".", "")
+    if not normalised.isascii() or not normalised.isalnum():
+        return False
+    return bool(
+        re.fullmatch(r"[0-9]+[A-Z]", normalised)
+        or re.fullmatch(r"[A-Z][0-9]+[A-Z0-9]", normalised)
+    )
 
 
 class IdentityError(CadrumoError, ValueError):

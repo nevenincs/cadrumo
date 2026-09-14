@@ -55,8 +55,10 @@ if TYPE_CHECKING:
     from ...core.config import Settings
     from ..provisioning import HardwareProfile
     from .evidence import PurchaseInvoiceEvidenceService
+    from .evidence_input_ports import EvidenceDocumentShapeProbe
     from .evidence_ports import LedgerEvidencePorts
     from .extraction_draft_store import StoredExtractionDraft
+    from .invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
     from .invoice_draft_records import InvoiceDraft
 
 __all__ = [
@@ -353,7 +355,7 @@ def summarise_batch(
     )
 
 
-def _reads_without_a_model(data: bytes) -> bool:
+def _reads_without_a_model(data: bytes, *, document_shape_probe: EvidenceDocumentShapeProbe) -> bool:
     """Return whether these bytes carry a machine-readable record needing no model.
 
     Derived from the bytes through the one shared shape probe, never from the
@@ -367,10 +369,9 @@ def _reads_without_a_model(data: bytes) -> bool:
     may then need one after all; that is the conservative direction, because the
     cost is a refusal the operator sees rather than a model load nobody admitted.
     """
-    from ...adapters.inbound.einvoice.shape import probe_document_shape
     from ...core.document_shape import STRUCTURED_DOCUMENT_SHAPES
 
-    return probe_document_shape(data) in STRUCTURED_DOCUMENT_SHAPES
+    return document_shape_probe(data) in STRUCTURED_DOCUMENT_SHAPES
 
 
 class _InferenceLaneState:
@@ -538,6 +539,7 @@ def run_evidence_batch(
     sources: Iterable[Path | str],
     direction: InvoiceKind,
     evidence_ports: LedgerEvidencePorts,
+    extraction_ports: InvoiceDraftExtractionPorts,
     settings: Settings | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
     profile: HardwareProfile | None = None,
@@ -572,6 +574,8 @@ def run_evidence_batch(
             records rather than one.
         evidence_ports: Required evidence catalogue, attachment, and event
             capabilities for this bucket.
+        extraction_ports: Required invoice-draft extraction capabilities, including
+            the application-owned shape probe, structured reader, and text-layer reader.
         settings: Resolved ``Settings``; ``load_settings()`` when omitted, so
             ``override_settings()`` is honoured.
         on_item: Called with each row as it completes, for progress reporting.
@@ -623,7 +627,10 @@ def run_evidence_batch(
             )
             continue
         content_address = sha256_hex(data)
-        if _reads_without_a_model(data):
+        if _reads_without_a_model(
+            data,
+            document_shape_probe=extraction_ports.evidence_input_ports.document_shape_probe,
+        ):
             deterministic.add(content_address)
         addressed[(content_address, str(path))] = path
 
@@ -654,6 +661,7 @@ def run_evidence_batch(
                 settings=resolved_settings,
                 service=service,
                 extract=extract_invoice_draft_from_evidence,
+                extraction_ports=extraction_ports,
                 read_draft=read_extraction_draft,
                 write_draft=write_extraction_draft,
             )
@@ -706,6 +714,7 @@ def _ingest_one_batch_item(
     settings: Settings,
     service: PurchaseInvoiceEvidenceService,
     extract: Callable[..., InvoiceDraft],
+    extraction_ports: InvoiceDraftExtractionPorts,
     read_draft: Callable[..., StoredExtractionDraft | None],
     write_draft: Callable[..., object],
     needed_inference: bool = True,
@@ -756,7 +765,12 @@ def _ingest_one_batch_item(
         )
 
     try:
-        draft = extract(bucket_id=bucket_id, evidence_id=evidence_id, settings=settings)
+        draft = extract(
+            bucket_id=bucket_id,
+            evidence_id=evidence_id,
+            settings=settings,
+            ports=extraction_ports,
+        )
     except Exception as exc:  # reason: an unreadable document is a refusal row, not a dead run.
         return refused(
             "not_readable",

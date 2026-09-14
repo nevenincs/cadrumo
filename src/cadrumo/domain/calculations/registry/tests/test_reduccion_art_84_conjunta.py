@@ -25,7 +25,6 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
@@ -38,8 +37,6 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 _REDUCCION_ART_84_CASILLA: CasillaId = validated_casilla_id("0461", surface="_REDUCCION_ART_84_CASILLA")
 _ART_84_LEGAL_REFS = ("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84")
 _ART_84_SOURCE_REFS_2024 = (
@@ -205,7 +202,7 @@ def test_0461_conjunta_tipo_1_matrimonio_yields_3400_2024() -> None:
         minor_children_in_unit=Decimal("0"),
         expected_0461=Decimal("3400.00"),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -221,7 +218,7 @@ def test_0461_individual_yields_0_2024() -> None:
         minor_children_in_unit=Decimal("0"),
         expected_0461=Decimal("0.00"),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -239,7 +236,7 @@ def test_0461_conjunta_tipo_2_monoparental_yields_2150_2024() -> None:
         minor_children_in_unit=Decimal("1"),
         expected_0461=Decimal("2150.00"),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -262,19 +259,11 @@ def test_0461_anti_tautology_declaration_type_change_2024() -> None:
         expected_0461=Decimal("0.00"),
     )
     for scenario in (conjunta_scenario, individual_scenario):
-        report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+        report = run_registry_calculation_scenario(scenario)
         assert_registry_scenario_matches(report)
 
-    conjunta_report = run_registry_calculation_scenario(
-        conjunta_scenario,
-        registry_root=_REGISTRY_ROOT,
-        source_root=_SOURCE_ROOT,
-    )
-    individual_report = run_registry_calculation_scenario(
-        individual_scenario,
-        registry_root=_REGISTRY_ROOT,
-        source_root=_SOURCE_ROOT,
-    )
+    conjunta_report = run_registry_calculation_scenario(conjunta_scenario)
+    individual_report = run_registry_calculation_scenario(individual_scenario)
     assert (
         conjunta_report.calculation.values[_REDUCCION_ART_84_CASILLA]
         != individual_report.calculation.values[_REDUCCION_ART_84_CASILLA]
@@ -299,7 +288,7 @@ def test_0461_conjunta_tipo_1_matrimonio_yields_3400_2025() -> None:
         minor_children_in_unit=Decimal("0"),
         expected_0461=Decimal("3400.00"),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -311,7 +300,7 @@ def test_0461_individual_yields_0_2025() -> None:
         minor_children_in_unit=Decimal("0"),
         expected_0461=Decimal("0.00"),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -326,7 +315,7 @@ def test_0461_conjunta_tipo_2_monoparental_yields_2150_2025() -> None:
         minor_children_in_unit=Decimal("1"),
         expected_0461=Decimal("2150.00"),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -345,19 +334,11 @@ def test_0461_anti_tautology_declaration_type_change_2025() -> None:
         expected_0461=Decimal("0.00"),
     )
     for scenario in (conjunta_scenario, individual_scenario):
-        report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+        report = run_registry_calculation_scenario(scenario)
         assert_registry_scenario_matches(report)
 
-    conjunta_report = run_registry_calculation_scenario(
-        conjunta_scenario,
-        registry_root=_REGISTRY_ROOT,
-        source_root=_SOURCE_ROOT,
-    )
-    individual_report = run_registry_calculation_scenario(
-        individual_scenario,
-        registry_root=_REGISTRY_ROOT,
-        source_root=_SOURCE_ROOT,
-    )
+    conjunta_report = run_registry_calculation_scenario(conjunta_scenario)
+    individual_report = run_registry_calculation_scenario(individual_scenario)
     assert (
         conjunta_report.calculation.values[_REDUCCION_ART_84_CASILLA]
         != individual_report.calculation.values[_REDUCCION_ART_84_CASILLA]

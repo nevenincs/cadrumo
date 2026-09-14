@@ -13,14 +13,13 @@ from datetime import UTC, date, datetime
 from typing import Literal
 
 import pytest
-from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
 from ....core.period import Period
 from ....core.post_filing_event import PostFilingEventKind
 from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.notifications import PersistedNotificationsSnapshot
+from ...live.notification_ports import RemoteNotification
 from ..calendar import (
     actionable_post_filing_events,
     calendar_events_from_expedientes_snapshots,
@@ -59,7 +58,7 @@ def _notification(
         fecha_notificacion=date(2025, 3, 12),
         modo_notificacion="DEH",
         leida=leida,
-        source_url=AnyHttpUrl(SOURCE_URL),
+        source_url=SOURCE_URL,
     )
 
 
@@ -118,7 +117,7 @@ def test_expediente_filing_event_carries_declaracion_presentada_kind() -> None:
         source_url=SOURCE_URL,
         authenticated_identity="B12345678",
         declarations=(
-            Declaracion(
+            ExpedientesDeclaration(
                 modelo="303",
                 ejercicio=2025,
                 period=Period.from_year_and_code(2025, "1T"),

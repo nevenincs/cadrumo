@@ -10,11 +10,11 @@ field is absent, not invented).
 Three reading paths, chosen on the document's own shape rather than on its
 stored MIME type:
 
-- A **structured** e-invoice (Facturae, CII, UBL) is read exactly by
-  :func:`~adapters.inbound.einvoice.parse_einvoice_document`. It reaches no model
-  at all, so prompt injection is categorically impossible for that document
-  rather than merely mitigated, and it is the only path that can recover the
-  document's own line decomposition and per-rate breakdown.
+- A **structured** e-invoice (Facturae, CII, UBL) is read exactly through the
+  application-owned :class:`~application.ledger.structured_invoice_ports.StructuredInvoiceReader`.
+  It reaches no model at all, so prompt injection is categorically impossible
+  for that document rather than merely mitigated, and it is the only path that
+  can recover the document's own line decomposition and per-rate breakdown.
 - A **text-native PDF** is transcribed by
   :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`, read semantically by
   :func:`~llm.extract_invoice_fields_from_text`, and then grounded against that
@@ -267,7 +267,7 @@ def extract_invoice_draft_from_evidence(
         # refusal exists to prevent, reported to the operator as a vision
         # failure on a text PDF.
         try:
-            transcription = transcribe_text_layer(evidence_input)
+            transcription = transcribe_text_layer(evidence_input, text_layer_ports=ports.text_layer_ports)
         except PurchaseInvoiceEvidenceInputError:
             transcription = None
         if transcription is not None:
@@ -643,7 +643,7 @@ def _extract_invoice_fields_from_structured_record(
         raw_text_length=len(evidence.data),
         provenance=structured_provenance(parsed=parsed, evidence=evidence, derived=country_codes),
     )
-    draft.set_facturae_invoice_class(parsed.facturae_invoice_class)
+    draft.set_facturae_invoice_class(parsed.invoice_classification)
 
     # Exactness is not correctness, and conflating the two is what left this path
     # unchecked. Reaching no model makes prompt injection categorically
@@ -656,7 +656,7 @@ def _extract_invoice_fields_from_structured_record(
             "discrepancies": (
                 *deterministic_findings(draft),
                 *facturae_invoice_class_findings(
-                    declared=parsed.facturae_invoice_class,
+                    declared=parsed.invoice_classification,
                     rectifies_invoice_number=parsed.rectifies_invoice_number,
                 ),
             ),

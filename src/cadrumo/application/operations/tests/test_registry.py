@@ -543,6 +543,15 @@ def test_registry_refuses_unknown_and_ambiguous_identities() -> None:
         )
 
 
+def test_registry_rejects_duplicate_definition_identities() -> None:
+    """A definition identity cannot be reused for a different contract shape."""
+    item = definition(definition_id="profile.sync")
+    conflicting_identity = item.model_copy(update={"phase_codes": ("profile.sync.alternate",)})
+
+    with pytest.raises(ValidationError, match="definition IDs must be unique"):
+        OperationRegistry(definitions=(item, conflicting_identity))
+
+
 def test_definition_refuses_mismatched_factory_payload_and_factory_output() -> None:
     wrong_payload_factory = OperationExecutorFactory(
         request_type=ResultPayload,

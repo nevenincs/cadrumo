@@ -36,6 +36,13 @@ from ...core.time.utc import parse_iso_datetime
 from ...core.tipos_actividad import TipoActividad
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_mapping
+from ..calculations.registry.concepto_ingreso import require_concepto_ingreso
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.iva_category_catalogue import require_iva_category
+from ..calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
+from ..calculations.registry.iva_schema_vocabulary import require_iva_exemption_article
+from ..calculations.registry.prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
+from ..calculations.registry.prorrata_vocabulary import require_input_classification
 from ..identifiers import canonical_decimal_string
 from ..iva.deduction_facts import IvaDeductionClassificationProvenance
 from ..iva.prorrata import InputClassification
@@ -46,12 +53,9 @@ from ..iva.schema import (
     IvaCategory,
     IvaExemptionArticle,
     default_iva_cash_accounting_treatment,
+    require_eu_member_state,
 )
 from .cash_accounting_validation import validate_cash_accounting_axis
-from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.iva_category_catalogue import require_iva_category
-from ..calculations.registry.iva_schema_vocabulary import require_iva_exemption_article
-from ..calculations.registry.prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
 from .gross_validation import validate_gross_reconstitution
@@ -533,6 +537,47 @@ class Transaction(BaseModel):
         carries no re-entrancy risk. No-op for an already-typed enum member
         or ``None``.
         """
+        if info.field_name == "concepto_ingreso":
+            if value is None or isinstance(value, ConceptoIngreso):
+                return value
+            raw = info.data.get("raw")
+            effective_date = None
+            if isinstance(raw, RawTransaction):
+                effective_date = raw.value_date or raw.booked_date
+            if effective_date is None:
+                raise TransactionValidationError(
+                    "concepto_ingreso requires the transaction's effective date for registry resolution",
+                )
+            try:
+                return require_concepto_ingreso(value, effective_date=effective_date)
+            except RegistryValidationError as exc:
+                raise TransactionValidationError(str(exc)) from exc
+        if info.field_name == "deduction_fact_kind":
+            if value is None or isinstance(value, IvaDeductionFactKind):
+                return value
+            raw = info.data.get("raw")
+            effective_date = None
+            if isinstance(raw, RawTransaction):
+                effective_date = raw.value_date or raw.booked_date
+            try:
+                return require_iva_deduction_fact_kind(value, effective_date=effective_date)
+            except RegistryValidationError as exc:
+                raise TransactionValidationError(str(exc)) from exc
+        if info.field_name == "input_classification":
+            if value is None or isinstance(value, InputClassification):
+                return value
+            raw = info.data.get("raw")
+            effective_date = None
+            if isinstance(raw, RawTransaction):
+                effective_date = raw.value_date or raw.booked_date
+            if effective_date is None:
+                raise TransactionValidationError(
+                    "input_classification requires the transaction's effective date for registry resolution",
+                )
+            try:
+                return require_input_classification(value, effective_date=effective_date)
+            except RegistryValidationError as exc:
+                raise TransactionValidationError(str(exc)) from exc
         if not isinstance(value, str):
             return value
         enum_by_field: dict[str, type] = {
@@ -540,14 +585,11 @@ class Transaction(BaseModel):
             "business_classification": BusinessClassification,
             "lifecycle_state": TransactionLifecycleState,
             "iva_category": IvaCategory,
-            "deduction_fact_kind": IvaDeductionFactKind,
             "exemption_article": IvaExemptionArticle,
             "counterparty_identification_state": EUMemberState,
             "cash_accounting_treatment": IvaCashAccountingTreatment,
             "art_104_tres_exclusion": Art104TresExclusion,
-            "input_classification": InputClassification,
             "tipo_actividad": TipoActividad,
-            "concepto_ingreso": ConceptoIngreso,
         }
         return enum_by_field[info.field_name or ""](value)
 
@@ -777,8 +819,8 @@ class Transaction(BaseModel):
         if self.counterparty_country is None:
             return None
         try:
-            return EUMemberState(self.counterparty_country.lower())
-        except ValueError:
+            return require_eu_member_state(self.counterparty_country)
+        except (TypeError, ValueError, RegistryValidationError):
             return None
 
     @model_validator(mode="after")

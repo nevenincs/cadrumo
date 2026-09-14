@@ -277,11 +277,14 @@ def _load_profile_for_bucket(bucket_id: str) -> TaxpayerProfile | None:
 
 def _declared_activity_hint(profile: TaxpayerProfile) -> bool | None:
     """Resolve the explicit activity axis before considering weaker surrogates."""
-    from ...domain.deadlines.models import IrpfActivityKind
+    from ...domain.calculations.registry.activity_kind_catalogue import (
+        is_irpf_activity_kind_profesional,
+        is_irpf_activity_kind_sectorial,
+    )
 
-    if profile.irpf_activity_kind is IrpfActivityKind.SECTORIAL:
+    if is_irpf_activity_kind_sectorial(profile.irpf_activity_kind):
         return True
-    if profile.irpf_activity_kind is IrpfActivityKind.PROFESIONAL:
+    if is_irpf_activity_kind_profesional(profile.irpf_activity_kind):
         return False
     return None
 

@@ -16,10 +16,15 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
     repo = ApoderamientosRepository()
 
     result = repo.singleton
+    singleton_again = repo.singleton
+    fetched = repo.get(None)
 
     assert isinstance(result, ApoderamientosCatalogue), f"Expected ApoderamientosCatalogue, got {type(result).__name__}"
-    assert repo.singleton is result  # cached identity
-    assert repo.get(None) is result
+    assert singleton_again == result
+    assert singleton_again is not result
+    assert fetched == result
+    assert fetched is not result
+    assert not hasattr(repo, "_cache")
     assert len(result.scopes) > 0, "Apoderamientos catalogue must declare at least one scope"
     scope_codes = {s.code for s in result.scopes}
     assert "GENERALNT" in scope_codes, f"Expected canonical 'GENERALNT' scope in catalogue; got codes: {scope_codes}"
@@ -32,7 +37,10 @@ def test_recargo_bands_singleton_loads_real_tuple() -> None:
     repo = RecargoBandsRepository()
 
     result = repo.singleton
+    singleton_again = repo.singleton
 
     assert isinstance(result, tuple)
     assert len(result) > 0
-    assert repo.singleton is result
+    assert singleton_again == result
+    assert singleton_again is not result
+    assert not hasattr(repo, "_cache")

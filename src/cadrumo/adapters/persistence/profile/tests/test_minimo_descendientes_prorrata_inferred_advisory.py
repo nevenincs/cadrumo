@@ -1,0 +1,267 @@
+"""The Art. 61 norma 1ª prorrata advisory, which the chosen default direction depends on.
+
+This advisory is not a nice-to-have diagnostic. The engine applies the
+prorrata where profile signals indicate a second entitled filer, rather than
+claim the full amount, on the strength of this advisory existing:
+erring toward under-claiming is acceptable *because the operator is told and can
+correct it*. An advisory that never fires does not merely lose a message — it
+converts a deliberate, disclosed under-claim into a silent one and removes the
+stated reason for picking that direction over the alternative.
+
+It had no test of any kind: not the collector, not the wiring, not the source
+kind. Nothing anywhere drove it.
+
+Both directions are covered, and the silent half matters as much as the firing
+half for the same reason it did on the rentas advisory: an advisory that also
+fires when the operator DID answer is a blanket advisory, and the chosen default
+is only defensible if the message means something when it appears.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from unittest.mock import Mock
+
+import pytest
+
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.contribuyente.descendant import DescendantInfo
+from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
+from cadrumo.domain.contribuyente.renta_codes import RentaMaritalStatus
+from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
+from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import advisory_profile_bucket  # noqa: F401
+from cadrumo.application.modelo.tests.advisory_diagnostic_assertions import operator_text as _operator_text
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+_BUCKET_ID = "3d3d3d3d-3d3d-4d3d-8d3d-3d3d3d3d3d3d"
+_FILING_YEAR = 2024
+_ANNUAL_PERIOD = "0A"
+_ESTATAL_CASILLA: CasillaId = "0513"
+_KIND = "minimo_descendientes_prorrata_inferred"
+
+_CLAIMED = {_ESTATAL_CASILLA: Decimal("1200")}
+_NOTHING_CLAIMED = {_ESTATAL_CASILLA: Decimal("0")}
+
+#: The signals that make the engine INFER a second entitled contribuyente: a
+#: partnered filer declaring individually. Exactly the ordinary two-parent
+#: household the derivation exists to correct.
+#:
+#: The CODE is used rather than the word token the derivation also accepts,
+#: because the profile schema constrains marital_status to the numeric enum --
+#: so a code is what a real profile can hold, and these facts go through the
+#: real write path.
+_INFERRED_SECOND_FILER = {
+    "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+    "renta_filing.declaration_type": "1",
+}
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
+def _revision() -> ModeloRevision:
+    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
+
+
+def _write(*descendants: DescendantInfo, **profile_facts: str) -> None:
+    facts = [UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(list(descendants))]
+    facts.extend(UserProfileFact(path=path, value=value) for path, value in profile_facts.items())
+    set_active_test_profile_facts(tuple(facts))
+
+
+def _write_household(*descendants: DescendantInfo, signals: dict[str, str] | None = None) -> None:
+    _write(*descendants, **(_INFERRED_SECOND_FILER if signals is None else signals))
+
+
+def _collect(
+    casilla_values: dict[CasillaId, Decimal] | None = None,
+    *,
+    modelo: str = Modelo("100").value,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    diagnostics = collect_bucket_aggregation_advisory_diagnostics(
+        _revision(),
+        _CLAIMED if casilla_values is None else casilla_values,
+        modelo=modelo,
+        period_token=_ANNUAL_PERIOD,
+        filing_year=_FILING_YEAR,
+        bucket_id=_BUCKET_ID,
+        observation_repository=Mock(),
+        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=Mock(),
+        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+    )
+    return tuple(diagnostic for diagnostic in diagnostics if diagnostic.source_kind == _KIND)
+
+
+def _child(*, custodia_compartida: bool = False, prorrata_minimo: bool | None = None) -> DescendantInfo:
+    return DescendantInfo(
+        birth_date=date(_FILING_YEAR - 10, 5, 1),
+        custodia_compartida=custodia_compartida,
+        prorrata_minimo=prorrata_minimo,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Fires: the inference actually decided the factor.
+# ---------------------------------------------------------------------------
+
+
+def test_fires_when_the_prorrata_was_inferred_rather_than_answered() -> None:
+    """A partnered filer declaring individually, with no explicit answer on record."""
+    _write_household(_child())
+    diagnostics = _collect()
+    assert len(diagnostics) == 1
+    assert diagnostics[0].source_kind == _KIND
+    assert diagnostics[0].casilla_id == _ESTATAL_CASILLA
+
+
+def test_the_advisory_grounds_from_the_casilla_it_addresses() -> None:
+    """Casilla-derived, not advisory-asserted: norma 1ª has no finer catalogue entry.
+
+    The whole-article ``ley-35-2006:art-61`` entry already grounds the norma 1ª
+    prorrateo clause at exactly this granularity (its own required_text targets
+    that sentence), which is what casilla 0513 already references -- nothing
+    finer exists to mint on ``asserted_legal_refs``.
+    """
+    _write_household(_child())
+    diagnostic = _collect()[0]
+    assert diagnostic.legal_refs == ("ley-35-2006:art-56", "ley-35-2006:art-58", "ley-35-2006:art-61")
+    assert diagnostic.asserted_legal_refs == ()
+
+
+def test_the_message_names_the_descendant_and_both_corrections() -> None:
+    """The chosen default is only defensible if the operator can act on the message.
+
+    Under-claiming is disclosed rather than silent ONLY if the advisory says
+    which descendant was inferred and how to state the answer in either
+    direction. A message naming one direction would push every correction the
+    same way.
+    """
+    _write_household(_child())
+    message = _operator_text(_collect()[0])
+    assert "renta_family.descendiente.0" in message
+    assert "PRORRATA=false" in message
+    assert "PRORRATA=true" in message
+
+
+# ---------------------------------------------------------------------------
+# Silent: nothing was inferred, so there is nothing to disclose.
+# ---------------------------------------------------------------------------
+
+
+def test_silent_when_the_operator_answered_explicitly() -> None:
+    """An explicit answer is not an inference, in either direction."""
+    _write_household(_child(prorrata_minimo=True))
+    assert _collect() == ()
+
+    _write_household(_child(prorrata_minimo=False))
+    assert _collect() == ()
+
+
+def test_silent_when_shared_custody_decided_it() -> None:
+    """Custodia compartida is a declared fact, not an inference from marital status."""
+    _write_household(_child(custodia_compartida=True))
+    assert _collect() == ()
+
+
+def test_silent_when_no_second_filer_is_indicated() -> None:
+    """An unpartnered filer takes the full mínimo; nothing was inferred away."""
+    _write_household(
+        _child(),
+        signals={
+            "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
+            "renta_filing.declaration_type": "1",
+        },
+    )
+    assert _collect() == ()
+
+
+def test_silent_for_a_married_conjunta_return() -> None:
+    """Both progenitores inside one unit, so no prorrata is applied to disclose."""
+    _write_household(
+        _child(),
+        signals={
+            "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+            "renta_filing.declaration_type": "2",
+        },
+    )
+    assert _collect() == ()
+
+
+def test_silent_when_nothing_is_being_claimed() -> None:
+    _write_household(_child())
+    assert _collect(_NOTHING_CLAIMED) == ()
+
+
+def test_silent_for_another_modelo() -> None:
+    _write_household(_child())
+    assert _collect(modelo="303") == ()
+
+
+def test_names_only_the_descendants_whose_factor_was_inferred() -> None:
+    """A mixed household discloses the inference and not the declared answers."""
+    _write_household(_child(prorrata_minimo=False), _child(), _child(custodia_compartida=True))
+    message = _collect()[0].message
+    assert "renta_family.descendiente.1" in message
+    assert "renta_family.descendiente.0" not in message
+    assert "renta_family.descendiente.2" not in message
+
+
+def test_the_conjunta_branch_is_pinned_on_the_codes_the_schema_can_store() -> None:
+    """Art. 82.1's two modalities, on the ONLY values this field can hold.
+
+    ``renta_taxpayer.marital_status`` is constrained to the ECIVIL enum, so a
+    code is what a real profile carries. Every earlier test of this branch
+    passed a ``SituacionFamiliar`` WORD form straight to the injector, which the
+    write door refuses — so the branch was exercised only on a value production
+    can never produce, and dropping the pareja-de-hecho CODE from the partnered
+    set regressed every real filer while failing nothing.
+
+    These facts go through the real write path, so a value the schema would
+    reject cannot reach the assertion.
+    """
+    from cadrumo.application.modelo.profile_binding import second_entitled_filer_indicated
+
+    unmarried = {
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
+        "renta_filing.declaration_type": "2",
+    }
+    married = {
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_filing.declaration_type": "2",
+    }
+    # Art. 82.1.2a: no marriage bond, so the unit is one progenitor plus the
+    # minor children and the other progenitor stays separately entitled.
+    assert second_entitled_filer_indicated(unmarried) is True
+    # Art. 82.1.1a: both progenitores inside the one unit, nothing to share.
+    assert second_entitled_filer_indicated(married) is False
+
+    # And the same codes survive the write door, which is what makes them the
+    # values production actually sees.
+    _write_household(_child(), signals=unmarried)
+    assert len(_collect()) == 1
+    _write_household(_child(), signals=married)
+    assert _collect() == ()
+
+
+def test_the_message_stays_inside_its_length_bound_for_a_large_household() -> None:
+    """The sibling advisory's message overflowed its bound on a large household.
+
+    That defect turned an advisory into a hard ValidationError for the filer
+    with the most children at stake. This collector shares the bound, so it
+    gets the same case.
+    """
+    _write_household(*[_child() for _ in range(12)])
+    diagnostics = _collect()
+    assert len(diagnostics) == 1
+    assert len(diagnostics[0].message) <= 512

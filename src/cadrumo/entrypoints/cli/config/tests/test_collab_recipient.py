@@ -11,8 +11,8 @@ proven to be the exact key
 See Also:
     :mod:`~entrypoints.cli.config.collab`
         Command handlers for the ``config collab recipient`` surface.
-    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
-        Encrypted active-bucket registry the CLI delegates to.
+    :class:`~adapters.persistence.profile.review_package_recipient_registry.RecipientFingerprintRegistryAdapter`
+        Encrypted active-bucket registry bound by the CLI composition.
     :class:`~application.modelo.RecipientFingerprintRecord`
         Public-key trust record projected by ``add`` and ``list``.
     :func:`~application.modelo.public_key_hex_from_raw_bytes`
@@ -39,7 +39,7 @@ from pydantic import ValidationError
 
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....tests.cli_envelope import unwrap_schema_envelope as _payload
-from .....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ...main import app as root_app
 from ...tests.cli_runner import invoke_typer_app
 

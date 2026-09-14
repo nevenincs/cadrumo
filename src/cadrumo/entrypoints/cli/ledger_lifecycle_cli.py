@@ -337,13 +337,17 @@ def ledger_evidence_pull_all(
     """
     from ...adapters.outbound.google.active_profile import resolve_active_profile
     from ...adapters.outbound.google.document_link_resolver import (
-        DriveFolderDocument,
         list_drive_folder_documents,
         resolve_document_link,
     )
+    from ...adapters.outbound.storage.errors import OutboundStoragePermissionError
     from ...adapters.outbound.storage.factory import build_google_credentials
     from ...adapters.persistence.storage.attachment import AttachmentStore
     from ...application.ledger.evidence_sweep import sweep_evidence_folder
+    from ...application.ledger.evidence_sweep_ports import (
+        EvidenceSweepDocument,
+        EvidenceSweepFileNotReachableError,
+    )
     from ...domain.attachments.enums import AttachmentKind
     from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
     from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
@@ -359,14 +363,26 @@ def ledger_evidence_pull_all(
 
     store = AttachmentStore()
 
-    def _fetch(document: DriveFolderDocument) -> str:
+    application_documents = tuple(
+        EvidenceSweepDocument(
+            file_id=document.file_id,
+            name=document.name,
+            mime_type=document.mime_type,
+        )
+        for document in listing.documents
+    )
+
+    def _fetch(document: EvidenceSweepDocument) -> str:
         """Fetch and encrypt one folder child, returning its attachment id."""
         reference = f"https://drive.google.com/file/d/{document.file_id}"
-        data = resolve_document_link(
-            source=AttachmentSource.GOOGLE_DRIVE,
-            reference=reference,
-            credentials=credentials,
-        )
+        try:
+            data = resolve_document_link(
+                source=AttachmentSource.GOOGLE_DRIVE,
+                reference=reference,
+                credentials=credentials,
+            )
+        except OutboundStoragePermissionError as exc:
+            raise EvidenceSweepFileNotReachableError from exc
         attachment = add_attachment(
             store,
             content=AttachmentBytesContent(data=data),
@@ -388,7 +404,7 @@ def ledger_evidence_pull_all(
         )
         return attachment.attachment_id
 
-    sweep = sweep_evidence_folder(documents=listing.documents, fetch=_fetch)
+    sweep = sweep_evidence_folder(documents=application_documents, fetch=_fetch)
     rows = [
         LedgerEvidencePullAllFilePayload(
             file_id=swept.file_id,

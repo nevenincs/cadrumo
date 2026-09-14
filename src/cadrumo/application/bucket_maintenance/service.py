@@ -24,7 +24,10 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ..bucket_deletion_contracts import BucketDeletionFingerprint
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
-from ..user_profile.custody_ports import default_profile_bucket_storage, inventory_committed_profile_custody
+from ..user_profile.custody_ports import (
+    ProfileBucketStoragePort,
+    inventory_committed_profile_custody,
+)
 from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ._deletion_paths import validated_bucket_deletion_paths
 from .contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
@@ -70,6 +73,9 @@ def _bucket_delete_refusal(
 class BucketMaintenanceService:
     """Expose only non-mutating maintenance operations for current capsules."""
 
+    def __init__(self, *, bucket_storage: ProfileBucketStoragePort) -> None:
+        self._bucket_storage = bucket_storage
+
     @contextmanager
     def _mutation_target_lock(
         self,
@@ -80,7 +86,11 @@ class BucketMaintenanceService:
         missing_ok: bool = False,
     ) -> Generator[None]:
         try:
-            paths = validated_bucket_deletion_paths(root=root, bucket_id=bucket_id)
+            paths = validated_bucket_deletion_paths(
+                root=root,
+                bucket_id=bucket_id,
+                storage=self._bucket_storage,
+            )
         except FileNotFoundError as exc:
             if missing_ok:
                 yield
@@ -95,12 +105,11 @@ class BucketMaintenanceService:
                 bucket_id=str(bucket_id),
                 facts={"bucket_id": str(bucket_id), "custody_target_unlinked": False},
             ) from exc
-        storage = default_profile_bucket_storage()
-        storage.acquire_lock(paths, wait_seconds=wait_seconds)
+        self._bucket_storage.acquire_lock(paths, wait_seconds=wait_seconds)
         try:
             yield
         finally:
-            storage.release_lock(paths)
+            self._bucket_storage.release_lock(paths)
 
     @contextmanager
     def deletion_target_locks(
@@ -117,10 +126,13 @@ class BucketMaintenanceService:
         projection.
         """
         with ExitStack() as stack:
-            storage = default_profile_bucket_storage()
             for bucket_id in sorted(set(bucket_ids)):
                 try:
-                    paths = validated_bucket_deletion_paths(root=root, bucket_id=bucket_id)
+                    paths = validated_bucket_deletion_paths(
+                        root=root,
+                        bucket_id=bucket_id,
+                        storage=self._bucket_storage,
+                    )
                 except FileNotFoundError:
                     continue
                 except ValueError as exc:
@@ -129,8 +141,8 @@ class BucketMaintenanceService:
                         bucket_id=str(bucket_id),
                         facts={"bucket_id": str(bucket_id), "custody_target_unlinked": False},
                     ) from exc
-                storage.acquire_lock(paths, wait_seconds=wait_seconds)
-                stack.callback(storage.release_lock, paths)
+                self._bucket_storage.acquire_lock(paths, wait_seconds=wait_seconds)
+                stack.callback(self._bucket_storage.release_lock, paths)
             yield
 
     def assess_deletion(self, command: AssessBucketDeletionCommand) -> BucketDeletionAssessment:
@@ -154,7 +166,11 @@ class BucketMaintenanceService:
 
         root = load_settings().cadrumo_local_storage_root
         try:
-            validated_bucket_deletion_paths(root=root, bucket_id=command.bucket_id)
+            validated_bucket_deletion_paths(
+                root=root,
+                bucket_id=command.bucket_id,
+                storage=self._bucket_storage,
+            )
         except FileNotFoundError:
             return BucketDeletionAssessment(bucket_id=command.bucket_id, exists=False)
         except ValueError as exc:

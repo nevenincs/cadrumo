@@ -8,7 +8,7 @@ or revision-specific fallback is retained here.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from datetime import date
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -24,15 +24,16 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
-def resolve_first_slice_expense_routing[CategoryEnum: Enum](
+def resolve_first_slice_expense_routing[CategoryT](
     *,
-    category_type: type[CategoryEnum],
+    category_type: type[CategoryT],
     casilla_factory: Callable[[object], CasillaId],
     model_code: str,
     fact_id: str,
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
-) -> dict[CategoryEnum, CasillaId]:
+    category_tokens: Callable[[ValidatedRegistryAuthority, date], Collection[CategoryT]] | None = None,
+) -> dict[CategoryT, CasillaId]:
     """Resolve one dated routing map from the selected registry authority.
 
     The model scope and the mapping fact share the caller's effective date so
@@ -44,11 +45,22 @@ def resolve_first_slice_expense_routing[CategoryEnum: Enum](
         raise RegistryValidationError("first-slice routing requires a non-empty modelo code")
     if not isinstance(effective_date, date):
         raise TypeError("first-slice routing requires a calendar effective date")
-    if not isinstance(category_type, type) or not issubclass(category_type, Enum):
-        raise TypeError("first-slice routing requires an Enum category type")
+    if not isinstance(category_type, type):
+        raise TypeError("first-slice routing requires a category token type")
 
     normalized_model_code = model_code.strip()
     selected_authority = authority if authority is not None else bundled_authority()
+    if issubclass(category_type, Enum):
+        members_by_name = {member.name: member for member in category_type}
+        expected = set(category_type)
+    else:
+        if category_tokens is None:
+            raise TypeError("non-Enum first-slice routing requires a registry category projection")
+        projected = tuple(category_tokens(selected_authority, effective_date))
+        members_by_name = {str(member.value).upper(): member for member in projected}
+        if len(members_by_name) != len(projected):
+            raise TypeError("first-slice routing category projection contains duplicate member names")
+        expected = set(projected)
     query_service = RegistryQueryService(selected_authority)
     model_report = query_service.describe_modelo_for_scope(
         normalized_model_code,
@@ -72,7 +84,7 @@ def resolve_first_slice_expense_routing[CategoryEnum: Enum](
         raise RegistryValidationError("first-slice routing declaration must resolve as a mapping fact")
 
     metadata: dict[str, str] = {}
-    routing: dict[CategoryEnum, CasillaId] = {}
+    routing: dict[CategoryT, CasillaId] = {}
     for entry in resolved.payload.entries:
         if not isinstance(entry.key, str) or not isinstance(entry.value, str):
             raise RegistryValidationError("first-slice routing entries must be string-to-string")
@@ -85,7 +97,7 @@ def resolve_first_slice_expense_routing[CategoryEnum: Enum](
             metadata[entry.key] = entry.value
             continue
         try:
-            category = category_type[member_name]
+            category = members_by_name[member_name]
         except KeyError as exc:
             raise RegistryValidationError(
                 f"registry routing names unknown category member {member_name!r}",
@@ -116,10 +128,9 @@ def resolve_first_slice_expense_routing[CategoryEnum: Enum](
     if metadata["source_kind"] != "first_slice_expense_routing":
         raise RegistryValidationError("first-slice routing declares an unsupported source kind")
 
-    expected = set(category_type)
     if set(routing) != expected:
-        missing = sorted(member.name for member in expected - set(routing))
-        extra = sorted(member.name for member in set(routing) - expected)
+        missing = sorted(getattr(member, "name", member.value) for member in expected - set(routing))
+        extra = sorted(getattr(member, "name", member.value) for member in set(routing) - expected)
         raise RegistryValidationError(f"registry routing coverage mismatch; missing={missing!r}, extra={extra!r}")
     return routing
 

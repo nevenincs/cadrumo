@@ -31,13 +31,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.ledger_filing_snapshot import evaluate_ledger_filing_staleness
 
 if TYPE_CHECKING:
@@ -59,7 +59,7 @@ def ledger_drift_findings(
     *,
     target: CalculationRevision,
     work_unit: WorkUnit,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     source_refs: tuple[str, ...] = (),
     blocking_finding_observer: Callable[
         [ModeloVerificationFinding, bool, tuple[str, ...], tuple[str, ...]],
@@ -74,9 +74,9 @@ def ledger_drift_findings(
     two views it holds apart are exactly the two arguments: ``target`` is the
     stored :class:`CalculationRevision` the casilla values came from, and
     ``transaction_repository`` is the live
-    :class:`TransactionCatalogueRepository` the evidence gate reads. When it is
-    ``None`` the repository is opened against the work unit's own bucket, so
-    the live side is never silently absent. The
+    :class:`TransactionCatalogueRepositoryProtocol` the evidence gate reads.
+    The caller supplies the repository bound to the work unit's bucket, so the
+    live side is never silently absent. The
     anchor's fingerprint covers tax facts only, so a reclassify moves it and an
     evidence attach does not — which is what lets this refuse the stale-draft
     path without refusing the attach-and-re-verify recovery the
@@ -95,7 +95,7 @@ def ledger_drift_findings(
         return []
     if target.state is not CalculationRevisionState.BORRADOR:
         return []
-    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    tx_repo = transaction_repository
     anchor = target.ledger_filing_snapshot
     if anchor is None:
         finding = _drift_finding(work_unit=work_unit, source_refs=source_refs, changed=0, removed=0, anchored=False)

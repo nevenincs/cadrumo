@@ -42,7 +42,6 @@ from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separators
 from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try_parse_canonical_decimal
@@ -53,7 +52,6 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ._bulk_import_columns import (
     BulkImportColumnResolution,
@@ -61,6 +59,7 @@ from ._bulk_import_columns import (
     resolve_bulk_import_columns,
 )
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from .catalogue_creation_ports import CatalogueCreationPorts
 
 __all__ = [
     "BULK_INVOICE_IMPORT_REQUIRED_COLUMNS",
@@ -640,7 +639,7 @@ def import_invoices_from_rows(
     bucket_id: str,
     kind: InvoiceKind,
     declared_country: str | None = None,
-    repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ports: CatalogueCreationPorts,
 ) -> BulkInvoiceImportResult:
     """Create one catalogue :class:`Invoice` per valid row in *rows*.
 
@@ -669,8 +668,7 @@ def import_invoices_from_rows(
     having Spain inferred for a foreign counterparty.
     """
     _assert_country_is_answerable(source.resolution, declared_country=declared_country)
-    repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    catalogue = repo.load()
+    catalogue = ports.invoice_repository.load()
     existing_ids = set(catalogue.invoices)
 
     refused: list[BulkInvoiceImportRowFailure] = []
@@ -705,6 +703,7 @@ def import_invoices_from_rows(
                 retention_amount=parsed.retencion_amount,
                 currency=parsed.currency,
                 notes=parsed.notes,
+                rate_provider=ports.rate_provider,
             )
         except (InvoiceValidationError, ValidationError) as exc:
             reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
@@ -720,7 +719,7 @@ def import_invoices_from_rows(
 
         result = create_catalogue_invoice(
             invoice=candidate,
-            repository=repo,
+            ports=ports,
         )
         existing_ids.add(result.invoice.invoice_id)
         created_ids.append(result.invoice.invoice_id)

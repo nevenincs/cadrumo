@@ -6,27 +6,25 @@ contracts. This module binds those contracts to encrypted secure-object storage.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime
-from typing import ClassVar, override
+from typing import ClassVar, TypeVar, override
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.calculations.errors import (
     CalculationRefusalPrecondition,
-    ObservationCasillaReferenceError,
     ObservationEvidenceDisplacementError,
-    ObservationKeyError,
     calculation_no_recovery_verdict,
 )
 from cadrumo.application.calculations.m303_carry_ingress import normalize_m303_carry_observation_envelope
+from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.application.calculations.observations_repository import (
     IvaWalletDecisionEnvelopePayload,
     ObservationEnvelopePayload,
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
-    decision_payload_digest,
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
     member_observation_key,
@@ -49,12 +47,26 @@ from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
+from ..storage.errors import StorageError
 from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
 )
+
+_T = TypeVar("_T")
+
+
+def _translate_storage_failure(operation: str, callback: Callable[[], _T]) -> _T:
+    """Translate known persistence failures at the application port boundary."""
+    try:
+        return callback()
+    except PersistenceDegradationError:
+        raise
+    except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+        raise PersistenceDegradationError(operation) from exc
+
 
 class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelopePayload]):
     """Repository over encrypted SQL-backed past-filing observations.
@@ -78,6 +90,14 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
     sensitivity: ClassVar[SensitivityClass] = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
     payload_type: ClassVar[type[BaseModel]] = ObservationEnvelopePayload
+
+    @override
+    def load(self, identifier: str) -> ObservationEnvelopePayload | None:
+        """Load one envelope while translating storage failures inward."""
+        return _translate_storage_failure(
+            "calculation_observation_load",
+            lambda: super(CalculationObservationRepository, self).load(identifier),
+        )
 
     @override
     def extract_identifier(self, payload: ObservationEnvelopePayload) -> str:
@@ -275,10 +295,49 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         modelo. The verified scan recomputes the natural key from each payload
         and refuses a mismatch instead of yielding it.
         """
-        safe_repository_id(modelo, context="modelo")
-        for payload in self.iter_records():
-            if payload.observation.modelo == modelo:
-                yield payload
+        try:
+            safe_repository_id(modelo, context="modelo")
+            for payload in self.iter_records():
+                if payload.observation.modelo == modelo:
+                    yield payload
+        except PersistenceDegradationError:
+            raise
+        except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+            raise PersistenceDegradationError("calculation_observation_iter_modelo") from exc
+
+    @override
+    def iter_records(self) -> Iterator[ObservationEnvelopePayload]:
+        """Iterate envelopes while translating storage failures inward."""
+        try:
+            yield from super().iter_records()
+        except PersistenceDegradationError:
+            raise
+        except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+            raise PersistenceDegradationError("calculation_observation_iter_records") from exc
+
+    @override
+    def save(self, payload: ObservationEnvelopePayload) -> None:
+        """Persist one envelope while translating storage failures inward."""
+        _translate_storage_failure(
+            "calculation_observation_save",
+            lambda: super(CalculationObservationRepository, self).save(payload),
+        )
+
+    @override
+    def to_secure_object_write(
+        self,
+        payload: ObservationEnvelopePayload,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Prepare one envelope write while translating storage failures inward."""
+        return _translate_storage_failure(
+            "calculation_observation_prepare",
+            lambda: super(CalculationObservationRepository, self).to_secure_object_write(
+                payload,
+                expected_revision_id=expected_revision_id,
+            ),
+        )
 
 
 class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelopePayload]):

@@ -189,7 +189,10 @@ def _run_work_calculate(
             {
                 "saved": True,
                 "saved_confirmation": saved_confirmation,
-                **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
+                **calculation_revision_payload(
+                    calculation_revision,
+                    work_unit=unit_for_modality,
+                ).model_dump(mode="python"),
                 **modality_payload,
                 "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
             }
@@ -198,7 +201,7 @@ def _run_work_calculate(
         raise CliOutboundPayloadBoundaryError(exc, record=WorkCalculateResult) from exc
     lines = [
         "operation\tmodelo.work.calculate",
-        *calculation_revision_lines(calculation_revision),
+        *calculation_revision_lines(calculation_revision, work_unit=unit_for_modality),
         *modality_lines,
         *work_unit_plazo_lines(unit_for_modality),
         *source_advisory_lines,

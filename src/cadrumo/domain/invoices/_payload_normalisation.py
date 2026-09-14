@@ -21,19 +21,21 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from datetime import date
-from enum import StrEnum
 from typing import Final, NamedTuple
 
-from ...core.aggregation import IntracomOperationType
+from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.travel_agency_mediation import require_travel_agency_mediation
 from ..iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
 from ..iva.oss import OssIossRegime, require_oss_ioss_regime
-from ..iva.schema import EUMemberState, IvaCategory
+from ..iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,
     PaymentStatus,
+    require_invoice_class,
+    require_invoice_operation_date_role,
     resolve_invoice_legal_mention,
 )
 from .errors import InvoiceValidationError
@@ -45,7 +47,7 @@ class _EnumFieldRule(NamedTuple):
     """How one raw payload string becomes its typed enum member."""
 
     field: str
-    enum: type[StrEnum]
+    enum: type
     message: str
     absent_when_blank: bool = False
     normalise: Callable[[str], str] | None = None
@@ -139,15 +141,24 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
     if rule.absent_when_blank and not text:
         payload[rule.field] = None
         return
+    effective_date = payload.get("issued_at")
+    if not isinstance(effective_date, date):
+        effective_date = date.today()
     try:
         payload[rule.field] = (
             require_oss_ioss_regime(text)
             if rule.enum is OssIossRegime
             else require_transaction_kind(text, effective_date=date.today())
             if rule.enum is TransactionKind
+            else require_eu_member_state(text)
+            if rule.enum is EUMemberState
+            else require_invoice_class(text, effective_date=effective_date)
+            if rule.enum is InvoiceClass
+            else require_invoice_operation_date_role(text, effective_date=effective_date)
+            if rule.enum is InvoiceOperationDateRole
             else rule.enum(text)
         )
-    except ValueError as exc:
+    except (RegistryValidationError, TypeError, ValueError) as exc:
         raise InvoiceValidationError(rule.message) from exc
 
 
@@ -182,11 +193,37 @@ def _coerce_legal_mentions(payload: dict[str, object]) -> None:
     payload["legal_mentions"] = tuple(coerced)
 
 
+def _coerce_travel_agency_mediation(payload: dict[str, object]) -> None:
+    """Project the optional travel-agency mediation token through fact 0133."""
+    if "travel_agency_mediation" not in payload:
+        return
+    raw = payload["travel_agency_mediation"]
+    if raw is None:
+        return
+    if not isinstance(raw, (str, TravelAgencyMediationType)):
+        raise InvoiceValidationError(
+            "travel_agency_mediation must be a TravelAgencyMediationType or its value"
+        )
+    effective_date = payload.get("issued_at")
+    if not isinstance(effective_date, date):
+        raise InvoiceValidationError("travel_agency_mediation requires a normalized issued_at date")
+    try:
+        payload["travel_agency_mediation"] = require_travel_agency_mediation(
+            raw,
+            effective_date=effective_date,
+        )
+    except (RegistryValidationError, TypeError, ValueError) as exc:
+        raise InvoiceValidationError(
+            "travel_agency_mediation must be declared by the facts registry"
+        ) from exc
+
+
 def normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, object]:
     """Coerce every enum-typed invoice payload field, refusing off-catalogue values."""
     for rule in _ENUM_FIELD_RULES:
         _coerce_enum_field(payload, rule)
     _coerce_legal_mentions(payload)
+    _coerce_travel_agency_mediation(payload)
     return payload
 
 

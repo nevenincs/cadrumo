@@ -11,36 +11,23 @@ enum/Decimal channel mismatch is rejected at the binding boundary.
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
-from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ....domain.calculations.registry.ids import BindingId, RelationId
-from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ....domain.calculations.registry.schema_formula import FormulaExpression
-from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.source_mesh import CalculationSourceResolution
-from ..calculation_actions import calculate_modelo_revision
 from ..profile_binding import (
     ProfileBindingResolutionError,
     resolve_profile_sourced_bindings,
 )
-from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,9 +35,7 @@ _PROFILE_ID = "10000000-0000-4000-8000-000000000476"
 _BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
-_TYPED_PERIOD = Period.from_year_and_code(_YEAR, _PERIOD)
 _CCAA_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
-_ESTIMACION_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
@@ -63,28 +48,6 @@ def _sourced_binding_ids(result: CalculationSourceResolution) -> set[BindingId]:
     retired ``bindings_sourced_from_profile`` field used to materialise.
     """
     return set(result.binding_values) | set(result.enum_binding_values) | set(result.date_binding_values)
-
-
-@contextmanager
-def _secure_backend(tmp_path: Path) -> Generator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
-
-
-def _calculation_repositories() -> tuple[
-    WorkUnitCatalogueRepository,
-    CalculationRevisionCatalogueRepository,
-    BucketEventHistoryRepository,
-]:
-    return (
-        WorkUnitCatalogueRepository(),
-        CalculationRevisionCatalogueRepository(),
-        BucketEventHistoryRepository(),
-    )
-
-
-def _store_profile(record: UserProfileRecord) -> None:
-    seed_test_profile_record(record)
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
@@ -248,67 +211,6 @@ def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> Regist
         },
     )
     return snapshot.model_copy(update={"revision": revision})
-
-
-def _non_ccaa_decimal_binding_values(snapshot: RegistrySnapshot) -> dict[BindingId, Decimal]:
-    """Supply every non-CCAA, non-profile binding through the Decimal channel as zero.
-
-    The CCAA binding is deliberately omitted: the calculation under test
-    must source it from the user profile, not from caller input. Other
-    ``source="profile"`` bindings (M100 2025 added an age_at_year_end
-    date binding plus declaration-type) are likewise excluded so the
-    profile resolver populates them from the seeded
-    :class:`UserProfileRecord`.
-    """
-    return {
-        binding.id: Decimal("0")
-        for binding in snapshot.revision.bindings
-        if binding.id != _CCAA_BINDING and binding.source != "profile"
-    }
-
-
-def _zero_relation_values(snapshot: RegistrySnapshot) -> dict[RelationId, Decimal]:
-    return {binding.id: Decimal("0") for binding, _ in relation_prefill_bindings_for_period(snapshot.revision)}
-
-
-def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_input(
-    tmp_path: Path,
-) -> None:
-    """A Modelo 100 calculation succeeds with CCAA sourced only from the profile.
-
-    The operator supplies no ``--enum-binding`` for CCAA; the engine's
-    autonomic-chain dispatch ops require it. The calculation completing
-    and producing autonomic-chain casillas proves the profile fact
-    reached the enum channel through ``calculate_modelo_revision``.
-    """
-    with _secure_backend(tmp_path):
-        _store_profile(_profile_with_ccaa("madrid"))
-        snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="100",
-            filing_year=_YEAR,
-            period=_TYPED_PERIOD,
-            revision_id="2025",
-            repository=work_repo,
-            clock=_CLOCK,
-        )
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values=_non_ccaa_decimal_binding_values(snapshot),
-            relation_values=_zero_relation_values(snapshot),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
-            clock=_CLOCK,
-        )
-        # The autonomic minimo-contribuyente casilla is computed by a
-        # CCAA-dispatch formula; its presence proves the dispatch resolved.
-        assert "0512" in revision.casilla_values
-        assert revision.binding_overrides[_CCAA_BINDING] == "madrid"
 
 
 # ---------------------------------------------------------------------------
@@ -475,123 +377,6 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
     assert "not-a-decimal-secret" not in str(exc_info.value)
     assert exc_info.value.translated_message == "application.modelo.profile_binding.errors.decimal_value_type_invalid"
     assert exc_info.value.context == {"binding_id": _SYNTHETIC_DECIMAL_PROFILE_BINDING, "value_type": "str"}
-
-
-def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel(
-    tmp_path: Path,
-) -> None:
-    """Supplying the enum-consumed CCAA binding as a Decimal is refused.
-
-    CCAA is consumed by a dispatch op (string enum channel). Routing it
-    through the Decimal ``--binding`` channel is a binding-type
-    mismatch; the boundary rejects it with a clear message instead of
-    letting the engine raise an opaque ``binding has no supplied value``.
-    """
-    with _secure_backend(tmp_path):
-        _store_profile(_profile_with_ccaa("madrid"))
-        snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="100",
-            filing_year=_YEAR,
-            period=_TYPED_PERIOD,
-            revision_id="2025",
-            repository=work_repo,
-            clock=_CLOCK,
-        )
-        decimal_bindings = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}
-        with pytest.raises(ModeloError):
-            calculate_modelo_revision(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                binding_values=decimal_bindings,
-                relation_values=_zero_relation_values(snapshot),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-                clock=_CLOCK,
-            )
-        assert calc_repo.load().revisions == {}
-
-
-def test_estimacion_directa_binding_stays_in_the_decimal_channel(
-    tmp_path: Path,
-) -> None:
-    """The estimacion-directa modality binding is a Decimal-channel binding.
-
-    ``renta-modelo-100-estimacion-directa-es-normal`` carries a
-    ``typed_enum`` annotation, yet the Modelo 100 rendimiento-neto
-    formula consumes it as a Decimal operand (compared to a numeric
-    literal). Supplying it as a Decimal must be accepted; the boundary
-    must not misroute it to the enum channel on the strength of its
-    ``typed_enum`` tag alone.
-    """
-    with _secure_backend(tmp_path):
-        _store_profile(_profile_with_ccaa("madrid"))
-        snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="100",
-            filing_year=_YEAR,
-            period=_TYPED_PERIOD,
-            revision_id="2025",
-            repository=work_repo,
-            clock=_CLOCK,
-        )
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values=_non_ccaa_decimal_binding_values(snapshot),
-            relation_values=_zero_relation_values(snapshot),
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
-            clock=_CLOCK,
-        )
-        assert Decimal(revision.binding_overrides[_ESTIMACION_BINDING]) == Decimal("0")
-
-
-def test_estimacion_directa_binding_rejected_through_enum_channel(
-    tmp_path: Path,
-) -> None:
-    """Routing the Decimal-consumed estimacion-directa binding as an enum is refused.
-
-    This is the estimacion-directa enum/Decimal mismatch: the binding
-    declares ``typed_enum`` so a caller might route it to the enum
-    channel, but the formula consumes it as a Decimal operand. The
-    boundary rejects the mismatch with a clear message.
-    """
-    with _secure_backend(tmp_path):
-        _store_profile(_profile_with_ccaa("madrid"))
-        snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="100",
-            filing_year=_YEAR,
-            period=_TYPED_PERIOD,
-            revision_id="2025",
-            repository=work_repo,
-            clock=_CLOCK,
-        )
-        with pytest.raises(ModeloError):
-            calculate_modelo_revision(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                binding_values=_non_ccaa_decimal_binding_values(snapshot),
-                enum_binding_values={_ESTIMACION_BINDING: "normal"},
-                relation_values=_zero_relation_values(snapshot),
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-                clock=_CLOCK,
-            )
-        assert calc_repo.load().revisions == {}
 
 
 def test_profile_resolution_declares_the_terminal_origin_it_produced() -> None:

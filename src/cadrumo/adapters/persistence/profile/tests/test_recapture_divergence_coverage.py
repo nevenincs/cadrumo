@@ -41,7 +41,7 @@ from cadrumo.application.storage.sync_runs.records import SyncRunCoverage
 from cadrumo.application.live.filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from cadrumo.application.live.filed_data_capture import recapture_divergence_notices
 from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
-from cadrumo.application.live.tests._filed_capture_history_support import (
+from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import (
     _M303_DECLARATION_TYPE_C,
     _prior_303_observation,
     _secure_backend,

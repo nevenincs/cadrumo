@@ -20,7 +20,7 @@ from their semantic sources and retired the Stage-1 ADVISORY predicates, so this
 collector normally emits no M303 official-box diagnostics for that revision.
 
 See Also:
-    :mod:`~cadrumo.application.modelo._calculation_diagnostics`
+    :mod:`~cadrumo.application.modelo.calculation_diagnostics`
         Post-calculation coordinator that calls this collector with the engine
         casilla values.
     :mod:`~cadrumo.application.modelo.verification_actions`

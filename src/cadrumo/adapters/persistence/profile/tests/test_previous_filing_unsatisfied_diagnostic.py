@@ -25,6 +25,7 @@ class. No mock, stub, fake, skip or xfail.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -47,6 +48,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
@@ -99,6 +101,8 @@ def _resolve(secure_objects: SecureObjectRepository):
     resolver = PreviousFilingSourceResolver(
         repository=CalculationObservationRepository(objects=secure_objects),
         registry_snapshot=snapshot,
+        iva_history_repository=IvaCompensationHistoryRepository(),
+        profile_read_ports=empty_profile_read_ports(),
     )
     return resolver.resolve(
         CalculationSourceContext(

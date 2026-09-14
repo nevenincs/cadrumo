@@ -154,14 +154,29 @@ def test_resources_factory_composes_every_repository() -> None:
     assert set(registry.__dataclass_fields__.keys()) == expected_fields
 
 
-def test_resources_registry_clear_empties_every_repository() -> None:
-    """The aggregate clear() empties every Repository's Identity Map."""
+def test_resources_registry_clear_leaves_authority_backed_repositories_cacheless() -> None:
+    """Aggregate clearing cannot create a second cache for regulated authority data."""
 
     resources.cache_clear()
     registry = resources()
-    _ = registry.apoderamientos.singleton
-    assert registry.apoderamientos._cache != {}
+    before = (
+        registry.apoderamientos.singleton,
+        registry.recargo_bands.singleton,
+        registry.iva_catalogues.get(2025),
+    )
+    authority_repositories = (
+        registry.apoderamientos,
+        registry.recargo_bands,
+        registry.iva_catalogues,
+    )
+    assert all(not hasattr(repository, "_cache") for repository in authority_repositories)
 
     registry.clear()
 
-    assert registry.apoderamientos._cache == {}
+    after = (
+        registry.apoderamientos.singleton,
+        registry.recargo_bands.singleton,
+        registry.iva_catalogues.get(2025),
+    )
+    assert after == before
+    assert all(not hasattr(repository, "_cache") for repository in authority_repositories)

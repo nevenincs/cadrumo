@@ -63,7 +63,7 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..workflow.engine import WorkflowEngine
 from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
-from ._prior_domiciliation import resolve_prior_domiciliation_election
+from .prior_domiciliation import resolveprior_domiciliation_election
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -233,7 +233,7 @@ def file_modelo_revision(
         from .action_errors import ModeloPriorDomiciliationElectionRefusedError
 
         raise ModeloPriorDomiciliationElectionRefusedError(
-            translated_message="errors.refused.refused_modelo_prior_domiciliation_election",
+            translated_message="errors.refused.refused_modeloprior_domiciliation_election",
             context={"received_type": type(prior_domiciliation_election).__name__},
         )
     run_repo = ports.workflow_run_repository
@@ -285,7 +285,7 @@ def file_modelo_revision(
             # An idempotent retry remains subject to the same fail-closed typed
             # election boundary: an unproven ``X`` request cannot hide behind
             # a prior local filing no-op.
-            resolve_prior_domiciliation_election(
+            resolveprior_domiciliation_election(
                 election=prior_domiciliation_election,
                 work_unit=work_unit,
                 revision=target,
@@ -322,7 +322,8 @@ def file_modelo_revision(
         actor=actor.strip(),
         clock=now,
         settings=settings,
-        observation_repository=obs_repo,
+        draft_review_ports=ports.draft_review_ports,
+        workflow_gate_ports=ports.workflow_gate_ports,
     )
     _run_revision_workflow_gate(
         engine=gate_engine,
@@ -340,7 +341,7 @@ def file_modelo_revision(
         refund_election=refund_election,
         payment_election=payment_election,
     )
-    prior_domiciliation_provenance = resolve_prior_domiciliation_election(
+    prior_domiciliation_provenance = resolveprior_domiciliation_election(
         election=prior_domiciliation_election,
         work_unit=work_unit,
         revision=target,
@@ -360,6 +361,9 @@ def file_modelo_revision(
         work_unit_repository=wu_repo,
         bucket_event_repository=bv_repo,
         calculation_observation_repository=obs_repo,
+        participation_index_repository=ports.participation_index_repository,
+        prorrata_register_repository=ports.prorrata_register_repository,
+        iva_compensation_history_repository=ports.iva_compensation_history_repository,
         result_disposition=result_disposition,
         prior_domiciliation_election=prior_domiciliation_provenance,
         taxpayer_nif=workflow_profile.tax_id,

@@ -75,12 +75,13 @@ from ....domain.bienes_inversion.register import (
     InvestmentAssetAcquisitionLink,
     validate_investment_asset_reciprocity,
 )
+from ....domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
+from ....domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ....domain.iva.flow import derive_flow_for_classification
 from ....domain.iva.lookup import rate_kinds_for_declared_rate
-from ....domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
-from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ....domain.iva.schema import IvaCategory, IvaRateKind, spanish_eu_member_state
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError
@@ -296,9 +297,11 @@ def _migrated_iva_rate_kind(
 ) -> IvaRateKind:
     """Resolve the one dated legal rate tier for persisted IVA evidence."""
     operation_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
-    if fact.kind is IvaDeductionFactKind.REAGP_COMPENSATION:
+    if is_iva_deduction_kind(fact.kind, "kind.reagp"):
         return resolve_iva_rate_kind_catalogue(effective_date=operation_date).exempt_token
-    rate_kinds = rate_kinds_for_declared_rate(EUMemberState.ES, fact.iva_rate, operation_date)
+    rate_kinds = rate_kinds_for_declared_rate(
+        spanish_eu_member_state(effective_date=operation_date), fact.iva_rate, operation_date
+    )
     if len(rate_kinds) != 1:
         raise LedgerStorageError(
             f"transaction {transaction.transaction_id}: persisted IVA rate does not resolve to exactly one legal tier"
@@ -493,7 +496,8 @@ class TransactionCatalogueRepository:
         """Validate the whole upgraded catalogue before any v2 row replacement."""
         transactions = self._validated_migrated_transactions(payloads)
         if any(
-            transaction.deduction_fact_kind is not None and transaction.deduction_fact_kind.is_investment_acquisition
+            transaction.deduction_fact_kind is not None
+            and is_iva_deduction_kind(transaction.deduction_fact_kind, "kind.investment_acquisition")
             for transaction in transactions
         ):
             raise LedgerStorageError(
@@ -561,7 +565,7 @@ class TransactionCatalogueRepository:
         for transaction in transactions:
             if not (
                 transaction.deduction_fact_kind is not None
-                and transaction.deduction_fact_kind.is_investment_acquisition
+                and is_iva_deduction_kind(transaction.deduction_fact_kind, "kind.investment_acquisition")
             ):
                 continue
             investment_asset_id = transaction.investment_asset_id

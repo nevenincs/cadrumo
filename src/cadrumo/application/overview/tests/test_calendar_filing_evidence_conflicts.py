@@ -6,9 +6,9 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
 from ..calendar_evidence import calendar_filing_evidence_from_sources
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange
@@ -62,7 +62,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
-                    Declaracion(
+                    ExpedientesDeclaration(
                         modelo="303",
                         ejercicio=2025,
                         period=_PERIOD_2025_1T,

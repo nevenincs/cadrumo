@@ -538,7 +538,12 @@ def detail_row_payloads(rev: CalculationRevision) -> tuple[DetailRowPayload, ...
     return tuple(rows)
 
 
-def calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisionPayload:
+def calculation_revision_payload(
+    rev: CalculationRevision,
+    *,
+    work_unit: WorkUnit | None = None,
+    include_result_summary: bool = True,
+) -> CalculationRevisionPayload:
     """Project a calculation revision into the shared JSON payload.
 
     The returned
@@ -551,6 +556,8 @@ def calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisio
     :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.SourceProvenancePayload`
     resolver-trace rows for envelope-aware commands.
     """
+    if include_result_summary and work_unit is None:
+        raise TypeError("calculation revision payload requires its selected work unit for result summary")
     observations = tuple(
         ObservationPayload(
             casilla_id=obs.casilla_id,
@@ -587,7 +594,11 @@ def calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisio
         state=rev.state.value,
         casilla_values={k: str(v) for k, v in visible_calculation_casilla_values(rev).items()},
         observations=observations,
-        result_summary=result_summary_payload(rev),
+        result_summary=(
+            result_summary_payload(rev, work_unit=work_unit)
+            if include_result_summary and work_unit is not None
+            else ()
+        ),
         detail_rows=detail_row_payloads(rev),
         source_provenance=source_provenance,
         binding_overrides={key: str(value) for key, value in rev.binding_overrides.items()},
@@ -603,9 +614,9 @@ def calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisio
     )
 
 
-def result_summary_lines(rev: CalculationRevision) -> list[str]:
+def result_summary_lines(rev: CalculationRevision, *, work_unit: WorkUnit) -> list[str]:
     """Return the headline-result summary block for a calculation revision."""
-    summary = calculation_result_summary(rev)
+    summary = calculation_result_summary(rev, work_unit=work_unit)
     if summary is None or not summary.rows:
         return []
     header = tr(
@@ -621,13 +632,17 @@ def result_summary_lines(rev: CalculationRevision) -> list[str]:
     return lines
 
 
-def result_summary_payload(rev: CalculationRevision) -> tuple[ResultSummaryRowPayload, ...]:
+def result_summary_payload(
+    rev: CalculationRevision,
+    *,
+    work_unit: WorkUnit,
+) -> tuple[ResultSummaryRowPayload, ...]:
     """Return headline-result summary rows for the JSON payload.
 
     Each row is a
     :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`.
     """
-    summary = calculation_result_summary(rev)
+    summary = calculation_result_summary(rev, work_unit=work_unit)
     if summary is None:
         return ()
     return tuple(
@@ -710,7 +725,7 @@ def _formula_operation_label(operation: str) -> str:
         return tr(
             "cli.app.modelo.work.formula_operation_calculation",
         )
-    key, default = entry
+    key, _default = entry
     return tr(
         key,
     )
@@ -793,7 +808,15 @@ def _calculation_detail_lines(rev: CalculationRevision) -> list[str]:
     return lines
 
 
-def calculation_revision_lines(rev: CalculationRevision, *, verbose: bool = False) -> list[str]:
+def calculation_revision_lines(
+    rev: CalculationRevision,
+    *,
+    work_unit: WorkUnit | None = None,
+    include_result_summary: bool = True,
+    verbose: bool = False,
+) -> list[str]:
+    if include_result_summary and work_unit is None:
+        raise TypeError("calculation revision lines require their selected work unit for result summary")
     lines = [
         f"calculation_revision_id\t{rev.calculation_revision_id}",
         f"work_unit_id\t{rev.work_unit_id}",
@@ -802,7 +825,11 @@ def calculation_revision_lines(rev: CalculationRevision, *, verbose: bool = Fals
         f"updated_at\t{rev.updated_at.isoformat()}",
     ]
     lines.extend(_calculation_revision_lifecycle_lines(rev))
-    summary_lines = result_summary_lines(rev)
+    summary_lines = (
+        result_summary_lines(rev, work_unit=work_unit)
+        if include_result_summary and work_unit is not None
+        else []
+    )
     if summary_lines:
         lines.extend(summary_lines)
     lines.extend(_calculation_casilla_lines(rev, verbose=verbose))
@@ -812,7 +839,7 @@ def calculation_revision_lines(rev: CalculationRevision, *, verbose: bool = Fals
 
 def calculation_observation_lines(rev: CalculationRevision) -> list[str]:
     """Return a stable text view of a revision's typed casilla observations."""
-    payload = calculation_revision_payload(rev)
+    payload = calculation_revision_payload(rev, include_result_summary=False)
     observations = sorted(payload.observations, key=lambda obs: obs.casilla_id)
     lines = [
         f"calculation_revision_id\t{payload.calculation_revision_id}",

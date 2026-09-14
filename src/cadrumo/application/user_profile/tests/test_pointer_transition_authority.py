@@ -24,10 +24,18 @@ _B = "22222222-2222-4222-8222-222222222222"
 
 def _select_b_then_a_in_child(root_text: str, result_queue: Any) -> None:
     """Publish two real transitions from one fresh interpreter."""
-    from ....tests.profile_persistence import composed_profile_persistence_ports
+    from collections.abc import Iterator
+    from contextlib import contextmanager
+
+    from ....core.locks import exclusive_file_lock
     from ..profile_pointer import active_profile_pointer_transaction as transaction_context
 
-    with composed_profile_persistence_ports(), transaction_context(Path(root_text)) as transaction:
+    @contextmanager
+    def _root_lock(root: Path, *, timeout_seconds: float) -> Iterator[None]:
+        with exclusive_file_lock(root, timeout=timeout_seconds):
+            yield
+
+    with transaction_context(Path(root_text), root_lock=_root_lock) as transaction:
         selected_b = transaction.select(_B)
         selected_a = transaction.select(_A)
     result_queue.put((selected_b, selected_a))

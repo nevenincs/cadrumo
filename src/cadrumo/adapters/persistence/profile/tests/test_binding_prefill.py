@@ -39,14 +39,14 @@ from cadrumo.domain.iva_compensation.errors import IvaCompensationCasillaReferen
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from cadrumo.application.calculations.binding_prefill import (
-    _iva_compensation_history_observation,
-    _observation_from_iva_compensation_history,
+    iva_compensation_history_observation,
+    observation_from_iva_compensation_history,
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
 from cadrumo.application.calculations.errors import BindingPrefillTypeError
 from cadrumo.application.calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
@@ -83,11 +83,13 @@ def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obl
         empty_report = resolve_bindings_from_local_store(
             snapshot,
             repository=CalculationObservationRepository(),
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
         scoped_report = resolve_bindings_from_local_store(
             snapshot,
             repository=CalculationObservationRepository(),
             activity_start_date=date(2026, 1, 1),
+            iva_history_repository=IvaCompensationHistoryRepository(),
         )
 
     binding_id = "irpf.previous_year_economic_activity_net_income"
@@ -385,7 +387,7 @@ def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -
     formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
 
     with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
-        _iva_compensation_history_observation(
+        iva_compensation_history_observation(
             modelo_id="303",
             revision_id=snapshot.revision.id,
             casillas=casillas_without_resultado,
@@ -417,7 +419,7 @@ def test_iva_history_observation_only_claims_formula_provenance_for_exact_casill
         source_observation_key="303:2025:4T:history-source",
     )
 
-    observation = _observation_from_iva_compensation_history(state)
+    observation = observation_from_iva_compensation_history(state)
     by_id = {item.casilla_id: item for item in observation.observations}
 
     posterior = by_id[_M303_POSTERIOR_CASILLA]
@@ -447,7 +449,7 @@ def test_iva_history_observation_rejects_mismatched_formula_operand_projection()
     formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
 
     with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
-        _iva_compensation_history_observation(
+        iva_compensation_history_observation(
             modelo_id="303",
             revision_id=snapshot.revision.id,
             casillas=casillas,

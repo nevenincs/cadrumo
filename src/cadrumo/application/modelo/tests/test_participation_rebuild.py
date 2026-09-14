@@ -1,36 +1,34 @@
-"""Rebuild the participation index from a real finalized-revision catalogue.
+"""Rebuild the participation index from finalized-revision catalogues.
 
-Seeds a calculation-revision catalogue with finalized revisions (verified and
-filed) plus a borrador, persisted through the real encrypted repositories, runs
-``rebuild_participation_index``, and asserts every finalized revision's
-``source_transaction_ids`` land in the rebuilt index while the borrador is
-excluded and filed revisions carry their ``filing_record_id``. No mocks — the
-rebuild reads the same encrypted catalogues the production write path persists.
+The application service is exercised through inward repository fakes.  Adapter
+round-trips belong to the persistence adapter tests; these cases cover the
+application projection and its replacement semantics without importing storage.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_record import (
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
@@ -38,8 +36,9 @@ from ....domain.modelos.participation_index import (
     upsert_transaction_participation,
 )
 from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..participation_index_rebuild import rebuild_participation_index
+from ..participation_index_rebuild_ports import ParticipationIndexRebuildPorts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -54,6 +53,80 @@ _IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "iva.base-imponible",
     surface="_IVA_BASE_IMPONIBLE_CASILLA",
 )
+
+
+class _CalculationRepository:
+    """Inward fake for the calculation-revision catalogue capability."""
+
+    def __init__(self) -> None:
+        self._catalogue = CalculationRevisionCatalogue()
+
+    def load(self) -> CalculationRevisionCatalogue:
+        """Return the current in-memory calculation catalogue."""
+        return self._catalogue
+
+    def save(self, catalogue: CalculationRevisionCatalogue) -> None:
+        """Replace the in-memory calculation catalogue."""
+        self._catalogue = catalogue
+
+
+class _WorkUnitRepository:
+    """Inward fake for the work-unit catalogue capability."""
+
+    def __init__(self) -> None:
+        self._catalogue = WorkUnitCatalogue()
+
+    def load(self) -> WorkUnitCatalogue:
+        """Return the current in-memory work-unit catalogue."""
+        return self._catalogue
+
+    def save(self, catalogue: WorkUnitCatalogue) -> None:
+        """Replace the in-memory work-unit catalogue."""
+        self._catalogue = catalogue
+
+
+class _FilingRepository:
+    """Inward fake for the filing-record catalogue capability."""
+
+    def __init__(self) -> None:
+        self._catalogue = ModeloRecordCatalogue()
+
+    def load(self) -> ModeloRecordCatalogue:
+        """Return the current in-memory filing-record catalogue."""
+        return self._catalogue
+
+    def save(self, catalogue: ModeloRecordCatalogue) -> None:
+        """Replace the in-memory filing-record catalogue."""
+        self._catalogue = catalogue
+
+
+class _ParticipationIndexRepository:
+    """Inward fake for the derived index replacement capability."""
+
+    def __init__(self) -> None:
+        self._indexes: dict[str, TransactionRevisionParticipationIndex] = {}
+
+    def exists(self, transaction_id: str) -> bool:
+        """Report whether an index exists for ``transaction_id``."""
+        return transaction_id in self._indexes
+
+    def load(self, transaction_id: str) -> TransactionRevisionParticipationIndex:
+        """Return an index or the empty index for ``transaction_id``."""
+        return self._indexes.get(
+            transaction_id,
+            TransactionRevisionParticipationIndex(transaction_id=transaction_id),
+        )
+
+    def save(self, index: TransactionRevisionParticipationIndex) -> None:
+        """Persist one in-memory index."""
+        self._indexes[index.transaction_id] = index
+
+    def replace_all(self, indexes: Iterable[TransactionRevisionParticipationIndex]) -> int:
+        """Replace every in-memory index and return the stale-row count."""
+        replacement = {index.transaction_id: index for index in indexes}
+        stale_count = len(self._indexes.keys() - replacement.keys())
+        self._indexes = replacement
+        return stale_count
 
 
 def _work_unit(*, modelo: str, period: str, revision_seed: str) -> WorkUnit:
@@ -122,70 +195,75 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
     )
 
 
-def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record(tmp_path: Path) -> None:
+def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record() -> None:
     """Rebuild folds every finalized revision in, drops borrador, carries filing_record_id."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        cr_repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
-        wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
-        fr_repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+    cr_repo = _CalculationRepository()
+    wu_repo = _WorkUnitRepository()
+    fr_repo = _FilingRepository()
+    participation_repo = _ParticipationIndexRepository()
+    ports = ParticipationIndexRebuildPorts(
+        calculation_repository=cr_repo,
+        work_unit_repository=wu_repo,
+        filing_repository=fr_repo,
+        participation_index_repository=participation_repo,
+    )
 
-        filed_wu = _work_unit(modelo="303", period="1T", revision_seed="303")
-        verified_wu = _work_unit(modelo="130", period="2T", revision_seed="130")
-        borrador_wu = _work_unit(modelo="303", period="3T", revision_seed="303b")
+    filed_wu = _work_unit(modelo="303", period="1T", revision_seed="303")
+    verified_wu = _work_unit(modelo="130", period="2T", revision_seed="130")
+    borrador_wu = _work_unit(modelo="303", period="3T", revision_seed="303b")
 
-        filed_rev = _revision(
-            work_unit=filed_wu,
-            state=CalculationRevisionState.PRESENTADO,
-            txids=(_TX_FILED, _TX_SHARED),
-        )
-        verified_rev = _revision(
-            work_unit=verified_wu,
-            state=CalculationRevisionState.VERIFICADO_COMPLETO,
-            txids=(_TX_VERIFIED, _TX_SHARED),
-        )
-        borrador_rev = _revision(
-            work_unit=borrador_wu,
-            state=CalculationRevisionState.BORRADOR,
-            txids=(_TX_BORRADOR,),
-        )
+    filed_rev = _revision(
+        work_unit=filed_wu,
+        state=CalculationRevisionState.PRESENTADO,
+        txids=(_TX_FILED, _TX_SHARED),
+    )
+    verified_rev = _revision(
+        work_unit=verified_wu,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        txids=(_TX_VERIFIED, _TX_SHARED),
+    )
+    borrador_rev = _revision(
+        work_unit=borrador_wu,
+        state=CalculationRevisionState.BORRADOR,
+        txids=(_TX_BORRADOR,),
+    )
 
-        work_units = wu_repo.load()
-        for wu in (filed_wu, verified_wu, borrador_wu):
-            work_units = upsert_work_unit(work_units, wu)
-        wu_repo.save(work_units)
+    work_units = wu_repo.load()
+    for wu in (filed_wu, verified_wu, borrador_wu):
+        work_units = upsert_work_unit(work_units, wu)
+    wu_repo.save(work_units)
 
-        revisions = cr_repo.load()
-        for rev in (filed_rev, verified_rev, borrador_rev):
-            revisions = upsert_calculation_revision(revisions, rev)
-        cr_repo.save(revisions)
+    revisions = cr_repo.load()
+    for rev in (filed_rev, verified_rev, borrador_rev):
+        revisions = upsert_calculation_revision(revisions, rev)
+    cr_repo.save(revisions)
 
-        # A filing record bound to the filed revision so rebuild can attach filing_record_id.
-        filing_id = derive_filing_record_id(
-            work_unit_id=filed_wu.work_unit_id,
-            calculation_revision_id=filed_rev.calculation_revision_id,
-            filed_by="aeat.cli.modelo.file",
-        )
-        filing_record = ModeloRecord(
-            filing_record_id=filing_id,
-            work_unit_id=filed_wu.work_unit_id,
-            calculation_revision_id=filed_rev.calculation_revision_id,
-            bucket_id=_BUCKET_ID,
-            modelo=ModeloCode("303"),
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "1T"),
-            filed_at=_T0 + timedelta(hours=2),
-            filed_by="aeat.cli.modelo.file",
-            status=ModeloRecordStatus.VIGENTE,
-        )
-        fr_repo.save(upsert_filing_record(fr_repo.load(), filing_record))
+    # A filing record bound to the filed revision so rebuild can attach filing_record_id.
+    filing_id = derive_filing_record_id(
+        work_unit_id=filed_wu.work_unit_id,
+        calculation_revision_id=filed_rev.calculation_revision_id,
+        filed_by="aeat.cli.modelo.file",
+    )
+    filing_record = ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=filed_wu.work_unit_id,
+        calculation_revision_id=filed_rev.calculation_revision_id,
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "1T"),
+        filed_at=_T0 + timedelta(hours=2),
+        filed_by="aeat.cli.modelo.file",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    fr_repo.save(upsert_filing_record(fr_repo.load(), filing_record))
 
-        stats = rebuild_participation_index(bucket_id=_BUCKET_ID)
+    stats = rebuild_participation_index(ports=ports)
 
-        participation_repo = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
-        index_filed = participation_repo.load(_TX_FILED)
-        index_verified = participation_repo.load(_TX_VERIFIED)
-        index_borrador = participation_repo.load(_TX_BORRADOR)
-        index_shared = participation_repo.load(_TX_SHARED)
+    index_filed = participation_repo.load(_TX_FILED)
+    index_verified = participation_repo.load(_TX_VERIFIED)
+    index_borrador = participation_repo.load(_TX_BORRADOR)
+    index_shared = participation_repo.load(_TX_SHARED)
 
     # Two finalized revisions folded in (borrador excluded).
     assert stats.revision_count == 2
@@ -212,10 +290,16 @@ def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record(
     assert shared_revisions == {filed_rev.calculation_revision_id, verified_rev.calculation_revision_id}
 
 
-def test_rebuild_on_empty_catalogue_writes_nothing(tmp_path: Path) -> None:
+def test_rebuild_on_empty_catalogue_writes_nothing() -> None:
     """An empty revision catalogue rebuilds to zero participations."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        stats = rebuild_participation_index(bucket_id=_BUCKET_ID)
+    stats = rebuild_participation_index(
+        ports=ParticipationIndexRebuildPorts(
+            calculation_repository=_CalculationRepository(),
+            work_unit_repository=_WorkUnitRepository(),
+            filing_repository=_FilingRepository(),
+            participation_index_repository=_ParticipationIndexRepository(),
+        ),
+    )
 
     assert stats.revision_count == 0
     assert stats.transaction_count == 0
@@ -223,7 +307,7 @@ def test_rebuild_on_empty_catalogue_writes_nothing(tmp_path: Path) -> None:
     assert stats.stale_removed_count == 0
 
 
-def test_rebuild_prunes_participation_absent_from_the_regenerated_catalogue(tmp_path: Path) -> None:
+def test_rebuild_prunes_participation_absent_from_the_regenerated_catalogue() -> None:
     """A persisted entry the catalogue no longer records is removed, not left readable.
 
     The index is a derived cache over the finalized-revision catalogue, so a
@@ -231,65 +315,75 @@ def test_rebuild_prunes_participation_absent_from_the_regenerated_catalogue(tmp_
     been discarded has no regenerated row, and leaving its secure object in place
     would keep surfacing a participation the authority dropped.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        participation_repo = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
+    participation_repo = _ParticipationIndexRepository()
+    ports = ParticipationIndexRebuildPorts(
+        calculation_repository=_CalculationRepository(),
+        work_unit_repository=_WorkUnitRepository(),
+        filing_repository=_FilingRepository(),
+        participation_index_repository=participation_repo,
+    )
 
-        # A genuine persisted participation whose revision is absent from the
-        # (empty) catalogue the rebuild will read.
-        stale_wu = _work_unit(modelo="303", period="4T", revision_seed="303stale")
-        stale_rev = _revision(
-            work_unit=stale_wu,
-            state=CalculationRevisionState.PRESENTADO,
-            txids=(_TX_BORRADOR,),
-        )
-        participation_repo.save(
-            upsert_transaction_participation(
-                TransactionRevisionParticipationIndex(transaction_id=_TX_BORRADOR),
-                TransactionRevisionParticipation(
-                    calculation_revision_id=stale_rev.calculation_revision_id,
-                    work_unit_id=stale_wu.work_unit_id,
-                    modelo=stale_wu.modelo,
-                    filing_year=stale_wu.filing_year,
-                    period=stale_wu.period,
-                    revision_state=CalculationRevisionState.PRESENTADO.value,
-                ),
+    # A genuine persisted participation whose revision is absent from the
+    # (empty) catalogue the rebuild will read.
+    stale_wu = _work_unit(modelo="303", period="4T", revision_seed="303stale")
+    stale_rev = _revision(
+        work_unit=stale_wu,
+        state=CalculationRevisionState.PRESENTADO,
+        txids=(_TX_BORRADOR,),
+    )
+    participation_repo.save(
+        upsert_transaction_participation(
+            TransactionRevisionParticipationIndex(transaction_id=_TX_BORRADOR),
+            TransactionRevisionParticipation(
+                calculation_revision_id=stale_rev.calculation_revision_id,
+                work_unit_id=stale_wu.work_unit_id,
+                modelo=stale_wu.modelo,
+                filing_year=stale_wu.filing_year,
+                period=stale_wu.period,
+                revision_state=CalculationRevisionState.PRESENTADO.value,
             ),
-        )
-        assert participation_repo.exists(_TX_BORRADOR)
+        ),
+    )
+    assert participation_repo.exists(_TX_BORRADOR)
 
-        stats = rebuild_participation_index(bucket_id=_BUCKET_ID)
+    stats = rebuild_participation_index(ports=ports)
 
-        pruned_exists = participation_repo.exists(_TX_BORRADOR)
-        pruned_index = participation_repo.load(_TX_BORRADOR)
+    pruned_exists = participation_repo.exists(_TX_BORRADOR)
+    pruned_index = participation_repo.load(_TX_BORRADOR)
 
     assert stats.stale_removed_count == 1
     assert pruned_exists is False
     assert pruned_index.participations == ()
 
 
-def test_rebuild_prunes_only_transactions_the_catalogue_dropped(tmp_path: Path) -> None:
+def test_rebuild_prunes_only_transactions_the_catalogue_dropped() -> None:
     """Pruning is scoped to absent keys: a still-finalized transaction round-trips intact."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        cr_repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
-        wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
-        participation_repo = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
+    cr_repo = _CalculationRepository()
+    wu_repo = _WorkUnitRepository()
+    participation_repo = _ParticipationIndexRepository()
+    ports = ParticipationIndexRebuildPorts(
+        calculation_repository=cr_repo,
+        work_unit_repository=wu_repo,
+        filing_repository=_FilingRepository(),
+        participation_index_repository=participation_repo,
+    )
 
-        kept_wu = _work_unit(modelo="130", period="2T", revision_seed="130keep")
-        kept_rev = _revision(
-            work_unit=kept_wu,
-            state=CalculationRevisionState.VERIFICADO_COMPLETO,
-            txids=(_TX_VERIFIED,),
-        )
-        wu_repo.save(upsert_work_unit(wu_repo.load(), kept_wu))
-        cr_repo.save(upsert_calculation_revision(cr_repo.load(), kept_rev))
+    kept_wu = _work_unit(modelo="130", period="2T", revision_seed="130keep")
+    kept_rev = _revision(
+        work_unit=kept_wu,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        txids=(_TX_VERIFIED,),
+    )
+    wu_repo.save(upsert_work_unit(wu_repo.load(), kept_wu))
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), kept_rev))
 
-        # A stale object for a transaction no revision references any more.
-        participation_repo.save(TransactionRevisionParticipationIndex(transaction_id=_TX_BORRADOR))
+    # A stale object for a transaction no revision references any more.
+    participation_repo.save(TransactionRevisionParticipationIndex(transaction_id=_TX_BORRADOR))
 
-        stats = rebuild_participation_index(bucket_id=_BUCKET_ID)
+    stats = rebuild_participation_index(ports=ports)
 
-        kept_index = participation_repo.load(_TX_VERIFIED)
-        dropped_exists = participation_repo.exists(_TX_BORRADOR)
+    kept_index = participation_repo.load(_TX_VERIFIED)
+    dropped_exists = participation_repo.exists(_TX_BORRADOR)
 
     assert stats.stale_removed_count == 1
     assert dropped_exists is False

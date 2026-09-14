@@ -17,21 +17,18 @@ fail the test.
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.calculations.registry.authority import bundled_authority
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_de_canones_is_source_state_exempt(tmp_path: Path) -> None:
+def test_de_canones_is_source_state_exempt() -> None:
     """DE-resident cánones: source-state exemption (art 12) → 0."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = resolve_convenio_rate(tipo_renta="canones", country_code="DE", base="1000.00")
+    tipo, cuota = resolve_convenio_rate(tipo_renta="canones", country_code="DE", base="1000.00")
 
     assert tipo == Decimal("0")
     assert cuota == Decimal("0.00")

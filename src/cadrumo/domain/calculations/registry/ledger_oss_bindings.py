@@ -25,6 +25,8 @@ from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
+from .eu_member_state_catalogue import require_eu_member_state, require_registry_declared_eu_member_state
+from .governed_fact_scope import governed_facts_in_scope
 from .ids import BindingId
 from .iva_rate_kind_catalogue import require_iva_rate_kind, require_registry_declared_iva_rate_kind
 from .ledger_binding_selector_support import LedgerIvaFact, OssIossLedgerFact
@@ -32,6 +34,13 @@ from .schema_base import coerce_enum_member, coerce_enum_tuple
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
+
+
+def _coerce_registry_eu_member_state(value: object) -> EUMemberState:
+    """Hydrate from candidate facts during validation, or the bundle at runtime."""
+    if governed_facts_in_scope() is not None:
+        return require_registry_declared_eu_member_state(value, effective_date=date.today())
+    return require_eu_member_state(value, effective_date=date.today())
 
 
 class OssIossLedgerObservation(BaseModel):
@@ -100,7 +109,7 @@ class LedgerOssProvider(BaseModel):
     kind: Literal[BindingSourceKind.LEDGER_OSS_AGGREGATION] = BindingSourceKind.LEDGER_OSS_AGGREGATION
 
     regime: OssIossRegime
-    destination_member_state: Annotated[EUMemberState, BeforeValidator(coerce_enum_member(EUMemberState))]
+    destination_member_state: Annotated[EUMemberState, BeforeValidator(_coerce_registry_eu_member_state)]
     rate_kind: Annotated[IvaRateKind, BeforeValidator(coerce_enum_member(IvaRateKind))]
     invoice_direction: Annotated[InvoiceKind, BeforeValidator(coerce_enum_member(InvoiceKind))]
     transaction_kinds: Annotated[
@@ -113,19 +122,23 @@ class LedgerOssProvider(BaseModel):
     @classmethod
     def _validate_registry_regime(cls, value: OssIossRegime) -> OssIossRegime:
         """Refuse a binding selector whose regime is absent from facts authority."""
-        return require_oss_ioss_regime(value)
+        authority = governed_facts_in_scope()
+        return require_oss_ioss_regime(value, effective_date=date.today(), authority=authority)
 
     @field_validator("rate_kind", mode="after")
     @classmethod
     def _validate_registry_rate_kind(cls, value: IvaRateKind) -> IvaRateKind:
         """Refuse a binding rate tier absent from the IVA facts being validated."""
-        return require_registry_declared_iva_rate_kind(value, effective_date=date.today())
+        if governed_facts_in_scope() is not None:
+            return require_registry_declared_iva_rate_kind(value, effective_date=date.today())
+        return require_iva_rate_kind(value, effective_date=date.today())
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod
     def _validate_registry_transaction_kinds(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
         """Refuse binding transaction kinds absent from the classification fact."""
-        return tuple(require_transaction_kind(kind, effective_date=date.today()) for kind in value)
+        authority = governed_facts_in_scope()
+        return tuple(require_transaction_kind(kind, effective_date=date.today(), authority=authority) for kind in value)
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod

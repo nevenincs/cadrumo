@@ -16,8 +16,8 @@ from ....application.operator_surface.command_ports import cli_argv_for
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings, override_settings
 from ....core.config_support import SecretStoreBackend
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ..verb_input_schema import build_verb_input_schemas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

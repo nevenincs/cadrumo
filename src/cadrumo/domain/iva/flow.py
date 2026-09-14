@@ -86,52 +86,66 @@ devengada / cuota deducible total?".
 
 from __future__ import annotations
 
-from enum import StrEnum
+from typing import Self
+
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
 
 from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
+from ...core.errors.hierarchy import CoreValidationError
 from .classification import InvoiceKind
 from .schema import IvaCategory
 
 
-class IvaFlowDirection(StrEnum):
-    """Closed enumeration of the IVA flow directions.
+class IvaFlowDirection(str):
+    """Opaque IVA flow token projected from fact 0083.
 
-    Members are kebab-case lowercase strings to align with TOML-driven
-    binding selectors and ledger-side tagging.
-
-    Attributes:
-        REPERCUTIDO: Output IVA. The sujeto pasivo charges IVA to a
-            customer in an invoice it issues. Anchored to LIVA art. 88.
-        SOPORTADO: Input IVA. The sujeto pasivo bears IVA charged by a
-            supplier via direct repercusión and may deduct it under
-            LIVA art. 92.
-        INVERSION_SUJETO_PASIVO: Self-assessed reverse charge. The sujeto
-            pasivo is the recipient of an operation that triggers
-            inversión del sujeto pasivo under LIVA art. 84.Uno.2.º
-            (intra-community acquisitions, construction RC, waste RC,
-            consumer-electronics RC, services received from EU
-            non-established suppliers); the same operation lands as
-            both a repercutido and a soportado entry in the books.
-        OPERACION_CON_INVERSION: The SUPPLIER's side of an operation
-            that triggers inversión del sujeto pasivo. The supplier
-            makes a sujeta y no exenta supply and repercutes nothing,
-            because LIVA art. 84.Uno.2.º makes the recipient the sujeto
-            pasivo; so the operation is turnover that settles on
-            NEITHER side. Distinct from
-            :attr:`INVERSION_SUJETO_PASIVO`, which is the recipient's
-            side of the same operation.
-
-            The member exists because that is a fourth state rather
-            than the absence of the other three, and because the axis
-            previously could not express it: a supplier's reverse-charge
-            invoice was routed to :attr:`INVERSION_SUJETO_PASIVO` and
-            self-assessed as though the supplier were the recipient.
+    Flow membership, legal descriptions, and settlement-side semantics belong
+    to the dated facts registry.  This wire type deliberately carries no
+    closed Python member list; callers must obtain tokens through the typed
+    registry projection.
     """
 
-    REPERCUTIDO = "repercutido"
-    SOPORTADO = "soportado"
-    INVERSION_SUJETO_PASIVO = "inversion_sujeto_pasivo"
-    OPERACION_CON_INVERSION = "operacion_con_inversion"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("IvaFlowDirection tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("IvaFlowDirection token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("IvaFlowDirection must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical registry token for diagnostics."""
+        return str(self)
 
 
 def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind) -> IvaFlowDirection:
@@ -146,7 +160,15 @@ def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind) -> IvaFlowDirecti
     regimes (reverse charge, intra-community) that route the same members
     differently.
     """
-    return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+    flow_catalogue = _flow_direction_catalogue()
+    return flow_catalogue.issued_token if invoice_kind is InvoiceKind.ISSUED else flow_catalogue.received_token
+
+
+def _flow_direction_catalogue():
+    """Resolve the selected 0083 flow catalogue without an import cycle."""
+    from ..calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
+
+    return resolve_iva_flow_direction_catalogue()
 
 
 def _recipient_only_reverse_charge_categories(
@@ -222,62 +244,60 @@ def derive_flow_for_classification(
     Returns:
         The :class:`IvaFlowDirection` that matches the classification.
     """
-    catalogue = resolve_iva_category_catalogue()
-    if category in _recipient_only_reverse_charge_categories(catalogue):
-        return IvaFlowDirection.INVERSION_SUJETO_PASIVO
-    if category == catalogue.require("domestic_reverse_charge"):
+    category_catalogue = resolve_iva_category_catalogue()
+    flow_catalogue = _flow_direction_catalogue()
+    if category in _recipient_only_reverse_charge_categories(category_catalogue):
+        return flow_catalogue.recipient_reverse_charge_token
+    if category == category_catalogue.require("domestic_reverse_charge"):
         if invoice_direction is InvoiceKind.ISSUED:
-            return IvaFlowDirection.OPERACION_CON_INVERSION
-        return IvaFlowDirection.INVERSION_SUJETO_PASIVO
+            return flow_catalogue.supplier_reverse_charge_token
+        return flow_catalogue.recipient_reverse_charge_token
     return flow_direction_for_invoice_kind(invoice_direction)
 
 
-class IvaSettlementSide(StrEnum):
-    """Closed enumeration of the two cornerstones of IVA settlement.
+class IvaSettlementSide(str):
+    """Opaque IVA settlement-side token projected from fact 0083."""
 
-    Modelo 303 / 322 / 353 / 309 / 390 settlement is the difference
-    between the two sides; downstream filing and verification logic
-    classify cuotas into these two buckets.
+    __slots__ = ()
 
-    Attributes:
-        DEVENGADA: Output IVA — the amount owed to the Treasury,
-            arising from sales (LIVA art. 88 repercusión) or
-            self-assessed reverse-charge entries (LIVA art. 84.Uno.2).
-        DEDUCIBLE: Input IVA — the amount deductible from the
-            devengada total because the sujeto pasivo bore IVA on
-            inputs (LIVA art. 92 cuotas tributarias deducibles).
-    """
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("IvaSettlementSide tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("IvaSettlementSide token must be a non-empty string")
+        return str.__new__(cls, value)
 
-    DEVENGADA = "devengada"
-    DEDUCIBLE = "deducible"
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
 
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("IvaSettlementSide must be a registry-projected token")
 
-_FLOW_TO_SETTLEMENT_SIDES: dict[IvaFlowDirection, frozenset[IvaSettlementSide]] = {
-    IvaFlowDirection.REPERCUTIDO: frozenset({IvaSettlementSide.DEVENGADA}),
-    IvaFlowDirection.SOPORTADO: frozenset({IvaSettlementSide.DEDUCIBLE}),
-    IvaFlowDirection.INVERSION_SUJETO_PASIVO: frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}),
-    IvaFlowDirection.OPERACION_CON_INVERSION: frozenset(),
-}
-"""Closed mapping from flow direction to the settlement side(s) it
-contributes to. INVERSION_SUJETO_PASIVO is the only flow that contributes to
-both sides on the same operation (LIVA art. 84.Uno.2 mechanism).
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
-OPERACION_CON_INVERSION is the only flow that contributes to NEITHER, and the
-empty set is the whole point rather than a placeholder: the supplier in a
-reverse-charge operation repercutes no cuota and bears none, so the operation is
-turnover that belongs in volumen de operaciones and in no cuota total. Routing it
-to either side invents a figure -- to DEVENGADA an output cuota never charged, to
-DEDUCIBLE a deduction of input IVA never borne."""
+    @property
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
 
-_DEVENGADA_FLOWS: frozenset[IvaFlowDirection] = frozenset(
-    flow for flow, sides in _FLOW_TO_SETTLEMENT_SIDES.items() if IvaSettlementSide.DEVENGADA in sides
-)
-"""Frozen set of flow directions that contribute to cuota devengada."""
-
-_DEDUCIBLE_FLOWS: frozenset[IvaFlowDirection] = frozenset(
-    flow for flow, sides in _FLOW_TO_SETTLEMENT_SIDES.items() if IvaSettlementSide.DEDUCIBLE in sides
-)
-"""Frozen set of flow directions that contribute to cuota deducible."""
+    @property
+    def name(self) -> str:
+        """Return the canonical registry token for diagnostics."""
+        return str(self)
 
 
 def settlement_sides_for_flow(
@@ -317,7 +337,7 @@ def settlement_sides_for_flow(
         :attr:`IvaFlowDirection.OPERACION_CON_INVERSION`, whose supplier
         repercutes no cuota and bears none.
     """
-    return _FLOW_TO_SETTLEMENT_SIDES[flow]
+    return _flow_direction_catalogue().settlement_sides_for(flow)
 
 
 def is_devengada_flow(flow: IvaFlowDirection) -> bool:
@@ -329,7 +349,7 @@ def is_devengada_flow(flow: IvaFlowDirection) -> bool:
     substrate's settlement-side codification so downstream consumers
     don't have to re-enumerate the mapping.
     """
-    return flow in _DEVENGADA_FLOWS
+    return _flow_direction_catalogue().is_devengada(flow)
 
 
 def is_deducible_flow(flow: IvaFlowDirection) -> bool:
@@ -340,7 +360,33 @@ def is_deducible_flow(flow: IvaFlowDirection) -> bool:
     ``flow in {SOPORTADO, INVERSION_SUJETO_PASIVO}`` but anchored to the
     substrate's settlement-side codification.
     """
-    return flow in _DEDUCIBLE_FLOWS
+    return _flow_direction_catalogue().is_deducible(flow)
+
+
+def is_inversion_sujeto_pasivo_flow(flow: IvaFlowDirection) -> bool:
+    """Return whether ``flow`` is the recipient reverse-charge direction."""
+    return flow == _flow_direction_catalogue().recipient_reverse_charge_token
+
+
+def is_standard_issued_or_received_flow(flow: IvaFlowDirection) -> bool:
+    """Return whether ``flow`` is one of the ordinary invoice-side flows."""
+    catalogue = _flow_direction_catalogue()
+    return flow in {catalogue.issued_token, catalogue.received_token}
+
+
+def is_issued_flow_direction(flow: IvaFlowDirection) -> bool:
+    """Return whether ``flow`` is the ordinary issued-invoice direction."""
+    return flow == _flow_direction_catalogue().issued_token
+
+
+def issued_flow_direction() -> IvaFlowDirection:
+    """Return the registry-declared flow for an issued invoice."""
+    return _flow_direction_catalogue().issued_token
+
+
+def received_flow_direction() -> IvaFlowDirection:
+    """Return the registry-declared flow for a received invoice."""
+    return _flow_direction_catalogue().received_token
 
 
 __all__ = [
@@ -350,5 +396,10 @@ __all__ = [
     "flow_direction_for_invoice_kind",
     "is_deducible_flow",
     "is_devengada_flow",
+    "is_inversion_sujeto_pasivo_flow",
+    "is_issued_flow_direction",
+    "is_standard_issued_or_received_flow",
+    "issued_flow_direction",
+    "received_flow_direction",
     "settlement_sides_for_flow",
 ]

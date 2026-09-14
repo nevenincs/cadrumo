@@ -178,7 +178,7 @@ def main() -> None:
         )
     )
     sys.argv[:] = argv
-    from .._cli_main import main as cli_main
+    from .bootstrap import main as cli_main
 
     try:
         cli_main()

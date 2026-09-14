@@ -1,7 +1,7 @@
 """Application service for the cross-period IVA prorrata register.
 
-Thin orchestration over
-:class:`adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`:
+Thin orchestration over the application-owned
+:class:`~application.prorrata_register.ports.ProrrataRegisterServiceRepositoryProtocol`:
 the caller declares a per-ejercicio prorrata entry, lists the register, and reads
 one entry by ``(ejercicio, sector)`` key. The register is authoritative
 profile-scoped state; this service owns no calculation, only the declare/list/get
@@ -30,11 +30,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal
 
-from ...adapters.persistence.profile.prorrata_register import (
-    ProrrataRegisterRepository,
-)
-from ...core.prorrata_register import ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance
 from ...core.prorrata_register import ProrrataRegisterRegime as _ProrrataRegisterRegime
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    aeat_autorizada_prorrata_provenance as _aeat_autorizada_provenance,
+    general_prorrata_register_regime as _general_regime,
+    inicio_actividad_prorrata_provenance as _inicio_actividad_provenance,
+)
 from ...domain.prorrata_register.register import (
     ProrrataProvisionalResolution,
     ProrrataRegister,
@@ -43,6 +44,7 @@ from ...domain.prorrata_register.register import (
     SectorDefinition,
     resolve_provisional_percentage,
 )
+from .ports import ProrrataRegisterServiceRepositoryProtocol
 
 
 def require_prorrata_register_coordinates_current(register: ProrrataRegister) -> ProrrataRegister:
@@ -65,9 +67,9 @@ def require_prorrata_register_coordinates_current(register: ProrrataRegister) ->
 class ProrrataRegisterService:
     """Declare, list, and read cross-period prorrata entries on the active profile."""
 
-    def __init__(self, *, repository: ProrrataRegisterRepository | None = None) -> None:
-        """Initialise the service, defaulting to the active-bucket register repository."""
-        self._repository = repository if repository is not None else ProrrataRegisterRepository()
+    def __init__(self, *, repository: ProrrataRegisterServiceRepositoryProtocol) -> None:
+        """Bind the required bucket-scoped register capability."""
+        self._repository = repository
 
     def declare(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
         """Atomically add or replace ``entry`` by its ``(ejercicio, sector)`` key.
@@ -105,7 +107,7 @@ class ProrrataRegisterService:
         provisional_percentage: Decimal,
         authorisation_reference: str,
         sector_id: str | None = None,
-        regime: _ProrrataRegisterRegime = _ProrrataRegisterRegime.GENERAL,
+        regime: _ProrrataRegisterRegime | None = None,
     ) -> ProrrataRegister:
         """Record an art. 105.Dos AEAT-authorised provisional prorrata override.
 
@@ -119,13 +121,15 @@ class ProrrataRegisterService:
         Returns:
             The updated :class:`ProrrataRegister`.
         """
+        if regime is None:
+            regime = _general_regime()
         entry = ProrrataRegisterEntry(
             ejercicio=ejercicio,
             regime=regime,
             especial_transition=None,
             sector_id=sector_id,
             provisional_percentage=provisional_percentage,
-            provisional_provenance=_ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
+            provisional_provenance=_aeat_autorizada_provenance(),
             authorisation_reference=authorisation_reference,
             source_registry_snapshot_refs=(),
         )
@@ -138,7 +142,7 @@ class ProrrataRegisterService:
         provisional_percentage: Decimal,
         proposal_reference: str,
         sector_id: str | None = None,
-        regime: _ProrrataRegisterRegime = _ProrrataRegisterRegime.GENERAL,
+        regime: _ProrrataRegisterRegime | None = None,
     ) -> ProrrataRegister:
         """Record an art. 105.Tres inicio-de-actividades proposed prorrata override.
 
@@ -152,13 +156,15 @@ class ProrrataRegisterService:
         Returns:
             The updated :class:`ProrrataRegister`.
         """
+        if regime is None:
+            regime = _general_regime()
         entry = ProrrataRegisterEntry(
             ejercicio=ejercicio,
             regime=regime,
             especial_transition=None,
             sector_id=sector_id,
             provisional_percentage=provisional_percentage,
-            provisional_provenance=_ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
+            provisional_provenance=_inicio_actividad_provenance(),
             authorisation_reference=proposal_reference,
             source_registry_snapshot_refs=(),
         )

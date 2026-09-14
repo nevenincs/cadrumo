@@ -58,9 +58,10 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..iva.components import (
     IvaComponentPresence,
-    IvaKindApplicability,
     category_bears_taxable_base,
     category_components,
+    registry_component_presence_token,
+    registry_kind_applicability_token,
 )
 from ..iva.schema import IvaCategory
 from .errors import InvoiceValidationError
@@ -283,7 +284,7 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
     # side of the operation. The invoice carries its kind, so the caller never
     # has to guess.
     row = category_components(category, invoice.kind)
-    if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
+    if row.applicability == registry_kind_applicability_token("does_not_arise"):
         # The category is one-directional and this invoice claims the other
         # side (an "import" the taxpayer issued, say). Its own defect rather
         # than the undeclared one: the operator DID declare a treatment, so
@@ -294,7 +295,9 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
     # already declare their own components UNKNOWN, so reading that column is
     # both the same test and one that keeps working if the enum grows another
     # placeholder member.
-    if row.base is IvaComponentPresence.UNKNOWN or row.cuota is IvaComponentPresence.UNKNOWN:
+    if row.base == registry_component_presence_token("unknown") or row.cuota == registry_component_presence_token(
+        "unknown",
+    ):
         yield InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED
         return
     if category_bears_taxable_base(category, invoice.kind) and invoice.base_total == Decimal("0"):
@@ -318,7 +321,7 @@ def _carries_a_cuota_its_category_forbids(invoice: Invoice, cuota: IvaComponentP
     member state's, settled through the special regime rather than through the
     Spanish general cuota that the Axis-A row describes.
     """
-    if cuota is not IvaComponentPresence.ZERO_BY_LAW:
+    if cuota != registry_component_presence_token("zero_by_law"):
         return False
     if invoice.oss_ioss_regime is not None:
         return False

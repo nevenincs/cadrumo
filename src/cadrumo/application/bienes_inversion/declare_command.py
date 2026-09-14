@@ -17,16 +17,15 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, NonNegativeInt
+from pydantic import BaseModel, NonNegativeInt, field_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionDisposal,
-    BienInversionDisposalRegime,
     BienInversionIvaRecord,
-    BienInversionKind,
 )
+from ...domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from .service import BienesInversionRegisterService
 
 
@@ -61,6 +60,24 @@ class BienInversionDeclarationCommand(BaseModel):
     prorrata_sector_id: str | None = None
     disposal_year: NonNegativeInt | None = None
     disposal_regime: BienInversionDisposalRegime | None = None
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _kind_from_registry(cls, value: object) -> BienInversionKind:
+        from ...domain.calculations.registry.bienes_inversion_catalogue import require_bien_inversion_kind
+
+        return require_bien_inversion_kind(value)
+
+    @field_validator("disposal_regime", mode="before")
+    @classmethod
+    def _disposal_regime_from_registry(cls, value: object) -> BienInversionDisposalRegime | None:
+        if value is None:
+            return None
+        from ...domain.calculations.registry.bienes_inversion_catalogue import (
+            require_bien_inversion_disposal_regime,
+        )
+
+        return require_bien_inversion_disposal_regime(value)
 
 
 class BienInversionDeclarationResultV1(BaseModel):
@@ -101,13 +118,13 @@ def resolve_bien_inversion_disposal(
 def declare_bien_inversion(
     command: BienInversionDeclarationCommand,
     *,
-    service: BienesInversionRegisterService | None = None,
+    service: BienesInversionRegisterService,
 ) -> BienInversionDeclarationResultV1:
     """Build one register record from operator intent and persist it.
 
     Args:
         command: The operator's declaration.
-        service: Injected register service; the active-profile one by default.
+        service: Required register service composed for the target profile.
 
     Returns:
         The record as persisted, with the updated register.
@@ -131,7 +148,7 @@ def declare_bien_inversion(
             disposal_regime=command.disposal_regime,
         ),
     )
-    register = (service if service is not None else BienesInversionRegisterService()).declare(record)
+    register = service.declare(record)
     return BienInversionDeclarationResultV1(record=record, updated_register=register)
 
 

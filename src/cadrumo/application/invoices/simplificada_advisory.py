@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "SimplificadaTaxIdAdvisory",
+    "resolve_simplificada_tax_id_legal_refs",
     "resolve_simplificada_tax_id_advisory",
 ]
 
@@ -64,6 +65,42 @@ class SimplificadaTaxIdAdvisory(StrEnum):
     #: profile, or a profile that would not read — so the establishment half of
     #: case 3.º is unknown and the rule was NOT evaluated.
     ISSUER_UNKNOWN = "issuer_unknown"
+
+
+def resolve_simplificada_tax_id_legal_refs() -> tuple[str, ...]:
+    """Return the legal references carried by the simplified-invoice fact.
+
+    The advisory predicate and the invoice model both consume the dated
+    ``invoice-simplificada-counterparty-tax-id-applicability`` mapping.  Keep
+    the notice provenance on that same resolved fact instead of repeating one
+    of its legal-reference values in an entrypoint.
+
+    Returns:
+        The fact's ordered legal-reference identifiers.
+
+    Raises:
+        RegistryValidationError: If the fact does not resolve as a mapping or
+            carries no provenance.
+    """
+    from datetime import date
+
+    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.errors import RegistryValidationError
+    from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from ...domain.calculations.registry.schema_base import DateAxis
+
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="invoice-simplificada-counterparty-tax-id-applicability",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("invoice applicability must resolve as a mapping fact")
+    if not resolved.legal_refs:
+        raise RegistryValidationError("invoice applicability is missing legal-reference provenance")
+    return tuple(str(reference) for reference in resolved.legal_refs)
 
 
 def _active_taxpayer_profile() -> TaxpayerProfile | None:

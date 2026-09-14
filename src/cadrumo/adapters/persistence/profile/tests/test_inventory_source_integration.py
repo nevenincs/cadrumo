@@ -1,0 +1,85 @@
+"""Encrypted inventory integration for the application source resolver."""
+
+from __future__ import annotations
+
+from decimal import Decimal
+from typing import Any
+
+import pytest
+from sqlalchemy import select
+
+from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from cadrumo.adapters.persistence.storage.sql.engine import get_engine
+from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
+from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.aggregation.inventory import InventorySourceResolver
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.aggregation.tests.test_inventory_source import inventory_ledger
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_BUCKET_ID = "00000000-0000-4000-8000-000000000176"
+
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
+
+
+def _revision() -> ModeloRevision:
+    return bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+
+
+def _context(revision: ModeloRevision) -> CalculationSourceContext:
+    return CalculationSourceContext(
+        bucket_id=_BUCKET_ID,
+        modelo="100",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "0A"),
+        revision=revision,
+    )
+
+
+def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
+    runtime_profile: TestRuntimeProfile,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    repository = InventoryLedgerRepository(objects=runtime_profile.repository)
+    revision = _revision()
+    absent = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+    alpha = inventory_ledger("alpha", physical_closing=Decimal("250.00"))
+    zeta = inventory_ledger("zeta")
+    repository.save(InventoryLedgerDocument(ledgers=(zeta, alpha)))
+    complete = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+
+    statement = select(SecureObjectRow).where(
+        SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
+        SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
+    )
+
+    def orphan_authority(document: dict[str, Any]) -> None:
+        ledgers = document["ledgers"]
+        assert isinstance(ledgers, list) and isinstance(ledgers[0], dict)
+        assert "zeta" in repr(ledgers)
+        ledgers[0]["closing_authority_record"]["decision"]["actividad_id"] = "other"
+
+    mutate_encrypted_secure_object_json(
+        get_engine(runtime_profile.settings),
+        row_statement=statement,
+        mutate=orphan_authority,
+    )
+    corrupted = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+
+    assert absent.row_binding_values == {}
+    assert absent.diagnostics[0].reason == "source_domain_not_ready"
+    assert complete.row_binding_values[("inventory-0181", 1)] == Decimal("100.00")
+    assert complete.row_source_identities[("inventory-0181", 1)].source_row_identity == "alpha"
+    assert complete.diagnostics[0].reason == "source_issue"
+    assert corrupted.row_binding_values == {}
+    assert corrupted.diagnostics[0].reason == "storage_degraded"
+    rendered = f"{corrupted!r} {corrupted.model_dump()!r} {caplog.text}"
+    for canary in ("alpha", "zeta", "250.00", "reviewer-secret", "inventory-secret-command", "a" * 64):
+        assert canary not in rendered

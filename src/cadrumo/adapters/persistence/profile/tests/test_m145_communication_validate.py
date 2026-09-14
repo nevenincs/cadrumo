@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
@@ -68,8 +69,9 @@ def test_validate_m145_communication_record_accepts_registry_backed_required_fie
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
-        result = validate_m145_communication_record(record.communication_record_id[:12], bucket_id=runtime.bucket_id)
+        result = validate_m145_communication_record(record.communication_record_id[:12], bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
 
     assert result.valid is True
     assert result.issue_count == 0
@@ -92,8 +94,9 @@ def test_validate_m145_communication_record_reports_missing_required_casilla_wit
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(communication_year=2026, field_values=values),
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
-        result = validate_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+        result = validate_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
 
     issue = next(
         issue for issue in result.issues if issue.kind is M145CommunicationValidationIssueKind.MISSING_REQUIRED
@@ -131,8 +134,9 @@ def test_validate_m145_communication_record_reports_registry_data_type_failures(
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(communication_year=2026, field_values=values),
             bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
-        result = validate_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+        result = validate_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
 
     issue = next(
         issue

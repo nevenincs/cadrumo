@@ -20,7 +20,7 @@ from defusedxml import ElementTree as DefusedElementTree
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
 from ..ccaa import CCAA
-from ..renta_codes import RENTA_MODELO100_CCAA_CODIGOS, modelo100_ccaa_codigo
+from ..renta_codes import modelo100_ccaa_codigo, renta_modelo100_ccaa_codigos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -141,13 +141,13 @@ def _mismatches_against_xsd(table: Mapping[CCAA, str], documented: Mapping[str, 
 
 def test_production_codigos_match_the_xsd_documented_table() -> None:
     """Each community's código equals the one AEAT documents under its name."""
-    assert _mismatches_against_xsd(RENTA_MODELO100_CCAA_CODIGOS, _authoritative_table()) == []
+    assert _mismatches_against_xsd(renta_modelo100_ccaa_codigos(), _authoritative_table()) == []
 
 
 def test_the_accessor_and_the_table_agree() -> None:
     """The exported accessor returns exactly what the grounded table holds."""
     for community in CCAA:
-        assert modelo100_ccaa_codigo(community) == RENTA_MODELO100_CCAA_CODIGOS[community]
+        assert modelo100_ccaa_codigo(community) == renta_modelo100_ccaa_codigos()[community]
 
 
 def test_the_grounding_detects_a_swapped_codigo() -> None:
@@ -160,10 +160,10 @@ def test_the_grounding_detects_a_swapped_codigo() -> None:
     the wrong comunidad.
     """
     documented = _authoritative_table()
-    swapped = dict(RENTA_MODELO100_CCAA_CODIGOS)
+    swapped = dict(renta_modelo100_ccaa_codigos())
     swapped[CCAA.MADRID], swapped[CCAA.MURCIA] = (
-        RENTA_MODELO100_CCAA_CODIGOS[CCAA.MURCIA],
-        RENTA_MODELO100_CCAA_CODIGOS[CCAA.MADRID],
+        renta_modelo100_ccaa_codigos()[CCAA.MURCIA],
+        renta_modelo100_ccaa_codigos()[CCAA.MADRID],
     )
 
     reported = _mismatches_against_xsd(swapped, documented)
@@ -175,7 +175,7 @@ def test_the_grounding_detects_a_swapped_codigo() -> None:
 
 def test_every_ccaa_member_carries_a_codigo() -> None:
     """No community may fall out of the table and export as a default."""
-    assert set(RENTA_MODELO100_CCAA_CODIGOS) == set(CCAA)
+    assert set(renta_modelo100_ccaa_codigos()) == set(CCAA)
     assert set(_AEAT_NOMBRE) == set(CCAA)
 
 
@@ -185,7 +185,7 @@ def test_production_codigos_are_accepted_by_the_xsd_enumeration() -> None:
         _M100_FILES / "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd",
     )
 
-    assert set(RENTA_MODELO100_CCAA_CODIGOS.values()) <= enumeration
+    assert set(renta_modelo100_ccaa_codigos().values()) <= enumeration
 
 
 def test_codigos_reachable_from_the_enum_exclude_the_non_comunidad_entries() -> None:
@@ -195,7 +195,7 @@ def test_codigos_reachable_from_the_enum_exclude_the_non_comunidad_entries() -> 
     all three are outside the ordinary common-regime catalogue the enum models.
     """
     documented = _authoritative_table()
-    exported = set(RENTA_MODELO100_CCAA_CODIGOS.values())
+    exported = set(renta_modelo100_ccaa_codigos().values())
 
     assert documented["18"] == "CIUDAD DE CEUTA"
     assert documented["19"] == "CIUDAD DE MELILLA"

@@ -13,7 +13,7 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     invoice_ledger_screen_binding_ids,
 )
 from ...domain.invoices.models import Invoice
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ._modelo_bindings_invoice_iva import (
     M303_INVOICE_EVIDENCE_SAMPLE_LIMIT,
     InvoiceIvaSilenceReport,
@@ -78,7 +78,7 @@ def raise_if_invoice_iva_would_be_silent(
     period: Period,
     transaction_binding_values: Mapping[BindingId, Decimal],
     ledger_observations: Sequence[IvaLedgerObservation] = (),
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    ports: InvoiceCatalogueReadPorts,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
     screened_bindings: tuple[BindingId, ...] | None = None,
 ) -> InvoiceIvaSilenceReport:
@@ -136,7 +136,7 @@ def raise_if_invoice_iva_would_be_silent(
         context=context,
         period=period,
         ledger_observations=ledger_observations,
-        invoice_repository=invoice_repository,
+        ports=ports,
     )
     return _raise_if_screened_invoice_iva_would_be_silent(
         context=context,

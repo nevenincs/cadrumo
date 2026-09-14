@@ -18,7 +18,7 @@ For a filed declaración, the same header comparison runs, and — for the
 modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` — every
 casilla the registry's verification policy reconciles is compared, one by one,
 against the persisted revision's ``casilla_values`` via
-:func:`application.modelo._reconcile_casilla.detect_casilla_divergences`.
+:func:`application.modelo.reconcile_casilla.detect_casilla_divergences`.
 A divergence surfaces as a typed ``casilla`` diff
 (:class:`ModeloReconciliationDiffKind.CASILLA`). A modelo not yet enrolled in
 casilla-level declaration reconcile is refused with
@@ -63,7 +63,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante.errors import JustificanteParseError
-from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
+from .reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
 from .action_errors import WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -380,7 +380,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
             )
         except ReconciliationDeclaracionParseError as exc:
             raise _evidence_invalid_refusal(exc, source_ref=str(command.source_path)) from exc
-        return _reconcile_parsed_declaracion(
+        return reconcile_parsed_declaracion(
             work_unit=work_unit,
             source_kind=command.source_kind,
             source_ref=str(command.source_path),
@@ -489,7 +489,7 @@ def reconcile_parsed_justificante(
     )
 
 
-def _reconcile_parsed_declaracion(
+def reconcile_parsed_declaracion(
     *,
     work_unit: WorkUnit,
     source_kind: ModeloReconciliationEvidenceKind,
@@ -1012,7 +1012,7 @@ def _reconcile_declaracion_casillas(
     calculation), decodes the declaración's
     :class:`ReconciliationCasillaObservation` rows into decimals, and
     delegates the comparison to
-    :func:`application.modelo._reconcile_casilla.detect_casilla_divergences`.
+    :func:`application.modelo.reconcile_casilla.detect_casilla_divergences`.
     Every branch that cannot perform the comparison returns a
     ``totals_not_reconciled``-shaped advisory instead of silently passing
     (``no-silent-under-declaration``); the advisory code is reused across the
@@ -1244,5 +1244,6 @@ __all__ = [
     "ReconciliationEvidenceInvalidError",
     "modelo_reconcile",
     "modelo_reconcile_bytes",
+    "reconcile_parsed_declaracion",
     "reconcile_parsed_justificante",
 ]

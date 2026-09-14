@@ -14,11 +14,10 @@ natural sub-noun grammar (actividad + movement + valuation); this
 service carries the documented ``LIFECYCLE_OPERATIONS_ONLY`` exception
 to the canonical add / remove / update / view / list spine.
 
-Persistence is owned by :class:`InventoryService`, which stores the
-:class:`domain.contribuyente.inventory.InventoryLedgerDocument`
-through
-:class:`adapters.persistence.profile.inventory.InventoryLedgerRepository`
-and emits bucket-scoped inventory events for audit-significant verbs. Movement
+Persistence is coordinated by :class:`InventoryService` through its required
+application-owned :class:`InventoryServicePorts` bundle. The executable
+composition root supplies concrete storage capabilities, while the service
+emits bucket-scoped inventory events for audit-significant verbs. Movement
 commands are converted into
 :class:`domain.contribuyente.inventory.MovementRecord` rows, while
 valuation previews delegate FIFO/PMP math to

@@ -1,4 +1,4 @@
-"""Real-behavior tests for profile-borne Cl@ve credential resolution.
+"""Application-policy tests for profile-borne Cl@ve credential resolution.
 
 The active profile is the authority for the credentials a Cl@ve mode
 needs, and the environment settings remain the fallback so an operator who
@@ -9,9 +9,10 @@ asserts that value reaches the settings the provider will read. Otherwise
 the guard would pass and the provider would still refuse for a value the
 profile plainly holds.
 
-Every test drives the real profile store through the real lifecycle
-service - no test doubles - because the read path this exercises depends
-on an unlocked bucket session.
+The suite supplies application-owned profile facts through an inward fake.
+Profile-store registration and unlocked-session integration belong in the
+persistence adapter tests; these cases focus on the application precedence
+and refusal contract.
 """
 
 from __future__ import annotations
@@ -19,41 +20,54 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.domain.user_profile.values import ProfileSetupState
+
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....domain.user_profile.loader import load_user_profile_schema
-from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
-from ....tests.user_profile import register_minimal_profile
 from ...user_profile.preflight import build_profile_preflight_requirement
+from .. import sessions as _sessions
 from ..sessions import (
     AuthProfileIdentityMismatchError,
+    ClaveAuthFacts,
     ClaveCredentialsIncompleteError,
     _prepare_clave_auth,
+    clave_auth_facts_from_profile_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: This module's OWN bucket. A bucket shared with a sibling module makes
-#: the two suites' isolation fixtures interchangeable and puts both on one
-#: bucket-scoped master-key session in the same run.
-_BUCKET_ID = "c0000002-0000-4000-8000-000000000002"
-_PROFILE_LABEL = "clave-operator"
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
 _SOPORTE = "E12345678"
 _FECHA_VALIDEZ = "2030-01-01"
 
+_ACTIVE_PROFILE_FACTS = ClaveAuthFacts()
+
 
 def _register_profile(**overrides: str) -> None:
+    global _ACTIVE_PROFILE_FACTS
+
     facts = {"identity.tax_id": _TAX_ID}
     facts.update(overrides)
-    # Seeded ahead of any workflow-state read: the capsule publishes by an
-    # atomic no-replace rename onto ``buckets/<profile-id>``, and the workflow
-    # repository materialises that same directory on first access.
-    register_minimal_profile(
-        profile_id=_BUCKET_ID,
-        display_name=_PROFILE_LABEL,
-        overrides=facts,
+    _ACTIVE_PROFILE_FACTS = clave_auth_facts_from_profile_values(
+        facts,
+        profile_setup_state=ProfileSetupState.COMPLETE,
+    )
+
+
+@pytest.fixture(autouse=True)
+def _bind_profile_facts(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Inject one explicit application-owned profile-facts capability per test."""
+
+    global _ACTIVE_PROFILE_FACTS
+    _ACTIVE_PROFILE_FACTS = ClaveAuthFacts()
+    monkeypatch.setattr(
+        _sessions,
+        "_active_profile_auth_facts",
+        lambda *, operator_scope_ports: _ACTIVE_PROFILE_FACTS,
     )
 
 
@@ -67,7 +81,11 @@ def test_profile_dni_nie_wins_over_settings_and_reaches_the_provider() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr(_OTHER_TAX_ID)) as settings:
-        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert expected_identity == _TAX_ID
     assert bound.cadrumo_clave_movil_dni_nie is not None
@@ -83,7 +101,11 @@ def test_settings_remain_the_identity_fallback_when_the_profile_carries_the_requ
 
     _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID)) as settings:
-        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert expected_identity == _TAX_ID
     assert bound.cadrumo_clave_movil_dni_nie == settings.cadrumo_clave_movil_dni_nie
@@ -100,7 +122,7 @@ def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> Non
         ) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     expected_label = build_profile_preflight_requirement(
         "auth.clave_movil_route",
@@ -129,7 +151,11 @@ def test_profile_numero_soporte_reaches_the_non_qr_contraste_setting() -> None:
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
-        bound, _expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        bound, _expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert bound.cadrumo_clave_movil_nie_soporte is not None
     assert bound.cadrumo_clave_movil_nie_soporte.get_secret_value() == _SOPORTE
@@ -149,7 +175,11 @@ def test_rebinding_the_settings_preserves_every_other_secret() -> None:
         cadrumo_clave_movil_dni_nie=SecretStr(_OTHER_TAX_ID),
         cadrumo_clave_permanente_password=SecretStr("permanente-password"),
     ) as settings:
-        bound, _expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        bound, _expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert bound is not settings
     assert bound.cadrumo_clave_permanente_password is not None
@@ -168,7 +198,7 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
         override_settings(cadrumo_clave_movil_dni_nie=None) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_missing"
     # The refusal names the absent credential by the label the profile editor
@@ -202,7 +232,7 @@ def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> 
         ) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
 
@@ -221,7 +251,11 @@ def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
         cadrumo_clave_movil_dni_fecha=None,
         cadrumo_clave_prefer_non_qr=False,
     ) as settings:
-        _bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        _bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert expected_identity == _TAX_ID
 
@@ -238,7 +272,11 @@ def test_profile_qr_route_overrides_an_environment_app_request() -> None:
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
-        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert expected_identity == _TAX_ID
     assert bound.cadrumo_clave_prefer_non_qr is False
@@ -257,7 +295,11 @@ def test_profile_app_request_route_requires_contraste_and_reaches_provider_setti
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_prefer_non_qr=False,
     ) as settings:
-        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert expected_identity == _TAX_ID
     assert bound.cadrumo_clave_prefer_non_qr is True
@@ -280,7 +322,11 @@ def test_dni_validity_date_from_settings_satisfies_the_contraste() -> None:
         cadrumo_clave_movil_dni_fecha=_FECHA_VALIDEZ,
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
-        _bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        _bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert expected_identity == _TAX_ID
 
@@ -308,7 +354,11 @@ def test_profile_fecha_validez_carries_a_dni_holder_through_the_non_qr_route() -
         cadrumo_clave_movil_dni_fecha=None,
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
-        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert expected_identity == _TAX_ID
     assert bound.cadrumo_clave_movil_dni_fecha == _FECHA_VALIDEZ
@@ -334,7 +384,7 @@ def test_a_profile_carrying_neither_contraste_still_refuses_the_non_qr_route() -
         ) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
 
@@ -348,7 +398,11 @@ def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(cadrumo_clave_permanente_dni_nie=None) as settings:
-        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_PERMANENTE)
+        bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_PERMANENTE,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert bound.cadrumo_clave_permanente_dni_nie is not None
     assert bound.cadrumo_clave_permanente_dni_nie.get_secret_value() == _TAX_ID
@@ -372,7 +426,11 @@ def test_certificate_provider_needs_neither_clave_field() -> None:
 
     _register_profile()
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CERTIFICATE)
+        bound, expected_identity = _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CERTIFICATE,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert bound is settings
     # It still carries an expectation. The certificate has no
@@ -402,7 +460,11 @@ def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
             cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
             cadrumo_clave_permanente_dni_nie=SecretStr(_TAX_ID),
         ) as settings:
-            _bound, expected_identity = _prepare_clave_auth(settings, kind)
+            _bound, expected_identity = _prepare_clave_auth(
+                settings,
+                kind,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            )
         if expected_identity != _TAX_ID:
             missing.append(f"{kind.value} -> {expected_identity!r}")
 
@@ -428,7 +490,7 @@ def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clav
             cadrumo_clave_permanente_dni_nie=SecretStr(_OTHER_TAX_ID),
         ) as settings:
             try:
-                _prepare_clave_auth(settings, kind)
+                _prepare_clave_auth(settings, kind, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
             except AuthProfileIdentityMismatchError:
                 refused[kind.value] = True
             else:
@@ -437,6 +499,3 @@ def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clav
     assert all(refused.values()), (
         f"a mismatched Cl@ve identity was accepted by: {[k for k, v in refused.items() if not v]}"
     )
-
-
-_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)

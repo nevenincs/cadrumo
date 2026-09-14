@@ -15,6 +15,7 @@ from ...application.modelo.iva_wallet_seed import (
     record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
+from ...application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.i18n.render import tr
@@ -24,7 +25,7 @@ from ...domain.modelos.errors import ModeloError
 from ._modelo_iva_wallet_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .state_projection_support import calculation_action_ports_factory
+from .state_projection_support import modelo_iva_wallet_seed_ports_factory
 
 
 def _wallet_amount(amount: str) -> Decimal:
@@ -51,12 +52,9 @@ def _wallet_amount(amount: str) -> Decimal:
     return parsed
 
 
-def _load_existing_seeded_period(bucket_id: str, period: Period):
+def _load_existing_seeded_period(period: Period, *, ports: ModeloIvaWalletSeedPorts):
     """Return the stored period state before correction, or ``None`` when absent."""
-    from ...application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
-
-    del bucket_id
-    return IvaCompensationHistoryRepository().load_period(period)
+    return ports.iva_compensation_history_repository.load_period(period)
 
 
 __all__ = ["iva_wallet_balance_cmd", "iva_wallet_correct_cmd", "iva_wallet_override_cmd", "iva_wallet_seed_cmd"]
@@ -64,7 +62,12 @@ __all__ = ["iva_wallet_balance_cmd", "iva_wallet_correct_cmd", "iva_wallet_overr
 
 def iva_wallet_balance_cmd(ctx: typer.Context, as_of_year: int) -> None:
     """Report the aggregated IVA wallet balance without contacting AEAT."""
-    report = query_iva_wallet_balance(as_of_year=as_of_year)
+    bucket_id = active_bucket_id_or_refuse()
+    ports = modelo_iva_wallet_seed_ports_factory(ctx)(bucket_id=bucket_id)
+    report = query_iva_wallet_balance(
+        as_of_year=as_of_year,
+        repository=ports.iva_compensation_history_repository,
+    )
     balance_result = IvaWalletBalanceResult(
         as_of_year=report.as_of_year,
         total_balance=str(report.total_balance),
@@ -98,8 +101,12 @@ def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amoun
     seed_amount = _wallet_amount(amount)
     try:
         filing_period = Period.from_year_and_code(filing_year, period)
+        bucket_id = active_bucket_id_or_refuse()
         state = seed_iva_compensation_period_for_bucket(
-            bucket_id=active_bucket_id_or_refuse(), period=filing_period, amount=seed_amount
+            bucket_id=bucket_id,
+            period=filing_period,
+            amount=seed_amount,
+            ports=modelo_iva_wallet_seed_ports_factory(ctx)(bucket_id=bucket_id),
         )
     except ModeloIvaWalletSeedNegativeAmountError as exc:
         raise typer.BadParameter(resolve_error_message(exc)) from exc
@@ -154,10 +161,16 @@ def iva_wallet_correct_cmd(
         )
     correct_amount = _wallet_amount(amount)
     filing_period = Period.from_year_and_code(filing_year, period)
-    previous_state = _load_existing_seeded_period(active_bucket_id_or_refuse(), filing_period)
+    bucket_id = active_bucket_id_or_refuse()
+    ports = modelo_iva_wallet_seed_ports_factory(ctx)(bucket_id=bucket_id)
+    previous_state = _load_existing_seeded_period(filing_period, ports=ports)
     try:
         state = correct_iva_compensation_period_for_bucket(
-            bucket_id=active_bucket_id_or_refuse(), period=filing_period, amount=correct_amount, reason=clean_reason
+            bucket_id=bucket_id,
+            period=filing_period,
+            amount=correct_amount,
+            reason=clean_reason,
+            ports=ports,
         )
     except ModeloIvaWalletSeedNegativeAmountError as exc:
         raise typer.BadParameter(resolve_error_message(exc)) from exc
@@ -226,7 +239,7 @@ def iva_wallet_override_cmd(
     override_amount = _wallet_amount(amount)
     filing_period = Period.from_year_and_code(filing_year, period)
     bucket_id = active_bucket_id_or_refuse()
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id)
+    ports = modelo_iva_wallet_seed_ports_factory(ctx)(bucket_id=bucket_id)
     try:
         decision = record_iva_compensation_override_for_bucket(
             bucket_id=bucket_id,
@@ -234,8 +247,7 @@ def iva_wallet_override_cmd(
             amount=override_amount,
             reason=clean_reason,
             evidence_locator=clean_locator,
-            observation_repository=calculation_ports.observation_repository,
-            decision_repository=calculation_ports.iva_compensation_decision_repository,
+            ports=ports,
         )
     except ModeloIvaWalletSeedNegativeAmountError as exc:
         raise typer.BadParameter(resolve_error_message(exc)) from exc

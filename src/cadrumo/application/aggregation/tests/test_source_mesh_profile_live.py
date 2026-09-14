@@ -2,28 +2,28 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
 
 import pytest
-from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from ....core.aggregation import CalculationSourceLineageRole
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.config import Settings
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.iva_compensation.reconciliation import reconcile_iva_compensation_wallet
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationWalletObservationProtocol,
+    reconcile_iva_compensation_wallet,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
 from ...modelo.profile_binding import resolve_profile_sourced_bindings
 from ..source_mesh import CalculationSourceContext
 from ..source_profile import ProfileSourceResolver
-from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -97,26 +97,26 @@ def _registered_modelo_profile() -> UserProfileRecord:
     )
 
 
-def _wallet(amount: Decimal) -> IvaCompensationWalletObservation:
-    return IvaCompensationWalletObservation(
+@dataclass(frozen=True)
+class _WalletObservation:
+    """Inward structural fake for the wallet fields consumed by source policy."""
+
+    taxpayer_nif: str
+    target_year: int
+    target_period: Period
+    total_pending: Decimal
+    source_url: str
+    captured_at: datetime
+
+
+def _wallet(amount: Decimal) -> IvaCompensationWalletObservationProtocol:
+    return _WalletObservation(
         taxpayer_nif="12345678Z",
-        authenticated_identity="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
-        rows=(
-            IvaCompensationWalletRow(
-                generation_year=2026,
-                generation_period=Period.from_year_and_code(2026, "1T"),
-                generated_amount=amount,
-                applied_amount=Decimal("0"),
-                pending_amount=amount,
-                raw_label="2026 1T",
-            ),
-        ),
         total_pending=amount,
-        source_url=AnyHttpUrl(WALLET_URL),
+        source_url=WALLET_URL,
         captured_at=_CLOCK,
-        raw_sha256="a" * 64,
     )
 
 
@@ -153,39 +153,6 @@ def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> 
     assert {item.fingerprint for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
         item.fingerprint for item in direct_resolution.provenance
     }
-
-
-def test_profile_source_resolver_fingerprints_storage_loaded_profile(
-    secure_profile_backend: None,  # noqa: F811
-) -> None:
-    snapshot = _modelo_100_snapshot()
-    profile_record = _profile_with_ccaa("madrid")
-    seed_test_profile_record(profile_record)
-
-    resolution = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=snapshot.revision,
-        ),
-    )
-
-    assert resolution.enum_binding_values[_CCAA_BINDING] == "madrid"
-    repeated = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=snapshot.revision,
-        ),
-    )
-    assert {item.fingerprint for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
-        item.fingerprint for item in repeated.provenance
-    }
-    assert all(item.fingerprint for item in resolution.provenance)
 
 
 def test_profile_source_resolver_respects_caller_owned_precedence() -> None:

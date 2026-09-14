@@ -8,12 +8,11 @@ operator a scope-upgrade story for what is actually a broken connection — a
 report that is wrong about every row it contains, and confidently so.
 
 So exactly one failure continues the sweep: the document is not reachable under
-the granted ``drive.file`` scope, which Google answers with 403/404 and the
-resolver raises as
-:exc:`~adapters.outbound.storage.errors.OutboundStoragePermissionError`. The app
-can only read files it created or the operator picked, so the very next document
-in the same folder may well be readable, and refusing the whole sweep over one
-would make bulk pull useless on any realistic folder.
+the granted ``drive.file`` scope, which the fetch capability reports as
+:class:`~application.ledger.evidence_sweep_ports.EvidenceSweepFileNotReachableError`.
+The app can only read files it created or the operator picked, so the very next
+document in the same folder may well be readable, and refusing the whole sweep
+over one would make bulk pull useless on any realistic folder.
 
 Everything else ends the sweep and surfaces as itself. A network failure is not
 about the document, and a non-bytes payload from the media endpoint says the
@@ -30,12 +29,15 @@ set. A second frontend would have had the same three ways to get it wrong.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from enum import StrEnum
 from typing import NamedTuple
 
-from ...adapters.outbound.google.document_link_resolver import DriveFolderDocument
-from ...adapters.outbound.storage.errors import OutboundStoragePermissionError
+from .evidence_sweep_ports import (
+    EvidenceSweepDocument,
+    EvidenceSweepFetcher,
+    EvidenceSweepFileNotReachableError,
+)
 
 __all__ = [
     "EvidenceFolderSweep",
@@ -70,7 +72,7 @@ def classify_evidence_sweep_failure(error: Exception) -> EvidenceSweepRefusal | 
         failure is not a fact about this document and the caller must let it
         propagate. ``None`` means re-raise, never "ignore".
     """
-    if isinstance(error, OutboundStoragePermissionError):
+    if isinstance(error, EvidenceSweepFileNotReachableError):
         return EvidenceSweepRefusal.FILE_NOT_REACHABLE
     return None
 
@@ -121,8 +123,8 @@ class EvidenceFolderSweep(NamedTuple):
 
 def sweep_evidence_folder(
     *,
-    documents: Sequence[DriveFolderDocument],
-    fetch: Callable[[DriveFolderDocument], str],
+    documents: Sequence[EvidenceSweepDocument],
+    fetch: EvidenceSweepFetcher,
 ) -> EvidenceFolderSweep:
     """Fetch every document, recording the ones refused individually.
 

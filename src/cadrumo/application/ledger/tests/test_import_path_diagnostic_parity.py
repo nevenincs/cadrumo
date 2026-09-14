@@ -16,18 +16,19 @@ here.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.financial.providers.base import ParsedLedgerRow
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...transactions.import_diagnostics import import_ledger_with_diagnostics
 from ..actions_import import evaluate_import_rows
+from ..protocols import ParsedLedgerRowProtocol
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -55,8 +56,16 @@ def _raw(provider_id: str, *, description: str) -> RawTransaction:
     )
 
 
-def _parsed(raw: RawTransaction) -> ParsedLedgerRow:
-    return ParsedLedgerRow(raw=raw, direction=TransactionDirection.OUTGOING)
+@dataclass(frozen=True, slots=True)
+class _ParsedLedgerRowFake:
+    """Application-owned parsed-row double for the import classification seam."""
+
+    raw: RawTransaction
+    direction: TransactionDirection
+
+
+def _parsed(raw: RawTransaction) -> ParsedLedgerRowProtocol:
+    return _ParsedLedgerRowFake(raw=raw, direction=TransactionDirection.OUTGOING)
 
 
 def _both_paths(raws: tuple[RawTransaction, ...]) -> tuple[int, int, int, int]:

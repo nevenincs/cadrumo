@@ -34,7 +34,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ._ledger_value_fixtures import repository
 
 __all__ = ["repository"]
@@ -42,7 +41,7 @@ __all__ = ["repository"]
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.iva.schema import EUMemberState
-from ..counterparty_establishment import ConfirmedCounterpartyFactsRepository
+from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from ..establishment_ladder import (
     CounterpartyEstablishment,
     EstablishmentRung,
@@ -52,7 +51,6 @@ from ..establishment_ladder import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "37373737-3737-4737-8737-373737373738"
-runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 _GERMAN_IVA = "DE811234567"
 _SPANISH_CIF = "B12345674"
@@ -74,7 +72,7 @@ _ON_DATE = date(2026, 3, 10)
 
 
 def _resolve(
-    repository: ConfirmedCounterpartyFactsRepository,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
     *,
     tax_identifier: str | None = None,
     country_name: str | None = None,
@@ -100,7 +98,7 @@ class TestARegistrationAloneSettlesNoTerritory:
 
     def test_a_german_iva_number_alone_establishes_nothing(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The defect itself: this used to return EU_MEMBER and stop the ladder."""
         resolved = _resolve(repository, tax_identifier=_GERMAN_IVA)
@@ -111,7 +109,7 @@ class TestARegistrationAloneSettlesNoTerritory:
 
     def test_a_spanish_identifier_alone_establishes_nothing(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The side that was already right, pinned so a fix cannot arrive by tightening it."""
         resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
@@ -121,7 +119,7 @@ class TestARegistrationAloneSettlesNoTerritory:
 
     def test_both_registrations_leave_the_territory_equally_unsettled(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The symmetry itself. A repair tightening one side reddens exactly this."""
         german = _resolve(repository, tax_identifier=_GERMAN_IVA)
@@ -131,7 +129,7 @@ class TestARegistrationAloneSettlesNoTerritory:
 
     def test_the_registration_still_settles_the_identification_terminally(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The other half of the split: decisive for the fact registration IS.
 
@@ -151,7 +149,7 @@ class TestConcordantPapersResolveSilently:
 
     def test_a_printed_address_country_settles_it_without_the_registration(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The commonest concordant shape, and it needs no corroboration rule.
 
@@ -168,7 +166,7 @@ class TestConcordantPapersResolveSilently:
 
     def test_a_reverse_charge_mention_corroborates_where_no_address_country_was_printed(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The concordance rung proper: registration plus an independent treatment."""
         resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, regime_legend=_REVERSE_CHARGE)
@@ -180,7 +178,7 @@ class TestConcordantPapersResolveSilently:
 
     def test_the_mention_corroborates_nothing_without_a_registration(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The control. Concordance needs two signals, so one of them alone is not it."""
         resolved = _resolve(repository, regime_legend=_REVERSE_CHARGE)
@@ -190,7 +188,7 @@ class TestConcordantPapersResolveSilently:
 
     def test_the_mention_stops_corroborating_when_spanish_iva_is_charged_beside_it(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """A document disagreeing with itself is not a corroboration.
 
@@ -215,7 +213,7 @@ class TestConflictedPapersSurface:
 
     def test_spanish_iva_charged_beside_a_foreign_registration_conflicts(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The design's named conflict fixture, and never a silent EU_MEMBER."""
         resolved = _resolve(
@@ -232,7 +230,7 @@ class TestConflictedPapersSurface:
 
     def test_a_spanish_address_beside_a_foreign_registration_conflicts(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The other face of the same entity: registered abroad, addressed here."""
         resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID)
@@ -242,7 +240,7 @@ class TestConflictedPapersSurface:
 
     def test_the_postal_rung_never_quietly_answers_a_conflicted_document(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """Why the conflict check runs BEFORE the ordinary rungs.
 
@@ -258,7 +256,7 @@ class TestConflictedPapersSurface:
 
     def test_a_spanish_registration_with_a_spanish_address_does_not_conflict(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The control that keeps the conflict specific to a FOREIGN registration.
 
@@ -274,7 +272,7 @@ class TestConflictedPapersSurface:
 
     def test_a_foreign_rate_charged_beside_a_foreign_registration_does_not_conflict(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """Charged tax is only Spain-indicating when the rate is a SPANISH one.
 
@@ -293,7 +291,7 @@ class TestConflictedPapersSurface:
 
     def test_an_unreadable_date_raises_no_conflict_from_a_rate_it_cannot_check(
         self,
-        repository: ConfirmedCounterpartyFactsRepository,
+        repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """Inconclusive contributes nothing in either direction.
 

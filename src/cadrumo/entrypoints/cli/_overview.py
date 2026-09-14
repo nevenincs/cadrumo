@@ -803,6 +803,7 @@ def overview_prepare(
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
     from ...application.modelo.registry_discovery import registry_describe_modelo_for_scope
     from ...application.overview.data_prep import build_data_prep_walkthrough
+    from ..ledger_action_composition import compose_ledger_action_ports
     from ...domain.calculations.registry.errors import RegistrySnapshotError
     from .state_projection_support import ledger_evidence_ports_factory
 
@@ -823,6 +824,7 @@ def overview_prepare(
         ) from exc
 
     transaction_repository = transaction_catalogue_repo(current)
+    ledger_action_ports = compose_ledger_action_ports(bucket_id=bucket_id)
     invoice_catalogue = load_invoices()
     evidence_records = PurchaseInvoiceEvidenceService(
         ports=ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id),
@@ -831,6 +833,7 @@ def overview_prepare(
         bucket_id=bucket_id,
         period=canonical_period,
         transaction_repository=transaction_repository,
+        usage_ratio_profile_loader=ledger_action_ports.usage_ratio_profile_loader,
     )
     work_unit_catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
 
@@ -863,9 +866,6 @@ def overview_pipeline(
     revisions, and the latest verification report per revision, then renders
     the typed envelope plus outstanding-finding notices.
     """
-    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.actions_manual import summarize_manual_transactions
     from ...application.modelo.calculation_actions import get_calculation_revision
     from ...application.modelo.filing_actions import list_verification_reports
@@ -890,10 +890,11 @@ def overview_pipeline(
         ports=compose_ledger_action_ports(bucket_id=bucket_id),
     )
 
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id)
     all_work_units = list_work_units(
         bucket_id=bucket_id,
         include_discarded=False,
-        repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
+        ports=calculation_ports.work_lifecycle_ports,
     )
     work_units = tuple(
         unit
@@ -902,7 +903,6 @@ def overview_pipeline(
         and unit.period.registry_token == canonical_period.registry_token
     )
 
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id)
     filing_ports = filing_action_ports_factory(ctx)(bucket_id=bucket_id)
     revisions_by_id: dict[str, CalculationRevision] = {}
     reports_by_revision_id: dict[str, tuple[VerificationReport, ...]] = {}

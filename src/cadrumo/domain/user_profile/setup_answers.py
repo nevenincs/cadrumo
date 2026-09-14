@@ -29,7 +29,6 @@ from typing import Any, Final
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
-from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -37,6 +36,7 @@ from ...core.parsing.utils import parse_bool
 from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.spanish_postcode import OptionalSpanishPostcode
 from ..contribuyente.ccaa import CCAA
+from ..calculations.registry.ccaa_catalogue import default_ccaa, require_ccaa
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import (
     FiscalResidency,
@@ -48,12 +48,12 @@ from ..contribuyente.renta_codes import (
 from ..calculations.registry.entity_type import require_entity_type, require_legal_entity_form
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
+from ..calculations.registry.activity_kind_catalogue import require_irpf_activity_kind
+from ..calculations.registry.irpf_income_categories import require_irpf_income_category
 from ..calculations.registry.irpf_regimes import require_irpf_estimation_regime, require_irpf_special_regime
-from ..deadlines.models import (
-    IVARegime,
-    IrpfActivityKind,
-    IrpfIncomeCategory,
-)
+from ..calculations.registry.situacion_familiar_catalogue import require_situacion_familiar
+from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
+from ..deadlines.models import IVARegime
 
 
 def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
@@ -297,9 +297,14 @@ class SetupAnswers(BaseModel):
         if isinstance(value, CCAA):
             return value
         if value is None:
-            return CCAA.MADRID
+            return default_ccaa()
         if isinstance(value, str):
-            return CCAA(value) if value else CCAA.MADRID
+            if not value:
+                return default_ccaa()
+            try:
+                return require_ccaa(value)
+            except RegistryValidationError as exc:
+                raise ProfileAnswerTypeError("tax_residence_ccaa must be declared by the CCAA facts registry") from exc
         raise ProfileAnswerTypeError("tax_residence_ccaa must be a CCAA member or string token")
 
     @field_validator("entity_type", mode="before")
@@ -345,23 +350,23 @@ class SetupAnswers(BaseModel):
     def _parse_irpf_activity_kind(cls, value: object) -> Any:
         if value == "":
             return ""
-        if isinstance(value, IrpfActivityKind):
-            return value
-        if isinstance(value, str):
-            return IrpfActivityKind(value)
-        raise ProfileAnswerTypeError(
-            "irpf_activity_kind must be an IrpfActivityKind member, string token, or blank",
-        )
+        try:
+            return require_irpf_activity_kind(value)
+        except RegistryValidationError as exc:
+            raise ProfileAnswerTypeError(
+                "irpf_activity_kind must be declared by the facts registry",
+            ) from exc
 
     @field_validator("situacion_familiar", mode="before")
     @classmethod
     def _parse_situacion_familiar(cls, value: object) -> Any:
         if value == "":
             return ""
-        if isinstance(value, SituacionFamiliar):
-            return value
-        if isinstance(value, str):
-            return SituacionFamiliar(value)
+        if isinstance(value, SituacionFamiliar) or isinstance(value, str):
+            try:
+                return require_situacion_familiar(value)
+            except RegistryValidationError as exc:
+                raise ProfileAnswerTypeError("situacion_familiar must be declared by the facts registry") from exc
         raise ProfileAnswerTypeError("situacion_familiar must be a SituacionFamiliar member, string token, or blank")
 
     @field_validator("unidad_familiar_descendientes_exclusivos", mode="before")
@@ -416,7 +421,12 @@ class SetupAnswers(BaseModel):
     def _validate_irpf_income_categories(cls, value: str) -> str:
         tokens = [token.strip() for token in value.split(",") if token.strip()]
         for token in tokens:
-            IrpfIncomeCategory(token)
+            try:
+                require_irpf_income_category(token)
+            except RegistryValidationError as exc:
+                raise ProfileAnswerTypeError(
+                    "irpf_income_categories must contain only values declared by the income-category facts registry",
+                ) from exc
         return ",".join(tokens)
 
     @field_validator("declaration_roles")
@@ -424,7 +434,12 @@ class SetupAnswers(BaseModel):
     def _validate_declaration_roles(cls, value: str) -> str:
         tokens = [token.strip() for token in value.split(",") if token.strip()]
         for token in tokens:
-            ThirdPartyDeclarationRole(token)
+            try:
+                require_third_party_declaration_role(token)
+            except RegistryValidationError as exc:
+                raise ProfileAnswerTypeError(
+                    "declaration_roles must contain only values declared by the facts registry",
+                ) from exc
         return ",".join(tokens)
 
     @field_validator("taxation_type", mode="before")

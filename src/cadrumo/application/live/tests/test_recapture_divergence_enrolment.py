@@ -19,7 +19,7 @@ import inspect
 
 import pytest
 
-from ..filed_data_capture import _CaptureAccumulator
+from ..filed_data_capture import FiledCaptureAccumulator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,7 +40,7 @@ class TestTheDivergenceIsReadBeforeThePersist:
         function whose whole contract is their order, so there is no control
         flow between them for the assertion to miss.
         """
-        source = inspect.getsource(_CaptureAccumulator.absorb)
+        source = inspect.getsource(FiledCaptureAccumulator.absorb)
         read_at = source.index("recapture_divergence_notices")
         write_at = source.index("store.persist_observation")
         assert read_at < write_at, (
@@ -73,7 +73,7 @@ class TestTheAdvisoryReachesTheOperator:
     """A notice nothing forwards is the defect this closes."""
 
     def test_the_accumulator_carries_the_notices_it_reads(self) -> None:
-        accumulator = _CaptureAccumulator()
+        accumulator = FiledCaptureAccumulator()
         assert accumulator.recapture_notices == []
 
     def test_the_run_model_exposes_the_notices(self) -> None:

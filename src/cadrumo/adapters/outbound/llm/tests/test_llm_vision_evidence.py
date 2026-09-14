@@ -112,7 +112,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     instructive, non-silent error naming the opt-in command.
     """
     from .....domain.user_profile.values import UserProfileFact, UserProfileRecord
-    from .....tests.profile_capsule import seed_test_profile_record
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
     clock = datetime(2026, 1, 1, tzinfo=UTC)
     seed_test_profile_record(

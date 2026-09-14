@@ -48,6 +48,7 @@ are deferred calc-completeness follow-ons — not claimed here.
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -70,7 +71,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.profile_capsule import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -202,7 +203,7 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
     persisted :class:`CalculationRevision`.
     """
     snapshot = _snapshot(filing_year)
-    carry = resolve_bindings_from_local_store(snapshot, repository=obs_repo).binding_values
+    carry = resolve_bindings_from_local_store(snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
     # Every non-profile binding defaults to zero through the caller channel;
     # the previous_filing carry overlays its real resolved value. profile
     # bindings are deliberately omitted so the profile resolver fills them.

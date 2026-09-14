@@ -1,32 +1,19 @@
-"""``export_modelo_to_sheets`` records provenance on failure, before it can succeed.
+"""Application-owned calc-sheets export orchestration contracts.
 
-The success path calls the real outbound Google adapter, which this project
-never exercises in tests (write-shaped online tests are forbidden, matching
-every sibling in ``adapters.outbound.google.tests``). What IS exercised here,
-for real, is the half this row exists to add: a run that never reaches Sheets
-still gets a sync-run record, persisted through the genuine encrypted store —
-never a mock — proving the failure-path co-write actually happens rather than
-being a design-only shell around an untested call.
+These tests cover the renderer-neutral plan and coverage metadata without
+constructing or importing any outbound transport or persistence adapter. The
+adapter-backed failure-path integration lives with the Google outbound tests.
 """
 
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 
 import pytest
 
-from .....adapters.outbound.google.calc_sheets_apply import apply_export_plan
-from .....adapters.outbound.storage.errors import OutboundStorageValidationError
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from .....core.sync_surface import SyncSurface
-from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
-from .....tests.google_credentials import unused_google_credentials
 from ..engine import build_export_plan
-from ..export_service import _export_scope_description, _SingleExportCoverage, export_modelo_to_sheets
+from ..export_service import _SingleExportCoverage, _export_scope_description
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,42 +43,3 @@ def test_scope_description_names_modelo_period_and_year() -> None:
     assert plan.metadata.modelo_id in scope
     assert plan.metadata.period.registry_token in scope
     assert str(plan.metadata.filing_year) in scope
-
-
-def test_a_failed_apply_still_persists_a_sync_run_record_and_reraises(tmp_path: Path) -> None:
-    """``root_folder_id=""`` fails inside ``apply_export_plan`` before any network call.
-
-    That is what makes this a real, deterministic, offline-triggerable failure:
-    the blank-root validation is the adapter's own first line, so the
-    exception this test drives is the SAME exception class a live refusal
-    would raise, not a substitute for one.
-    """
-    plan = _m130_plan()
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f5d2c9d7-2ca0-4036-80c1-a9880b662b18") as profile:
-        repository = SyncRunRecordRepository()
-
-        with pytest.raises(OutboundStorageValidationError):
-            export_modelo_to_sheets(
-                plan,
-                credentials=unused_google_credentials(),
-                root_folder_id="",
-                sync_run_repository=repository,
-                apply_export_plan=apply_export_plan,
-            )
-
-        records = [repository.load(identifier) for identifier in repository.iter_ids()]
-        assert len(records) == 1, "exactly one sync-run record must exist after the failed run"
-        record = records[0]
-        assert record is not None
-
-        assert record.bucket_id == profile.bucket_id
-        assert record.surface == SyncSurface.CALC_SHEETS_EXPORT
-        assert record.succeeded is False
-        assert record.unit_count == 0
-        assert record.divergence_count == 0
-        assert plan.metadata.modelo_id in record.resolved_scope
-
-        events = BucketEventHistoryRepository().load().events
-        assert record.bucket_event_id in events, "the co-written bucket event must exist alongside the record"
-        assert events[record.bucket_event_id].event_type is BucketEventType.SYNC_RUN_CALC_SHEETS_EXPORT_COMPLETED

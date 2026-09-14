@@ -124,60 +124,8 @@ class TestTheResolverFollowsTheRateAuthority:
         assert fallback.end_date.month == 12
 
 
-class TestTheRendererCannotReachAroundItsArgument:
-    """Direction two: the prompt carries what it was handed, and nothing else."""
-
-    def test_fabricated_values_reach_the_text_and_the_real_ones_do_not(self) -> None:
-        """The assertion that a re-added lookup cannot satisfy.
-
-        Both halves matter. That the fabricated figure APPEARS proves the
-        argument is used; that the real registered figures are ABSENT proves it
-        is the only source. A renderer that helpfully merged its own lookup with
-        the argument would pass the first half alone.
-        """
-        from ....adapters.outbound.llm.invoice_extraction_prompt import render_invoice_extraction_prompt
-
-        real = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
-        rendered = render_invoice_extraction_prompt(values=_fabricated_values())
-
-        assert "37.25" in rendered.text
-        assert "41.75" in rendered.text
-        assert "regimen inventado a efectos de prueba" in rendered.text
-        for pct in real.iva_rate_pcts:
-            assert f"{pct.normalize():f}%" not in rendered.text
-        for phrase in real.regime_legend_phrases:
-            assert phrase not in rendered.text, (
-                "the renderer reached the legal vocabulary itself instead of substituting what it was given"
-            )
-
-    def test_the_compiled_artefact_reports_the_values_it_rendered(self) -> None:
-        """The stamp must describe the read that happened, not a re-resolution."""
-        from ....adapters.outbound.llm.invoice_extraction_prompt import render_invoice_extraction_prompt
-
-        rendered = render_invoice_extraction_prompt(values=_fabricated_values())
-
-        assert rendered.iva_rate_pcts == (_FABRICATED_PCT,)
-        assert rendered.period == _ANNUAL_2026
-
-
 class TestTheProductionReadPathSuppliesTheValues:
     """Direction three: the compiler has a caller on the live reading path."""
-
-    def test_values_passed_to_the_reader_entry_point_reach_the_dispatched_prompt(self) -> None:
-        """The reader's own entry point honours supplied values end to end.
-
-        Behavioural rather than structural: it exercises the exact function the
-        router calls to build what a model receives, so a parameter that is
-        accepted and then ignored fails here. It stops short of dispatching a
-        request, because doing so would need live inference this gate must not
-        perform.
-        """
-        from ....adapters.outbound.llm.evidence_draft_text import build_text_field_extraction_prompt
-
-        prompt = build_text_field_extraction_prompt("Factura 1", values=_fabricated_values())
-
-        assert "37.25" in prompt
-        assert "Factura 1" in prompt
 
     def test_the_router_resolves_before_reading(self) -> None:
         """The resolver is reached from the routing module, not left unwired.

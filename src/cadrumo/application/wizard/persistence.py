@@ -32,6 +32,12 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_adoption_token,
+    descendant_relacion_default_token,
+    descendant_relacion_entitling_tokens,
+    require_descendant_relacion,
+)
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -266,19 +272,18 @@ def _safe_relacion_and_entry_dates(
     the relación axis exists to prevent. The review verdict still blocks the
     final submit, so the operator is told rather than silently trimmed.
     """
-    from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES
-
     raw_relacion = (row.get("relacion") or "").strip()
+    authority = bundled_authority()
     try:
-        relacion = DescendantRelacion(raw_relacion) if raw_relacion else None
-    except ValueError:
+        relacion = require_descendant_relacion(raw_relacion, authority=authority) if raw_relacion else None
+    except (RegistryValidationError, ValueError):
         relacion = None
     birth_raw = row["birth-date"]
     inscripcion = _safe_entry_date(birth_raw, row.get("inscripcion-registro-civil"))
     acogimiento = _safe_entry_date(birth_raw, row.get("acogimiento-resolucion"))
-    if relacion is not None and relacion is not DescendantRelacion.ADOPTADO:
+    if relacion is not None and relacion != descendant_relacion_adoption_token(authority=authority):
         inscripcion = None
-    if relacion is not None and relacion not in ART_58_2_ENTITLING_RELACIONES:
+    if relacion is not None and relacion not in descendant_relacion_entitling_tokens(authority=authority):
         acogimiento = None
     elif relacion is None and acogimiento is not None:
         # An unstated relación cannot carry an acogimiento date: the canonical
@@ -568,7 +573,7 @@ def _descendant_identity_answers(
         # original walk never gave, and the two legs would stop matching.
         (
             "relacion",
-            descendant.relacion.value if descendant.relacion is not DescendantRelacion.DESCENDIENTE else None,
+            descendant.relacion.value if descendant.relacion != descendant_relacion_default_token() else None,
         ),
         ("inscripcion-registro-civil", _optional_isoformat(descendant.inscripcion_registro_civil_date)),
         ("acogimiento-resolucion", _optional_isoformat(descendant.acogimiento_resolucion_date)),

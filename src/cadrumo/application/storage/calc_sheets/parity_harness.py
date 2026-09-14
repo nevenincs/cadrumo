@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from importlib import import_module
@@ -102,6 +103,33 @@ class _SheetsDiscoveryBuilder(Protocol):
         credentials: Credentials,
         cache_discovery: bool,
     ) -> SheetsResource: ...
+
+
+@dataclass(frozen=True, slots=True)
+class CalcSheetsParityApplyResult:
+    """Application-facing outcome of materialising one parity workbook.
+
+    The parity algorithm only needs the stable workbook identifiers.  Keeping
+    this projection here prevents the Google adapter's result model and its
+    write-count fields from becoming part of the application contract.
+    """
+
+    spreadsheet_id: str
+    spreadsheet_url: str
+
+
+class CalcSheetsParityApplyPort(Protocol):
+    """Required outbound capability for the parity harness's workbook write."""
+
+    def __call__(
+        self,
+        plan: SheetExportPlan,
+        *,
+        credentials: object,
+        root_folder_id: str,
+    ) -> CalcSheetsParityApplyResult:
+        """Materialise ``plan`` and return its application-facing identity."""
+        ...
 
 
 class ParityReport(BaseModel):
@@ -410,6 +438,7 @@ def verify_modelo_parity(
     *,
     credentials: Credentials,
     root_folder_id: str,
+    apply_port: CalcSheetsParityApplyPort,
 ) -> ParityReport:
     """Run the full three-way parity verification for one modelo+period.
 
@@ -421,6 +450,8 @@ def verify_modelo_parity(
             to read/write the per-modelo spreadsheet.
         root_folder_id: Google Drive folder id under which the parity
             spreadsheet is created or updated.
+        apply_port: Composed application capability that materialises the
+            workbook and returns its normalized identity.
 
     Returns a :class:`ParityReport`.
 
@@ -436,8 +467,6 @@ def verify_modelo_parity(
     snapshot's process-local cache. The local Decimal runtime is
     invoked once and consulted only for comparison.
     """
-    from ....adapters.outbound.google.calc_sheets_apply import apply_export_plan
-
     operator_inputs, inputs_by_id = _build_operator_inputs(snapshot, scenario)
     relation_values = _build_relation_values(snapshot, scenario)
 
@@ -446,7 +475,7 @@ def verify_modelo_parity(
         operator_inputs=operator_inputs,
         relation_values=relation_values,
     )
-    apply_result = apply_export_plan(
+    apply_result = apply_port(
         plan,
         credentials=credentials,
         root_folder_id=root_folder_id,
@@ -502,6 +531,8 @@ def verify_modelo_parity(
 
 
 __all__ = [
+    "CalcSheetsParityApplyPort",
+    "CalcSheetsParityApplyResult",
     "OperatorInputScenario",
     "ParityReport",
     "verify_modelo_parity",

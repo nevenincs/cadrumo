@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.decimal.constants import HUNDRED
+from ...core.decimal.constants import HUNDRED, ZERO
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.iva.schema import IvaCategory
@@ -122,24 +122,43 @@ def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
     visible without reading the legacy table or taking a consumer-local
     authority snapshot.
     """
+    from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
     from ...domain.iva.errors import IvaRateNotFoundError
     from ...domain.iva.lookup import coexisting_tier_rates, lookup_rate
-    from ...domain.iva.schema import EUMemberState
-    from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
+    from ...domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
+    from ...domain.iva.schema import spanish_eu_member_state
 
     overlapping: set[Decimal] = set()
     on_date = period.start_date
     while on_date <= period.end_date:
+        catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date)
         kinds = tuple(
             definition.token
-            for definition in resolve_iva_rate_kind_catalogue(effective_date=on_date).definitions
+            for definition in catalogue.definitions
         )
         for kind in kinds:
+            if kind == catalogue.zero_token:
+                # RATE_0 is a permanent registry slot, while 0062's zero rows
+                # are date-bounded temporary measures.  Project the slot's
+                # zero value through 0094 instead of treating the absence of a
+                # temporary 0062 row as proof that zero is unavailable.
+                zero_slot = resolve_iva_rate_slot(ZERO, on_date)
+                zero_fraction = iva_rate_percentage(zero_slot, on_date)
+                if zero_fraction is not None:
+                    overlapping.add(zero_fraction * HUNDRED)
+                continue
             try:
-                overlapping.add(lookup_rate(EUMemberState.ES, kind, on_date).pct)
+                overlapping.add(
+                    lookup_rate(spanish_eu_member_state(effective_date=on_date), kind, on_date).pct,
+                )
             except IvaRateNotFoundError:
                 continue
-            overlapping.update(rate.pct for rate in coexisting_tier_rates(EUMemberState.ES, kind, on_date))
+                overlapping.update(
+                    rate.pct
+                    for rate in coexisting_tier_rates(
+                        spanish_eu_member_state(effective_date=on_date), kind, on_date
+                    )
+                )
         on_date += timedelta(days=1)
     return tuple(sorted(overlapping))
 

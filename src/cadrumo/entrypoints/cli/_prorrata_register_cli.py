@@ -42,10 +42,18 @@ from ...application.prorrata_register.service import ProrrataRegisterService
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.prorrata_register import (
-    ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
+)
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    carried_prior_definitiva_prorrata_provenance,
+    especial_prorrata_register_regime,
+    general_prorrata_register_regime,
+    opcion_prorrata_transition,
+    prorrata_electable_provenances,
+    require_prorrata_provenance,
+    revocacion_prorrata_transition,
 )
 from ...domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
@@ -72,7 +80,7 @@ from ._prorrata_register_payloads import (
 )
 from .common import active_bucket_id_or_refuse as _register_bucket_id
 from .common import bad, emit_envelope
-from .state_projection_support import calculation_action_ports_factory
+from .state_projection_support import calculation_action_ports_factory, prorrata_register_repository_factory
 
 #: Machine-readable notice codes for the carried-seed advisory channel. They are
 #: transport tokens, never localised presentation text.
@@ -128,14 +136,14 @@ def _sector_payload(definition: SectorDefinition) -> SectorDefinitionPayload:
 
 
 def _resolve_provenance(
-    raw: ProrrataProvisionalProvenance, reference: str | None
+    raw: object, reference: str | None
 ) -> tuple[
     ProrrataProvisionalProvenance,
     str | None,
 ]:
     """Check the election against art. 105, mapping each refusal to its message."""
+    raw = require_prorrata_provenance(raw)
     from ...application.prorrata_register.election import (
-        ELECTABLE_PROVENANCES,
         ProrrataElectionError,
         ProrrataElectionRefusal,
         validate_prorrata_election,
@@ -149,7 +157,7 @@ def _resolve_provenance(
                 tr(
                     "cli.app.ledger.prorrata.provenance_not_electable",
                     provenance=raw.value,
-                    accepted=", ".join(member.value for member in ELECTABLE_PROVENANCES),
+                    accepted=", ".join(member.value for member in prorrata_electable_provenances()),
                 ),
             ) from exc
         if exc.refusal is ProrrataElectionRefusal.REFERENCE_REQUIRED:
@@ -195,7 +203,9 @@ def _elect(
         )
     except (ProrrataRegisterValidationError, ValidationError) as exc:
         raise bad(str(exc)) from exc
-    service = ProrrataRegisterService()
+    service = ProrrataRegisterService(
+        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+    )
     try:
         register = (
             service.declare_especial_transition(entry) if especial_transition is not None else service.declare(entry)
@@ -230,14 +240,16 @@ def prorrata_elect_especial(
     ejercicio: int,
     percentage: str,
     evidence_reference: str | None = None,
-    provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    provenance: ProrrataProvisionalProvenance | None = None,
     reference: str | None = None,
     sector: str | None = None,
 ) -> None:
     """Persist an ``ESPECIAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
+    if provenance is None:
+        provenance = carried_prior_definitiva_prorrata_provenance()
     _elect(
         ctx,
-        regime=ProrrataRegisterRegime.ESPECIAL,
+        regime=especial_prorrata_register_regime(),
         ejercicio=ejercicio,
         percentage_raw=percentage,
         provenance=provenance,
@@ -245,7 +257,7 @@ def prorrata_elect_especial(
         sector_id=sector,
         especial_transition=(
             ProrrataEspecialTransitionEvidence(
-                kind=ProrrataEspecialTransitionKind.OPCION,
+                kind=opcion_prorrata_transition(),
                 evidence_reference=evidence_reference,
             )
             if evidence_reference is not None
@@ -260,7 +272,7 @@ def prorrata_elect_general(
     ctx: typer.Context,
     ejercicio: int,
     percentage: str,
-    provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    provenance: ProrrataProvisionalProvenance | None = None,
     reference: str | None = None,
     sector: str | None = None,
 ) -> None:
@@ -270,9 +282,11 @@ def prorrata_elect_general(
     verb, which requires the revocation evidence: this verb records a plain
     general election and never manufactures a transition.
     """
+    if provenance is None:
+        provenance = carried_prior_definitiva_prorrata_provenance()
     _elect(
         ctx,
-        regime=ProrrataRegisterRegime.GENERAL,
+        regime=general_prorrata_register_regime(),
         ejercicio=ejercicio,
         percentage_raw=percentage,
         provenance=provenance,
@@ -289,21 +303,23 @@ def prorrata_revoke_especial(
     ejercicio: int,
     evidence_reference: str,
     percentage: str,
-    provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    provenance: ProrrataProvisionalProvenance | None = None,
     reference: str | None = None,
     sector: str | None = None,
 ) -> None:
     """Persist a typed prorrata-especial revocation for the ejercicio."""
+    if provenance is None:
+        provenance = carried_prior_definitiva_prorrata_provenance()
     _elect(
         ctx,
-        regime=ProrrataRegisterRegime.GENERAL,
+        regime=general_prorrata_register_regime(),
         ejercicio=ejercicio,
         percentage_raw=percentage,
         provenance=provenance,
         reference=reference,
         sector_id=sector,
         especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind.REVOCACION,
+            kind=revocacion_prorrata_transition(),
             evidence_reference=evidence_reference,
         ),
         result_class=ProrrataRevokeEspecialResult,
@@ -327,7 +343,9 @@ def prorrata_declare_sector(
         )
     except ProrrataRegisterValidationError as exc:
         raise bad(str(exc)) from exc
-    register = ProrrataRegisterService().declare_sector(definition)
+    register = ProrrataRegisterService(
+        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+    ).declare_sector(definition)
     payload = ProrrataDeclareSectorResult(
         bucket_id=bucket_id,
         sector=_sector_payload(definition),
@@ -454,7 +472,7 @@ def _seed_findings_with_existing_entry(
     standing_provenance = existing.provisional_provenance
     if (
         standing_provenance is not None
-        and standing_provenance is not ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+        and standing_provenance != carried_prior_definitiva_prorrata_provenance()
     ):
         raise bad(
             tr(
@@ -492,7 +510,9 @@ def prorrata_seed(
     if seed is None:
         _refuse_missing_seed_source(ejercicio)
 
-    service = ProrrataRegisterService()
+    service = ProrrataRegisterService(
+        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+    )
     findings = _seed_findings_with_existing_entry(
         service,
         ejercicio=ejercicio,
@@ -524,7 +544,7 @@ def prorrata_seed(
             f"ejercicio\t{seed.entry.ejercicio}",
             f"sector_id\t{seed.entry.sector_id or ''}",
             f"provisional_percentage\t{seed.entry.provisional_percentage}",
-            f"provisional_provenance\t{ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value}",
+            f"provisional_provenance\t{carried_prior_definitiva_prorrata_provenance().value}",
             f"source\t{seed.source_modelo}:{seed.source_filing_year}:{seed.source_period}",
             f"source_casilla_id\t{seed.source_casilla_id}",
             f"stamped_revision_id\t{seed.stamped_revision_id}",
@@ -549,7 +569,9 @@ def prorrata_seed_sector(
     whole-entity Modelo 303 observation.
     """
     bucket_id = _register_bucket_id()
-    service = ProrrataRegisterService()
+    service = ProrrataRegisterService(
+        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+    )
     register = service.list_all()
     entry = seed_sector_carried_definitive_from_register(register, ejercicio=ejercicio, sector_id=sector_id)
     if entry is None:
@@ -581,7 +603,7 @@ def prorrata_seed_sector(
             f"sector_id\t{entry.sector_id or ''}",
             f"prior_ejercicio\t{ejercicio - 1}",
             f"provisional_percentage\t{entry.provisional_percentage}",
-            f"provisional_provenance\t{ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value}",
+            f"provisional_provenance\t{carried_prior_definitiva_prorrata_provenance().value}",
             f"source_observation_ref\t{entry.source_observation_ref or ''}",
             f"count\t{len(updated.entries)}",
         ),
@@ -606,7 +628,9 @@ def prorrata_settle_sector(
     bucket_id = _register_bucket_id()
     con_derecho = parse_decimal_amount(con_derecho_volume, label="con-derecho-volume", signed=False)
     sin_derecho = parse_decimal_amount(sin_derecho_volume, label="sin-derecho-volume", signed=False)
-    service = ProrrataRegisterService()
+    service = ProrrataRegisterService(
+        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+    )
     entry = service.get(ejercicio, sector_id=sector_id)
     if entry is None:
         raise bad(
@@ -649,7 +673,9 @@ def prorrata_settle_sector(
 def prorrata_list(ctx: typer.Context) -> None:
     """List the register via :class:`ProrrataRegisterService`."""
     bucket_id = _register_bucket_id()
-    register: ProrrataRegister = ProrrataRegisterService().list_all()
+    register: ProrrataRegister = ProrrataRegisterService(
+        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+    ).list_all()
     entries = [_entry_payload(entry) for entry in register.entries]
     sectors = [_sector_payload(definition) for definition in register.sector_definitions]
     payload = ProrrataListResult(

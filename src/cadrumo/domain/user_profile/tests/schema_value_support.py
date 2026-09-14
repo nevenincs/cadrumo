@@ -10,7 +10,6 @@ from collections.abc import Mapping
 
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ...calculations.registry.tax_id_runtime import runtime_nif_check_letter
-from ...deadlines.models import IVARegime
 from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldDefinition, ProfileFieldType
 
 _PLACEHOLDER_TAX_ID = f"12345678{runtime_nif_check_letter(12345678)}"
@@ -48,7 +47,7 @@ REQUIRED_PROFILE_PLACEHOLDERS: Mapping[str, str] = {
     "tax_residence.ccaa": "madrid",
     "tax_residence.jurisdiction_scope": "common_regime",
     "activities.description": "economic activity",
-    "iva.regime": IVARegime.GENERAL,
+    "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",
     "iva.redeme_enrolled": "false",
     "iva.cash_accounting_regime_enrolled": "false",

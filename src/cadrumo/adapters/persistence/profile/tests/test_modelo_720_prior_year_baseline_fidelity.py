@@ -48,6 +48,7 @@ See Also:
 """
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -67,11 +68,12 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from cadrumo.application._foreign_asset_thresholds import foreign_asset_declaration_thresholds
+from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
 from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
@@ -571,7 +573,7 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
             )
         )
         snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-        report = resolve_bindings_from_local_store(snapshot_n1, repository=repo, captured_at=_CLOCK_N_PLUS_1)
+        report = resolve_bindings_from_local_store(snapshot_n1, repository=repo, captured_at=_CLOCK_N_PLUS_1, iva_history_repository=IvaCompensationHistoryRepository())
 
     assert dict(report.binding_values) == {
         _CUENTAS_BASELINE_BINDING: _CUENTAS_N,
@@ -641,6 +643,8 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
         primary_resolution = PreviousFilingSourceResolver(
             repository=primary_repository,
             registry_snapshot=snapshot,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            profile_read_ports=empty_profile_read_ports(),
         ).resolve(
             CalculationSourceContext(
                 bucket_id=runtime.primary.bucket_id,
@@ -654,6 +658,8 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
             secondary_resolution = PreviousFilingSourceResolver(
                 repository=secondary_repository,
                 registry_snapshot=snapshot,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                profile_read_ports=empty_profile_read_ports(),
             ).resolve(
                 CalculationSourceContext(
                     bucket_id=runtime.secondary.bucket_id,
@@ -689,7 +695,7 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
         snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         with pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"):
-            resolve_bindings_from_local_store(snapshot_n1, repository=repo, captured_at=_CLOCK_N_PLUS_1)
+            resolve_bindings_from_local_store(snapshot_n1, repository=repo, captured_at=_CLOCK_N_PLUS_1, iva_history_repository=IvaCompensationHistoryRepository())
 
 
 def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_delta_is_below_threshold() -> None:

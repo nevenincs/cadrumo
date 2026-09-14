@@ -18,7 +18,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.profile_capsule import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ._modelo_work_ux_support import _create_profile, _invoke
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

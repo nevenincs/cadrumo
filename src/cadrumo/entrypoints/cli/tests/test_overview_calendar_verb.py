@@ -32,8 +32,8 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.user_profile.values import ProfileSetupState
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from .._overview_evidence import live_censo_verified_profile_keys
 from .._overview_rendering import calendar_shift_reason_text
 from ..common import current_workflow_state, profile_to_taxpayer

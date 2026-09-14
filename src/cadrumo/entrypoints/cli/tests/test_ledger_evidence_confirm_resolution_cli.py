@@ -44,7 +44,7 @@ from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import UserProfileFact
-from ....tests.profile_capsule import set_active_test_profile_facts
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from .ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

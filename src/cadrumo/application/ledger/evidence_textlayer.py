@@ -1,11 +1,11 @@
 """On-host text-layer extraction from in-memory evidence bytes.
 
-Runs the in-tree pdfplumber text extractor over a resolved
+Runs the required application page-text capability over a resolved
 :class:`EvidenceInput`'s in-memory bytes, fully on-host. Nothing is written to
 disk and nothing leaves the machine (sensitive-financial-data-secure-storage-only).
 This is the cheapest on-host reader and covers text-native PDFs; image evidence
 and scan-only PDFs have no usable text layer and must go through the on-host
-vision reader instead.
+vision reader instead. The concrete PDF reader is bound by outer composition.
 
 This module is the deterministic half of the ingestion pipeline's acquisition
 stage: :func:`transcribe_text_layer` projects the extracted pages into a
@@ -21,13 +21,13 @@ from __future__ import annotations
 
 from importlib.metadata import version
 
-from ...adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.field_origin import FieldOrigin
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .document_transcription import DocumentTranscription, TranscriberIdentity
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .evidence_input import EvidenceInput
+from .evidence_textlayer_ports import EvidenceTextLayerPorts
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 __all__ = [
@@ -72,11 +72,16 @@ def text_layer_transcriber_identity() -> TranscriberIdentity:
     )
 
 
-def extract_evidence_pages(evidence: EvidenceInput) -> tuple[str, ...]:
+def extract_evidence_pages(
+    evidence: EvidenceInput,
+    *,
+    text_layer_ports: EvidenceTextLayerPorts,
+) -> tuple[str, ...]:
     """Return the on-host text layer of a PDF ``EvidenceInput``, page by page.
 
     Args:
         evidence: Resolved in-memory evidence bytes.
+        text_layer_ports: Required application capability for reading PDF pages.
 
     Returns:
         One string per page in the document's own page order. A page carrying no
@@ -96,18 +101,19 @@ def extract_evidence_pages(evidence: EvidenceInput) -> tuple[str, ...]:
                 facts={"pdf_layer_present": False},
             ),
         )
-    return extract_pages_text_from_bytes(
-        evidence.data,
-        error_class=PurchaseInvoiceEvidenceInputError,
-        pdf_label="the invoice PDF",
-    )
+    return text_layer_ports.extract_pages_text(evidence.data)
 
 
-def extract_evidence_text(evidence: EvidenceInput) -> str:
+def extract_evidence_text(
+    evidence: EvidenceInput,
+    *,
+    text_layer_ports: EvidenceTextLayerPorts,
+) -> str:
     """Return the on-host text layer of a PDF ``EvidenceInput`` as one string.
 
     Args:
         evidence: Resolved in-memory evidence bytes.
+        text_layer_ports: Required application capability for reading PDF pages.
 
     Returns:
         The concatenated per-page text of the PDF (empty pages dropped).
@@ -116,10 +122,16 @@ def extract_evidence_text(evidence: EvidenceInput) -> str:
         PurchaseInvoiceEvidenceInputError: When the evidence is not a PDF, or the
             PDF has no usable text layer (scan-only / XFA).
     """
-    return "\n".join(page for page in extract_evidence_pages(evidence) if page)
+    return "\n".join(
+        page for page in extract_evidence_pages(evidence, text_layer_ports=text_layer_ports) if page
+    )
 
 
-def transcribe_text_layer(evidence: EvidenceInput) -> DocumentTranscription:
+def transcribe_text_layer(
+    evidence: EvidenceInput,
+    *,
+    text_layer_ports: EvidenceTextLayerPorts,
+) -> DocumentTranscription:
     """Return the acquisition-stage transcription of a text-native PDF.
 
     The deterministic acquisition path: it reads, it does not interpret. The text
@@ -128,6 +140,7 @@ def transcribe_text_layer(evidence: EvidenceInput) -> DocumentTranscription:
 
     Args:
         evidence: Resolved in-memory evidence bytes.
+        text_layer_ports: Required application capability for reading PDF pages.
 
     Returns:
         The transcription, stamped :attr:`~cadrumo.core.FieldOrigin.TEXT_LAYER`
@@ -138,7 +151,7 @@ def transcribe_text_layer(evidence: EvidenceInput) -> DocumentTranscription:
         PurchaseInvoiceEvidenceInputError: When the evidence is not a PDF, or the
             PDF has no usable text layer (scan-only / XFA).
     """
-    pages = extract_evidence_pages(evidence)
+    pages = extract_evidence_pages(evidence, text_layer_ports=text_layer_ports)
     return DocumentTranscription(
         text="\n".join(page for page in pages if page),
         page_count=len(pages),

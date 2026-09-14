@@ -6,7 +6,7 @@ result as :class:`CasillaObservation` rows so the advisory carries the same
 per-casilla grounding the rest of the calculation chain does.
 
 See Also:
-    :mod:`~application._foreign_asset_thresholds`
+    :mod:`~application.foreign_asset_thresholds`
         Resolves the per-bloque declaration floors and re-declaration deltas
         from the effective registry revision.
     :class:`~domain.calculations.registry.RegistryModeloObservation`
@@ -32,7 +32,6 @@ from ...core.casilla_id import CasillaId
 from ...core.foreign_asset_obligation import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     ForeignAssetObligationGroup,
-    foreign_asset_obligation_group,
 )
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
@@ -43,13 +42,16 @@ from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloCasillasReport, ModeloDescribeReport
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import CasillaDataType
+from ...domain.calculations.registry.foreign_asset_obligation_catalogue import (
+    resolve_foreign_asset_obligation_catalogue,
+)
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from .._foreign_asset_thresholds import foreign_asset_declaration_thresholds
+from ..foreign_asset_thresholds import foreign_asset_declaration_thresholds
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,12 +98,14 @@ def _registry_valuation_casillas(
 ) -> dict[ForeignAssetObligationGroup, CasillaId]:
     """Discover valuation casillas and their obligation groups from a revision."""
     result: dict[ForeignAssetObligationGroup, CasillaId] = {}
+    catalogue = resolve_foreign_asset_obligation_catalogue()
     for casilla in modelo_revision.casillas:
         parts = tuple(str(casilla.id).split("."))
         if len(parts) < 2 or parts[-1].casefold() != "valoracion":
             continue
         namespace = parts[-2].replace("-", "_").casefold()
-        for group in ForeignAssetObligationGroup:
+        for definition in catalogue.groups:
+            group = definition.token
             if namespace == group.value or namespace in group.value.split("_"):
                 result[group] = casilla.id
                 break
@@ -190,11 +194,12 @@ def _obligation_group_for_valuation_casilla(casilla_id: CasillaId) -> ForeignAss
     if len(parts) < 2 or parts[-1].casefold() != "valoracion":
         return None
     namespace = parts[-2].replace("-", "_").casefold()
+    catalogue = resolve_foreign_asset_obligation_catalogue()
     return next(
         (
-            group
-            for group in ForeignAssetObligationGroup
-            if namespace == group.value or namespace in group.value.split("_")
+            definition.token
+            for definition in catalogue.groups
+            if namespace == definition.token.value or namespace in definition.token.value.split("_")
         ),
         None,
     )
@@ -214,7 +219,7 @@ def modelo_720_redeclaration_advisory_findings(
     so a correctly present row produces no advisory.
 
     See Also:
-        :func:`~application._foreign_asset_thresholds.foreign_asset_declaration_thresholds`
+        :func:`~application.foreign_asset_thresholds.foreign_asset_declaration_thresholds`
             Supplies the strict per-obligation-block re-declaration delta.
     """
     return _redeclaration_advisory_findings(
@@ -236,7 +241,7 @@ def modelo_721_redeclaration_advisory_findings(
 
     See Also:
         :class:`~core.foreign_asset_obligation.ForeignAssetObligationGroup`
-            Provides the ``MONEDAS_VIRTUALES`` group used for the Modelo 721
+            Provides the registry-projected group token used for the Modelo 721
             re-declaration threshold.
     """
     return _redeclaration_advisory_findings(
@@ -342,17 +347,15 @@ def _modelo_721_positions(
 def _accumulate_modelo_721_balance(state: _Modelo721PositionState, value: Decimal | str) -> None:
     if not state.token or not isinstance(value, Decimal):
         return
-    key = (
-        ForeignAssetObligationGroup.MONEDAS_VIRTUALES.value,
-        state.custodian_name,
-        state.custodian_country,
-        state.token,
+    virtual_currency_group = resolve_foreign_asset_obligation_catalogue().group_for_asset_class(
+        ForeignAssetClass.VIRTUAL_CURRENCY,
     )
+    key = (virtual_currency_group.value, state.custodian_name, state.custodian_country, state.token)
     existing = state.positions.get(key)
     value_eur = value if existing is None else existing.value_eur + value
     state.positions[key] = _RedeclarationPosition(
         key=key,
-        group=ForeignAssetObligationGroup.MONEDAS_VIRTUALES,
+        group=virtual_currency_group,
         value_eur=value_eur,
     )
     state.token = ""
@@ -513,7 +516,7 @@ def _modelo_720_evidence_totals(
         if row is None:
             continue
         asset_class, value = row
-        group = foreign_asset_obligation_group(asset_class)
+        group = resolve_foreign_asset_obligation_catalogue().group_for_asset_class(asset_class)
         totals[group] = totals.get(group, Decimal("0")) + value
     return totals
 

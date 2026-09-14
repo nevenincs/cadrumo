@@ -1,6 +1,7 @@
 """Seed and caller-binding boundary coverage for Modelo 303 IVA wallet decisions."""
 
 from __future__ import annotations
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date
 from decimal import Decimal
@@ -147,6 +148,7 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
             period=_period(2025, "4T"),
             amount=Decimal("450.00"),
             seeded_at=_DECIDED_AT,
+            repository=IvaCompensationHistoryRepository(),
         )
 
         with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
@@ -187,6 +189,7 @@ def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303
             period=_period(_TARGET_YEAR, "1T"),
             amount=Decimal("0"),
             seeded_at=_DECIDED_AT,
+            repository=IvaCompensationHistoryRepository(),
         )
         snapshot = _snapshot_303()
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
@@ -236,6 +239,7 @@ def test_explicit_nonzero_binding_conflicts_with_prior_zero_seed(tmp_path: Path)
             period=_period(_TARGET_YEAR, "1T"),
             amount=Decimal("0"),
             seeded_at=_DECIDED_AT,
+            repository=IvaCompensationHistoryRepository(),
         )
         snapshot = _snapshot_303()
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)

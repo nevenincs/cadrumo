@@ -1,30 +1,18 @@
 """Inventory application service: bucket-scoped CRUD over :class:`InventoryLedger`.
 
-The service persists :class:`InventoryLedgerDocument` through
-:class:`InventoryLedgerRepository`, whose runtime default is built by
-:func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
-It does not read or write plaintext inventory JSON side stores.
-
-State-changing and audit-significant verbs append events to the
-per-bucket audit trail via :class:`BucketEventHistoryRepository`;
-valuation math remains delegated to :func:`compute_inventory_valuation`.
+The service persists :class:`InventoryLedgerDocument` and emits events through
+the required :class:`InventoryServicePorts` capability bundle. It does not
+resolve storage routes or read and write plaintext inventory JSON side stores.
+Valuation math remains delegated to :func:`compute_inventory_valuation`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.inventory import (
-    InventoryClosingAuthorityConflictError,
-    InventoryLedgerRepository,
-)
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...core.config import Settings
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as _now_utc
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -46,8 +34,10 @@ from ...domain.contribuyente.inventory.valuation import compute_inventory_valuat
 from .errors import (
     InventoryActividadConflictError,
     InventoryActividadNotFoundError,
+    InventoryClosingAuthorityConflictError,
     InventoryServiceInputError,
 )
+from .ports import InventoryLedgerServiceRepositoryProtocol, InventoryServicePorts
 
 
 class InventoryActividadSummary(BaseModel):
@@ -131,8 +121,6 @@ class InventoryValuationPreviewResult(BaseModel):
 
 
 _INVENTORY_EVENT_PAYLOAD_VERSION = 1
-InventoryRepositoryFactory = Callable[[str], InventoryLedgerRepository]
-"""Factory that builds an :class:`InventoryLedgerRepository` for a bucket id."""
 
 
 def _emit_inventory_event(
@@ -160,20 +148,6 @@ def _emit_inventory_event(
     return event.event_id
 
 
-def _runtime_repository_factory(settings: Settings) -> InventoryRepositoryFactory:
-    def _factory(bucket_id: str) -> InventoryLedgerRepository:
-        return InventoryLedgerRepository(
-            objects=secure_object_repository_for_bucket(bucket_id, settings),
-        )
-
-    return _factory
-
-
-def inventory_ledger_repository_for_bucket(bucket_id: str) -> InventoryLedgerRepository:
-    """Compose the encrypted inventory repository for one explicit bucket."""
-    return InventoryLedgerRepository(objects=secure_object_repository_for_bucket(bucket_id))
-
-
 def _find_ledger(document: InventoryLedgerDocument, actividad_id: str, year: int) -> InventoryLedger | None:
     for ledger in document.ledgers:
         if ledger.actividad_id == actividad_id and ledger.year == year:
@@ -193,31 +167,21 @@ def _replace_ledger(document: InventoryLedgerDocument, ledger: InventoryLedger) 
 class InventoryService:
     """Bucket-scoped CRUD over per-actividad :class:`InventoryLedger` records.
 
-    Runtime construction routes the repository through
-    :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`,
-    so the requested ``bucket_id`` is checked by the storage runtime instead
-    of bypassing custody with a local file path. Tests may inject an
-    :class:`InventoryLedgerRepository` factory or
-    :class:`BucketEventHistoryRepository` protocol implementation.
+    The executable composition root supplies the repository factory and event
+    repository through :class:`InventoryServicePorts`; the service never
+    resolves a storage route or names an adapter implementation.
     """
 
     def __init__(
         self,
-        settings: Settings | None = None,
-        bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-        repository_factory: InventoryRepositoryFactory | None = None,
+        *,
+        ports: InventoryServicePorts,
     ) -> None:
-        """Initialize the service with resolved settings and the optional repository factories."""
-        # `Settings()` bypasses `override_settings`; route through
-        # `load_settings()` so tests and CLI calls see the active scoped
-        # storage runtime.
-        from ...core.config import load_settings as _load_settings
+        """Bind the required application-owned inventory capabilities."""
+        self._event_repository = ports.bucket_event_repository
+        self._repository_factory = ports.inventory_repository_factory
 
-        self._settings = settings or _load_settings()
-        self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
-        self._repository_factory = repository_factory or _runtime_repository_factory(self._settings)
-
-    def _repository_for(self, bucket_id: str) -> InventoryLedgerRepository:
+    def _repository_for(self, bucket_id: str) -> InventoryLedgerServiceRepositoryProtocol:
         return self._repository_factory(bucket_id)
 
     def create(
@@ -497,5 +461,4 @@ __all__ = [
     "InventoryService",
     "InventoryValuationPreview",
     "InventoryValuationPreviewResult",
-    "inventory_ledger_repository_for_bucket",
 ]

@@ -238,7 +238,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application._config_reset_repository.ConfigResetJournalError",
+        "cadrumo.application.config_reset_repository.ConfigResetJournalError",
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL",
             category=ErrorCategory.ERROR,
@@ -248,7 +248,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application._config_reset_repository.ConfigResetJournalAlreadyExistsError",
+        "cadrumo.application.config_reset_repository.ConfigResetJournalAlreadyExistsError",
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL_ALREADY_EXISTS",
             category=ErrorCategory.ERROR,
@@ -258,7 +258,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application._config_reset_repository.ConfigResetJournalNotFoundError",
+        "cadrumo.application.config_reset_repository.ConfigResetJournalNotFoundError",
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -268,7 +268,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application._config_reset_repository.ConfigResetJournalCorruptError",
+        "cadrumo.application.config_reset_repository.ConfigResetJournalCorruptError",
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL_CORRUPT",
             category=ErrorCategory.ERROR,
@@ -278,7 +278,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application._config_reset_repository.ConfigResetJournalOwnershipError",
+        "cadrumo.application.config_reset_repository.ConfigResetJournalOwnershipError",
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL_OWNERSHIP",
             category=ErrorCategory.ERROR,
@@ -288,7 +288,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application._config_reset_repository.ConfigResetJournalIncompleteError",
+        "cadrumo.application.config_reset_repository.ConfigResetJournalIncompleteError",
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL_INCOMPLETE",
             category=ErrorCategory.ERROR,
@@ -583,6 +583,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_FILING_APPLICATION",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_filing_application",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.filing.history_ports.FilingHistoryPersistenceError",
+        ErrorCode(
+            code="FAIL_FILING_HISTORY_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.error.error_storage_bucket",
             retryable=False,
             runbook_id=None,
         ),
