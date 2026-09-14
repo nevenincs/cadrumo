@@ -63,6 +63,7 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -419,11 +420,11 @@ def test_modelo_190_relation_prefill_aggregates_111_quarters(tmp_path: Path) -> 
     for each still relation-backed targeted casilla (02 importe, 28 retenciones).
     The retired quarterly count relations remain absent.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         obs_repo = CalculationObservationRepository()
         expected = _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         snapshot_190 = compiled_bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
-        prefill = resolve_relations_from_local_store(snapshot_190, repository=obs_repo)
+        prefill = resolve_relations_from_local_store(snapshot_190, operation=operation, repository=obs_repo)
         relation_ids = {
             binding.id
             for binding in snapshot_190.revision.bindings
@@ -454,12 +455,12 @@ def test_modelo_190_year_isolation_ignores_prior_year_observations(tmp_path: Pat
     resolver MUST discriminate by ``filing_year`` so the Year N+1 190 monetary
     relations equal Year N+1's quarterly sums and do not absorb Year N's values.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         obs_repo = CalculationObservationRepository()
         _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         expected_n1 = _compute_year_111_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
         snapshot_190_n1 = compiled_bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
-        prefill = resolve_relations_from_local_store(snapshot_190_n1, repository=obs_repo)
+        prefill = resolve_relations_from_local_store(snapshot_190_n1, operation=operation, repository=obs_repo)
 
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in prefill.values if item.value is not None
@@ -495,7 +496,7 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     EHA/3127/2009 art. 1, and the AEAT M190 form (BOE-modelo-190-2025-form).
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         obs_repo = CalculationObservationRepository()
 
         # Year N: calculate four 111 quarters, persist, resolve 190, calculate 190.
@@ -504,7 +505,7 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         _q1_result = _calculate_111(filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"])
 
         snapshot_190_n = compiled_bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
-        prefill_n = resolve_relations_from_local_store(snapshot_190_n, repository=obs_repo)
+        prefill_n = resolve_relations_from_local_store(snapshot_190_n, operation=operation, repository=obs_repo)
         resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
         withholding_n = resolve_withholding_binding_values(
             snapshot_190_n.revision,
@@ -526,7 +527,7 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         )
 
         snapshot_190_n1 = compiled_bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
-        prefill_n1 = resolve_relations_from_local_store(snapshot_190_n1, repository=obs_repo)
+        prefill_n1 = resolve_relations_from_local_store(snapshot_190_n1, operation=operation, repository=obs_repo)
         resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
         withholding_n1 = resolve_withholding_binding_values(
             snapshot_190_n1.revision,

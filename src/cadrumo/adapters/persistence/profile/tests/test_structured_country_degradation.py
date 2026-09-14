@@ -84,6 +84,7 @@ from cadrumo.application.ledger.country_vocabulary_advisory import country_vocab
 from cadrumo.application.ledger.establishment_ladder import resolve_draft_counterparty_establishment
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
+from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from cadrumo.core.classifier_input_source import ClassifierInputSource
 from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
@@ -92,6 +93,7 @@ from cadrumo.core.iva_category_resolution import IvaCategoryOutcome
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from cadrumo.domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
@@ -104,6 +106,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
 _CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
+
+
+def _registry_legends(operation):
+    """Resolve the registry vocabulary on the test's pinned authority lease."""
+    period = default_invoice_extraction_period()
+    return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 #: The specimen carrying a full address block on each party, both stating ``ESP``.
 _WITH_ADDRESSES: Final = "facturae_32_series_and_parties_invoice.xml"
@@ -664,6 +672,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
                 draft=draft,
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
+                legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             )
 
@@ -677,6 +686,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
                 draft=draft,
                 kind=InvoiceKind.ISSUED,
                 repository=repository,
+                legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             ).scope is IvaTerritorialScope._from_registry("es_mainland")
 

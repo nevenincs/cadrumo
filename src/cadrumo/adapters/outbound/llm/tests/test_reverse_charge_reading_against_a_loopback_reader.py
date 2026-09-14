@@ -53,6 +53,7 @@ from cadrumo.application.ledger.invoice_draft_extraction_ports import (
     InvoiceDraftExtractionPorts,
     StructuredInvoiceReadError,
 )
+from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from cadrumo.application.ledger.regime_contradiction import (
     draft_prints_a_repercutido_line,
     regime_contradiction_finding,
@@ -61,11 +62,13 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.iva_category_catalogue import (
     registry_category_projection,
     require_iva_category,
 )
 from cadrumo.domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
+from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from cadrumo.tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -84,6 +87,14 @@ def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPort
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def registry_legends() -> tuple[RegimeLegend, ...]:
+    """Resolve the registry vocabulary on one pinned authority lease."""
+    period = default_invoice_extraction_period()
+    with _indexed_authority_for_test().operation() as operation:
+        return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 _CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
 #: Prints the art. 84.Uno.2 mention and charges no output IVA -- the lawful
@@ -250,7 +261,7 @@ def test_both_documents_print_the_mention_the_legend_table_matches() -> None:
     )
 
 
-def test_a_mention_with_no_repercutido_line_derives_the_reverse_charge(serve) -> None:
+def test_a_mention_with_no_repercutido_line_derives_the_reverse_charge(serve, registry_legends) -> None:
     """The lawful presentation: the mention stands, no tax is charged, the category derives."""
     draft = serve(_LAWFUL, _LAWFUL_REPLY)
 
@@ -265,7 +276,7 @@ def test_a_mention_with_no_repercutido_line_derives_the_reverse_charge(serve) ->
     )
     assert derivation.outcome is LegendDerivationOutcome.DERIVED
     assert derivation.category == require_iva_category("domestic_reverse_charge")
-    assert regime_contradiction_finding(draft) is None
+    assert regime_contradiction_finding(draft, legends=registry_legends) is None
 
 
 def test_the_reverse_charge_is_not_relieved_on_an_establishment_premise() -> None:
@@ -289,7 +300,7 @@ def test_the_reverse_charge_is_not_relieved_on_an_establishment_premise() -> Non
     } == relief_categories
 
 
-def test_a_mention_beside_a_repercutido_line_raises_a_blocking_finding(serve) -> None:
+def test_a_mention_beside_a_repercutido_line_raises_a_blocking_finding(serve, registry_legends) -> None:
     """The contradiction: the document cannot be right on both halves.
 
     Asserted on the outcome and the finding, never on a category -- the axis
@@ -307,7 +318,7 @@ def test_a_mention_beside_a_repercutido_line_raises_a_blocking_finding(serve) ->
     assert derivation.outcome is LegendDerivationOutcome.CONTRADICTED
     assert derivation.category is None, "the category must be withheld, not guessed, on a contradiction"
 
-    finding = regime_contradiction_finding(draft)
+    finding = regime_contradiction_finding(draft, legends=registry_legends)
     assert finding is not None
     assert finding.kind is DraftDiscrepancyKind.REGIME_CONTRADICTED
     # The field names the mention rather than the category, because the category
