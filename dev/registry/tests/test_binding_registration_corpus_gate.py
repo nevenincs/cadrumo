@@ -31,6 +31,7 @@ from typing import Any
 import pytest
 
 from cadrumo.core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregation, BindingAggregationOp
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_provider_registration import (
     validate_binding_against_registration,
 )
@@ -45,7 +46,8 @@ from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
 
 from ..compiler.loader import load_modelo_directory
-from ..convert_binding_provider_shape import REGISTRY_MODELOS_ROOT
+
+REGISTRY_MODELOS_ROOT = Path(bundled_path("registry", "aeat", "modelos"))
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

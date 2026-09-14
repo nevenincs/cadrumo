@@ -30,7 +30,7 @@ from ..analysis.delta_minimality import MinimalityVerdict, judge_definition
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
-from ._export_tree import _render_toml_bytes
+from ._export_tree import render_toml_bytes
 from ._tree_validation import GeneratedExportTreeValidationContext
 from .candidate_staging import (
     ignore_export_authority_directories,
@@ -87,7 +87,7 @@ def _migrate(registry_root: Path) -> frozenset[str]:
         rows = tomllib.loads(path.read_text("utf-8"))["revisions"][_REVISION]["casillas"]
         kept = [row for row in rows if row["id"] not in dropped]
         if kept:
-            path.write_bytes(_render_toml_bytes(path.name, {"revisions": {_REVISION: {"casillas": kept}}}))
+            path.write_bytes(render_toml_bytes(path.name, {"revisions": {_REVISION: {"casillas": kept}}}))
         else:
             path.unlink()
     manifest_path = revision_root / "revision.toml"
@@ -157,8 +157,12 @@ def _prepared(work: Path, target_root: Path) -> _PreparedInvocation:
         target_root=target_root,
         target_export_root=modelo_root / "revisions" / _REVISION / "export",
         published_modelo_root=stage_isolated_edition(
-            modelo_root, work / "published-modelo" / _MODELO, revision=_REVISION
-        ),
+            modelo_root,
+            work / "published-modelo" / _MODELO,
+            revision=_REVISION,
+            source_locales_root=bundled_path().parent / "locales",
+            staged_locales_root=work / "published-locales",
+        ).modelo_root,
     )
 
 

@@ -72,7 +72,9 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HFP/823/2022 articulo 4: fija el plazo reglamentario anual del Modelo 345 entre el 1 y el 31 de enero."
+governs_periods_from = 2022-01-01
 required_text = [
+    "Artículo 4. Plazo de presentación del modelo 345",
     "entre el",
     "31 de enero de cada",
     "natural inmediato anterior",

@@ -91,11 +91,11 @@ from .loader_cache import (
     toml_file_fingerprint,
 )
 from .loader_fingerprints import (
-    _collect_registry_tree_fingerprints_uncached,
-    collect_modelo_directory_fingerprints,
+    clear_fingerprint_cache as _clear_fingerprint_cache,
 )
 from .loader_fingerprints import (
-    clear_fingerprint_cache as _clear_fingerprint_cache,
+    collect_modelo_directory_fingerprints,
+    collect_registry_tree_fingerprints,
 )
 from .loader_grammar import revision_section_fragment_paths
 from .loader_semantics import compile_export_semantic_field, compile_projection_endpoint_declaration
@@ -1714,7 +1714,7 @@ def _refresh_registry_tree_fingerprints_after_load_error(
     initial_error: RegistryLoadError,
 ) -> _RegistryPathFingerprints:
     try:
-        return _collect_registry_tree_fingerprints_uncached(resolved)
+        return collect_registry_tree_fingerprints(resolved, use_cache=False)
     except RegistryLoadError as refresh_error:
         raise RegistryLoadError(
             f"{resolved}: registry tree changed during load. "

@@ -311,15 +311,27 @@ def validate_application_link_section(
         owner = f"application link {link.id}"
         failures.extend(_missing_refs(prefix, owner, link.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, link.source_refs, source_refs, "source"))
-        failures.extend(
-            _application_link_source_tier_failures(
-                prefix,
-                owner,
-                link.source_refs,
-                surface=link.surface,
-                source_refs=source_refs,
-            ),
-        )
+        if _allowed_application_link_source_tiers(link.surface) == _DEFAULT_APPLICATION_LINK_SOURCE_TIERS:
+            failures.extend(
+                evidence.require_procedural_evidence(
+                    prefix,
+                    owner,
+                    link.source_refs,
+                    link.legal_refs,
+                    valid_from=revision.valid_from,
+                    valid_to=revision.valid_to,
+                ),
+            )
+        else:
+            failures.extend(
+                _application_link_source_tier_failures(
+                    prefix,
+                    owner,
+                    link.source_refs,
+                    surface=link.surface,
+                    source_refs=source_refs,
+                ),
+            )
     return failures
 
 
@@ -336,9 +348,32 @@ def validate_deadline_window_section(
         owner = f"deadline window {window.id}"
         failures.extend(_missing_refs(prefix, owner, window.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, window.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_source_tier(prefix, owner, window.source_refs, "official_source_guidance"))
         failures.extend(
-            deadline_window_content_failures(prefix, window, source_refs=source_refs, evidence=evidence),
+            evidence.require_procedural_evidence(
+                prefix,
+                owner,
+                window.source_refs,
+                window.legal_refs,
+                valid_from=revision.valid_from,
+                valid_to=revision.valid_to,
+            )
+        )
+        failures.extend(
+            deadline_window_content_failures(
+                prefix,
+                window,
+                source_refs=source_refs,
+                evidence=evidence,
+                legal_clause_texts=tuple(
+                    " ".join(clause.required_text)
+                    for clause in evidence.procedural_legal_clauses(
+                        window.source_refs,
+                        window.legal_refs,
+                        valid_from=revision.valid_from,
+                        valid_to=revision.valid_to,
+                    )
+                ),
+            ),
         )
         for condition in window.applicability_conditions:
             condition_owner = f"deadline condition for {window.id}"

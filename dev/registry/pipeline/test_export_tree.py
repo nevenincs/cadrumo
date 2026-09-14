@@ -66,7 +66,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_toml_serialization_refusal_never_carries_the_offending_value() -> None:
-    """``_render_toml_bytes``'s ``rtoml.dumps`` refusal must never echo a payload value.
+    """``render_toml_bytes``'s ``rtoml.dumps`` refusal must never echo a payload value.
 
     ``rtoml.dumps`` raises ``TomlSerializationError`` (a ``ValueError``
     subclass) whose sole ``args[0]`` bakes the offending value's own ``repr``
@@ -89,7 +89,7 @@ def test_toml_serialization_refusal_never_carries_the_offending_value() -> None:
     assert probe_value in str(raw_excinfo.value), "premise: rtoml's own error must actually carry the value"
 
     with pytest.raises(RegistryValidationError) as excinfo:
-        _export_tree._render_toml_bytes("generated/example.toml", {"bad": _Unserializable()})
+        _export_tree.render_toml_bytes("generated/example.toml", {"bad": _Unserializable()})
 
     message = str(excinfo.value)
     assert probe_value not in message

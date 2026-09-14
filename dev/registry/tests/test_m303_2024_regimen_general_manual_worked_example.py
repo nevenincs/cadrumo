@@ -162,7 +162,13 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
-from .ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import (
+    _category,
+    _deduction_kind,
+    _deduction_provenance,
+    _flow,
+    _rate_kind,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -205,6 +211,21 @@ _MANUAL_1T_LEAF_FIGURES: dict[CasillaId, Decimal] = {
 
 _FILING_YEAR = 2024
 _PERIOD = "1T"
+_DEVENGO_DATE = date(2024, 3, 31)
+
+_GENERAL_RATE_KIND = _rate_kind("general", effective_date=_DEVENGO_DATE)
+_DOMESTIC_GENERAL_CATEGORY = _category("domestic_general", effective_date=_DEVENGO_DATE)
+_INTRA_COMMUNITY_ACQUISITION_CATEGORY = _category(
+    "intra_community_acquisition_reverse_charge",
+    effective_date=_DEVENGO_DATE,
+)
+_IMPORT_THIRD_COUNTRY_CATEGORY = _category("import_third_country", effective_date=_DEVENGO_DATE)
+_SOPORTADO_FLOW = _flow("soportado", effective_date=_DEVENGO_DATE)
+_REPERCUTIDO_FLOW = _flow("repercutido", effective_date=_DEVENGO_DATE)
+_REVERSE_CHARGE_FLOW = _flow("inversion_sujeto_pasivo", effective_date=_DEVENGO_DATE)
+_DOMESTIC_CURRENT_DEDUCTION = _deduction_kind("domestic_current", effective_date=_DEVENGO_DATE)
+_INTRA_EU_CURRENT_DEDUCTION = _deduction_kind("intra_eu_current", effective_date=_DEVENGO_DATE)
+_IMPORT_CURRENT_DEDUCTION = _deduction_kind("import_current", effective_date=_DEVENGO_DATE)
 
 
 def _op(
@@ -216,7 +237,7 @@ def _op(
     base: Decimal,
     iva: Decimal,
     recargo: Decimal = Decimal("0"),
-    rate_kind: IvaRateKind = IvaRateKind.GENERAL,
+    rate_kind: IvaRateKind = _GENERAL_RATE_KIND,
     deduction_fact_kind: IvaDeductionFactKind | None = None,
 ) -> IvaLedgerObservation:
     deduction_provenance = (
@@ -235,6 +256,7 @@ def _op(
         flow_direction=flow,
         base_amount=base,
         iva_amount=iva,
+        applied_rate=Decimal("0.21"),
         recargo_amount=recargo,
         deduction_fact_kind=deduction_fact_kind,
         deduction_provenance=deduction_provenance,
@@ -253,78 +275,78 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
         _op(
             "op1-compra-motores",
             day=5,
-            category=IvaCategory.DOMESTIC_GENERAL,
-            flow=IvaFlowDirection.SOPORTADO,
+            category=_DOMESTIC_GENERAL_CATEGORY,
+            flow=_SOPORTADO_FLOW,
             base=Decimal("36000.00"),
             iva=Decimal("7560.00"),
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_fact_kind=_DOMESTIC_CURRENT_DEDUCTION,
         ),
         _op(
             "op2-compra-chapa-intracomunitaria",
             day=7,
-            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            category=_INTRA_COMMUNITY_ACQUISITION_CATEGORY,
+            flow=_REVERSE_CHARGE_FLOW,
             base=Decimal("18000.00"),
             iva=Decimal("3780.00"),
-            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+            deduction_fact_kind=_INTRA_EU_CURRENT_DEDUCTION,
         ),
         _op(
             "op3-servicios-abogado",
             day=8,
-            category=IvaCategory.DOMESTIC_GENERAL,
-            flow=IvaFlowDirection.SOPORTADO,
+            category=_DOMESTIC_GENERAL_CATEGORY,
+            flow=_SOPORTADO_FLOW,
             base=Decimal("6000.00"),
             iva=Decimal("1260.00"),
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_fact_kind=_DOMESTIC_CURRENT_DEDUCTION,
         ),
         _op(
             "op4-transporte-intracomunitario",
             day=9,
-            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            category=_INTRA_COMMUNITY_ACQUISITION_CATEGORY,
+            flow=_REVERSE_CHARGE_FLOW,
             base=Decimal("3000.00"),
             iva=Decimal("630.00"),
-            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+            deduction_fact_kind=_INTRA_EU_CURRENT_DEDUCTION,
         ),
         _op(
             "op5-alquiler-local",
             day=1,
-            category=IvaCategory.DOMESTIC_GENERAL,
-            flow=IvaFlowDirection.SOPORTADO,
+            category=_DOMESTIC_GENERAL_CATEGORY,
+            flow=_SOPORTADO_FLOW,
             base=Decimal("5000.00"),
             iva=Decimal("1050.00"),
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_fact_kind=_DOMESTIC_CURRENT_DEDUCTION,
         ),
         _op(
             "op6-importacion-marruecos",
             day=20,
-            category=IvaCategory.IMPORT_THIRD_COUNTRY,
-            flow=IvaFlowDirection.SOPORTADO,
+            category=_IMPORT_THIRD_COUNTRY_CATEGORY,
+            flow=_SOPORTADO_FLOW,
             base=Decimal("12000.00"),
             iva=Decimal("2520.00"),
-            deduction_fact_kind=IvaDeductionFactKind.IMPORT_CURRENT,
+            deduction_fact_kind=_IMPORT_CURRENT_DEDUCTION,
         ),
         _op(
             "op7-ventas-mayorista",
             day=10,
-            category=IvaCategory.DOMESTIC_GENERAL,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=_DOMESTIC_GENERAL_CATEGORY,
+            flow=_REPERCUTIDO_FLOW,
             base=Decimal("55000.00"),
             iva=Decimal("11550.00"),
         ),
         _op(
             "op8-montajes-arreglos",
             day=15,
-            category=IvaCategory.DOMESTIC_GENERAL,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=_DOMESTIC_GENERAL_CATEGORY,
+            flow=_REPERCUTIDO_FLOW,
             base=Decimal("4000.00"),
             iva=Decimal("840.00"),
         ),
         _op(
             "op9-ventas-recargo-equivalencia",
             day=18,
-            category=IvaCategory.DOMESTIC_GENERAL,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=_DOMESTIC_GENERAL_CATEGORY,
+            flow=_REPERCUTIDO_FLOW,
             base=Decimal("24000.00"),
             iva=Decimal("5040.00"),
             recargo=Decimal("1248.00") if include_recargo else Decimal("0"),

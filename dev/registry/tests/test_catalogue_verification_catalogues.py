@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
@@ -38,6 +39,29 @@ _DELIBERATELY_VINTAGED_EXCERPT_IDS = (
     "ley-35-2006:art-66-2021",
     "ley-35-2006:art-68-2018",
 )
+
+_PRE_BLOCKLIST_HISTORICAL_REFERENCE_IDS = (
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-19-1991:art-4-9",
+    "rdleg-1175-1990:art-unico",
+)
+
+
+def test_historical_references_remain_grounded_before_filing_review_fact_coverage() -> None:
+    """Corpus integrity applies to historical law outside the filing-review fact horizon."""
+    _modelos, catalogues = registry_tree()
+    historical = {ref_id: catalogues.legal[ref_id] for ref_id in _PRE_BLOCKLIST_HISTORICAL_REFERENCE_IDS}
+
+    verify_legal_catalogue_grounding(historical, source_root=bundled_path())
+
+    reference = historical["ley-19-1991:art-28"]
+    corrupted = reference.model_copy(
+        update={"required_text": (*reference.required_text, "absent historical quotation")},
+    )
+    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
+        verify_legal_catalogue_grounding({corrupted.id: corrupted}, source_root=bundled_path())
 
 
 def test_forbidden_text_clause_is_additive_over_the_full_committed_legal_catalogue() -> None:

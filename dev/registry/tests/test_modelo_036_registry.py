@@ -79,12 +79,24 @@ def test_modelo_036_snapshot_builds_for_event_periods() -> None:
         # censal alta/modificacion/baja is filed on AEAT's sede -- this
         # application produces no fichero for it, so a filing-grade snapshot
         # asks for capability the modelo neither has nor claims.
-        snapshot = _committed_snapshot("036", 2025, period, RegistryAuthorityGrade.APPLICABILITY)
+        snapshot = _committed_snapshot(
+            "036",
+            2025,
+            period,
+            RegistryAuthorityGrade.APPLICABILITY,
+            on=date(2025, 2, 3),
+        )
         assert snapshot.revision.id == "2025-02-03-y-siguientes"
 
 
 def test_modelo_036_snapshot_carries_rgat_substantive_grounding() -> None:
-    snapshot = _committed_snapshot("036", 2025, "alta", RegistryAuthorityGrade.APPLICABILITY)
+    snapshot = _committed_snapshot(
+        "036",
+        2025,
+        "alta",
+        RegistryAuthorityGrade.APPLICABILITY,
+        on=date(2025, 2, 3),
+    )
     assert "rd-1065-2007:art-9" in snapshot.legal
     assert "rd-1065-2007:art-10" in snapshot.legal
     assert "rd-1065-2007:art-11" in snapshot.legal
@@ -113,3 +125,18 @@ def test_modelo_036_filing_schedule_is_event_triggered() -> None:
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-036-event-triggered")
     assert schedule.period_kind == "ad_hoc"
     assert set(schedule.periods) == {"alta", "modificacion", "baja"}
+
+
+def test_historical_modelo_036_filing_consumer_cites_the_applicable_boe_clause() -> None:
+    modelo, _ = _load_modelo_036()
+    revision = modelo.revisions["2023-hasta-2025-02-02"]
+
+    assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    filing = next(link for link in revision.application_links if link.surface == "filing")
+    assert filing.legal_refs == (
+        "rd-1065-2007:art-9",
+        "rd-1065-2007:art-10",
+        "rd-1065-2007:art-11",
+        "orden-eha-1274-2007:art-2",
+    )
+    assert filing.source_refs == ("boe-modelo-036-filing-order",)

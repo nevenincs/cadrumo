@@ -20,9 +20,10 @@ type error does not stop the markdown linter from having something true to say,
 and a developer wants the whole list in one pass.
 
 `setup` is the opposite shape, and follows the opposite rule deliberately. Its
-phases are a DEPENDENCY CHAIN that builds one artifact. ``setup-repository-tools`` installs
-git hooks and enrolls the framework by running executables out of the
-environment ``setup-python`` creates. Running ``setup-repository-tools`` after
+phases are a DEPENDENCY CHAIN that builds one artifact. ``setup-repository-tools``
+enrolls repository tooling by running executables out of the environment
+``setup-python`` creates; it deliberately installs no Git hook and changes no
+Git configuration. Running ``setup-repository-tools`` after
 ``setup-python`` failed does not produce a second independent finding - it
 produces a cascade of "command not found" that buries the one real cause, and
 it produces it slowly.

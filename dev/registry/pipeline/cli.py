@@ -12,12 +12,11 @@ from __future__ import annotations
 import re
 import shutil
 import tempfile
-from collections import Counter
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
 import typer
 
@@ -37,8 +36,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
-from ..compiler.fact_providers import AUTHORED_FACT_PROVIDER_ID
-from ._export_tree import RenderedExportTree, _render_toml_bytes, render_complete_export_tree
+from ._export_tree import RenderedExportTree, render_complete_export_tree, render_toml_bytes
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -46,7 +44,7 @@ from ._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from .authority_publication import publish_authority_candidate, publish_facts_authority_candidate
+from .authority_publication import publish_authority_candidate
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
     generated_export_bootstrap_target,
@@ -128,60 +126,6 @@ def publish_authority(
         f"\tmodelos={len(published.modelos)}",
     )
     typer.echo("next\tcurrentness=report-registry-status\tpublication=registry-publish-target-if-targets-stale")
-
-
-def publish_facts_authority_candidate_workflow(
-    *,
-    registry_root: Path,
-    artifact_path: Path,
-) -> AuthorityArtifact:
-    """Publish authored facts plus retained provider facts through the canonical writer."""
-    return publish_facts_authority_candidate(
-        registry_root=registry_root,
-        artifact_path=artifact_path,
-    )
-
-
-@app.command("publish-facts-authority")
-def publish_facts_authority(
-    registry_root: Annotated[
-        Path | None,
-        typer.Option("--registry-root", help="Facts registry tree; defaults to the bundled registry."),
-    ] = None,
-    artifact: Annotated[
-        Path | None,
-        typer.Option("--artifact", help="Artifact to replace; defaults to the bundled runtime authority artifact."),
-    ] = None,
-) -> None:
-    """Compile authored facts and merge them into the current typed authority artifact.
-
-    The facts-only boundary compiles authored facts and retains existing
-    provider-owned generated facts from the validated authority merge base; it
-    does not load or refresh Modelo revisions.  It refuses when the existing
-    authority is missing or unreadable, when authored/provider payloads differ,
-    or when unrelated published fact IDs would be discarded.
-    """
-    artifact_path = artifact or bundled_authority_artifact_path()
-    published = publish_facts_authority_candidate_workflow(
-        registry_root=registry_root or bundled_path("registry", "aeat"),
-        artifact_path=artifact_path,
-    )
-    provider_counts = Counter(
-        str(fact.provider_id) for fact in published.catalogues.facts.facts.values() if fact.provider_id is not None
-    )
-    authored_count = provider_counts.get(AUTHORED_FACT_PROVIDER_ID, 0)
-    provider_owned_count = sum(
-        count for provider_id, count in provider_counts.items() if provider_id != AUTHORED_FACT_PROVIDER_ID
-    )
-    typer.echo(
-        "publish-facts-authority"
-        f"\tartifact={artifact_path}"
-        f"\tidentity_digest={published.identity_digest}"
-        f"\tfacts={len(published.catalogues.facts.facts)}"
-        f"\tauthored={authored_count}"
-        f"\tprovider_owned={provider_owned_count}"
-        f"\tretained_provider_owned={provider_owned_count}",
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -370,7 +314,7 @@ def stage_isolated_edition(
         return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
     shutil.rmtree(revisions_root / revision)
     (revisions_root / f"{revision}.toml").write_bytes(
-        _render_toml_bytes(f"{revision}.toml", {"revisions": {revision: edition.table}}),
+        render_toml_bytes(f"{revision}.toml", {"revisions": {revision: edition.table}}),
     )
     shutil.copytree(source_locales_root, staged_locales_root)
     manager = LocaleManager(src_dir=staged_locales_root, locales_dir=staged_locales_root)
@@ -385,15 +329,15 @@ def _inherited_labels(edition: MaterialisedEdition, source_locales_root: Path, *
     """Return the origin text each inherited row needs under its own occurrence key in ``locale``."""
     rows = edition.table.get("casillas")
     origins = edition.label_origins
-    if origins is None or not isinstance(rows, tuple) or len(rows) != len(origins):
+    if origins is None or not isinstance(rows, tuple) or len(cast(tuple[object, ...], rows)) != len(origins):
         raise ValueError(
             f"edition {edition.revision_id!r} of modelo {edition.modelo_id!r} carries no label origin per casilla",
         )
     with override_locales_root(source_locales_root):
         catalogue = locale_map(locale)
     carried: dict[str, str | None] = {}
-    for row, origin in zip(rows, origins, strict=True):
-        casilla_id = row.get("id") if isinstance(row, Mapping) else None
+    for row, origin in zip(cast(tuple[object, ...], rows), origins, strict=True):
+        casilla_id = cast(Mapping[str, object], row).get("id") if isinstance(row, Mapping) else None
         if origin is None or not isinstance(casilla_id, str):
             continue
         own_key = casilla_occurrence_locale_key(
@@ -863,7 +807,6 @@ __all__ = [
     "TargetCurrentnessState",
     "app",
     "publish_authority_candidate_workflow",
-    "publish_facts_authority_candidate_workflow",
     "stage_isolated_edition",
     "supporting_modelos",
     "target_currentness",

@@ -25,7 +25,7 @@ _JUSTFILE = REPO_ROOT / "justfile"
 #: The one tool-dependent module the unit lane must not collect. Named here so
 #: the lane's exclusion is asserted against the module's real marker rather
 #: than against whichever mechanism happens to exclude it today.
-_WORKBOOK_PARITY = REPO_ROOT / "dev" / "registry" / "tests" / "test_workbook_parity.py"
+_WORKBOOK_PARITY = REPO_ROOT / "dev" / "registry" / "parity" / "tests" / "test_workbook_parity.py"
 _PROHIBITED_AEAT_PRODUCT_FORMS = (
     (
         "python-import",
@@ -264,7 +264,12 @@ def test_the_harness_real_proof_outruns_the_default_per_test_wall_ceiling() -> N
     pass only; the collect-only preflights stay on the default, since they do
     no work beyond importing.
     """
-    ini_ceiling = int(re.search(r"(?m)^timeout\s*=\s*(\d+)", _PYPROJECT.read_text(encoding="utf-8")).group(1))
+    timeout_match = re.search(
+        r"(?m)^timeout\s*=\s*(\d+)",
+        _PYPROJECT.read_text(encoding="utf-8"),
+    )
+    assert timeout_match is not None, "pyproject.toml must declare a pytest timeout"
+    ini_ceiling = int(timeout_match.group(1))
     commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-pytest-harness")
     real_proof = commands[-1]
 
@@ -415,7 +420,10 @@ def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> 
         None,
     )
     assert body is not None, "no justfile line carries the test-unit body; the delegated lane has no home"
-    assert "-m 'unit and not external_tool and not os_keychain'" in body
+    assert (
+        "-m 'unit and not perf and not external_tool and not os_keychain "
+        "and not windows_only and not tui_render and not resident_service'"
+    ) in body
     assert "--durations=" in body, "the durations override the CI step passes must reach the underlying pytest call"
 
     # The workbook-parity module is held out of this lane by its OWN marker,
@@ -497,8 +505,8 @@ def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
     Operator directive 2026-07-20. The historical failure mode was a 5.5-hour
     wedged unit run under the 6-hour default; pytest-timeout caps each test
     and these ceilings cap the jobs. The slow conformance surfaces (docs
-    build, CVE audit, hook replay) must stay out of the per-push lane — they
-    live in the dispatch-only full lane.
+    build and CVE audit) stay out of the per-push lane. Hook replay stays out
+    of every hosted lane because `prek.toml` is operator-manual only.
     """
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     assert document["jobs"]["cadrumo-workflow-lint"]["timeout-minutes"] <= 15
@@ -511,7 +519,7 @@ def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
 
 
 def test_full_lane_carries_every_slow_conformance_surface() -> None:
-    """The dispatch-only full lane keeps docs, CVE, hooks, and the unit suite.
+    """The dispatch-only full lane keeps docs, CVE, and the unit suite.
 
     Dispatch-only per the 2026-07-21 operator ruling (manual cadence, no
     standing compute); the no-schedule invariant itself is pinned repo-wide
@@ -526,7 +534,7 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
     commands = "\n".join(str(step.get("run", "")) for step in document["jobs"]["cadrumo-full-conformance"]["steps"])
     assert "just docs-check" in commands
     assert "pip-audit --strict" in commands
-    assert "just check-hooks" in commands
+    assert "just check-hooks" not in commands
     # Same `test-unit` recipe ci.yml routes through, with the full lane's own
     # durations value; the recipe's substance is pinned in
     # test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates.
@@ -541,6 +549,15 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
     assert unit_step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8"
     assert "just check-registry" in commands
     assert _prohibited_aeat_product_forms(_FULL_WORKFLOW.read_text(encoding="utf-8")) == ()
+
+
+def test_ci_lanes_never_invoke_the_mutating_path_repair() -> None:
+    """Hosted lanes keep read-only gates authoritative and never rewrite sources."""
+    for path in (_WORKFLOW, _FULL_WORKFLOW):
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+        commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])
+        assert "fix-code" not in commands, f"{path.name} invokes the mutating local repair"
+        assert "dev.quality.fixes" not in commands, f"{path.name} invokes the mutating repair owner directly"
 
 
 #: Below these the lane workflows have stopped carrying a surface to inspect.
@@ -650,12 +667,14 @@ def test_ci_workflow_product_surface_has_no_former_identity() -> None:
     assert "just check-registry" in commands
 
     recipe_commands = resolved_recipe_commands(_REPOSITORY_ROOT, "check-registry")
-    assert "uv run --no-sync python -m dev.registry.conformance integrity" in recipe_commands, (
-        "`just check-registry` must still run the development integrity gate; "
+    assert len(recipe_commands) == 1
+    registry_status = recipe_commands[0]
+    assert "python -m dev.test_runs.command" in registry_status
+    assert "python -m dev.registry.analysis.registry_status --check --json" in registry_status, (
+        "`just check-registry` must still run the consolidated blocking status; "
         f"the workflow now has no copy of its own to fall back on: {recipe_commands}"
     )
     assert _prohibited_aeat_product_forms("\n".join(recipe_commands)) == ()
-    assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" in recipe_commands
     assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" not in commands
     assert not any(re.match(r"^(?:uv run(?: --no-sync)? )?cadrumo(?:\s|$)", command) for command in commands)
 

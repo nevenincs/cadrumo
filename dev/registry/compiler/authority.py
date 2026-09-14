@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.core.frozen_mapping import FrozenMapping
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.convenio import ConvenioAuthority
@@ -24,6 +26,7 @@ from .authority_state import (
     register_authoring_authority,
     source_evidence_receipt,
 )
+from .build_identity import authority_compiler_identity
 from .convenio import convenio_authority_from_facts
 from .corpus_catalogue import (
     compile_record_design_manifest_catalogue,
@@ -43,12 +46,21 @@ from .source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
 
 
+@dataclass(frozen=True, slots=True)
+class StructuralRegistryComponents:
+    """Typed compiler output that has not passed registry-wide conformance."""
+
+    modelos: tuple[ModeloDefinition, ...]
+    catalogues: RegistryCatalogues
+    identity_digest: str
+
+
 def compile_structural_authority(
     registry_root: Path,
     source_root: Path,
     *,
     identity: RegistryIdentity | None = None,
-) -> ValidatedRegistryAuthority:
+) -> StructuralRegistryComponents:
     """Compile typed authority components without registry-wide conformance."""
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     if identity is None:
@@ -59,7 +71,7 @@ def compile_structural_authority(
     if record_design_catalogue is not None:
         catalogue, sources = record_design_catalogue
         verify_catalogue_identity_bindings(catalogue, sources)
-    return ValidatedRegistryAuthority.from_validated_components(
+    return StructuralRegistryComponents(
         modelos=modelos,
         catalogues=catalogues,
         identity_digest=identity.digest,
@@ -83,7 +95,7 @@ def _compile_validated_authority_uncached(
         identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
     authority = compile_structural_authority(root, sources_root, identity=identity)
     modelos, catalogues = authority.modelos, authority.catalogues
-    source_evidence_fingerprint = collect_source_evidence_fingerprints(sources_root)
+    source_evidence_fingerprint = collect_source_evidence_fingerprints(sources_root, use_cache=False)
     # Scope validation re-validates typed members whose field validators read
     # governed vocabulary, exactly as the tree load does, so it needs the same
     # candidate facts in scope. Without them every ledger-IVA binding refuses
@@ -101,7 +113,11 @@ def _compile_validated_authority_uncached(
             source_root=sources_root,
             source_evidence_fingerprint=source_evidence_fingerprint,
         ).validate_registry(modelos)
-    return authority
+    return ValidatedRegistryAuthority.from_validated_components(
+        modelos=modelos,
+        catalogues=catalogues,
+        identity_digest=authority.identity_digest,
+    )
 
 
 def compile_validated_authority(
@@ -122,11 +138,12 @@ def compile_validated_authority(
             pair.registry_root,
             collect_fingerprints=collect_registry_tree_fingerprints,
         )
-    source_receipt = source_evidence_receipt(collect_source_evidence_fingerprints(pair.source_root))
+    source_receipt = source_evidence_receipt(collect_source_evidence_fingerprints(pair.source_root, use_cache=False))
     authority = cached_compilation(
         pair,
         registry_identity_digest=identity.digest,
         source_receipt=source_receipt,
+        compiler_identity_digest=authority_compiler_identity(),
         build=lambda: _compile_validated_authority_uncached(
             pair.registry_root,
             pair.source_root,
@@ -201,26 +218,26 @@ def compile_registry_tree(
         )
     catalogues = catalogues.model_copy(
         update={
-            "legal": {**catalogues.legal, **supplementary_ordenes.legal},
+            "legal": FrozenMapping({**catalogues.legal, **supplementary_ordenes.legal}),
             "facts": facts,
             "convenio": convenio,
-            "supplementary_ordenes": supplementary_ordenes.authorities,
+            "supplementary_ordenes": FrozenMapping(supplementary_ordenes.authorities),
             "runtime": runtime_catalogues,
         }
     )
     return modelos, catalogues
 
 
-def construct_unvalidated_authority(
+def load_unvalidated_components(
     registry_root: Path,
     source_root: Path,
     *,
     identity: RegistryIdentity,
-) -> ValidatedRegistryAuthority:
+) -> StructuralRegistryComponents:
     """Build a diagnostic-only projection without granting publication validity."""
     root, _sources_root = canonical_authoring_root_pair(registry_root, source_root)
     modelos, catalogues = load_registry_tree(root, identity=identity)
-    return ValidatedRegistryAuthority.from_validated_components(
+    return StructuralRegistryComponents(
         modelos=modelos,
         catalogues=catalogues,
         identity_digest=identity.digest,
@@ -230,8 +247,7 @@ def construct_unvalidated_authority(
 def compiled_bundled_authority() -> ValidatedRegistryAuthority:
     """Compile the bundled registry sources for development tooling.
 
-    Runtime reads only the signed published artifact, which a development
-    checkout does not have and cannot sign. Development tools, screens and tests
+    Runtime reads only the digest-checked published artifact. Development tools, screens and tests
     compile the same sources instead. The result is cached by registry identity,
     so an unchanged tree compiles once per process and any change to the sources
     compiles afresh.

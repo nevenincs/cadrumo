@@ -40,6 +40,7 @@ def collect_source_evidence_fingerprints(
     source_root: Path | None,
     *,
     justificante_corpus_root: Path | None = None,
+    use_cache: bool = True,
 ) -> SourceEvidenceFingerprint:
     """Return ``(path, size, mtime_ns)`` fingerprints for source evidence files.
 
@@ -60,7 +61,7 @@ def collect_source_evidence_fingerprints(
     )
     if not roots:
         return ()
-    if not all(_is_bundled_evidence_root(root) for root in roots):
+    if not use_cache or not all(_is_bundled_evidence_root(root) for root in roots):
         return _walk_source_evidence(roots)
 
     started = time.time()
@@ -114,7 +115,11 @@ def _source_evidence_roots(
     candidates: list[Path] = []
     if source_root is not None:
         resolved = source_root.expanduser().resolve()
-        candidates.extend((resolved / "corpus", resolved / "src" / "cadrumo" / "_data" / "corpus"))
+        candidates.extend(
+            root / family
+            for root in (resolved, resolved / "src" / "cadrumo" / "_data")
+            for family in ("corpus", "manual_corpus_text")
+        )
     if justificante_corpus_root is not None:
         candidates.append(justificante_corpus_root.expanduser().resolve())
 

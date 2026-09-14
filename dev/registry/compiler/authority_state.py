@@ -127,6 +127,7 @@ def cached_compilation(
     *,
     registry_identity_digest: str,
     source_receipt: str,
+    compiler_identity_digest: str,
     build: Callable[[], ValidatedRegistryAuthority],
 ) -> ValidatedRegistryAuthority:
     """Compile once for an observed mutable-tree receipt, otherwise rebuild."""
@@ -136,6 +137,7 @@ def cached_compilation(
             "schema": "registry-authoring-compilation-receipt/v1",
             "registry_identity_digest": registry_identity_digest,
             "source_receipt": source_receipt,
+            "compiler_identity_digest": compiler_identity_digest,
         }
     )
     with _barrier.read():

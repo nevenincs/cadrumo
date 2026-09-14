@@ -6,6 +6,7 @@ import json
 import logging
 import warnings
 from collections.abc import Callable, Iterable, Mapping
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -21,7 +22,7 @@ from cadrumo.core.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
 )
-from cadrumo.core.resources.bundled_data import packaged_data, resolve_companion_binary
+from cadrumo.core.resources.bundled_data import resolve_companion_binary
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
@@ -37,7 +38,7 @@ type WorkbookOpener = Callable[[str], Workbook]
 type PdfDocumentOpener = Callable[[str], pypdfium2.PdfDocument]
 """Opens one PDF source for page-text extraction."""
 
-_SourceTextCacheKey = tuple[str, str, int, int]
+_SourceTextCacheKey = tuple[str, str, str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +102,17 @@ def _validated_sidecar_text(raw: str, corpus_path: str, actual_sha256: str) -> s
     return sidecar.normalised_text
 
 
-def _read_manual_pdf_sidecar(corpus_path: str, source_path: Path) -> str | None:
+def _manual_sidecar_path(corpus_path: str, source_root: Path) -> Path:
+    relative = corpus_path.removeprefix(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX)
+    return source_root / _MANUAL_CORPUS_TEXT_DIR / (relative + MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX)
+
+
+def _read_manual_pdf_sidecar(
+    corpus_path: str,
+    source_path: Path,
+    *,
+    source_root: Path | None = None,
+) -> str | None:
     """Return the shipped normalised text for a manual-PDF source, or ``None``.
 
     Locates the content-keyed sidecar committed under
@@ -121,16 +132,14 @@ def _read_manual_pdf_sidecar(corpus_path: str, source_path: Path) -> str | None:
         corpus_path: The source's :attr:`SourceReference.corpus_path`,
             e.g. ``"corpus/manuals/renta/2020/part1/source.pdf"``.
         source_path: Resolved on-disk path to the source PDF bytes.
+        source_root: Candidate evidence root; inferred from corpus_path when omitted.
     """
     if not corpus_path.startswith(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX):
         return None
-    relative = corpus_path[len(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX) :]
-    # Build the sidecar Traversable under the bundled _data tree.
-    sidecar_parts = relative.split("/")
-    sidecar_parts[-1] = sidecar_parts[-1] + MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX
+    if source_root is None:
+        source_root = source_path.parents[len(Path(corpus_path).parts) - 1]
     try:
-        node = packaged_data(_MANUAL_CORPUS_TEXT_DIR, *sidecar_parts)
-        raw = node.read_text(encoding="utf-8")
+        raw = _manual_sidecar_path(corpus_path, source_root).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return None
     return _validated_sidecar_text(raw, corpus_path, sha256_hex(source_path.read_bytes()))
@@ -158,7 +167,7 @@ def _resolve_source_path(source: SourceReference, source_root: Path) -> Path:
     return source_path
 
 
-def _read_source_text(source: SourceReference, source_path: Path) -> str:
+def _read_source_text(source: SourceReference, source_path: Path, *, source_root: Path | None = None) -> str:
     """Read and normalise a source, using the shipped PDF text when present."""
     if source.kind is RegistrySourceKind.MANUAL_PDF:
         # Try the shipped content-keyed sidecar first; verify sha256 before
@@ -166,7 +175,7 @@ def _read_source_text(source: SourceReference, source_path: Path) -> str:
         # sidecar is generated once at build time by the corpus extraction
         # tooling and shipped with the cadrumo wheel — end-user machines
         # should never reach the fallback.
-        sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path)
+        sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path, source_root=source_root)
         if sidecar_text is not None:
             return sidecar_text
         return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
@@ -192,7 +201,11 @@ def _extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None =
         from openpyxl.utils.exceptions import InvalidFileException
     except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
         raise OSError("openpyxl is required to validate XLSX source citations") from exc
-    opener = open_workbook or (lambda source: load_workbook(source, read_only=True, data_only=False))
+
+    def default_opener(source: str) -> Workbook:
+        return load_workbook(source, read_only=True, data_only=False)
+
+    opener = open_workbook or default_opener
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
@@ -359,6 +372,7 @@ class EvidenceValidator:
         source_refs: Mapping[str, SourceReference],
         source_root: Path | None,
     ) -> None:
+        """Bind the candidate catalogues and its evidence root."""
         self._legal = legal_refs
         self._sources = source_refs
         self._source_root = source_root
@@ -371,6 +385,7 @@ class EvidenceValidator:
         refs: Iterable[str],
         required_tier: str,
     ) -> list[str]:
+        """Require a cited source to carry the requested tier."""
         if any(
             (source := self._sources.get(ref)) is not None and source.evidence_tier == required_tier for ref in refs
         ):
@@ -384,6 +399,7 @@ class EvidenceValidator:
         refs: Iterable[str],
         allowed_tiers: Iterable[str],
     ) -> list[str]:
+        """Require at least one source in the permitted tiers."""
         allowed = tuple(allowed_tiers)
         if any((source := self._sources.get(ref)) is not None and source.evidence_tier in allowed for ref in refs):
             return []
@@ -393,6 +409,64 @@ class EvidenceValidator:
             requirement = f"one of {', '.join(allowed)} source evidence"
         return [f"{scope}: {owner} requires {requirement}"]
 
+    def require_procedural_evidence(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        legal_refs: Iterable[str],
+        *,
+        valid_from: date,
+        valid_to: date | None,
+    ) -> list[str]:
+        """Accept guidance or a cited, in-window BOE clause in the same source.
+
+        Full compilation separately verifies source hashes and the legal clause's
+        required text. A layout source alone cannot establish procedural authority:
+        the declaration must cite the actual legal clause in that document.
+        """
+        refs = tuple(refs)
+        failures = self.require_source_tier(scope, owner, refs, "official_source_guidance")
+        if not failures:
+            return []
+        if self.procedural_legal_clauses(refs, legal_refs, valid_from=valid_from, valid_to=valid_to):
+            return []
+        return failures
+
+    def procedural_legal_clauses(
+        self,
+        refs: Iterable[str],
+        legal_refs: Iterable[str],
+        *,
+        valid_from: date,
+        valid_to: date | None,
+    ) -> tuple[LegalReference, ...]:
+        """Return cited BOE clauses whose document and governed span match."""
+        legal_refs = tuple(legal_refs)
+        matched: dict[str, LegalReference] = {}
+        for ref in refs:
+            source = self._sources.get(ref)
+            if source is None or source.authority != "boe" or source.kind != "form_spec":
+                continue
+            if source.applies_from is None or source.applies_from > valid_from:
+                continue
+            if source.applies_to is not None and (valid_to is None or source.applies_to < valid_to):
+                continue
+            for legal_id in legal_refs:
+                legal = self._legal.get(legal_id)
+                if legal is None or legal.authority != "boe" or not legal.article:
+                    continue
+                if legal.corpus_ref.partition("#")[0] != source.corpus_path:
+                    continue
+                governed_from = legal.governs_periods_from or legal.effective_from
+                governed_to = legal.governs_periods_to if legal.governs_periods_from else legal.effective_to
+                if governed_from > valid_from:
+                    continue
+                if governed_to is not None and (valid_to is None or governed_to < valid_to):
+                    continue
+                matched[legal.id] = legal
+        return tuple(matched.values())
+
     def validate_source_citations(
         self,
         scope: str,
@@ -401,6 +475,7 @@ class EvidenceValidator:
         citations: Iterable[SourceCitation],
         required_tier: str,
     ) -> list[str]:
+        """Verify citation membership, tier, and quoted source text."""
         failures: list[str] = []
         refs_set = set(refs)
         citations_tuple = tuple(citations)
@@ -474,14 +549,26 @@ class EvidenceValidator:
         source_path = _resolve_source_path(source, source_root)
         stat = source_path.stat()
         extraction_contract = f"{source.kind}:xlsx-text-v1" if source_path.suffix.casefold() == ".xlsx" else source.kind
-        source_key = (extraction_contract, str(source_path), stat.st_size, stat.st_mtime_ns)
+        sidecar_digest = ""
+        if source.kind is RegistrySourceKind.MANUAL_PDF:
+            sidecar = _manual_sidecar_path(source.corpus_path, source_root)
+            if sidecar.is_file():
+                sidecar_digest = sha256_hex(sidecar.read_bytes())
+        source_key = (
+            extraction_contract,
+            str(source_path),
+            str(source.sha256),
+            sidecar_digest,
+            stat.st_size,
+            stat.st_mtime_ns,
+        )
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
         if global_cached is not None:
             self._source_text_cache[source.id] = global_cached
             return global_cached
 
         # Check disk cache
-        cache_key_str = f"{extraction_contract}:{source_path}:{stat.st_size}:{stat.st_mtime_ns}"
+        cache_key_str = json.dumps(source_key)
         disk_cache = _load_disk_cache()
         if cache_key_str in disk_cache:
             normalised = disk_cache[cache_key_str]
@@ -489,7 +576,7 @@ class EvidenceValidator:
             self._source_text_cache[source.id] = normalised
             return normalised
 
-        normalised = _read_source_text(source, source_path)
+        normalised = _read_source_text(source, source_path, source_root=source_root)
 
         _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
         self._source_text_cache[source.id] = normalised

@@ -4472,7 +4472,7 @@ source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "
 # and the 2025 form-order legal reference is added.
 [[revisions."2025".casilla_continuidad_evolutions]]
 id = "m100-0577-2024-2025-label-and-legal-refs-evolved"
-continuidad_id = "irpf-perdida-derecho-deduccion-general-autonomica"
+continuidad_id = "irpf-perdida-derecho-deduccion-autonomica"
 from_revision = "2024"
 to_revision = "2025"
 evolution_kind = "label_and_legal_refs_evolved"
@@ -4494,7 +4494,7 @@ source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "
 # and the 2025 form-order legal reference is added.
 [[revisions."2025".casilla_continuidad_evolutions]]
 id = "m100-0579-2024-2025-label-and-legal-refs-evolved"
-continuidad_id = "irpf-perdida-derecho-deducciones-autonomicas"
+continuidad_id = "irpf-perdida-derecho-deduccion-autonomicas-suma"
 from_revision = "2024"
 to_revision = "2025"
 evolution_kind = "label_and_legal_refs_evolved"

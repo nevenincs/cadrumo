@@ -615,6 +615,30 @@ to_revision = "2021"
 evolution_kind = "unchanged"
 legal_refs = ["ley-35-2006:art-68.2"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+
+# Grounding: the 2020 and 2021 AEAT dictionaries keep box 0681 in
+# Resultados/RegularizacionRes with the same role and article 97 authority;
+# only the exercise year embedded in the official label changes.
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0681-2020-2021-label-evolved"
+continuidad_id = "irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+
+# Grounding: the 2020 and 2021 AEAT dictionaries keep box 0682 in
+# Resultados/RegularizacionRes with the same role and article 97 authority;
+# only the exercise year embedded in the official label changes.
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0682-2020-2021-label-evolved"
+continuidad_id = "irpf-regularizacion-devoluciones-solicitadas-ejercicio"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
 # Grounding: aeat-dr-100-2020-dictionary:1119 y aeat-dr-100-2021-dictionary:1162; 175 Aniversario de la construcción del Gran Teatre del Liceu, columna Aplicado, M21CTLA.
 [[revisions."2021".casilla_continuidad_evolutions]]
 id = "m100-0765-2020-2021-unchanged"

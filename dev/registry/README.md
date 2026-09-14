@@ -54,6 +54,25 @@ contracts.
 - `mappings/`, `render_profiles/` — the authored inputs described above.
 - `tests/` — the pipeline, parity, and analysis suites.
 
+## Runtime authority publication
+
+Publish the shipped runtime authority from the repository root:
+
+```powershell
+uv run --no-sync python -m dev.registry.pipeline publish-authority
+```
+
+This is the sole authority-publication command. It compiles a fresh, complete
+generation, requires registry-wide conformance and exact legal-evidence
+closure, admits its canonical bytes through the runtime decoder, and atomically
+replaces the artifact only after durable staging and a final input-receipt
+check. The v5 artifact
+keeps distinct source, compiler, and complete-component receipts plus a payload
+digest. Runtime reads that artifact only; it has no authoring-tree fallback.
+
+See [How to publish a validated runtime authority](../../docs/how-to/publish-runtime-authority.md)
+for prerequisites, failure behavior, currentness checks, and recovery.
+
 ## Declaration screens
 
 The registry declares the same fact in several places and reconciles the copies
@@ -157,4 +176,3 @@ designs and one bundles fifteen, so a search resolves a note against an arbitrar
 year and still produces an answer. And check the transcription exists before
 trusting an empty result, because thirteen bundled designs ship without extracted
 text and "no pointers" and "no file" look identical from the outside.
-

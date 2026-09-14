@@ -13,7 +13,10 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.snapshot import build_validated_snapshot
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
@@ -68,9 +71,23 @@ def derive_filing_revision_classifications(
     layout/inspection projections; they retain no authority, snapshot, or
     service object.
     """
-    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    return _derive_filing_revision_classifications(
+        authority.modelos,
+        authority.catalogues,
+        source_root=source_root_for(authority),
+    )
+
+
+def _derive_filing_revision_classifications(
+    modelos: tuple[ModeloDefinition, ...],
+    catalogues: RegistryCatalogues,
+    *,
+    source_root: Path,
+) -> tuple[RegistryDiagnosticFilingRevision, ...]:
+    """Classify structural data without constructing a validated authority."""
+    assessment_horizon = coverage_assessment_horizon(catalogues)
     classified: list[RegistryDiagnosticFilingRevision] = []
-    for modelo in sorted(authority.modelos, key=lambda item: item.id):
+    for modelo in sorted(modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
             if revision.authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
@@ -97,9 +114,9 @@ def derive_filing_revision_classifications(
                 inspection = RegistryRevisionInspection.from_revision(
                     modelo=modelo,
                     revision=revision,
-                    source_root=source_root_for(authority),
-                    sources=authority.catalogues.sources,
-                    legal_ref_ids=frozenset(authority.catalogues.legal),
+                    source_root=source_root,
+                    sources=catalogues.sources,
+                    legal_ref_ids=frozenset(catalogues.legal),
                 )
                 static_inspection = StaticGeneratedArtifactInspection.from_inspection(inspection)
             except ValueError as error:
@@ -117,15 +134,17 @@ def derive_filing_revision_classifications(
                 )
                 continue
             try:
-                snapshots = tuple(
-                    authority.snapshot(
-                        modelo.id,
-                        filing_year=filing_year,
-                        period=period,
-                        grade=RegistryAuthorityGrade.FILING,
+                with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+                    snapshots = tuple(
+                        build_validated_snapshot(
+                            modelo,
+                            catalogues,
+                            filing_year=filing_year,
+                            period=period,
+                            grade=RegistryAuthorityGrade.FILING,
+                        )
+                        for filing_year, period in selection_coordinates
                     )
-                    for filing_year, period in selection_coordinates
-                )
             except RegistryValidationError as error:
                 layout = revision.export_layouts[0] if len(revision.export_layouts) == 1 else None
                 classified.append(
@@ -229,7 +248,7 @@ def load_registry_diagnostic_classification(
     residue; filing, export, and calculation callers must load a validated
     authority through :func:`dev.registry.compiler.authority.compile_validated_authority`.
     """
-    from .compiler.authority import construct_unvalidated_authority
+    from .compiler.authority import load_unvalidated_components
     from .compiler.authority_state import canonical_authoring_root_pair
     from .compiler.identity import resolve_registry_identity
     from .compiler.loader_fingerprints import collect_registry_tree_fingerprints
@@ -239,12 +258,16 @@ def load_registry_diagnostic_classification(
         resolved_root,
         collect_fingerprints=collect_registry_tree_fingerprints,
     )
-    authority = construct_unvalidated_authority(
+    authority = load_unvalidated_components(
         resolved_root,
         resolved_source_root,
         identity=identity,
     )
     return UnvalidatedRegistryClassification(
         strict_validation_error=str(strict_validation_error),
-        filing_revisions=derive_filing_revision_classifications(authority),
+        filing_revisions=_derive_filing_revision_classifications(
+            authority.modelos,
+            authority.catalogues,
+            source_root=resolved_source_root,
+        ),
     )

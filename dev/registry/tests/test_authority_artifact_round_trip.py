@@ -14,6 +14,7 @@ import json
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -23,6 +24,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityArtifactFormatError,
+    AuthorityBuildIdentity,
+    AuthorityEvidenceProjection,
+    PublishedLegalEvidence,
     read_authority_artifact,
     write_authority_artifact,
 )
@@ -81,6 +85,7 @@ _ATOM_FACT_ID = "iva-rate-schedule"
 _ATOMS: dict[str, Decimal | date | str] = {"decimal": Decimal("0.40"), "date": date(2025, 1, 1), "text": "0.40"}
 
 
+@lru_cache(maxsize=1)
 def _atom_artifact() -> AuthorityArtifact:
     """A real compiled catalogue whose one mapping fact carries a decimal, a date and a look-alike string."""
     catalogues = compiled_bundled_authority().catalogues
@@ -90,11 +95,29 @@ def _atom_artifact() -> AuthorityArtifact:
     entries = tuple(MappingFactEntry(key=key, value=value) for key, value in _ATOMS.items())
     planted_variant = variant.model_copy(update={"payload": variant.payload.model_copy(update={"entries": entries})})
     planted_fact = fact.model_copy(update={"variants": (planted_variant,)})
-    facts = catalogues.facts.model_copy(update={"facts": {_ATOM_FACT_ID: planted_fact}})
+    facts = catalogues.facts.model_copy(update={"facts": {**catalogues.facts.facts, _ATOM_FACT_ID: planted_fact}})
+    legal_ids = frozenset(catalogues.legal)
+    legal = {legal_id: catalogues.legal[legal_id] for legal_id in legal_ids}
+    evidence = AuthorityEvidenceProjection(
+        legal=tuple(
+            PublishedLegalEvidence(
+                legal_reference_id=legal_id,
+                anchored_text="\n".join(legal[legal_id].required_text) or legal_id,
+                text_sha256=sha256_hex(("\n".join(legal[legal_id].required_text) or legal_id).encode()),
+            )
+            for legal_id in sorted(legal_ids)
+        )
+    )
+    build_identity = AuthorityBuildIdentity.from_inputs(
+        source_identity_digest=sha256_hex(b"fact-atom-round-trip sources"),
+        compiler_identity_digest=sha256_hex(b"fact-atom-round-trip compiler"),
+    )
     return AuthorityArtifact(
         modelos=(),
-        catalogues=catalogues.model_copy(update={"facts": facts}),
-        identity_digest=sha256_hex(b"fact-atom-round-trip"),
+        catalogues=catalogues.model_copy(update={"facts": facts, "legal": legal, "sources": {}}),
+        build_identity=build_identity,
+        identity_digest=build_identity.identity_digest,
+        evidence=evidence,
     )
 
 
@@ -113,7 +136,7 @@ def _redigest(path: Path, edit_payload_text: Callable[[str], str]) -> None:
     path.write_bytes(
         canonical_json_bytes(
             {
-                "format": "cadrumo-authority-artifact-v4",
+                "format": "cadrumo-authority-artifact-v5",
                 "payload": payload,
                 "payload_sha256": sha256_hex(canonical_json_bytes(payload)),
             }

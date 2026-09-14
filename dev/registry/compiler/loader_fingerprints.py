@@ -145,17 +145,9 @@ def collect_registry_tree_fingerprints_for_cache(
     file moves no parent-directory stat on any mainstream filesystem, so a
     directory-only check cannot speak for the per-file rows.
 
-    For the package-bundled tree the per-file rows carry an empty content digest
-    by construction (read-only package data, see
-    :func:`~dev.registry.compiler.loader_cache.is_bundled_registry_path`),
-    and its window is a declared bound on how often the 17k-entry walk is
-    redone rather than a claim about file content, so the directory-level check
-    is the whole of what its entry asserts. A mutable authoring tree's rows DO
-    carry content digests, and nothing short of re-reading the files can
-    validate them -- which is the entire cost the cache would be skipping. Such
-    a tree therefore recomputes its complete fingerprint on every call and is
-    neither served from nor written to the cache; the compiled result is still
-    reused through the fingerprint-keyed caches above.
+    Every TOML row carries a content digest, including editable bundled paths.
+    The optional interactive TTL permits a bounded stale inspection; publication
+    explicitly disables it and re-reads the complete inventory and every file.
     """
     started = time.time()
     bundled = use_cache and is_bundled_root(resolved)
@@ -315,25 +307,11 @@ def _directory_fingerprint(path: Path) -> RegistryPathFingerprint:
     return str(path), stat.st_size, stat.st_mtime_ns, ""
 
 
-def _collect_registry_tree_fingerprints_uncached(resolved: Path) -> RegistryPathFingerprints:
-    return collect_registry_tree_fingerprints_for_cache(
-        resolved,
-        use_cache=False,
-        fingerprint_cache=_registry_fingerprint_cache,
-        is_bundled_root=is_bundled_registry_root,
-        bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
-        live_cached=_live_cached_fingerprints,
-        collect_directory=collect_registry_directory_fingerprints,
-        collect_sources=_registry_source_fingerprints,
-        store=_store_registry_fingerprints,
-    )
-
-
-def collect_registry_tree_fingerprints(resolved: Path) -> RegistryPathFingerprints:
+def collect_registry_tree_fingerprints(resolved: Path, *, use_cache: bool = True) -> RegistryPathFingerprints:
     """Collect the complete canonical cache key for one registry tree."""
     return collect_registry_tree_fingerprints_for_cache(
         resolved,
-        use_cache=True,
+        use_cache=use_cache,
         fingerprint_cache=_registry_fingerprint_cache,
         is_bundled_root=is_bundled_registry_root,
         bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
@@ -342,10 +320,6 @@ def collect_registry_tree_fingerprints(resolved: Path) -> RegistryPathFingerprin
         collect_sources=_registry_source_fingerprints,
         store=_store_registry_fingerprints,
     )
-
-
-def _toml_fingerprint(path: Path) -> RegistryPathFingerprint:
-    return toml_file_fingerprint(path)
 
 
 __all__ = [

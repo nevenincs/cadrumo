@@ -230,6 +230,19 @@ applies_from = 2025-02-03
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml"
 review_status = "pending_review"
 
+[sources."boe-modelo-036-filing-order"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1274-2007-art-2.html"
+sha256 = "9f578bf51fbc13d34160e963ff389107e50060f7e6e9f666a8eb9622e72e362a"
+bytes = 5685
+retrieved_at = 2026-05-14
+published_at = 2007-05-10
+applies_from = 2007-07-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#ar-2"
+review_status = "operator_reviewed"
+
 [sources."aeat-nif-personas-fisicas"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

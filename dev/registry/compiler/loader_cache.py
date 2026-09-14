@@ -25,7 +25,6 @@ See Also:
 
 from __future__ import annotations
 
-import os
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -448,50 +447,6 @@ def is_bundled_registry_root(resolved: Path) -> bool:
         return False
 
 
-def is_bundled_registry_path(path: Path) -> bool:
-    """Whether ``path`` lies inside the package-bundled registry tree.
-
-    Path-containment sibling of :func:`is_bundled_registry_root`, used by the
-    per-file fingerprint to decide whether a content digest must be computed:
-    the bundled tree is read-only package data that is never rewritten during
-    a process's lifetime (the same immutability premise the pytest disk-cache
-    predicate and the longer bundled TTL already rely on), so its files keep
-    the cheap stat-only fingerprint, while any mutable authoring tree -- the
-    only place an in-run rewrite can collide on ``(size, mtime_ns)`` -- pays
-    for the content discriminator. ``path`` must already be resolved. Fails
-    closed to ``False`` (content-sensitive fingerprinting) on any resources
-    boundary failure.
-    """
-    try:
-        root, root_prefix = _bundled_root_match()
-    except (ImportError, OSError, ValueError):
-        return False
-    candidate = os.path.normcase(str(path))
-    return candidate == root or candidate.startswith(root_prefix)
-
-
-@lru_cache(maxsize=1)
-def _bundled_root_match() -> tuple[str, str]:
-    """Return the bundled registry root as ``(normcased, normcased + separator)``.
-
-    Memoised because :func:`is_bundled_registry_path` asks about every registry
-    TOML -- 17k times per fingerprint walk -- and the answer derives from one
-    process-lifetime root. ``maxsize=1`` because the function takes no
-    arguments, so exactly one entry can ever exist; it is the same shape
-    :func:`_bundled_registry_root` above already uses.
-
-    A normcased string pair rather than :meth:`pathlib.PurePath.is_relative_to`,
-    which builds and compares path-part sequences at roughly a quarter of a
-    millisecond per call on Windows -- 4.7s of a 14.7s profiled cache-hit
-    compile. ``os.path.normcase`` reproduces the case folding pathlib applies on
-    Windows and is the identity on POSIX, and the separator in the prefix stops
-    a sibling whose name merely starts with the root's (``aeat-old`` beside
-    ``aeat``) from reading as contained.
-    """
-    root = os.path.normcase(str(_bundled_registry_root()))
-    return root, root + os.sep
-
-
 def toml_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
     """Return the ``(path, size, mtime_ns, content_digest)`` fingerprint for one registry TOML.
 
@@ -505,12 +460,9 @@ def toml_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
     content digest closes that hole; the stat fields remain as the cheap
     first-order discriminator.
 
-    The package-bundled tree is exempt (empty digest): it is read-only package
-    data never rewritten during a process's lifetime -- the same immutability
-    premise the pytest disk-cache predicate and the longer bundled TTL already
-    encode (:func:`is_bundled_registry_path`) -- and hashing its ~16.5k TOML
-    files (~25 MB) would add ~1.3 s to every cold fingerprint walk for a tree
-    that cannot exhibit the collision.
+    Authoring trees inside a checkout are mutable even when reached through
+    bundled_path. Installed runtime reads the artifact and never uses this
+    developer fingerprint path, so every compiler input receives a digest.
     """
     try:
         stat = path.stat()
@@ -526,9 +478,7 @@ def toml_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
 
 
 def _toml_content_digest(path: Path) -> str:
-    """Return the mutable-tree content discriminator, or ``""`` for bundled files."""
-    if is_bundled_registry_path(path):
-        return ""
+    """Return the content discriminator for every developer TOML input."""
     try:
         data = path.read_bytes()
     except OSError as exc:

@@ -19,22 +19,33 @@ from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, B
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.binding_selector_utils import provider_member
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
+from cadrumo.domain.calculations.registry.iva_deduction_catalogue import (
+    require_iva_deduction_evidence_authority,
+    require_iva_deduction_fact_kind,
+)
+from cadrumo.domain.calculations.registry.iva_flow_catalogue import require_iva_flow_direction
+from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+    require_iva_cash_accounting_treatment,
+    require_iva_exemption_article,
+)
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
+    LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.relations import (
@@ -42,14 +53,18 @@ from cadrumo.domain.calculations.registry.relations import (
     resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.iva.deduction_facts import (
     IvaDeductionClassificationProvenance,
     required_deduction_evidence_authority,
 )
 from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from cadrumo.domain.iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from cadrumo.domain.iva_compensation.filed_derivation import M303CompensationBasis
 
 _M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
@@ -116,7 +131,8 @@ def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> Bi
 
 
 def _with_selector(binding: BindingDefinition, **updates: object) -> BindingDefinition:
-    return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
+    provider = provider_member(binding, LedgerIvaProvider)
+    return binding.model_copy(update={"provider": provider.model_copy(update=updates)})
 
 
 def _with_aggregation(binding: BindingDefinition, op: BindingAggregationOp) -> BindingDefinition:
@@ -137,19 +153,56 @@ def _filing_result_disposition(result: RegistryCalculationResult) -> ResultDispo
 
 #: The tiers on which a real line always carries a rate, so a fixture that omits
 #: one is modelling a row no production path can mint.
-_DOMESTIC_RATE_TIERS: Final[frozenset[IvaRateKind]] = frozenset(
-    {IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED},
-)
+_DOMESTIC_RATE_TIERS: Final[frozenset[str]] = frozenset({"general", "reduced", "super_reduced"})
+
+
+def _rate_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaRateKind:
+    """Resolve a fixture token through the same dated governed catalogue as production."""
+    return require_iva_rate_kind(value, effective_date=effective_date)
+
+
+def _category(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaCategory:
+    """Resolve a fixture category through the dated governed catalogue."""
+    return require_iva_category(value, effective_date=effective_date)
+
+
+def _flow(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaFlowDirection:
+    """Resolve a fixture flow through the dated governed catalogue."""
+    return require_iva_flow_direction(value, effective_date=effective_date)
+
+
+def _exemption(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaExemptionArticle:
+    """Resolve a fixture exemption through the dated governed catalogue."""
+    return require_iva_exemption_article(value, effective_date=effective_date)
+
+
+def _cash_treatment(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaCashAccountingTreatment:
+    """Resolve a fixture cash treatment through the dated governed catalogue."""
+    return require_iva_cash_accounting_treatment(value, effective_date=effective_date)
+
+
+def _deduction_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaDeductionFactKind:
+    """Resolve a fixture deduction kind through the dated governed catalogue."""
+    return require_iva_deduction_fact_kind(value, effective_date=effective_date)
+
+
+def _deduction_authority(
+    value: str,
+    *,
+    effective_date: date = date(2025, 6, 15),
+) -> IvaDeductionEvidenceAuthority:
+    """Resolve fixture evidence authority through the dated governed catalogue."""
+    return require_iva_deduction_evidence_authority(value, effective_date=effective_date)
 
 
 def _observation(
     *,
     ledger_id: str = "ledger-1",
     txn_date: date = date(2025, 6, 15),
-    category: IvaCategory = IvaCategory.DOMESTIC_GENERAL,
+    category: IvaCategory | None = None,
     exemption_article: IvaExemptionArticle | None = None,
-    rate_kind: IvaRateKind = IvaRateKind.GENERAL,
-    flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
+    rate_kind: IvaRateKind | None = None,
+    flow: IvaFlowDirection | None = None,
     base: Decimal = Decimal("1000"),
     iva: Decimal = Decimal("210"),
     recargo: Decimal = Decimal("0"),
@@ -179,9 +232,12 @@ def _observation(
     Left optional for every other tier, where production legitimately leaves it
     unset: an exempt or not-subject line carries no rate to state.
     """
-    if rate_kind in _DOMESTIC_RATE_TIERS and applied_rate is None:
+    selected_rate_kind = rate_kind or _rate_kind("general", effective_date=txn_date)
+    selected_category = category or _category("domestic_general", effective_date=txn_date)
+    selected_flow = flow or _flow("repercutido", effective_date=txn_date)
+    if selected_rate_kind in _DOMESTIC_RATE_TIERS and applied_rate is None:
         raise AssertionError(
-            f"fixture builds a {rate_kind.value} observation with no applied_rate; "
+            f"fixture builds a {selected_rate_kind.value} observation with no applied_rate; "
             "every production path supplies one on the domestic tiers, so this models "
             "a row that cannot occur. State the rate the line carried.",
         )
@@ -203,10 +259,10 @@ def _observation(
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
-        category=category,
+        category=selected_category,
         exemption_article=exemption_article,
-        rate_kind=rate_kind,
-        flow_direction=flow,
+        rate_kind=selected_rate_kind,
+        flow_direction=selected_flow,
         base_amount=base,
         iva_amount=iva,
         recargo_amount=recargo,
@@ -274,16 +330,8 @@ def _calculate_390_from_observations_and_303_filings(
     observations: tuple[IvaLedgerObservation, ...],
     quarterly_results: dict[str, RegistryCalculationResult],
 ) -> RegistryCalculationResult:
-    # Scoped to M390 alone, at calculation grade -- this computes an IVA
-    # aggregation result, never a filing claim -- rather than through
-    # ``bundled_authority()``, whose ``.load()`` validates every
-    # modelo in the bundled tree before returning anything.
-    modelos, catalogues = bundled_registry_tree()
-    modelo_390 = next(modelo for modelo in modelos if modelo.id == "390")
-    snapshot = build_snapshot(
-        modelo_390,
-        catalogues,
-        source_root=bundled_path(),
+    snapshot = bundled_authority().snapshot(
+        "390",
         filing_year=filing_year,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,

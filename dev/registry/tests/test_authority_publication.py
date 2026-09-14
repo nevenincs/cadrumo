@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import os
-import shutil
-import sys
 from decimal import Decimal
 from pathlib import Path
-from types import ModuleType
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
+    AuthorityBuildIdentity,
+    AuthorityEvidenceProjection,
+    PublishedLegalEvidence,
     read_authority_artifact,
     write_authority_artifact,
 )
@@ -160,6 +160,44 @@ legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 """
 
+_TAX_ID_FACT = """\
+[fact]
+fact_id = "spanish-tax-identifier-format"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "spanish-tax-identifier-format:fixture"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["test-ley-001:art-1"]
+source_refs = ["test-source-002"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "test-source-002"
+required_text = ["x"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "tax_id.width", value = "9" },
+  { key = "tax_id.country_prefix", value = "ES" },
+  { key = "tax_id.country_prefixed_width", value = "11" },
+  { key = "tax_id.country_prefix_strip_width", value = "2" },
+  { key = "tax_id.leaders.prefixed_nif", value = "KLM" },
+  { key = "tax_id.leaders.nie", value = "XYZ" },
+  { key = "tax_id.leaders.cif", value = "ABCDEFGHJNPQRSUVW" },
+  { key = "tax_id.check.nif_letters", value = "TRWAGMYFPDXBNJZSQVHLCKE" },
+  { key = "tax_id.check.nie_prefix.X", value = "0" },
+  { key = "tax_id.check.nie_prefix.Y", value = "1" },
+  { key = "tax_id.check.nie_prefix.Z", value = "2" },
+  { key = "tax_id.check.cif_digit_only_kinds", value = "ABEH" },
+  { key = "tax_id.check.cif_letter_only_kinds", value = "PQRSNW" },
+  { key = "tax_id.check.cif_letter_table", value = "JABCDEFGHI" },
+]
+"""
+
 
 def _previous_publication() -> AuthorityArtifact:
     """Return a complete typed authority representing an already published release."""
@@ -204,6 +242,11 @@ def _previous_publication() -> AuthorityArtifact:
     ).require_complete()
     published_facts = bundled_authority().catalogues.facts
     tax_id_fact = published_facts.facts["spanish-tax-identifier-format"]
+    legal_text = "art-1 fixture authority text"
+    build_identity = AuthorityBuildIdentity.from_inputs(
+        source_identity_digest=sha256_hex(b"previous fixture authority sources"),
+        compiler_identity_digest=sha256_hex(b"previous fixture authority compiler"),
+    )
     return AuthorityArtifact(
         modelos=(minimal_modelo(minimal_revision()),),
         catalogues=minimal_catalogues().model_copy(
@@ -212,7 +255,17 @@ def _previous_publication() -> AuthorityArtifact:
                 "facts": published_facts.model_copy(update={"facts": {tax_id_fact.fact_id: tax_id_fact}}),
             },
         ),
-        identity_digest="e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f",
+        build_identity=build_identity,
+        identity_digest=build_identity.identity_digest,
+        evidence=AuthorityEvidenceProjection(
+            legal=(
+                PublishedLegalEvidence(
+                    legal_reference_id=legal_id,
+                    anchored_text=legal_text,
+                    text_sha256=sha256_hex(legal_text.encode("utf-8")),
+                ),
+            )
+        ),
     )
 
 
@@ -231,9 +284,10 @@ def _stage_valid_candidate(root: Path) -> None:
     revision_dir.mkdir(parents=True)
     legal_dir.mkdir()
     facts_dir.mkdir()
-    shutil.copy2(
-        bundled_path("registry", "aeat", "facts", "0102-spanish-tax-identifier-format.toml"),
-        facts_dir / "0102-spanish-tax-identifier-format.toml",
+    (facts_dir / "0102-spanish-tax-identifier-format.toml").write_text(
+        _TAX_ID_FACT,
+        encoding="utf-8",
+        newline="\n",
     )
     corpus_dir = root / "corpus" / "test"
     corpus_dir.mkdir(parents=True)
@@ -314,24 +368,66 @@ def test_staged_candidate_publishes_and_the_reader_consumes_it_as_current(
     assert currency.recorded_identity_digest == published.identity_digest
 
 
-def test_structural_publication_does_not_run_registry_conformance(
+def test_cross_model_conformance_failure_preserves_the_previous_artifact(
     tmp_path: Path,
     isolated_provider_registration: None,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An unrelated whole-registry validator failure does not block publication."""
+    """The full publisher refuses an unknown cross-model dependency before cutover."""
     candidate_root = tmp_path / "candidate"
     _stage_valid_candidate(candidate_root)
-
-    validator_module = ModuleType("dev.registry.compiler.validator")
-    monkeypatch.setitem(sys.modules, "dev.registry.compiler.validator", validator_module)
-
-    candidate = validate_authority_candidate(
-        registry_root=candidate_root / "registry" / "aeat",
-        source_root=candidate_root,
+    artifact_path = tmp_path / "authority.json"
+    write_authority_artifact(artifact_path, _previous_publication())
+    previous_bytes = artifact_path.read_bytes()
+    declarations = (
+        candidate_root / "registry" / "aeat" / "modelos" / "999" / "revisions" / "2025" / "dependency_classifications"
+    )
+    declarations.mkdir()
+    (declarations / "0001-missing-source-modelo.toml").write_text(
+        """
+[[revisions."2025".dependency_classifications]]
+id = "missing-source-modelo"
+source_modelo = "998"
+treatment = "non_dependency"
+legal_refs = ["test-ley-001:art-1"]
+source_refs = ["test-source-002"]
+""",
+        encoding="utf-8",
     )
 
-    assert candidate.artifact.modelos[0].id == "999"
+    with pytest.raises(RegistryValidationError, match="unknown source modelo '998'"):
+        publish_authority_candidate_workflow(
+            registry_root=candidate_root / "registry" / "aeat",
+            source_root=candidate_root,
+            artifact_path=artifact_path,
+        )
+
+    assert artifact_path.read_bytes() == previous_bytes
+
+
+def test_missing_legal_quotation_preserves_the_previous_artifact(
+    tmp_path: Path,
+    isolated_provider_registration: None,
+) -> None:
+    """The full publisher refuses legal evidence that does not contain its required quotation."""
+    candidate_root = tmp_path / "candidate"
+    _stage_valid_candidate(candidate_root)
+    artifact_path = tmp_path / "authority.json"
+    write_authority_artifact(artifact_path, _previous_publication())
+    previous_bytes = artifact_path.read_bytes()
+    catalogue = candidate_root / "registry" / "aeat" / "legal" / "catalogue.toml"
+    catalogue.write_text(
+        catalogue.read_text(encoding="utf-8").replace("test provision text", "missing legal quotation"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryValidationError, match="required text"):
+        publish_authority_candidate_workflow(
+            registry_root=candidate_root / "registry" / "aeat",
+            source_root=candidate_root,
+            artifact_path=artifact_path,
+        )
+
+    assert artifact_path.read_bytes() == previous_bytes
 
 
 def test_published_legal_evidence_answers_citation_queries_after_its_source_is_gone(
