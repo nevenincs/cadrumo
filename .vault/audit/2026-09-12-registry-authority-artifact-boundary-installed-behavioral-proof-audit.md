@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a04ff2d3418fdcf1980f1e9cfd597f352dbc8b1a35f4cf0e156783b9eaf7b30'
+body_hash: 'sha256:426d7b65de358af932d9beb455b1830401bf5b2c89fe2ea7849f586962362ac1'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
@@ -13,6 +13,8 @@ related:
 # `registry-authority-artifact-boundary` audit: `installed behavioral proof`
 
 ## Scope
+
+This audit examined the installed-package behavioral proof for the registry authority boundary: successful authority-dependent CLI and MCP workflows before artifact damage, fail-closed behavior after artifact removal or corruption, exact-wheel CommandSpec imports, OSS selector reconstruction outside candidate scope, tracked-input fidelity of the disposable distribution cohort, and publication bootstrap independence from the artifact being replaced.
 
 ## Findings
 
@@ -49,3 +51,5 @@ When the Lorca supplementary projection gained four required typed fields, the o
 Closed on rework. `RegistryValidator` is loaded only inside full registry validation after candidate facts are in scope; structural candidate compilation and publication no longer import it eagerly. The first formal review found that the imported applicability module still froze candidate-derived entity, income-category, and IVA-regime vocabulary in module globals. The IVA seed mapping now constructs each rule on access, and taxpayer entity vocabulary resolution prefers an explicit or context-scoped candidate authority before the bundled artifact and its date-keyed cache. A two-candidate same-process detector changes entity vocabulary in the first real `CandidateFactAuthority` scope and IVA self-assessment vocabulary in the second, proving neither the first candidate nor the published bundle leaks into the other result. Publication fixtures now carry the mandatory authored tax-ID fact, and the documented provider-free compiler branch retains authored facts rather than discarding them while normal enrolled-provider ownership and convenio refusal remain fail-closed. Full validation and supplementary compilation both receive the final authored-plus-projected fact catalogue. The publication and candidate-scope suite passes all nine tests; formatting, focused lint, and diff checks pass; strict runtime reconstruction succeeds with 58 modelos and 150 facts; and final formal re-review found no unresolved issue.
 
 ## Recommendations
+
+At the time of the audit, S07 remained contingent on rerunning the expensive installed cohort from a tracked repository state that contained every production dependency. Future changes to this proof should continue to require a successful authority-dependent command before damage, identify the refused command or tool in the hostile transcript, exclude untracked inputs from exact-wheel cohorts, keep candidate-derived vocabulary scoped to the active candidate, and keep structural publication imports independent of the installed artifact.

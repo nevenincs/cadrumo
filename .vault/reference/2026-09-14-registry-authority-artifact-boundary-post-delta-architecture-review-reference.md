@@ -5,15 +5,16 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:723f1986ddca95f0a141822b4ea6e983f2b48ee956558fae112b156c151c007d'
+body_hash: 'sha256:3a992681e09b0e0f173898b3f41ee1a450161c19f1bedd13dbbc32dc233f72e7'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"
 ---
-
 # `registry-authority-artifact-boundary` reference: `Post-delta authority backend architecture review`
 
 ## Summary
+
+Historical baseline captured before the implementation authorized later on 2026-09-14. Present-tense findings and measurements below describe that baseline. The implementation outcome is recorded in `2026-09-14-registry-authority-artifact-boundary-remediation-result-reference`; the final review is recorded in `2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit`.
 
 **Retain the compiled authority boundary. Repair its validation, identity and query contracts before changing its storage format.** Delta authoring and runtime publication solve different problems: deltas express what changed in law; publication supplies an installed application with resolved, versioned, evidence-bearing data. Fewer TOML files do not remove that distinction. They do weaken any argument that a monolithic eager JSON document is justified merely by file count.
 

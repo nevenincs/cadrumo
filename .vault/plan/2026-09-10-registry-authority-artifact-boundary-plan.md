@@ -7,9 +7,10 @@ tier: L3
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
-modified: '2026-09-13'
+  - '[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]'
+modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:2c45b7ea1210d049b415b1a3a1225cc7d97155666cba621c473cdb48b19bba7a'
+body_hash: 'sha256:0ee1bea5551ee33a240bad2ff810ab9c899e1cbb174790d9b16be9cb24ba1b78'
 ---
 
 # `registry-authority-artifact-boundary` plan
@@ -66,8 +67,8 @@ Place compiler and conformance code in development dependencies and package only
 
 Exercise publication refusal, artifact-only installed use, corruption refusal, and post-publication source isolation.
 
-- [ ] `W03.P05.S07` - Prove artifact publication and installed runtime behavior; `tests/integration/`.
-- [ ] `W03.P05.S08` - Document the artifact publication and recovery workflow; `docs/`.
+- [x] `W03.P05.S07` - Prove artifact publication and installed runtime behavior; `dev/registry/tests/test_authority_publication.py, dev/packaging/tests/test_installed_oracles.py`.
+- [x] `W03.P05.S08` - Document the artifact publication and recovery workflow; `docs/`.
 
 ## Wave `W04` - Canonical compiled runtime
 
@@ -94,7 +95,46 @@ Regenerate the tracked v4 authority and prove compact semantic round-trip, raw-s
 
 - [x] `W04.P08.S16` - Regenerate and measure the tracked v4 artifact, proving semantic equality and the compactness budget; `src/cadrumo/_data/registry/authority/authority.json, dev/registry/pipeline/`.
 - [x] `W04.P08.S17` - Prove installed artifact-only execution, corruption refusal, zero raw AEAT readers, typed operative-value consumption and centralized temporal admission; `tests/integration/, dev/packaging/tests/, src/cadrumo/tests/`.
-- [ ] `W04.P08.S18` - Document publication, recovery, schema migration and runtime ownership, then complete final architecture review; `docs/, .vault/audit/`.
+- [x] `W04.P08.S18` - Document publication, recovery, schema migration and runtime ownership, then complete final architecture review; `docs/, .vault/audit/`.
+
+## Wave `W05` - Authority backend remediation
+
+Restore trustworthy publication and reliable runtime reads, optimize the existing format, prove reproducible dependency tracking, and consider a storage pivot only if measured workload budgets still fail.
+
+### Phase `W05.P09` - Trustworthy publication
+
+Require full validation, coherent identities, complete evidence closure, and atomic replacement from one captured candidate.
+
+- [x] `W05.P09.S19` - Require full registry and evidence validation of the captured candidate before atomic publication; `dev/registry/compiler/authority.py, dev/registry/pipeline/authority_publication.py`.
+- [x] `W05.P09.S20` - Separate source-manifest, compiler-schema build, component-dependency, and payload identities and enforce full canonical publication; `dev/registry/pipeline/authority_publication.py, src/cadrumo/domain/calculations/registry/authority_artifact.py`.
+- [x] `W05.P09.S21` - Reject incomplete, duplicate, mismatched, or unknown-reference artifact evidence before replacement and runtime admission; `src/cadrumo/domain/calculations/registry/authority_artifact.py, dev/registry/tests/`.
+
+### Phase `W05.P10` - Reliable immutable runtime
+
+Freeze the reachable authority graph and make installed Modelo queries independent of authoring context and generic deep copying.
+
+- [x] `W05.P10.S22` - Make the authority holder, temporal mappings, snapshots, and every reachable semantic value deeply immutable; `src/cadrumo/domain/calculations/registry/authority.py, src/cadrumo/domain/calculations/registry/binding_temporal.py, src/cadrumo/domain/calculations/registry/schema.py`.
+- [x] `W05.P10.S23` - Prove installed Modelo 303 query, copy, empty-ledger calculation, and published 2026 export-field codec paths without authoring context or weakened membership validation; `src/cadrumo/domain/calculations/registry/authority.py, src/cadrumo/domain/iva/flow.py, dev/packaging/tests/test_installed_oracles.py`.
+
+### Phase `W05.P11` - Current-format query performance
+
+Share immutable typed definitions, precompute invariant indexes, bound caches, and measure representative workloads before changing storage.
+
+- [x] `W05.P11.S24` - Share deeply immutable typed definitions, index evidence, and bound generation, context-projection, and snapshot caches without requiring eager revision or layout precomputation; `src/cadrumo/domain/calculations/registry/authority.py, src/cadrumo/domain/calculations/registry/schema.py`.
+- [x] `W05.P11.S25` - Measure fresh-process post-import load, peak memory, first snapshots, warm queries, and full enumeration; record results without asserting unapproved product budgets; `dev/registry/benchmark_authority.py`.
+
+### Phase `W05.P12` - Reproducible selective builds
+
+Bind compiler semantics and exact transitive inputs to publication, then prove selective output equivalent to a clean full build before enabling it.
+
+- [x] `W05.P12.S26` - Capture compiler-schema identity and exact uncached or staged transitive input manifests for publication; `dev/registry/pipeline/authority_publication.py, dev/registry/compiler/source_evidence_fingerprint.py`.
+- [x] `W05.P12.S27` - Prove concurrent-input refusal while retaining full-only canonical publication; defer selective component output and equivalence claims until exact dependency closure is implemented; `dev/registry/tests/, dev/registry/pipeline/`.
+
+### Phase `W05.P13` - Measured storage decision
+
+Evaluate a different physical backend only if the optimized current format misses agreed product budgets, preserving one logical authority generation.
+
+- [x] `W05.P13.S28` - Retain the optimized current format and defer indexed storage until concrete product startup or memory SLOs require a separate architecture decision; `.vault/adr/`.
 
 ## Parallelization
 

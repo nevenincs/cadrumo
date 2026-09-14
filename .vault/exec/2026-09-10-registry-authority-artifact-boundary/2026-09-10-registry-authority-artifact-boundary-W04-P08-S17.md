@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-13'
-modified: '2026-09-13'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:743b6c0a05793cb827f7625e83696a28312d4b7d6bfc27f26feae874907d6fde'
+body_hash: 'sha256:ce560a19154252c8e7a1c8009ed06e42f70921f7a44f1b1087dd5160e02039ff'
 step_id: 'S17'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
