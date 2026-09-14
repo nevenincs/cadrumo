@@ -31,6 +31,7 @@ from typing import Final
 
 from pydantic import TypeAdapter, ValidationError
 
+from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import UTF_8_ENCODING
 from ....domain.calculations.registry.ids import BindingId, RelationId
 
@@ -41,7 +42,7 @@ _JOIN_DOCUMENT_ADAPTER: Final[TypeAdapter[dict[str, dict[RelationId, BindingId]]
 )
 
 
-class RelationBindingJoinError(RuntimeError):
+class RelationBindingJoinError(CadrumoError):
     """Raised when the bundled relation-to-binding join cannot be read as declared.
 
     A packaging fault, not a data condition: the table ships inside the wheel,

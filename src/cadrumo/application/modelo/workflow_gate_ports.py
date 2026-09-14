@@ -12,11 +12,12 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.submission.models import ModeloPresentado
 
 
-class WorkflowGatePersistenceError(RuntimeError):
+class WorkflowGatePersistenceError(CadrumoError):
     """Translated persistence failure raised by a workflow-gate capability."""
 
     def __init__(self, operation: str) -> None:

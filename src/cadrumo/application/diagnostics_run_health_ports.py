@@ -15,6 +15,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
+from ..core.errors.hierarchy import CadrumoError
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
 
@@ -34,7 +35,7 @@ class DiagnosticRunRecord(BaseModel):
     started_at: UtcInstant
 
 
-class DiagnosticRunTelemetryError(RuntimeError):
+class DiagnosticRunTelemetryError(CadrumoError):
     """A diagnostic telemetry read failed at the outbound boundary."""
 
 

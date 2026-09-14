@@ -95,12 +95,29 @@ if TYPE_CHECKING:
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ...application.workflow.state_models import WorkflowState
     from ...domain.deadlines.models import TaxpayerProfile
+    from ...domain.user_profile.schema import ProfileSchemaDefinition
     from .errors import CliRefusedBoundaryError
 
 logger = get_logger(__name__)
 
 
-def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
+def _profile_schema_for_record(record: object) -> ProfileSchemaDefinition:
+    """Return the schema pinned to the authenticated record operation."""
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ...domain.user_profile.values import UserProfileRecord
+
+    if not isinstance(record, UserProfileRecord):
+        raise TypeError("overview profile schema requires an authenticated UserProfileRecord")
+    return ProfileRecordRepository.for_current_session(
+        record.profile_id,
+    ).session.profile_decode_context.schema
+
+
+def _grounded_warning_summary(
+    warnings: Sequence[CalendarWarning],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> str:
     """Render calendar warnings as grounded profile requirements where possible.
 
     A completeness warning's ``code`` is the profile field's declared selector
@@ -115,18 +132,21 @@ def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     """
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
-    from ...domain.user_profile.loader import load_user_profile_schema
 
     return ", ".join(
         format_profile_selector_requirements(
             (warning.code for warning in warnings),
-            schema=load_user_profile_schema(),
+            schema=schema,
             grounding_index=build_profile_grounding_index(bundled_authority()),
         ),
     )
 
 
-def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> CliRefusedBoundaryError:
+def _incomplete_profile_refusal(
+    warnings: Sequence[CalendarWarning],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> CliRefusedBoundaryError:
     """Return the refusal for a projection blocked by unanswered profile facts.
 
     A profile fact the operator has not supplied is a workflow-state refusal,
@@ -148,7 +168,7 @@ def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> CliRefus
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
             translated_message="cli.overview.refused_incomplete_profile",
-            context={"requirements": _grounded_warning_summary(warnings)},
+            context={"requirements": _grounded_warning_summary(warnings, schema=schema)},
         ),
         verdict=cli_exception_no_recovery_verdict(
             CliExceptionPrecondition.OVERVIEW_PROFILE_COMPLETE,
@@ -165,7 +185,11 @@ _ENTITY_TYPE_SELECTOR = "taxpayer.entity_type"
 _IRPF_INCOME_CATEGORIES_SELECTOR = "taxpayer.irpf_income_categories"
 
 
-def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBoundaryError:
+def _undeclared_taxpayer_model_refusal(
+    profile: TaxpayerProfile,
+    *,
+    schema: ProfileSchemaDefinition,
+) -> CliRefusedBoundaryError:
     """Return the refusal for a projection blocked by an undeclared taxpayer model.
 
     Applicability cannot be derived without an entity type, and for a natural
@@ -184,7 +208,6 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.contribuyente.entity_type import entity_type_natural_person_token
-    from ...domain.user_profile.loader import load_user_profile_schema
     from .common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
 
@@ -200,7 +223,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
                 "requirements": ", ".join(
                     format_profile_selector_requirements(
                         missing,
-                        schema=load_user_profile_schema(),
+                        schema=schema,
                         grounding_index=build_profile_grounding_index(bundled_authority()),
                     ),
                 ),
@@ -213,8 +236,15 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     )
 
 
-def _refuse_calendar_warnings(cal: OverviewCalendar) -> None:
-    raise _incomplete_profile_refusal(cal.warnings)
+def _refuse_calendar_warnings(cal: OverviewCalendar, *, schema: ProfileSchemaDefinition) -> None:
+    raise _incomplete_profile_refusal(cal.warnings, schema=schema)
+
+
+def _require_profile_schema(schema: ProfileSchemaDefinition | None) -> ProfileSchemaDefinition:
+    """Refuse a schema-less profile operation before rendering grounded output."""
+    if schema is None:
+        raise RuntimeError("profile overview requires a schema pinned to the authenticated operation")
+    return schema
 
 
 def _overview_status_period(period: str, *, year: int | None):
@@ -341,7 +371,12 @@ def overview_status(
         _emit_period_overview_status(ctx, current=current, period=period, year=year, verbose=verbose)
         return
     profile_record = current.active_profile_record() if current is not None else None
-    raw_values = record_to_values(profile_record) if profile_record is not None else None
+    profile_schema = _profile_schema_for_record(profile_record) if profile_record is not None else None
+    raw_values = (
+        record_to_values(profile_record, schema=profile_schema)
+        if profile_record is not None and profile_schema is not None
+        else None
+    )
     report = _overview_application.build_overview_status_report(
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         operator_probe_ports=operator_probe_ports(ctx),
@@ -401,7 +436,10 @@ def overview_calendar(
 
     current = current_workflow_state()
     record = current.active_profile_record()
-    raw_values = record_to_values(record) if record is not None else None
+    profile_schema = _profile_schema_for_record(record) if record is not None else None
+    raw_values = (
+        record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
+    )
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
         raise no_active_profile_refusal()
@@ -458,9 +496,12 @@ def overview_calendar(
         # The taxpayer model is undeclared — the engine refuses
         # to guess. Surface the "declare your taxpayer type first"
         # guidance instead of an empty calendar with no explanation.
-        raise _undeclared_taxpayer_model_refusal(profile_to_taxpayer(current))
+        raise _undeclared_taxpayer_model_refusal(
+            profile_to_taxpayer(current),
+            schema=_require_profile_schema(profile_schema),
+        )
     if cal.warnings and not allow_incomplete:
-        _refuse_calendar_warnings(cal)
+        _refuse_calendar_warnings(cal, schema=_require_profile_schema(profile_schema))
     typed_cal, lines, calendar_notices = overview_calendar_output(
         cal,
         rng,
@@ -484,6 +525,7 @@ class _ProfileCalendarInputs:
     """
 
     taxpayer: TaxpayerProfile
+    schema: ProfileSchemaDefinition
     raw_values: Mapping[str, object]
     events: tuple[OverviewCalendarEvent, ...]
     filing_evidence: tuple[OverviewCalendarFilingEvidence, ...]
@@ -513,7 +555,8 @@ def _profile_calendar_inputs(
 
     try:
         record = repository.load(bucket_id)
-        taxpayer = projection_for_taxpayer(record)
+        schema = repository.session.profile_decode_context.schema
+        taxpayer = projection_for_taxpayer(record, schema=schema)
         live_events, _ = local_live_calendar_events(
             bucket_id,
             rng,
@@ -531,7 +574,8 @@ def _profile_calendar_inputs(
         work_units, _ = local_modelo_work_units(bucket_id)
         return _ProfileCalendarInputs(
             taxpayer=taxpayer,
-            raw_values=record_to_values(record),
+            schema=schema,
+            raw_values=record_to_values(record, schema=schema),
             events=events,
             filing_evidence=filing_evidence,
             work_units=work_units,
@@ -610,7 +654,7 @@ def _profile_calendar_projection(
         live_censo_verified_profile_keys=inputs.live_censo_verified_profile_keys,
     )
     if cal.warnings and not allow_incomplete:
-        _refuse_calendar_warnings(cal)
+        _refuse_calendar_warnings(cal, schema=inputs.schema)
     return overview_calendar_profile_output(bucket_id=bucket_id, label=pointer.label, cal=cal)
 
 
@@ -699,7 +743,10 @@ def overview_agenda(
             ),
         )
     record = current.active_profile_record()
-    raw_values = record_to_values(record) if record is not None else None
+    profile_schema = _profile_schema_for_record(record) if record is not None else None
+    raw_values = (
+        record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
+    )
     agenda = build_overview_agenda(
         profile_to_taxpayer(current),
         as_of=as_of_date,
@@ -707,9 +754,12 @@ def overview_agenda(
         raw_values=raw_values,
     )
     if not agenda.taxpayer_model_declared and not allow_incomplete:
-        raise _undeclared_taxpayer_model_refusal(profile_to_taxpayer(current))
+        raise _undeclared_taxpayer_model_refusal(
+            profile_to_taxpayer(current),
+            schema=_require_profile_schema(profile_schema),
+        )
     if agenda.warnings and not allow_incomplete:
-        raise _incomplete_profile_refusal(agenda.warnings)
+        raise _incomplete_profile_refusal(agenda.warnings, schema=_require_profile_schema(profile_schema))
 
     typed_agenda, lines, coverage_notices = overview_agenda_output(agenda)
     emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines, notices=coverage_notices)
@@ -734,7 +784,10 @@ def overview_backlog(
     parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None
     parsed_to = _parse_iso_date(to_date, label="--to") if to_date else None
     record = current.active_profile_record()
-    raw_values = record_to_values(record) if record is not None else None
+    profile_schema = _profile_schema_for_record(record) if record is not None else None
+    raw_values = (
+        record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
+    )
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
         raise no_active_profile_refusal()
@@ -747,9 +800,12 @@ def overview_backlog(
         work_units=work_units,
     )
     if not backlog.taxpayer_model_declared:
-        raise _undeclared_taxpayer_model_refusal(profile_to_taxpayer(current))
+        raise _undeclared_taxpayer_model_refusal(
+            profile_to_taxpayer(current),
+            schema=_require_profile_schema(profile_schema),
+        )
     if backlog.warnings and not allow_incomplete:
-        raise _incomplete_profile_refusal(backlog.warnings)
+        raise _incomplete_profile_refusal(backlog.warnings, schema=_require_profile_schema(profile_schema))
 
     typed_backlog, lines, backlog_notices = overview_backlog_output(
         backlog,
@@ -883,7 +939,6 @@ def overview_pipeline(
         raise no_active_profile_refusal()
 
     canonical_period = _canonical_period(period, year=year)
-    transaction_repository = transaction_catalogue_repo(current)
     ledger_report = summarize_manual_transactions(
         bucket_id=bucket_id,
         period=canonical_period,

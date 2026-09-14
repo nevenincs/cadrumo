@@ -391,6 +391,7 @@ def consume_root_fallback(
     """Read all required payloads, authenticate exactly, and assert the session."""
     from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.user_profile.login_session import login_profile
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
     payload = read_profile_secret_payload(root_profile_secret_model(), selection=root)
@@ -399,10 +400,12 @@ def consume_root_fallback(
         if not isinstance(payload, ProfileAuthenticationSecrets):
             raise TypeError("root profile-secret model resolved an unexpected payload type")
         passphrase = payload.profile_passphrase.get_secret_value()
-        outcome = login_profile(
-            name=bucket_id,
-            passphrase_callback=lambda: passphrase,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            outcome = login_profile(
+                name=bucket_id,
+                passphrase_callback=lambda: passphrase,
+                profile_decode_context=operation.profile_decode_context(),
+            )
         if outcome.bucket_id != bucket_id or not active_bucket_session_serves(bucket_id):
             raise RuntimeError("profile authentication did not establish the exact requested session")
         from ._profile_session_gate import bind_profile_target

@@ -26,7 +26,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ...domain.user_profile.errors import ProfileSchemaValidationError
-from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .completeness import profile_section_rows
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
@@ -34,7 +33,7 @@ from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
 
 if TYPE_CHECKING:
-    from ...domain.user_profile.schema import ProfileSectionDefinition
+    from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,15 +130,22 @@ def add_profile_repeatable_section_row(
     profile_id: str,
     section_key: str,
     values: Mapping[str, str],
+    schema: ProfileSchemaDefinition | None = None,
 ) -> ProfileRepeatableRowMutationOutcome:
     """Allocate and publish one complete repeatable profile row atomically.
 
     The schema selects the section, the current encrypted record determines the
     next stable index, and the shared profile-fact writer owns the one atomic
     publication and bucket event. A frontend must supply only the field-keyed
-    values it collected.
+    values it collected. ``schema`` must come from the enclosing pinned
+    authority operation; this operation does not consult bundled authoring
+    data.
     """
-    section = load_user_profile_schema().section(section_key)
+    if schema is None:
+        raise ProfileSchemaValidationError(
+            "profile row mutation requires the schema pinned to the authority operation",
+        )
+    section = schema.section(section_key)
     if not section.repeatable:
         raise ProfileSchemaValidationError("profile row mutation requires a schema-declared repeatable section")
     current = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)

@@ -6,6 +6,7 @@ import base64
 import json
 from collections.abc import Callable
 from types import MappingProxyType
+from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel
 
@@ -64,7 +65,6 @@ from ..profile.retencion_observations import RetencionObservationRepositoryAdapt
 from ..profile.submission import SubmissionRepository
 from .attachment import unwrap_blob_payload
 from .envelope.contract import Envelope
-from .envelope.secure_bound_repository import SecureBoundRepository
 from .namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .runtime_repository import secure_object_repository_for_bucket
 from .secure_object_namespaces import (
@@ -77,6 +77,9 @@ from .secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
 )
 from .sql.secure_object_records import SecureObjectRecord
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
     {
@@ -91,16 +94,37 @@ _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
 NaturalKeyResolver = Callable[[SecureObjectRecord, str], str]
 
 
+class _BoundPayloadRepository[T: BaseModel](Protocol):
+    """Structural contract for repositories used only to inspect carried keys."""
+
+    @classmethod
+    def payload_model(cls) -> type[T]:
+        """Return the payload type wrapped by the repository."""
+        ...
+
+    def extract_identifier(self, payload: T) -> str:
+        """Return the carried payload's natural identifier."""
+        ...
+
+
 def _canonical_b64(value: bytes) -> str:
     return base64.b64encode(value).decode("ascii")
 
 
-def _envelope_payload[T: BaseModel](record: SecureObjectRecord, payload_type: type[T]) -> T:
+def _envelope_payload[T: BaseModel](
+    record: SecureObjectRecord,
+    payload_type: type[T],
+    *,
+    validation_context: object | None = None,
+) -> T:
     envelope_cls = Envelope[T].for_payload_type(payload_type)
-    return envelope_cls.model_validate_json(record.payload.decode(_UTF_8)).payload
+    return envelope_cls.model_validate_json(
+        record.payload.decode(_UTF_8),
+        context=validation_context,
+    ).payload
 
 
-def _bound_resolver[T: BaseModel](repo_factory: Callable[[], SecureBoundRepository[T]]) -> NaturalKeyResolver:
+def _bound_resolver[T: BaseModel](repo_factory: Callable[[], _BoundPayloadRepository[T]]) -> NaturalKeyResolver:
     """Parse one bound repository payload and recover its natural identifier."""
 
     def _resolve(record: SecureObjectRecord, _bucket_id: str) -> str:
@@ -115,9 +139,10 @@ def _snapshot_resolver[T: BaseModel](
     payload_type_factory: Callable[[], type[T]],
     object_key: Callable[[str, str], str],
     snapshot_id_attr: str = "snapshot_id",
+    validation_context: object | None = None,
 ) -> NaturalKeyResolver:
     def _resolve(record: SecureObjectRecord, bucket_id: str) -> str:
-        payload = _envelope_payload(record, payload_type_factory())
+        payload = _envelope_payload(record, payload_type_factory(), validation_context=validation_context)
         return object_key(bucket_id, getattr(payload, snapshot_id_attr))
 
     return _resolve
@@ -153,7 +178,11 @@ def _sha256_payload_resolver(record: SecureObjectRecord, _bucket_id: str) -> str
     return sha256_hex(record.payload)
 
 
-def _natural_key_resolvers(*, bucket_id: str) -> dict[str, NaturalKeyResolver]:
+def _natural_key_resolvers(
+    *,
+    bucket_id: str,
+    profile_decode_context: ProfileDecodeContext,
+) -> dict[str, NaturalKeyResolver]:
     """Return the single natural-key resolver registry for carried namespaces."""
     resolvers: dict[str, NaturalKeyResolver] = {}
 
@@ -248,14 +277,16 @@ def _natural_key_resolvers(*, bucket_id: str) -> dict[str, NaturalKeyResolver]:
     resolvers["cadrumo.domain.usage_ratios"] = _bucket_template_resolver("profile:{bucket_id}")
     resolvers["cadrumo.auth.apoderado"] = _bucket_template_resolver("{bucket_id}")
 
-    resolvers.update(_live_snapshot_natural_key_resolvers())
+    resolvers.update(_live_snapshot_natural_key_resolvers(profile_decode_context=profile_decode_context))
     resolvers.update(_modelo_natural_key_resolvers())
     resolvers.update(_sede_natural_key_resolvers())
     resolvers.update(_ledger_extraction_natural_key_resolvers())
     return resolvers
 
 
-def _live_snapshot_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
+def _live_snapshot_natural_key_resolvers(
+    *, profile_decode_context: ProfileDecodeContext
+) -> dict[str, NaturalKeyResolver]:
     def _justificante_payload() -> type[JustificanteCaptureSnapshot]:
         return JustificanteCaptureSnapshot
 
@@ -317,6 +348,7 @@ def _live_snapshot_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         "cadrumo.application.user_profile.snapshot": _snapshot_resolver(
             _profile_snapshot_payload,
             _profile_snapshot_key,
+            validation_context=profile_decode_context,
         ),
     }
 
@@ -419,9 +451,13 @@ def _serialize_carried_objects(
     bucket_id: str,
     profile: StorageCustodyProfile,
     definitions: tuple[SecureObjectNamespaceDefinition, ...],
+    profile_decode_context: ProfileDecodeContext,
 ) -> tuple[CarriedSecureObject, ...]:
     repository = secure_object_repository_for_bucket(bucket_id)
-    resolvers = _natural_key_resolvers(bucket_id=bucket_id)
+    resolvers = _natural_key_resolvers(
+        bucket_id=bucket_id,
+        profile_decode_context=profile_decode_context,
+    )
     carried: list[CarriedSecureObject] = []
     for definition in definitions:
         keys = repository.list_keys(definition.namespace)
@@ -472,6 +508,7 @@ def collect_profile_custody_carry(
     *,
     bucket_id: str,
     profile: StorageCustodyProfile,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileCustodyCarryMaterial:
     """Resolve persisted carry rows and coverage facts for one active bucket."""
     repository = secure_object_repository_for_bucket(bucket_id)
@@ -484,6 +521,7 @@ def collect_profile_custody_carry(
         bucket_id=bucket_id,
         profile=profile,
         definitions=definitions,
+        profile_decode_context=profile_decode_context,
     )
     return ProfileCustodyCarryMaterial(
         carried_objects=carried_objects,

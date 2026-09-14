@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from ..core.errors.hierarchy import CadrumoError
 
-class PersistenceDegradationError(RuntimeError):
+
+class PersistenceDegradationError(CadrumoError):
     """A persistence capability could not provide a requested operation."""
 
     def __init__(self, operation: str) -> None:

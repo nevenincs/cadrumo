@@ -54,13 +54,12 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.utc import UtcInstant
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from .errors import (
@@ -338,10 +337,12 @@ class IvaWalletDecisionEnvelopePayload(BaseModel):
 
 
 def decision_payload_digest(decision: IvaCompensationReconciliationDecision) -> str:
+    """Return the stable digest used to identify a reconciliation decision."""
     return sha256_hex(decision.model_dump_json().encode(UTF_8_ENCODING))
 
 
 def require_observation_period(period: Period) -> Period:
+    """Refuse a non-period value before it enters a persisted observation key."""
     # Deliberate runtime guard: annotations are not enforced at call time and this
     # value composes a persisted observation key, so a wrong type would surface as
     # an unreadable record rather than a refusal here.
@@ -502,21 +503,23 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
     return f"iva-wallet-decision-event:{digest}"
 
 
-def validate_observation_casilla_ids(observation: RegistryModeloObservation) -> str:
+def validate_observation_casilla_ids(
+    observation: RegistryModeloObservation,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> str:
+    """Validate all observed and operand casillas against the selected revision."""
     observed_casilla_ids = frozenset(observation.casilla_values)
     operand_casilla_refs = frozenset(
         operand_ref for item in observation.observations for operand_ref in item.operand_casilla_refs
     )
     referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return validate_observation_casilla_ids(observation, operation=indexed_operation)
     try:
-        modelo = next(
-            (candidate for candidate in bundled_authority().modelos if candidate.id == observation.modelo),
-            None,
-        )
-        if modelo is None:
-            raise RegistrySnapshotError(f"modelo {observation.modelo!r} is not present in the calculation registry")
-        revision = select_revision(
-            modelo,
+        revision = operation.revision_for_context(
+            observation.modelo,
             filing_year=observation.filing_year,
             period=observation.period,
         )

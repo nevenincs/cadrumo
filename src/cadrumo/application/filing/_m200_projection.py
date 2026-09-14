@@ -21,21 +21,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING
 
 from ...core.filing_projection_ref import FilingProjectionRef
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 from ._producer_snapshot_m200 import Modelo200ProfileFacts
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
-
-if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 __all__ = ["build_m200_filing_projection_plan"]
 
@@ -47,25 +42,17 @@ class _M200ProjectionCatalogue:
     family_by_kind: Mapping[str, str]
 
 
-# fact-relocation: selected M200 row-family declarations are consumed through RegistryQueryService and the dated mapping fact
+# fact-relocation: selected M200 row-family declarations are consumed through the dated mapping fact.
 def _registry_m200_projection_catalogue(
     effective_date: date,
     *,
     period: str | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> _M200ProjectionCatalogue:
     """Resolve row-family routes from the selected registry authority."""
-    selected_authority = authority or bundled_authority()
-    query_service = RegistryQueryService(selected_authority)
-    if period is None:
-        query_service.describe_modelo("200")
-    else:
-        query_service.describe_modelo_for_scope(
-            "200",
-            filing_year=effective_date.year,
-            period=period,
-            as_of=effective_date,
-        )
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RuntimeError("Modelo 200 projection requires a generation-pinned authority operation")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m200-projection-family-catalogue",

@@ -60,6 +60,7 @@ if TYPE_CHECKING:
     from pathlib import Path
     from uuid import UUID
 
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from .aggregate import CommittedProfileView, ProfileRestoreAuthority
     from .custody_ports import (
         ProfileCustodyEnvelopePort,
@@ -194,6 +195,7 @@ def restore_profile_with_password(
     sentinel: ProfileCustodySentinelPort,
     database_bytes: bytes,
     root: Path | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> CommittedProfileView:
     """Republish one capsule proving nothing but the profile's own password.
 
@@ -224,6 +226,7 @@ def restore_profile_with_password(
         database_bytes=database_bytes,
         authority="password",
         root=root,
+        profile_decode_context=profile_decode_context,
     )
 
 
@@ -236,6 +239,7 @@ def restore_profile_from_recovery_artifact(
     sentinel: ProfileCustodySentinelPort,
     database_bytes: bytes,
     root: Path | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> CommittedProfileView:
     """Republish one capsule proving a portable artifact instead of the password.
 
@@ -280,6 +284,7 @@ def restore_profile_from_recovery_artifact(
         database_bytes=database_bytes,
         authority="recovery_artifact",
         root=root,
+        profile_decode_context=profile_decode_context,
     )
 
 
@@ -292,13 +297,18 @@ def _publish_restored_capsule(
     database_bytes: bytes,
     authority: ProfileRestoreAuthority,
     root: Path | None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> CommittedProfileView:
     """Bind a proved key to one record session and publish exactly once.
 
     Recovery proof authorizes only the explicit artifact door. Publication
     never installs a source wrapper or artifact as enrolled recovery.
     """
-    session = ProfileRecordSession.from_envelope(envelope=password_envelope, dek=dek)
+    session = ProfileRecordSession.from_envelope(
+        envelope=password_envelope,
+        dek=dek,
+        profile_decode_context=profile_decode_context,
+    )
     try:
         return ProfileCapsuleLifecycle(root=root).restore(
             label=label,

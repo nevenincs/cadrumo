@@ -72,7 +72,6 @@ from ...domain.calculations.registry.schema_scalars import (
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.contribuyente.descendant_maternity import relacion_is_ambiguous_for_maternidad
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -93,6 +92,7 @@ from ...domain.modelos.row_models import (
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
+from ...domain.modelos.sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
@@ -118,7 +118,8 @@ _MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_
 _MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND = "maternidad_ambiguous_relacion"
 
 
-# fact-relocation: selected calculate-input declarations are consumed through RegistryQueryService and the dated mapping fact
+# fact-relocation: selected calculate-input declarations are consumed through
+# RegistryQueryService and the dated mapping fact.
 def _registry_calculate_input_declarations(
     work_unit: WorkUnit | None = None,
 ) -> ResolvedMappingFact:
@@ -1238,8 +1239,10 @@ def _pension_rescate_contributions(
         aportaciones_totales=resolved_totales,
         context=fact_context,
     )
-    _registry_calculate_input_declarations(work_unit)
-    raise NotImplementedError("registry-selected DT12 reduction semantic-role declarations are unresolved")
+    reduccion_casilla_id = _semantic_role_casilla_id(
+        work_unit,
+        _registry_calculate_input_declaration("modelo.role.reduccion_trabajo", work_unit=work_unit),
+    )
     inject, window_advisory = _dt12_window_decision(
         reduccion=reduccion,
         eligibility=_dt12_window_verdict(
@@ -1278,9 +1281,17 @@ def _sal_reserva_especial_contribution(
     if supplied is None:
         return {}
     resolved_neto, resolved_dotada, resolved_capital = supplied
-    del resolved_neto, resolved_dotada, resolved_capital, fact_context
-    _registry_calculate_input_declarations(work_unit)
-    raise NotImplementedError("registry-selected SAL semantic-role declarations are unresolved")
+    return {
+        _semantic_role_casilla_id(
+            work_unit,
+            _registry_calculate_input_declaration("modelo.role.sal_reserva_especial", work_unit=work_unit),
+        ): compute_sal_reserva_especial_dotacion(
+            beneficio_neto=resolved_neto,
+            reserva_dotada=resolved_dotada,
+            capital_social=resolved_capital,
+            context=fact_context,
+        )
+    }
 
 
 def apply_calculation_shortcut_inputs(
@@ -1337,9 +1348,12 @@ def apply_calculation_shortcut_inputs(
     advisories: list[CalculationSourceDiagnostic] = []
 
     if prestacion_inss_exenta is not None:
-        del prestacion_inss_exenta
-        _registry_calculate_input_declarations(work_unit)
-        raise NotImplementedError("registry-selected INSS semantic-role declarations are unresolved")
+        resolved_casilla_values[
+            _semantic_role_casilla_id(
+                work_unit,
+                _registry_calculate_input_declaration("modelo.role.inss_exenta", work_unit=work_unit),
+            )
+        ] = prestacion_inss_exenta
 
     advisories.extend(_maternidad_advisories(work_unit))
 
@@ -1367,9 +1381,11 @@ def apply_calculation_shortcut_inputs(
     )
 
     if autoconsumo_promotor_base is not None:
-        del autoconsumo_promotor_base
-        _registry_calculate_input_declarations(work_unit)
-        raise NotImplementedError("registry-selected M303 autoconsumo binding declarations are unresolved")
+        binding_id = _registry_calculate_input_declaration(
+            "modelo.binding.autoconsumo_promotor",
+            work_unit=work_unit,
+        )
+        resolved_bindings[binding_id] = autoconsumo_promotor_base
 
     return resolved_casilla_values, resolved_bindings, tuple(advisories)
 
@@ -1479,9 +1495,8 @@ def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> Calculat
 def _semantic_role_casilla_id(work_unit: WorkUnit, semantic_role: str) -> CasillaId:
     """Resolve one semantic role from the already captured parent work unit."""
     modelo_id = str(work_unit.modelo)
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo_id)
-    revision = select_revision(
-        modelo,
+    revision = RegistryQueryService(bundled_authority()).revision_for_scope(
+        modelo_id,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )

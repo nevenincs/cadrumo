@@ -39,6 +39,7 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceFacetName,
     ModeloWorkspaceProjectionV1,
 )
+from .....core.errors.hierarchy import CadrumoError
 from .models import (
     ModeloWorkspaceBoundedPageV1,
     ModeloWorkspaceCompletePageV1,
@@ -55,7 +56,7 @@ posture, not a legacy one -- there is no older version to tolerate.
 """
 
 
-class ModeloWorkspaceSessionAdmissionError(ValueError):
+class ModeloWorkspaceSessionAdmissionError(CadrumoError):
     """The result could not open a session and carried no typed refusal to explain it."""
 
 

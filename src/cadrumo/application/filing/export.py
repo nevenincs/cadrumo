@@ -227,7 +227,11 @@ def _prepare_export_draft(
     product_software_identity: AeatProductSoftwareIdentity | None,
     schema_provider: RegistrySchemaAccessor | None,
 ) -> _PreparedExportDraft:
-    provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
+    provider = schema_provider or build_runtime_schema_provider(
+        modelos=(draft.modelo,),
+        filing_year=draft.period.filing_year,
+        period=draft.period,
+    )
     subview = provider.get_subview(draft.modelo)
     registry_snapshot = provider.get_snapshot(draft.modelo)
     _require_current_export_schema(draft, subview)
@@ -634,6 +638,7 @@ def render_filing_layout(
     prior_domiciliation_election: PriorDomiciliationElection,
     product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> bytes:
+    """Render one already-selected layout after enforcing immutable filing context."""
     if (
         draft.modelo == Modelo("303").value
         and producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election

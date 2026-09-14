@@ -198,7 +198,11 @@ def verify_export(
     schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionVerifyResult:
     """Verify parser-covered bytes and root identity against an approved draft."""
-    provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
+    provider = schema_provider or build_runtime_schema_provider(
+        modelos=(draft.modelo,),
+        filing_year=draft.period.filing_year,
+        period=draft.period,
+    )
     subview = provider.get_subview(draft.modelo)
     _require_current_verify_schema(draft, subview)
     if not subview.export_layout_ids:

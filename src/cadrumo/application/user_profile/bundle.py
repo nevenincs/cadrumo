@@ -30,6 +30,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import UserProfilePortableExport
 
 #: Current bundle write version. Every export stamps this.
@@ -44,6 +45,7 @@ def serialize_profile_bundle(
     *,
     bucket_id: str,
     custody_profile: StorageCustodyProfile | str = StorageCustodyProfile.STRUCTURED,
+    profile_decode_context: ProfileDecodeContext,
 ) -> UserProfilePortableExport:
     """Build a v3 :class:`~cadrumo.domain.user_profile.portable_export.UserProfilePortableExport`.
 
@@ -57,6 +59,8 @@ def serialize_profile_bundle(
         custody_profile: Secure-object custody scope to apply, as a
             :class:`~cadrumo.core.StorageCustodyProfile`
             or one of its string values.
+        profile_decode_context: Decode context supplied by the enclosing
+            pinned authority operation for the encrypted profile rows.
 
     The bundle carries only decrypted pydantic domain-model payloads
     (no encrypted envelopes or key material). The recipient re-encrypts
@@ -71,7 +75,10 @@ def serialize_profile_bundle(
     from .custody_carry import build_secure_object_custody_payload, normalize_storage_custody_profile
     from .profile_record_repository import ProfileRecordRepository
 
-    record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    record = ProfileRecordRepository.for_current_session(
+        bucket_id,
+        profile_decode_context=profile_decode_context,
+    ).load(bucket_id)
 
     work_unit_catalogue = work_unit_catalogue_repository(bucket_id=bucket_id).load()
     work_units = tuple(work_unit_catalogue)
@@ -88,6 +95,7 @@ def serialize_profile_bundle(
     carried_objects, coverage_manifest = build_secure_object_custody_payload(
         bucket_id=bucket_id,
         custody_profile=normalize_storage_custody_profile(custody_profile),
+        profile_decode_context=profile_decode_context,
     )
 
     return UserProfilePortableExport(

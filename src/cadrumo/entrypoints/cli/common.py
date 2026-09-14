@@ -935,12 +935,14 @@ def resolve_pull_year_range(
 
 
 def profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.user_profile.projections import projection_for_taxpayer
 
     record = state.active_profile_record()
     if record is None:
         return projection_for_taxpayer({})
-    return projection_for_taxpayer(record)
+    schema = ProfileRecordRepository.for_current_session(record.profile_id).session.profile_decode_context.schema
+    return projection_for_taxpayer(record, schema=schema)
 
 
 def declared_tax_id(record: UserProfileRecord | None) -> str:
@@ -982,8 +984,8 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     """
     from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
     from ...application.user_profile.preflight import format_profile_selector_requirements
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
-    from ...domain.user_profile.loader import load_user_profile_schema
     from .errors import CliRefusedBoundaryError
 
     record = state.active_profile_record()
@@ -998,6 +1000,13 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
         profile_name=record.profile_id if record is not None else None,
     )
     if verdict is not None:
+        profile_schema = (
+            ProfileRecordRepository.for_current_session(record.profile_id).session.profile_decode_context.schema
+            if record is not None
+            else None
+        )
+        if profile_schema is None:
+            raise RuntimeError("filing refusal requires a schema pinned to the authenticated operation")
         raise attach_cli_policy_verdict(
             CliRefusedBoundaryError(
                 translated_message="cli.common.errors.filing_requires_declared_tax_id",
@@ -1005,7 +1014,7 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
                     "requirements": ", ".join(
                         format_profile_selector_requirements(
                             [_TAX_ID_SELECTOR],
-                            schema=load_user_profile_schema(),
+                            schema=profile_schema,
                             grounding_index=build_profile_grounding_index(_bundled_authority()),
                         ),
                     ),

@@ -1,40 +1,33 @@
 """Semantic-plus-exact census over every operand and edit authority the production registry composes.
 
-The denominator here is the git-tracked source tree, never a filesystem walk:
-a gitignored mirror or a generated-artifact directory has silently inflated a
-census before, so this one is scoped to `git ls-files` from the start rather
-than narrowed after the fact.
+The denominator here is the repository-visible source tree. Its shared
+enumerator applies the repository's checked-in ignore rules without consulting
+version-control state, so ignored mirrors and generated artifacts stay out while
+new source files enter the census immediately.
 """
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 
 import pytest
+from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
-def _tracked_source_files() -> tuple[str, ...]:
-    """Return every git-tracked Python file, the census's stated denominator."""
-    result = subprocess.run(
-        ["git", "ls-files", "*.py"],  # noqa: S607
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return tuple(line.strip() for line in result.stdout.splitlines() if line.strip())
+def _source_files() -> tuple[str, ...]:
+    """Return every repository-visible Python file in the census denominator."""
+    return tuple(path for path in repository_files(_REPO_ROOT) if path.endswith(".py"))
 
 
-def test_the_tracked_denominator_is_nonempty_and_reproducible() -> None:
+def test_the_source_denominator_is_nonempty_and_reproducible() -> None:
     """Anchors the census to a real, non-vacuous, re-derivable file set."""
-    files = _tracked_source_files()
-    assert len(files) > 1000, f"tracked Python file denominator looks too small: {len(files)}"
-    assert files == _tracked_source_files(), "the tracked-file denominator must be stable within one run"
+    files = _source_files()
+    assert len(files) > 1000, f"Python source denominator looks too small: {len(files)}"
+    assert files == _source_files(), "the source-file denominator must be stable within one run"
 
 
 def test_no_two_production_definitions_declare_the_same_financial_operand_kind() -> None:

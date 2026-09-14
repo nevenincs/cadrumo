@@ -11,10 +11,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...domain.invoices.models import InvoiceCatalogue
 
 
-class InvoiceSourcePersistenceError(RuntimeError):
+class InvoiceSourcePersistenceError(CadrumoError):
     """Translated failure while reading the invoice source catalogue."""
 
     def __init__(self, operation: str) -> None:

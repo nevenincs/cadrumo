@@ -20,6 +20,7 @@ from typing import Final, Protocol
 
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.hex_ids import CalculationRevisionId, InvoiceId
@@ -47,7 +48,7 @@ from .preflight import LedgerPreflightReport
 LEDGER_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
 
-class LedgerWorkspaceProjectionError(ValueError):
+class LedgerWorkspaceProjectionError(CadrumoError):
     """Canonical input facts cannot form one truthful workspace snapshot."""
 
 

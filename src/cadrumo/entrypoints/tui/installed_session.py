@@ -112,14 +112,19 @@ def compose_authenticated_account_inputs(
     from .secret.passphrase import build_profile_passphrase_change_door
 
     repository = ProfileRecordRepository.for_current_session(profile_id)
+    profile_schema = repository.session.profile_decode_context.schema
 
     def persist_profile_field(path: str, value: str) -> ProfileOverview:
         applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
-        return build_profile_overview(applied, label=profile_label)
+        return build_profile_overview(applied, label=profile_label, schema=profile_schema)
 
     return InstalledWorkbenchAccountInputsV1(
         profile_id=profile_id,
-        profile_overview=build_profile_overview(repository.load(profile_id), label=profile_label),
+        profile_overview=build_profile_overview(
+            repository.load(profile_id),
+            label=profile_label,
+            schema=profile_schema,
+        ),
         persist_profile_field=persist_profile_field,
         login_choices=tuple(login_choices),
         authenticate=attempt_profile_login,

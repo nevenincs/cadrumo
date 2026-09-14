@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
+
 
 @dataclass(frozen=True, slots=True)
 class EvidenceSweepDocument:
@@ -15,7 +17,7 @@ class EvidenceSweepDocument:
     mime_type: str
 
 
-class EvidenceSweepFileNotReachableError(RuntimeError):
+class EvidenceSweepFileNotReachableError(CadrumoError):
     """The provider refused one file under the currently granted scope."""
 
 

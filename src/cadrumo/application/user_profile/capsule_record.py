@@ -25,7 +25,7 @@ from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, Secure
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ...domain.user_profile.errors import UserProfileError
-from ...domain.user_profile.values import UserProfileRecord
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from .custody_ports import (
     ProfileCustodySecureObjectNamespace,
     ProfileCustodySecureObjectRawRowPort,
@@ -37,6 +37,7 @@ from .custody_ports import (
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
     from .custody_ports import ProfileCustodyEnvelopePort
 
 
@@ -109,6 +110,7 @@ class ProfileRecordSession:
     password_generation: int
     dek_epoch: str
     _dek: bytearray
+    profile_decode_context: ProfileDecodeContext
 
     @classmethod
     def from_envelope(
@@ -116,6 +118,7 @@ class ProfileRecordSession:
         *,
         envelope: ProfileCustodyEnvelopePort,
         dek: bytes,
+        profile_decode_context: ProfileDecodeContext,
     ) -> ProfileRecordSession:
         """Create a record authority from an unlocked envelope and its DEK."""
         if len(dek) != 32:
@@ -126,6 +129,7 @@ class ProfileRecordSession:
             password_generation=envelope.password_generation,
             dek_epoch=envelope.dek_epoch,
             _dek=bytearray(dek),
+            profile_decode_context=profile_decode_context,
         )
 
     def close(self) -> None:
@@ -156,6 +160,13 @@ class ProfileRecordSession:
         if self.closed:
             raise ProfileRecordIntegrityError("profile record session is closed")
         return bytes(self._dek)
+
+    def create_context(self) -> ProfileCreateContext:
+        """Reuse this session's pinned generation for a replacement write."""
+        context = self.profile_decode_context
+        from ...domain.calculations.registry.authority_artifact import ProfileCreateContext
+
+        return ProfileCreateContext(schema=context.schema, generation=context.generation)
 
     def assert_initial_record(self, record: UserProfileRecord) -> None:
         """Validate that a record is the first authenticated revision for this session."""
@@ -384,15 +395,12 @@ class ProfileRecordStore:
             raise ProfileRecordIntegrityError("rotated record session carries the same envelope as the current one")
         with _secure_objects_for_record(self.session, root=self._root) as objects:
             current = self._load_from_objects(objects)
-            replacement = UserProfileRecord(
-                schema_id=current.record.schema_id,
-                schema_version=current.record.schema_version,
-                profile_id=current.record.profile_id,
-                facts=current.record.facts,
+            replacement = _replacement_record(
+                current.record,
+                context=rotated.create_context(),
                 setup_state=current.record.setup_state,
                 record_revision=current.record.record_revision + 1,
                 previous_record_digest=current.record.content_digest,
-                content_digest="",
                 created_at=current.record.created_at,
                 updated_at=datetime.fromisoformat(event.occurred_at).astimezone(UTC),
             )
@@ -413,7 +421,7 @@ class ProfileRecordStore:
     def _load_from_objects(self, objects: ProfileCustodySecureObjectRepositoryPort) -> LoadedProfileRecord:
         namespace = profile_custody_secure_object_namespace()
         raw, loaded = _load_profile_record_row(objects, self.session.profile_id, namespace)
-        record = _decode_profile_record(loaded)
+        record = _decode_profile_record(loaded, context=self.session.profile_decode_context)
         self.session.assert_row_binding(raw, record)
         event_id, event = _load_profile_record_event(objects, raw)
         _assert_event_binding(self.session, record, event_id, event)
@@ -504,12 +512,44 @@ def _load_profile_record_row(
     return raw, loaded
 
 
-def _decode_profile_record(loaded: ProfileCustodySecureObjectRecordPort) -> UserProfileRecord:
+def _decode_profile_record(
+    loaded: ProfileCustodySecureObjectRecordPort,
+    *,
+    context: ProfileDecodeContext,
+) -> UserProfileRecord:
     """Decode the strict current profile record payload."""
     try:
-        return UserProfileRecord.model_validate_json(loaded.payload)
+        from ...domain.user_profile.values import decode_user_profile_record
+
+        return decode_user_profile_record(loaded.payload, context=context)
     except ValueError as exc:
         raise ProfileRecordIntegrityError("profile record row is not the current strict record shape") from exc
+
+
+def _replacement_record(
+    current: UserProfileRecord,
+    *,
+    context: ProfileCreateContext,
+    setup_state: ProfileSetupState,
+    record_revision: int,
+    previous_record_digest: str | None,
+    created_at: datetime,
+    updated_at: datetime,
+) -> UserProfileRecord:
+    """Build a replacement through the context-required profile factory."""
+    from ...domain.user_profile.values import create_user_profile_record
+
+    return create_user_profile_record(
+        context=context,
+        profile_id=str(current.profile_id),
+        facts=current.facts,
+        setup_state=setup_state,
+        record_revision=record_revision,
+        previous_record_digest=previous_record_digest,
+        content_digest="",
+        created_at=created_at,
+        updated_at=updated_at,
+    )
 
 
 def _load_profile_record_event(

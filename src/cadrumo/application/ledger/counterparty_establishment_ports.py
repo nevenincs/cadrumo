@@ -9,11 +9,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
+from ...core.errors.hierarchy import CadrumoError
+
 if TYPE_CHECKING:
     from .counterparty_establishment import ConfirmedCounterpartyFacts
 
 
-class CounterpartyEstablishmentPersistenceError(RuntimeError):
+class CounterpartyEstablishmentPersistenceError(CadrumoError):
     """Translated failure from the counterparty-establishment store."""
 
     def __init__(self, operation: str) -> None:

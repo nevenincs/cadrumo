@@ -33,7 +33,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.temporal import select_revision, select_revision_for_year
+from ...domain.calculations.registry.queries import RegistryQueryService
 
 M145_COMMUNICATION_SERVICE_OWNER = "cadrumo.application.modelo"
 
@@ -96,16 +96,19 @@ def build_m145_communication_service_contract(*, filing_year: int | None = None)
     through a filing-grade snapshot.
     """
     selected_filing_year = date.today().year if filing_year is None else filing_year
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("145").value)
-    year_revision = select_revision_for_year(modelo, filing_year=selected_filing_year)
+    query_service = RegistryQueryService(bundled_authority())
+    year_revision = query_service.revision_for_year(
+        Modelo("145").value,
+        filing_year=selected_filing_year,
+    )
     period_tokens = tuple(
         str(period) for period in year_revision.period_selector.periods_for_year(selected_filing_year)
     )
     if len(period_tokens) != 1:
         raise ValueError("Modelo 145 communication contract requires one registry period token")
     period_token = period_tokens[0]
-    revision = select_revision(
-        modelo,
+    revision = query_service.revision_for_scope(
+        Modelo("145").value,
         filing_year=selected_filing_year,
         period=period_token,
     )

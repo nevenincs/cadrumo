@@ -39,6 +39,7 @@ from .recovery_custody import restore_profile_from_recovery_artifact, restore_pr
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from .aggregate import CommittedProfileView
     from .custody_ports import (
         ProfileCustodyEnvelopePort,
@@ -112,6 +113,7 @@ def restore_profile_capsule_with_password(
     capsule: ProfileCapsuleSource,
     password: str,
     root: Path | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRestoreOutcome:
     """Publish already-read capsule material under its own password.
 
@@ -130,6 +132,7 @@ def restore_profile_capsule_with_password(
         sentinel=material.sentinel,
         database_bytes=material.database_bytes,
         root=root,
+        profile_decode_context=profile_decode_context,
     )
     return _outcome(view, material, authority="password")
 
@@ -141,6 +144,7 @@ def restore_profile_capsule_with_recovery_artifact(
     artifact_source: Path,
     recovery_secret: str,
     root: Path | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRestoreOutcome:
     """Publish already-read capsule material proving a portable artifact.
 
@@ -156,6 +160,7 @@ def restore_profile_capsule_with_recovery_artifact(
         sentinel=material.sentinel,
         database_bytes=material.database_bytes,
         root=root,
+        profile_decode_context=profile_decode_context,
     )
     return _outcome(view, material, authority="recovery_artifact")
 

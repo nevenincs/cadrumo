@@ -21,7 +21,6 @@ from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.parsing.utils import parse_bool as _parse_bool
 from ...core.period import Period as _Period
 from ...core.time.clock import now as _utc_now
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import (
     bound_casilla_binding_ids as _registry_bound_casilla_binding_ids,
 )
@@ -73,56 +72,6 @@ from .errors import ModeloApplicationError
 from .errors import ModeloApplicationError as _ModeloBuilderError
 
 
-def _refuse_unsupported_filing_year(period: _Period) -> None:
-    """Refuse to build a filing draft for a year the registry does not declare supported.
-
-    Placed at the production consumption boundary rather than on the shared
-    snapshot accessor. The corpus deliberately ships historical revisions --
-    37 of the 58 bundled modelos carry years outside the declared window, some
-    reaching back to 2003 -- and structural inspection of those revisions is
-    legitimate. What is not legitimate is BUILDING A FILING for a year nobody
-    declared the product supports, which is what this guard refuses.
-
-    The declaration is bounded rather than enumerated, and only its hard gates
-    refuse here. Below the floor is outside what the product claims and is
-    refused. Above the horizon is not: no revision names such a year, but the
-    newest declared one carries forward into it, so the year is answerable and
-    this guard lets it through. A declared hard ceiling closes that open end.
-
-    A year above the horizon still has to resolve a revision, and that is the
-    resolver's refusal to make, with the modelo and period in hand. Refusing it
-    twice here would only name the earlier of two reasons.
-
-    Raises:
-        ModeloApplicationError: When the period's filing year falls outside the
-            hard gates of the one writable supported-year declaration. The
-            message names the year and that declaration, because a refusal an
-            operator cannot act on is an outage rather than a guard.
-    """
-    authority = bundled_authority()
-    try:
-        authority.project_filing_year(period.filing_year)
-        return
-    except _RegistrySnapshotError as exc:
-        refusal = exc
-    declaration = authority.catalogues.supported_filing_years
-    if declaration is None:
-        supported_filing_years = "none declared"
-    else:
-        ceiling = declaration.hard_ceiling
-        supported_filing_years = (
-            f"{declaration.floor} and later" if ceiling is None else f"{declaration.floor} to {ceiling}"
-        )
-    raise ModeloApplicationError(
-        translated_message="application.filing.build_draft.errors.unsupported_filing_year",
-        context={
-            "filing_year": str(period.filing_year),
-            "supported_filing_years": supported_filing_years,
-            "declaration": "registry/aeat/legal/supported-filing-years.toml",
-        },
-    ) from refusal
-
-
 def build_draft(
     *,
     modelo: str,
@@ -156,8 +105,7 @@ def build_draft(
         :class:`ModeloBuilderError`: If the registry has no
             matching snapshot, inputs are malformed, or strict validation fails.
     """
-    _refuse_unsupported_filing_year(period)
-    snapshot = _load_registry_snapshot(modelo=modelo, period=period)
+    snapshot = _load_registry_snapshot(modelo=modelo, period=period, schema_provider=schema_provider)
     filing_year, registry_period = _registry_period(period)
     snapshot_ref = _RegistrySnapshotRef(
         modelo=snapshot.modelo.id,
@@ -453,33 +401,25 @@ def _validate_built_draft(
     return _apply_validation(draft, findings)
 
 
-def _load_registry_snapshot(*, modelo: str, period: _Period) -> _RegistrySnapshot:
-    """Resolve the registry snapshot for ``modelo`` in ``period`` from the authority.
-
-    Deliberately uncached at this layer. Registry snapshots are already cached
-    beneath this call, and that cache chain is invalidated by the complete
-    registry-tree fingerprint: resetting the process resource registry rebuilds
-    the authority, whose tree load is keyed on that fingerprint, so changed
-    sources re-derive. A memo here would sit *above* the loader keyed only on
-    ``(modelo, period)`` — no fingerprint, no TTL, and outside that reset
-    protocol — so it would keep serving the pre-change snapshot for the life of
-    the process even after a correct reset, which means computing a filing under
-    a superseded revision's norms. Resolving through the authority costs well
-    under a microsecond on the warm path, so the memo bought nothing that could
-    justify that.
-
-    Revision selection stays law-determined: only ``filing_year`` and the bare
-    registry period token are passed, never a stored revision id.
-    """
+def _load_registry_snapshot(
+    *,
+    modelo: str,
+    period: _Period,
+    schema_provider: _CasillaSchemaProvider,
+) -> _RegistrySnapshot:
+    """Read the exact snapshot already pinned into the filing schema provider."""
     filing_year, registry_period = _registry_period(period)
     try:
-        authority = bundled_authority()
-        return authority.snapshot(
-            modelo,
-            filing_year=filing_year,
-            period=registry_period,
-        )
-    except (_RegistrySnapshotError, _RegistryValidationError) as exc:
+        get_snapshot = getattr(schema_provider, "get_snapshot", None)
+        if not callable(get_snapshot):
+            raise _RegistrySnapshotError("filing schema provider carries no generation-pinned snapshot")
+        snapshot = get_snapshot(modelo)
+        if not isinstance(snapshot, _RegistrySnapshot):
+            raise _RegistrySnapshotError("filing schema provider returned an invalid registry snapshot")
+        if snapshot.filing_year != filing_year or snapshot.period != registry_period:
+            raise _RegistrySnapshotError("filing schema provider snapshot does not match the requested period")
+        return snapshot
+    except (_RegistrySnapshotError, _RegistryValidationError, ModeloApplicationError) as exc:
         raise _ModeloBuilderError(
             translated_message="application.filing.build_draft.errors.registry_snapshot_unavailable",
             context={
@@ -762,6 +702,7 @@ def filing_binding_values(
     enum_binding_ids: frozenset[_BindingId] = frozenset(),
     non_decimal_binding_ids: frozenset[_BindingId] = frozenset(),
 ) -> list[_ModeloBindingValue]:
+    """Project literal filing bindings while preserving their registry provenance."""
     values: list[_ModeloBindingValue] = []
     for binding_id, binding in bindings.items():
         if binding_id in enum_binding_ids or binding_id in non_decimal_binding_ids:

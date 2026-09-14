@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from functools import cache
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.period import Period, PeriodError, StandardPeriodCode
 
 __all__ = [
@@ -21,7 +22,7 @@ __all__ = [
 ]
 
 
-class LedgerPeriodValidationError(ValueError):
+class LedgerPeriodValidationError(CadrumoError):
     """A ledger period token is not a span-shaped canonical AEAT period."""
 
     def __init__(self, *, raw: str, accepted_period_tokens: tuple[str, ...]) -> None:

@@ -29,6 +29,7 @@ from ...domain.calculations.registry.applicability_modelo202 import Modelo202Mod
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
@@ -187,36 +188,36 @@ def cross_period_dependency_inventory(
     :class:`RegistrySnapshot` evaluated for
     dependency coverage.
     """
-    selected_modelos = authority.modelos if modelos is None else tuple(authority.modelo(modelo) for modelo in modelos)
+    query_service = RegistryQueryService(authority)
+    selected_codes = None if modelos is None else tuple(modelos)
     items: list[CrossPeriodDependencyInventoryItem] = []
-    for modelo in selected_modelos:
-        for revision in modelo.revisions.values():
-            if not revision.period_selector.includes_year(filing_year):
+    for modelo_id, revision in query_service.iter_modelo_revisions(modelo_codes=selected_codes):
+        if not revision.period_selector.includes_year(filing_year):
+            continue
+        # Dependency inventory is a filing-readiness surface. Applicability-
+        # and calculation-grade revisions cannot lawfully produce the filing
+        # snapshot consumed below, and therefore cannot own filing blockers.
+        if revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
+            continue
+        for period in revision.period_selector.periods_for_year(filing_year):
+            snapshot = authority.snapshot(
+                modelo_id,
+                filing_year=filing_year,
+                period=period,
+                revision_id=str(revision.id),
+            )
+            dependencies = cross_period_dependency_requirements(snapshot)
+            if not dependencies:
                 continue
-            # Dependency inventory is a filing-readiness surface. Applicability-
-            # and calculation-grade revisions cannot lawfully produce the filing
-            # snapshot consumed below, and therefore cannot own filing blockers.
-            if revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
-                continue
-            for period in revision.period_selector.periods_for_year(filing_year):
-                snapshot = authority.snapshot(
-                    str(modelo.id),
-                    filing_year=filing_year,
-                    period=period,
-                    revision_id=str(revision.id),
-                )
-                dependencies = cross_period_dependency_requirements(snapshot)
-                if not dependencies:
-                    continue
-                items.append(
-                    CrossPeriodDependencyInventoryItem(
-                        target_modelo=str(snapshot.modelo.id),
-                        target_revision_id=str(snapshot.revision.id),
-                        target_filing_year=snapshot.filing_year,
-                        target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-                        dependencies=dependencies,
-                    ),
-                )
+            items.append(
+                CrossPeriodDependencyInventoryItem(
+                    target_modelo=str(snapshot.modelo.id),
+                    target_revision_id=str(snapshot.revision.id),
+                    target_filing_year=snapshot.filing_year,
+                    target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+                    dependencies=dependencies,
+                ),
+            )
     return CrossPeriodDependencyInventory(
         filing_year=filing_year,
         items=tuple(

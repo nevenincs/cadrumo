@@ -37,7 +37,7 @@ from __future__ import annotations
 from contextvars import copy_context
 from dataclasses import dataclass
 from threading import Event
-from typing import TYPE_CHECKING, ClassVar, cast, override
+from typing import TYPE_CHECKING, cast, override
 
 from textual import on
 from textual.app import ComposeResult
@@ -46,6 +46,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Select, Static
 
 from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
+from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from ....core.i18n.render import output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
@@ -93,7 +94,7 @@ class RegistrationRefusal:
 _RECOVERY_HANDOFF_POLL_SECONDS = 0.1
 
 
-class RecoveryHandoverAbandonedError(Exception):
+class RecoveryHandoverAbandonedError(CadrumoError):
     """The screen that owed the recovery confirmation is no longer presentable.
 
     Distinct from :class:`RecoveryHandoverCancelledError`, which reports a
@@ -103,19 +104,9 @@ class RecoveryHandoverAbandonedError(Exception):
     the process with no error and no diagnostic.
     """
 
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal-recovery-handover-abandonment-signal: this reports an unanswerable handoff rather than a "
-        "storage or custody fault; the frontend catches it by name and renders a RegistrationRefusal message key"
-    )
 
-
-class RecoveryHandoverCancelledError(Exception):
+class RecoveryHandoverCancelledError(CadrumoError):
     """The operator declined the one-time recovery possession gate."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal-recovery-handover-cancellation-signal: this reports a deliberate operator choice, not a "
-        "fault; the frontend catches it by name and renders a RegistrationRefusal message key"
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -627,16 +618,20 @@ def build_profile_registration_attempt(
     recovery phrase, or enrollment record is retained beyond the call.
     """
     from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from ....domain.user_profile.values import UserProfileFact
 
     try:
-        outcome = register_profile_with_credentials(
-            label=label,
-            passphrase=candidate_passphrase,
-            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
-            recovery_handover=recovery_handover,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            outcome = register_profile_with_credentials(
+                label=label,
+                passphrase=candidate_passphrase,
+                facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
+                recovery_handover=recovery_handover,
+                profile_create_context=operation.profile_create_context(),
+                profile_decode_context=operation.profile_decode_context(),
+            )
     except RecoveryHandoverCancelledError:
         return RegistrationAttempt(
             expected_refusal=RegistrationRefusal(

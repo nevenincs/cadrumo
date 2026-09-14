@@ -19,6 +19,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Final, Protocol
 
+from ...core.errors.hierarchy import CadrumoError
+
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
 
@@ -59,7 +61,7 @@ only modelo it covers -- because that revision legitimately declares both.
 """
 
 
-class AmbiguousDeclarationResultError(ValueError):
+class AmbiguousDeclarationResultError(CadrumoError):
     """A revision declares more than one final-result casilla."""
 
 

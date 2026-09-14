@@ -19,6 +19,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, NonNegativeInt, field_validator
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
@@ -29,7 +30,7 @@ from ...domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, B
 from .service import BienesInversionRegisterService
 
 
-class BienInversionDisposalIncompleteError(ValueError):
+class BienInversionDisposalIncompleteError(CadrumoError):
     """Raised when exactly one half of a disposal was supplied.
 
     A disposal is a year AND a regime: the year alone does not say how the

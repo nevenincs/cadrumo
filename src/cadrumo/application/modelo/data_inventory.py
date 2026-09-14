@@ -43,10 +43,10 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.profile_grounding import binding_profile_keys
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.calculations.registry.temporal import select_revision
 from .binding_readiness import profile_resolvable_binding_ids
 
 # Sources whose calculate resolvers read bucket-local observation, register, or
@@ -68,6 +68,7 @@ _LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
 
 
@@ -192,6 +193,7 @@ def data_inventory_checklist(
     filing_year: int,
     period: Period,
     bucket_id: str | None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> DataInventoryChecklist:
     """Compose the data-inventory checklist for one modelo / year / period.
 
@@ -227,8 +229,18 @@ def data_inventory_checklist(
     Returns:
         A :class:`DataInventoryChecklist`.
     """
-    modelo_definition = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo)
-    revision = select_revision(modelo_definition, filing_year=filing_year, period=period.registry_token)
+    if operation is None:
+        revision = RegistryQueryService(bundled_authority()).revision_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period.registry_token,
+        )
+    else:
+        revision = operation.revision_for_context(
+            modelo,
+            filing_year=filing_year,
+            period=period.registry_token,
+        )
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     buckets = _collect_inventory_buckets(revision, bindings_by_id)
 

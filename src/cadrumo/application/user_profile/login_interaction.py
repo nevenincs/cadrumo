@@ -45,12 +45,18 @@ def preselected_profile_login_id(name: str | None) -> str | None:
 def attempt_profile_login(profile_id: str, passphrase: str) -> ProfileLoginAttempt:
     """Unlock a chosen profile, converting expected operator refusals to data."""
     from ...core.errors.error_codes import resolve_error_message
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ...domain.user_profile.errors import ProfileNotFoundError
     from .authentication import ProfileAuthenticationRefusedError
     from .login_session import ProfileLoginThrottledError
 
     try:
-        outcome = login_profile(name=profile_id, passphrase_callback=lambda: passphrase)
+        with bundled_indexed_authority().operation() as operation:
+            outcome = login_profile(
+                name=profile_id,
+                passphrase_callback=lambda: passphrase,
+                profile_decode_context=operation.profile_decode_context(),
+            )
     except (ProfileAuthenticationRefusedError, ProfileLoginThrottledError, ProfileNotFoundError) as refusal:
         return ProfileLoginAttempt(refusal=resolve_error_message(refusal))
     return ProfileLoginAttempt(outcome=outcome)

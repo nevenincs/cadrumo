@@ -17,9 +17,8 @@ from ....domain.filing.errors import ModeloBuilderError, ModeloDraftError
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
 from ....domain.filing.validator import ModeloValidator
-from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.submission.models import ModeloDraftStatus
-from ....domain.transactions.models import TransactionCatalogue
+from ...review.tests._fakes import draft_review_ports
 from ..draft_construction import binding_provenance, build_draft
 from ..draft_review import (
     approve_draft,
@@ -122,12 +121,12 @@ def _schema_provider() -> CasillaSchemaProvider:
 
 @cache
 def _modelo_130_unscoped_provider() -> CasillaSchemaProvider:
-    return build_runtime_schema_provider(modelos=("130",))
+    return build_runtime_schema_provider(modelos=("130",), filing_year=_PERIOD.filing_year, period=_PERIOD)
 
 
 @cache
 def _unscoped_schema_provider() -> CasillaSchemaProvider:
-    return build_runtime_schema_provider()
+    return build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD)
 
 
 @cache
@@ -504,8 +503,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
         bucket_id="test",
         approved_by="operator",
         schema_provider=schema_provider,
-        transaction_catalogue=TransactionCatalogue(),
-        invoice_catalogue=InvoiceCatalogue(),
+        ports=draft_review_ports(),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
@@ -526,7 +524,7 @@ def test_approve_draft_rejects_blank_approver_with_translated_message() -> None:
             bucket_id="test",
             approved_by="   ",
             schema_provider=schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
+            ports=draft_review_ports(),
         )
 
     assert exc_info.value.translated_message == "application.filing.review.errors.approved_by_blank"
@@ -548,7 +546,7 @@ def test_approve_draft_rejects_unready_draft_with_translated_message() -> None:
             bucket_id="test",
             approved_by="operator",
             schema_provider=schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
+            ports=draft_review_ports(),
         )
 
     assert exc_info.value.translated_message == "application.filing.review.errors.draft_not_ready"
@@ -580,8 +578,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
         bucket_id="test",
         approved_by="registry",
         schema_provider=schema_provider,
-        transaction_catalogue=TransactionCatalogue(),
-        invoice_catalogue=InvoiceCatalogue(),
+        ports=draft_review_ports(),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
@@ -611,8 +608,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
         bucket_id="test",
         approved_by="registry",
         schema_provider=schema_provider,
-        transaction_catalogue=TransactionCatalogue(),
-        invoice_catalogue=InvoiceCatalogue(),
+        ports=draft_review_ports(),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
@@ -649,8 +645,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
         bucket_id="test",
         approved_by="registry",
         schema_provider=schema_provider,
-        transaction_catalogue=TransactionCatalogue(),
-        invoice_catalogue=InvoiceCatalogue(),
+        ports=draft_review_ports(),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
@@ -671,7 +666,7 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
             bucket_id="test",
             approved_by="operator",
             schema_provider=schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
+            ports=draft_review_ports(),
         )
     assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
     context = exc_info.value.context
@@ -698,7 +693,7 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
             bucket_id="test",
             approved_by="operator",
             schema_provider=schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
+            ports=draft_review_ports(),
         )
     assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
     context = exc_info.value.context
@@ -724,7 +719,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
         draft,
         bucket_id="test",
         schema_provider=schema_provider,
-        transaction_catalogue=TransactionCatalogue(),
+        ports=draft_review_ports(),
     )
     assert refreshed.status is ModeloDraftStatus.PRESENTADA
     assert refreshed.approved_at is None

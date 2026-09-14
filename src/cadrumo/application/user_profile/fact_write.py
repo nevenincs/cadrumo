@@ -95,12 +95,14 @@ def apply_profile_fact_changes(
 
     repository = ProfileRecordRepository.for_current_session(profile_id)
     current = expected_record if expected_record is not None else repository.load(profile_id)
+    profile_context = repository.session.profile_decode_context
     changed_paths = {fact.path for fact in changes}
     next_facts = (*tuple(fact for fact in current.facts if fact.path not in changed_paths), *changes)
     reject_invalid_profile_facts(
         profile_id,
         next_facts,
         require_complete=current.setup_state is not ProfileSetupState.INCOMPLETE,
+        schema=profile_context.schema,
     )
     published = repository.apply_fact_changes(
         profile_id,

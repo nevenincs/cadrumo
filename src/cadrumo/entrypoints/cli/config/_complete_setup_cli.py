@@ -33,7 +33,7 @@ from ..common import bad, emit_envelope
 from ._complete_setup_payloads import ProfileCompleteSetupResult
 
 
-def _still_missing(record: object) -> tuple[str, ...]:
+def _still_missing(record: object, *, schema: object) -> tuple[str, ...]:
     """Return the profile paths that keep this record out of ``COMPLETE``.
 
     Both authorities are consulted and their answers unioned in order: the
@@ -46,11 +46,13 @@ def _still_missing(record: object) -> tuple[str, ...]:
         missing_required_field_paths,
     )
     from ....application.user_profile.projections import record_to_path_values
-    from ....domain.user_profile.loader import load_user_profile_schema
+    from ....domain.user_profile.schema import ProfileSchemaDefinition
     from ....domain.user_profile.values import UserProfileRecord
 
     values = record_to_path_values(cast(UserProfileRecord, record))
-    schema_missing = missing_required_field_paths(load_user_profile_schema(), values)
+    if not isinstance(schema, ProfileSchemaDefinition):
+        raise TypeError("profile setup completeness requires the session's pinned profile schema")
+    schema_missing = missing_required_field_paths(schema, values)
     conditional_missing = conditional_profile_missing_required(values)
     # dict.fromkeys de-duplicates while preserving order: a path both authorities
     # name is one thing to fix, not two.
@@ -98,7 +100,7 @@ def profile_complete_setup(ctx: typer.Context) -> None:
             expected_content_digest=current.content_digest,
         )
     except ProfileSchemaValidationError as exc:
-        missing = _still_missing(current)
+        missing = _still_missing(current, schema=profiles.session.profile_decode_context.schema)
         raise bad(
             tr(
                 "cli.config.profile.complete_setup.incomplete",

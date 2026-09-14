@@ -12,10 +12,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 
 
-class InvoiceConfirmationPersistenceError(RuntimeError):
+class InvoiceConfirmationPersistenceError(CadrumoError):
     """Translated failure from the confirmation attachment capability."""
 
     def __init__(self, operation: str) -> None:

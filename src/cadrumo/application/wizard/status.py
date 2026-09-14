@@ -17,6 +17,7 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ..operator_actions.models import DeclaredNextAction
 from ..state_projection_auth import build_auth_readiness_without_live_backend
 from ..user_profile.completeness import iva_regime_required
@@ -166,7 +167,11 @@ def _next_wizard_action(
     return None
 
 
-def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
+def load_active_taxpayer_profile(
+    state: WorkflowState,
+    *,
+    schema: ProfileSchemaDefinition | None = None,
+) -> TaxpayerProfile:
     """Build an :class:`TaxpayerProfile` from the active profile values.
 
     The bridge runs the active profile record through the canonical
@@ -177,6 +182,9 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
     Args:
         state: The current :class:`WorkflowState` from which the active
             profile record is resolved.
+        schema: The profile schema supplied by the enclosing authority
+            operation. It is required when ``state`` contains a profile
+            record; no bundled-schema fallback is permitted.
 
     Returns:
         A :class:`TaxpayerProfile` populated from the active profile's
@@ -198,14 +206,18 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ),
         )
+    if schema is None:
+        raise WizardStatusError(
+            "active taxpayer projection requires the schema pinned to the authority operation",
+        )
     values: dict[str, str] = dict(record_to_path_values(record))
     if not values.get(_TAX_ID_PATH):
         _require_active_profile_tax_id(
             values,
             active_profile=resolve_active_bucket_id(),
-            requirement=_grounded_tax_id_requirement(),
+            requirement=_grounded_tax_id_requirement(schema=schema),
         )
-    return projection_for_taxpayer(record)
+    return projection_for_taxpayer(record, schema=schema)
 
 
 _TAX_ID_PATH = "identity.tax_id"
@@ -240,7 +252,7 @@ def _require_active_profile_tax_id(
     )
 
 
-def _grounded_tax_id_requirement() -> str:
+def _grounded_tax_id_requirement(*, schema: ProfileSchemaDefinition) -> str:
     """Render the tax-identifier field as its operator label with legal grounding.
 
     The refusal previously named the field by baking a selector token into its
@@ -249,13 +261,12 @@ def _grounded_tax_id_requirement() -> str:
     schema. Reading the label from the schema is also what every other missing
     profile fact refusal in this codebase does.
     """
-    from ...domain.user_profile.loader import load_user_profile_schema
     from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
             _TAX_ID_PATH,
-            schema=load_user_profile_schema(),
+            schema=schema,
         ),
     )
 

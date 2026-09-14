@@ -14,6 +14,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
+from ...core.errors.hierarchy import CadrumoError
 from ...domain.transactions.models import Transaction
 
 
@@ -54,7 +55,7 @@ class LlmTransactionDiagnosticsReader(Protocol):
         ...
 
 
-class LlmDiagnosticsReadError(RuntimeError):
+class LlmDiagnosticsReadError(CadrumoError):
     """A usage or transaction diagnostics read failed at the outer boundary."""
 
 

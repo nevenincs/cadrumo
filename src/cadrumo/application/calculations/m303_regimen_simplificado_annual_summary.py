@@ -18,14 +18,13 @@ from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado
 from ...domain.modelos.calculation_revision import (
@@ -79,12 +78,14 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
         filing_repository: ModeloRecordCatalogueRepositoryProtocol,
         regimen_simplificado_applies: bool,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Initialize the resolver with the repositories and applicability flag it draws on."""
         self._registry_snapshot = registry_snapshot
         self._work_unit_repository = work_unit_repository
         self._calculation_repository = calculation_repository
         self._filing_repository = filing_repository
+        self._operation = operation
         #: Whether regimen simplificado reaches this taxpayer at all. Supplied
         #: rather than derived: the closed scope vocabulary is single-homed in
         #: the modelo package, and this layer already receives its scope
@@ -115,16 +116,20 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         self._require_registry_target_map(requirement.binding_ids_by_summary_casilla_id, values)
         handoff = M303RegimenSimplificadoAnnualSummaryHandoff.assembled(
             source_bucket_id=source.bucket_id,
+            source_modelo=source.modelo,
             source_work_unit_id=source.work_unit_id,
             source_calculation_revision_id=source_revision.calculation_revision_id,
             source_registry_revision_id=source.revision_id,
             source_filing_year=source.filing_year,
+            source_period_code=source.period.registry_token,
             source_result_digest=result.digest,
             source_evidence_references=evidence_references,
             target_bucket_id=target.bucket_id,
+            target_modelo=target.modelo,
             target_work_unit_id=target.work_unit_id,
             target_registry_revision_id=target.revision_id,
             target_filing_year=target.filing_year,
+            target_period_code=target.period.registry_token,
             values=values,
         )
         self._require_registry_coordinates_current(handoff)
@@ -327,6 +332,17 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         source: WorkUnit,
         source_revision: CalculationRevision,
     ) -> tuple[M303RegimenSimplificadoCalculationResult, tuple[FilingEvidenceReference, ...]]:
+        if self._operation is None:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                resolver = M303RegimenSimplificadoAnnualSummarySourceResolver(
+                    registry_snapshot=self._registry_snapshot,
+                    work_unit_repository=self._work_unit_repository,
+                    calculation_repository=self._calculation_repository,
+                    filing_repository=self._filing_repository,
+                    regimen_simplificado_applies=self._regimen_simplificado_applies,
+                    operation=indexed_operation,
+                )
+                return resolver._validated_source_evidence(source, source_revision)
         evidence = source_revision.filing_instance_evidence
         if evidence is None:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
@@ -334,9 +350,8 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             )
         m303 = evidence.m303
         result = m303.regimen_simplificado.calculation_result
-        modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("303").value)
-        source_revision_at_coordinate = select_revision(
-            modelo,
+        source_revision_at_coordinate = self._operation.revision_for_context(
+            Modelo("303").value,
             filing_year=source.filing_year,
             period=source.period.registry_token,
         )
@@ -461,6 +476,7 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     regimen_simplificado_applies: bool,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> None:
     """Fail closed when a persisted M390 handoff no longer re-resolves exactly."""
     # The calculation rung, not the filing rung. This precondition asks the
@@ -470,7 +486,18 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     # a calculation-grade modelo before the registry can answer "this
     # requirement does not apply to you" -- and the check still runs, still
     # reads the requirement, and still raises on a handoff present without one.
-    snapshot = bundled_authority().snapshot(
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return validate_m303_regimen_simplificado_annual_summary_target_revision(
+                target_work_unit=target_work_unit,
+                target_revision=target_revision,
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+                filing_repository=filing_repository,
+                regimen_simplificado_applies=regimen_simplificado_applies,
+                operation=indexed_operation,
+            )
+    snapshot = operation.snapshot(
         target_work_unit.modelo,
         filing_year=target_work_unit.filing_year,
         period=target_work_unit.period.registry_token,
@@ -482,6 +509,7 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
         calculation_repository=calculation_repository,
         filing_repository=filing_repository,
         regimen_simplificado_applies=regimen_simplificado_applies,
+        operation=operation,
     ).validate_persisted_target_revision(
         target_work_unit=target_work_unit,
         target_revision=target_revision,

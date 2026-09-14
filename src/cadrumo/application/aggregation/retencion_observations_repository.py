@@ -26,6 +26,7 @@ from datetime import datetime
 from typing import Protocol
 
 from ...core.aggregation import AggregationCaptureKind, RetencionScheme
+from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.translatable import Translatable as t
 from ...core.period import Period
 from .errors import AggregationValidationError
@@ -77,7 +78,7 @@ def _validate_key_component(token: str, *, context: str) -> str:
     )
 
 
-class RetencionObservationPersistenceError(RuntimeError):
+class RetencionObservationPersistenceError(CadrumoError):
     """Translated failure from the retención-observation persistence port."""
 
     def __init__(self, operation: str) -> None:

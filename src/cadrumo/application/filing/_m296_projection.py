@@ -27,9 +27,8 @@ from collections.abc import Mapping
 from datetime import date
 
 from ...core.filing_projection_ref import FilingProjectionRef
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
@@ -45,17 +44,9 @@ def _registry_m296_projection_catalogue(
     period: str | None = None,
 ) -> Mapping[str, str]:
     """Resolve detail-row collections from the selected registry authority."""
-    authority = bundled_authority()
-    query_service = RegistryQueryService(authority)
-    if period is None:
-        query_service.describe_modelo("296", as_of=effective_date)
-    else:
-        query_service.describe_modelo_for_scope(
-            "296",
-            filing_year=effective_date.year,
-            period=period,
-            as_of=effective_date,
-        )
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise RuntimeError("Modelo 296 projection requires a generation-pinned authority operation")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-296-detail-collection-mapping",
@@ -100,7 +91,8 @@ def _rows_for(
 
 def _m296_field_name(reference: FilingProjectionRef) -> str:
     """Return the row-attribute name carried by a registry projection reference."""
-    field_name = getattr(reference.field, "value", reference.field)
+    raw_field = getattr(reference, "field", None)
+    field_name = getattr(raw_field, "value", raw_field)
     if not isinstance(field_name, str) or not field_name:
         raise ValueError("Modelo 296 projection reference has no row field")
     return field_name

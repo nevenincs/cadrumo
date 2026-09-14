@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from ...core.errors.hierarchy import CadrumoError
 from .launcher import InstalledWorkbenchRootInputsProviderV1, main
 
 _SELF_TEST_FLAG = "--self-test"
 _MODULE_ARGUMENT_ERROR_EXIT_CODE = 2
 
 
-class TuiModuleArgumentError(ValueError):
+class TuiModuleArgumentError(CadrumoError):
     """Arguments outside the independent TUI root's closed invocation surface."""
 
 

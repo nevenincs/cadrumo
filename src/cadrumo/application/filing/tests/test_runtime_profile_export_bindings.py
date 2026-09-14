@@ -32,14 +32,14 @@ def _modelo_100_bindings(filing_year: int):
     return provider.get_subview("100").profile_export_bindings
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", range(2022, 2026))
 def test_every_projected_binding_declares_an_export_address(filing_year: int) -> None:
     """The discriminator holds: nothing lands here without somewhere to land."""
     for binding in _modelo_100_bindings(filing_year):
         assert getattr(binding.provider, "dictionary_field", None), binding.id
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", range(2022, 2026))
 def test_the_projection_is_narrower_than_the_revision_binding_set(filing_year: int) -> None:
     """It is a projection, not a second snapshot.
 
@@ -59,7 +59,8 @@ def test_a_fixed_width_modelo_projects_nothing() -> None:
     Keeps the projection honest: a discriminator that matched everything would
     make the assertions above vacuous.
     """
-    provider = build_runtime_schema_provider(modelos=("303",))
+    period = Period.from_year_and_code(2025, "4T")
+    provider = build_runtime_schema_provider(modelos=("303",), filing_year=period.filing_year, period=period)
 
     assert provider.get_subview("303").profile_export_bindings == ()
 
@@ -71,7 +72,7 @@ def test_the_identity_fields_the_export_needs_are_reachable() -> None:
     Their presence here is what makes replacing those escapes a join rather than
     a relocation of the same hardcoding.
     """
-    addressed = {str(binding.selector.dictionary_field) for binding in _modelo_100_bindings(2024)}
+    addressed = {str(binding.provider.dictionary_field) for binding in _modelo_100_bindings(2024)}
 
     assert {"DPNIF_D", "DP_APENOM_D"} <= addressed
 

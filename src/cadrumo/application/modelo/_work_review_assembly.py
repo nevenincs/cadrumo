@@ -5,13 +5,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.identity.bucket import BucketId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
 from ...core.period import Period
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.export import (
@@ -39,7 +40,6 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
@@ -72,6 +72,9 @@ from .work_review import (
     ModeloWorkReviewCasilla,
 )
 from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,17 +194,27 @@ def _persisted_decimal_bindings(
 
 def _official_references(
     snapshot: RegistrySnapshot,
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority | None,
     estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Mapping[CasillaId, str | None]:
+    layouts = derive_export_layouts_from_bindings(snapshot.revision)
+    if operation is None:
+        if authority is None:
+            raise ValueError("work-review evidence requires an authority or pinned operation")
+        source_payloads = {item.source_reference_id: item.payload for item in authority.evidence.sources}
+    else:
+        source_ids = {str(source_id) for layout in layouts for source_id in layout.source_refs}
+        source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
     xml_paths: dict[CasillaId, str] = {}
-    for layout in derive_export_layouts_from_bindings(snapshot.revision):
+    for layout in layouts:
         if layout.dictionary_source_ref is None:
             continue
         for entry in xml_dictionary_entries(
             layout,
             sources=snapshot.sources,
-            source_payloads={item.source_reference_id: item.payload for item in authority.evidence.sources},
+            source_payloads=source_payloads,
         ):
             if entry.casilla_id is not None:
                 xml_paths.setdefault(entry.casilla_id, entry.path)
@@ -394,14 +407,23 @@ def _review_casilla(
 def _review_row_context(
     *,
     snapshot: RegistrySnapshot,
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority | None,
     revision: CalculationRevision | None,
     blocking_findings: tuple[ModeloVerificationFinding, ...],
+    operation: PinnedAuthorityOperation | None = None,
 ) -> _ReviewRowContext:
+    layouts = derive_export_layouts_from_bindings(snapshot.revision)
+    if operation is None:
+        if authority is None:
+            raise ValueError("work-review evidence requires an authority or pinned operation")
+        source_payloads = {item.source_reference_id: item.payload for item in authority.evidence.sources}
+    else:
+        source_ids = {str(source_id) for layout in layouts for source_id in layout.source_refs}
+        source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
     estados_casillas_oficiales = clasificar_casillas_oficiales(
         snapshot.revision,
         sources=snapshot.sources,
-        source_payloads={item.source_reference_id: item.payload for item in authority.evidence.sources},
+        source_payloads=source_payloads,
     )
     consumption_index = relation_consumption_index(snapshot.revision)
     return _ReviewRowContext(
@@ -419,7 +441,12 @@ def _review_row_context(
         persisted_decimal_bindings=_persisted_decimal_bindings(snapshot=snapshot, revision=revision),
         persisted_binding_ids=frozenset(() if revision is None else revision.binding_overrides),
         estados_casillas_oficiales=estados_casillas_oficiales,
-        official_references=_official_references(snapshot, authority, estados_casillas_oficiales),
+        official_references=_official_references(
+            snapshot,
+            authority,
+            estados_casillas_oficiales,
+            operation=operation,
+        ),
         blocking_findings=blocking_findings,
     )
 
@@ -427,15 +454,17 @@ def _review_row_context(
 def _review_casillas(
     *,
     snapshot: RegistrySnapshot,
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority | None,
     revision: CalculationRevision | None,
     blocking_findings: tuple[ModeloVerificationFinding, ...],
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[ModeloWorkReviewCasilla, ...]:
     context = _review_row_context(
         snapshot=snapshot,
         authority=authority,
         revision=revision,
         blocking_findings=blocking_findings,
+        operation=operation,
     )
     return tuple(_review_casilla(casilla, context) for casilla in snapshot.revision.casillas)
 
@@ -482,22 +511,28 @@ def assemble_modelo_work_review(
     period: Period,
     *,
     authority: ValidatedRegistryAuthority | None,
+    operation: PinnedAuthorityOperation | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
 ) -> ModeloWorkReview:
-    resolved_authority = authority or bundled_authority()
-    selected_revision = select_revision(
-        resolved_authority.validate_modelo(modelo),
-        filing_year=filing_year,
-        period=period.registry_token,
-    )
-    snapshot = resolved_authority.snapshot(
+    if operation is None:
+        raise ValueError("work-review assembly requires an explicit pinned authority operation")
+    if authority is not None:
+        raise ValueError("work-review assembly accepts a pinned operation, not a legacy authority")
+    selected_revision = operation.revision_for_context(
         modelo,
         filing_year=filing_year,
         period=period.registry_token,
+    )
+    snapshot = operation.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period.registry_token,
+        revision_id=selected_revision.id,
         grade=selected_revision.effective_authority_grade,
     )
+    resolved_authority = None
     work_units = work_unit_repository.load()
     calculation_repo = calculation_repository
     verification_repo = verification_repository
@@ -521,6 +556,7 @@ def assemble_modelo_work_review(
         authority=resolved_authority,
         revision=revision,
         blocking_findings=blocking_findings,
+        operation=operation,
     )
     return ModeloWorkReview(
         bucket_id=bucket_id,

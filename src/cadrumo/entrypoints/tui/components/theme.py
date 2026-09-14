@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING, Final
 
 from textual.theme import Theme
 
+from ....core.errors.hierarchy import CadrumoError
+
 if TYPE_CHECKING:
     from textual.app import App
 
@@ -214,7 +216,7 @@ themes would create two places for one fact to drift apart.
 """
 
 
-class UnknownDesignTokenError(KeyError):
+class UnknownDesignTokenError(CadrumoError):
     """A stylesheet referenced a ``$cadrumo-`` token that is not declared."""
 
 

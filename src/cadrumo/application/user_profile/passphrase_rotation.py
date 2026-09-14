@@ -57,6 +57,8 @@ if TYPE_CHECKING:
     from pathlib import Path
     from uuid import UUID
 
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+
 _ENVELOPE_KDF_SALT_BYTES = 16
 
 
@@ -103,6 +105,7 @@ def rotate_profile_passphrase(
     new_passphrase: str,
     new_passphrase_confirmation: str,
     root: Path | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfilePassphraseRotationOutcome:
     """Re-wrap ``profile_id``'s data key under ``new_passphrase``.
 
@@ -121,6 +124,8 @@ def rotate_profile_passphrase(
             profile-password contract.
         new_passphrase_confirmation: Must equal ``new_passphrase``.
         root: Storage root override; the effective root when omitted.
+        profile_decode_context: Decode context supplied by the enclosing
+            pinned authority operation for the authenticated record.
 
     Returns:
         A :class:`ProfilePassphraseRotationOutcome` naming the new generation.
@@ -189,8 +194,16 @@ def rotate_profile_passphrase(
         # the old password no longer opens anything. So the step that needs
         # the old credential goes first.
         occurred_at = _now()
-        old_session = ProfileRecordSession.from_envelope(envelope=current, dek=unlock.dek)
-        new_session = ProfileRecordSession.from_envelope(envelope=rotated, dek=unlock.dek)
+        old_session = ProfileRecordSession.from_envelope(
+            envelope=current,
+            dek=unlock.dek,
+            profile_decode_context=profile_decode_context,
+        )
+        new_session = ProfileRecordSession.from_envelope(
+            envelope=rotated,
+            dek=unlock.dek,
+            profile_decode_context=profile_decode_context,
+        )
         try:
             ProfileRecordStore(session=old_session, root=storage_root).rehead_under_rotated_envelope(
                 rotated=new_session,

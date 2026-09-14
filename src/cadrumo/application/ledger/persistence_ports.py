@@ -7,8 +7,10 @@ knowledge of the secure-object implementation to preserve guarded retries.
 
 from __future__ import annotations
 
+from ...core.errors.hierarchy import CadrumoError
 
-class LedgerPersistenceConflictError(RuntimeError):
+
+class LedgerPersistenceConflictError(CadrumoError):
     """A revision-guarded ledger persistence operation lost a race."""
 
 

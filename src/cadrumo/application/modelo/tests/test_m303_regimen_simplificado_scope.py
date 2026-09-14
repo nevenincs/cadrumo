@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+from ....domain.deadlines.models import TaxpayerProfile
 from ..action_errors import ModeloProfileReadinessError
 from ..m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_composition,
@@ -12,6 +13,8 @@ from ..m303_regimen_simplificado_scope import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_GENERAL_IVA_REGIME = require_iva_regime("GENERAL")
 
 
 def test_a_profile_projection_without_an_iva_block_blocks_m303_scope_resolution() -> None:
@@ -33,7 +36,7 @@ def test_a_profile_projection_without_an_iva_block_blocks_m303_scope_resolution(
     """
     with pytest.raises(ModeloProfileReadinessError) as raised_1:
         m303_regimen_simplificado_scope_for_profile(
-            TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL, iva=None),
+            TaxpayerProfile(tax_id="12345678Z", iva_regime=_GENERAL_IVA_REGIME, iva=None),
         )
 
     failure_1 = raised_1.value.precondition_failure
@@ -53,7 +56,7 @@ def test_raw_unknown_composition_is_refused() -> None:
 
 
 def test_profile_without_iva_is_refused_by_the_profile_mapper() -> None:
-    profile = TaxpayerProfile(tax_id="00000000T", iva_regime=IVARegime.GENERAL)
+    profile = TaxpayerProfile(tax_id="00000000T", iva_regime=_GENERAL_IVA_REGIME)
 
     with pytest.raises(ModeloProfileReadinessError) as raised_3:
         m303_regimen_simplificado_scope_for_profile(profile)

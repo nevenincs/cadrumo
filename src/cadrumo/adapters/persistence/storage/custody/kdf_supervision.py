@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Final, Literal, cast
 from uuid import UUID
 
 from .....core.config import load_settings
+from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
@@ -111,7 +112,7 @@ class ProfileCustodyUnlock:
     dek: bytes
 
 
-class _CalibrationDeadlineElapsedError(Exception):
+class _CalibrationDeadlineElapsedError(CadrumoError):
     """Signal that a calibration grid cannot continue within its total deadline."""
 
 

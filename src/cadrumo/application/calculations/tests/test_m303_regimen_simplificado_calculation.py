@@ -9,6 +9,7 @@ import pytest
 from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
@@ -16,7 +17,6 @@ from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -37,7 +37,7 @@ def _annual_snapshot_and_rows(
     M303RegimenSimplificadoSnapshot,
 ]:
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", effective_date=period.end_date),
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=bundled_authority().snapshot(
@@ -137,7 +137,10 @@ def test_dana_eligibility_is_refused_outside_the_2024_annual_result() -> None:
         evidence_reference=FilingEvidenceReference(reference="test:m303-simplificado:quarterly-dana"),
     )
 
-    with pytest.raises(M303RegimenSimplificadoCalculationError, match="only for the 2024 annual"):
+    with pytest.raises(
+        M303RegimenSimplificadoCalculationError,
+        match="only when the selected registry reduction applies to the annual simplified result",
+    ):
         calculate_m303_regimen_simplificado_result(
             period=period,
             scope_decision=scope,

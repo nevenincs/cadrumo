@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ...core.authority_grade import RegistryAuthorityGrade
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...core.period import Period
@@ -118,11 +119,11 @@ from .workspace_producers import (
 )
 
 
-class ModeloWorkspaceAbsentRegistryProjectionError(ValueError):
+class ModeloWorkspaceAbsentRegistryProjectionError(CadrumoError):
     """Raised when a registry capture returns without its promised projection."""
 
 
-class ModeloWorkspaceUnresolvedWorkError(ValueError):
+class ModeloWorkspaceUnresolvedWorkError(CadrumoError):
     """Raised when a workspace read reaches an unresolved work selection."""
 
 
@@ -696,7 +697,7 @@ def _resolved_obligation(resolution: ModeloWorkResolution) -> tuple[ModeloCode, 
     return resolution.modelo, resolution.filing_year, resolution.period
 
 
-class ModeloWorkspaceStaleCursorError(ValueError):
+class ModeloWorkspaceStaleCursorError(CadrumoError):
     """Raised when a cursor's pinned coordinate no longer matches the current baseline.
 
     A stale cursor MUST refuse rather than silently return a different page:

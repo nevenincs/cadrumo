@@ -62,8 +62,9 @@ from ...core.sync_surface import SyncSurface
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import (
-    ModeloDefinition,
     ModeloRevision,
 )
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
@@ -193,12 +194,12 @@ def _unsupported_filed_capture_failure_row(
 
 
 def _filed_capture_revisions_for_year(
-    definition: ModeloDefinition,
+    revisions: Sequence[ModeloRevision],
     *,
     year: int,
 ) -> tuple[ModeloRevision, ...]:
     """Return this modelo's revisions that cover the requested filing year."""
-    return tuple(revision for revision in definition.revisions.values() if revision.period_selector.includes_year(year))
+    return tuple(revision for revision in revisions if revision.period_selector.includes_year(year))
 
 
 def _declares_filed_declarations_read_surface(revisions: Sequence[ModeloRevision]) -> bool:
@@ -210,16 +211,25 @@ def _declares_filed_declarations_read_surface(revisions: Sequence[ModeloRevision
     )
 
 
-def _registered_modelo_definition(modelo: str) -> ModeloDefinition | None:
-    """Look up a registry modelo with the registry's existing duplicate-key resolution."""
-    return {str(definition.id): definition for definition in bundled_authority().modelos}.get(modelo)
+def _registered_modelo_revisions(modelo: str) -> tuple[ModeloRevision, ...] | None:
+    """Load the explicitly enumerated revisions for one registry modelo."""
+    try:
+        revisions = tuple(
+            revision
+            for _modelo_id, revision in RegistryQueryService(bundled_authority()).iter_modelo_revisions(
+                modelo_codes=(modelo,),
+            )
+        )
+    except (RegistrySnapshotError, ValueError):
+        return None
+    return revisions or None
 
 
 def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
-    definition = _registered_modelo_definition(modelo)
-    if definition is None:
+    revisions = _registered_modelo_revisions(modelo)
+    if revisions is None:
         return f"registry has no modelo definition for {modelo!r}"
-    revisions = _filed_capture_revisions_for_year(definition, year=year)
+    revisions = _filed_capture_revisions_for_year(revisions, year=year)
     if not revisions:
         return f"registry has no revision for modelo {modelo!r} filing year {year}"
     if _declares_filed_declarations_read_surface(revisions):
@@ -583,7 +593,7 @@ async def list_filed_data_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in bundled_authority().modelos)
+    resolved_modelos = modelos if modelos is not None else RegistryQueryService(bundled_authority()).modelo_codes()
     rows: list[FiledDataListingRow] = []
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
 
@@ -1092,7 +1102,7 @@ async def capture_filed_data_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in bundled_authority().modelos)
+    resolved_modelos = modelos if modelos is not None else RegistryQueryService(bundled_authority()).modelo_codes()
     accumulator = FiledCaptureAccumulator()
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
     pair_total = await _announce_bulk_capture_plan(
@@ -1248,6 +1258,7 @@ async def discover_filed_history(
     which is the flag a caller must check before making any coverage claim.
 
     Args:
+        filed_data_port: Filed-data capability used to discover register availability.
         profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the load-bearing
             :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`
             signal. ``None`` yields a register-options-only report.
@@ -2060,6 +2071,9 @@ async def pull_filed_history(
     failure would waste a long authenticated sweep.
 
     Args:
+        certificate_secret_backend_factory: Creates the secure certificate-secret backend.
+        browser_session_factory: Creates the authenticated browser session.
+        operator_scope_ports: Operator-scope capabilities used by authenticated stages.
         iva_remote_state_port: Composed IVA wallet acquisition and persistence port.
         notifications_ports: Composed notifications query and snapshot persistence bundle.
         output_root: Root the capture writes its encrypted stores under.

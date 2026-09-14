@@ -28,6 +28,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from .financial_operand import (
@@ -111,7 +112,7 @@ _CRASH_CLASSIFICATION: dict[
 }
 
 
-class OperationFinancialOperandCustodyError(ValueError):
+class OperationFinancialOperandCustodyError(CadrumoError):
     """Raised when a custody advance would break the fixed transition order."""
 
 

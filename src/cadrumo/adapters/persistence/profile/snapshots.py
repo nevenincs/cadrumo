@@ -88,6 +88,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         enforce_payload_identity: bool = True,
         classification_error_factory: Callable[[str, SensitivityClass, SensitivityClass], Exception] | None = None,
         version_error_factory: Callable[[str, int, int], Exception] | None = None,
+        payload_validation_context: object | None = None,
     ) -> None:
         """Bind the repository to one bucket and one payload namespace.
 
@@ -117,6 +118,8 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
                 callers whose port must not expose persistence errors.
             version_error_factory: Optional typed version-refusal factory for
                 callers whose port must not expose persistence errors.
+            payload_validation_context: Optional Pydantic validation context
+                passed to nested payload models during encrypted reads.
         """
         self._input_error_cls = input_error_cls
         trimmed = bucket_id.strip()
@@ -133,6 +136,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         self._enforce_payload_identity = enforce_payload_identity
         self._classification_error_factory = classification_error_factory
         self._version_error_factory = version_error_factory
+        self._payload_validation_context = payload_validation_context
 
     @property
     def bucket_id(self) -> str:
@@ -320,7 +324,10 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         record: SecureObjectRecord,
         requested_snapshot_id: str | None = None,
     ) -> TPayload:
-        envelope = self._envelope_cls().model_validate_json(record.payload.decode(UTF_8_ENCODING))
+        envelope = self._envelope_cls().model_validate_json(
+            record.payload.decode(UTF_8_ENCODING),
+            context=self._payload_validation_context,
+        )
         if not inner_envelope_classification_is_expected(
             envelope.classification,
             self._namespace_definition.sensitivity,

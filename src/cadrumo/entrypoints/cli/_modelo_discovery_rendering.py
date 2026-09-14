@@ -15,7 +15,6 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ...core.type_guards import is_object_collection
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.query_reports import (
     ModeloBindingQueryRow,
@@ -131,15 +130,25 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     back to the binding ids rather than emit a warning naming nothing.
     """
     from ...application.user_profile.preflight import format_profile_path_requirements
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ...domain.calculations.registry.authority import bundled_authority
     from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
-    from ...domain.user_profile.loader import load_user_profile_schema
 
     if not checklist.unresolved_profile_keys:
+        return ""
+    active_bucket_id = resolve_active_bucket_id()
+    if active_bucket_id is None:
+        return ""
+    try:
+        schema = ProfileRecordRepository.for_current_session(
+            active_bucket_id,
+        ).session.profile_decode_context.schema
+    except ProfileNotFoundError:
         return ""
     return ", ".join(
         format_profile_path_requirements(
             checklist.unresolved_profile_keys,
-            schema=load_user_profile_schema(),
+            schema=schema,
             grounding_index=build_profile_grounding_index(bundled_authority()),
         )
     )

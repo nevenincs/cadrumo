@@ -13,13 +13,14 @@ from textual.screen import Screen
 
 from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.workspace_models import ModeloWorkspaceProjectionV1
+from ....core.errors.hierarchy import CadrumoError
 from ....core.identity.bucket import BucketId
 from ..declarations.models import ModeloWorkspaceScreenFactoryV1
 from .routes import WORKSPACE_SELECTION_OUTCOME, resolve_destination
 from .view.controller import ModeloWorkspaceReadSession, open_workspace_read_session
 
 
-class ModeloWorkspaceDeclarationAdmissionError(ValueError):
+class ModeloWorkspaceDeclarationAdmissionError(CadrumoError):
     """An installed declaration cannot open a workspace from this generation."""
 
 

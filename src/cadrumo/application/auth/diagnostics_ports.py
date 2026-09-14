@@ -13,6 +13,7 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
 
 
@@ -24,7 +25,7 @@ class AuthDiagnosticPersistenceRecord(BaseModel):
     payload: bytes
 
 
-class AuthDiagnosticPersistenceError(RuntimeError):
+class AuthDiagnosticPersistenceError(CadrumoError):
     """A persistence operation for auth diagnostics failed at the adapter boundary."""
 
     def __init__(self, operation: str) -> None:

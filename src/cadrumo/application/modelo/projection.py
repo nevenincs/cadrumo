@@ -20,6 +20,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
@@ -52,7 +53,6 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.work_unit import WorkUnit
 from .calculate_input import ModeloCalculateBindingInputError
@@ -62,6 +62,9 @@ from .calculation_action_ports import CalculationActionPorts
 from .calculation_actions import list_calculation_revisions
 from .profile_binding import resolve_profile_sourced_bindings
 from .work_lifecycle import list_work_units
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _LOG = get_logger(__name__)
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
@@ -322,7 +325,8 @@ def _registry_projection_declaration(year: int) -> ResolvedMappingFact:
     return resolved
 
 
-# fact-relocation: selected M130/M100 projection declarations are consumed through RegistryQueryService and the dated mapping fact
+# fact-relocation: selected M130/M100 projection declarations are consumed through
+# RegistryQueryService and the dated mapping fact.
 def _m130_quarter_revisions(year: int) -> dict[Period, CalculationRevision]:
     """Leave source-model selection at the registry boundary."""
     _registry_projection_declaration(year)
@@ -526,7 +530,7 @@ def _comparison_year_pair(years: Iterable[int]) -> tuple[int, int]:
     try:
         year_a, year_b = requested_years
     except ValueError:
-        raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")
+        raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years") from None
     return year_a, year_b
 
 
@@ -537,11 +541,24 @@ def _comparison_static_revisions(
     year_b: int,
     period_a: str,
     period_b: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[ModeloRevision, ModeloRevision]:
     """Resolve both law-version revisions in the historical comparison order."""
-    modelo_definition = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo)
-    rev_b_static = select_revision(modelo_definition, filing_year=year_b, period=period_b)
-    rev_a_static = select_revision(modelo_definition, filing_year=year_a, period=period_a)
+    if operation is not None:
+        rev_b_static = operation.revision_for_context(
+            modelo,
+            filing_year=year_b,
+            period=period_b,
+        )
+        rev_a_static = operation.revision_for_context(
+            modelo,
+            filing_year=year_a,
+            period=period_a,
+        )
+        return rev_a_static, rev_b_static
+    query_service = RegistryQueryService(bundled_authority())
+    rev_b_static = query_service.revision_for_scope(modelo, filing_year=year_b, period=period_b)
+    rev_a_static = query_service.revision_for_scope(modelo, filing_year=year_a, period=period_a)
     return rev_a_static, rev_b_static
 
 
@@ -631,6 +648,7 @@ def compare_modelo_years(
     modelo: str,
     years: Iterable[int],
     ports: CalculationActionPorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloCompareServiceResult:
     """Compare the best persisted revision for two filing years.
 
@@ -652,6 +670,7 @@ def compare_modelo_years(
         year_b=year_b,
         period_a=period_a,
         period_b=period_b,
+        operation=operation,
     )
     casilla_meta = _comparison_casilla_metadata(rev_a_static, rev_b_static)
 
