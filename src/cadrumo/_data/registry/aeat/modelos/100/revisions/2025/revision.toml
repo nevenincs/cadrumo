@@ -68,6 +68,8 @@ source_refs = [
     "aeat-modelo-100-procedure",
     "aeat-renta-web-open",
 ]
+family_storage_baseline = "2024"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2025".family_dispositions.projection_endpoints]
 reason = """
@@ -9187,3 +9189,2308 @@ position = 2246
 [[revisions."2025".casilla_positions]]
 id = "eo-agraria-reduccion-irregularidad-base"
 position = 2247
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-anualidades-alimentos-hijos-suma"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-75"]}
+sequence_removals = {legal_refs = [1]}
+restate_identity = true
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-actividades-economicas-suma"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89"]}
+sequence_order = {legal_refs = [0, 1, 2, 8, 9, 10, 11, 3, 4, 5, 6, 7]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-actividades-rendimiento-neto-computable"}
+sequence_additions = {"expression.args" = [{op = "negate", args = [{casilla_id = "0384"}]}], legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-capital-inmobiliario-rendimiento-neto-computable"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-capital-inmobiliario-suma"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-capital-mobiliario-ahorro-suma"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-capital-mobiliario-general-suma"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-capital-mobiliario-rendimiento-neto-computable"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-deuda-subordinada-preferentes-suma"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-ganancias-no-transmision-base-general"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-ganancias-transmision-base-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-perdidas-no-transmision-base-general"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-atribucion-perdidas-transmision-base-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-base-imponible-del-ahorro"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base imponible del ahorro", "saldo"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-base-imponible-general"}
+fields = {expression = {op = "max"}}
+sequence_additions = {"expression.args" = [{literal = "0"}, {op = "subtract", args = [{casilla_id = "0432"}, {casilla_id = "0433"}]}], legal_refs = ["ley-35-2006:art-48", "orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base imponible general", "Saldo neto"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {"expression.args" = [0, 1], legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-base-liquidable-del-ahorro"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "remanente"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-base-liquidable-general"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable general", "reducciones"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-base-liquidable-general-sometida-a-gravamen"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-inmobiliario-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimientos del capital inmobiliario", "gastos deducibles"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-inmobiliario-rendimiento-neto-reducido"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimiento minimo computable"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-inmobiliario-suma-rendimientos-reducidos"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimientos del capital inmobiliario"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-mobiliario-ahorro-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["gastos fiscalmente deducibles", "rendimientos del capital mobiliario"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-mobiliario-ahorro-rendimiento-neto-reducido"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Rendimiento neto reducido", "rendimientos del capital mobiliario"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-mobiliario-ahorro-suma-rendimientos-reducidos"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base imponible del ahorro", "rendimientos del capital mobiliario"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-mobiliario-ahorro-total-ingresos"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Rendimientos a integrar en la base imponible del ahorro", "rendimientos del capital mobiliario"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-mobiliario-general-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["gastos fiscalmente deducibles", "base imponible general"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-mobiliario-general-rendimiento-neto-reducido"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Rendimiento neto reducido", "base imponible general"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-mobiliario-general-suma-rendimientos-reducidos"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base imponible general", "rendimientos del capital mobiliario"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-mobiliario-general-total-ingresos"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base imponible general", "rendimientos del capital mobiliario"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-base-liquidable-ahorro-autonomica"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "cuota íntegra autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-base-liquidable-ahorro-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "cuota íntegra estatal"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-base-liquidable-general-autonomica"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable general", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [2], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-base-liquidable-general-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable general", "escala general"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-diferencial"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["cuota diferencial", "pagos a cuenta"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-escala-autonomica-sobre-base-liquidable-ahorro"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "Gravamen autonómico"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-escala-autonomica-sobre-base-liquidable-general"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["escala autonómica", "base liquidable general"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [2], source_citations = [0], source_refs = [0, 1]}
+restate_identity = true
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["escala autonómica", "mínimo personal"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [2], source_citations = [0], source_refs = [0, 1]}
+restate_identity = true
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "mínimo personal"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-escala-estatal-sobre-base-liquidable-ahorro"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "Gravamen estatal"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-escala-estatal-sobre-base-liquidable-general"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["escala general", "base liquidable general"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+restate_identity = true
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-escala-estatal-sobre-minimo-personal-familiar"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["escala general", "mínimo personal"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+restate_identity = true
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-escala-estatal-sobre-minimo-personal-familiar-base-ahorro"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "mínimo personal"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-integra-autonomica"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuota íntegra autonómica", "base liquidable"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-integra-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuota íntegra estatal", "base liquidable general"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-liquida-autonomica"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuota líquida autonómica", "deducciones"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-liquida-autonomica-incrementada"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuota líquida autonómica", "incrementada"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-liquida-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuota líquida estatal", "deducciones"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-liquida-estatal-incrementada"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuota líquida", "incrementada"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-liquida-incrementada-total"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["cuota resultante", "resultado de la declaracion"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-cuota-resultante-autoliquidacion"}
+sequence_additions = {"expression.args" = [{op = "negate", args = [{casilla_id = "0414"}]}], legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["cuota resultante", "cuota diferencial"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0, 1]}
+sequence_order = {"expression.args" = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-deduccion-ceuta-melilla-autonomica-50-porciento"}
+sequence_additions = {legal_refs = ["real-decreto-ley-13-2025:art-2"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-deduccion-ceuta-melilla-estatal-50-porciento"}
+sequence_additions = {legal_refs = ["real-decreto-ley-13-2025:art-2"]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-deduccion-incentivos-inversion-empresarial-total"}
+sequence_additions = {"expression.args" = [{casilla_id = "0757"}, {casilla_id = "0760"}, {casilla_id = "0765"}, {casilla_id = "0767"}, {casilla_id = "0769"}, {casilla_id = "0780"}, {casilla_id = "0785"}, {casilla_id = "0795"}, {casilla_id = "0798"}, {casilla_id = "2060"}, {casilla_id = "2061"}]}
+sequence_removals = {"expression.args" = [16]}
+sequence_order = {"expression.args" = [0, 1, 2, 3, 4, 5, 6, 59, 7, 8, 60, 9, 10, 11, 61, 12, 62, 13, 63, 14, 64, 15, 16, 17, 65, 18, 19, 20, 21, 22, 66, 23, 24, 67, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 68, 69]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-diferencia-previa"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Fase 1", "Determinacion del rendimiento neto"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-gastos-dificil-justificacion"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["5 por 100", "gastos de dificil justificacion"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-gastos-normal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Provisiones fiscalmente deducibles", "RENDIMIENTO NETO"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-gastos-previos"}
+sequence_additions = {"expression.args" = [{casilla_id = "0196"}, {op = "negate", args = [{casilla_id = "0197"}]}], legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Otros gastos fiscalmente deducibles", "excepto provisiones"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+sequence_order = {"expression.args" = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 28, 29, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-gastos-simplificada"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Conjunto de provisiones deducibles", "gastos de dificil justificacion"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-ingresos-computables"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Ingresos integros computables", "actividades economicas"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-rendimiento-neto"}
+sequence_additions = {"expression.args" = [{op = "equal", args = [{binding = "renta-profile-has-economic-activity"}, {literal = "1"}]}, {op = "if_then_else", args = [{op = "equal", args = [{binding = "renta-modelo-100-estimacion-directa-es-normal"}, {literal = "1"}]}, {op = "subtract", args = [{casilla_id = "0180"}, {casilla_id = "0220"}]}, {op = "subtract", args = [{casilla_id = "0180"}, {casilla_id = "0223"}]}]}, {literal = "0"}], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-32", "orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {"expression.args" = [0, 1, 2], legal_refs = [2], source_citations = [0], source_refs = [0]}
+sequence_order = {legal_refs = [2, 0, 1, 3, 4]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-rendimiento-neto-reducido"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Fase 2ª. Determinacion del rendimiento neto reducido", "gastos de dificil justificacion"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-rendimiento-neto-reducido-total"}
+sequence_additions = {"expression.args" = [{op = "subtract", args = [{op = "subtract", args = [{op = "subtract", args = [{casilla_id = "0231"}, {casilla_id = "0232"}]}, {casilla_id = "0233"}]}, {casilla_id = "0234"}]}, {casilla_id = "0237"}], legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Fase 3ª. Determinacion del rendimiento neto reducido total", "gastos de dificil justificacion"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {"expression.args" = [0, 1], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-directa-total-rendimiento-neto-reducido"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Fase 3ª. Determinacion del rendimiento neto reducido total"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido"}
+fields = {expression = {op = "subtract"}}
+sequence_additions = {"expression.args" = [{casilla_id = "1549"}], legal_refs = ["orden-hac-1347-2024:art-4"]}
+sequence_removals = {"expression.args" = [1, 2, 3], legal_refs = [2, 3, 4, 5]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-ganancias-patrimoniales-base-ahorro-suma"}
+sequence_additions = {"expression.args" = [{casilla_id = "2235"}]}
+sequence_order = {"expression.args" = [0, 1, 12, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-inmobiliario-renta-imputada-art-85"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1,1 por 100 s/40.800 = 448,80", "2 por 100", "valor catastral", "62 ÷ 365"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-inmobiliario-suma-rentas-imputadas"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rentas inmobiliarias imputadas", "bienes inmuebles"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-juegos-ganancias-suma"}
+sequence_additions = {"expression.args" = [{casilla_id = "0360"}]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-matrimonio-mes-fin"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Modelo 100", "ejercicio 2025"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-matrimonio-mes-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Modelo 100", "ejercicio 2025"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-matrimonio-vigente-todo-anio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["matrimonio", "vigente"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo del contribuyente"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-descendientes-autonomico"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-descendientes-estatal"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-personal-base-liquidable-ahorro-autonomica"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-personal-base-liquidable-ahorro-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable del ahorro", "Mínimo personal y familiar"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-personal-base-liquidable-general-autonomica"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable general", "autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-personal-base-liquidable-general-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base liquidable general", "Mínimo personal y familiar"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-personal-y-familiar-autonomica"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo del contribuyente", "Mínimo personal y familiar"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-personal-y-familiar-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo del contribuyente", "Mínimo personal y familiar"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-otras-ganancias-no-transmision-suma"}
+sequence_additions = {"expression.args" = [{casilla_id = "0362"}]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-pagos-fraccionados-ingresados"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 3], source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-perdidas-patrimoniales-base-ahorro-suma"}
+sequence_additions = {"expression.args" = [{casilla_id = "2236"}]}
+sequence_order = {"expression.args" = [0, 1, 8, 2, 3, 4, 5, 6, 7]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-premios-ganancias-suma"}
+sequence_additions = {"expression.args" = [{casilla_id = "0361"}]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-reduccion-art-84-conjunta"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Reducción por tributación conjunta"]}], source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-reduccion-prevision-social-total"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["planes de pensiones", "reducción", "límite"]}], source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-resultado-declaracion"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["resultado de la declaracion", "cuota diferencial"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-retenciones-arrendamientos-urbanos"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "rendimientos del capital inmobiliario"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-saldo-neto-rendimientos-base-imponible-general"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["base imponible general", "rendimientos"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-total-pagos-a-cuenta"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [2], source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-trabajo-especie-importe-integro"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Rendimientos del trabajo en especie", "retribuciones dinerarias"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-trabajo-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Otros gastos deducibles", "Incremento para trabajadores activos con discapacidad"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-trabajo-rendimiento-neto-previo"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Rendimiento neto previo del trabajo", "Cotizaciones a la Seguridad Social"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-trabajo-rendimiento-neto-reducido"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["por obtencion de rendimientos", "Rendimiento neto reducido del trabajo"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-trabajo-suma-rendimientos-netos-previos"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimientos del trabajo", "Rendimiento neto previo"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-trabajo-total-ingresos-integros-computables"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Total ingresos computables", "rendimientos del trabajo"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-transparencia-fiscal-suma"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-91"]}
+
+[[revisions."2025".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2024", id = "modelo-100-anual"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-7", "orden-hac-277-2026:art-3"], source_refs = ["aeat-modelo-100-procedure", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [1, 3], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 2, 3, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "live_cross_references"
+selector = {revision = "2024", id = "modelo-100-filed-declarations-read"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-modelo-100-procedure"]}
+sequence_removals = {legal_refs = [0, 1, 2, 3, 4], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2024", id = "modelo-100-declaracion-pdf"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024", id = "renta-dep-100"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary"], target_constructs = ["renta-dependent-modelos"]}
+sequence_removals = {source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024", id = "renta-dep-111"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-work-income"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024", id = "renta-dep-123"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-movable-capital"]}
+sequence_removals = {source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024", id = "renta-dep-130"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-economic-activities"]}
+sequence_removals = {legal_refs = [0, 2], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 2, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024", id = "renta-dep-131"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-economic-activities"]}
+sequence_removals = {binding_refs = [1], legal_refs = [0, 1, 2, 3, 5], source_refs = [0, 1, 2, 3]}
+sequence_order = {legal_refs = [0, 2, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024", id = "renta-dep-193"}
+sequence_additions = {target_constructs = ["renta-payments-retentions", "renta-movable-capital"]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-anexo-c-base-liquidable-negativa-general"}
+fields = {formulas = ["renta-base-liquidable-negativa-general-compensacion-total", "renta-base-liquidable-negativa-general-2024-aplicada-maxima", "renta-base-liquidable-negativa-general-2024-pendiente-fin"]}
+sequence_additions = {casilla_ids = ["0501", "1389", "1390", "base-liq-neg-general-2024-aplicada-maxima"], legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]}
+sequence_removals = {source_refs = [0, 1, 2, 3, 4]}
+sequence_order = {casilla_ids = [1, 0, 2, 3, 4]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-cuota-chain"}
+sequence_additions = {formulas = ["renta-base-liquidable-negativa-general-compensacion-total", "renta-minimo-contribuyente-autonomica"], legal_refs = ["andalucia-ley-5-2021:art-23-bis", "asturias-dl-2-2014:art-2-bis", "canarias-dl-1-2009:art-18-quater", "galicia-dl-1-2011:art-4-bis", "valenciana-ley-13-1997:art-2-bis", "ley-35-2006:art-48", "ley-35-2006:art-75"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-modelo-100-procedure", "aeat-renta-2025-manual-deducciones-autonomicas", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {formulas = [1], legal_refs = [1, 2, 3, 5, 6, 8, 32], source_refs = [0, 1, 2]}
+sequence_order = {formulas = [11, 10, 17, 12, 13, 14, 36, 15, 16, 29, 28, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 31, 30, 33, 35, 32, 34, 8, 6, 7, 5, 37, 0, 1, 2, 4, 3, 9], legal_refs = [32, 33, 34, 35, 36, 0, 37, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 38, 26, 27, 28, 29, 30, 31], source_refs = [1, 2, 3, 4, 5, 6, 0]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-dependent-modelos"}
+removed_fields = ["casilla_ids", "formulas"]
+sequence_additions = {bindings = ["renta-modelo-184-atribucion-actividades-economicas", "renta-modelo-190-retenciones-anuales", "renta-base-liquidable-negativa-general-anterior"], dependency_classifications = ["renta-dep-100", "renta-dep-184", "renta-dep-190", "renta-dep-303", "renta-dep-390", "renta-dep-347", "renta-dep-349", "renta-dep-369", "renta-dep-840", "renta-dep-036", "renta-dep-202", "renta-dep-200", "renta-dep-232", "renta-dep-720"], legal_refs = ["ley-35-2006:art-50", "ley-27-2014:art-18", "ley-27-2014:art-40", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "orden-hac-277-2026:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "aeat-modelo-202-instructions", "aeat-modelo-232-procedure", "aeat-dr-184-2025"]}
+sequence_removals = {bindings = [4], legal_refs = [2, 3, 4, 8], source_refs = [0, 1, 2, 3, 4]}
+sequence_order = {bindings = [0, 1, 2, 3, 5, 6, 4, 7], dependency_classifications = [0, 1, 2, 3, 5, 6, 7, 4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], legal_refs = [0, 1, 10, 2, 11, 12, 3, 4, 13, 7, 14, 15, 8, 9, 5, 6, 16, 17, 18, 19, 20, 21], source_refs = [2, 3, 4, 5, 6, 0, 1, 7, 8, 9]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-final-settlement"}
+fields = {bindings = ["renta-modelo-130-pagos-fraccionados", "renta-modelo-131-pagos-fraccionados"], casilla_ids = ["0585", "0586", "0587", "0588", "0414", "0589", "0590", "0591", "0595", "0592", "0593", "0594", "0596", "0597", "0598", "0599", "0600", "0601", "0602", "0603", "0604", "0605", "0606", "0609", "0610", "0611", "0612", "0613", "0623", "0624", "0636", "0637", "0248", "0249", "0660", "0661", "0662", "0663", "0664", "0666", "0669", "0670"]}
+removed_fields = ["application_links"]
+sequence_additions = {formulas = ["renta-pagos-fraccionados-ingresados"], legal_refs = ["ley-35-2006:art-81-bis", "orden-eha-672-2007:art-3", "orden-hac-277-2026:art-3", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "rd-439-2007:art-80", "rd-439-2007:art-86", "rd-439-2007:art-90", "rd-439-2007:art-95", "rd-439-2007:art-108", "ley-35-2006:art-67", "ley-35-2006:art-77", "ley-35-2006:art-97", "orden-eha-3127-2009:art-1", "orden-eha-3377-2011:art-1", "orden-hac-1431-2025:art-2", "orden-eha-672-2007:art-1"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]}
+sequence_removals = {formulas = [9, 10], source_refs = [0, 1, 2, 3, 4]}
+sequence_order = {formulas = [0, 2, 1, 9, 3, 4, 5, 6, 7, 8], legal_refs = [3, 4, 5, 6, 14, 8, 10, 11, 12, 13, 15, 16, 9, 17, 18, 19, 20, 0, 1, 2, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 7, 35, 36, 37, 38, 39, 40, 41]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-actividades-economicas-objetiva"}
+sequence_additions = {formulas = ["renta-eo-agraria-reduccion-general", "renta-eo-agraria-reduccion-jovenes", "renta-eo-agraria-reduccion-irregularidad", "renta-eo-agraria-rendimiento-neto-reducido-por-actividad", "renta-eo-agraria-rendimiento-base-mejillon-batea", "renta-eo-agraria-rendimiento-base-porcino-carne", "renta-eo-agraria-rendimiento-base-remolacha", "renta-eo-agraria-rendimiento-base-bovino-carne-avicultura", "renta-eo-agraria-rendimiento-base-forestal-corta-larga", "renta-eo-agraria-rendimiento-base-bovino-leche", "renta-eo-agraria-rendimiento-base-cereales-citricos-horticultura", "renta-eo-agraria-rendimiento-base-porcino-cria-ovino-leche-apicultura", "renta-eo-agraria-rendimiento-base-forestal-corta-corta", "renta-eo-agraria-rendimiento-base-arroz-oleaginosas-flores", "renta-eo-agraria-rendimiento-base-otras-especies-ganaderas", "renta-eo-agraria-rendimiento-base-forestal-resina", "renta-eo-agraria-rendimiento-base-raices-tuberculos-forrajes", "renta-eo-agraria-rendimiento-base-plantas-textiles", "renta-eo-agraria-rendimiento-base-actividades-accesorias", "renta-eo-agraria-rendimiento-base-otros-trabajos-accesorios", "renta-eo-agraria-rendimiento-base-cria-guarda-engorde-ganado", "renta-eo-agraria-rendimiento-neto-previo", "renta-eo-agraria-rendimiento-neto-minorado", "renta-eo-agraria-rendimiento-neto-modulos"], legal_refs = ["ley-35-2006:da-6", "orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1", "orden-hac-1347-2024:anexo-i-instruccion-2-1", "orden-hac-1347-2024:anexo-i-instruccion-2-2", "orden-hac-1347-2024:anexo-i-instruccion-2-3", "orden-hac-1347-2024:anexo-i-instruccion-3"], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [2, 3, 4, 5]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-base-y-cuota"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-75", "real-decreto-ley-13-2025:art-2"]}
+sequence_removals = {legal_refs = [16]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 22, 16, 17, 18, 19, 20, 21, 23]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-capital-inmobiliario"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+sequence_removals = {formulas = [2, 3, 4, 5, 6, 7], legal_refs = [2, 3], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-capital-mobiliario"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
+sequence_removals = {formulas = [3, 4, 5, 6, 7, 8, 9, 10]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-ganancias-patrimoniales"}
+sequence_additions = {formulas = ["renta-atencion-percibida-importe-total", "renta-criptomonedas-ganancia-reducida-no-exenta"]}
+sequence_order = {formulas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 47, 35, 48, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-regimenes-especiales"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-91"]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-personal-family"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3", "ley-35-2006:art-75"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 2, 3, 4, 6, 7, 9, 10], source_refs = [0, 1, 2, 3]}
+sequence_order = {legal_refs = [3, 0, 1, 4, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-approval"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [1, 2, 3, 4, 5, 0, 6, 7]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-calculation"}
+sequence_additions = {legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-deadline"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-7", "orden-hac-277-2026:art-3"], source_refs = ["aeat-modelo-100-procedure", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 2], source_refs = [0, 1]}
+sequence_order = {legal_refs = [1, 2, 0]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-export"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-100-2025-dictionary", "aeat-modelo-100-procedure"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-filed-declarations-observation"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-modelo-100-procedure"]}
+sequence_removals = {legal_refs = [0, 1, 2, 3, 4], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-filing"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]}
+sequence_removals = {source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-reconciliation"}
+fields = {consumer = "cadrumo.application.modelo.modelo_reconcile"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [1, 2, 3, 4, 5, 0, 6, 7]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-review"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [1, 2, 3, 4, 5, 0, 6, 7]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-100-workflow"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [1, 2, 3, 4, 5, 0, 6, 7]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-andalucia-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "13000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "13000", upper_bound = "21100", fixed_addition = "1235", marginal_rate = "0.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "21100", upper_bound = "35200", fixed_addition = "2207", marginal_rate = "0.15", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35200", upper_bound = "60000", fixed_addition = "4322", marginal_rate = "0.185", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000", fixed_addition = "8910", marginal_rate = "0.225", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Andalucía", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-aragon-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "13072.50", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "13072.50", upper_bound = "21210.00", fixed_addition = "1241.89", marginal_rate = "0.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "21210.00", upper_bound = "36960.00", fixed_addition = "2218.39", marginal_rate = "0.15", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "36960.00", upper_bound = "52500.00", fixed_addition = "4580.89", marginal_rate = "0.185", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "52500.00", upper_bound = "60000.00", fixed_addition = "7455.79", marginal_rate = "0.205", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000.00", upper_bound = "80000.00", fixed_addition = "8993.29", marginal_rate = "0.23", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "80000.00", upper_bound = "90000.00", fixed_addition = "13593.29", marginal_rate = "0.24", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "90000.00", upper_bound = "130000.00", fixed_addition = "15993.29", marginal_rate = "0.25", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "130000.00", fixed_addition = "25993.29", marginal_rate = "0.255", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Aragón", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-asturias-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12450.00", upper_bound = "17707.20", fixed_addition = "1120.50", marginal_rate = "0.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "17707.20", upper_bound = "33007.20", fixed_addition = "1751.36", marginal_rate = "0.14", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "33007.20", upper_bound = "53407.20", fixed_addition = "3893.36", marginal_rate = "0.192", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "53407.20", upper_bound = "70000.00", fixed_addition = "7810.16", marginal_rate = "0.215", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "70000.00", upper_bound = "90000.00", fixed_addition = "11377.62", marginal_rate = "0.225", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "90000.00", upper_bound = "175000.00", fixed_addition = "15877.62", marginal_rate = "0.25", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "175000.00", fixed_addition = "37127.62", marginal_rate = "0.26", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Principado de Asturias", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-baleares-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "10000", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "10000", upper_bound = "18000", fixed_addition = "900", marginal_rate = "0.1125", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "18000", upper_bound = "30000", fixed_addition = "1800", marginal_rate = "0.1425", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "30000", upper_bound = "48000", fixed_addition = "3510", marginal_rate = "0.175", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "48000", upper_bound = "70000", fixed_addition = "6660", marginal_rate = "0.19", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "70000", upper_bound = "90000", fixed_addition = "10840", marginal_rate = "0.2175", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "90000", upper_bound = "120000", fixed_addition = "15190", marginal_rate = "0.2275", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "120000", upper_bound = "175000", fixed_addition = "22015", marginal_rate = "0.2375", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "175000", fixed_addition = "35077.50", marginal_rate = "0.2475", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Illes Balears", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-base-ahorro"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "6000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "6000", upper_bound = "50000", fixed_addition = "570", marginal_rate = "0.105", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "50000", upper_bound = "200000", fixed_addition = "5190", marginal_rate = "0.115", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "200000", upper_bound = "300000", fixed_addition = "22440", marginal_rate = "0.135", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.15", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-canarias-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "13748", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "13748", upper_bound = "19422", fixed_addition = "1237.32", marginal_rate = "0.115", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "19422", upper_bound = "35924", fixed_addition = "1889.83", marginal_rate = "0.14", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35924", upper_bound = "57566", fixed_addition = "4200.11", marginal_rate = "0.185", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "57566", upper_bound = "93268", fixed_addition = "8203.88", marginal_rate = "0.235", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "93268", upper_bound = "123745", fixed_addition = "16593.85", marginal_rate = "0.25", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "123745", fixed_addition = "24213.10", marginal_rate = "0.26", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Canarias", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-cantabria-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "13000", fixed_addition = "0", marginal_rate = "0.085", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "13000", upper_bound = "21000", fixed_addition = "1105", marginal_rate = "0.11", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "21000", upper_bound = "35200", fixed_addition = "1985", marginal_rate = "0.145", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35200", upper_bound = "60000", fixed_addition = "4044", marginal_rate = "0.18", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000", upper_bound = "90000", fixed_addition = "8508", marginal_rate = "0.225", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "90000", fixed_addition = "15258", marginal_rate = "0.245", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Cantabria", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-castilla-la-mancha-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "20200.00", upper_bound = "35200.00", fixed_addition = "2112.75", marginal_rate = "0.15", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35200.00", upper_bound = "60000.00", fixed_addition = "4362.75", marginal_rate = "0.185", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000.00", fixed_addition = "8950.75", marginal_rate = "0.225", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-castilla-y-leon-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "1120.50", marginal_rate = "0.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "20200.00", upper_bound = "35200.00", fixed_addition = "2050.50", marginal_rate = "0.14", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35200.00", upper_bound = "53407.20", fixed_addition = "4150.50", marginal_rate = "0.185", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "53407.20", fixed_addition = "7518.83", marginal_rate = "0.215", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad de Castilla y León", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-cataluna-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12500.00", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12500.00", upper_bound = "22000.00", fixed_addition = "1187.50", marginal_rate = "0.125", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "22000.00", upper_bound = "33000.00", fixed_addition = "2375.00", marginal_rate = "0.16", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "33000.00", upper_bound = "53000.00", fixed_addition = "4135.00", marginal_rate = "0.19", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "53000.00", upper_bound = "90000.00", fixed_addition = "7935.00", marginal_rate = "0.215", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "90000.00", upper_bound = "120000.00", fixed_addition = "15890.00", marginal_rate = "0.235", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "120000.00", upper_bound = "175000.00", fixed_addition = "22940.00", marginal_rate = "0.245", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "175000.00", fixed_addition = "36415.00", marginal_rate = "0.255", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Cataluña", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-comunidad-valenciana-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12000", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12000", upper_bound = "22000", fixed_addition = "1080", marginal_rate = "0.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "22000", upper_bound = "32000", fixed_addition = "2280", marginal_rate = "0.15", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "32000", upper_bound = "42000", fixed_addition = "3780", marginal_rate = "0.175", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "42000", upper_bound = "52000", fixed_addition = "5530", marginal_rate = "0.2", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "52000", upper_bound = "62000", fixed_addition = "7530", marginal_rate = "0.225", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "62000", upper_bound = "72000", fixed_addition = "9780", marginal_rate = "0.25", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "72000", upper_bound = "100000", fixed_addition = "12280", marginal_rate = "0.265", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "100000", upper_bound = "150000", fixed_addition = "19700", marginal_rate = "0.275", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "150000", upper_bound = "200000", fixed_addition = "33450", marginal_rate = "0.285", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "200000", fixed_addition = "47700", marginal_rate = "0.295", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunitat Valenciana", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-extremadura-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "996.00", marginal_rate = "0.10", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "20200.00", upper_bound = "24200.00", fixed_addition = "1771.00", marginal_rate = "0.16", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "24200.00", upper_bound = "35200.00", fixed_addition = "2411.00", marginal_rate = "0.175", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35200.00", upper_bound = "60000.00", fixed_addition = "4336.00", marginal_rate = "0.21", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000.00", upper_bound = "80200.00", fixed_addition = "9544.00", marginal_rate = "0.235", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "80200.00", upper_bound = "99200.00", fixed_addition = "14291.00", marginal_rate = "0.24", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "99200.00", upper_bound = "120200.00", fixed_addition = "18851.00", marginal_rate = "0.245", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "120200.00", fixed_addition = "23996.00", marginal_rate = "0.25", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-galicia-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12985.35", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12985.35", upper_bound = "21068.60", fixed_addition = "1168.68", marginal_rate = "0.1165", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "21068.60", upper_bound = "35200.00", fixed_addition = "2110.38", marginal_rate = "0.149", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35200.00", upper_bound = "60000.00", fixed_addition = "4215.96", marginal_rate = "0.184", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000.00", fixed_addition = "8779.16", marginal_rate = "0.225", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Galicia", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-la-rioja-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "996.00", marginal_rate = "0.106", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "20200.00", upper_bound = "35200.00", fixed_addition = "1817.50", marginal_rate = "0.136", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35200.00", upper_bound = "40000.00", fixed_addition = "3857.50", marginal_rate = "0.178", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "40000.00", upper_bound = "50000.00", fixed_addition = "4711.90", marginal_rate = "0.183", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "50000.00", upper_bound = "60000.00", fixed_addition = "6541.90", marginal_rate = "0.19", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000.00", upper_bound = "120000.00", fixed_addition = "8441.90", marginal_rate = "0.245", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "120000.00", fixed_addition = "23141.90", marginal_rate = "0.27", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de La Rioja", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-madrid-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "13362.22", fixed_addition = "0", marginal_rate = "0.085", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "13362.22", upper_bound = "19004.63", fixed_addition = "1135.79", marginal_rate = "0.107", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "19004.63", upper_bound = "35425.68", fixed_addition = "1739.53", marginal_rate = "0.128", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35425.68", upper_bound = "57320.40", fixed_addition = "3841.42", marginal_rate = "0.174", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "57320.40", fixed_addition = "7651.10", marginal_rate = "0.205", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad de Madrid", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-autonomica-murcia-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "1182.75", marginal_rate = "0.112", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "20200.00", upper_bound = "34000.00", fixed_addition = "2050.75", marginal_rate = "0.133", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "34000.00", upper_bound = "60000.00", fixed_addition = "3886.15", marginal_rate = "0.179", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000.00", fixed_addition = "8540.15", marginal_rate = "0.225", valid_from = 2025-01-01, valid_to = 2025-12-31}], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Región de Murcia", "escala autonómica"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-estatal-base-ahorro"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "6000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "6000", upper_bound = "50000", fixed_addition = "570", marginal_rate = "0.105", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "50000", upper_bound = "200000", fixed_addition = "5190", marginal_rate = "0.115", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "200000", upper_bound = "300000", fixed_addition = "22440", marginal_rate = "0.135", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.15", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-escala-estatal-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "20200", upper_bound = "35200", fixed_addition = "2112.75", marginal_rate = "0.15", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "35200", upper_bound = "60000", fixed_addition = "4362.75", marginal_rate = "0.185", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "60000", upper_bound = "300000", fixed_addition = "8950.75", marginal_rate = "0.225", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "300000", fixed_addition = "62950.75", marginal_rate = "0.245", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["5 por 100", "dificil justificacion"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], values = [{value = "2000", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["5 por 100", "gastos de dificil justificacion"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], values = [{value = "5", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-gastos-carry-forward-anos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["reparación y conservación podrán ser deducidos en los cuatro años siguientes, respetando cada año el límite"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "4", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-imputacion-inmobiliaria-rate-old-or-no-revision"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["2 por 100", "valor catastral"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "0.02", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-imputacion-inmobiliaria-rate-recent-revision"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1,1 por 100", "valor catastral", "2025"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "0.011", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-imputacion-inmobiliaria-year-days"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["62 ÷ 365", "valor catastral"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "365", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-maternidad-alta-posterior-incremento"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["el incremento de 150 euros, en cuyo caso, dicho límite se eleva en dicho ejercicio"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "150", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-maternidad-cap-anual"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["podrá superar 1.200 euros anuales, salvo en el supuesto en que resulte de aplicación"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "1200", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-maternidad-mensual"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["a la deducción por maternidad por este hijo asciende a 550 euros (100 euros por cada mes a partir de mayo,"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "100", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-ascendientes-mayor-65"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por ascendientes"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "1150", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-ascendientes-mayor-75"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por ascendientes"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "1400", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-base"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo del contribuyente"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "5550", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-65-74"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo del contribuyente", "65"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "1150", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-75"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo del contribuyente", "75"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "1400", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-custodia-compartida-prorrata"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["prorrateado por partes iguales con el progenitor que tenga la guarda y custodia."]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "0.5", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendiente-edad-maxima"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["a) Que el descendiente, en los términos anteriormente comentados, sea menor de 25 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "25", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-cuarto-y-siguientes"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "4500", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-declaracion-propia-rentas-limite"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["que el descendiente no presente declaración del IRPF con rentas superiores a 1.800", "si las rentas son superiores a 1.800 euros, ninguno de ellos puede aplicar el mínimo por descendientes"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "1800", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-fallecimiento"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["En caso de fallecimiento de un descendiente que genere derecho al mínimo por este concepto, la cuantía aplicable es de 2.400 euros", "sin computar a estos efectos aquellos descendientes que, en su caso, hubieran fallecido en el ejercicio con anterioridad a la fecha de devengo del impuesto"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "2400", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-madrid-cuarto-y-siguientes"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Madrid", "4.950 euros anuales por el cuarto y siguientes"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "4950", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-madrid-menor-tres-anos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Madrid", "se aumentará en 3.005,16 euros anuales"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "3005.16", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-madrid-primer-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Madrid", "2.575,85 euros anuales por el primer descendiente"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "2575.85", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-madrid-segundo-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Madrid", "2.897,83 euros anuales por el segundo"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "2897.83", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-madrid-tercer-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de Madrid", "4.400 euros anuales por el tercero"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "4400", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-menor-tres-anos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes", "menor de tres"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "2800", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-primer-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes", "primero"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "2400", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-rentas-anuales-limite"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["que el descendiente no haya obtenido en el ejercicio 2025 rentas superiores a 8.000 euros anuales, excluidas las rentas exentas del impuesto"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "8000", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-segundo-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes", "segundo"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "2700", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-descendientes-tercer-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes", "tercero"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "4000", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-discapacidad-gastos-asistencia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por discapacidad"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "3000", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-discapacidad-grado-33"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por discapacidad"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "3000", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-discapacidad-grado-65"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por discapacidad"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "9000", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-menor-tres-edad-maxima"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuando el descendiente sea menor de tres años, el mínimo que corresponda de los"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "3", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-amortizacion-rate"}
+sequence_additions = {values = [{value = "0.03", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-ejercicio-amendment-year"}
+sequence_additions = {values = [{value = "2024", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-joven-tenant-age-max"}
+sequence_additions = {values = [{value = "35", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-joven-tenant-age-min"}
+sequence_additions = {values = [{value = "18", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-prior-rent-rebaja-threshold"}
+sequence_additions = {values = [{value = "0.05", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-reduccion-rate-tier-50"}
+sequence_additions = {values = [{value = "0.50", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-reduccion-rate-tier-60"}
+sequence_additions = {values = [{value = "0.60", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-reduccion-rate-tier-70"}
+sequence_additions = {values = [{value = "0.70", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-reduccion-rate-tier-90"}
+sequence_additions = {values = [{value = "0.90", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-rental-rehab-lookback-years"}
+sequence_additions = {values = [{value = "2", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-100-2024-0a"}
+replacement_id = "modelo-100-2025-0a"
+fields = {closes_on = 2026-06-30, filing_year = 2025, opens_on = 2026-04-08, payment_cutoff_on = 2026-06-25, period = "2025 0A"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-7", "orden-hac-277-2026:art-3"], source_refs = ["aeat-modelo-100-procedure", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 2], source_refs = [0, 1]}
+sequence_order = {legal_refs = [1, 2, 0]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "deduccion-requires-adquisicion-before:deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"}
+fields = {predicate_id = "modelo-100-2025-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "implies-nonzero:cuota-resultante-determinada-cuando-base-liquidable-general-positiva"}
+fields = {predicate_id = "modelo-100-2025-cuota-resultante-determinada-cuando-base-liquidable-general-positiva"}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "implies-nonzero:retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"}
+fields = {predicate_id = "modelo-100-2025-retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "implies-nonzero:retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"}
+fields = {predicate_id = "modelo-100-2025-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-base-liquidable-negativa-general-anterior"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-certificado-trabajo-retenciones"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-ascendant-birth-date"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["unidad familiar"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-ascendant-cohabiting-descendant-count"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["unidad familiar"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-ascendant-death-date"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["unidad familiar"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-ascendant-disability-grade"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["personas con discapacidad"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1, 2], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-ascendant-display-name"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["datos identificativos"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-ascendant-tax-id"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["número de identificación fiscal (NIF)"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1, 2], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-descendant-birth-date"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["unidad familiar"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-descendant-death-date"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["unidad familiar"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-descendant-disability-grade"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["personas con discapacidad"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1, 2], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-descendant-display-name"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["datos identificativos"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-family-descendant-tax-id"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["número de identificación fiscal (NIF)"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0183-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0186-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0191-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0192-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0193-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0194-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0195-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0199-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0200-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0202-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0203-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0206-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0208-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0217-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-income-0171"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Ingresos"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-modelo-100-estimacion-directa-es-normal"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-modelo-111-retenciones-periodicas"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-modelo-123-retenciones-periodicas"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-modelo-130-pagos-fraccionados"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 2], source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 2, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-modelo-131-pagos-fraccionados"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 2], source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 2, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-anualidades-sin-minimo-descendientes"}
+fields = {provider = {profile_key = "renta_family.anualidades_sin_minimo_descendientes_2025"}}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-declaration-type"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["declaración conjunta"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-display-name"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["datos identificativos"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-family-descendants-eu-eea-deduction"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["unidades familiares formadas por residentes fiscales", "Espacio Económico Europeo"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-family-minor-children-in-unit"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["unidad familiar"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1, 2], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-marital-status"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["datos identificativos"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-marriage-full-year"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["matrimonio", "vigente"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-marriage-month-end"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Modelo 100", "ejercicio 2025"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-marriage-month-start"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Modelo 100", "ejercicio 2025"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-minimo-descendientes-autonomico"}
+fields = {provider = {profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2025"}}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-minimo-descendientes-estatal"}
+fields = {provider = {profile_key = "renta_family.descendientes_minimos_aggregate_2025"}}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-spouse-birth-date"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["declaraciones conjuntas"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-spouse-disability-grade"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["declaraciones conjuntas", "personas con discapacidad"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-spouse-display-name"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["declaraciones conjuntas"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-spouse-eu-eea-country"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Estados miembros de la Unión Europea", "Espacio Económico Europeo"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-spouse-eu-eea-resident"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Estados miembros de la Unión Europea", "Espacio Económico Europeo"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-spouse-non-resident-irpf"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["declaraciones conjuntas"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-spouse-sex"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["declaraciones conjuntas"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-spouse-tax-id"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["declaraciones conjuntas", "número de identificación fiscal (NIF) del cónyuge"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-tax-id"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Comunidad Autónoma de régimen común", "residencia en 2025"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-tax-residence-ccaa"}
+fields = {aeat_prefilled = true}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["número de identificación fiscal (NIF)"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-taxpayer-birth-date"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["datos identificativos"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-taxpayer-death-date"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["contribuyentes"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-taxpayer-disability-grade"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["personas con discapacidad"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0, 1], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-taxpayer-sex"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["datos identificativos"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "export_layouts"
+selector = {revision = "2024", id = "modelo-100-xml-dictionary"}
+fields = {dictionary_source_ref = "aeat-dr-100-2025-dictionary"}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2024", id = "modelo-100-record-design-layout"}
+fields = {fixture_id = "modelo-100-2025-record-design", workbook_source = "aeat-dr-100-2025-xsd"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024", id = "modelo-100-cuota-chain-verification"}
+fields = {externally_grounded_casilla_ids = ["0519", "0520"]}
+sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024", id = "modelo-100-reconcile-when-present"}
+sequence_additions = {externally_grounded_casilla_ids = ["0610", "0670"], legal_refs = ["orden-hac-277-2026:art-3"], reconcile_when_present_casilla_ids = ["0159", "0501", "1039", "1390", "1490", "1493", "1496", "1499", "1502", "1505", "1508", "1511", "1514", "1517", "1520", "1523", "1526", "1529", "1532", "1535", "1537", "1539", "1548", "1549", "1551", "1554", "1555", "2211", "2232", "base-liq-neg-general-2024-aplicada-maxima"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {externally_grounded_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28], reconcile_when_present_casilla_ids = [17, 82, 83, 89, 90, 101, 102, 120], source_refs = [0, 1]}
+sequence_order = {reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 166, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 167, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 168, 122, 123, 124, 125, 126, 169, 127, 128, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 129, 190, 191, 192, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 193, 194, 195]}
+
+[[revisions."2025".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2024", id = "aeat-dr-100-2024-dictionary"}
+replacement_id = "aeat-dr-100-2025-dictionary"
+sequence_additions = {casillas = [{casilla_id = "PH18", number = "###"}, {casilla_id = "SEXO_D", number = "*05"}, {casilla_id = "ECIVIL", number = "*06-09"}, {casilla_id = "DPGMIN_D", number = "*11"}, {casilla_id = "ZRUE2", number = "*43"}, {casilla_id = "SEXO_C", number = "*59"}, {casilla_id = "DPFNAC_C", number = "*60"}, {casilla_id = "DPGMIN_C", number = "*61"}, {casilla_id = "NORESIDENTE", number = "*62"}, {casilla_id = "RESIDENTEUE", number = "*64"}, {casilla_id = "DECFAL", number = "*67"}, {casilla_id = "TIPOTRIBUTACION", number = "*68 *69"}, {casilla_id = "ZCCAD", number = "*70"}, {casilla_id = "MINUSDLG", number = "*79"}, {casilla_id = "FALLDLG", number = "*84"}, {casilla_id = "CONVASDLG", number = "*95"}, {casilla_id = "FALLASDLG", number = "*97"}, {casilla_id = "0157", number = "0157"}, {casilla_id = "0158", number = "0158"}, {casilla_id = "0159", number = "0159"}, {casilla_id = "0196", number = "0196"}, {casilla_id = "0197", number = "0197"}, {casilla_id = "0237", number = "0237"}, {casilla_id = "0360", number = "0360"}, {casilla_id = "0361", number = "0361"}, {casilla_id = "0362", number = "0362"}, {casilla_id = "0384", number = "0384"}, {casilla_id = "0414", number = "0414"}, {casilla_id = "0525", number = "0525"}, {casilla_id = "0757", number = "0757"}, {casilla_id = "0760", number = "0760"}, {casilla_id = "0765", number = "0765"}, {casilla_id = "0767", number = "0767"}, {casilla_id = "0769", number = "0769"}, {casilla_id = "0780", number = "0780"}, {casilla_id = "0785", number = "0785"}, {casilla_id = "0795", number = "0795"}, {casilla_id = "0798", number = "0798"}, {casilla_id = "1389", number = "1389"}, {casilla_id = "1390", number = "1390"}, {casilla_id = "1488", number = "1488"}, {casilla_id = "1489", number = "1489"}, {casilla_id = "1490", number = "1490"}, {casilla_id = "1491", number = "1491"}, {casilla_id = "1492", number = "1492"}, {casilla_id = "1493", number = "1493"}, {casilla_id = "1494", number = "1494"}, {casilla_id = "1495", number = "1495"}, {casilla_id = "1496", number = "1496"}, {casilla_id = "1497", number = "1497"}, {casilla_id = "1498", number = "1498"}, {casilla_id = "1499", number = "1499"}, {casilla_id = "1500", number = "1500"}, {casilla_id = "1501", number = "1501"}, {casilla_id = "1502", number = "1502"}, {casilla_id = "1503", number = "1503"}, {casilla_id = "1504", number = "1504"}, {casilla_id = "1505", number = "1505"}, {casilla_id = "1506", number = "1506"}, {casilla_id = "1507", number = "1507"}, {casilla_id = "1508", number = "1508"}, {casilla_id = "1509", number = "1509"}, {casilla_id = "1510", number = "1510"}, {casilla_id = "1511", number = "1511"}, {casilla_id = "1512", number = "1512"}, {casilla_id = "1513", number = "1513"}, {casilla_id = "1514", number = "1514"}, {casilla_id = "1515", number = "1515"}, {casilla_id = "1516", number = "1516"}, {casilla_id = "1517", number = "1517"}, {casilla_id = "1518", number = "1518"}, {casilla_id = "1519", number = "1519"}, {casilla_id = "1520", number = "1520"}, {casilla_id = "1521", number = "1521"}, {casilla_id = "1522", number = "1522"}, {casilla_id = "1523", number = "1523"}, {casilla_id = "1524", number = "1524"}, {casilla_id = "1525", number = "1525"}, {casilla_id = "1526", number = "1526"}, {casilla_id = "1527", number = "1527"}, {casilla_id = "1528", number = "1528"}, {casilla_id = "1529", number = "1529"}, {casilla_id = "1530", number = "1530"}, {casilla_id = "1531", number = "1531"}, {casilla_id = "1532", number = "1532"}, {casilla_id = "1533", number = "1533"}, {casilla_id = "1534", number = "1534"}, {casilla_id = "1535", number = "1535"}, {casilla_id = "1537", number = "1537"}, {casilla_id = "1538", number = "1538"}, {casilla_id = "1539", number = "1539"}, {casilla_id = "1540", number = "1540"}, {casilla_id = "1541", number = "1541"}, {casilla_id = "1542", number = "1542"}, {casilla_id = "1543", number = "1543"}, {casilla_id = "1544", number = "1544"}, {casilla_id = "1545", number = "1545"}, {casilla_id = "1546", number = "1546"}, {casilla_id = "1547", number = "1547"}, {casilla_id = "1551", number = "1551"}, {casilla_id = "1552", number = "1552"}, {casilla_id = "1554", number = "1554"}, {casilla_id = "eo-agraria-reduccion-irregularidad-base", number = "eo-agraria-reduccion-irregularidad-base"}, {casilla_id = "AJ", number = "*98"}, {casilla_id = "1039", number = "1039"}, {casilla_id = "2060", number = "2060"}, {casilla_id = "2061", number = "2061"}, {casilla_id = "2207", number = "2207"}, {casilla_id = "2210", number = "2210"}, {casilla_id = "2211", number = "2211"}, {casilla_id = "2230", number = "2230"}, {casilla_id = "2231", number = "2231"}, {casilla_id = "2232", number = "2232"}, {casilla_id = "2235", number = "2235"}, {casilla_id = "2236", number = "2236"}], legal_refs = ["ley-35-2006:art-75", "ley-35-2006:da-6", "ley-35-2006:da-60", "madrid-dl-1-2010:art-18", "madrid-dl-1-2010:art-4", "orden-eha-3127-2009:art-1", "orden-hac-1347-2024:anexo-i-instruccion-2-1", "orden-hac-1347-2024:anexo-i-instruccion-2-2", "orden-hac-1347-2024:anexo-i-instruccion-2-3", "orden-hac-1347-2024:anexo-i-instruccion-3", "orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1", "orden-hac-1431-2025:art-2", "orden-hac-277-2026:art-10", "orden-hac-277-2026:art-3", "rd-439-2007:art-13", "rd-439-2007:art-95", "real-decreto-ley-13-2025:art-2"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-modelo-100-procedure", "aeat-renta-2025-manual-deducciones-autonomicas", "aeat-renta-2025-manual-parte1", "aeat-renta-web-open", "boe-modelo-100-2025-form"]}
+sequence_removals = {casillas = [79, 80, 406, 568, 569, 570, 571, 574, 575, 576, 577, 578, 579, 580, 581, 582, 586, 587, 593, 594, 601], legal_refs = [27, 28, 45, 73, 75, 76, 83, 84, 85, 95], source_refs = [0, 1, 2]}
+sequence_order = {casillas = [581, 563, 564, 582, 583, 0, 584, 565, 566, 585, 586, 587, 588, 589, 590, 591, 592, 593, 567, 568, 569, 594, 595, 570, 571, 572, 573, 574, 596, 597, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 575, 576, 577, 578, 579, 580, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 598, 599, 600, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 601, 602, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 603, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 604, 605, 606, 607, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 608, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 609, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 610, 395, 396, 611, 397, 398, 399, 612, 400, 613, 401, 614, 402, 615, 403, 404, 405, 616, 406, 407, 408, 409, 410, 617, 411, 412, 618, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 619, 620, 434, 435, 436, 437, 438, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 668, 669, 670, 671, 672, 673, 674, 675, 676, 677, 678, 679, 439, 440, 441, 680, 681, 682, 683, 442, 684, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475, 476, 477, 478, 479, 480, 685, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 686, 687, 688, 689, 690, 691, 692, 693, 694, 695], legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 86, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 87, 88, 64, 65, 66, 89, 67, 90, 91, 68, 69, 70, 92, 93, 94, 95, 96, 97, 98, 99, 100, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 101, 81, 82, 83, 84, 85, 102, 103]}
+
+[[revisions."2025".family_removals]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"}
+
+[[revisions."2025".family_removals]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-deduccion-maternidad-0611"}
+
+[[revisions."2025".family_removals]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-incremento-guarderia-0613"}
+
+[[revisions."2025".family_removals]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-autonomico"}
+
+[[revisions."2025".family_removals]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-actividades-economicas-directa"}
+
+[[revisions."2025".family_removals]]
+family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-trabajo"}
+
+[[revisions."2025".family_removals]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-guarderia-incremento-cap-anual"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-modelo-131-rendimiento-neto-modulos"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-cotizaciones-ss-madre"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-deduccion-maternidad"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-descendientes-count"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-descendientes-guarderia"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-guarderia-gastos-reales"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-profile-incremento-guarderia"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "renta-rental-reduccion-art-23-2-tier"}
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-criptomonedas-ganancia-reducida-no-exenta"
+position = 38
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-atencion-percibida-importe-total"
+position = 40
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-liquida-incrementada-total"
+position = 45
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-resultante-autoliquidacion"
+position = 46
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-diferencial"
+position = 47
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-resultado-declaracion"
+position = 48
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-trabajo-total-ingresos-integros-computables"
+position = 50
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-retenciones-arrendamientos-urbanos"
+position = 68
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-estimacion-directa-gastos-previos"
+position = 70
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-estimacion-directa-gastos-dificil-justificacion"
+position = 73
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-estimacion-directa-rendimiento-neto"
+position = 75
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-pagos-fraccionados-ingresados"
+position = 79
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-total-pagos-a-cuenta"
+position = 80
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-minimo-contribuyente-estatal"
+position = 81
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-minimo-contribuyente-autonomica"
+position = 82
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-escala-estatal-sobre-base-liquidable-general"
+position = 89
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-escala-estatal-sobre-minimo-personal-familiar"
+position = 90
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-escala-autonomica-sobre-base-liquidable-general"
+position = 91
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar"
+position = 92
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-base-liquidable-general-estatal"
+position = 93
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-base-liquidable-general-autonomica"
+position = 94
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-integra-estatal"
+position = 95
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-integra-autonomica"
+position = 96
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-liquida-estatal"
+position = 97
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-liquida-autonomica"
+position = 98
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-liquida-estatal-incrementada"
+position = 99
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-cuota-liquida-autonomica-incrementada"
+position = 100
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-deduccion-madrid-nacimiento-adopcion"
+position = 185
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
+position = 186
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-base-liquidable-negativa-general-compensacion-total"
+position = 187
+
+[[revisions."2025".family_positions]]
+family = "formulas"
+id = "renta-base-liquidable-negativa-general-2024-pendiente-fin"
+position = 188
+
+[[revisions."2025".family_positions]]
+family = "live_cross_references"
+id = "modelo-100-renta-web-open"
+position = 0
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-111"
+position = 0
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-123"
+position = 1
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-130"
+position = 2
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-131"
+position = 3
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-184"
+position = 4
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-190"
+position = 5
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-193"
+position = 6
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-303"
+position = 7
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-390"
+position = 8
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-347"
+position = 9
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-349"
+position = 10
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-369"
+position = 11
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-840"
+position = 12
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-036"
+position = 13
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-202"
+position = 14
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-200"
+position = 15
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-232"
+position = 16
+
+[[revisions."2025".family_positions]]
+family = "dependency_classifications"
+id = "renta-dep-720"
+position = 17
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-source-foundation"
+position = 1
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-observation-parsing"
+position = 2
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-personal-family"
+position = 3
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-final-settlement"
+position = 4
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-dependent-modelos"
+position = 5
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-payments-retentions"
+position = 6
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-work-income"
+position = 7
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-real-estate-capital"
+position = 8
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-movable-capital"
+position = 9
+
+[[revisions."2025".family_positions]]
+family = "constructs"
+id = "renta-economic-activities"
+position = 10
+
+[[revisions."2025".family_positions]]
+family = "application_links"
+id = "modelo-100-portal"
+position = 0
+
+[[revisions."2025".family_positions]]
+family = "application_links"
+id = "modelo-100-extractor"
+position = 9
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-ejercicio-amendment-year"
+position = 0
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-rehab-lookback-years"
+position = 1
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-joven-tenant-age-min"
+position = 2
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-joven-tenant-age-max"
+position = 3
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-reduccion-rate-tier-50"
+position = 4
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-reduccion-rate-tier-60"
+position = 5
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-reduccion-rate-tier-70"
+position = 6
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-reduccion-rate-tier-90"
+position = 7
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-prior-rent-rebaja-threshold"
+position = 8
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-ric-reduccion-rate-maximo"
+position = 27
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-ric-materializacion-plazo-anos"
+position = 28
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-ric-mantenimiento-plazo-anos"
+position = 29
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-zec-tipo-gravamen-reducido"
+position = 30
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-estimacion-objetiva-reduccion-general-rate"
+position = 31
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate"
+position = 32
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-atribucion-rentas-rate-pass-through"
+position = 33
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-minimo-contribuyente-base"
+position = 34
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-rental-amortizacion-rate"
+position = 39
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-deduccion-madrid-nacimiento-adopcion-cuantia"
+position = 53
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual"
+position = 54
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-conjunta"
+position = 55
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar"
+position = 56
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-eo-agraria-reduccion-jovenes-rate"
+position = 62
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-eo-agraria-reduccion-irregularidad-rate"
+position = 63
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-eo-agraria-reduccion-irregularidad-cap"
+position = 64
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-minimo-descendientes-named-detail-limit"
+position = 74
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "cap-le-when-positive:compensacion-base-neg-general-no-excede-stock"
+position = 0
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "cap-le-when-positive:compensacion-base-neg-general-no-excede-limite"
+position = 1
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "at-most-one-positive:eo-agraria-indice-medios-ajenos-personal-asalariado-incompatibles"
+position = 4
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-medios-ajenos"
+position = 5
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-personal-asalariado"
+position = 6
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-tierras-arrendadas"
+position = 7
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-agricultura-ecologica"
+position = 8
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-regadio-electrico"
+position = 9
+
+[[revisions."2025".family_positions]]
+family = "verification_predicates"
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-pequena-empresa"
+position = 10
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-ledger-expense-0186-deductible"
+position = 1
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-ledger-expense-0192-deductible"
+position = 2
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-ledger-expense-0199-deductible"
+position = 3
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-ledger-expense-0203-deductible"
+position = 4
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-tax-id"
+position = 5
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-display-name"
+position = 6
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-declaration-type"
+position = 8
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-taxpayer-sex"
+position = 9
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-ledger-income-0171"
+position = 10
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-marital-status"
+position = 11
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-taxpayer-birth-date"
+position = 12
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-spouse-tax-id"
+position = 13
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-spouse-display-name"
+position = 14
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-spouse-birth-date"
+position = 15
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-spouse-sex"
+position = 16
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-taxpayer-disability-grade"
+position = 17
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-taxpayer-death-date"
+position = 18
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-spouse-disability-grade"
+position = 19
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-spouse-non-resident-irpf"
+position = 20
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-spouse-eu-eea-resident"
+position = 21
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-spouse-eu-eea-country"
+position = 22
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-family-descendants-eu-eea-deduction"
+position = 23
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-family-minor-children-in-unit"
+position = 24
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-descendant-tax-id"
+position = 25
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-descendant-display-name"
+position = 26
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-descendant-birth-date"
+position = 27
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-descendant-disability-grade"
+position = 28
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-descendant-death-date"
+position = 29
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-ascendant-tax-id"
+position = 30
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-ascendant-display-name"
+position = 31
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-ascendant-birth-date"
+position = 32
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-ascendant-disability-grade"
+position = 33
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-ascendant-cohabiting-descendant-count"
+position = 34
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-family-ascendant-death-date"
+position = 35
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-modelo-130-pagos-fraccionados"
+position = 38
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-modelo-131-pagos-fraccionados"
+position = 39
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-modelo-184-atribucion-actividades-economicas"
+position = 40
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-modelo-190-retenciones-anuales"
+position = 41
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-madrid-nacimiento-adopcion-eligible-count"
+position = 48
+
+[[revisions."2025".family_positions]]
+family = "bindings"
+id = "renta-profile-unidad-familiar-otros-miembros-base"
+position = 49

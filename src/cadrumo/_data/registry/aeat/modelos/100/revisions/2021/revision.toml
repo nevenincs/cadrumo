@@ -54,6 +54,8 @@ source_refs = [
     "aeat-renta-2021-manual-parte1",
     "boe-modelo-100-2021-form",
 ]
+family_storage_baseline = "2020"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2021".family_dispositions.projection_endpoints]
 reason = """
@@ -925,11 +927,11 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0246" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2020-dictionary y aeat-dr-100-2021-dictionary: campo PMESINI5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = { sign = "non_negative", max_value = "12", legal_refs = ["ley-35-2006:art-81-bis"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2020-dictionary y aeat-dr-100-2021-dictionary: campo PMESINI5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = { sign = "non_negative", max_value = "12",  source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0247" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2020-dictionary y aeat-dr-100-2021-dictionary: campo PMESFIN5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = { sign = "non_negative", max_value = "12", legal_refs = ["ley-35-2006:art-81-bis"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2020-dictionary y aeat-dr-100-2021-dictionary: campo PMESFIN5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = { sign = "non_negative", max_value = "12",  source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0248" }
@@ -2266,7 +2268,7 @@ fields = { source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0618" }
-fields = { constraints = { sign = "non_negative", min_value = "1", max_value = "9", legal_refs = ["ley-35-2006:art-81-bis"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { constraints = { sign = "non_negative", min_value = "1", max_value = "9",  source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0619" }
@@ -2310,7 +2312,7 @@ fields = { source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0629" }
-fields = { constraints = { sign = "non_negative", max_value = "99", legal_refs = ["ley-35-2006:art-81-bis"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { constraints = { sign = "non_negative", max_value = "99",  source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0630" }
@@ -2402,7 +2404,7 @@ fields = { source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0652" }
-fields = { constraints = { sign = "non_negative", max_value = "99", legal_refs = ["ley-35-2006:art-81-bis"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { constraints = { sign = "non_negative", max_value = "99",  source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }, source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0653" }
@@ -6387,3 +6389,770 @@ position = 1512
 [[revisions."2021".casilla_positions]]
 id = "1613"
 position = 1513
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-atribucion-actividades-rendimiento-neto-computable"}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-base-liquidable-general-sometida-a-gravamen"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63"], source_refs = ["aeat-dr-100-2021-dictionary"]}
+sequence_removals = {legal_refs = [1], source_refs = [1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-base-liquidable-ahorro-autonomica"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-76-2021"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-base-liquidable-ahorro-estatal"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-66-2021"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-base-liquidable-general-estatal"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63"]}
+sequence_removals = {legal_refs = [1]}
+sequence_order = {legal_refs = [0, 2, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-escala-autonomica-sobre-base-liquidable-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-76-2021"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-escala-autonomica-sobre-base-liquidable-general"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["escala autonómica", "base liquidable general"]}], source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["escala autonómica", "mínimo personal"]}], source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-76-2021"]}
+sequence_removals = {legal_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-escala-estatal-sobre-base-liquidable-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-66-2021"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-escala-estatal-sobre-base-liquidable-general"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63"]}
+sequence_removals = {legal_refs = [1]}
+sequence_order = {legal_refs = [0, 2, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-escala-estatal-sobre-minimo-personal-familiar"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63"]}
+sequence_removals = {legal_refs = [1]}
+sequence_order = {legal_refs = [0, 2, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-escala-estatal-sobre-minimo-personal-familiar-base-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-66-2021"]}
+sequence_removals = {legal_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-integra-autonomica"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-76-2021"]}
+sequence_removals = {legal_refs = [2]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-integra-estatal"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63", "ley-35-2006:art-66-2021"]}
+sequence_removals = {legal_refs = [1, 2]}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-cuota-liquida-estatal"}
+sequence_additions = {"expression.args" = [{op = "negate", args = [{casilla_id = "0567"}]}]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-deduccion-incentivos-inversion-empresarial-total"}
+sequence_additions = {"expression.args" = [{casilla_id = "0842"}, {casilla_id = "1686"}, {casilla_id = "1687"}, {casilla_id = "1688"}, {casilla_id = "1722"}, {casilla_id = "1723"}, {casilla_id = "1727"}, {casilla_id = "1728"}, {casilla_id = "1729"}, {casilla_id = "1730"}, {casilla_id = "1731"}]}
+sequence_removals = {"expression.args" = [0, 1, 10, 11, 12, 17, 19, 20, 23, 24, 25]}
+sequence_order = {"expression.args" = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 33, 29, 30, 31, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-deducciones-actividades-economicas-autonomica-suma"}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-deducciones-actividades-economicas-estatal-suma"}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-estimacion-directa-rendimiento-neto"}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-estimacion-directa-rendimiento-neto-reducido"}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido"}
+sequence_additions = {legal_refs = ["orden-hac-1155-2020:art-4"]}
+sequence_removals = {legal_refs = [2]}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-importe-derecho-reduccion-pension-suma"}
+sequence_additions = {"expression.args" = [{casilla_id = "0426"}, {casilla_id = "0427"}]}
+sequence_order = {"expression.args" = [0, 1, 2, 4, 5, 3]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-minimo-descendientes-autonomico"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-minimo-descendientes-estatal"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-minimo-personal-base-liquidable-ahorro-autonomica"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-76-2021"]}
+sequence_removals = {legal_refs = [1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-minimo-personal-base-liquidable-ahorro-estatal"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-66-2021"]}
+sequence_removals = {legal_refs = [1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-minimo-personal-base-liquidable-general-estatal"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63"]}
+sequence_removals = {legal_refs = [1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-otras-ganancias-no-transmision-suma"}
+sequence_additions = {"expression.args" = [{casilla_id = "0266"}, {casilla_id = "0279"}]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-pagos-fraccionados-ingresados"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Modelo 100", "ejercicio 2021"]}], source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-76-2021"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-tipo-medio-gravamen-estatal-base-liquidable-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-66-2021"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-tipo-medio-gravamen-estatal-base-liquidable-general"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63"]}
+sequence_removals = {legal_refs = [1]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-total-pagos-a-cuenta"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Modelo 100", "ejercicio 2021"]}], source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-trabajo-rendimiento-neto"}
+fields = {expression = {op = "max"}}
+sequence_additions = {"expression.args" = [{literal = "0"}, {op = "sum", args = [{casilla_id = "0018"}, {op = "negate", args = [{casilla_id = "0019"}]}, {op = "negate", args = [{casilla_id = "0020"}]}, {op = "negate", args = [{casilla_id = "0021"}]}]}]}
+sequence_removals = {"expression.args" = [0, 1, 2, 3]}
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-transparencia-fiscal-suma"}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "formulas"
+selector = {revision = "2020", id = "renta-unidad-familiar-cuota-liquida-ue-formula"}
+restate_identity = true
+
+[[revisions."2021".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2020", id = "modelo-100-anual"}
+sequence_additions = {legal_refs = ["orden-hfp-207-2022:art-8"], source_refs = ["boe-modelo-100-2021-form", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {legal_refs = [1], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 3, 1, 2]}
+
+[[revisions."2021".family_overrides]]
+family = "live_cross_references"
+selector = {revision = "2020", id = "modelo-100-filed-declarations-read"}
+sequence_additions = {source_refs = ["boe-modelo-100-2021-form", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2020", id = "renta-dep-111"}
+sequence_additions = {source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2020", id = "renta-dep-123"}
+sequence_additions = {source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2020", id = "renta-dep-130"}
+sequence_additions = {source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2020", id = "renta-dep-131"}
+sequence_additions = {source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "constructs"
+selector = {revision = "2020", id = "renta-cuota-chain"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63", "ley-35-2006:art-66-2021", "ley-35-2006:art-76-2021"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {legal_refs = [14, 16, 22], source_refs = [0, 1, 2]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 23, 14, 24, 15, 16, 17, 18, 19, 25, 20, 21, 22], source_refs = [1, 2, 3, 0]}
+
+[[revisions."2021".family_overrides]]
+family = "constructs"
+selector = {revision = "2020", id = "renta-dependent-modelos"}
+sequence_additions = {source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_refs = [0, 1, 2, 3, 4]}
+
+[[revisions."2021".family_overrides]]
+family = "constructs"
+selector = {revision = "2020", id = "renta-mini-model-actividades-economicas-objetiva"}
+sequence_additions = {legal_refs = ["orden-hac-1155-2020:art-4"]}
+sequence_removals = {legal_refs = [2]}
+
+[[revisions."2021".family_overrides]]
+family = "constructs"
+selector = {revision = "2020", id = "renta-mini-model-base-y-cuota"}
+sequence_additions = {formulas = ["renta-deduccion-eficiencia-energetica-vivienda-suma"], legal_refs = ["ley-35-2006:art-63", "ley-35-2006:art-66-2021", "ley-35-2006:da-50", "ley-35-2006:art-64", "ley-35-2006:art-76-2021"]}
+sequence_removals = {legal_refs = [2, 3, 15]}
+sequence_order = {formulas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 24, 16, 17, 18, 19, 20, 21, 22, 23], legal_refs = [0, 1, 18, 19, 2, 3, 4, 5, 6, 7, 8, 20, 9, 10, 21, 11, 12, 22, 13, 14, 15, 16, 17]}
+
+[[revisions."2021".family_overrides]]
+family = "constructs"
+selector = {revision = "2020", id = "renta-mini-model-trabajo"}
+sequence_additions = {formulas = ["renta-trabajo-otros-gastos"]}
+sequence_order = {formulas = [0, 6, 1, 2, 3, 4, 5]}
+
+[[revisions."2021".family_overrides]]
+family = "application_links"
+selector = {revision = "2020", id = "modelo-100-deadline"}
+sequence_additions = {legal_refs = ["orden-hfp-207-2022:art-8"], source_refs = ["boe-modelo-100-2021-form", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {legal_refs = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [2, 0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "application_links"
+selector = {revision = "2020", id = "modelo-100-export"}
+sequence_additions = {source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "application_links"
+selector = {revision = "2020", id = "modelo-100-filed-declarations-observation"}
+sequence_additions = {source_refs = ["boe-modelo-100-2021-form", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "application_links"
+selector = {revision = "2020", id = "modelo-100-filing"}
+sequence_additions = {source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {source_refs = [0, 1, 2]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-andalucia-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "28000", fixed_addition = "2112.75", marginal_rate = "0.15", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "28000", upper_bound = "35200", fixed_addition = "3282.75", marginal_rate = "0.156", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "35200", upper_bound = "50000", fixed_addition = "4405.95", marginal_rate = "0.187", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "50000", upper_bound = "60000", fixed_addition = "7173.55", marginal_rate = "0.189", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", upper_bound = "120000", fixed_addition = "9063.55", marginal_rate = "0.229", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "120000", fixed_addition = "22803.55", marginal_rate = "0.237", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de Andalucía", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-aragon-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.10", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1245", marginal_rate = "0.125", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "34000", fixed_addition = "2213.75", marginal_rate = "0.155", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "34000", upper_bound = "50000", fixed_addition = "4352.75", marginal_rate = "0.19", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "50000", upper_bound = "60000", fixed_addition = "7392.75", marginal_rate = "0.21", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", upper_bound = "70000", fixed_addition = "9492.75", marginal_rate = "0.22", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "70000", upper_bound = "90000", fixed_addition = "11692.75", marginal_rate = "0.225", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "90000", upper_bound = "130000", fixed_addition = "16192.75", marginal_rate = "0.235", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "130000", upper_bound = "150000", fixed_addition = "25592.75", marginal_rate = "0.245", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "150000", fixed_addition = "30492.75", marginal_rate = "0.25", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de Aragón", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-asturias-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.10", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "17707.20", fixed_addition = "1245", marginal_rate = "0.12", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "17707.20", upper_bound = "33007.20", fixed_addition = "1875.86", marginal_rate = "0.14", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "33007.20", upper_bound = "53407.20", fixed_addition = "4017.86", marginal_rate = "0.185", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "53407.20", upper_bound = "70000", fixed_addition = "7791.86", marginal_rate = "0.215", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "70000", upper_bound = "90000", fixed_addition = "11359.32", marginal_rate = "0.225", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "90000", upper_bound = "175000", fixed_addition = "15859.32", marginal_rate = "0.25", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "175000", fixed_addition = "37109.32", marginal_rate = "0.255", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Principado de Asturias", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-baleares-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "10000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "10000", upper_bound = "18000", fixed_addition = "950", marginal_rate = "0.1175", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "18000", upper_bound = "30000", fixed_addition = "1890", marginal_rate = "0.1475", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "30000", upper_bound = "48000", fixed_addition = "3660", marginal_rate = "0.1775", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "48000", upper_bound = "70000", fixed_addition = "6855", marginal_rate = "0.1925", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "70000", upper_bound = "90000", fixed_addition = "11090", marginal_rate = "0.22", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "90000", upper_bound = "120000", fixed_addition = "15490", marginal_rate = "0.23", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "120000", upper_bound = "175000", fixed_addition = "22390", marginal_rate = "0.24", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "175000", fixed_addition = "35590", marginal_rate = "0.25", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Illes Balears", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-base-ahorro"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "6000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "6000", upper_bound = "50000", fixed_addition = "570", marginal_rate = "0.105", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "50000", upper_bound = "200000", fixed_addition = "5190", marginal_rate = "0.115", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "200000", fixed_addition = "22440", marginal_rate = "0.13", valid_from = 2021-01-01, valid_to = 2021-12-31}], legal_refs = ["ley-35-2006:art-76-2021"]}
+sequence_removals = {brackets = [0, 1, 2], legal_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-canarias-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "17707.20", fixed_addition = "1120.50", marginal_rate = "0.115", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "17707.20", upper_bound = "33007.20", fixed_addition = "1725.08", marginal_rate = "0.14", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "33007.20", upper_bound = "53407.20", fixed_addition = "3867.08", marginal_rate = "0.185", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "53407.20", upper_bound = "90000", fixed_addition = "7641.08", marginal_rate = "0.235", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "90000", upper_bound = "120000", fixed_addition = "16240.39", marginal_rate = "0.25", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "120000", fixed_addition = "23740.39", marginal_rate = "0.26", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de Canarias", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-cantabria-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "34000", fixed_addition = "2112.75", marginal_rate = "0.15", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "34000", upper_bound = "46000", fixed_addition = "4182.75", marginal_rate = "0.185", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "46000", upper_bound = "60000", fixed_addition = "6402.75", marginal_rate = "0.195", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", upper_bound = "90000", fixed_addition = "9132.75", marginal_rate = "0.245", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "90000", fixed_addition = "16482.75", marginal_rate = "0.255", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de Cantabria", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-castilla-la-mancha-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "35200", fixed_addition = "2112.75", marginal_rate = "0.15", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "35200", upper_bound = "60000", fixed_addition = "4362.75", marginal_rate = "0.185", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", fixed_addition = "8950.75", marginal_rate = "0.225", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-castilla-y-leon-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "35200", fixed_addition = "2112.75", marginal_rate = "0.14", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "35200", upper_bound = "53407.20", fixed_addition = "4212.75", marginal_rate = "0.185", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "53407.20", fixed_addition = "7581.08", marginal_rate = "0.215", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad de Castilla y León", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-cataluna-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "17707.20", fixed_addition = "0", marginal_rate = "0.12", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "17707.20", upper_bound = "33007.20", fixed_addition = "2124.86", marginal_rate = "0.14", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "33007.20", upper_bound = "53407.20", fixed_addition = "4266.86", marginal_rate = "0.185", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "53407.20", upper_bound = "90000", fixed_addition = "8040.86", marginal_rate = "0.215", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "90000", upper_bound = "120000", fixed_addition = "15908.31", marginal_rate = "0.235", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "120000", upper_bound = "175000", fixed_addition = "22958.31", marginal_rate = "0.245", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "175000", fixed_addition = "36433.31", marginal_rate = "0.255", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de Cataluña", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-comunidad-valenciana-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.10", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "17000", fixed_addition = "1245", marginal_rate = "0.11", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "17000", upper_bound = "30000", fixed_addition = "1745.50", marginal_rate = "0.139", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "30000", upper_bound = "50000", fixed_addition = "3552.50", marginal_rate = "0.18", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "50000", upper_bound = "65000", fixed_addition = "7152.50", marginal_rate = "0.235", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "65000", upper_bound = "80000", fixed_addition = "10677.50", marginal_rate = "0.245", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "80000", upper_bound = "120000", fixed_addition = "14352.50", marginal_rate = "0.25", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "120000", upper_bound = "140000", fixed_addition = "24352.50", marginal_rate = "0.255", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "140000", upper_bound = "175000", fixed_addition = "29452.50", marginal_rate = "0.275", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "175000", fixed_addition = "39077.50", marginal_rate = "0.295", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunitat Valenciana", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-extremadura-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1182.75", marginal_rate = "0.125", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "24200", fixed_addition = "2151.50", marginal_rate = "0.155", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "24200", upper_bound = "35200", fixed_addition = "2771.50", marginal_rate = "0.165", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "35200", upper_bound = "60000", fixed_addition = "4586.50", marginal_rate = "0.205", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", upper_bound = "80200", fixed_addition = "9670.50", marginal_rate = "0.235", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "80200", upper_bound = "99200", fixed_addition = "14417.50", marginal_rate = "0.24", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "99200", upper_bound = "120200", fixed_addition = "18977.50", marginal_rate = "0.245", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "120200", fixed_addition = "24122.50", marginal_rate = "0.25", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-galicia-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1182.75", marginal_rate = "0.1175", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "27700", fixed_addition = "2093.38", marginal_rate = "0.155", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "27700", upper_bound = "35200", fixed_addition = "3255.88", marginal_rate = "0.17", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "35200", upper_bound = "47600", fixed_addition = "4530.88", marginal_rate = "0.185", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "47600", upper_bound = "60000", fixed_addition = "6824.88", marginal_rate = "0.205", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", fixed_addition = "9366.88", marginal_rate = "0.225", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de Galicia", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-la-rioja-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1120.50", marginal_rate = "0.116", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "35200", fixed_addition = "2019.50", marginal_rate = "0.146", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "35200", upper_bound = "50000", fixed_addition = "4209.50", marginal_rate = "0.188", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "50000", upper_bound = "60000", fixed_addition = "6991.90", marginal_rate = "0.195", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", upper_bound = "120000", fixed_addition = "8941.90", marginal_rate = "0.25", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "120000", fixed_addition = "23941.90", marginal_rate = "0.27", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad Autónoma de La Rioja", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-madrid-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "17707.20", fixed_addition = "1120.50", marginal_rate = "0.112", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "17707.20", upper_bound = "33007.20", fixed_addition = "1709.31", marginal_rate = "0.133", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "33007.20", upper_bound = "53407.20", fixed_addition = "3744.21", marginal_rate = "0.179", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "53407.20", fixed_addition = "7395.81", marginal_rate = "0.21", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad de Madrid", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-autonomica-murcia-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.097", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1207.65", marginal_rate = "0.1172", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "34000", fixed_addition = "2115.95", marginal_rate = "0.1418", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "34000", upper_bound = "60000", fixed_addition = "4072.79", marginal_rate = "0.1854", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", fixed_addition = "8893.19", marginal_rate = "0.229", valid_from = 2021-01-01, valid_to = 2021-12-31}], source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Región de Murcia", "escala autonómica"]}], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-estatal-base-ahorro"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "6000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "6000", upper_bound = "50000", fixed_addition = "570", marginal_rate = "0.105", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "50000", upper_bound = "200000", fixed_addition = "5190", marginal_rate = "0.115", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "200000", fixed_addition = "22440", marginal_rate = "0.13", valid_from = 2021-01-01, valid_to = 2021-12-31}], legal_refs = ["ley-35-2006:art-66-2021"]}
+sequence_removals = {brackets = [0, 1, 2], legal_refs = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-escala-estatal-base-general"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "12450", upper_bound = "20200", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "20200", upper_bound = "35200", fixed_addition = "2112.75", marginal_rate = "0.15", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "35200", upper_bound = "60000", fixed_addition = "4362.75", marginal_rate = "0.185", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "60000", upper_bound = "300000", fixed_addition = "8950.75", marginal_rate = "0.225", valid_from = 2021-01-01, valid_to = 2021-12-31}, {lower_bound = "300000", fixed_addition = "62950.75", marginal_rate = "0.245", valid_from = 2021-01-01, valid_to = 2021-12-31}], legal_refs = ["ley-35-2006:art-63"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], legal_refs = [1]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"}
+sequence_additions = {values = [{value = "2000", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"}
+sequence_additions = {values = [{value = "5", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-gastos-carry-forward-anos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["deducidos en los cuatro años siguientes, respetando cada año el límite legalmente establecido."]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "4", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-maternidad-cap-anual"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Hasta 1.200 euros anuales."]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "1200", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-maternidad-mensual"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["la misma es de 100 euros por cada mes del período impositivo en que concurran de forma"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "100", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-ascendientes-mayor-65"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por ascendientes"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "1150", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-ascendientes-mayor-75"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por ascendientes"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "1400", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-contribuyente-base"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo del contribuyente"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "5550", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-contribuyente-edad-65-74"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo del contribuyente"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "1150", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-contribuyente-edad-75"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo del contribuyente"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "1400", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-custodia-compartida-prorrata"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["los hijos menores de edad y mayores incapacitados, por partes iguales,"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "0.5", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendiente-edad-maxima"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["a) Que el descendiente, en los términos anteriormente comentados, sea menor de 25 años a la"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "25", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-cuarto-y-siguientes"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "4500", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-declaracion-propia-rentas-limite"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["que el descendiente no presente declaración del IRPF con rentas superiores a 1.800", "si las rentas son superiores a 1.800 euros, ninguno de ellos puede aplicar el mínimo por descendientes"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "1800", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-fallecimiento"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["En caso de fallecimiento de un descendiente que genere derecho al mínimo por este concepto, la cuantía aplicable es de 2.400 euros", "sin computar a estos efectos aquellos descendientes que, en su caso, hubieran fallecido en el ejercicio con anterioridad a la fecha de devengo del impuesto"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "2400", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-madrid-cuarto-y-siguientes"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad de Madrid", "4.950 euros anuales por el cuarto y siguientes"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "4950", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-madrid-tercer-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Comunidad de Madrid", "4.400 euros anuales por el tercero"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "4400", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-menor-tres-anos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes", "menor de tres"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "2800", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-primer-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes", "primero"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "2400", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-rentas-anuales-limite"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["que el descendiente no haya obtenido en el ejercicio 2021 rentas superiores a 8.000 euros anuales, excluidas las rentas exentas del impuesto"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "8000", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-segundo-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes", "segundo"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "2700", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-descendientes-tercer-hijo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes", "tercero"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "4000", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-discapacidad-gastos-asistencia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por discapacidad"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "3000", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-discapacidad-grado-33"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por discapacidad"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "3000", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-discapacidad-grado-65"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por discapacidad"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "9000", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-minimo-menor-tres-edad-maxima"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Cuando el descendiente sea menor de tres años, el mínimo que corresponda de los indicados"]}], source_refs = ["aeat-renta-2021-manual-parte1"], values = [{value = "3", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-amortizacion-rate"}
+sequence_additions = {values = [{value = "0.03", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-ejercicio-amendment-year"}
+sequence_additions = {values = [{value = "2024", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-joven-tenant-age-max"}
+sequence_additions = {values = [{value = "35", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-joven-tenant-age-min"}
+sequence_additions = {values = [{value = "18", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-prior-rent-rebaja-threshold"}
+sequence_additions = {values = [{value = "0.05", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-reduccion-rate-tier-50"}
+sequence_additions = {values = [{value = "0.50", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-reduccion-rate-tier-60"}
+sequence_additions = {values = [{value = "0.60", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-reduccion-rate-tier-70"}
+sequence_additions = {values = [{value = "0.70", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-reduccion-rate-tier-90"}
+sequence_additions = {values = [{value = "0.90", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "parameters"
+selector = {revision = "2020", id = "renta-rental-rehab-lookback-years"}
+sequence_additions = {values = [{value = "2", date_axis = "filing_period", valid_from = 2021-01-01, valid_to = 2021-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2021".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2020", id = "modelo-100-2020-0a"}
+replacement_id = "modelo-100-2021-0a"
+fields = {closes_on = 2022-06-30, filing_year = 2021, opens_on = 2022-04-06, payment_cutoff_on = 2022-06-27, period = "2021 0A"}
+sequence_additions = {legal_refs = ["orden-hfp-207-2022:art-8"], source_refs = ["boe-modelo-100-2021-form", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {legal_refs = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [2, 0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2020", id = "implies-nonzero:retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"}
+fields = {predicate_id = "modelo-100-2021-retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"}
+
+[[revisions."2021".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2020", id = "implies-nonzero:retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"}
+fields = {predicate_id = "modelo-100-2021-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-modelo-100-estimacion-directa-es-normal"}
+sequence_additions = {source_refs = ["aeat-dr-100-2021-dictionary"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-modelo-111-retenciones-periodicas"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2021"]}], source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-modelo-123-retenciones-periodicas"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2021"]}], source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-modelo-130-pagos-fraccionados"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Modelo 100", "ejercicio 2021"]}], source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-modelo-131-pagos-fraccionados"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Modelo 100", "ejercicio 2021"]}], source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-profile-anualidades-sin-minimo-descendientes"}
+fields = {provider = {profile_key = "renta_family.anualidades_sin_minimo_descendientes_2021"}}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-profile-minimo-descendientes-autonomico"}
+fields = {provider = {profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2021"}}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-profile-minimo-descendientes-estatal"}
+fields = {provider = {profile_key = "renta_family.descendientes_minimos_aggregate_2021"}}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Mínimo por descendientes"]}], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "bindings"
+selector = {revision = "2020", id = "renta-profile-tax-residence-ccaa"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2021-manual-parte1", required_text = ["Modelo 100", "ejercicio 2021"]}], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2021".family_overrides]]
+family = "export_layouts"
+selector = {revision = "2020", id = "modelo-100-xml-dictionary"}
+fields = {dictionary_source_ref = "aeat-dr-100-2021-dictionary"}
+sequence_additions = {source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2021".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2020", id = "modelo-100-record-design-layout"}
+fields = {fixture_id = "modelo-100-2021-record-design", workbook_source = "aeat-dr-100-2021-xsd"}
+sequence_additions = {source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]}
+sequence_removals = {source_refs = [0, 1, 2]}
+
+[[revisions."2021".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2020", id = "modelo-100-cuota-chain-verification"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-63", "ley-35-2006:art-66-2021", "ley-35-2006:art-76-2021"], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {legal_refs = [1, 2, 7], source_refs = [0]}
+sequence_order = {legal_refs = [0, 6, 7, 1, 2, 3, 4, 8, 5], source_refs = [1, 0]}
+
+[[revisions."2021".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2020", id = "modelo-100-reconcile-when-present"}
+sequence_additions = {externally_grounded_casilla_ids = ["0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546"], legal_refs = ["ley-35-2006:art-63", "ley-35-2006:art-66-2021", "ley-35-2006:art-76-2021"], reconcile_when_present_casilla_ids = ["0019", "0519", "0520", "0527", "0532", "0533", "0545", "0546", "0567"], source_refs = ["aeat-renta-2021-manual-parte1"]}
+sequence_removals = {externally_grounded_casilla_ids = [0, 1, 2, 3, 4], legal_refs = [1, 2, 7], source_refs = [0]}
+sequence_order = {legal_refs = [0, 6, 7, 1, 2, 3, 4, 8, 5], reconcile_when_present_casilla_ids = [0, 1, 2, 3, 134, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 135, 136, 137, 72, 73, 74, 75, 138, 139, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 140, 141, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 142, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133], source_refs = [1, 0]}
+
+[[revisions."2021".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2020", id = "aeat-dr-100-2020-dictionary"}
+replacement_id = "aeat-dr-100-2021-dictionary"
+sequence_additions = {casillas = [{casilla_id = "0266", number = "0266"}, {casilla_id = "0279", number = "0279"}, {casilla_id = "0426", number = "0426"}, {casilla_id = "0427", number = "0427"}, {casilla_id = "0567", number = "0567"}, {casilla_id = "0842", number = "0842"}, {casilla_id = "1662", number = "1662"}, {casilla_id = "1670", number = "1670"}, {casilla_id = "1679", number = "1679"}, {casilla_id = "1686", number = "1686"}, {casilla_id = "1687", number = "1687"}, {casilla_id = "1688", number = "1688"}, {casilla_id = "1722", number = "1722"}, {casilla_id = "1723", number = "1723"}, {casilla_id = "1727", number = "1727"}, {casilla_id = "1728", number = "1728"}, {casilla_id = "1729", number = "1729"}, {casilla_id = "1730", number = "1730"}, {casilla_id = "1731", number = "1731"}], legal_refs = ["ley-35-2006:art-52-2021", "ley-35-2006:art-63", "ley-35-2006:art-66-2021", "ley-35-2006:art-76-2021", "ley-35-2006:art-91", "ley-35-2006:da-50", "orden-hac-1155-2020:art-4", "orden-hfp-207-2022:art-10"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]}
+sequence_removals = {casillas = [176, 319, 320, 340, 341, 342, 347, 349, 350, 353, 354, 355], legal_refs = [23, 28, 30, 42, 53, 65, 66, 81], source_refs = [0, 1, 2]}
+sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 449, 127, 128, 129, 450, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 451, 452, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 453, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 454, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448], legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 74, 23, 24, 25, 26, 75, 27, 76, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 77, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 78, 49, 50, 51, 52, 79, 53, 54, 55, 56, 57, 58, 59, 80, 81, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73]}
+
+[[revisions."2021".family_positions]]
+family = "formulas"
+id = "renta-deduccion-eficiencia-energetica-vivienda-suma"
+position = 12
+
+[[revisions."2021".family_positions]]
+family = "formulas"
+id = "renta-trabajo-otros-gastos"
+position = 39
+
+[[revisions."2021".family_positions]]
+family = "application_links"
+id = "modelo-100-extractor"
+position = 8
