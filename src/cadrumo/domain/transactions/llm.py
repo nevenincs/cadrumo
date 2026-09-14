@@ -44,7 +44,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -61,6 +61,9 @@ from .enums import BusinessClassification
 from .errors import LLMClassifierError, TransactionValidationError
 from .model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier
 from .models import Transaction
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 _REASON_MAX_LENGTH = 2048
 
@@ -364,6 +367,7 @@ def default_prompt_spec() -> PromptSpec:
 def prompt_spec_with_every_spending_category(
     *,
     year: int,
+    operation: PinnedAuthorityOperation,
     classifications: tuple[ClassificationChoice, ...] | None = None,
 ) -> PromptSpec:
     """Return a prompt spec that also asks the LLM to suggest a SpendingCategory.
@@ -381,6 +385,8 @@ def prompt_spec_with_every_spending_category(
         year: Filing year whose category profiles supply the hints. Passed
             explicitly because the proportionality kind a category carries is
             year-versioned regulatory data.
+        operation: The generation-pinned authority operation used for both the
+            dated category vocabulary and its profiles.
         classifications: Optional override for the classification
             choices; defaults to :func:`default_classification_choices`.
 
@@ -389,8 +395,8 @@ def prompt_spec_with_every_spending_category(
         registered :class:`cadrumo.domain.categories.SpendingCategory`.
     """
     category_choices = tuple(
-        CategoryChoice(value=value, hint=_category_hint(value, year=year))
-        for value in spending_category_tokens(effective_date=date(year, 12, 31))
+        CategoryChoice(value=value, hint=_category_hint(value, year=year, operation=operation))
+        for value in spending_category_tokens(effective_date=date(year, 12, 31), authority=operation)
     )
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
@@ -398,7 +404,7 @@ def prompt_spec_with_every_spending_category(
     )
 
 
-def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
+def default_iva_category_choices(*, operation: PinnedAuthorityOperation) -> tuple[IvaCategoryChoice, ...]:
     """Return the grounded IVA-category choices for the saturation prompt.
 
     The allow-list and concise hints are projected from the dated IVA category
@@ -409,8 +415,12 @@ def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
     Returns:
         One :class:`IvaCategoryChoice` per registry-declared IVA category, in
         authored order.
+
+    Args:
+        operation: The generation-pinned authority operation used to resolve the
+            IVA category catalogue.
     """
-    catalogue = resolve_iva_category_catalogue()
+    catalogue = resolve_iva_category_catalogue(authority=operation)
     return tuple(
         IvaCategoryChoice(value=definition.token, hint=catalogue.hint(definition.token))
         for definition in catalogue.definitions
@@ -420,6 +430,7 @@ def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
 def prompt_spec_with_saturation_fields(
     *,
     year: int,
+    operation: PinnedAuthorityOperation,
     classifications: tuple[ClassificationChoice, ...] | None = None,
 ) -> PromptSpec:
     """Return a prompt spec for full saturation: spending + IVA category selection.
@@ -435,6 +446,8 @@ def prompt_spec_with_saturation_fields(
         year: Filing year whose category profiles supply the hints. Passed
             explicitly because the proportionality kind a category carries is
             year-versioned regulatory data.
+        operation: The generation-pinned authority operation used for the
+            spending and IVA category projections.
         classifications: Optional override for the classification choices;
             defaults to :func:`default_classification_choices`.
 
@@ -443,17 +456,17 @@ def prompt_spec_with_saturation_fields(
         IVA-category allow-lists.
     """
     category_choices = tuple(
-        CategoryChoice(value=value, hint=_category_hint(value, year=year))
-        for value in spending_category_tokens(effective_date=date(year, 12, 31))
+        CategoryChoice(value=value, hint=_category_hint(value, year=year, operation=operation))
+        for value in spending_category_tokens(effective_date=date(year, 12, 31), authority=operation)
     )
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
         categories=category_choices,
-        iva_categories=default_iva_category_choices(),
+        iva_categories=default_iva_category_choices(operation=operation),
     )
 
 
-def _category_hint(value: SpendingCategory, *, year: int) -> str:
+def _category_hint(value: SpendingCategory, *, year: int, operation: PinnedAuthorityOperation) -> str:
     """Return the best available hint string for a SpendingCategory in ``year``.
 
     Resolves the display label and ``notes`` translation keys to Spanish at
@@ -469,7 +482,7 @@ def _category_hint(value: SpendingCategory, *, year: int) -> str:
     loader is cached: resolving there would bake one operator's locale
     into the shared profile and serve it to the next operator.
     """
-    profile = resolve_category_profiles(year).get(value)
+    profile = resolve_category_profiles(year, operation=operation).get(value)
     if profile is None:
         return value.value.replace("_", " ")
     # Pinned to Spanish regardless of operator locale: the classifier reasons

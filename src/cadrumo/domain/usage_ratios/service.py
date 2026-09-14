@@ -12,15 +12,21 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ...core.identity.bucket import canonical_bucket_id
+from ..calculations.registry.governed_fact_scope import validating_governed_facts
 from ..categories.proportionality import effective_usage_ratio
 from ..categories.registry import resolve_category_profiles
 from ..categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, categories_for_family
 from .errors import UsageRatioPersistenceError, UsageRatioValidationError
 from .model import UsageRatioProfile
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "derive_home_office_ratios_from_censo",
@@ -133,6 +139,7 @@ def derive_home_office_ratios_from_censo(
     raw_afectacion_ratio: Decimal,
     *,
     year: int,
+    operation: PinnedAuthorityOperation,
 ) -> UsageRatioProfile:
     """Build a :class:`UsageRatioProfile` for HOME_OFFICE categories from the censo.
 
@@ -151,6 +158,8 @@ def derive_home_office_ratios_from_censo(
             criteria forbid 100% afectación on the habitual vivienda.
         year: Registry profile year (e.g. ``2025``) whose
             proportionality rules drive the derivation.
+        operation: The caller-owned authority generation used for the complete
+            category projection.
 
     Returns:
         A :class:`UsageRatioProfile` carrying one entry per
@@ -165,10 +174,15 @@ def derive_home_office_ratios_from_censo(
         raise UsageRatioValidationError(
             f"raw_afectacion_ratio must be in [0, 1]; got {raw_afectacion_ratio}",
         )
-    registry = resolve_category_profiles(year)
+    registry = resolve_category_profiles(year, operation=operation)
     derived: dict[SpendingCategory, Decimal] = {}
     for family in HOME_OFFICE_FAMILIES:
-        for category in categories_for_family(family):
+        for category in categories_for_family(
+            family,
+            effective_date=date(year, 12, 31),
+            authority=operation,
+        ):
             profile = registry[category]
             derived[category] = effective_usage_ratio(profile.proportionality, raw_afectacion_ratio)
-    return UsageRatioProfile(ratios=derived)
+    with validating_governed_facts(operation):
+        return UsageRatioProfile(ratios=derived)

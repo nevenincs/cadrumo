@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..enums import TransactionDirection
 from ..llm import parse_response, prompt_spec_with_saturation_fields
 from ..models import Transaction
@@ -50,28 +51,30 @@ def _transaction() -> Transaction:
     )
 
 
-def test_evidence_text_is_injected_into_prompt() -> None:
-    prompt = prompt_spec_with_saturation_fields(year=2025).render(_transaction(), evidence_text=_EVIDENCE)
+def test_evidence_text_is_injected_into_prompt(operation: PinnedAuthorityOperation) -> None:
+    prompt = prompt_spec_with_saturation_fields(year=2025, operation=operation).render(
+        _transaction(), evidence_text=_EVIDENCE
+    )
     assert _EVIDENCE in prompt
     assert "begin evidence" in prompt
     # The selection-only guard must travel with the evidence: never emit its numbers.
     assert "Do NOT copy or output any euro amount" in prompt
 
 
-def test_prompt_without_evidence_has_no_evidence_section() -> None:
-    prompt = prompt_spec_with_saturation_fields(year=2025).render(_transaction())
+def test_prompt_without_evidence_has_no_evidence_section(operation: PinnedAuthorityOperation) -> None:
+    prompt = prompt_spec_with_saturation_fields(year=2025, operation=operation).render(_transaction())
     assert "begin evidence" not in prompt
     assert _EVIDENCE not in prompt
 
 
-def test_multiple_components_asked_only_when_evidence_present() -> None:
+def test_multiple_components_asked_only_when_evidence_present(operation: PinnedAuthorityOperation) -> None:
     """The multiplicity judgement is requested only when there is an invoice to read.
 
     On the bare bank-row path the model cannot judge multiplicity, so the field
     and its instruction must be absent; with evidence text or an attached image
     they must be present.
     """
-    spec = prompt_spec_with_saturation_fields(year=2025)
+    spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
     bare = spec.render(_transaction())
     assert '"multiple_components"' not in bare
     assert "multiple_components true" not in bare
@@ -84,9 +87,9 @@ def test_multiple_components_asked_only_when_evidence_present() -> None:
     assert '"multiple_components"' in with_image
 
 
-def test_multiple_components_survives_the_allow_list_parse() -> None:
+def test_multiple_components_survives_the_allow_list_parse(operation: PinnedAuthorityOperation) -> None:
     """A model-emitted multiplicity flag round-trips through the allow-list parse."""
-    spec = prompt_spec_with_saturation_fields(year=2025)
+    spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
     flagged = parse_response(
         json.dumps(
             {

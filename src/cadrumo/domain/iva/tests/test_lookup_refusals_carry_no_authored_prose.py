@@ -28,6 +28,8 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate
 from ..schema import EUMemberState, IvaCatalogue, IvaCategory, IvaCitation, IvaRateKind, IvaRegulation
@@ -87,18 +89,24 @@ def _catalogue_citing_an_unregistered_reference() -> IvaCatalogue:
 
 def test_unregistered_member_state_refusal_carries_no_authored_sentence() -> None:
     """XI is absent from the rate table entirely."""
-    with pytest.raises(IvaRateNotFoundError) as caught:
-        lookup_rate(EUMemberState._from_registry("xi"), IvaRateKind("general"), _ON)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(IvaRateNotFoundError) as caught:
+            lookup_rate(
+                EUMemberState._from_registry("xi"), IvaRateKind("general"), _ON, operation=_authority_operation_for_test
+            )
 
-    assert str(caught.value) == "errors.iva.rate_member_state_unregistered"
+        assert str(caught.value) == "errors.iva.rate_member_state_unregistered"
 
 
 def test_unmatched_tier_refusal_carries_no_authored_sentence() -> None:
     """Denmark is in the table but carries no reducido tier."""
-    with pytest.raises(IvaRateNotFoundError) as caught:
-        lookup_rate(EUMemberState._from_registry("dk"), IvaRateKind("reduced"), _ON)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(IvaRateNotFoundError) as caught:
+            lookup_rate(
+                EUMemberState._from_registry("dk"), IvaRateKind("reduced"), _ON, operation=_authority_operation_for_test
+            )
 
-    assert str(caught.value) == "errors.error.error_financial_iva_rate_not_found"
+        assert str(caught.value) == "errors.error.error_financial_iva_rate_not_found"
 
 
 def test_every_lookup_refusal_key_is_distinct() -> None:

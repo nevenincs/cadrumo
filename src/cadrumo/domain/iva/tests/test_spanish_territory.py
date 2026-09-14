@@ -28,6 +28,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..classification import IvaTerritorialScope
 from ..establishment import territorial_scope_for_country, territorial_scope_for_spanish_postal_code
 
@@ -43,19 +45,24 @@ class TestTheExcludedTerritoriesAreRecognised:
 
     @pytest.mark.parametrize("printed", ["35001", "35500", "38010", "38700"])
     def test_a_canarian_code_resolves_outside_the_tai(self, printed: str) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) == IvaTerritorialScope._from_registry("es_canarias")
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert territorial_scope_for_spanish_postal_code(
+                printed, operation=_authority_operation_for_test
+            ) == IvaTerritorialScope._from_registry("es_canarias")
 
     @pytest.mark.parametrize("printed", ["51001", "51002"])
     def test_a_ceuta_code_resolves_outside_the_tai(self, printed: str) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) == IvaTerritorialScope._from_registry(
-            "es_ceuta_melilla"
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert territorial_scope_for_spanish_postal_code(
+                printed, operation=_authority_operation_for_test
+            ) == IvaTerritorialScope._from_registry("es_ceuta_melilla")
 
     @pytest.mark.parametrize("printed", ["52001", "52006"])
     def test_a_melilla_code_resolves_outside_the_tai(self, printed: str) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) == IvaTerritorialScope._from_registry(
-            "es_ceuta_melilla"
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert territorial_scope_for_spanish_postal_code(
+                printed, operation=_authority_operation_for_test
+            ) == IvaTerritorialScope._from_registry("es_ceuta_melilla")
 
     def test_every_excluded_prefix_comes_from_the_registry(self) -> None:
         """Read from the bundled table, so a boundary change moves here with it.
@@ -65,21 +72,27 @@ class TestTheExcludedTerritoriesAreRecognised:
         — a second copy in the gate would drift against the first and pass while
         doing so.
         """
-        import tomllib
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            import tomllib
 
-        from ....core.resources.bundled_data import bundled_path
+            from ....core.resources.bundled_data import bundled_path
 
-        payload = tomllib.loads(
-            bundled_path("registry", "aeat", "iva", "territories.toml").read_text(encoding="utf-8"),
-        )
-        records = payload["territory"]
+            payload = tomllib.loads(
+                bundled_path("registry", "aeat", "iva", "territories.toml").read_text(encoding="utf-8"),
+            )
+            records = payload["territory"]
 
-        assert records, "the registry must enumerate at least one excluded territory"
-        for record in records:
-            expected = IvaTerritorialScope(record["scope"])
-            for prefix in record["postal_prefixes"]:
-                assert territorial_scope_for_spanish_postal_code(f"{prefix}001") is expected, prefix
-                assert expected in _OUTSIDE_THE_TAI, f"{prefix} claims a scope inside the TAI"
+            assert records, "the registry must enumerate at least one excluded territory"
+            for record in records:
+                expected = IvaTerritorialScope(record["scope"])
+                for prefix in record["postal_prefixes"]:
+                    assert (
+                        territorial_scope_for_spanish_postal_code(
+                            f"{prefix}001", operation=_authority_operation_for_test
+                        )
+                        is expected
+                    ), prefix
+                    assert expected in _OUTSIDE_THE_TAI, f"{prefix} claims a scope inside the TAI"
 
 
 class TestTheMainlandIsNeverInvented:
@@ -87,13 +100,18 @@ class TestTheMainlandIsNeverInvented:
 
     @pytest.mark.parametrize("printed", [None, "", "   ", "2800", "280011", "abcde", "28 001", "ES28001"])
     def test_absent_or_malformed_evidence_resolves_to_nothing(self, printed: str | None) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) is None
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert territorial_scope_for_spanish_postal_code(printed, operation=_authority_operation_for_test) is None
 
     def test_no_unreadable_input_produces_a_territory(self) -> None:
         """The property over the whole unreadable space, not a sample."""
-        unreadable: list[str | None] = [None, "", " ", "1", "12", "123", "1234", "123456", "1a345", "  28001  x"]
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            unreadable: list[str | None] = [None, "", " ", "1", "12", "123", "1234", "123456", "1a345", "  28001  x"]
 
-        assert {territorial_scope_for_spanish_postal_code(probe) for probe in unreadable} == {None}
+            assert {
+                territorial_scope_for_spanish_postal_code(probe, operation=_authority_operation_for_test)
+                for probe in unreadable
+            } == {None}
 
 
 class TestAWellFormedCodeOutsideTheExclusionsIsTheMainland:
@@ -101,7 +119,10 @@ class TestAWellFormedCodeOutsideTheExclusionsIsTheMainland:
 
     @pytest.mark.parametrize("printed", ["28001", "08001", "41001", "07800", "46001"])
     def test_a_peninsular_or_balearic_code_resolves_to_the_mainland(self, printed: str) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) == IvaTerritorialScope._from_registry("es_mainland")
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert territorial_scope_for_spanish_postal_code(
+                printed, operation=_authority_operation_for_test
+            ) == IvaTerritorialScope._from_registry("es_mainland")
 
     def test_the_balearics_are_inside_the_tai(self) -> None:
         """Named separately because it is the island group that IS inside.
@@ -110,7 +131,10 @@ class TestAWellFormedCodeOutsideTheExclusionsIsTheMainland:
         generalisation, and Ley 37/1992 art. 3.Dos places the Balearics inside
         the territory while excluding the Canaries.
         """
-        assert territorial_scope_for_spanish_postal_code("07001") == IvaTerritorialScope._from_registry("es_mainland")
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert territorial_scope_for_spanish_postal_code(
+                "07001", operation=_authority_operation_for_test
+            ) == IvaTerritorialScope._from_registry("es_mainland")
 
 
 class TestTheTwoAxesComposeWithoutOverlapping:
@@ -118,8 +142,12 @@ class TestTheTwoAxesComposeWithoutOverlapping:
 
     def test_the_country_axis_still_refuses_a_spanish_code(self) -> None:
         """If this ever answers, the two axes have started competing."""
-        assert territorial_scope_for_country("ES") is None
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
 
     def test_the_postal_axis_answers_what_the_country_axis_would_not(self) -> None:
-        assert territorial_scope_for_country("ES") is None
-        assert territorial_scope_for_spanish_postal_code("35001") == IvaTerritorialScope._from_registry("es_canarias")
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
+            assert territorial_scope_for_spanish_postal_code(
+                "35001", operation=_authority_operation_for_test
+            ) == IvaTerritorialScope._from_registry("es_canarias")

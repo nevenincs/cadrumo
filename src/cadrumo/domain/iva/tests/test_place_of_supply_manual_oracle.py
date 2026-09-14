@@ -34,6 +34,8 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.resources.bundled_data import bundled_path
 from ..classification import (
     CustomerTaxStatus,
@@ -114,22 +116,26 @@ def test_the_grounding_row_reads_the_two_articles_the_manual_reasons_through() -
     A row that cited only one of the two would still classify correctly while
     losing the half of the reasoning that explains why.
     """
-    oracle = _oracle()
-    expected = oracle["expected"]
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        oracle = _oracle()
+        expected = oracle["expected"]
 
-    result = classify_iva(
-        IvaInvoiceClassificationCriteria(
-            transaction_date=date(oracle["source"]["year"], 6, 15),
-            issuer_residency=IvaTerritorialScope(oracle["operation"]["issuer_residency"]),
-            customer_residency=IvaTerritorialScope(oracle["operation"]["customer_residency"]),
-            customer_identification_state=EUMemberState(oracle["operation"]["customer_member_state"]),
-            customer_tax_status=CustomerTaxStatus(oracle["operation"]["customer_tax_status"]),
-            kind=TransactionKind(oracle["operation"]["transaction_kind"]),
-            direction=InvoiceKind(oracle["operation"]["direction"]),
-        ),
-    )
-    rule = place_of_supply_rule(result.matched_rule_id, on=date(oracle["source"]["year"], 6, 15))
+        result = classify_iva(
+            IvaInvoiceClassificationCriteria(
+                transaction_date=date(oracle["source"]["year"], 6, 15),
+                issuer_residency=IvaTerritorialScope(oracle["operation"]["issuer_residency"]),
+                customer_residency=IvaTerritorialScope(oracle["operation"]["customer_residency"]),
+                customer_identification_state=EUMemberState(oracle["operation"]["customer_member_state"]),
+                customer_tax_status=CustomerTaxStatus(oracle["operation"]["customer_tax_status"]),
+                kind=TransactionKind(oracle["operation"]["transaction_kind"]),
+                direction=InvoiceKind(oracle["operation"]["direction"]),
+            ),
+            operation=_authority_operation_for_test,
+        )
+        rule = place_of_supply_rule(
+            result.matched_rule_id, on=date(oracle["source"]["year"], 6, 15), operation=_authority_operation_for_test
+        )
 
-    assert expected["located_by"] in rule.legal_references
-    assert rule.establishing_reference == expected["treatment_established_by"]
-    assert rule.supply_nature is SupplyNature(expected["supply_nature"])
+        assert expected["located_by"] in rule.legal_references
+        assert rule.establishing_reference == expected["treatment_established_by"]
+        assert rule.supply_nature is SupplyNature(expected["supply_nature"])

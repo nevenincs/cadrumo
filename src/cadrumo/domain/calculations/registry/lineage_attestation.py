@@ -170,7 +170,7 @@ def _members_for(
     revision: str,
     family: str,
     side: str,
-) -> frozenset[str]:
+) -> tuple[str, ...]:
     """Read one validated revision/family membership set with typed failures."""
     revision_members = members_by_revision.get(revision)
     if revision_members is None:
@@ -193,7 +193,7 @@ def _members_for(
         raise RegistryValidationError(
             f"lineage membership index for {family!r}/{revision!r} contains a non-string member identity",
         )
-    return frozenset(family_members)
+    return tuple(family_members)
 
 
 def validate_lineage_attestations(
@@ -248,11 +248,12 @@ def validate_lineage_attestations(
             family=attestation.family,
             side="predecessor",
         )
-        if attestation.identity not in predecessor_members:
+        predecessor_count = predecessor_members.count(attestation.identity)
+        if predecessor_count != 1:
             raise RegistryValidationError(
-                f"lineage attestation {attestation.family!r}/{attestation.identity!r} is "
-                f"stale: member is absent from predecessor revision "
-                f"{attestation.from_revision!r}",
+                f"lineage attestation {attestation.family!r}/{attestation.identity!r} has "
+                f"{predecessor_count} targets in predecessor revision {attestation.from_revision!r}; "
+                "exactly one is required",
             )
 
         target_members = _members_for(
@@ -261,10 +262,12 @@ def validate_lineage_attestations(
             family=attestation.family,
             side="target",
         )
-        if attestation.identity not in target_members:
+        target_count = target_members.count(attestation.identity)
+        if target_count != 1:
             raise RegistryValidationError(
-                f"lineage attestation {attestation.family!r}/{attestation.identity!r} is "
-                f"stale: member is absent from target revision {attestation.to_revision!r}",
+                f"lineage attestation {attestation.family!r}/{attestation.identity!r} has "
+                f"{target_count} targets in target revision {attestation.to_revision!r}; "
+                "exactly one is required",
             )
 
     return materialized

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from calendar import monthrange
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import date
 from typing import Literal, Protocol
 
@@ -33,7 +34,7 @@ from .schema_base import (
     SourceRefs,
 )
 from .schema_deadlines import DeadlineWindowDefinition
-from .schema_references import PeriodSelector
+from .schema_references import PeriodSelector, TemporalProjectionDirection
 
 
 class RevisionSelectionMetadata(RegistryModel):
@@ -184,6 +185,21 @@ class _SelectableRevision(Protocol):
     def contains_date(self, coordinate: date) -> bool: ...
 
 
+@dataclass(frozen=True, slots=True)
+class RevisionTemporalResolution[RevisionT: _SelectableRevision]:
+    """An authored revision selected for one requested filing coordinate."""
+
+    revision: RevisionT
+    requested_filing_year: int
+    authored_filing_year: int
+    projection_direction: TemporalProjectionDirection
+
+    @property
+    def is_projected(self) -> bool:
+        """Return whether the selected source differs from the requested year."""
+        return self.projection_direction is not TemporalProjectionDirection.AUTHORED
+
+
 def _supported_filing_year(
     filing_year: int,
     support: SupportedFilingYearsCatalogue | None,
@@ -191,7 +207,88 @@ def _supported_filing_year(
     """Project an admitted year through the shared support-envelope mechanics."""
     if support is None:
         return filing_year
-    return support.projection_coordinate(filing_year)
+    return filing_year if support.admits_filing_year(filing_year) else None
+
+
+def _eligible_authored_years(
+    revision: _SelectableRevision,
+    *,
+    support: SupportedFilingYearsCatalogue,
+    period: str | None,
+) -> tuple[int, ...]:
+    """Return authored support coordinates compatible with one revision branch."""
+    return tuple(
+        year
+        for year in support.years
+        if revision.period_selector.includes_year(year)
+        and (
+            period is None
+            or selector_token_for_request(revision.period_selector.periods_for_year(year), period) is not None
+        )
+    )
+
+
+def _nearest_authored_candidates[RevisionT: _SelectableRevision](
+    revisions: Sequence[RevisionT],
+    *,
+    filing_year: int,
+    period: str | None,
+    revision_id: RevisionId | None,
+    support: SupportedFilingYearsCatalogue | None,
+) -> tuple[list[RevisionT], int]:
+    """Select authored anchors nearest the request; equal distance prefers earlier."""
+    if support is not None and not support.admits_filing_year(filing_year):
+        return [], filing_year
+    exact = [
+        revision
+        for revision in revisions
+        if (revision_id is None or revision.id == revision_id)
+        and revision.period_selector.includes_year(filing_year)
+        and (
+            period is None
+            or selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period) is not None
+        )
+    ]
+    if exact or support is None:
+        return exact, filing_year
+    anchors = [
+        (year, revision)
+        for revision in revisions
+        if revision_id is None or revision.id == revision_id
+        for year in _eligible_authored_years(revision, support=support, period=period)
+    ]
+    if not anchors:
+        return [], filing_year
+    authored_year = min((year for year, _ in anchors), key=lambda year: (abs(year - filing_year), year))
+    return [revision for year, revision in anchors if year == authored_year], authored_year
+
+
+def revision_temporal_resolution[RevisionT: _SelectableRevision](
+    revision: RevisionT,
+    *,
+    filing_year: int,
+    period: str | None,
+    support: SupportedFilingYearsCatalogue | None,
+) -> RevisionTemporalResolution[RevisionT]:
+    """Describe requested identity and authored provenance for a selected revision."""
+    _candidates, authored_year = _nearest_authored_candidates(
+        (revision,),
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision.id,
+        support=support,
+    )
+    direction = TemporalProjectionDirection.AUTHORED
+    if authored_year < filing_year:
+        direction = TemporalProjectionDirection.FORWARD
+    elif authored_year > filing_year:
+        direction = TemporalProjectionDirection.BACKWARD
+    return RevisionTemporalResolution(
+        revision=revision,
+        requested_filing_year=filing_year,
+        authored_filing_year=authored_year,
+        projection_direction=direction,
+    )
 
 
 def _project_reference_date(on: date | None, *, requested_year: int, selection_year: int) -> date | None:
@@ -401,19 +498,26 @@ def select_revision_for_year(
             carries a year beyond its authored horizon back to that horizon.
     """
     selection_year = _supported_filing_year(filing_year, support)
-    selection_on = (
-        None
-        if selection_year is None
-        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
-    )
     revisions = tuple(modelo.revisions.values())
+    matching, authored_year = _nearest_authored_candidates(
+        revisions,
+        filing_year=filing_year,
+        period=None,
+        revision_id=None,
+        support=support,
+    )
     return _select_single_year_revision(
         str(modelo.id),
         revisions,
         modelo.pending_ejercicio_ordenes,
         []
         if selection_year is None
-        else _year_revision_candidates(revisions, filing_year=selection_year, on=selection_on),
+        else _effective_candidates(
+            matching,
+            on=_project_reference_date(on, requested_year=filing_year, selection_year=authored_year),
+            filing_year=authored_year,
+            period=None,
+        ),
         filing_year=filing_year,
     )
 
@@ -430,10 +534,13 @@ def select_revision_metadata_for_year(
         filing_year,
         directory.supported_filing_years if support is None else support,
     )
-    selection_on = (
-        None
-        if selection_year is None
-        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+    effective_support = directory.supported_filing_years if support is None else support
+    matching, authored_year = _nearest_authored_candidates(
+        directory.revisions,
+        filing_year=filing_year,
+        period=None,
+        revision_id=None,
+        support=effective_support,
     )
     return _select_single_year_revision(
         directory.modelo_id,
@@ -441,7 +548,12 @@ def select_revision_metadata_for_year(
         directory.pending_ejercicio_ordenes,
         []
         if selection_year is None
-        else _year_revision_candidates(directory.revisions, filing_year=selection_year, on=selection_on),
+        else _effective_candidates(
+            matching,
+            on=_project_reference_date(on, requested_year=filing_year, selection_year=authored_year),
+            filing_year=authored_year,
+            period=None,
+        ),
         filing_year=filing_year,
     )
 
@@ -472,29 +584,23 @@ def select_revision(
             carries a year beyond its authored horizon back to that horizon.
     """
     selection_year = _supported_filing_year(filing_year, support)
-    matching = (
-        []
-        if selection_year is None
-        else [
-            revision
-            for revision in modelo.revisions.values()
-            if _revision_matches_request(
-                revision,
-                filing_year=selection_year,
-                period=period,
-                revision_id=revision_id,
-            )
-        ]
+    revisions = tuple(modelo.revisions.values())
+    matching, authored_year = _nearest_authored_candidates(
+        revisions,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        support=support,
     )
     selection_on = (
         None
         if selection_year is None
-        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+        else _project_reference_date(on, requested_year=filing_year, selection_year=authored_year)
     )
     candidates = _effective_candidates(
         matching,
         on=selection_on,
-        filing_year=filing_year if selection_year is None else selection_year,
+        filing_year=authored_year,
         period=period,
     )
     return _select_single_revision(
@@ -522,29 +628,23 @@ def select_revision_metadata(
         filing_year,
         directory.supported_filing_years if support is None else support,
     )
-    matching = (
-        []
-        if selection_year is None
-        else [
-            revision
-            for revision in directory.revisions
-            if _revision_matches_request(
-                revision,
-                filing_year=selection_year,
-                period=period,
-                revision_id=revision_id,
-            )
-        ]
+    effective_support = directory.supported_filing_years if support is None else support
+    matching, authored_year = _nearest_authored_candidates(
+        directory.revisions,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        support=effective_support,
     )
     selection_on = (
         None
         if selection_year is None
-        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+        else _project_reference_date(on, requested_year=filing_year, selection_year=authored_year)
     )
     candidates = _effective_candidates(
         matching,
         on=selection_on,
-        filing_year=filing_year if selection_year is None else selection_year,
+        filing_year=authored_year,
         period=period,
     )
     return _select_single_revision(

@@ -35,6 +35,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ..classification import IvaTerritorialScope
 from ..establishment import (
@@ -60,7 +62,8 @@ CATALOGUED_THIRD_COUNTRIES = ("US", "JP", "BR")
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
 def test_an_unassigned_code_establishes_no_scope(code: str) -> None:
     """The defect this file exists for, at the authority that produced it."""
-    assert territorial_scope_for_country(code) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert territorial_scope_for_country(code, operation=_authority_operation_for_test) is None
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
@@ -71,7 +74,8 @@ def test_an_unassigned_code_survives_neither_case_nor_padding(code: str) -> None
     ``" xx "`` walked straight through it, which is the form a reader actually
     produces.
     """
-    assert territorial_scope_for_country(f" {code.lower()} ") is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert territorial_scope_for_country(f" {code.lower()} ", operation=_authority_operation_for_test) is None
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
@@ -82,19 +86,26 @@ def test_the_structured_leg_refuses_the_same_codes(code: str) -> None:
     of ``XX`` establish a territory that the identical string printed in an
     address block does not.
     """
-    assert country_code_for_stated_country_code(code) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert country_code_for_stated_country_code(code, operation=_authority_operation_for_test) is None
 
 
 @pytest.mark.parametrize("code", CATALOGUED_THIRD_COUNTRIES)
 def test_a_genuine_third_country_still_resolves(code: str) -> None:
     """The opposite direction. Refusing a real export is its own defect."""
-    assert territorial_scope_for_country(code) is IvaTerritorialScope._from_registry("third_country")
-    assert country_code_for_stated_country_code(code) == code
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert territorial_scope_for_country(
+            code, operation=_authority_operation_for_test
+        ) is IvaTerritorialScope._from_registry("third_country")
+        assert country_code_for_stated_country_code(code, operation=_authority_operation_for_test) == code
 
 
 def test_a_member_state_still_resolves() -> None:
     """The EU branch is not collateral damage of the narrowing."""
-    assert territorial_scope_for_country("DE") is IvaTerritorialScope._from_registry("eu_member")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert territorial_scope_for_country(
+            "DE", operation=_authority_operation_for_test
+        ) is IvaTerritorialScope._from_registry("eu_member")
 
 
 def test_northern_ireland_survives_the_narrowing() -> None:
@@ -106,19 +117,30 @@ def test_northern_ireland_survives_the_narrowing() -> None:
     of the intra-community branch, and a narrowing that consulted only the
     user-assigned ranges would drop it as a placeholder.
     """
-    assert territorial_scope_for_country("XI") is IvaTerritorialScope._from_registry("eu_member")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert territorial_scope_for_country(
+            "XI", operation=_authority_operation_for_test
+        ) is IvaTerritorialScope._from_registry("eu_member")
 
 
 def test_spain_still_refuses_for_its_own_reason() -> None:
     """Spain returns nothing BY DESIGN, and must not be reclassified as unmatched."""
-    assert territorial_scope_for_country("ES") is None
-    assert stated_country_code_status("ES") is StatedCountryCodeStatus.CATALOGUED
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
+        assert (
+            stated_country_code_status("ES", operation=_authority_operation_for_test)
+            is StatedCountryCodeStatus.CATALOGUED
+        )
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
 def test_an_unassigned_code_is_reported_as_unassigned(code: str) -> None:
     """The typo signal. Distinguishable, or the operator cannot act on it."""
-    assert stated_country_code_status(code) is StatedCountryCodeStatus.UNASSIGNED
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            stated_country_code_status(code, operation=_authority_operation_for_test)
+            is StatedCountryCodeStatus.UNASSIGNED
+        )
 
 
 def test_an_assigned_code_the_vocabulary_omits_is_a_catalogue_gap() -> None:
@@ -134,16 +156,24 @@ def test_an_assigned_code_the_vocabulary_omits_is_a_catalogue_gap() -> None:
     it establishes -- not that the issuer typed nonsense. It fires no rung until
     the catalogue carries it.
     """
-    specimen = an_uncatalogued_alpha2()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        specimen = an_uncatalogued_alpha2()
 
-    assert stated_country_code_status(specimen) is StatedCountryCodeStatus.UNCATALOGUED
-    assert territorial_scope_for_country(specimen) is None
+        assert (
+            stated_country_code_status(specimen, operation=_authority_operation_for_test)
+            is StatedCountryCodeStatus.UNCATALOGUED
+        )
+        assert territorial_scope_for_country(specimen, operation=_authority_operation_for_test) is None
 
 
 @pytest.mark.parametrize("code", CATALOGUED_THIRD_COUNTRIES)
 def test_a_catalogued_code_reports_as_catalogued(code: str) -> None:
     """Positive control over the status axis itself."""
-    assert stated_country_code_status(code) is StatedCountryCodeStatus.CATALOGUED
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            stated_country_code_status(code, operation=_authority_operation_for_test)
+            is StatedCountryCodeStatus.CATALOGUED
+        )
 
 
 @pytest.mark.parametrize("stated", [None, "", "  ", "Germany", "D", "E1", "1234"])
@@ -153,7 +183,8 @@ def test_nothing_that_is_not_an_alpha2_code_gets_a_status(stated: str | None) ->
     Reporting an address line as an unassigned country code would spend the
     operator's attention naming a string nobody claimed was a country.
     """
-    assert stated_country_code_status(stated) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert stated_country_code_status(stated, operation=_authority_operation_for_test) is None
 
 
 @pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, "QM", "AA", "XA"])
@@ -163,6 +194,12 @@ def test_no_unmatched_code_degrades_to_spain(code: str) -> None:
     The derived catalogue-gap specimen is checked alongside the reserved codes,
     so both ways of being unmatched are covered without either being pinned.
     """
-    assert country_code_for_stated_country_code(an_uncatalogued_alpha2()) != "ES"
-    assert country_code_for_stated_country_code(code) != "ES"
-    assert territorial_scope_for_country(code) is not IvaTerritorialScope._from_registry("es_mainland")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            country_code_for_stated_country_code(an_uncatalogued_alpha2(), operation=_authority_operation_for_test)
+            != "ES"
+        )
+        assert country_code_for_stated_country_code(code, operation=_authority_operation_for_test) != "ES"
+        assert territorial_scope_for_country(
+            code, operation=_authority_operation_for_test
+        ) is not IvaTerritorialScope._from_registry("es_mainland")

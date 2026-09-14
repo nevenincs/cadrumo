@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 from functools import cache
 
 from ._repos.apoderamientos import ApoderamientosRepository
-from ._repos.category_profiles import CategoryProfileRepository
 from ._repos.holiday_calendars import HolidayCalendarRepository
 from ._repos.iva_catalogues import IvaCatalogueRepository
 from ._repos.manuals import ManualRepository
@@ -32,7 +31,6 @@ class ResourceRegistry:
     """
 
     apoderamientos: ApoderamientosRepository = field(default_factory=ApoderamientosRepository)
-    category_profiles: CategoryProfileRepository = field(default_factory=CategoryProfileRepository)
     holiday_calendars: HolidayCalendarRepository = field(default_factory=HolidayCalendarRepository)
     manuals: ManualRepository = field(default_factory=ManualRepository)
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)

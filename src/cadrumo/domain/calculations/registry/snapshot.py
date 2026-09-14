@@ -27,7 +27,12 @@ from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, Regist
 from .schema_base import DateAxis, filing_period_from_scope
 from .schema_references import LegalReference, SourceReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
-from .temporal import ModeloRevisionDirectory, RevisionSelectionMetadata, select_revision
+from .temporal import (
+    ModeloRevisionDirectory,
+    RevisionSelectionMetadata,
+    revision_temporal_resolution,
+    select_revision,
+)
 from .validate_revision_identity import revision_reference_identity_failures
 
 
@@ -201,6 +206,12 @@ def build_validated_snapshot(
         revision_id=revision_id,
         support=catalogues.supported_filing_years,
     )
+    temporal_resolution = revision_temporal_resolution(
+        revision,
+        filing_year=filing_year,
+        period=period,
+        support=catalogues.supported_filing_years,
+    )
     endpoint_directory = revision_directory or ModeloRevisionDirectory.from_modelo(
         modelo,
         support=catalogues.supported_filing_years,
@@ -259,6 +270,8 @@ def build_validated_snapshot(
         revision=revision,
         filing_period=filing_period_from_scope(filing_year, period),
         filing_year=filing_year,
+        authored_filing_year=temporal_resolution.authored_filing_year,
+        revision_projection_direction=temporal_resolution.projection_direction,
         period=period,
         legal=_catalogue_slice(catalogues.legal, legal_ids),
         sources=_catalogue_slice(catalogues.sources, source_ids),

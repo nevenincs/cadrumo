@@ -25,6 +25,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...iva.schema import IvaCategory
 from ..enums import BusinessClassification, TransactionDirection
 from ..errors import LLMClassifierError
@@ -127,15 +128,15 @@ def test_response_rejects_business_pct_out_of_range() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_iva_choices_cover_every_grounded_category() -> None:
-    choices = default_iva_category_choices()
+def test_iva_choices_cover_every_grounded_category(operation: PinnedAuthorityOperation) -> None:
+    choices = default_iva_category_choices(operation=operation)
     assert {choice.value for choice in choices} == set(IvaCategory)
     # Every choice carries a non-empty hint resolved from the catalogue label.
     assert all(choice.hint for choice in choices)
 
 
-def test_saturation_spec_allow_list_matches_every_category() -> None:
-    spec = prompt_spec_with_saturation_fields(year=2025)
+def test_saturation_spec_allow_list_matches_every_category(operation: PinnedAuthorityOperation) -> None:
+    spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
     assert spec.allowed_iva_categories() == frozenset(IvaCategory)
     # The default spec asks for no IVA category at all.
     assert default_prompt_spec().allowed_iva_categories() == frozenset()
@@ -146,8 +147,8 @@ def test_saturation_spec_allow_list_matches_every_category() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_rendered_prompt_requests_iva_category_without_numbers() -> None:
-    prompt = prompt_spec_with_saturation_fields(year=2025).render(_transaction())
+def test_rendered_prompt_requests_iva_category_without_numbers(operation: PinnedAuthorityOperation) -> None:
+    prompt = prompt_spec_with_saturation_fields(year=2025, operation=operation).render(_transaction())
     assert "iva_category" in prompt
     assert IvaCategory("domestic_general").value in prompt
     # Explicitly instructs the model not to compute a figure.
@@ -162,8 +163,8 @@ def test_rendered_prompt_requests_iva_category_without_numbers() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_parse_accepts_grounded_iva_category() -> None:
-    spec = prompt_spec_with_saturation_fields(year=2025)
+def test_parse_accepts_grounded_iva_category(operation: PinnedAuthorityOperation) -> None:
+    spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
     stdout = (
         '{"classification": "BUSINESS", "confidence": 0.9, "reason": "business meal", '
         '"category": "manutencion_dietas_nacional", "iva_category": "domestic_reduced"}'
@@ -172,8 +173,8 @@ def test_parse_accepts_grounded_iva_category() -> None:
     assert response.iva_category == IvaCategory("domestic_reduced")
 
 
-def test_parse_rejects_hallucinated_iva_category() -> None:
-    spec = prompt_spec_with_saturation_fields(year=2025)
+def test_parse_rejects_hallucinated_iva_category(operation: PinnedAuthorityOperation) -> None:
+    spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
     stdout = '{"classification": "BUSINESS", "confidence": 0.9, "reason": "x", "iva_category": "not_a_real_category"}'
     with pytest.raises(LLMClassifierError, match=r"no JSON candidate matched"):
         parse_response(stdout, spec=spec)
@@ -187,7 +188,7 @@ def test_parse_rejects_iva_category_when_spec_did_not_ask() -> None:
         parse_response(stdout, spec=default_prompt_spec())
 
 
-def test_every_iva_category_carries_a_curated_hint() -> None:
+def test_every_iva_category_carries_a_curated_hint(operation: PinnedAuthorityOperation) -> None:
     """No category may fall back to its auto-derived hint.
 
     The choice builder falls back to ``category.value.replace("_", " ")`` for
@@ -203,7 +204,7 @@ def test_every_iva_category_carries_a_curated_hint() -> None:
     """
     unhinted = sorted(
         choice.value.value
-        for choice in default_iva_category_choices()
+        for choice in default_iva_category_choices(operation=operation)
         if choice.hint == choice.value.value.replace("_", " ")
     )
 
