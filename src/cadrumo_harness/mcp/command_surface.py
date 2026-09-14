@@ -16,7 +16,7 @@ import subprocess
 from dataclasses import dataclass
 from functools import cache
 from types import MappingProxyType
-from typing import Any, ClassVar
+from typing import Any, ClassVar, override
 
 from pydantic import ConfigDict
 
@@ -62,6 +62,7 @@ class _WireOutputSchema(OutputSchema):
     _wire_schema: ClassVar[dict[str, Any]] = {}
 
     @classmethod
+    @override
     def model_json_schema(cls, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Return the exact result JSON Schema projected by the CLI process."""
         return copy.deepcopy(cls._wire_schema)
@@ -233,21 +234,26 @@ class CommandSurfaceSnapshot(CommandSurfacePort):
     _exposable: frozenset[str]
     _registration: CommandRegistrationProjection
 
+    @override
     def command_schema_refs(self) -> tuple[CommandSchemaRef, ...]:
         return self._schema_refs
 
+    @override
     def command_schema_type(self, command: str) -> type[OutputSchema]:
         try:
             return self._schema_types[command]
         except KeyError as error:
             raise LookupError(f"unknown command schema identity: {command}") from error
 
+    @override
     def command_schema_types(self) -> MappingProxyType[str, type[OutputSchema]]:
         return self._schema_types
 
+    @override
     def command_registration_projection(self) -> CommandRegistrationProjection:
         return self._registration
 
+    @override
     def build_verb_input_schemas(self, command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
         missing = tuple(key for key in command_keys if key not in self._input_schemas)
         if missing:
@@ -263,24 +269,29 @@ class CommandSurfaceSnapshot(CommandSurfacePort):
             )
         return {key: self._input_schemas[key] for key in command_keys}
 
+    @override
     def cli_path_for_command_key(self, command_key: str) -> tuple[str, ...]:
         try:
             return self._input_schemas[command_key].cli_path
         except KeyError as error:
             raise LookupError(f"unknown command schema identity: {command_key}") from error
 
+    @override
     def is_exposable_command(self, command_key: str) -> bool:
         return command_key in self._exposable
 
+    @override
     def command_search_terms(self, command_key: str) -> tuple[str, ...]:
         try:
             return self._search_terms[command_key]
         except KeyError as error:
             raise LookupError(f"unknown command schema identity: {command_key}") from error
 
+    @override
     def global_flags(self) -> frozenset[str]:
         return self._global_flags
 
+    @override
     def command_execution_policy_for_cli_path(self, cli_path: tuple[str, ...]) -> CommandExecutionPolicy:
         for key, schema in self._input_schemas.items():
             if schema.cli_path == cli_path:
@@ -334,6 +345,7 @@ class _PreconditionResolver(PreconditionActionResolutionPort):
     def __init__(self, surface: CommandSurfaceSnapshot) -> None:
         self._surface = surface
 
+    @override
     def resolve_action_reference(self, verdict: PreconditionVerdict) -> ResolvedActionReference | None:
         if verdict.action is None:
             return None
