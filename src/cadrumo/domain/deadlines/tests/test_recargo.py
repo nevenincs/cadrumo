@@ -17,6 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..models import Recovery
 from ..recargo import (
     build_recovery_for_overdue,
@@ -30,13 +31,13 @@ from ..recargo import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_recargo_bands_load_from_published_authority_in_order() -> None:
+def test_recargo_bands_load_from_published_authority_in_order(operation: PinnedAuthorityOperation) -> None:
     """The published bands must materialise sorted by min_completed_months.
 
     External authority: ley-58-2003:art-27.2 (Ley General Tributaria,
     post-Ley 11/2021).
     """
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     assert len(bands) >= 4
     # Sorted ascending by lower bound (0, 1, 2, ...).
     prior = -1
@@ -51,31 +52,31 @@ def test_recargo_bands_load_from_published_authority_in_order() -> None:
     assert interest_bands[0].max_completed_months is None
 
 
-def test_zero_completed_months_yields_1_pct() -> None:
+def test_zero_completed_months_yields_1_pct(operation: PinnedAuthorityOperation) -> None:
     """Filed late but within the first incomplete month → 1% base, no interest."""
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(0, bands)
     assert band.surcharge_pct == Decimal("1.00")
     assert band.interest_applies is False
 
 
-def test_one_completed_month_yields_2_pct() -> None:
+def test_one_completed_month_yields_2_pct(operation: PinnedAuthorityOperation) -> None:
     """1 completed month → 1% base + 1% = 2% (Art. 27.2, per completed month)."""
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(1, bands)
     assert band.surcharge_pct == Decimal("2.00")
     assert band.interest_applies is False
 
 
-def test_five_completed_months_yields_6_pct() -> None:
+def test_five_completed_months_yields_6_pct(operation: PinnedAuthorityOperation) -> None:
     """5 completed months → 1% + 5% = 6%."""
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(5, bands)
     assert band.surcharge_pct == Decimal("6.00")
     assert band.interest_applies is False
 
 
-def test_twelve_completed_months_yields_13_pct_no_interest() -> None:
+def test_twelve_completed_months_yields_13_pct_no_interest(operation: PinnedAuthorityOperation) -> None:
     """Exactly 12 completed months → 1% + 12% = 13%, still no interest (Art. 27.2).
 
     The graduated "1 por ciento más otro 1 por ciento adicional por cada mes
@@ -84,29 +85,29 @@ def test_twelve_completed_months_yields_13_pct_no_interest() -> None:
     have been exceeded (see the boundary tests below), so 12 completed months is
     still graduated.
     """
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(12, bands)
     assert band.id == "completed_months_12"
     assert band.surcharge_pct == Decimal("13.00")
     assert band.interest_applies is False
 
 
-def test_after_12_completed_months_adds_interest() -> None:
+def test_after_12_completed_months_adds_interest(operation: PinnedAuthorityOperation) -> None:
     """At/after 13 completed months the 15% + interest tail band applies.
 
     Thirteen completed months is unambiguously past the twelve-month term (a
     completed thirteenth month can only exist strictly beyond twelve months), so
     the 15% + intereses de demora tail is correct here (Art. 27.2 LGT).
     """
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(13, bands)
     assert band.id == "after_12_months"
     assert band.surcharge_pct == Decimal("15.00")
     assert band.interest_applies is True
 
 
-def test_resolve_recargo_band_rejects_negative_completed_months() -> None:
-    bands = load_recargo_bands()
+def test_resolve_recargo_band_rejects_negative_completed_months(operation: PinnedAuthorityOperation) -> None:
+    bands = load_recargo_bands(operation=operation)
     with pytest.raises(ValueError, match="completed_months must be >= 0"):
         resolve_recargo_band(-1, bands)
 
@@ -124,7 +125,7 @@ def test_completed_months_counts_only_whole_months() -> None:
     assert completed_months_late(closes, closes) == 0
 
 
-def test_build_recovery_uses_completed_months_not_day_bracket() -> None:
+def test_build_recovery_uses_completed_months_not_day_bracket(operation: PinnedAuthorityOperation) -> None:
     """A filing ~1 completed month late carries 2%, not a coarse bracket midpoint.
 
     Deadline 2026-04-20, presented 2026-06-19 → 1 completed month (the June-20
@@ -136,6 +137,7 @@ def test_build_recovery_uses_completed_months_not_day_bracket() -> None:
         reference_today=date(2026, 6, 19),
         modelo="130",
         period=Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
     assert recovery.still_filable is True
     assert recovery.recargo_band.surcharge_pct == Decimal("2.00")
@@ -146,7 +148,8 @@ def test_build_recovery_uses_completed_months_not_day_bracket() -> None:
 
 def test_load_recargo_bands_exposes_no_raw_path_override() -> None:
     """Runtime cannot substitute a raw authoring table for published authority."""
-    assert tuple(inspect.signature(load_recargo_bands).parameters) == ()
+    parameter = inspect.signature(load_recargo_bands).parameters["operation"]
+    assert parameter.default is inspect.Parameter.empty
 
 
 # ---------------------------------------------------------------------------
@@ -180,7 +183,9 @@ def test_more_than_twelve_months_elapsed_is_strict_after_anniversary() -> None:
     assert more_than_twelve_months_elapsed(closes, date(2027, 4, 21)) is True
 
 
-def test_exact_twelve_month_anniversary_stays_in_graduated_band() -> None:
+def test_exact_twelve_month_anniversary_stays_in_graduated_band(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The exact twelve-month anniversary resolves to 13% graduated, NOT the 15% tail.
 
     Regression for the cross-domain-continuity audit finding
@@ -195,13 +200,16 @@ def test_exact_twelve_month_anniversary_stays_in_graduated_band() -> None:
         reference_today=date(2027, 4, 20),
         modelo="130",
         period=Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
     assert recovery.recargo_band.id == "completed_months_12"
     assert recovery.recargo_band.surcharge_pct == Decimal("13.00")
     assert recovery.recargo_band.interest_applies is False
 
 
-def test_day_after_twelve_month_anniversary_enters_interest_tail() -> None:
+def test_day_after_twelve_month_anniversary_enters_interest_tail(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The day after the twelve-month anniversary is the first 15% + intereses day.
 
     Art. 27.2 LGT: intereses de demora run "desde el día siguiente al término de
@@ -214,13 +222,16 @@ def test_day_after_twelve_month_anniversary_enters_interest_tail() -> None:
         reference_today=date(2027, 4, 21),
         modelo="130",
         period=Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
     assert recovery.recargo_band.id == "after_12_months"
     assert recovery.recargo_band.surcharge_pct == Decimal("15.00")
     assert recovery.recargo_band.interest_applies is True
 
 
-def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band() -> None:
+def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The grounding has exactly one home, so two copies cannot disagree.
 
     ``Recovery`` used to mirror ``recargo_band.legal_ref`` onto a top-level
@@ -238,6 +249,7 @@ def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band() -> None:
         reference_today=date(2026, 5, 21),
         modelo="130",
         period=Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
 
     # The grounding is still reachable, and from one place only.

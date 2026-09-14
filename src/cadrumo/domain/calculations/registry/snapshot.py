@@ -457,7 +457,7 @@ SUBSTANTIVE_LAW_KINDS = frozenset(
 )
 
 
-def _legal_window_covers_devengo(revision: ModeloRevision, reference: LegalReference) -> bool:
+def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalReference) -> bool:
     """Return whether ``reference``'s effective window grounds ``revision``.
 
     A revision-scoped legal reference is a filing-specific grounding claim, so
@@ -591,7 +591,7 @@ def _legal_window_failure(
     carried_spans: tuple[tuple[date, date | None, str], ...] = (),
 ) -> str | None:
     """Return the existing refusal detail for one out-of-window legal ref."""
-    if _legal_window_covers_devengo(revision, reference):
+    if legal_window_covers_devengo(revision, reference):
         return None
     if reference.kind in SUBSTANTIVE_LAW_KINDS and _historical_carrier_admits(reference, carried_spans):
         return None

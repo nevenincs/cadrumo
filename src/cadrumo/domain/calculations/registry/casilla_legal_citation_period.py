@@ -62,7 +62,7 @@ from datetime import date
 
 from .schema import ModeloDefinition, ModeloRevision
 from .schema_references import LegalReference, governed_period_span
-from .snapshot import _legal_window_covers_devengo
+from .snapshot import legal_window_covers_devengo
 
 __all__ = (
     "CasillaCitationKey",
@@ -192,7 +192,7 @@ def _refusal(
             governs_to=None,
             alternatives=(),
         )
-    if _legal_window_covers_devengo(revision, reference):
+    if legal_window_covers_devengo(revision, reference):
         return None
     governs_from, governs_to = governed_period_span(reference)
     return CitationPeriodRefusal(
@@ -204,7 +204,7 @@ def _refusal(
         alternatives=tuple(
             sibling.id
             for sibling in articles[_article_key(reference)]
-            if sibling.id != reference.id and _legal_window_covers_devengo(revision, sibling)
+            if sibling.id != reference.id and legal_window_covers_devengo(revision, sibling)
         ),
     )
 

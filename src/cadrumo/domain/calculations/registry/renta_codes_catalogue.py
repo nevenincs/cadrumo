@@ -45,10 +45,12 @@ class FiscalResidencyCatalogue:
 
     @property
     def all_residencies(self) -> frozenset[FiscalResidency]:
+        """Return every residency token declared by this catalogue."""
         return frozenset(definition.token for definition in self.definitions)
 
     @property
     def choices(self) -> tuple[FiscalResidency, ...]:
+        """Return declared residency tokens in authored choice order."""
         return tuple(definition.token for definition in self.definitions)
 
     def require(self, value: object) -> FiscalResidency:
@@ -61,7 +63,7 @@ class FiscalResidencyCatalogue:
                 raise RegistryValidationError("fiscal-residency token must be non-empty")
             if raw not in {str(item) for item in self.all_residencies}:
                 raise RegistryValidationError(f"fiscal-residency token {raw!r} is not declared by the facts registry")
-            token = FiscalResidency._from_registry(raw)
+            token = FiscalResidency.from_registry(raw)
         else:
             raise RegistryValidationError("fiscal-residency token must be a string token")
         if token not in self.all_residencies:
@@ -71,6 +73,7 @@ class FiscalResidencyCatalogue:
         return token
 
     def definition(self, value: object) -> FiscalResidencyDefinition:
+        """Return the declaration for a required residency token."""
         token = self.require(value)
         return next(item for item in self.definitions if item.token == token)
 
@@ -156,7 +159,7 @@ def resolve_fiscal_residency_catalogue(
             raise RegistryValidationError(f"fiscal-residency token {raw_token!r} declares a mismatched value")
         definitions.append(
             FiscalResidencyDefinition(
-                token=FiscalResidency._from_registry(raw_token),
+                token=FiscalResidency.from_registry(raw_token),
                 description=_required(entries, f"{prefix}description"),
                 tax_regime=_required(entries, f"{prefix}tax_regime"),
                 requires_country=_boolean(entries, f"{prefix}requires_country"),
@@ -165,7 +168,7 @@ def resolve_fiscal_residency_catalogue(
         )
     catalogue = FiscalResidencyCatalogue(
         definitions=tuple(definitions),
-        default_token=FiscalResidency._from_registry(_required(entries, _FISCAL_RESIDENCY_DEFAULT_KEY)),
+        default_token=FiscalResidency.from_registry(_required(entries, _FISCAL_RESIDENCY_DEFAULT_KEY)),
     )
     if len(catalogue.all_residencies) != len(catalogue.definitions):
         raise RegistryValidationError("fiscal-residency catalogue has duplicate tokens")

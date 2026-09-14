@@ -29,6 +29,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.citation_grounding import CitationGrounding
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..proportionality import CategoryCitation
 from ..registry import load_category_profiles
 from ..spending_category import SpendingCategory
@@ -41,22 +42,22 @@ def _legal_catalogue():
     return compiled_bundled_authority().catalogues.legal
 
 
-def _shipped_citations() -> list[CategoryCitation]:
+def _shipped_citations(operation: PinnedAuthorityOperation) -> list[CategoryCitation]:
     """Return every citation on every shipped category profile."""
     found: list[CategoryCitation] = []
-    for profile in load_category_profiles().values():
+    for profile in load_category_profiles(operation=operation).values():
         if profile.proportionality is not None:
             found.extend(profile.proportionality.citations)
     return found
 
 
-def test_no_citation_quote_is_a_locale_key() -> None:
+def test_no_citation_quote_is_a_locale_key(operation: PinnedAuthorityOperation) -> None:
     """DISCRIMINATING. The defect in its original shape.
 
     A dotted key here means the record points at a translation that does not
     exist and renders as a word derived from its own final segment.
     """
-    keyed = [c for c in _shipped_citations() if c.quote.startswith("categories.registry.")]
+    keyed = [c for c in _shipped_citations(operation) if c.quote.startswith("categories.registry.")]
 
     assert not keyed, (
         "these citations still indirect their quotation through a locale key, so the record "
@@ -64,7 +65,7 @@ def test_no_citation_quote_is_a_locale_key() -> None:
     )
 
 
-def test_every_verified_quotation_is_contained_in_its_own_provision() -> None:
+def test_every_verified_quotation_is_contained_in_its_own_provision(operation: PinnedAuthorityOperation) -> None:
     """DISCRIMINATING, and the invariant that replaces the non-emptiness check.
 
     Asserted per citation rather than as a count: a tally would go green again
@@ -74,7 +75,7 @@ def test_every_verified_quotation_is_contained_in_its_own_provision() -> None:
     authority = compiled_bundled_authority()
     catalogue = authority.catalogues.legal
     uncontained: list[tuple[str, str]] = []
-    for citation in _shipped_citations():
+    for citation in _shipped_citations(operation):
         if citation.grounding is not CitationGrounding.VERIFIED:
             continue
         assert citation.legal_ref is not None, (
@@ -90,14 +91,14 @@ def test_every_verified_quotation_is_contained_in_its_own_provision() -> None:
     )
 
 
-def test_an_unverifiable_citation_says_why_instead_of_carrying_text() -> None:
+def test_an_unverifiable_citation_says_why_instead_of_carrying_text(operation: PinnedAuthorityOperation) -> None:
     """DISCRIMINATING. The half that keeps the absent evidence honest.
 
     The containment check skips a non-verified citation by design, so candidate
     text parked in that state would never be read against anything while still
     reading as evidence to anyone who printed it.
     """
-    for citation in _shipped_citations():
+    for citation in _shipped_citations(operation):
         if citation.grounding is CitationGrounding.VERIFIED:
             continue
         assert citation.grounding_reason.strip(), (
@@ -109,7 +110,9 @@ def test_an_unverifiable_citation_says_why_instead_of_carrying_text() -> None:
         )
 
 
-def test_a_citation_naming_an_unbundled_source_is_not_labelled_refused() -> None:
+def test_a_citation_naming_an_unbundled_source_is_not_labelled_refused(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """DISCRIMINATING. The two absences are different claims about the law.
 
     ``UNRESOLVED`` asserts the provision was read and found not to support the
@@ -117,7 +120,7 @@ def test_a_citation_naming_an_unbundled_source_is_not_labelled_refused() -> None
     edition is not among the bundled consolidated texts. Labelling it refused
     would assert a reading nobody performed.
     """
-    for citation in _shipped_citations():
+    for citation in _shipped_citations(operation):
         if citation.grounding is not CitationGrounding.SOURCE_NOT_BUNDLED:
             continue
         assert citation.legal_ref is None, (
@@ -126,7 +129,9 @@ def test_a_citation_naming_an_unbundled_source_is_not_labelled_refused() -> None
         )
 
 
-def test_the_seguro_de_enfermedad_citation_points_at_the_letter_that_grants_it() -> None:
+def test_the_seguro_de_enfermedad_citation_points_at_the_letter_that_grants_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """DISCRIMINATING, and a regression on a real mis-citation this pass found.
 
     The shipped locator for ``seguros_salud_autonomo`` read "art. 30.2.5.c regla
@@ -135,7 +140,7 @@ def test_the_seguro_de_enfermedad_citation_points_at_the_letter_that_grants_it()
     The locale key hid it, because a citation that renders as "Quote" cannot be
     read against the article it names.
     """
-    profile = load_category_profiles()[SpendingCategory.SEGUROS_SALUD_AUTONOMO]
+    profile = load_category_profiles(operation=operation)[SpendingCategory.SEGUROS_SALUD_AUTONOMO]
     assert profile.proportionality is not None
     citations = list(profile.proportionality.citations)
 

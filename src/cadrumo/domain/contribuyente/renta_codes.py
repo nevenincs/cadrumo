@@ -185,6 +185,7 @@ class FiscalResidency(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct only tokens already validated by registry hydration."""
         if not _registry_validated:
             raise TypeError("FiscalResidency tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -192,7 +193,8 @@ class FiscalResidency(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Project a token at a validated registry hydration boundary."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -237,6 +239,7 @@ class SituacionFamiliar(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct only tokens already validated by registry hydration."""
         if not _registry_validated:
             raise TypeError("SituacionFamiliar tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -289,6 +292,7 @@ class SituacionFamiliarM145(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct only tokens already validated by registry hydration."""
         if not _registry_validated:
             raise TypeError("SituacionFamiliarM145 tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:

@@ -25,6 +25,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.validity_window import ValidityWindow
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.schema_references import LegalReference
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
@@ -41,10 +42,10 @@ def _legal_catalogue() -> dict[str, LegalReference]:
     return dict(compiled_bundled_authority().catalogues.legal)
 
 
-def _statutory_citations() -> list[tuple[str, CategoryCitation]]:
+def _statutory_citations(operation: PinnedAuthorityOperation) -> list[tuple[str, CategoryCitation]]:
     return [
         (f"{category.value}/{citation.locator}", citation)
-        for category, profile in load_category_profiles().items()
+        for category, profile in load_category_profiles(operation=operation).items()
         for citation in profile.proportionality.citations
         if citation.source in STATUTORY_CITATION_SOURCES
     ]
@@ -67,10 +68,12 @@ def _outside_provision(
     return ""
 
 
-def test_every_statutory_citation_names_a_provision_the_catalogue_carries() -> None:
+def test_every_statutory_citation_names_a_provision_the_catalogue_carries(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Anchor: an unresolvable id would make the span check silently skip a row."""
     catalogue = _legal_catalogue()
-    citations = _statutory_citations()
+    citations = _statutory_citations(operation)
 
     assert citations, "no statutory citations were measured; every assertion here would be vacuous"
 
@@ -85,7 +88,9 @@ def test_every_statutory_citation_names_a_provision_the_catalogue_carries() -> N
     )
 
 
-def test_every_statutory_citation_stays_inside_its_provisions_effective_span() -> None:
+def test_every_statutory_citation_stays_inside_its_provisions_effective_span(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The whole shipped surface, re-derived from the catalogue on every run.
 
     Property, not tally: amending a provision's effective date automatically
@@ -95,7 +100,7 @@ def test_every_statutory_citation_stays_inside_its_provisions_effective_span() -
 
     violations = [
         f"{label} ({citation.legal_ref}): {problem}"
-        for label, citation in _statutory_citations()
+        for label, citation in _statutory_citations(operation)
         if citation.legal_ref in catalogue
         and (problem := _outside_provision(citation.window, catalogue[citation.legal_ref]))
     ]
