@@ -9,9 +9,9 @@ related:
   - '[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]'
   - '[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]'
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
-modified: '2026-09-12'
+modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:036e423081ae7ddc76738b185d66f1e98bc7a7a2b9b6d34a1de9a72b3e660d31'
+body_hash: 'sha256:896649b024fb60e3bbd81902824cc6bde12f9bc6a6dea473866dbfa8b356cde4'
 ---
 
 # `registry-edition-authoring` plan
@@ -266,6 +266,7 @@ Restate the screens that inferred what is now stated, retire the two that become
 - [ ] `W04.P09.S30` - [S | opus-medium] Retire the two screens whose question the stated lineage now answers directly, rather than leaving them measuring what the data asserts. Proof: their invariants are covered by the lineage gates.; `dev/registry/analysis`.
 - [ ] `W04.P09.S32` - [M | opus-medium] Promote the delta-minimality screen from reporting to gating, now that every modelo is migrated and it reports clean. Proof: a planted restated row is refused.; `dev/registry/analysis`.
 - [x] `W04.P09.S53` - [S | opus-medium] Rule on what a governance review stamp covers once editions inherit. The stamp writes declared scalars into the declaring file and is therefore still literally true after migration - but a reviewer signs off on a delta while the compiled edition carries inherited rows the reviewer never saw, so the stamp's SCOPE shrinks silently while its wording does not. Either the stamp states what it covers, or review is defined over the materialised edition. Silence here converts an honest attestation into a misleading one without anyone changing it. The same shape has already been confirmed once on a neighbouring gate: the type-column gate reads derivation records out of a generation manifest, so a hand-authored revision's 1,220 shipped fields are not explained, not pinned and not failing - they are invisible, and the gate covers 32 of 94 shipped revisions while reading as clean. Delta authoring produces stated rather than generated editions, so any gate keyed on manifest presence will read a migrated edition as absent rather than as unchecked. Rule on that too, or migration silently widens the blind spot. Proof: a migrated edition is distinguishable from an unreviewed one by what the stamp says, not by what a reader infers.; `dev/registry/conformance/_stamp.py`.
+- [ ] `W04.P09.S70` - Consolidate non-generated declarations, retire derived source-default controls, and prove exact source and materialised equality before delta reduction; `dev/registry/compact.py dev/registry/transformation_proof.py dev/registry/compiler/loader.py src/cadrumo/_data/registry/aeat/modelos`.
 
 ### Phase `W04.P10` - Promotion
 

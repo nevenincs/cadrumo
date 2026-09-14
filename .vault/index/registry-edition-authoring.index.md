@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-13'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b868e6d15b114d74763443937ac2e63198b7b13197def8cf060d925a6431c38'
+body_hash: 'sha256:64a1546223c4436995e97e3bad987de85dc1fdd19ba21f68d5c3dab86220abe1'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -58,6 +58,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-plan]]'
   - '[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]'
   - '[[2026-09-13-registry-edition-authoring-completion-controls-audit]]'
+  - '[[2026-09-14-registry-edition-authoring-minimal-storage-implementation-audit]]'
 ---
 
 # `registry-edition-authoring` feature index
@@ -73,6 +74,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 ### audit
 
 - `2026-09-13-registry-edition-authoring-completion-controls-audit` - `registry-edition-authoring` audit: `Registry completion controls and architectural unblock`
+- `2026-09-14-registry-edition-authoring-minimal-storage-implementation-audit` - `registry-edition-authoring` audit: `Minimal registry storage implementation`
 
 ### exec
 

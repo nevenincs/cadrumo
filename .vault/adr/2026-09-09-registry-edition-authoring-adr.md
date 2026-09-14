@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-11'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:a6b9162f9c717148f38ebb5b1b16ae953641e472cac69fa9432f3e57748cb9ab'
+body_hash: 'sha256:d74089bd3e20eec0e03315129a5a76c4b9eb721a5755aed1fa180df4d6136dda'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -450,6 +450,23 @@ pre-migration baseline to round-trip against, so it can inherit a row its author
 no validator will say so. The migration itself is covered, because round-trip equality fails if a
 previously-absent row appears. The forest rule must land in the same change, or silent inheritance
 compounds with a silently missing predecessor.
+
+### Minimal declaration storage
+
+Authoring transformations may consolidate non-generated section fragments into one TOML per
+section using the compiler's canonical raw merge. Packing preserves every declaration value,
+scalar type, member order and source comment; generated export artefacts remain owned by their
+generator. The raw authored accessor is explicitly diagnostic and is not filing authority.
+An existing semantic refusal does not prohibit a representation-only rewrite proved equal by
+that accessor. Before publication of source changes, retain exact input fingerprints and originals,
+refuse concurrent edits, and verify the resulting source tree again.
+
+`source_default_dispositions` is retired. Whether an edition default is derivable is computed
+from its declarations; a hand-authored justification neither changes that result nor waives a
+missing reference. Remove the schema field and corpus tables together. Review, legal scope,
+lineage evidence and support grades are not discarded as part of this mechanical retirement.
+Typed delta and field-default reductions still require complete materialised equality; raw packing
+alone does not establish delta minimality or authorize a filing-grade snapshot.
 
 ### Proof obligations
 
