@@ -74,29 +74,14 @@ identifiers accept their stable syntax in code, but membership belongs to this
 validated authority; an identifier absent from its published vocabulary is not
 silently admitted.
 
-## Measure a release candidate
+## Verify a release candidate
 
-Checkpoint C compares the isolated candidate with a JSON baseline written from
-the same validated in-memory generation. Run both backends with the default ten
-fresh processes per workload; the driver keeps modelo 100, 200, and 303 results
-separate and also reports fact-only, profile-only, evidence, and explicit
-enumeration costs.
-The JSON file is a disposable development benchmark input, not a publication
-candidate or an installable runtime fallback.
+Verify the descriptor-selected SQLite generation directly. The publication
+must admit every component through the indexed reader, match the current
+compiler receipt, and pass the packaging boundary checks. There is no eager
+JSON comparison backend or runtime fallback.
 
-```powershell
-uv run --no-sync python -m dev.registry.benchmark_authority --runs 10 --backend json --artifact <candidate-baseline.json>
-uv run --no-sync python -m dev.registry.benchmark_authority --runs 10 --backend sqlite --descriptor <candidate-authority.current.json>
-```
-
-Do not average modelo results. Each SQLite modelo workload must independently
-use at most half the JSON median for post-import admission plus its first
-snapshot and for incremental authority RSS. Its cached context lookup median
-must be at most 1 ms. A miss blocks promotion; it is not a reason to weaken the
-threshold or compile another candidate.
-Record the raw samples and per-workload summary with the accepted candidate;
-this guide intentionally carries no machine-specific measurement values.
-The packaging checks stage only that descriptor and its selected database into
+The packaging checks stage only the descriptor and its selected database into
 their private cohort. Superseded content-addressed files retained by a source
 checkout are not members of the candidate package.
 
