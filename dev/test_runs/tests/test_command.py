@@ -174,9 +174,7 @@ def test_locale_signal_normalizes_rich_traceback_without_leaking_it_to_stdout(
             "┌──────────────── Traceback (most recent call last) ────────────────┐",
             "│ dev/locales/cli.py:123 in status                                      │",
             "└─────────────────────────────────────────────────────────────────────┘",
-            "AuthorityArtifactFormatError: published authority artifact uses superseded ",
-            "format 'cadrumo-authority-artifact-v3'; republish it as ",
-            "'cadrumo-authority-artifact-v4'",
+            "AuthorityComponentCodecError: authority component uses unsupported codec",
         )
     )
     script = f"import sys; sys.stdout.buffer.write({traceback!r}.encode()); raise SystemExit(1)"
@@ -198,12 +196,9 @@ def test_locale_signal_normalizes_rich_traceback_without_leaking_it_to_stdout(
     assert finished["classification"] == "tool_failure"
     assert finished["result"] == "unavailable"
     assert finished["error"] == {
-        "category": "authority_artifact",
-        "type": "AuthorityArtifactFormatError",
-        "message": (
-            "published authority artifact uses superseded format "
-            "'cadrumo-authority-artifact-v3'; republish it as 'cadrumo-authority-artifact-v4'"
-        ),
+        "category": "child_process",
+        "type": "AuthorityComponentCodecError",
+        "message": "authority component uses unsupported codec",
     }
     assert finished["translation_backlog"] == {
         "cells_to_translate": None,
@@ -212,10 +207,10 @@ def test_locale_signal_normalizes_rich_traceback_without_leaking_it_to_stdout(
     }
     run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
     log = (run_dir / "run.log").read_text(encoding="utf-8")
-    assert "AuthorityArtifactFormatError" in log
+    assert "AuthorityComponentCodecError" in log
     report = json.loads((run_dir / "artifacts" / "locale-status.json").read_text(encoding="utf-8"))
     assert report["details"]["root_cause"] == finished["error"]
-    assert report["details"]["processor_error"].startswith("AuthorityArtifactFormatError: ")
+    assert report["details"]["processor_error"].startswith("AuthorityComponentCodecError: ")
     assert report["summary"]["translation_backlog"]["cells_to_translate"] is None
 
 
@@ -468,7 +463,7 @@ def test_pytest_summary_classifies_typed_summaryless_load_as_load_failure(
             '{"event":"lane_finished","exit_status":0,"kind":"collection","lane":"collect","role":"preflight","seconds":1}',
             '{"event":"lane_started","kind":"load","lane":"load","role":"preflight"}',
             "registry-runtime-load\tstatus=failed\tloadable=false\tdetail="
-            "AuthorityArtifactFormatError: published authority artifact has an invalid authority payload",
+            "AuthorityComponentCodecError: authority component failed typed decoding",
             '{"event":"lane_finished","exit_status":2,"kind":"load","lane":"load","role":"preflight","seconds":1}',
         )
     )
@@ -492,8 +487,8 @@ def test_pytest_summary_classifies_typed_summaryless_load_as_load_failure(
     assert finished["lanes"][1]["root_causes"] == [
         {
             "count": 1,
-            "exception": "AuthorityArtifactFormatError",
-            "message": "published authority artifact has an invalid authority payload",
+            "exception": "AuthorityComponentCodecError",
+            "message": "authority component failed typed decoding",
             "phase": "load",
         }
     ]
@@ -540,7 +535,7 @@ def test_pytest_summary_reports_collection_preflight_and_blocked_lanes(
             '{"event":"lane_finished","exit_status":0,"kind":"collection","lane":"collect","role":"preflight","seconds":2}',
             '{"event":"lane_started","kind":"load","lane":"load","role":"preflight"}',
             "registry-runtime-load\tstatus=failed\tloadable=false\tdetail="
-            "AuthorityArtifactFormatError: published authority artifact has an invalid authority payload",
+            "AuthorityComponentCodecError: authority component failed typed decoding",
             '{"event":"lane_finished","exit_status":1,"kind":"load","lane":"load","role":"preflight","seconds":1}',
             '{"blocked_by":["load"],"event":"lane_skipped","kind":"command","lane":"parallel","reason":"preflight_failed","role":"execution"}',
             '{"blocked_by":["load"],"event":"lane_skipped","kind":"command","lane":"serial","reason":"preflight_failed","role":"execution"}',

@@ -43,9 +43,8 @@ Modelos with no draft input
 ---------------------------
 Modelos 714, 322, 490, 309, 308, 123, 604, 151, 165, 184, 202, 180, 185, 210,
 270, 341, 353 and 576 route through one shared
-builder, :func:`general_export_scenario`. None of them registers an envelope
-policy -- Modelo 303 is the only modelo that does -- and none declares a
-required repeated record, so an empty draft leaves no required occurrence
+builder, :func:`general_export_scenario`. These scenarios need no extra
+software-identity evidence and declare no required repeated record, so an empty draft leaves no required occurrence
 unemitted and the compared bytes judge each edition's base layout and envelope,
 as Modelo 390's do. Each carries the full set of its export-bearing editions, so
 no edition of a listed modelo reports missing while its siblings report clean.
@@ -83,10 +82,17 @@ from cadrumo.application.aggregation.m303_arrivals import (
 )
 from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from cadrumo.application.filing.producer_snapshot import (
+    AmendmentEvidence,
     FilingElectionFacts,
     FilingProducerSnapshot,
     GeneralFilingProfileFacts,
     M303FilingFacts,
+    Modelo222ProfileFacts,
+    Modelo296AnexoCertificadoRow,
+    Modelo296AnexoPagoRow,
+    Modelo296PerceptorInteresesRow,
+    Modelo296PerceptorRow,
+    Modelo296ProfileFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
@@ -106,6 +112,9 @@ from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import resolve_bienes_inversion_regularizacion_parameters
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
@@ -120,10 +129,10 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
+from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.calculation_revision_m303_evidence import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
@@ -151,10 +160,13 @@ __all__ = [
     "M189_SCENARIO_PERIODS",
     "M190_SCENARIO_PERIODS",
     "M193_SCENARIO_PERIODS",
+    "M200_SCENARIO_PERIODS",
     "M202_SCENARIO_PERIODS",
     "M210_SCENARIO_PERIODS",
+    "M222_SCENARIO_PERIODS",
     "M232_SCENARIO_PERIODS",
     "M270_SCENARIO_PERIODS",
+    "M296_SCENARIO_PERIODS",
     "M303_SCENARIO_PERIODS",
     "M308_SCENARIO_PERIODS",
     "M309_SCENARIO_PERIODS",
@@ -170,7 +182,11 @@ __all__ = [
     "edition_export_scenarios",
     "general_export_scenario",
     "m131_export_scenario",
+    "m200_export_scenario",
+    "m222_export_scenario",
+    "m296_export_scenario",
     "m303_export_scenario",
+    "m322_export_scenario",
     "m390_export_scenario",
 ]
 
@@ -256,21 +272,21 @@ M490_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 M309_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2004-2015": Period.from_year_and_code(2004, "AD-HOC"),
     "2016-2017": Period.from_year_and_code(2016, "AD-HOC"),
-    "2018-2022": Period.from_year_and_code(2018, "AD-HOC"),
+    "2018-2022": Period.from_year_and_code(2022, "AD-HOC"),
     "2023-y-siguientes": Period.from_year_and_code(2023, "AD-HOC"),
 }
 #: The ad-hoc period Modelo 308's one export-bearing edition is rendered for.
 M308_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-y-siguientes": Period.from_year_and_code(2019, "AD-HOC"),
+    "2019-y-siguientes": Period.from_year_and_code(2022, "AD-HOC"),
 }
 #: The quarter each Modelo 123 edition is rendered for.
 M123_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2023": Period.from_year_and_code(2019, "1T"),
+    "2019-2023": Period.from_year_and_code(2022, "1T"),
     "2024-y-siguientes": Period.from_year_and_code(2024, "1T"),
 }
 #: The month each Modelo 604 edition is rendered for.
 M604_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021-2023": Period.from_year_and_code(2021, "01"),
+    "2021-2023": Period.from_year_and_code(2022, "01"),
     "2024-y-siguientes": Period.from_year_and_code(2024, "01"),
 }
 #: The annual period each Modelo 151 edition is rendered for.
@@ -288,11 +304,23 @@ M184_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2023-2024": Period.from_year_and_code(2023, "0A"),
     "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
 }
+#: The annual period of Modelo 200's export-bearing successor.
+M200_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
+}
 #: The payment period each Modelo 202 edition is rendered for; 202 files ``1P``-``3P``.
 M202_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2019-2022": Period.from_year_and_code(2019, "1P"),
     "2023-2024": Period.from_year_and_code(2023, "1P"),
     "2025-y-siguientes": Period.from_year_and_code(2025, "1P"),
+}
+#: The first payment period of Modelo 222's export-bearing edition.
+M222_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2025-y-siguientes": Period.from_year_and_code(2025, "1P"),
+}
+#: The annual period of Modelo 296's five-record successor design.
+M296_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2024-y-siguientes": Period.from_year_and_code(2024, "0A"),
 }
 #: The annual period each Modelo 180 edition is rendered for.
 M180_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
@@ -424,7 +452,7 @@ def m303_export_scenario(period: Period) -> EditionExportScenario:
         },
         producer_snapshot=partial(_m303_producer_snapshot, period),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        product_software_identity=_product_software_identity(),
+        product_software_identity_factory=_product_software_identity,
     )
 
 
@@ -517,7 +545,7 @@ def _m303_regimen_simplificado_evidence(
 ) -> M303RegimenSimplificadoFilingEvidence:
     """One non-agricultural activity from the edition's own Orden, so the repeated record emits once."""
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED
+        scope=m303_regime_composition_simplified_scope("simplified", authority=authority)
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot, scope_decision=scope
@@ -640,7 +668,7 @@ def m390_export_scenario(period: Period) -> EditionExportScenario:
         period=period,
         inputs={},
         producer_snapshot=_m390_producer_snapshot,
-        product_software_identity=_m390_product_software_identity(),
+        product_software_identity_factory=_m390_product_software_identity,
     )
 
 
@@ -707,6 +735,98 @@ def _m131_producer_snapshot() -> FilingProducerSnapshot:
 # ── modelos whose export path asks for no draft input ───────────────────────
 
 
+def _scenario_software_identity(modelo_id: str) -> AeatProductSoftwareIdentity:
+    """Validate synthetic software evidence inside the candidate fact scope."""
+    return AeatProductSoftwareIdentity(
+        program_identifier=f"C{modelo_id}",
+        developer_tax_id="Y0000001S",
+        evidence=(AeatProductSoftwareEvidence(reference=f"edition-round-trip:m{modelo_id}-software", digest="c" * 64),),
+    )
+
+
+def m200_export_scenario(period: Period) -> EditionExportScenario:
+    """An empty synthetic corporate draft with explicit envelope software evidence."""
+    return EditionExportScenario(
+        period=period,
+        inputs={},
+        producer_snapshot=partial(_general_producer_snapshot, "200"),
+        product_software_identity_factory=partial(_scenario_software_identity, "200"),
+    )
+
+
+def m222_export_scenario(period: Period) -> EditionExportScenario:
+    """A synthetic fiscal group with the identity its filing requires."""
+    return EditionExportScenario(
+        period=period,
+        inputs={},
+        producer_snapshot=partial(_m222_producer_snapshot, period),
+        product_software_identity_factory=partial(_scenario_software_identity, "222"),
+    )
+
+
+def _m222_producer_snapshot(period: Period) -> FilingProducerSnapshot:
+    return build_filing_producer_snapshot(
+        modelo=Modelo("222"),
+        taxpayer_tax_id=SYNTHETIC_TAX_ID,
+        taxpayer_identity=_TAXPAYER,
+        presenter=_presenter(),
+        model_profile=Modelo222ProfileFacts(
+            numero_grupo="0001/25",
+            entidad_dominante_identificacion="B00000000",
+            entidad_dominante_razon_social="Grupo Prueba",
+            representante_o_dominante="2",
+            fecha_inicio_periodo_impositivo=f"0101{period.filing_year}",
+        ),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.NEGATIVA,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
+    )
+
+
+def m296_export_scenario(period: Period) -> EditionExportScenario:
+    """One synthetic occurrence of every required Modelo 296 detail family."""
+    return EditionExportScenario(
+        period=period,
+        inputs={},
+        producer_snapshot=partial(_m296_producer_snapshot, period),
+    )
+
+
+def _m296_producer_snapshot(period: Period) -> FilingProducerSnapshot:
+    return build_filing_producer_snapshot(
+        modelo=Modelo("296"),
+        taxpayer_tax_id=SYNTHETIC_TAX_ID,
+        taxpayer_identity=_TAXPAYER,
+        presenter=_presenter(),
+        model_profile=Modelo296ProfileFacts(
+            ejercicio=str(period.filing_year),
+            nif_del_declarante=SYNTHETIC_TAX_ID,
+            apellidos_y_nombre_o_razon_social_del="Ana Prueba",
+            perceptor_rows=(Modelo296PerceptorRow(nif_del_perceptor="00000000T"),),
+            perceptor_intereses_rows=(Modelo296PerceptorInteresesRow(nif_del_perceptor="00000000T"),),
+            anexo_pago_rows=(Modelo296AnexoPagoRow(nif_del_contribuyente="00000000T"),),
+            anexo_certificado_rows=(Modelo296AnexoCertificadoRow(nif_del_perceptor="00000000T"),),
+        ),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.NEGATIVA,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
+    )
+
+
 def general_export_scenario(modelo_id: str, period: Period) -> EditionExportScenario:
     """A scenario carrying no draft input, for a modelo whose export path asks for none.
 
@@ -717,9 +837,9 @@ def general_export_scenario(modelo_id: str, period: Period) -> EditionExportScen
 
     No draft input is supplied, so every repeated record emits no occurrence and
     the compared bytes judge the edition's base layout and envelope -- the cheap
-    end Modelo 390 already occupies. Modelo 303 is the demanding end and keeps
-    its own builder: it is the one modelo registering an envelope policy, and
-    its records refuse an envelope that leaves a required occurrence unemitted.
+    end Modelo 390 already occupies. Modelos needing software-identity
+    evidence, group identity or required detail occurrences use their own
+    builders, which supply those facts explicitly.
     The modelos routed here declare no required repeated record, so an empty
     draft satisfies their occurrence requirements.
     """
@@ -730,7 +850,9 @@ def general_export_scenario(modelo_id: str, period: Period) -> EditionExportScen
     )
 
 
-def _general_producer_snapshot(modelo_id: str) -> FilingProducerSnapshot:
+def _general_producer_snapshot(
+    modelo_id: str, *, amendment_evidence: AmendmentEvidence | None = None
+) -> FilingProducerSnapshot:
     """The general-profile producer snapshot the no-input scenarios render through.
 
     The result disposition is the zero-result code every modelo here declares,
@@ -749,10 +871,31 @@ def _general_producer_snapshot(modelo_id: str) -> FilingProducerSnapshot:
             refund=RefundElection.COMPENSAR,
             prior_domiciliation=PriorDomiciliationElection.KEEP,
         ),
-        amendment_evidence=None,
+        amendment_evidence=amendment_evidence,
         m303_filing_facts=None,
         refund_account=None,
         charge_account=None,
+    )
+
+
+def m322_export_scenario(period: Period) -> EditionExportScenario:
+    """A synthetic complementaria exercising amendment fields and envelope evidence."""
+    return EditionExportScenario(
+        period=period,
+        inputs={},
+        producer_snapshot=_m322_producer_snapshot,
+        product_software_identity_factory=partial(_scenario_software_identity, "322"),
+    )
+
+
+def _m322_producer_snapshot() -> FilingProducerSnapshot:
+    return _general_producer_snapshot(
+        "322",
+        amendment_evidence=AmendmentEvidence(
+            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            m303_rectificativa_motive=None,
+            original_aeat_receipt="3220000000000",
+        ),
     )
 
 
@@ -772,7 +915,7 @@ _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportSc
     str(Modelo("131")): (m131_export_scenario, M131_SCENARIO_PERIODS),
     str(Modelo("390")): (m390_export_scenario, M390_SCENARIO_PERIODS),
     str(Modelo("714")): (partial(general_export_scenario, "714"), M714_SCENARIO_PERIODS),
-    str(Modelo("322")): (partial(general_export_scenario, "322"), M322_SCENARIO_PERIODS),
+    str(Modelo("322")): (m322_export_scenario, M322_SCENARIO_PERIODS),
     str(Modelo("490")): (partial(general_export_scenario, "490"), M490_SCENARIO_PERIODS),
     str(Modelo("309")): (partial(general_export_scenario, "309"), M309_SCENARIO_PERIODS),
     str(Modelo("308")): (partial(general_export_scenario, "308"), M308_SCENARIO_PERIODS),
@@ -782,6 +925,9 @@ _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportSc
     str(Modelo("165")): (partial(general_export_scenario, "165"), M165_SCENARIO_PERIODS),
     str(Modelo("184")): (partial(general_export_scenario, "184"), M184_SCENARIO_PERIODS),
     str(Modelo("202")): (partial(general_export_scenario, "202"), M202_SCENARIO_PERIODS),
+    str(Modelo("200")): (m200_export_scenario, M200_SCENARIO_PERIODS),
+    str(Modelo("222")): (m222_export_scenario, M222_SCENARIO_PERIODS),
+    str(Modelo("296")): (m296_export_scenario, M296_SCENARIO_PERIODS),
     str(Modelo("180")): (partial(general_export_scenario, "180"), M180_SCENARIO_PERIODS),
     str(Modelo("185")): (partial(general_export_scenario, "185"), M185_SCENARIO_PERIODS),
     str(Modelo("210")): (partial(general_export_scenario, "210"), M210_SCENARIO_PERIODS),

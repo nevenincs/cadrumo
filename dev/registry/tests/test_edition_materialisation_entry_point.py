@@ -6,12 +6,14 @@ import tomllib
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.core.toml import render_toml
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.edition_materialisation import materialise_edition
+from ..compiler.loader import load_modelo_directory
+from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -131,7 +133,7 @@ def test_the_delta_review_cannot_stand_on_the_full_copy(tmp_path: Path) -> None:
     carried = {**edition.table, **{key: declared[key] for key in ("review_status", "reviewed_by", "reviewed_at")}}
     carried["reviewed_against"] = declared["reviewed_against"]
 
-    with pytest.raises(ValidationError, match="names no predecessor"):
+    with pytest.raises(RegistryValidationError, match="names no predecessor"):
         _standalone(carried)
 
 
@@ -149,3 +151,90 @@ def test_an_unreviewed_delta_edition_withdraws_nothing(tmp_path: Path) -> None:
 
     assert edition.withdrawn_review_status is None
     assert edition.table["review_status"] == "pending_review"
+
+
+def _attested_modelo(tmp_path: Path, *, extra: str = "") -> Path:
+    return _modelo(
+        tmp_path,
+        successor_extra='predecessor = "2024"\n'
+        '[[revisions."2025".lineage_attestations]]\n'
+        'family = "casillas"\ncontinuidad_id = "base"\n'
+        'from_revision = "2024"\nto_revision = "2025"\norigin = "grounded"\n'
+        'evidence = "The same officially identified base is carried on this edge."\n'
+        f'legal_refs = ["{_LEGAL_REF}"]\nsource_refs = ["aeat-manual"]\n{extra}',
+    )
+
+
+def test_materialised_sidecar_is_an_exact_inline_claim_on_a_standalone_edition(tmp_path: Path) -> None:
+    modelo = _attested_modelo(tmp_path)
+    before = load_modelo_directory(modelo).revisions["2025"]
+    edition = materialise_edition(modelo, "2025")
+    assert "lineage_attestations" not in edition.table
+    standalone = tmp_path / "standalone"
+    standalone.mkdir()
+    _write_standard_manifest(standalone, "Detached attestation")
+    revision_dir = standalone / "revisions" / "2025"
+    (revision_dir / "casillas").mkdir(parents=True)
+    (revision_dir / "revision.toml").write_text(
+        render_toml(
+            {
+                "revisions": {
+                    "2025": {key: value for key, value in edition.table.items() if key not in REVISION_SECTION_FIELDS}
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    (revision_dir / "casillas" / "0001-declarations.toml").write_text(
+        render_toml({"revisions": {"2025": {"casillas": edition.table["casillas"]}}}), encoding="utf-8"
+    )
+    after = load_modelo_directory(standalone).revisions["2025"]
+    original = next(row for row in before.casillas if row.continuidad_id == "base")
+    detached = next(row for row in after.casillas if row.continuidad_id == "base")
+    for field in ("continuidad_origin", "continuidad_evidence", "legal_refs", "source_refs"):
+        assert getattr(detached, field) == getattr(original, field)
+    assert detached.continuidad_origin is not None
+
+
+@pytest.mark.parametrize("field", ["legal_refs", "source_refs"])
+def test_materialisation_does_not_discard_distinct_sidecar_references(tmp_path: Path, field: str) -> None:
+    modelo = _attested_modelo(tmp_path)
+    manifest = modelo / "revisions" / "2025" / "revision.toml"
+    text = manifest.read_text("utf-8")
+    original = f'legal_refs = ["{_LEGAL_REF}"]' if field == "legal_refs" else 'source_refs = ["aeat-manual"]'
+    replacement = 'legal_refs = ["ley-58-2003:art-30"]' if field == "legal_refs" else 'source_refs = ["other-source"]'
+    head, separator, tail = text.partition('[[revisions."2025".lineage_attestations]]')
+    manifest.write_text(head + separator + tail.replace(original, replacement), encoding="utf-8")
+    with pytest.raises(RegistryLoadError, match="without losing its distinct legal_refs or source_refs"):
+        materialise_edition(modelo, "2025")
+
+
+def test_materialisation_validates_sidecar_edge_before_projecting_its_claim(tmp_path: Path) -> None:
+    modelo = _attested_modelo(tmp_path)
+    manifest = modelo / "revisions" / "2025" / "revision.toml"
+    manifest.write_text(
+        manifest.read_text("utf-8").replace('from_revision = "2024"', 'from_revision = "2023"'), encoding="utf-8"
+    )
+    with pytest.raises(RegistryLoadError, match="canonical predecessor"):
+        materialise_edition(modelo, "2025")
+
+
+def test_materialisation_refuses_an_attestation_with_no_inline_family_representation(tmp_path: Path) -> None:
+    modelo = _attested_modelo(tmp_path)
+    manifest = modelo / "revisions" / "2025" / "revision.toml"
+    manifest.write_text(
+        manifest.read_text("utf-8").replace(
+            'family = "casillas"\ncontinuidad_id = "base"', 'family = "formulas"\nmember = "base-formula"'
+        ),
+        encoding="utf-8",
+    )
+    directory = modelo / "revisions" / "2024" / "formulas"
+    directory.mkdir()
+    (directory / "0001-declarations.toml").write_text(
+        '[[revisions."2024".formulas]]\nid = "base-formula"\ntarget_casilla_id = "1"\n'
+        'expression = { literal = "0" }\n'
+        f'legal_refs = ["{_LEGAL_REF}"]\nsource_refs = ["aeat-manual"]\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(RegistryLoadError, match="no inline lineage claim representation"):
+        materialise_edition(modelo, "2025")

@@ -1,7 +1,7 @@
 """Locale-coverage audit for wizard descriptor and CLI translation strings.
 
 ``audit_wizard_translations`` walks every :class:`Translatable` value
-declared anywhere in :data:`WIZARD_FLOWS` (titles, prompts, helps,
+declared by the operation-scoped wizard catalogue (titles, prompts, helps,
 choice labels and descriptions, plus the fixed error keys the runtime
 raises) and the wizard-derived flag-help keys, returning the tuple of
 keys that fail to resolve in any supported locale catalogue.
@@ -18,18 +18,27 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
+from contextlib import contextmanager
 from pathlib import Path
 
-from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
+from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.wizard.models import WizardFlow, WizardQuestion
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ._paths import SRC_DIR
 
 _FIXED_RUNTIME_KEYS: tuple[str, ...] = ("wizard.setup.errors.missing_required_flags",)
+
+
+@contextmanager
+def _wizard_flows() -> Generator[tuple[WizardFlow, ...]]:
+    """Yield the live wizard catalogue within one pinned authority operation."""
+    with bundled_indexed_authority().operation() as operation:
+        yield (build_setup_flow(operation),)
 
 
 def _walk_keys(flows: Iterable[WizardFlow]) -> tuple[str, ...]:
@@ -88,7 +97,8 @@ def wizard_descriptor_keys() -> frozenset[str]:
     The flow-help keys are interpolated from the flow id, so a source scan
     cannot see them; the descriptors are their only declaration.
     """
-    return frozenset(_walk_keys(WIZARD_FLOWS))
+    with _wizard_flows() as flows:
+        return frozenset(_walk_keys(flows))
 
 
 def audit_wizard_translations() -> tuple[str, ...]:
@@ -98,7 +108,8 @@ def audit_wizard_translations() -> tuple[str, ...]:
     locale=...)`` returns the raw key itself (the python-i18n
     fallback behaviour).
     """
-    keys = _walk_keys(WIZARD_FLOWS)
+    with _wizard_flows() as flows:
+        keys = _walk_keys(flows)
     missing: list[str] = []
     for key in keys:
         for locale in SUPPORTED_OUTPUT_LANGUAGES:

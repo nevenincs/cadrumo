@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
@@ -37,6 +38,9 @@ from dev._paths import REPO_ROOT
 
 from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, definition_findings, restatement_differences
 from ..compiler.authority import compile_validated_authority
+from ..compiler.edition_materialisation import materialise_edition
+from ..compiler.loader import load_modelo_directory
+from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ..edition_delta_migration import (
     BlockedCause,
     EditionPlan,
@@ -65,7 +69,54 @@ _EXPECTED_KINDS = frozenset({RoundTripFindingKind.EXPORT_UNCHECKED, RoundTripFin
 
 
 def _registry(destination: Path, modelo_id: str) -> Path:
-    return copy_registry_tree(_BUNDLED, destination / "registry" / "aeat", modelo_id=modelo_id)
+    root = copy_registry_tree(_BUNDLED, destination / "registry" / "aeat", modelo_id=modelo_id)
+    modelo = root / "modelos" / modelo_id
+    definition = load_modelo_directory(modelo)
+    # The corpus can already be enrolled. Build the input before invoking the
+    # migration under test, using the canonical materializer, not its output.
+    # Keep reference defaults expanded on each row so lifting is exercised too.
+    editions = [materialise_edition(modelo, path.name) for path in sorted((modelo / "revisions").iterdir())]
+    for edition in editions:
+        directory = (modelo / "revisions" / edition.revision_id).resolve()
+        assert directory.is_relative_to(root.resolve())
+        shutil.rmtree(directory)
+        directory.mkdir()
+        table = dict(edition.table)
+        typed_rows = {str(row.id): row for row in definition.revisions[edition.revision_id].casillas}
+        expanded_rows = []
+        for raw_row in table.get("casillas", ()):
+            row = dict(raw_row)
+            typed = typed_rows[str(row["id"])]
+            row.pop("additional_source_refs", None)
+            row["source_refs"] = tuple(typed.source_refs)
+            row["legal_refs"] = tuple(typed.legal_refs)
+            if "constraints" in row:
+                constraints = dict(row["constraints"])
+                constraints.pop("additional_source_refs", None)
+                constraints["source_refs"] = tuple(typed.constraints.source_refs)
+                constraints["legal_refs"] = tuple(typed.constraints.legal_refs)
+                row["constraints"] = constraints
+            expanded_rows.append(row)
+        table["casillas"] = tuple(expanded_rows)
+        for key in ("predecessor", "restated_families", "casilla_source_refs"):
+            table.pop(key, None)
+        # A deliberate authored ordering, independent of the migration's merge
+        # order, preserves the order-detector's non-vacuity after enrollment.
+        if modelo_id == _PILOT and edition.inherits_from is not None:
+            table["casillas"] = tuple(reversed(table["casillas"]))
+        manifest = {key: value for key, value in table.items() if key not in REVISION_SECTION_FIELDS}
+        (directory / "revision.toml").write_text(
+            render_toml({"revisions": {edition.revision_id: manifest}}), encoding="utf-8"
+        )
+        for section in REVISION_SECTION_FIELDS:
+            if not table.get(section):
+                continue
+            section_directory = directory / section
+            section_directory.mkdir()
+            (section_directory / "0001-declarations.toml").write_text(
+                render_toml({"revisions": {edition.revision_id: {section: table[section]}}}), encoding="utf-8"
+            )
+    return root
 
 
 def _load(root: Path, modelo_id: str) -> ModeloDefinition:
@@ -270,7 +321,9 @@ def test_a_row_stating_only_a_lineage_claim_stays_stated_and_dropping_it_loses_t
     assert "continuidad_evidence" in detail or "continuidad_origin" in detail
 
 
-def test_a_rerun_is_a_no_op_and_a_restated_default_is_refused(pilot: MigrationOutcome, tmp_path: Path) -> None:
+def test_a_rerun_is_a_no_op_and_a_restated_default_is_lifted_without_changing_the_chain(
+    pilot: MigrationOutcome, tmp_path: Path
+) -> None:
     assert pilot.staged_registry is not None
     again = migrate_modelo(
         registry_root=pilot.staged_registry, modelo_id=_PILOT, work_dir=tmp_path / "again", declare_blocked_roots=True
@@ -297,10 +350,20 @@ def test_a_rerun_is_a_no_op_and_a_restated_default_is_refused(pilot: MigrationOu
     )
     assert restated != block
     fragment.write_text(fragment.read_text(encoding="utf-8").replace(block, restated), encoding="utf-8", newline="\n")
-    with pytest.raises(RegistryError, match="re-planning it would change it"):
-        migrate_modelo(
-            registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "refused", declare_blocked_roots=True
-        )
+    lifted = migrate_modelo(
+        registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "lifted", declare_blocked_roots=True
+    )
+    assert lifted.changed
+    assert lifted.staged_registry is not None
+    assert _unexpected(lifted) == []
+    lifted_edition = next(item for item in lifted.plan.editions if item.revision_id == edition.revision_id)
+    assert lifted_edition.basis is PredecessorBasis.LIFT_ONLY
+    assert lifted_edition.lifted.row_source_refs == 1
+    assert _row_block(edition_dir, lifted_row)[1] == restated
+    assert (
+        "\nsource_refs = "
+        not in _row_block(_edition_dir(lifted.staged_registry, _PILOT, edition.revision_id), lifted_row)[1]
+    )
 
 
 def test_two_runs_over_one_tree_write_the_same_bytes(

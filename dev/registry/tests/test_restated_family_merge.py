@@ -270,3 +270,131 @@ def test_formula_target_identity_follows_unique_casilla_continuity(
     else:
         with pytest.raises(RegistryLoadError, match="a change to a field carrying the member's identity"):
             _successor(modelo_dir)
+
+
+def test_omitted_formula_cannot_inherit_onto_reused_split_child(tmp_path: Path) -> None:
+    from .test_casilla_structural_succession import _relation
+
+    modelo_dir = tmp_path / _MODELO_ID
+    modelo_dir.mkdir()
+    write_standard_manifest(modelo_dir, "Structural formula identity")
+    _write_revision(
+        modelo_dir,
+        "2024",
+        year=2024,
+        casillas=_casilla("2024", "0001", number="1", lineage="combined"),
+        formulas=_formula("2024", _BASE_FORMULA, target="0001"),
+        constructs="",
+    )
+    _write_revision(
+        modelo_dir,
+        "2025",
+        year=2025,
+        predecessor="2024",
+        casillas=_casilla("2025", "0001", number="1", lineage="surname")
+        + _casilla("2025", "0002", number="2", lineage="given"),
+        formulas='[revisions."2025"]\nformulas = []\n',
+        constructs="",
+    )
+    directory = modelo_dir / "revisions" / "2025" / "casilla_structural_successions"
+    directory.mkdir()
+    (directory / "0001-declarations.toml").write_text(_relation(), encoding="utf-8")
+    with pytest.raises(RegistryLoadError, match="a change to a field carrying the member's identity"):
+        load_modelo_directory(modelo_dir)
+
+
+@pytest.mark.parametrize("lineage", [None, "stable"])
+def test_omitted_formula_keeps_unchanged_target_with_or_without_lineage(tmp_path: Path, lineage: str | None) -> None:
+    modelo_dir = tmp_path / _MODELO_ID
+    modelo_dir.mkdir()
+    write_standard_manifest(modelo_dir, "Unchanged formula identity")
+    for year in (2024, 2025):
+        row = _casilla(str(year), "0001", number="1", lineage=lineage or "unused")
+        if lineage is None:
+            row = row.replace('continuidad_id = "unused"\n', "")
+        if year == 2025:
+            row = '[revisions."2025"]\ncasillas = []\n'
+        _write_revision(
+            modelo_dir,
+            str(year),
+            year=year,
+            predecessor="2024" if year == 2025 else None,
+            casillas=row,
+            formulas=_formula("2024", _BASE_FORMULA, target="0001")
+            if year == 2024
+            else '[revisions."2025"]\nformulas = []\n',
+            constructs="",
+        )
+    assert _successor(modelo_dir).formulas[0].target_casilla_id == "0001"
+
+
+@pytest.mark.parametrize("stated", ["omitted", "identical", "explicit-default"])
+@pytest.mark.parametrize(
+    "expression",
+    [
+        '{ casilla_id = "0001" }',
+        '{ op = "add", args = [{ literal = "0" }, { op = "add", args = '
+        '[{ casilla_id = "0001" }, { literal = "0" }] }] }',
+    ],
+    ids=["direct", "nested"],
+)
+def test_unchanged_formula_operand_cannot_follow_reused_split_child(
+    tmp_path: Path, *, stated: str, expression: str
+) -> None:
+    from .test_casilla_structural_succession import _relation
+
+    modelo_dir = tmp_path / _MODELO_ID
+    modelo_dir.mkdir()
+    write_standard_manifest(modelo_dir, "Structural operand identity")
+    for year in (2024, 2025):
+        revision = str(year)
+        rows = _casilla(revision, "0003", number="3", lineage="total")
+        rows += (
+            _casilla(revision, "0001", number="1", lineage="combined")
+            if year == 2024
+            else _casilla(revision, "0001", number="1", lineage="surname")
+            + _casilla(revision, "0002", number="2", lineage="given")
+        )
+        formulas = _formula(revision, _BASE_FORMULA, target="0003").replace('{ literal = "0" }', expression)
+        if year == 2025 and stated == "explicit-default":
+            formulas = formulas.replace('casilla_id = "0001"', 'casilla_id = "0001", args = []')
+        _write_revision(
+            modelo_dir,
+            revision,
+            year=year,
+            predecessor="2024" if year == 2025 else None,
+            casillas=rows,
+            formulas=formulas if year == 2024 or stated != "omitted" else '[revisions."2025"]\nformulas = []\n',
+            constructs="",
+        )
+    directory = modelo_dir / "revisions" / "2025" / "casilla_structural_successions"
+    directory.mkdir()
+    (directory / "0001-declarations.toml").write_text(_relation(), encoding="utf-8")
+    with pytest.raises(RegistryLoadError, match="unchanged expression whose casilla operand"):
+        load_modelo_directory(modelo_dir)
+
+
+@pytest.mark.parametrize("changed", [False, True], ids=["unchanged", "explicit-new-expression"])
+def test_formula_operand_identity_preserves_valid_declarations(tmp_path: Path, *, changed: bool) -> None:
+    modelo_dir = tmp_path / _MODELO_ID
+    modelo_dir.mkdir()
+    write_standard_manifest(modelo_dir, "Declared operand identity")
+    for year in (2024, 2025, 2026):
+        revision = str(year)
+        expression = '{ casilla_id = "0002" }' if changed and year > 2024 else '{ casilla_id = "0001" }'
+        _write_revision(
+            modelo_dir,
+            revision,
+            year=year,
+            predecessor=str(year - 1) if year > 2024 else None,
+            casillas="".join(
+                _casilla(revision, number, number=number, lineage=lineage)
+                for number, lineage in (("0001", "base"), ("0002", "cuota"), ("0003", "total"))
+            ),
+            formulas=_formula(revision, _BASE_FORMULA, target="0003").replace('{ literal = "0" }', expression)
+            if year == 2024 or (changed and year == 2025)
+            else f'[revisions."{revision}"]\nformulas = []\n',
+            constructs="",
+        )
+    modelo = load_modelo_directory(modelo_dir)
+    assert modelo.revisions["2026"].formulas[0].expression.casilla_id == ("0002" if changed else "0001")
