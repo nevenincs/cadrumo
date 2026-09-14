@@ -27,3 +27,7 @@ related:
 - `M` `dev/registry/tests/test_authority_publication.py`
 - `verify:` `checkpoint B focused authority/profile/filing selection (69 passed)` -> `pass`
 - `verify:` `compileall plus focused Ruff and ty checks` -> `pass`
+
+## Notes
+
+Checkpoint B was reopened on 2026-09-14 after the later integrated consumer cohort produced 32 passes and six stale usage-ratio fixture failures. The repaired fixture and source-window regressions await one affected-cohort run after receipt-covered compiler inputs are handed off.

@@ -12,7 +12,7 @@ related:
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-readiness-audit]]'
 modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:ff9b8010535434ca8d470d6a33f0a1a88f70bd16a8c7c63b65180b7ff09f28eb'
+body_hash: 'sha256:845514d921b12660b78aea4c39dcad68b8a32196105e8752468e7e316793fc97'
 ---
 
 <!-- RETIRED: S03, S04, S05, S06, S08, S09, S10, S11, S12, S18, S25, S26, S29, S30, S31, S32, S33, S35, S36, S37, S38, S39, S40, S41, S43, S44, S45, S46, S48, S49, S51, S52, S53, S54, S55, S57, S58, S59, S60, S61, S62, S63, S64, S67, S68, S69, S70, S71, S72, S73, S75, S76, S77, S78, S79, S80, S81, S82, S83, S85, S86, S87, S88, S89, S90, S91, S94, S95, S96, S97, S98, S99, S100, S101, S102, S103, S104, S105, S107, S109, S111, S112, S113, S115, S116, S118, S119, S120, S121, S122, S123, S125, S128, S130, S133, S136, S137 -->
@@ -102,7 +102,7 @@ Fix default filing selection and remove displaced raw-loader/eager API surfaces 
 
 - [x] `W02.P07.S110` - Require draft filing coordinates in runtime, export and verification; use selected source/layout dependencies and preserve stale-draft refusal; `src/cadrumo/application/filing`.
 - [x] `W02.P07.S114` - Retire the raw runtime parser after source tooling and all inventoried consumer fixtures migrate; remove displaced eager APIs and forwarding paths; `src/cadrumo/domain/user_profile/loader.py`.
-- [x] `W02.P07.S117` - Run checkpoint B once on the integrated authority/profile/filing contract selection plus focused import, lint and type checks; repair only observed failures; `src/cadrumo`.
+- [ ] `W02.P07.S117` - Run checkpoint B once on the integrated authority/profile/filing contract selection plus focused import, lint and type checks; repair only observed failures; `src/cadrumo`.
 
 ## Wave `W03` - Prove and publish the backend cutover
 
