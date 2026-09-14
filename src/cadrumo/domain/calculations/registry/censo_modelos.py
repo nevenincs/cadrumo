@@ -185,6 +185,7 @@ def _active_036_ownership_from_registry(
                 filing_year=filing_year,
                 period=period,
                 on=on,
+                support=authority.catalogues.supported_filing_years,
             )
 
     if tax_domain != "censo" or cadence != "ad_hoc":
