@@ -481,6 +481,7 @@ def _build_modelo_definition_from_data(
             revisions,
             predecessors=predecessor_declarations.named if predecessor_declarations is not None else {},
         )
+        revisions = {key: _with_lineage_claims(revision) for key, revision in revisions.items()}
     except RegistryValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid lineage attestations: {exc}") from exc
     try:
@@ -495,6 +496,39 @@ def _build_modelo_definition_from_data(
         )
     except ValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
+
+
+def _with_lineage_claims(revision: ModeloRevision) -> ModeloRevision:
+    """Expose target-edge claims to typed consumers, never to the inheritance input.
+
+    Sidecars have already passed membership, uniqueness and exact-edge validation.
+    The stored claim has one owner; its typed row view must not suppress a second
+    authored owner, even when both spell the same evidence.
+    """
+    claims = {
+        attestation.identity: attestation
+        for attestation in revision.lineage_attestations
+        if attestation.family == _INHERITED_SECTION
+    }
+    if not claims:
+        return revision
+    rows = []
+    for casilla in revision.casillas:
+        claim = claims.get(str(casilla.continuidad_id))
+        if claim is None:
+            rows.append(casilla)
+            continue
+        if casilla.continuidad_origin is not None or casilla.continuidad_evidence is not None:
+            raise RegistryValidationError(
+                f"revision {revision.id!r} casilla {casilla.id!r} duplicates lineage evidence ownership: "
+                "declare the claim on the row or in lineage_attestations, not both",
+            )
+        rows.append(
+            casilla.model_copy(
+                update={"continuidad_origin": claim.origin, "continuidad_evidence": claim.evidence},
+            ),
+        )
+    return revision.model_copy(update={"casillas": tuple(rows)})
 
 
 def _validate_lineage_sidecars(

@@ -74,3 +74,209 @@ A parameter holds a regulatory value a formula of this revision applies -- a rat
 applies nothing of its own. Empty by the shape of this revision's calculation rather than by omission."""
 legal_refs = ["ley-37-1992:art-164", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
+
+# Original bindings modelo-390-iva-soportado-importaciones-cuota commentary: # Annual IVA soportado deducible en importaciones — mirrors the M303
+# Original bindings modelo-390-iva-soportado-importaciones-cuota commentary: # import-deducible cuota onto the annual resumen so the deducible total includes
+# Original bindings modelo-390-iva-soportado-importaciones-cuota commentary: # imports. Selects import_third_country soportado lines across the rate tiers.
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # The annual devengada must carry the SAME intracomunitaria cuota the four
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # M303 quarters carry, or the M390<->M303 reconciliation diverges. Both the
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # goods leg (LIVA arts. 13/15) and the services leg (art. 69.Uno.1, read
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # subject to art. 70) self-assess under art. 84.Uno.2.a), and the quarterly
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # line combines them because the official M303 boxes 10/11 and 36/37 are
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # titled "de bienes y servicios"; the annual aggregate therefore selects both
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # categories too.
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # Recargo de equivalencia cuota devengada — annual, mirrors the M303
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # casillas 21/24/158 (LIVA art. 161) so the ledger-derived annual devengada
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # total includes the recargo cuota a supplier charges a recargo-de-equivalencia
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # retailer. Without these, iva.anual.cuota-devengada-total silently excludes
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # recargo (grounded against the AEAT Manual practico IVA 2024 Cap. 9 annual
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # worked example — see the formula's comment for the cross-quarter figures).
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # The super-reduced 1.0pct tier (M303 casilla 18) has no ledger binding on
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # M303 either (manual input there); it stays out of scope of this fix. The
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # super-reducido 0.5pct recargo tier (M303 casilla 158, domestic_super_reduced
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # / rate_kind "super_reduced") mirrors the general/reducido tiers above and
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # closes the residual gap left after the general/reducido wiring: without it,
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # any recargo-de-equivalencia filer whose supplier charges the 4pct
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # super-reducido rate (and therefore the 0.5pct recargo, LIVA art. 161) had
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # that tier's annual cuota silently excluded from
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # iva.anual.cuota-devengada-total, symmetrically breaking the
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # modelo-390-cuota-devengada-total-equals-reconciliacion-303 BLOCKING_RULE for
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # that filer (the reconciled-against figure sums the four filed Modelo 303
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # quarters' casilla 27, which includes recargo casilla 158 per the M303
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # 2023-y-siguientes and 2009-y-siguientes fixes).
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # -----------------------------------------------------------------------------
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # Cross-modelo previous_filing bindings — aggregate the four 303 quarterly
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # autoliquidaciones into the annual resumen totals. Implements the canonical
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # 390 <- 303 dependency where the resumen anual reconciles against the four
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # trimestrales filed during the ejercicio.
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # -----------------------------------------------------------------------------
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # -----------------------------------------------------------------------------
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # Bound casillas surfacing the 5 ledger_iva_aggregation bindings + the 3
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # previous_filing bindings as casilla values. Annual resumen mirrors the 303
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # result-casilla shape (devengada / deducible / resultado) plus reconciliation
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # casillas pulling each total from the four 303 quarters.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # -----------------------------------------------------------------------------
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # Annual régimen-general base-imponible aggregation bindings. The resumen anual
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # already aggregated the CUOTA of these rows (the sibling *-cuota bindings,
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # fact = iva_amount_sum) but drew no base imponible at all: every IVA observation
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # carries a base_amount that reached no binding on the annual return, while the
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # quarterly Modelo 303 draws its base through the matching
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # modelo-303-iva-*-base bindings. The AEAT Diseño de Registros pairs a "Base
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # imponible" box with every "Cuota" box of the Reg. ordinario block (2024 design,
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # apartado 5: 21% base [05] / cuota [06], 10% base [03] / cuota [04], 4% base
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # [01] / cuota [02]) and pairs the deducible total likewise ("Total oper. inter.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # corrientes bienes y servic." base [48] / cuota [49]), so the annual form does
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # ask for these amounts — the omission was ours, not the form's.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: #
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # Each selector mirrors its sibling cuota binding EXACTLY (same categories, same
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # rate_kinds, same flow_direction) and differs only in fact = base_amount_sum, so
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # the base and the cuota of one tier are drawn from the same observation set and
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # cannot select divergent rows.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: #
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # These bindings feed casillas that participate in NO formula: the annual
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # devengada/deducible totals sum cuotas, never bases. Adding them therefore
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # cannot move iva.anual.resultado-regimen-general — the base boxes are declared
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # alongside the cuota boxes on the official form, not summed into it.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: #
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # legal_refs are kept a subset of each target casilla's sibling cuota refs (and
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # therefore of the enclosing construct's refs) so the bound-casilla coverage
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # check holds without authoring a new legal-catalogue entry; LIVA art. 78 (base
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # imponible, regla general) is not currently in the bundled catalogue and
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # fabricating an entry for it would breach the bundled-corpus grounding rule.
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # The rate-blind total for the zero tier. Its three sibling tiers each carry
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # one, so a row whose applied_rate was never recorded still reaches that tier's
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # total and only the RATE box goes unclaimed. The zero tier had no blind layer
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # at all: its only two bindings both pin applied_rates = 0.00, so a zero-rated
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # row with no recorded rate reached NOTHING and its base imponible left the
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # return silently. No cuota is lost -- a zero-rated supply's cuota is zero --
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # but the base is a declared figure AEAT reconciles.
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: #
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # Declares no export_refs, exactly like its three siblings: this is the internal
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # total layer, and box [700] is the rate layer that writes to the record. That
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # split is what lets the rate-box coverage gate read a shortfall here, which is
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # the whole point of adding it.
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # Rate-specific box-layer bindings for the Reg. ordinario block of the annual
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # resumen. Each admits exactly ONE applied_rate, so it draws only from rows whose
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # rate the ledger actually recorded, and a row whose rate is unknown reaches none
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # of them. That is the deliberate behaviour documented on the applied_rates
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # selector: an unmeasured line must not land in a box asserting a specific rate.
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: #
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # tier bindings keep feeding the annual devengada total and therefore keep every
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # row, including rate-unrecorded ones; these feed the per-rate boxes. Narrowing
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # a tier binding instead of adding these would delete the rate-unrecorded rows
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # from the total outright.
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: #
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # All seven rates resolve inside an annual (0A) aggregation for 2024, though
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # three of them only inside part of the year: 5 % applies 1 Jul - 30 Sep and
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # 7,5 % and 2 % from 1 Oct (RDL 4/2024 art. 1), each coexisting with its tier's
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # ordinary rate. An annual return spans all of those windows, which is why a
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # per-rate box is needed at all -- the tier alone cannot separate them.
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # Rate-specific box-layer bindings for the Reg. ordinario block of the annual
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # resumen. Each admits exactly ONE applied_rate, so it draws only from rows whose
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # rate the ledger actually recorded, and a row whose rate is unknown reaches none
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # of them. That is the deliberate behaviour documented on the applied_rates
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # selector: an unmeasured line must not land in a box asserting a specific rate.
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # tier bindings keep feeding the annual devengada total and therefore keep every
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # row, including rate-unrecorded ones; these feed the per-rate boxes. Narrowing
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # a tier binding instead of adding these would delete the rate-unrecorded rows
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # from the total outright.
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # All seven rates resolve inside an annual (0A) aggregation for 2024, though
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # three of them only inside part of the year: 5 % applies 1 Jul - 30 Sep and
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # 7,5 % and 2 % from 1 Oct (RDL 4/2024 art. 1), each coexisting with its tier's
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # ordinary rate. An annual return spans all of those windows, which is why a
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # per-rate box is needed at all -- the tier alone cannot separate them.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # Rate-specific box-layer bindings for the Recargo de equivalencia block of the
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # annual resumen, the recargo counterpart of the Reg. ordinario layer beside it.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # The three rate-blind recargo bindings in 0001 select recargo_amount_sum routed
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # by the line's IVA rate TIER, and the official design keys its recargo boxes by
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # the recargo RATE. Those are not the same axis: one reducido tier carries the
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # 1,4 %, 1 % and 0,62 % recargo rates, so all three merged into box [600] and
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # [694] and [666] stayed empty. Each binding here admits exactly one IVA rate and
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # therefore exactly one recargo rate, so each official box draws only its own.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # tier bindings keep feeding modelo-390-iva-anual-cuota-devengada-total and
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # therefore keep every row, including one whose IVA rate the ledger never
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # recorded; these feed the per-rate boxes and admit no such row. Narrowing a tier
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # binding instead of adding these would delete the rate-unrecorded recargo from
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # the declared annual total outright.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # The recargo rate is not chosen here -- it follows the IVA rate by statute:
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA 21 %  -> recargo 5,2 %   LIVA art. 161.1
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA 10 %  -> recargo 1,4 %   LIVA art. 161.2 (via art. 91.uno)
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA  4 %  -> recargo 0,5 %   LIVA art. 161.3 (via art. 91.dos)
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA 7,5 % -> recargo 1 %     RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA  5 %  -> recargo 0,62 %  RDL 4/2024 art. 1.Uno, 1 Jul - 30 Sep 2024
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA  2 %  -> recargo 0,26 %  RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # The tabaco rung (recargo 1,75 %, LIVA art. 161.4, boxes [41]/[42]) is absent
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # because the IVA category it depends on is not modelled at all; that is a
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # separate omission from this merge and is not repaired by adding a rung here.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # The 0 % rung (boxes [663]/[664]) is likewise absent, and for a different
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # reason: the recargo block has no rate-blind ZERO tier binding, so adding a
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # rate-specific 0 % recargo box would create the one shape that loses money
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # silently -- a rate-specific rung with no total layer behind it. Giving it one
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # means adding a term to the annual devengada total formula, which is a change
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # to a money-bearing total and a decision of its own.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # Rate-specific box-layer bindings for the Recargo de equivalencia block of the
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # annual resumen, the recargo counterpart of the Reg. ordinario layer beside it.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # The three rate-blind recargo bindings in 0001 select recargo_amount_sum routed
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # by the line's IVA rate TIER, and the official design keys its recargo boxes by
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # the recargo RATE. Those are not the same axis: one reducido tier carries the
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # 1,4 %, 1 % and 0,62 % recargo rates, so all three merged into box [600] and
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # [694] and [666] stayed empty. Each binding here admits exactly one IVA rate and
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # therefore exactly one recargo rate, so each official box draws only its own.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # tier bindings keep feeding modelo-390-iva-anual-cuota-devengada-total and
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # therefore keep every row, including one whose IVA rate the ledger never
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # recorded; these feed the per-rate boxes and admit no such row. Narrowing a tier
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # binding instead of adding these would delete the rate-unrecorded recargo from
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # the declared annual total outright.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # The recargo rate is not chosen here -- it follows the IVA rate by statute:
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA 21 %  -> recargo 5,2 %   LIVA art. 161.1
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA 10 %  -> recargo 1,4 %   LIVA art. 161.2 (via art. 91.uno)
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA  4 %  -> recargo 0,5 %   LIVA art. 161.3 (via art. 91.dos)
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA 7,5 % -> recargo 1 %     RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA  5 %  -> recargo 0,62 %  RDL 4/2024 art. 1.Uno, 1 Jul - 30 Sep 2024
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA  2 %  -> recargo 0,26 %  RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # The tabaco rung (recargo 1,75 %, LIVA art. 161.4, boxes [41]/[42]) is absent
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # because the IVA category it depends on is not modelled at all; that is a
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # separate omission from this merge and is not repaired by adding a rung here.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # The 0 % rung (boxes [663]/[664]) is likewise absent, and for a different
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # reason: the recargo block has no rate-blind ZERO tier binding, so adding a
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # rate-specific 0 % recargo box would create the one shape that loses money
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # silently -- a rate-specific rung with no total layer behind it. Giving it one
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # means adding a term to the annual devengada total formula, which is a change
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # to a money-bearing total and a decision of its own.
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # Rate-specific bindings for the adquisiciones intracomunitarias (AIC) box
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # layer. See the sibling casillas file
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # (civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml)
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # for the full account of the defect this closes and the epoch scoping.
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # Selector rate_kind convention matches the M390 recargo rate-box layer and
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # the M303 transitional-rate rungs already in this tree: 21% -> general;
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # 5%/7,5%/10% -> reduced; 2%/4% -> super_reduced; 0% -> zero.
+# Original bindings modelo-390-iva-aic-servicios-tipo-21-cuota commentary: # Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2)
+# Original bindings modelo-390-iva-aic-servicios-tipo-21-cuota commentary: # bindings feeding boxes [27]/[28]. Rate-blind by design -- see the casillas
+# Original bindings modelo-390-iva-aic-servicios-tipo-21-cuota commentary: # file header -- mirroring Modelo 303's own domestic_reverse_charge binding,
+# Original bindings modelo-390-iva-aic-servicios-tipo-21-cuota commentary: # which likewise sums general/reduced/super_reduced together.
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # Per-tier rate-blind AIC bindings backing the casillas above. Fact scoped to
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # base_amount_sum only, matching the established precedent
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # (test_every_rate_split_base_tier_carries_exactly_one_rate_blind_binding);
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # the cuota counterpart is a separate, deliberately deferred decision (see
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # that domestic gate's own zero-tier docstring).
+# Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # Modelo 390 2022, página 1, casillas 74--83.  One source family consumes the
+# Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # immutable filed/current Modelo 303 4T calculation revision; endpoint bindings
+# Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # merely name arrival slots and never replay a scalar relation or observation.

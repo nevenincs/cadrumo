@@ -9,12 +9,6 @@
 # applicability is True but profile.representante_fiscal_nif is None
 # or empty.
 
-[[revisions."2024".verification_predicates]]
-id = "profile-field-required:representante-fiscal-required"
-predicate_id = "m210-representante-fiscal-required"
-expression = 'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
-legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
-
 # Silent-under-declaration guard per no-silent-under-declaration: the general /
 # UE-EEE branch's base_imponible (manual rendimientos_integros, optionally
 # reduced by gastos_deducibles per art 24.6) is computed from

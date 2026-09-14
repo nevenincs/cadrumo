@@ -1937,6 +1937,38 @@ def _write_drop(modelo_dir: Path, edition: EditionDrop, families: Mapping[str, _
             section_dir.rmdir()
 
 
+def stage_declaration_drop(modelo_dir: Path, edition: EditionDrop) -> None:
+    """Write a planned drop to a caller-owned staging tree, retaining row commentary.
+
+    This does not publish source or attest authority. The caller must compare
+    complete materialised definitions before accepting the staged representation.
+    """
+    from .compact import toml_comments
+
+    families = {family.section: family for family in _DROPPABLE_FAMILIES}
+    comments: list[str] = []
+    for drop in edition.families:
+        family = families[drop.section]
+        for fragment in _read_family_fragments(modelo_dir / "revisions" / edition.revision_id, drop.section):
+            for block in fragment.blocks:
+                identity = _identity_of(block.row, family)
+                if identity in drop.dropped:
+                    comments.extend(
+                        f"# Original {drop.section} {identity} commentary: {comment}"
+                        for comment in toml_comments(block.text)
+                    )
+            if fragment.blocks and all(_identity_of(block.row, family) in drop.dropped for block in fragment.blocks):
+                comments.extend(
+                    f"# Original {drop.section} fragment {fragment.path.name}: {comment}"
+                    for comment in toml_comments(fragment.preamble)
+                )
+    _write_drop(modelo_dir, edition, families)
+    if comments:
+        manifest = modelo_dir / "revisions" / edition.revision_id / _MANIFEST
+        text = manifest.read_text(encoding="utf-8")
+        manifest.write_text(text.rstrip() + "\n\n" + "\n".join(comments) + "\n", encoding="utf-8", newline="\n")
+
+
 @dataclass(frozen=True, slots=True)
 class DropOutcome:
     """The result of planning, staging and proving one modelo's drop."""

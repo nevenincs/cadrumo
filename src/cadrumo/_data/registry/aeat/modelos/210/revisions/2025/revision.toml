@@ -84,3 +84,246 @@ draft and 29 casilla entries with zero projection entries. Modelo 210 declares o
 legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-2"]
 source_refs = ["aeat-dr-210-2022", "aeat-modelo-210-procedure"]
 
+# Original casillas irnr-base-imponible-directa-i commentary: # --- Determinación de la base imponible: 210 R (rendimientos) ---
+# Original casillas irnr-exencion-dividendos commentary: # --- Determinación de la base imponible: 210 H (ganancias patrimoniales) ---
+# Original casillas irnr-base-imponible-ganancias-h commentary: # --- Determinación de la base imponible: 210 G (direct) ---
+# Original casillas irnr-base-imponible-directa-g commentary: # --- Liquidación ---
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # Modelo 210 base / rate / cuota chain casillas.
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # The base / rate / cuota chain for general, ue_residente, interest,
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # ganancia_patrimonial, and the Art. 13.1.h inmobiliaria imputed-real-estate
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # base branch. Pension is covered by the live Art. 25.1.b progressive tariff
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # parameter. The diseño-de-registro pass renumbered the seven boxes that
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # map onto official liquidación numbers (rendimientos_integros=[5],
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # gastos_deducibles=[7], base_imponible=[8], tipo_gravamen=[21],
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # cuota_integra=[22], retencion_practicada=[29], cuota_diferencial=[31]) and
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # added the remaining official boxes in the companion
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # 0002-casillas-diseno-registro.toml fragment; the inmobiliaria-support inputs
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # (valor_catastral, coeficiente, días, valores) keep their engine-internal
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # identifiers as they are not [4]-[31] numbered boxes.
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #
+# Original casillas irnr-ingreso-devolucion-anterior commentary: # Current wiring:
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - tipo_renta            manual text (operator-supplied enum key)
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - rendimientos_integros manual money input for non-imputed branches
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - valor_catastral / coeficiente_imputacion_inmobiliaria /
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #    dias_imputacion / valor_adquisicion / valor_comprobado_administracion:
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #                          manual facts for inmobiliaria Art. 13.1.h
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - gastos_deducibles     manual money input applied on the Art. 24.6
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #                          UE/EEE deduction path
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - retencion_practicada  manual money input (pagos a cuenta)
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - base_imponible        computed via `m210-base-imponible-2025`
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - tipo_gravamen         computed via `m210-tipo-gravamen-2025-resolve`
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - cuota_integra         computed via `m210-cuota-integra-2025`
+# Original casillas irnr-ingreso-devolucion-anterior commentary: #  - cuota_diferencial     computed via `m210-cuota-diferencial-2025`
+# Original casillas fragment 0001-declarations.toml: # Modelo 210 official diseño-de-registro numbered liquidación casillas [4]-[31].
+# Original casillas fragment 0001-declarations.toml: #
+# Original casillas fragment 0001-declarations.toml: # Grounded in the bundled AEAT layout authority `aeat-dr-210-2022`, the diseño
+# Original casillas fragment 0001-declarations.toml: # governing devengos from 01/06/2022, section "Determinación de la base
+# Original casillas fragment 0001-declarations.toml: # imponible" (210 I/R/H/G) and "Liquidación". These casillas were originally
+# Original casillas fragment 0001-declarations.toml: # authored from the 2011 diseño (record identifier T21001, version 1.1,
+# Original casillas fragment 0001-declarations.toml: # 15/02/2012), whose applicability window closed on 2017-12-31 -- nine years
+# Original casillas fragment 0001-declarations.toml: # before this revision opens -- so citing it here made the revision cite a
+# Original casillas fragment 0001-declarations.toml: # superseded source. Every one of the 21 casillas re-grounded is addressed by
+# Original casillas fragment 0001-declarations.toml: # the export tree this revision renders from the 2022 diseño, which is what
+# Original casillas fragment 0001-declarations.toml: # establishes that the later design carries them. The five existing base/rate/cuota casillas already carry their
+# Original casillas fragment 0001-declarations.toml: # official numbers (rendimientos_integros=[5], gastos_deducibles=[7],
+# Original casillas fragment 0001-declarations.toml: # base_imponible=[8], tipo_gravamen=[21], cuota_integra=[22],
+# Original casillas fragment 0001-declarations.toml: # retencion_practicada=[29], cuota_diferencial=[31]); this fragment adds the
+# Original casillas fragment 0001-declarations.toml: # remaining official boxes.
+# Original casillas fragment 0001-declarations.toml: #
+# Original casillas fragment 0001-declarations.toml: # Modelling notes (grounded, non-fabricating):
+# Original casillas fragment 0001-declarations.toml: #  - The engine keeps ONE branching base_imponible ([8]) (one casilla schema,
+# Original casillas fragment 0001-declarations.toml: #    code-keyed branches). The alternate type-I direct base [4] and type-G
+# Original casillas fragment 0001-declarations.toml: #    direct base [18] are declared
+# Original casillas fragment 0001-declarations.toml: #    as operator-input boxes for the paths the branching engine does not compute.
+# Original casillas fragment 0001-declarations.toml: #  - Signed money boxes (ganancias, ingreso/devolución anterior) carry no
+# Original casillas fragment 0001-declarations.toml: #    non_negative constraint: a ganancia patrimonial may be a loss, and the
+# Original casillas fragment 0001-declarations.toml: #    complementaria prior-result [30] is signed (±) per the official [31] rule.
+# Original casillas fragment 0001-declarations.toml: #  - The dividend-exención [6] is declared as the official field; wiring its
+# Original casillas fragment 0001-declarations.toml: #    subtraction into the type-R base op is deferred (dividends currently route
+# Original casillas fragment 0001-declarations.toml: #    through the Art. 25.1.f 19% branch, not the rendimientos-R deduction path).
+# Original casillas fragment 0001-declarations.toml: # --- Determinación de la base imponible: 210 I (direct) ---
+
+# Original formulas m210-base-imponible commentary: # M210 IRNR tipo-de-gravamen resolution formula.
+# Original formulas m210-base-imponible commentary: #
+# Original formulas m210-base-imponible commentary: # Dispatches through the modelo-neutral `irnr_resolve_tipo_gravamen` formula op:
+# Original formulas m210-base-imponible commentary: # - args[0]: text casilla `tipo_renta` (operator-supplied enum)
+# Original formulas m210-base-imponible commentary: # - args[1]: computed `base_imponible`
+# Original formulas m210-base-imponible commentary: # - args[2]: baseline TRLIRNR rate table `m210-tipo-gravamen-2025`
+# Original formulas m210-base-imponible commentary: # - args[3]: TRLIRNR Art 25.1.b pension tariff table
+# Original formulas m210-base-imponible commentary: # - args[4]: profile-bound `country_of_fiscal_residence`
+# Original formulas m210-base-imponible commentary: #
+# Original formulas m210-base-imponible commentary: # The Convenio doble imposicion treaty overrides are no longer a modelo-local
+# Original formulas m210-base-imponible commentary: # parameter: the op consults the cross-cutting `irnr.convenio.override` fact
+# Original formulas m210-base-imponible commentary: # projected onto the snapshot as the `ConvenioAuthority`, and branches on the
+# Original formulas m210-base-imponible commentary: # typed override kind (flat / ceiling / allocation_domestic_tariff / exempt).
+# Original formulas m210-base-imponible commentary: #
+# Original formulas m210-base-imponible commentary: # Returns the resolved Decimal rate, or one of the M210 rate-
+# Original formulas m210-base-imponible commentary: # sentinel constants when a deterministic rate cannot be produced
+# Original formulas m210-base-imponible commentary: # (deferred baseline or missing treaty override row).
+# Original formulas m210-base-imponible commentary: # For `tipo_renta="pension"` the returned Decimal is the effective
+# Original formulas m210-base-imponible commentary: # rate for the progressive Art 25.1.b tariff, so the downstream
+# Original formulas m210-base-imponible commentary: # `base_imponible * tipo_gravamen` formula lands on the statutory quota.
+# Original formulas m210-base-imponible commentary: # The application-layer verification sweep rewrites the sentinels
+# Original formulas m210-base-imponible commentary: # into BLOCKING findings post-engine.
+# Original formulas m210-tipo-gravamen-resolve commentary: # M210 IRNR cuota-íntegra formula.
+# Original formulas m210-tipo-gravamen-resolve commentary: #
+# Original formulas m210-tipo-gravamen-resolve commentary: # `cuota_integra = base_imponible × tipo_gravamen` per TRLIRNR Art 24
+# Original formulas m210-tipo-gravamen-resolve commentary: # combined with the resolved rate from Art 25.1.a / 25.1.f / Convenio
+# Original formulas m210-tipo-gravamen-resolve commentary: # override, or the effective rate from the Art 25.1.b pension tariff
+# Original formulas m210-tipo-gravamen-resolve commentary: # (see formula `m210-tipo-gravamen-2025-resolve`).
+# Original formulas m210-cuota-integra commentary: # M210 IRNR resultado de la autoliquidación (official casilla [31]).
+# Original formulas m210-cuota-integra commentary: #
+# Original formulas m210-cuota-integra commentary: # Official diseño-de-registro rule (record T21001, field 117):
+# Original formulas m210-cuota-integra commentary: #   [31] Resultado de la autoliquidación = [28] - [29] ± [30]
+# Original formulas m210-cuota-integra commentary: # where [28] is the cuota íntegra reducida (post-convenio), [29] the
+# Original formulas m210-cuota-integra commentary: # retenciones/ingresos a cuenta, and [30] the ingreso/devolución anterior
+# Original formulas m210-cuota-integra commentary: # (signed, exclusively for autoliquidación complementaria). Grounded in
+# Original formulas m210-cuota-integra commentary: # TRLIRNR Art 24. When no convenio, no donativos and no complementaria
+# Original formulas m210-cuota-integra commentary: # prior-result apply, [28] collapses to [22] (cuota íntegra) and [30]=0, so
+# Original formulas m210-cuota-integra commentary: # this reduces to the pre-slice-C `cuota_integra - retencion_practicada`
+# Original formulas m210-cuota-integra commentary: # behaviour (see the completeness-preserving chain in casillas [24]/[27]/[28]).
+# Original formulas m210-cuota-diferencial commentary: # M210 IRNR ganancias-patrimoniales base (official casilla [17]).
+# Original formulas m210-cuota-diferencial commentary: #
+# Original formulas m210-cuota-diferencial commentary: # Official diseño-de-registro rule (record T21001, field 100):
+# Original formulas m210-cuota-diferencial commentary: #   [17] Base imponible (210 H) = [12] + [16]
+# Original formulas m210-cuota-diferencial commentary: # i.e. the ganancia from the adquisición chain ([12]) plus the ganancia from
+# Original formulas m210-cuota-diferencial commentary: # the mejora / 2ª adquisición chain ([16]). Grounded in TRLIRNR Art 24 (base)
+# Original formulas m210-cuota-diferencial commentary: # and Art 25.1.f (ganancias patrimoniales). A ganancia box may be negative
+# Original formulas m210-cuota-diferencial commentary: # (pérdida patrimonial), so no sign clamp is applied.
+# Original formulas m210-base-ganancias-h commentary: # M210 IRNR cuota Ley IRNR (official casilla [24]).
+# Original formulas m210-base-ganancias-h commentary: #
+# Original formulas m210-base-ganancias-h commentary: # Official diseño-de-registro rule (record T21001, field 110):
+# Original formulas m210-base-ganancias-h commentary: #   [24] Cuota Ley IRNR = [22] - [23]
+# Original formulas m210-base-ganancias-h commentary: # i.e. the cuota íntegra ([22]) minus the deducción por donativos ([23]).
+# Original formulas m210-base-ganancias-h commentary: # Grounded in TRLIRNR Art 24. When no donativos are declared, [23]=0 and
+# Original formulas m210-base-ganancias-h commentary: # [24] collapses to [22].
+# Original formulas m210-cuota-ley-irnr commentary: # M210 IRNR cuota íntegra reducida (official casilla [28]).
+# Original formulas m210-cuota-ley-irnr commentary: #
+# Original formulas m210-cuota-ley-irnr commentary: # Official diseño-de-registro rule (record T21001, field 114):
+# Original formulas m210-cuota-ley-irnr commentary: #   [28] Cuota íntegra reducida = [24] - [27]   with   [27] = [24] - [26]
+# Original formulas m210-cuota-ley-irnr commentary: # so when a convenio limit [26] applies, [28] = [26] (the treaty-capped cuota).
+# Original formulas m210-cuota-ley-irnr commentary: # The registry models the convenio reduction conditionally on the presence of a
+# Original formulas m210-cuota-ley-irnr commentary: # declared límite convenio [26], clamped so the reduced cuota never exceeds the
+# Original formulas m210-cuota-ley-irnr commentary: # domestic cuota Ley IRNR [24]:
+# Original formulas m210-cuota-ley-irnr commentary: #   [28] = if [26] > 0 then min([24], [26]) else [24]
+# Original formulas m210-cuota-ley-irnr commentary: # This is faithful to the form's declared arithmetic in range ([26] <= [24] gives
+# Original formulas m210-cuota-ley-irnr commentary: # [27] = [24] - [26] and [28] = [26]) and correct at the edge (a límite above the
+# Original formulas m210-cuota-ley-irnr commentary: # cuota yields no reduction rather than a negative [27]). When no convenio limit
+# Original formulas m210-cuota-ley-irnr commentary: # is declared, [28] collapses to [24], preserving the no-convenio liquidación
+# Original formulas m210-cuota-ley-irnr commentary: # path. Grounded in TRLIRNR Art 24 (the convenio prevalence and cuota framework).
+# Original formulas m210-cuota-integra-reducida commentary: # M210 IRNR reducción por convenio (official casilla [27]).
+# Original formulas m210-cuota-integra-reducida commentary: #
+# Original formulas m210-cuota-integra-reducida commentary: # Official diseño-de-registro rule (record T21001, field 113):
+# Original formulas m210-cuota-integra-reducida commentary: #   [27] Reducción por Convenio = [24] - [26]
+# Original formulas m210-cuota-integra-reducida commentary: # The registry derives it from the clamped reduced cuota so the identity
+# Original formulas m210-cuota-integra-reducida commentary: # [28] = [24] - [27] holds by construction:
+# Original formulas m210-cuota-integra-reducida commentary: #   [27] = [24] - [28]
+# Original formulas m210-cuota-integra-reducida commentary: # where [28] is the (clamped) cuota íntegra reducida. When a convenio limit
+# Original formulas m210-cuota-integra-reducida commentary: # [26] <= [24] applies, [28] = [26] and [27] = [24] - [26] (matching the form).
+# Original formulas m210-cuota-integra-reducida commentary: # When no convenio limit is declared, [28] = [24] and [27] = 0. Grounded in
+# Original formulas m210-cuota-integra-reducida commentary: # TRLIRNR Art 24.
+# Original formulas fragment 0001-declarations.toml: # M210 IRNR base-imponible formula.
+# Original formulas fragment 0001-declarations.toml: #
+# Original formulas fragment 0001-declarations.toml: # Per TRLIRNR Art 24.1: non-imputed branches start from gross rendimientos.
+# Original formulas fragment 0001-declarations.toml: # Art 24.6 permits directly linked expenses on the UE/EEE path. For
+# Original formulas fragment 0001-declarations.toml: # tipo_renta="inmobiliaria",
+# Original formulas fragment 0001-declarations.toml: # TRLIRNR Art 13.1.h identifies the Spanish-source imputed income
+# Original formulas fragment 0001-declarations.toml: # and Art 24.5 routes the base to the IRPF imputation mechanics now
+# Original formulas fragment 0001-declarations.toml: # in LIRPF Art 85.
+
+# Original applicability fragment 0001-declarations.toml: # Modelo 210 applicability.
+# Original applicability fragment 0001-declarations.toml: #
+# Original applicability fragment 0001-declarations.toml: # The mirror of the Modelo 100 rule, which already names this modelo as the
+# Original applicability fragment 0001-declarations.toml: # non-resident counterpart: a NON_RESIDENT_IRNR contribuyente tributa por el
+# Original applicability fragment 0001-declarations.toml: # IRNR y presenta el Modelo 210, no el Modelo 100.
+# Original applicability fragment 0001-declarations.toml: #
+# Original applicability fragment 0001-declarations.toml: # Entity type is deliberately NOT gated. TRLIRNR art. 5 makes both personas
+# Original applicability fragment 0001-declarations.toml: # físicas and entidades no residentes contribuyentes of the IRNR, and the
+# Original applicability fragment 0001-declarations.toml: # official design carries an F/J discriminator on the contribuyente precisely
+# Original applicability fragment 0001-declarations.toml: # because either may file. Gating on natural_person would silently refuse a
+# Original applicability fragment 0001-declarations.toml: # non-resident company's Modelo 210, which is a real filing.
+# Original applicability fragment 0001-declarations.toml: #
+# Original applicability fragment 0001-declarations.toml: # Fiscal residency IS the gate, and it is the only one: the modelo applies to a
+# Original applicability fragment 0001-declarations.toml: # non-resident irrespective of income category or estimation régimen, because
+# Original applicability fragment 0001-declarations.toml: # those axes belong to the resident IRPF regime and have no counterpart here.
+
+# Original filing_schedules fragment 0001-declarations.toml: # Modelo 210 filing cadence.
+# Original filing_schedules fragment 0001-declarations.toml: #
+# Original filing_schedules fragment 0001-declarations.toml: # Two schedules, because Orden EHA/3316/2010 art. 5 gives Modelo 210 two
+# Original filing_schedules fragment 0001-declarations.toml: # genuinely different cadences and the revision's own period_selector already
+# Original filing_schedules fragment 0001-declarations.toml: # declares both tokens ("EVENT-N" and "0A"):
+# Original filing_schedules fragment 0001-declarations.toml: #
+# Original filing_schedules fragment 0001-declarations.toml: #   * Every renta OTHER than imputed urban-property income is filed per
+# Original filing_schedules fragment 0001-declarations.toml: #     devengo. There is no recurring calendar obligation -- the obligation
+# Original filing_schedules fragment 0001-declarations.toml: #     exists only where a renta accrued -- so this is an ad-hoc schedule keyed
+# Original filing_schedules fragment 0001-declarations.toml: #     on the event token.
+# Original filing_schedules fragment 0001-declarations.toml: #   * Imputed income from urban property (TRLIRNR art. 13.1.h) is filed once
+# Original filing_schedules fragment 0001-declarations.toml: #     for the whole calendar year, during the year FOLLOWING the devengo, which
+# Original filing_schedules fragment 0001-declarations.toml: #     is an annual cadence and is why the revision carries the "0A" token at
+# Original filing_schedules fragment 0001-declarations.toml: #     all.
+# Original filing_schedules fragment 0001-declarations.toml: #
+# Original filing_schedules fragment 0001-declarations.toml: # Both cite art. 5 because that is the article fixing the plazo for each; the
+# Original filing_schedules fragment 0001-declarations.toml: # annual one additionally cites art. 13.1.h, which is what makes that renta
+# Original filing_schedules fragment 0001-declarations.toml: # annual rather than per-devengo.
+
+# Original extraction_profiles fragment 0001-declarations.toml: # Modelo 210 declaración-PDF extraction profile.
+# Original extraction_profiles fragment 0001-declarations.toml: #
+# Original extraction_profiles fragment 0001-declarations.toml: # Every label_pattern below is grounded against the AEAT-published Modelo 210
+# Original extraction_profiles fragment 0001-declarations.toml: # instructions bundled at
+# Original extraction_profiles fragment 0001-declarations.toml: #   src/cadrumo/_data/corpus/aeat_official/instructions/modelo_210/files/
+# Original extraction_profiles fragment 0001-declarations.toml: #     modelo-210-instrucciones.html
+# Original extraction_profiles fragment 0001-declarations.toml: # and NOT against the registry's own casilla labels, which would be a
+# Original extraction_profiles fragment 0001-declarations.toml: # self-reference. AEAT prints each of these as the label followed by its casilla
+# Original extraction_profiles fragment 0001-declarations.toml: # number in parentheses -- "Base imponible (8):", "Gastos deducibles (7):",
+# Original extraction_profiles fragment 0001-declarations.toml: # "Cuota Ley IRNR (24):" -- so each pattern anchors on BOTH, which is what makes
+# Original extraction_profiles fragment 0001-declarations.toml: # it discriminating: "Base imponible" alone appears seven times in the document
+# Original extraction_profiles fragment 0001-declarations.toml: # (the 210 I, R, H and G determinations each have one), and only the parenthesised
+# Original extraction_profiles fragment 0001-declarations.toml: # number distinguishes the liquidación box the registry means.
+# Original extraction_profiles fragment 0001-declarations.toml: #
+# Original extraction_profiles fragment 0001-declarations.toml: # The number printed in each AEAT label agrees with the casilla's own `number`
+# Original extraction_profiles fragment 0001-declarations.toml: # field on this revision, independently confirming the join.
+# Original extraction_profiles fragment 0001-declarations.toml: #
+# Original extraction_profiles fragment 0001-declarations.toml: # Deliberately NOT strict, and deliberately not claiming a round trip: no filed
+# Original extraction_profiles fragment 0001-declarations.toml: # or synthetic Modelo 210 specimen is bundled, so nothing has yet proved these
+# Original extraction_profiles fragment 0001-declarations.toml: # patterns locate their value in a real document. `provisional_pending_specimen`
+# Original extraction_profiles fragment 0001-declarations.toml: # records exactly that, and `confidence = "review_required"` keeps any extraction
+# Original extraction_profiles fragment 0001-declarations.toml: # out of the strict path until a specimen exists. Raising either without adding
+# Original extraction_profiles fragment 0001-declarations.toml: # the specimen would convert an open gap into a verified-looking claim.
+
+# Original application_links modelo-210-deadline commentary: # Deadline consumer for the trimestral a-ingresar plazo windows grounded in
+# Original application_links modelo-210-deadline commentary: # Orden EHA/3316/2010 art 5 (as amended by HAC/56/2024 + HAC/623/2026). Required
+# Original application_links modelo-210-deadline commentary: # by the registry validator whenever a revision declares deadline windows.
+# Original application_links modelo-210-export commentary: # Export consumer for the generated fichero-BOE layout. Required by the
+# Original application_links modelo-210-export commentary: # registry validator whenever a revision declares export layouts. Grounded on
+# Original application_links modelo-210-export commentary: # Orden EHA/3316/2010 art 1, which approves the modelo and its ingreso/devolucion
+# Original application_links modelo-210-export commentary: # document -- the two records the layout renders -- and cites the exact record
+# Original application_links modelo-210-export commentary: # design the layout was generated from.
+# Original application_links modelo-210-extractor commentary: # Extractor consumer for the declaración-PDF profile. Required by the registry
+# Original application_links modelo-210-extractor commentary: # validator whenever a revision declares extraction profiles.
+# Original application_links fragment 0001-declarations.toml: # Modelo 210 application-link declaration.
+# Original application_links fragment 0001-declarations.toml: #
+# Original application_links fragment 0001-declarations.toml: # The validator requires at least one filing or communication surface
+# Original application_links fragment 0001-declarations.toml: # to satisfy the casilla-routing contract. The 2025 revision declares
+# Original application_links fragment 0001-declarations.toml: # the current filing, calculation, verification, review, approval,
+# Original application_links fragment 0001-declarations.toml: # reconciliation, and workflow consumers.
+
+# Original bindings m210-ledger-irnr-rendimientos-integros commentary: # Modelo 210 source-scoped gross-income binding.  Art. 13.1 is the territorial
+# Original bindings m210-ledger-irnr-rendimientos-integros commentary: # gateway: only a persisted, explicit M210 classification on a Spanish-source
+# Original bindings m210-ledger-irnr-rendimientos-integros commentary: # incoming ledger row may reach [5].  Art. 24 then governs the gross-income base
+# Original bindings m210-ledger-irnr-rendimientos-integros commentary: # fact.  Rate provisions (including art. 25.1) are deliberately not used as the
+# Original bindings m210-ledger-irnr-rendimientos-integros commentary: # source-scope authority.
+# Original bindings fragment 0001-declarations.toml: # M210 IRNR profile-axis bindings.
+# Original bindings fragment 0001-declarations.toml: #
+# Original bindings fragment 0001-declarations.toml: # Exposes the operator profile's country_of_fiscal_residence field
+# Original bindings fragment 0001-declarations.toml: # to the formula runtime so the m210_resolve_rate op (S400) can read
+# Original bindings fragment 0001-declarations.toml: # the treaty country at evaluation time via ctx.enum_binding_values.
+# Original bindings fragment 0001-declarations.toml: # Mirrors the M100 CCAA precedent at
+# Original bindings fragment 0001-declarations.toml: # bindings/0008-renta-2025-profile-tax-residence-ccaa.toml.
+# Original bindings fragment 0001-declarations.toml: #
+# Original bindings fragment 0001-declarations.toml: # country_of_fiscal_residence is a free-form ISO 3166-1 alpha-2 string
+# Original bindings fragment 0001-declarations.toml: # on TaxpayerProfile, not a closed enum class — typed_enum is omitted.
+# Original bindings fragment 0001-declarations.toml: # The cross-cutting ConvenioAuthority projects the canonical treaty override fact and resolves the
+# Original bindings fragment 0001-declarations.toml: # BOE treaty reference from this same field; the retired TaxpayerProfile
+# Original bindings fragment 0001-declarations.toml: # convenio_aplicable static-lookup property has been deleted in favour of
+# Original bindings fragment 0001-declarations.toml: # this resolution path.

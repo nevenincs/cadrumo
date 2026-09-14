@@ -309,6 +309,66 @@ class TestGroundingCensusCountsLinksNotRows:
         assert counts["chain_fully_grounded"] == 0
         assert counts["chained_rows"] == 1
 
+    def _sidecar(self, root: Path, *, start: str = "2023", end: str = "2024", malformed: bool = False) -> None:
+        manifest = root / "modelos" / _MODELO / "revisions" / "2024" / "revision.toml"
+        identity = 'member = "c1"' if malformed else 'continuidad_id = "c1"'
+        with manifest.open("a", encoding="utf-8") as stream:
+            stream.write(
+                f'\n[[revisions."2024".lineage_attestations]]\n'
+                'family = "casillas"\n'
+                f'{identity}\n'
+                f'from_revision = "{start}"\n'
+                f'to_revision = "{end}"\n'
+                'origin = "grounded"\n'
+                'evidence = "focused exact-edge test"\n'
+                'legal_refs = ["law:edge"]\n'
+                'source_refs = ["source-edge"]\n'
+            )
+
+    def test_relocating_a_row_claim_to_its_sidecar_preserves_the_grounded_link(self, tmp_path: Path) -> None:
+        _edition(tmp_path, "2023", valid_from="2023-01-01", chains=("c1",))
+        _edition(
+            tmp_path,
+            "2024",
+            valid_from="2024-01-01",
+            chains=(),
+            predecessor='predecessor = "2023"',
+        )
+        self._sidecar(tmp_path)
+
+        statuses = scan_registry(tmp_path)
+        counts = census(statuses, read_evolutions(tmp_path))
+
+        assert counts["chain_links_to_ground"] == 0
+        assert counts["chain_fully_grounded"] == 1
+        assert counts["chained_rows"] == 1, "the sidecar must not inflate the stated-row census"
+
+    @pytest.mark.parametrize(
+        ("start", "end", "malformed"),
+        (("2022", "2024", False), ("2023", "2025", False), ("2023", "2024", True)),
+    )
+    def test_malformed_or_wrong_edge_sidecars_are_not_treated_as_grounded(
+        self,
+        tmp_path: Path,
+        start: str,
+        end: str,
+        malformed: bool,
+    ) -> None:
+        _edition(tmp_path, "2023", valid_from="2023-01-01", chains=("c1",))
+        _edition(
+            tmp_path,
+            "2024",
+            valid_from="2024-01-01",
+            chains=(),
+            predecessor='predecessor = "2023"',
+        )
+        self._sidecar(tmp_path, start=start, end=end, malformed=malformed)
+
+        counts = self._census(tmp_path)
+
+        assert counts["chain_fully_grounded"] == 0
+        assert counts["chained_rows"] == 1
+
 
 class TestUncheckedRulingReferencesAreNamed:
     """A ruling whose edition this scan never read is unchecked, not clean.
