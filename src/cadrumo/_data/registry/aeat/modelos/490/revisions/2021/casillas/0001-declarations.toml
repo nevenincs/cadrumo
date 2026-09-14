@@ -195,7 +195,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq21-ajuste-cuota-integra-17"
-continuidad_id = "liq21-ajuste-cuota-integra-17"
+continuidad_id = "regularization-total-quota-adjustment"
 number = "17"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
@@ -272,91 +272,91 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-1"
-continuidad_id = "reg21-base-positiva-1"
+continuidad_id = "regularization-exercise-1-q1-positive-base"
 number = "1"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-8"
-continuidad_id = "reg21-base-positiva-8"
+continuidad_id = "regularization-exercise-1-q2-positive-base"
 number = "8"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-14"
-continuidad_id = "reg21-base-positiva-14"
+continuidad_id = "regularization-exercise-1-q3-positive-base"
 number = "14-51"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-20"
-continuidad_id = "reg21-base-positiva-20"
+continuidad_id = "regularization-exercise-1-q4-positive-base"
 number = "20"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-2"
-continuidad_id = "reg21-base-negativa-2"
+continuidad_id = "regularization-exercise-1-q1-negative-base"
 number = "2"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-9"
-continuidad_id = "reg21-base-negativa-9"
+continuidad_id = "regularization-exercise-1-q2-negative-base"
 number = "9"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-15"
-continuidad_id = "reg21-base-negativa-15"
+continuidad_id = "regularization-exercise-1-q3-negative-base"
 number = "15-119"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-21"
-continuidad_id = "reg21-base-negativa-21"
+continuidad_id = "regularization-exercise-1-q4-negative-base"
 number = "21"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-3"
-continuidad_id = "reg21-base-total-3"
+continuidad_id = "regularization-exercise-1-q1-total-base"
 number = "3"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-10"
-continuidad_id = "reg21-base-total-10"
+continuidad_id = "regularization-exercise-1-q2-total-base"
 number = "10-170"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-16"
-continuidad_id = "reg21-base-total-16"
+continuidad_id = "regularization-exercise-1-q3-total-base"
 number = "16-187"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-22"
-continuidad_id = "reg21-base-total-22"
+continuidad_id = "regularization-exercise-1-q4-total-base"
 number = "22"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-4-221"
-continuidad_id = "reg21-tipo-4-221"
+continuidad_id = "regularization-exercise-1-q1-tax-rate"
 number = "4"
 section = ["490_02"]
 data_type = "ratio"
@@ -364,7 +364,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-4-224"
-continuidad_id = "reg21-tipo-4-224"
+continuidad_id = "regularization-exercise-1-q2-tax-rate"
 number = "4-224"
 section = ["490_02"]
 data_type = "ratio"
@@ -372,7 +372,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-4-227"
-continuidad_id = "reg21-tipo-4-227"
+continuidad_id = "regularization-exercise-1-q3-tax-rate"
 number = "4-227"
 section = ["490_02"]
 data_type = "ratio"
@@ -380,7 +380,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-4-230"
-continuidad_id = "reg21-tipo-4-230"
+continuidad_id = "regularization-exercise-1-q4-tax-rate"
 number = "4-230"
 section = ["490_02"]
 data_type = "ratio"
@@ -388,84 +388,84 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-5"
-continuidad_id = "reg21-cuota-positiva-5"
+continuidad_id = "regularization-exercise-1-q1-positive-quota"
 number = "5"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-11"
-continuidad_id = "reg21-cuota-positiva-11"
+continuidad_id = "regularization-exercise-1-q2-positive-quota"
 number = "11-250"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-17"
-continuidad_id = "reg21-cuota-positiva-17"
+continuidad_id = "regularization-exercise-1-q3-positive-quota"
 number = "17-267"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-23"
-continuidad_id = "reg21-cuota-positiva-23"
+continuidad_id = "regularization-exercise-1-q4-positive-quota"
 number = "23"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-6"
-continuidad_id = "reg21-cuota-negativa-6"
+continuidad_id = "regularization-exercise-1-q1-negative-quota"
 number = "6"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-12"
-continuidad_id = "reg21-cuota-negativa-12"
+continuidad_id = "regularization-exercise-1-q2-negative-quota"
 number = "12-318"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-18"
-continuidad_id = "reg21-cuota-negativa-18"
+continuidad_id = "regularization-exercise-1-q3-negative-quota"
 number = "18-335"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-24"
-continuidad_id = "reg21-cuota-negativa-24"
+continuidad_id = "regularization-exercise-1-q4-negative-quota"
 number = "24"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-7"
-continuidad_id = "reg21-cuota-total-7"
+continuidad_id = "regularization-exercise-1-q1-total-quota"
 number = "7"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-13"
-continuidad_id = "reg21-cuota-total-13"
+continuidad_id = "regularization-exercise-1-q2-total-quota"
 number = "13-386"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-19"
-continuidad_id = "reg21-cuota-total-19"
+continuidad_id = "regularization-exercise-1-q3-total-quota"
 number = "19-403"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-25"
-continuidad_id = "reg21-cuota-total-25"
+continuidad_id = "regularization-exercise-1-q4-total-quota"
 number = "25"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
@@ -473,7 +473,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-02-regularizacion-ejercicio-437"
-continuidad_id = "490-02-regularizacion-ejercicio-437"
+continuidad_id = "regularization-exercise-2-year"
 number = "490-02-regularizacion-ejercicio-437"
 section = ["490_02"]
 data_type = "year"
@@ -481,91 +481,91 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-26"
-continuidad_id = "reg21-base-positiva-26"
+continuidad_id = "regularization-exercise-2-q1-positive-base"
 number = "26"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-33"
-continuidad_id = "reg21-base-positiva-33"
+continuidad_id = "regularization-exercise-2-q2-positive-base"
 number = "33"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-39"
-continuidad_id = "reg21-base-positiva-39"
+continuidad_id = "regularization-exercise-2-q3-positive-base"
 number = "39"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-45"
-continuidad_id = "reg21-base-positiva-45"
+continuidad_id = "regularization-exercise-2-q4-positive-base"
 number = "45"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-27"
-continuidad_id = "reg21-base-negativa-27"
+continuidad_id = "regularization-exercise-2-q1-negative-base"
 number = "27"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-34"
-continuidad_id = "reg21-base-negativa-34"
+continuidad_id = "regularization-exercise-2-q2-negative-base"
 number = "34"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-40"
-continuidad_id = "reg21-base-negativa-40"
+continuidad_id = "regularization-exercise-2-q3-negative-base"
 number = "40"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-46"
-continuidad_id = "reg21-base-negativa-46"
+continuidad_id = "regularization-exercise-2-q4-negative-base"
 number = "46"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-28"
-continuidad_id = "reg21-base-total-28"
+continuidad_id = "regularization-exercise-2-q1-total-base"
 number = "28"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-35"
-continuidad_id = "reg21-base-total-35"
+continuidad_id = "regularization-exercise-2-q2-total-base"
 number = "35"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-41"
-continuidad_id = "reg21-base-total-41"
+continuidad_id = "regularization-exercise-2-q3-total-base"
 number = "41"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-47"
-continuidad_id = "reg21-base-total-47"
+continuidad_id = "regularization-exercise-2-q4-total-base"
 number = "47"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-29-645"
-continuidad_id = "reg21-tipo-29-645"
+continuidad_id = "regularization-exercise-2-q1-tax-rate"
 number = "29"
 section = ["490_02"]
 data_type = "ratio"
@@ -573,7 +573,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-29-648"
-continuidad_id = "reg21-tipo-29-648"
+continuidad_id = "regularization-exercise-2-q2-tax-rate"
 number = "29-648"
 section = ["490_02"]
 data_type = "ratio"
@@ -581,7 +581,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-29-651"
-continuidad_id = "reg21-tipo-29-651"
+continuidad_id = "regularization-exercise-2-q3-tax-rate"
 number = "29-651"
 section = ["490_02"]
 data_type = "ratio"
@@ -589,7 +589,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-29-654"
-continuidad_id = "reg21-tipo-29-654"
+continuidad_id = "regularization-exercise-2-q4-tax-rate"
 number = "29-654"
 section = ["490_02"]
 data_type = "ratio"
@@ -597,91 +597,91 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-30"
-continuidad_id = "reg21-cuota-positiva-30"
+continuidad_id = "regularization-exercise-2-q1-positive-quota"
 number = "30"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-36"
-continuidad_id = "reg21-cuota-positiva-36"
+continuidad_id = "regularization-exercise-2-q2-positive-quota"
 number = "36"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-42"
-continuidad_id = "reg21-cuota-positiva-42"
+continuidad_id = "regularization-exercise-2-q3-positive-quota"
 number = "42"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-48"
-continuidad_id = "reg21-cuota-positiva-48"
+continuidad_id = "regularization-exercise-2-q4-positive-quota"
 number = "48"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-31"
-continuidad_id = "reg21-cuota-negativa-31"
+continuidad_id = "regularization-exercise-2-q1-negative-quota"
 number = "31"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-37"
-continuidad_id = "reg21-cuota-negativa-37"
+continuidad_id = "regularization-exercise-2-q2-negative-quota"
 number = "37"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-43"
-continuidad_id = "reg21-cuota-negativa-43"
+continuidad_id = "regularization-exercise-2-q3-negative-quota"
 number = "43"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-49"
-continuidad_id = "reg21-cuota-negativa-49"
+continuidad_id = "regularization-exercise-2-q4-negative-quota"
 number = "49"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-32"
-continuidad_id = "reg21-cuota-total-32"
+continuidad_id = "regularization-exercise-2-q1-total-quota"
 number = "32"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-38"
-continuidad_id = "reg21-cuota-total-38"
+continuidad_id = "regularization-exercise-2-q2-total-quota"
 number = "38"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-44"
-continuidad_id = "reg21-cuota-total-44"
+continuidad_id = "regularization-exercise-2-q3-total-quota"
 number = "44"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-50"
-continuidad_id = "reg21-cuota-total-50"
+continuidad_id = "regularization-exercise-2-q4-total-quota"
 number = "50"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "490-02-regularizacion-ejercicio-861"
-continuidad_id = "490-02-regularizacion-ejercicio-861"
+continuidad_id = "regularization-exercise-3-year"
 number = "490-02-regularizacion-ejercicio-861"
 section = ["490_02"]
 data_type = "year"
@@ -689,91 +689,91 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-51"
-continuidad_id = "reg21-base-positiva-51"
+continuidad_id = "regularization-exercise-3-q1-positive-base"
 number = "51"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-58"
-continuidad_id = "reg21-base-positiva-58"
+continuidad_id = "regularization-exercise-3-q2-positive-base"
 number = "58"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-64"
-continuidad_id = "reg21-base-positiva-64"
+continuidad_id = "regularization-exercise-3-q3-positive-base"
 number = "64"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-70"
-continuidad_id = "reg21-base-positiva-70"
+continuidad_id = "regularization-exercise-3-q4-positive-base"
 number = "70"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-52"
-continuidad_id = "reg21-base-negativa-52"
+continuidad_id = "regularization-exercise-3-q1-negative-base"
 number = "52"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-59"
-continuidad_id = "reg21-base-negativa-59"
+continuidad_id = "regularization-exercise-3-q2-negative-base"
 number = "59"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-65"
-continuidad_id = "reg21-base-negativa-65"
+continuidad_id = "regularization-exercise-3-q3-negative-base"
 number = "65"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-71"
-continuidad_id = "reg21-base-negativa-71"
+continuidad_id = "regularization-exercise-3-q4-negative-base"
 number = "71"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-53"
-continuidad_id = "reg21-base-total-53"
+continuidad_id = "regularization-exercise-3-q1-total-base"
 number = "53"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-60"
-continuidad_id = "reg21-base-total-60"
+continuidad_id = "regularization-exercise-3-q2-total-base"
 number = "60"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-66"
-continuidad_id = "reg21-base-total-66"
+continuidad_id = "regularization-exercise-3-q3-total-base"
 number = "66"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-72"
-continuidad_id = "reg21-base-total-72"
+continuidad_id = "regularization-exercise-3-q4-total-base"
 number = "72"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-54-1069"
-continuidad_id = "reg21-tipo-54-1069"
+continuidad_id = "regularization-exercise-3-q1-tax-rate"
 number = "54"
 section = ["490_02"]
 data_type = "ratio"
@@ -781,7 +781,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-54-1072"
-continuidad_id = "reg21-tipo-54-1072"
+continuidad_id = "regularization-exercise-3-q2-tax-rate"
 number = "54-1072"
 section = ["490_02"]
 data_type = "ratio"
@@ -789,7 +789,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-54-1075"
-continuidad_id = "reg21-tipo-54-1075"
+continuidad_id = "regularization-exercise-3-q3-tax-rate"
 number = "54-1075"
 section = ["490_02"]
 data_type = "ratio"
@@ -797,7 +797,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-54-1078"
-continuidad_id = "reg21-tipo-54-1078"
+continuidad_id = "regularization-exercise-3-q4-tax-rate"
 number = "54-1078"
 section = ["490_02"]
 data_type = "ratio"
@@ -805,91 +805,91 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-55"
-continuidad_id = "reg21-cuota-positiva-55"
+continuidad_id = "regularization-exercise-3-q1-positive-quota"
 number = "55"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-61"
-continuidad_id = "reg21-cuota-positiva-61"
+continuidad_id = "regularization-exercise-3-q2-positive-quota"
 number = "61"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-67"
-continuidad_id = "reg21-cuota-positiva-67"
+continuidad_id = "regularization-exercise-3-q3-positive-quota"
 number = "67"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-73"
-continuidad_id = "reg21-cuota-positiva-73"
+continuidad_id = "regularization-exercise-3-q4-positive-quota"
 number = "73"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-56"
-continuidad_id = "reg21-cuota-negativa-56"
+continuidad_id = "regularization-exercise-3-q1-negative-quota"
 number = "56"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-62"
-continuidad_id = "reg21-cuota-negativa-62"
+continuidad_id = "regularization-exercise-3-q2-negative-quota"
 number = "62"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-68"
-continuidad_id = "reg21-cuota-negativa-68"
+continuidad_id = "regularization-exercise-3-q3-negative-quota"
 number = "68"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-74"
-continuidad_id = "reg21-cuota-negativa-74"
+continuidad_id = "regularization-exercise-3-q4-negative-quota"
 number = "74"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-57"
-continuidad_id = "reg21-cuota-total-57"
+continuidad_id = "regularization-exercise-3-q1-total-quota"
 number = "57"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-63"
-continuidad_id = "reg21-cuota-total-63"
+continuidad_id = "regularization-exercise-3-q2-total-quota"
 number = "63"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-69"
-continuidad_id = "reg21-cuota-total-69"
+continuidad_id = "regularization-exercise-3-q3-total-quota"
 number = "69"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-75"
-continuidad_id = "reg21-cuota-total-75"
+continuidad_id = "regularization-exercise-3-q4-total-quota"
 number = "75"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "490-02-regularizacion-ejercicio-1285"
-continuidad_id = "490-02-regularizacion-ejercicio-1285"
+continuidad_id = "regularization-exercise-4-year"
 number = "490-02-regularizacion-ejercicio-1285"
 section = ["490_02"]
 data_type = "year"
@@ -897,28 +897,28 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-76"
-continuidad_id = "reg21-base-positiva-76"
+continuidad_id = "regularization-exercise-4-q1-positive-base"
 number = "76"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-83"
-continuidad_id = "reg21-base-positiva-83"
+continuidad_id = "regularization-exercise-4-q2-positive-base"
 number = "83"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-89"
-continuidad_id = "reg21-base-positiva-89"
+continuidad_id = "regularization-exercise-4-q3-positive-base"
 number = "89"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-95"
-continuidad_id = "reg21-base-positiva-95"
+continuidad_id = "regularization-exercise-4-q4-positive-base"
 number = "95"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
@@ -955,63 +955,63 @@ source_refs = ["enrolled-modelo-490-procedure"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-77"
-continuidad_id = "reg21-base-negativa-77"
+continuidad_id = "regularization-exercise-4-q1-negative-base"
 number = "77"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-84"
-continuidad_id = "reg21-base-negativa-84"
+continuidad_id = "regularization-exercise-4-q2-negative-base"
 number = "84"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-90"
-continuidad_id = "reg21-base-negativa-90"
+continuidad_id = "regularization-exercise-4-q3-negative-base"
 number = "90"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-96"
-continuidad_id = "reg21-base-negativa-96"
+continuidad_id = "regularization-exercise-4-q4-negative-base"
 number = "96"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-78"
-continuidad_id = "reg21-base-total-78"
+continuidad_id = "regularization-exercise-4-q1-total-base"
 number = "78"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-85"
-continuidad_id = "reg21-base-total-85"
+continuidad_id = "regularization-exercise-4-q2-total-base"
 number = "85"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-91"
-continuidad_id = "reg21-base-total-91"
+continuidad_id = "regularization-exercise-4-q3-total-base"
 number = "91"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-97"
-continuidad_id = "reg21-base-total-97"
+continuidad_id = "regularization-exercise-4-q4-total-base"
 number = "97"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-79-1493"
-continuidad_id = "reg21-tipo-79-1493"
+continuidad_id = "regularization-exercise-4-q1-tax-rate"
 number = "79"
 section = ["490_02"]
 data_type = "ratio"
@@ -1019,7 +1019,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-79-1496"
-continuidad_id = "reg21-tipo-79-1496"
+continuidad_id = "regularization-exercise-4-q2-tax-rate"
 number = "79-1496"
 section = ["490_02"]
 data_type = "ratio"
@@ -1027,7 +1027,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-79-1499"
-continuidad_id = "reg21-tipo-79-1499"
+continuidad_id = "regularization-exercise-4-q3-tax-rate"
 number = "79-1499"
 section = ["490_02"]
 data_type = "ratio"
@@ -1035,7 +1035,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-79-1502"
-continuidad_id = "reg21-tipo-79-1502"
+continuidad_id = "regularization-exercise-4-q4-tax-rate"
 number = "79-1502"
 section = ["490_02"]
 data_type = "ratio"
@@ -1043,84 +1043,84 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-80"
-continuidad_id = "reg21-cuota-positiva-80"
+continuidad_id = "regularization-exercise-4-q1-positive-quota"
 number = "80"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-86"
-continuidad_id = "reg21-cuota-positiva-86"
+continuidad_id = "regularization-exercise-4-q2-positive-quota"
 number = "86"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-92"
-continuidad_id = "reg21-cuota-positiva-92"
+continuidad_id = "regularization-exercise-4-q3-positive-quota"
 number = "92"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-98"
-continuidad_id = "reg21-cuota-positiva-98"
+continuidad_id = "regularization-exercise-4-q4-positive-quota"
 number = "98"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-81"
-continuidad_id = "reg21-cuota-negativa-81"
+continuidad_id = "regularization-exercise-4-q1-negative-quota"
 number = "81"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-87"
-continuidad_id = "reg21-cuota-negativa-87"
+continuidad_id = "regularization-exercise-4-q2-negative-quota"
 number = "87"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-93"
-continuidad_id = "reg21-cuota-negativa-93"
+continuidad_id = "regularization-exercise-4-q3-negative-quota"
 number = "93"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-99"
-continuidad_id = "reg21-cuota-negativa-99"
+continuidad_id = "regularization-exercise-4-q4-negative-quota"
 number = "99"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-82"
-continuidad_id = "reg21-cuota-total-82"
+continuidad_id = "regularization-exercise-4-q1-total-quota"
 number = "82"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-88"
-continuidad_id = "reg21-cuota-total-88"
+continuidad_id = "regularization-exercise-4-q2-total-quota"
 number = "88"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-94"
-continuidad_id = "reg21-cuota-total-94"
+continuidad_id = "regularization-exercise-4-q3-total-quota"
 number = "94"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-100"
-continuidad_id = "reg21-cuota-total-100"
+continuidad_id = "regularization-exercise-4-q4-total-quota"
 number = "100"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
