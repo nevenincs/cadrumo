@@ -30,6 +30,11 @@ from datetime import UTC, date, datetime
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -54,12 +59,13 @@ _FIRST_UNCEILINGED_YEAR = 2023
 def _record_declaring_months(filing_year: int) -> UserProfileRecord:
     """A profile with one clearly-eligible descendant declaring a full year of months."""
     child = DescendantInfo(birth_date=date(filing_year - 1, 6, 1), meses_madre_trabajo=tuple(range(1, 13)))
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list((child,))),
         created_at=_T0,
         updated_at=_T0,
+        context=_profile_creation_context_for_test(),
     )
 
 

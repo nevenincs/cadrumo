@@ -29,6 +29,11 @@ from functools import lru_cache
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.descendant import DescendantInfo
@@ -49,12 +54,13 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=facts,
         created_at=_T0,
         updated_at=_T0,
+        context=_profile_creation_context_for_test(),
     )
 
 

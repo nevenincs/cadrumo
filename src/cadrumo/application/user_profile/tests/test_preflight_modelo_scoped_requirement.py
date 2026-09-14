@@ -12,6 +12,11 @@ from __future__ import annotations
 
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.classification.policies import SensitivityClass
 from ....core.modelo import Modelo
@@ -24,7 +29,7 @@ from ....domain.user_profile.schema import (
     ProfileSectionDefinition,
     ProfileSnapshotPolicy,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState
 from ..preflight import ProfilePreflightService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -64,7 +69,12 @@ def _schema() -> ProfileSchemaDefinition:
 
 
 def _missing_paths(modelo: str) -> tuple[str, ...]:
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=())
+    record = _create_profile_record_for_test(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=(),
+        context=_profile_creation_context_for_test(),
+    )
     report = ProfilePreflightService(schema=_schema()).report(
         record=record,
         modelo=modelo,

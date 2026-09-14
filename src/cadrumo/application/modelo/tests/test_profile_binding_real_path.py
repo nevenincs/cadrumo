@@ -36,6 +36,11 @@ from typing import Any
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.registry_contract import profile_binding_selectors
@@ -90,7 +95,7 @@ def _full_m100_profile() -> UserProfileRecord:
     Dates arrive as Python ``date`` objects; booleans as ``bool``;
     strings as ``str``; Decimals as ``Decimal``.
     """
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -140,6 +145,7 @@ def _full_m100_profile() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
 
@@ -249,7 +255,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
 def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date() -> None:
     """A single taxpayer does not owe an impossible marriage date to resolve 0245-0247."""
     snapshot = _modelo_100_snapshot()
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -262,6 +268,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
     resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
@@ -289,7 +296,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
     assert dictionary_field == "ECIVIL"
     assert b'<xs:pattern value="([1-4]){1}"/>' in _M100_2025_XSD.read_bytes()
 
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -302,6 +309,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
     resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
@@ -317,7 +325,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
 def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved() -> None:
     """A married taxpayer still needs the actual marriage date for Art. 82 month facts."""
     snapshot = _modelo_100_snapshot()
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -330,6 +338,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved()
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
     resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)

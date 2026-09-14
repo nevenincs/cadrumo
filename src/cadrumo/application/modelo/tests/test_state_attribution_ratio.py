@@ -20,6 +20,11 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
 from ..profile_binding import (
@@ -70,7 +75,7 @@ def test_injector_overwrites_legacy_ratio_from_explicit_scope() -> None:
 
 
 def _common_profile() -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
@@ -81,11 +86,12 @@ def _common_profile() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
 
 def _profile_without_jurisdiction_scope() -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
@@ -95,6 +101,7 @@ def _profile_without_jurisdiction_scope() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
 

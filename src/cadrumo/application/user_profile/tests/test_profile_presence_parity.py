@@ -18,8 +18,13 @@ from __future__ import annotations
 
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..completeness import missing_required_field_paths, profile_value_is_present
 from ..keys_validation import validate_profile_values
 from ..overview import build_profile_overview
@@ -53,10 +58,11 @@ def test_completeness_reports_a_whitespace_only_required_field_missing(blank: st
 
 @pytest.mark.parametrize("blank", _BLANK_VALUES)
 def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None:
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path=_TAX_ID_PATH, value=blank),),
+        context=_profile_creation_context_for_test(),
     )
 
     overview = build_profile_overview(record)
@@ -70,10 +76,11 @@ def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None
 
 
 def test_overview_and_key_authority_agree_on_a_real_value() -> None:
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path=_TAX_ID_PATH, value="12345678Z"),),
+        context=_profile_creation_context_for_test(),
     )
 
     overview = build_profile_overview(record)

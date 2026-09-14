@@ -27,6 +27,11 @@ from datetime import date
 
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..projections import record_to_path_values
@@ -45,7 +50,12 @@ def _warned_paths(*facts: UserProfileFact) -> set[str | None]:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts)
+    return _create_profile_record_for_test(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=facts,
+        context=_profile_creation_context_for_test(),
+    )
 
 
 def test_a_closed_window_still_projects_its_value() -> None:
