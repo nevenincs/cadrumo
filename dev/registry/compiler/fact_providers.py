@@ -252,7 +252,11 @@ def compile_registered_fact_providers(
             compiled = (*compiled, *registration.project_modelos(compiled_modelos))
         for fact in compiled:
             required_modelo = _MODELO_SCOPED_AUTHORED_FACTS.get(fact.fact_id)
-            if required_modelo is not None and present_modelo_ids is not None and required_modelo not in present_modelo_ids:
+            if (
+                required_modelo is not None
+                and present_modelo_ids is not None
+                and required_modelo not in present_modelo_ids
+            ):
                 continue
             previous_owner = owner_by_fact_id.get(fact.fact_id)
             if previous_owner is not None:
