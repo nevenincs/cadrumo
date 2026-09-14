@@ -1,21 +1,17 @@
 default_language_version.python = "3.13"
 
 # ── prek policy ─────────────────────────────────────────────────────────────
-# Every hook is VERIFY-ONLY. No autofixers run at commit time.
-# Rationale: prek's stash-pop step has lost work in this repo when an
-# autofixing hook modifies the staged tree mid-commit and the rollback
-# conflicts with concurrently-edited files in the worktree. Verify-only
-# hooks never stash unstaged changes and never rewrite files.
-#
-# The pre-commit hook script is intentionally NOT installed by the project
-# (`prek install` is a no-op here). Run prek as a manual gate before
-# committing:
+# This is an UNINSTALLED, MANUAL replay configuration. Project setup never
+# runs `prek install` and no repository-owned commit hook invokes it. Prek may
+# stash unstaged changes when it is asked to operate on staged files even when
+# every child hook is read-only, so the supported replay always says
+# `--all-files` and is never a commit-time action:
 #
 #     uv run --no-sync prek run --all-files
 #
-# Bring autofixers back IN A SEPARATE STEP only — e.g. `uv run --no-sync
-# ruff check --fix src/` followed by `uv run --no-sync ruff format src/`
-# before staging — never as a commit-time auto-mutation.
+# Mechanical repair is a separate explicit-path action:
+#
+#     just fix-code path/to/owned.py
 
 # ── General file checks (read-only) ─────────────────────────────────────────
 [[repos]]
@@ -46,17 +42,23 @@ hooks = [
 # excluded from this config. Run `ruff format` manually if whitespace
 # drift matters before a release.
 
-# ── Ruff (verify-only) ──────────────────────────────────────────────────────
+# ── Ruff (project-locked, verify-only) ─────────────────────────────────────
 [[repos]]
-repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.15.12"
-hooks = [
-  # ruff-check: no --fix, no auto-mutation. Just fail on remaining errors.
-  { id = "ruff-check" },
-  # ruff-format: --check mode verifies without rewriting; rewrite is a
-  # manual step (`uv run --no-sync ruff format src/`) outside the hook.
-  { id = "ruff-format", args = ["--check"] },
-]
+repo = "local"
+
+[[repos.hooks]]
+id = "ruff-check"
+name = "ruff check"
+language = "system"
+entry = "uv run --no-sync ruff check"
+types_or = ["python", "pyi"]
+
+[[repos.hooks]]
+id = "ruff-format"
+name = "ruff format check"
+language = "system"
+entry = "uv run --no-sync ruff format --check"
+types_or = ["python", "pyi"]
 
 # ── ty (type checking, verify-only) ─────────────────────────────────────────
 [[repos]]

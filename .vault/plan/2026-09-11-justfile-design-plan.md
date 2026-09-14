@@ -13,7 +13,7 @@ related:
   - '[[2026-09-14-gate-integrity-adjudication-pre-commit-hook-runtime-reference]]'
 modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:97d422a0a71137402d631724743477f7c2900b1550c3062109575f85ab753732'
+body_hash: 'sha256:ba8da94e1087171007d951feb145cb7e02f2de2810eec442d308446cbbff6fac'
 ---
 
 <!-- RETIRED: P07 -->
@@ -152,7 +152,7 @@ After all four agent lanes land, reconcile their disjoint justfile sections, mig
 
 Integrate the four lane-owned subject aggregates into explicit connected local and hosted-policy gate surfaces after their public names stabilize.
 
-- [ ] `W05.P14.S37` - Implement explicit path-scoped Ruff/ty/format repair, keep prek replay manual-only, reconcile setup claims, and prove Just/CI dispatch; `developer-tooling repair and replay surface`.
+- [x] `W05.P14.S37` - Implement explicit path-scoped Ruff/ty/format repair, keep prek replay manual-only, reconcile setup claims, and prove Just/CI dispatch; `developer-tooling repair and replay surface`.
 - [ ] `W05.P14.S73` - Declare gate-local network prerequisites and keep subject check aggregates portable; `justfile`.
 - [ ] `W05.P14.S77` - Integrate the four independently edited justfile sections and resolve cross-section dependencies; `justfile`.
 - [ ] `W05.P14.S75` - Compose the four lane-owned subject aggregates into the connected local gate with explicit exclusions; `justfile`.

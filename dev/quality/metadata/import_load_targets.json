@@ -2419,7 +2419,6 @@
         "dev.init.__main__",
         "dev.init.contract",
         "dev.init.dotenv",
-        "dev.init.hooks",
         "dev.init.plan",
         "dev.init.probe",
         "dev.init.process",

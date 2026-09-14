@@ -3,9 +3,8 @@
 # 2026-07-20: "we cannot have a test or build infrastructure that takes 50
 # mins per step"): three parallel jobs — static checks, the unit suite, and
 # the dedicated deterministic harness verdict — sized against the two Linux
-# runners. The slow conformance surfaces
-# (nitpicky docs build, CVE audit, pre-commit hook replay) moved to
-# ci-full.yml (manual dispatch only — operator ruling 2026-07-21: no
+# runners. The slow conformance surfaces (nitpicky docs build and CVE audit)
+# moved to ci-full.yml (manual dispatch only — operator ruling 2026-07-21: no
 # scheduled runs) and gate releases and on-demand full verification.
 #
 # No secrets are required for the unit suite; live tests are explicitly skipped.
@@ -173,10 +172,9 @@ jobs:
         # `check-format` joins the two style gates here because until now
         # NOTHING enforced formatting on a push. The recipe existed and was
         # invoked by zero automatically-triggered workflows, and the only other
-        # configured format gate is the ruff-format hook in `prek.toml`, which
-        # this fleet is instructed never to run because it stashes the shared
-        # tree. Two configured gates covered formatting and the intersection of
-        # what they enforced was empty.
+        # configured format check is the operator-manual replay in `prek.toml`.
+        # Two configured checks covered formatting and the intersection of what
+        # they enforced automatically was empty.
         #
         # The sweep landed FIRST, in the same commit that added this line.
         # Adding the step to an unswept tree would red the lane on its first

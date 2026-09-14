@@ -351,9 +351,9 @@ check-workflows:
 check-gate-contracts:
     @uv run --no-sync python -m dev.ci_contract
 
-# Convenience replay for hooks. It is intentionally not in check-code or
-# check-repository because it duplicates the leaf checks and owns hook behavior.
-[doc('Replay all pre-commit hooks; read-only convenience check excluded from aggregates.')]
+# Manual replay of the uninstalled prek configuration. `--all-files` is
+# mandatory: staged-file replay may use prek's stash/restore isolation.
+[doc('Manually replay the uninstalled prek checks over all files; excluded from aggregates.')]
 [group('check')]
 check-hooks:
     @uv run --no-sync python -m dev.quality.quiet uv run --no-sync prek run --all-files
@@ -580,13 +580,14 @@ test-runner-image: build-runner-image
 
 # ── Code mutations (Write) ──────────────────────────────────────────────────
 
-# Apply deterministic mechanical source repairs owned by the quality tooling.
-# This changes source files only; committed documentation and other generated
-# derivatives have their own explicit generation commands.
-[doc('Apply deterministic mechanical source repairs; source-mutating and never a verification gate.')]
+# Apply bounded repairs only to Python files the caller explicitly owns. The
+# wrapper never reads or changes Git state and never broadens an omitted path
+# to the repository. Remaining Ruff/ty diagnostics are advisory; operational
+# failures still fail the recipe.
+[doc('Repair one explicitly named Python file with Ruff, ty, then Ruff format; mutating and never a gate.')]
 [group('fix')]
-fix-code:
-    @uv run --no-sync python -m dev.quality.fixes
+fix-code PATH:
+    @uv run --no-sync python -m dev.quality.fixes {{quote(PATH)}}
 
 # Auto-repair every lint violation that carries a safe source fix (ruff check --fix).
 [group('fix')]
@@ -928,12 +929,12 @@ test-test-policy:
 test-repository-contracts:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py
 
-[doc('Run CI, deployment, release, and benchmark contract tests with independent scheduler verdicts.')]
+[doc('Run CI, repair-safety, deployment, release, and benchmark contracts with independent scheduler verdicts.')]
 [group('test')]
 test-ci-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_fixes.py dev/quality/tests/test_ty_fix_boundary.py
     @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests
-    @uv run --no-sync pytest -v -n0 -m "perf" dev/ci/tests dev/deploy/tests dev/release/tests
+    @uv run --no-sync pytest -v -n0 -m "perf" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_ty_fix_boundary.py
 
 # Run the same registry conformance population exposed inside `test-registry`
 # as a directly addressable recipe. The registry aggregate guards it with

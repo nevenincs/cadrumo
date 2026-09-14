@@ -1,8 +1,8 @@
 # Full-conformance lane for Cadrumo (dispatch-only).
 # The per-push ci.yml is budgeted at a ten-minute wall (operator directive
 # 2026-07-20), so the slow, push-frequency-insensitive proofs live here: the
-# nitpicky warnings-as-errors docs build, the locked-graph CVE audit, and the
-# pre-commit hook replay, plus the same lint/type/unit surface as per-push CI
+# nitpicky warnings-as-errors docs build and the locked-graph CVE audit, plus
+# the same lint/type/unit surface as per-push CI
 # so a red here is diagnosable without cross-referencing another workflow's
 # history.
 #
@@ -53,16 +53,6 @@ jobs:
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
 
-      - name: Cache prek hooks
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: |
-            ~/.cache/prek
-            ~/AppData/Local/prek
-          key: prek-${{ runner.os }}-${{ hashFiles('prek.toml') }}
-          restore-keys: |
-            prek-${{ runner.os }}-
-
       - name: Initialize the worktree
         run: just setup
 
@@ -73,9 +63,9 @@ jobs:
         run: |
           just check-style
           # `check-format` was reachable from nowhere before this line. It exists
-          # as a recipe, and `prek.toml` carries a `ruff-format --check` hook, but
-          # no workflow invoked the recipe and the hook only fires for a committer
-          # who runs it -- so two configured gates covered formatting and their
+          # as a recipe, and `prek.toml` carries a manual `ruff-format --check`
+          # replay, but no workflow invoked the recipe -- so two configured gates
+          # covered formatting and their
           # intersection was empty. Unformatted files reached HEAD unimpeded and
           # `ruff format --check .` was not green tree-wide.
           just check-format
@@ -351,9 +341,6 @@ jobs:
         run: |
           uv export --frozen --no-dev --no-emit-project --no-hashes > /tmp/audit-reqs.txt
           uvx pip-audit --strict -r /tmp/audit-reqs.txt
-
-      - name: Hooks
-        run: just check-hooks
 
       - name: Vault structural drift (informational)
         # The vault audit carries a standing backlog of status-token drift, so

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-12'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:45b53500dad49bef2e2bf512df876edf2bfcc31f4603989919718dd45d51b0d6'
+body_hash: 'sha256:4d307be6095c1873c010c8a6906c5d7dc641376e366b72e094cc95ad4d553cdc'
 related:
   - '[[2026-09-11-justfile-design-W01-P01-S01]]'
   - '[[2026-09-11-justfile-design-W01-P01-S02]]'
@@ -63,6 +63,7 @@ related:
   - '[[2026-09-11-justfile-design-W04-P13-S64]]'
   - '[[2026-09-11-justfile-design-W04-P13-summary]]'
   - '[[2026-09-11-justfile-design-W05-P11-S78]]'
+  - '[[2026-09-11-justfile-design-W05-P14-S37]]'
   - '[[2026-09-11-justfile-design-adr]]'
   - '[[2026-09-11-justfile-design-audit]]'
   - '[[2026-09-11-justfile-design-lane1-code-review-audit]]'
@@ -73,6 +74,7 @@ related:
   - '[[2026-09-11-justfile-design-w02-code-review-audit]]'
   - '[[2026-09-11-justfile-design-w04-review-audit]]'
   - '[[2026-09-12-justfile-design-registry-test-signal-review-audit]]'
+  - '[[2026-09-14-justfile-design-pre-commit-repair-review-audit]]'
 ---
 
 # `justfile-design` feature index
@@ -93,6 +95,7 @@ Auto-generated index of all documents tagged with `#justfile-design`.
 - `2026-09-11-justfile-design-w02-code-review-audit` - `justfile-design` audit: `w02 code review`
 - `2026-09-11-justfile-design-w04-review-audit` - `justfile-design` audit: `W04 documentation and domain recipe review`
 - `2026-09-12-justfile-design-registry-test-signal-review-audit` - `justfile-design` audit: `registry test signal review`
+- `2026-09-14-justfile-design-pre-commit-repair-review-audit` - `justfile-design` audit: `pre commit repair review`
 
 ### exec
 
@@ -151,6 +154,7 @@ Auto-generated index of all documents tagged with `#justfile-design`.
 - `2026-09-11-justfile-design-W04-P13-S64` - Replace database migration creation and upgrade with separately named mutation recipes
 - `2026-09-11-justfile-design-W04-P13-summary` - `justfile-design` `W04.P13` summary
 - `2026-09-11-justfile-design-W05-P11-S78` - Make the registry test signal fail closed through collection and exact artifact-backed load preflights before granular lanes, and enroll every registry-owned test population
+- `2026-09-11-justfile-design-W05-P14-S37` - Implement explicit path-scoped Ruff/ty/format repair, keep prek replay manual-only, reconcile setup claims, and prove Just/CI dispatch
 
 ### plan
 

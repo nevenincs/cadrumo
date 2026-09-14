@@ -50,6 +50,8 @@ release-please.yml:Refuse a deadlocked release state
 #   test-roundtrip         a four-path pytest invocation with a `-k` filter
 #   test-live-drift        the GROI live-drift suite, named by path
 aeat-drift-detector.yml:Run GROI live drift tests
+aeat-corpus-staleness.yml:Compare the captured corpus against the official pages
+aeat-corpus-staleness.yml:Fail the run only when the corpus has drifted
 agent-harness-eval.yml:Cadrumo agent-harness eval surface
 ci-full.yml:Semgrep regression rules (linkage-design type-uniformity)
 ci-full.yml:Audit dependencies for known CVEs

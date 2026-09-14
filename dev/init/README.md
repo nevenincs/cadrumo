@@ -11,7 +11,7 @@ The recipes:
 | ----------------------------- | ------------------------------------------------------------- |
 | `just setup`                  | Everything, in dependency order.                              |
 | `just setup-python`           | The Python environment and its locked dependencies.           |
-| `just setup-repository-tools` | Framework enrollment and git hooks.                           |
+| `just setup-repository-tools` | Framework enrollment and pinned repository tooling; no Git hooks. |
 | `just setup-check`            | Reports whether the worktree is initialized. Mutates nothing. |
 | `just setup-workstation-tools` | Optional workstation CLI provisioning.                       |
 | `just setup-browser`          | Optional browser-channel provisioning.                        |
@@ -64,14 +64,19 @@ the managed Python environment and repository tooling, while `doctor-dev`
 probes readiness without mutation. Optional workstation tools are installed
 only by `setup-workstation-tools`.
 
+**It does not install commit hooks or change Git configuration.** `prek.toml`
+is retained only for explicit `just check-hooks` replay over all files. Fast
+mechanical repair is an explicit, caller-owned-path action (`just fix-code
+path/to/file.py`) outside commit time.
+
 **Network-heavy optional provisioning is out of scope.** Playwright browser
 downloads, RAG model and Qdrant provisioning, and `cargo install` of dev gates
 stay behind their own named recipes. `setup` restores what the lockfiles pin.
 
 ## Layout
 
-Every file here except `plan.py` is byte-identical in `vaultspec-core`,
-`vaultspec-rag`, `vaultspec-dashboard`, `vaultspec-a2a` and `cadrumo`.
+The initialization runtime follows the fleet contract. `plan.py` owns this
+repository's phase data; no setup module owns Git-hook installation.
 
 | File          | Role                                                           |
 | ------------- | -------------------------------------------------------------- |
