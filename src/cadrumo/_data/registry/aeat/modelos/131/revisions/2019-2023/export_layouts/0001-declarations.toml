@@ -1,3 +1,7 @@
+[[revisions."2019-2023".export_layouts]]
+id = "modelo-131-fichero-boe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
 # Pag. 0 of the Diseno de Registros: the file envelope. Positions 1-328 carry
 # the modelo/ejercicio/periodo identifier followed by the <AUX>...</AUX>
 # administration block. Positions 93-96 (Version del Programa) and 101-109 (NIF
@@ -6,35 +10,13 @@
 # registry data -- AeatProductSoftwareIdentity is supplied at runtime with
 # reviewed evidence and is reachable from a layout only through the M303-scoped
 # filing-envelope declaration -- so they are left unwritten rather than guessed.
-# Design row 5, "Indicador de pagina complementaria.", whose declared
-# contenido is exactly "En blanco": AEAT wants no datum in this position.
-# It marks a COMPLEMENTARY PAGE (a repeated instance of the same page), not
-# a complementary DECLARATION; Modelo 131 files one Pag. 1, so there is
-# never a complementary page to mark. The declaration-level flag is its own
-# row and is written there.
-# Design campo 8, marked Obligatorio. Personas fisicas only carry apellidos
-# here and the nombre goes in campo 9, so surnames -- not full_name -- is the
-# fact this slot takes.
-# Design campo 9, marked Obligatorio, "solo personas fisicas".
-# Design campo 47, "Domiciliacion - IBAN". Written only for a domiciliated
-# ingreso; blank otherwise, which is why the slot is not required.
-# Design campo 48, "Complementaria (7) - Declaracion complementaria", whose
-# declared contenido is exactly 'blanco o "X"'. A boolean export field renders
-# the canonical "X" or blank, so this design admits the producer directly.
-
-[[revisions.2019-2023.export_layouts]]
-id = "modelo-131-fichero-boe"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records]]
+[[revisions."2019-2023".export_layouts.records]]
 id = "modelo-131-2019-2023-envelope-header"
 record_type = "envelope_header"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-open"
 offset = 1
 length = 2
@@ -47,8 +29,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-modelo"
 offset = 3
 length = 3
@@ -61,8 +42,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-discriminante"
 offset = 6
 length = 1
@@ -75,8 +55,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-ejercicio"
 offset = 7
 length = 4
@@ -89,8 +68,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-periodo"
 offset = 11
 length = 2
@@ -103,8 +81,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-marker"
 offset = 13
 length = 5
@@ -117,8 +94,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-aux-open"
 offset = 18
 length = 5
@@ -131,8 +107,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-reserved-1"
 offset = 23
 length = 70
@@ -144,8 +119,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-reserved-2"
 offset = 97
 length = 4
@@ -157,8 +131,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-reserved-3"
 offset = 110
 length = 213
@@ -170,8 +143,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-aux-close"
 offset = 323
 length = 6
@@ -184,16 +156,14 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records]]
+[[revisions."2019-2023".export_layouts.records]]
 id = "modelo-131-2019-2023-page-01"
 record_type = "page_1"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "page_1"
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-page-open"
 offset = 1
 length = 2
@@ -206,8 +176,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-page-modelo"
 offset = 3
 length = 3
@@ -220,8 +189,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-page-number"
 offset = 6
 length = 5
@@ -234,8 +202,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-page-end"
 offset = 11
 length = 1
@@ -248,12 +215,17 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-complementaria-indicator"
 offset = 12
 length = 1
 kind = "filler"
+# Design row 5, "Indicador de pagina complementaria.", whose declared
+# contenido is exactly "En blanco": AEAT wants no datum in this position.
+# It marks a COMPLEMENTARY PAGE (a repeated instance of the same page), not
+# a complementary DECLARATION; Modelo 131 files one Pag. 1, so there is
+# never a complementary page to mark. The declaration-level flag is its own
+# row and is written there.
 data_type = "text"
 required = false
 padding = "right_space"
@@ -261,8 +233,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-declaration-type"
 offset = 13
 length = 1
@@ -275,8 +246,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-tax-id"
 offset = 14
 length = 9
@@ -289,12 +259,14 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-declarante-apellidos"
 offset = 23
 length = 60
 kind = "header"
+# Design campo 8, marked Obligatorio. Personas fisicas only carry apellidos
+# here and the nombre goes in campo 9, so surnames -- not full_name -- is the
+# fact this slot takes.
 producer_key = "taxpayer.surnames"
 data_type = "text"
 required = true
@@ -303,12 +275,12 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-declarante-nombre"
 offset = 83
 length = 20
 kind = "header"
+# Design campo 9, marked Obligatorio, "solo personas fisicas".
 producer_key = "taxpayer.given_name"
 data_type = "text"
 required = true
@@ -317,8 +289,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-filing-year"
 offset = 103
 length = 4
@@ -331,8 +302,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-period-code"
 offset = 107
 length = 2
@@ -345,8 +315,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-01"
 offset = 324
 length = 17
@@ -359,8 +328,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-02"
 offset = 341
 length = 17
@@ -373,8 +341,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-03"
 offset = 358
 length = 17
@@ -387,8 +354,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-04"
 offset = 375
 length = 17
@@ -401,8 +367,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-05"
 offset = 392
 length = 17
@@ -415,8 +380,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-06"
 offset = 409
 length = 17
@@ -429,8 +393,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-07"
 offset = 426
 length = 17
@@ -443,8 +406,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-08"
 offset = 443
 length = 17
@@ -457,8 +419,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-09"
 offset = 460
 length = 17
@@ -471,8 +432,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-10"
 offset = 477
 length = 17
@@ -485,8 +445,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-11"
 offset = 494
 length = 17
@@ -499,8 +458,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-12"
 offset = 511
 length = 17
@@ -513,8 +471,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-13"
 offset = 528
 length = 17
@@ -527,8 +484,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-14"
 offset = 545
 length = 17
@@ -541,8 +497,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-casilla-15"
 offset = 562
 length = 17
@@ -555,12 +510,13 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-domiciliacion-iban"
 offset = 579
 length = 34
 kind = "header"
+# Design campo 47, "Domiciliacion - IBAN". Written only for a domiciliated
+# ingreso; blank otherwise, which is why the slot is not required.
 producer_key = "selected_account.iban"
 data_type = "text"
 required = false
@@ -569,12 +525,14 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-declaracion-complementaria"
 offset = 613
 length = 1
 kind = "header"
+# Design campo 48, "Complementaria (7) - Declaracion complementaria", whose
+# declared contenido is exactly 'blanco o "X"'. A boolean export field renders
+# the canonical "X" or blank, so this design admits the producer directly.
 producer_key = "amendment_evidence.is_complementaria"
 data_type = "boolean"
 required = false
@@ -583,8 +541,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
-
-[[revisions.2019-2023.export_layouts.records.fields]]
+[[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-page-close"
 offset = 740
 length = 12

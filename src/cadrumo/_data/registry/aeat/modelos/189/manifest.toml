@@ -3,7 +3,6 @@ id = "189"
 tax_domain = "cross_tax"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
-output_sensitivity = "financial"
 calculation_class = "informative"
 legal_refs = [
     "orden-eha-3481-2008:art-1",

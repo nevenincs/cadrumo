@@ -8,7 +8,6 @@ closes_on = 2025-04-21
 payment_cutoff_on = 2025-04-15
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-modelo-202-instructions", "aeat-calendario-contribuyente-2025"]
-
 [[revisions.2025-y-siguientes.deadline_windows]]
 id = "modelo-202-2025-2p"
 filing_year = 2025
@@ -19,7 +18,6 @@ closes_on = 2025-10-20
 payment_cutoff_on = 2025-10-15
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-modelo-202-instructions", "aeat-calendario-contribuyente-2025"]
-
 [[revisions.2025-y-siguientes.deadline_windows]]
 id = "modelo-202-2025-3p"
 filing_year = 2025
@@ -30,7 +28,6 @@ closes_on = 2025-12-22
 payment_cutoff_on = 2025-12-17
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-modelo-202-instructions", "aeat-calendario-contribuyente-2025"]
-
 [[revisions.2025-y-siguientes.deadline_windows]]
 id = "modelo-202-2026-1p"
 filing_year = 2026
@@ -41,7 +38,6 @@ closes_on = 2026-04-20
 payment_cutoff_on = 2026-04-15
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-modelo-202-instructions", "aeat-calendario-contribuyente-2026"]
-
 [[revisions.2025-y-siguientes.deadline_windows]]
 id = "modelo-202-2026-2p"
 filing_year = 2026
@@ -52,7 +48,6 @@ closes_on = 2026-10-20
 payment_cutoff_on = 2026-10-15
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-modelo-202-instructions", "aeat-calendario-contribuyente-2026"]
-
 [[revisions.2025-y-siguientes.deadline_windows]]
 id = "modelo-202-2026-3p"
 filing_year = 2026

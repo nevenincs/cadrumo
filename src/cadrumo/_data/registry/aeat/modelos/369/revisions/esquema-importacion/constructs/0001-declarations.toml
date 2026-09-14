@@ -1,16 +1,107 @@
-# The export application link, authored with this esquema's export
-# layouts. The construct must close over every application link the
-# revision declares, and this one was left out of the member list.
-
-[[revisions.esquema-importacion.constructs]]
+[[revisions."esquema-importacion".constructs]]
 id = "modelo-369"
-legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-quinvicies", "ley-37-1992:art-163-sexvicies", "ley-37-1992:art-163-septvicies", "ley-37-1992:art-163-octovicies"]
-source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
-casilla_ids = ["decl.ejercicio", "decl.periodo", "iva.importacion.de.low-value-cuota", "iva.importacion.cuota-total"]
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "iva.importacion.de.low-value-cuota",
+    "iva.importacion.cuota-total",
+]
 formulas = ["modelo-369-importacion-cuota-total"]
 bindings = ["modelo-369-importacion-de-low-value-21pct"]
 workbook_parity_refs = ["modelo-369-importacion-dr-2021"]
-live_cross_references = ["modelo-369-importacion-static-documentation", "modelo-369-importacion-filed-declarations-read"]
-application_links = ["modelo-369-importacion-portal", "modelo-369-importacion-filing", "modelo-369-importacion-extractor", "modelo-369-importacion-deadline", "modelo-369-importacion-calculation", "modelo-369-importacion-review", "modelo-369-importacion-approval", "modelo-369-importacion-reconciliation", "modelo-369-importacion-workflow", "modelo-369-importacion-export"]
+live_cross_references = [
+    "modelo-369-importacion-static-documentation",
+    "modelo-369-importacion-filed-declarations-read",
+]
+application_links = [
+    "modelo-369-importacion-portal",
+    "modelo-369-importacion-filing",
+    "modelo-369-importacion-extractor",
+    "modelo-369-importacion-deadline",
+    "modelo-369-importacion-calculation",
+    "modelo-369-importacion-review",
+    "modelo-369-importacion-approval",
+    "modelo-369-importacion-reconciliation",
+    "modelo-369-importacion-workflow",
+    # The export application link, authored with this esquema's export
+    # layouts. The construct must close over every application link the
+    # revision declares, and this one was left out of the member list.
+    "modelo-369-importacion-export",
+]
 filing_schedules = ["modelo-369-importacion-mensual"]
-deadline_windows = ["modelo-369-importacion-2022-01", "modelo-369-importacion-2022-02", "modelo-369-importacion-2022-03", "modelo-369-importacion-2022-04", "modelo-369-importacion-2022-05", "modelo-369-importacion-2022-06", "modelo-369-importacion-2022-07", "modelo-369-importacion-2022-08", "modelo-369-importacion-2022-09", "modelo-369-importacion-2022-10", "modelo-369-importacion-2022-11", "modelo-369-importacion-2022-12", "modelo-369-importacion-2023-01", "modelo-369-importacion-2023-02", "modelo-369-importacion-2023-03", "modelo-369-importacion-2023-04", "modelo-369-importacion-2023-05", "modelo-369-importacion-2023-06", "modelo-369-importacion-2023-07", "modelo-369-importacion-2023-08", "modelo-369-importacion-2023-09", "modelo-369-importacion-2023-10", "modelo-369-importacion-2023-11", "modelo-369-importacion-2023-12", "modelo-369-importacion-2024-01", "modelo-369-importacion-2024-02", "modelo-369-importacion-2024-03", "modelo-369-importacion-2024-04", "modelo-369-importacion-2024-05", "modelo-369-importacion-2024-06", "modelo-369-importacion-2024-07", "modelo-369-importacion-2024-08", "modelo-369-importacion-2024-09", "modelo-369-importacion-2024-10", "modelo-369-importacion-2024-11", "modelo-369-importacion-2024-12", "modelo-369-importacion-2025-01", "modelo-369-importacion-2025-02", "modelo-369-importacion-2025-03", "modelo-369-importacion-2025-04", "modelo-369-importacion-2025-05", "modelo-369-importacion-2025-06", "modelo-369-importacion-2025-07", "modelo-369-importacion-2025-08", "modelo-369-importacion-2025-09", "modelo-369-importacion-2025-10", "modelo-369-importacion-2025-11", "modelo-369-importacion-2025-12", "modelo-369-importacion-2026-01", "modelo-369-importacion-2026-02", "modelo-369-importacion-2026-03", "modelo-369-importacion-2026-04", "modelo-369-importacion-2026-05", "modelo-369-importacion-2026-06", "modelo-369-importacion-2026-07", "modelo-369-importacion-2026-08", "modelo-369-importacion-2026-09", "modelo-369-importacion-2026-10", "modelo-369-importacion-2026-11", "modelo-369-importacion-2026-12"]
+deadline_windows = [
+    "modelo-369-importacion-2022-01",
+    "modelo-369-importacion-2022-02",
+    "modelo-369-importacion-2022-03",
+    "modelo-369-importacion-2022-04",
+    "modelo-369-importacion-2022-05",
+    "modelo-369-importacion-2022-06",
+    "modelo-369-importacion-2022-07",
+    "modelo-369-importacion-2022-08",
+    "modelo-369-importacion-2022-09",
+    "modelo-369-importacion-2022-10",
+    "modelo-369-importacion-2022-11",
+    "modelo-369-importacion-2022-12",
+    "modelo-369-importacion-2023-01",
+    "modelo-369-importacion-2023-02",
+    "modelo-369-importacion-2023-03",
+    "modelo-369-importacion-2023-04",
+    "modelo-369-importacion-2023-05",
+    "modelo-369-importacion-2023-06",
+    "modelo-369-importacion-2023-07",
+    "modelo-369-importacion-2023-08",
+    "modelo-369-importacion-2023-09",
+    "modelo-369-importacion-2023-10",
+    "modelo-369-importacion-2023-11",
+    "modelo-369-importacion-2023-12",
+    "modelo-369-importacion-2024-01",
+    "modelo-369-importacion-2024-02",
+    "modelo-369-importacion-2024-03",
+    "modelo-369-importacion-2024-04",
+    "modelo-369-importacion-2024-05",
+    "modelo-369-importacion-2024-06",
+    "modelo-369-importacion-2024-07",
+    "modelo-369-importacion-2024-08",
+    "modelo-369-importacion-2024-09",
+    "modelo-369-importacion-2024-10",
+    "modelo-369-importacion-2024-11",
+    "modelo-369-importacion-2024-12",
+    "modelo-369-importacion-2025-01",
+    "modelo-369-importacion-2025-02",
+    "modelo-369-importacion-2025-03",
+    "modelo-369-importacion-2025-04",
+    "modelo-369-importacion-2025-05",
+    "modelo-369-importacion-2025-06",
+    "modelo-369-importacion-2025-07",
+    "modelo-369-importacion-2025-08",
+    "modelo-369-importacion-2025-09",
+    "modelo-369-importacion-2025-10",
+    "modelo-369-importacion-2025-11",
+    "modelo-369-importacion-2025-12",
+    "modelo-369-importacion-2026-01",
+    "modelo-369-importacion-2026-02",
+    "modelo-369-importacion-2026-03",
+    "modelo-369-importacion-2026-04",
+    "modelo-369-importacion-2026-05",
+    "modelo-369-importacion-2026-06",
+    "modelo-369-importacion-2026-07",
+    "modelo-369-importacion-2026-08",
+    "modelo-369-importacion-2026-09",
+    "modelo-369-importacion-2026-10",
+    "modelo-369-importacion-2026-11",
+    "modelo-369-importacion-2026-12",
+]

@@ -1,7 +1,7 @@
 # This provenance anchor preserves the official design without asserting a
 # byte-position parity run or authoring an export layout.
 
-[[revisions.2024-desde-06.workbook_parity_refs]]
+[[revisions."2024-desde-06".workbook_parity_refs]]
 id = "modelo-038-static-layout"
 workbook_source = "aeat-dr-038-2024"
 fixture_id = "modelo-038-2024-layout"

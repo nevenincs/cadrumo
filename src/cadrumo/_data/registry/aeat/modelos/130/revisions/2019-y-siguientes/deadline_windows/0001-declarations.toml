@@ -1,14 +1,4 @@
-# Calculation-completeness manifest for revision 2019-y-siguientes: the
-# casillas in this revision's calculation closure (formula targets,
-# formula-expression refs, formula/binding endpoints, verification
-# operands), keyed by canonical casilla_id plus reviewed segment/number
-# metadata. Derived off-load-path from the registry calculation
-# surface; the drift re-verification test re-derives it.
-# Presentation dates and bank-domiciliation cutoffs are transcribed from the
-# bundled official AEAT taxpayer calendar for the physical presentation year.
-# The fourth-quarter rows therefore cite the following year's calendar.
-
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2024-1t"
 filing_year = 2024
 period = "2024 1T"
@@ -19,7 +9,7 @@ payment_cutoff_on = 2024-04-17
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -27,7 +17,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2024-2t"
 filing_year = 2024
 period = "2024 2T"
@@ -38,7 +28,7 @@ payment_cutoff_on = 2024-07-17
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -46,7 +36,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2024-3t"
 filing_year = 2024
 period = "2024 3T"
@@ -57,7 +47,7 @@ payment_cutoff_on = 2024-10-16
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -65,7 +55,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2024-4t"
 filing_year = 2024
 period = "2024 4T"
@@ -76,7 +66,7 @@ payment_cutoff_on = 2025-01-27
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -84,7 +74,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-1t"
 filing_year = 2025
 period = "2025 1T"
@@ -95,7 +85,7 @@ payment_cutoff_on = 2025-04-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -103,7 +93,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-2t"
 filing_year = 2025
 period = "2025 2T"
@@ -114,7 +104,7 @@ payment_cutoff_on = 2025-07-16
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -122,7 +112,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-3t"
 filing_year = 2025
 period = "2025 3T"
@@ -133,7 +123,7 @@ payment_cutoff_on = 2025-10-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -141,7 +131,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2025-4t"
 filing_year = 2025
 period = "2025 4T"
@@ -152,7 +142,7 @@ payment_cutoff_on = 2026-01-27
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -160,7 +150,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2026-1t"
 filing_year = 2026
 period = "2026 1T"
@@ -171,7 +161,7 @@ payment_cutoff_on = 2026-04-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -179,7 +169,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2026-2t"
 filing_year = 2026
 period = "2026 2T"
@@ -190,7 +180,7 @@ payment_cutoff_on = 2026-07-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -198,7 +188,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2026-3t"
 filing_year = 2026
 period = "2026 3T"
@@ -209,7 +199,7 @@ payment_cutoff_on = 2026-10-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -217,7 +207,7 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2026-4t"
 filing_year = 2026
 period = "2026 4T"
@@ -227,7 +217,7 @@ closes_on = 2027-01-30
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows.applicability_conditions]]
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
 op = "equals"
 value = false
@@ -235,7 +225,17 @@ explanation = "Autonomo en estimacion directa salvo la excepcion Art. 109 por co
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+# Calculation-completeness manifest for revision 2019-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.
+# Presentation dates and bank-domiciliation cutoffs are transcribed from the
+# bundled official AEAT taxpayer calendar for the physical presentation year.
+# The fourth-quarter rows therefore cite the following year's calendar.
+
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2022-1t"
 filing_year = 2022
 period = "2022 1T"
@@ -246,7 +246,7 @@ payment_cutoff_on = 2022-04-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2022-2t"
 filing_year = 2022
 period = "2022 2T"
@@ -257,7 +257,7 @@ payment_cutoff_on = 2022-07-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2022-3t"
 filing_year = 2022
 period = "2022 3T"
@@ -268,7 +268,7 @@ payment_cutoff_on = 2022-10-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2022-4t"
 filing_year = 2022
 period = "2022 4T"
@@ -279,7 +279,7 @@ payment_cutoff_on = 2023-01-25
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2023-1t"
 filing_year = 2023
 period = "2023 1T"
@@ -290,7 +290,7 @@ payment_cutoff_on = 2023-04-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2023-2t"
 filing_year = 2023
 period = "2023 2T"
@@ -301,7 +301,7 @@ payment_cutoff_on = 2023-07-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2023-3t"
 filing_year = 2023
 period = "2023 3T"
@@ -312,7 +312,7 @@ payment_cutoff_on = 2023-10-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2019-y-siguientes.deadline_windows]]
+[[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-130-2023-4t"
 filing_year = 2023
 period = "2023 4T"

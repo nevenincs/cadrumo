@@ -1,8 +1,7 @@
 # Provenance anchor for the complete parser-readable historical PDF. The
 # mutation-sensitive coverage test performs the byte-coordinate comparison;
 # runner_required stays false because this design contains no formulas.
-
-[[revisions.2005-2015.workbook_parity_refs]]
+[[revisions."2005-2015".workbook_parity_refs]]
 id = "modelo-341-record-design"
 workbook_source = "aeat-dr-341-2005-2015"
 fixture_id = "modelo-341-2005-2015-layout"

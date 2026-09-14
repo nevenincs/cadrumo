@@ -9,8 +9,7 @@
 # 180's plazo -- orden-hap-1732-2014 contains the word "enero" zero times, and
 # orden-hfp-1284-2023 art. 7, which this modelo's 2023 windows cite, amends the
 # RECORD DESIGN rather than any plazo.
-
-[[revisions.2019-2022.deadline_windows]]
+[[revisions."2019-2022".deadline_windows]]
 id = "modelo-180-2022-0a"
 filing_year = 2022
 period = "2022 0A"

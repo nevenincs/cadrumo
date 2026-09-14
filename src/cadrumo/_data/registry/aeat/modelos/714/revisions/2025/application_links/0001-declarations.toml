@@ -1,4 +1,4 @@
-[[revisions.2025.application_links]]
+[[revisions."2025".application_links]]
 id = "modelo-714-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"

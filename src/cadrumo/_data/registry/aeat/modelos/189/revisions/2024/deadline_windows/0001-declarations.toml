@@ -4,8 +4,7 @@
 # 2025-03-01 is a Saturday, shift_deadline derives the operational date with its
 # reason, and pre-shifting here would destroy the statutory date and report no
 # shift occurred.
-
-[[revisions.2024.deadline_windows]]
+[[revisions."2024".deadline_windows]]
 id = "modelo-189-2024-0a"
 filing_year = 2024
 period = "2024 0A"

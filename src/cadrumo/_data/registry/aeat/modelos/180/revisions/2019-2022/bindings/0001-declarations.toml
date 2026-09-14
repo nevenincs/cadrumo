@@ -1,80 +1,34 @@
+[[revisions.2019-2022.bindings]]
+id = "modelo-180-115-perceptores-anual"
 # RET-1: distinct perceptor-NIF count from the dedicated per-perceptor retención
 # store (aggregate_retenciones_180.total_perceptors), not the sum of quarterly
 # Modelo 115 counts (which double-counts a perceptor paid in more than one quarter).
-
-[[revisions.2019-2022.bindings]]
-id = "modelo-180-115-perceptores-anual"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "decl.total-perceptores", fact = "perceptor_count_distinct" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 
 [[revisions.2019-2022.bindings.source_citations]]
 source_ref = "aeat-modelo-180-ayuda-resumen-datos"
 required_text = ["Casilla01 Número total de perceptores relacionados", "Consigne el número de los perceptores"]
-
-[revisions.2019-2022.bindings.provider]
-kind = "retenciones_aggregation"
-target_casilla_id = "decl.total-perceptores"
-fact = "perceptor_count_distinct"
-
-[revisions.2019-2022.bindings.value]
-data_type = "integer"
-channel = "integer"
-
 [[revisions.2019-2022.bindings]]
 id = "modelo-180-115-base-anual"
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "115", source_casilla_id = "02", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+aggregation = { op = "sum" }
 
 [[revisions.2019-2022.bindings.source_citations]]
 source_ref = "aeat-modelo-180-ayuda-resumen-datos"
 required_text = ["Casilla02 Base retenciones e ingresos a cuenta", "Consigne la suma de las cantidades reflejadas"]
-
-[revisions.2019-2022.bindings.provider]
-kind = "relation_prefill"
-relation_kind = "annual_summary"
-dependency_role = "periodic_to_annual_summary"
-source_modelo = "115"
-source_casilla_id = "02"
-
-[revisions.2019-2022.bindings.provider.temporal]
-kind = "same_filing_year_periods"
-source_periods = ["1T", "2T", "3T", "4T"]
-
-[revisions.2019-2022.bindings.applicability]
-kind = "target_periods"
-periods = ["0A"]
-
-[revisions.2019-2022.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-2022.bindings.aggregation]
-op = "sum"
-
 [[revisions.2019-2022.bindings]]
 id = "modelo-180-115-retenciones-anual"
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "115", source_casilla_id = "03", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+aggregation = { op = "sum" }
 
 [[revisions.2019-2022.bindings.source_citations]]
 source_ref = "aeat-modelo-180-ayuda-resumen-datos"
 required_text = ["Casilla03 Retenciones e ingresos a cuenta", "Consigne la suma total de las cantidades reflejadas"]
-
-[revisions.2019-2022.bindings.provider]
-kind = "relation_prefill"
-relation_kind = "annual_summary"
-dependency_role = "periodic_to_annual_summary"
-source_modelo = "115"
-source_casilla_id = "03"
-
-[revisions.2019-2022.bindings.provider.temporal]
-kind = "same_filing_year_periods"
-source_periods = ["1T", "2T", "3T", "4T"]
-
-[revisions.2019-2022.bindings.applicability]
-kind = "target_periods"
-periods = ["0A"]
-
-[revisions.2019-2022.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-2022.bindings.aggregation]
-op = "sum"

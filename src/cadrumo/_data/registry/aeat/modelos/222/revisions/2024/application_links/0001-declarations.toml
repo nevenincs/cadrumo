@@ -16,7 +16,7 @@
 # declares no export layout, so it declares no export link either rather than
 # pointing a consumer at a layout that does not exist.
 
-[[revisions.2024.application_links]]
+[[revisions."2024".application_links]]
 id = "modelo-222-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
@@ -24,7 +24,7 @@ requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-5"]
 source_refs = ["aeat-modelo-222-instructions"]
 
-[[revisions.2024.application_links]]
+[[revisions."2024".application_links]]
 id = "modelo-222-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -32,7 +32,7 @@ requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-2"]
 source_refs = ["aeat-modelo-222-instructions"]
 
-[[revisions.2024.application_links]]
+[[revisions."2024".application_links]]
 id = "modelo-222-workflow"
 surface = "workflow"
 consumer = "cadrumo.application.workflow"
@@ -40,7 +40,7 @@ requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-2"]
 source_refs = ["aeat-modelo-222-instructions"]
 
-[[revisions.2024.application_links]]
+[[revisions."2024".application_links]]
 id = "modelo-222-calculation"
 surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"

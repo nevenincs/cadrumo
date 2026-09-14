@@ -15,6 +15,21 @@
 # base-liquidable casilla, yielding fixed_addition + (base - lower_bound) *
 # marginal_rate for the matched bracket. The escala is the STATE default
 # (subsidiaria a la escala autonómica); Phase-B implements the state baseline.
+
+[[revisions."2022".formulas]]
+id = "patrimonio-cuota-integra-escala-estatal"
+target_casilla_id = "patrimonio.cuota-integra"
+expression = { op = "lookup_bracket", args = [
+    { casilla_id = "patrimonio.base-liquidable" },
+    { parameter = "patrimonio-escala-estatal" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-30"]
+additional_source_refs = ["aeat-manual-patrimonio-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-manual-patrimonio-2022"
+required_text = ["patrimonio neto"]
 # Ejercicio 2022. The art. 30 escala estatal, the art. 28 minimo exento
 # framework and the art. 31 percentages are the same as 2021's because the LAW
 # is the same, not because 2021 was copied. Read from the BOE consolidated text
@@ -38,42 +53,17 @@
 # and verified against the bundled authoritative corpus
 # `ley-19-1991-art-31.html`.
 
-[[revisions.2022.formulas]]
-id = "patrimonio-cuota-integra-escala-estatal"
-target_casilla_id = "patrimonio.cuota-integra"
-rounding = "money-2"
-legal_refs = ["ley-19-1991:art-30"]
-additional_source_refs = ["aeat-manual-patrimonio-2022"]
-
-[[revisions.2022.formulas.source_citations]]
-source_ref = "aeat-manual-patrimonio-2022"
-required_text = ["patrimonio neto"]
-
-[revisions.2022.formulas.expression]
-op = "lookup_bracket"
-
-[[revisions.2022.formulas.expression.args]]
-casilla_id = "patrimonio.base-liquidable"
-
-[[revisions.2022.formulas.expression.args]]
-parameter = "patrimonio-escala-estatal"
-
-[[revisions.2022.formulas]]
+[[revisions."2022".formulas]]
 id = "patrimonio-reduccion-limite-80-suelo"
 target_casilla_id = "patrimonio.reduccion-limite-80"
+expression = { op = "percent", args = [
+    { casilla_id = "patrimonio.cuota-integra" },
+    { parameter = "patrimonio-reduccion-maxima-limite-conjunto-porcentaje" },
+] }
 rounding = "money-2"
 legal_refs = ["ley-19-1991:art-31"]
 additional_source_refs = ["aeat-manual-patrimonio-2022"]
 
-[[revisions.2022.formulas.source_citations]]
+[[revisions."2022".formulas.source_citations]]
 source_ref = "aeat-manual-patrimonio-2022"
 required_text = ["patrimonio neto"]
-
-[revisions.2022.formulas.expression]
-op = "percent"
-
-[[revisions.2022.formulas.expression.args]]
-casilla_id = "patrimonio.cuota-integra"
-
-[[revisions.2022.formulas.expression.args]]
-parameter = "patrimonio-reduccion-maxima-limite-conjunto-porcentaje"

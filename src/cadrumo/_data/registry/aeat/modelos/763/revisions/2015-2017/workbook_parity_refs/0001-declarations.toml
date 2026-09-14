@@ -1,7 +1,7 @@
 # The era's official record design is retained as a static-layout anchor only.
 # No casilla-to-position mapping or filing capability is claimed.
 
-[[revisions.2015-2017.workbook_parity_refs]]
+[[revisions."2015-2017".workbook_parity_refs]]
 id = "modelo-763-static-layout"
 workbook_source = "aeat-dr-763-2015"
 fixture_id = "modelo-763-2015-2017-layout"

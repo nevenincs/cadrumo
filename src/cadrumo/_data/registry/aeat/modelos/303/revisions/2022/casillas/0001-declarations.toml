@@ -1,3 +1,176 @@
+[[revisions.2022.casillas]]
+id = "23"
+number = "23"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_23"
+continuidad_id = "dr303-23"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "24"
+number = "24"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "dr303_24"
+continuidad_id = "dr303-24"
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "25"
+number = "25"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "dr303_25"
+continuidad_id = "dr303-25"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "26"
+number = "26"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "dr303_26"
+continuidad_id = "dr303-26"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "27"
+number = "27"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "dr303_27"
+continuidad_id = "dr303-27"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "28"
+number = "28"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_28"
+continuidad_id = "dr303-28"
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-interiores-base"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "29"
+number = "29"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_29"
+continuidad_id = "dr303-29"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "30"
+number = "30"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_30"
+continuidad_id = "dr303-30"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "31"
+number = "31"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_31"
+continuidad_id = "dr303-31"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "32"
+number = "32"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_32"
+continuidad_id = "dr303-32"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "33"
+number = "33"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_33"
+continuidad_id = "dr303-33"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "34"
+number = "34"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_34"
+continuidad_id = "dr303-34"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "35"
+number = "35"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_35"
+continuidad_id = "dr303-35"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "36"
+number = "36"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_36"
+continuidad_id = "dr303-36"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "37"
+number = "37"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_37"
+continuidad_id = "dr303-37"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "38"
+number = "38"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_38"
+continuidad_id = "dr303-38"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "39"
+number = "39"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_39"
+continuidad_id = "dr303-39"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "40"
+number = "40"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_40"
+continuidad_id = "dr303-40"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "41"
+number = "41"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_41"
+continuidad_id = "dr303-41"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "42"
+number = "42"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_42"
+continuidad_id = "dr303-42"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "43"
+number = "43"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_43"
+continuidad_id = "dr303-43"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
 # Casilla 44 is `input_kind = "manual"` with NO formula BY DECISION, not by
 # omission. LIVA art. 105.Cuatro settles the definitive prorrata in the year's
 # last declaracion-liquidacion and regularises the provisional deductions; the
@@ -31,1590 +204,1059 @@
 # Uno, Cuatro and Seis are textually identical across both revision windows -
 # this revision opens in 2009, after that amendment - and the same reasoning
 # binds each.
+[[revisions.2022.casillas]]
+id = "44"
+number = "44"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_44"
+continuidad_id = "dr303-44"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "45"
+number = "45"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "dr303_45"
+continuidad_id = "dr303-45"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "47"
+number = "47"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_47"
+continuidad_id = "dr303-47"
 # Operator input. The design defines this box as a SUM over the per-activity
 # regimen simplificado rows (A1..F3 / B1..M2), and those per-activity modulos
 # rows are not modelled in this registry, so the engine cannot derive it.
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "48"
+number = "48"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_48"
+continuidad_id = "dr303-48"
 # Operator input. The design defines this box as a SUM over the per-activity
 # regimen simplificado rows (A1..F3 / B1..M2), and those per-activity modulos
 # rows are not modelled in this registry, so the engine cannot derive it.
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "49"
+number = "49"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_49"
+continuidad_id = "dr303-49"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "50"
+number = "50"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_50"
+continuidad_id = "dr303-50"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "51"
+number = "51"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_51"
+continuidad_id = "dr303-51"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "52"
+number = "52"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_52"
+continuidad_id = "dr303-52"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "53"
+number = "53"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_53"
+continuidad_id = "dr303-53"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "54"
+number = "54"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_54"
+continuidad_id = "dr303-54"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "55"
+number = "55"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_55"
+continuidad_id = "dr303-55"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "56"
+number = "56"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_56"
+continuidad_id = "dr303-56"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "57"
+number = "57"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_57"
+continuidad_id = "dr303-57"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "58"
+number = "58"
+section = ["iva", "regimen_simplificado"]
+semantic_role = "dr303_58"
+continuidad_id = "dr303-58"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "59"
+number = "59"
+section = ["iva", "resultado"]
+semantic_role = "dr303_59"
+continuidad_id = "dr303-59"
+input_kind = "bound"
+binding = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 # Casilla 59 reports the base imponible of exempt intra-community supplies
 # (entregas intracomunitarias exentas). The substantive ground is LIVA art. 25
 # (exenciones en las entregas de bienes destinados a otro Estado miembro), not
 # the repercusión/deducción articles 88/92 — an exempt entrega carries no cuota
 # repercutida nor deducible, so this is an informativa base-only box.
+legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "60"
+number = "60"
+section = ["iva", "resultado"]
+semantic_role = "dr303_60"
+continuidad_id = "dr303-60"
+input_kind = "bound"
+binding = "modelo-303-casilla-60-exportaciones-base"
 # Casilla 60 reports the base imponible of exempt exports and operations
 # treated as exports. The substantive grounds are LIVA art. 21 (exenciones en
 # las exportaciones de bienes) for the "Exportaciones" leg and art. 22
 # (exenciones en las operaciones asimiladas a las exportaciones) for the
 # "operaciones asimiladas" leg the label names. Both are exempt (zero cuota),
 # so the repercusión/deducción articles 88/92 do not apply — base-only box.
-# Intra-community-acquisition official-box parity casillas. They expose the
-# self-assessed AIC cuota in its official devengado (boxes 10/11) and deducible
-# (boxes 36/37) positions for the export/workbook parity surface. They are NOT
-# added to the resultado formula — the iva.autorepercutido.intracomunitaria
-# semantic casilla already books that cuota into the resultado, and adding these
-# would double-count. The devengado/deducible pair nets to zero (LIVA art. 84
-# inversión + art. 92 deduction).
-# Third-country import IVA deducible (official casilla 33). IVA devengado on the
-# import is settled at customs (DUA) and never reaches M303; only the deducible
-# leg appears here. This is a real deduction (not net-zero), so it feeds the
-# cuota-deducible-total formula. Grounded in LIVA art. 17 (hecho imponible
-# importaciones) + art. 92 (cuotas deducibles).
-
-[[revisions.2022.casillas]]
-id = "23"
-number = "23"
-data_type = "ratio"
-semantic_role = "dr303_23"
-continuidad_id = "dr303-23"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "24"
-number = "24"
-data_type = "money"
-semantic_role = "dr303_24"
-continuidad_id = "dr303-24"
-required = false
-input_kind = "bound"
-binding = "modelo-303-recargo-equivalencia-general-cuota"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "25"
-number = "25"
-data_type = "money"
-semantic_role = "dr303_25"
-continuidad_id = "dr303-25"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "26"
-number = "26"
-data_type = "money"
-semantic_role = "dr303_26"
-continuidad_id = "dr303-26"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "27"
-number = "27"
-data_type = "money"
-semantic_role = "dr303_27"
-continuidad_id = "dr303-27"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "28"
-number = "28"
-data_type = "money"
-semantic_role = "dr303_28"
-continuidad_id = "dr303-28"
-required = false
-input_kind = "bound"
-binding = "modelo-303-iva-soportado-interiores-base"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "29"
-number = "29"
-data_type = "money"
-semantic_role = "dr303_29"
-continuidad_id = "dr303-29"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "30"
-number = "30"
-data_type = "money"
-semantic_role = "dr303_30"
-continuidad_id = "dr303-30"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "31"
-number = "31"
-data_type = "money"
-semantic_role = "dr303_31"
-continuidad_id = "dr303-31"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "32"
-number = "32"
-data_type = "money"
-semantic_role = "dr303_32"
-continuidad_id = "dr303-32"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "33"
-number = "33"
-data_type = "money"
-semantic_role = "dr303_33"
-continuidad_id = "dr303-33"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "34"
-number = "34"
-data_type = "money"
-semantic_role = "dr303_34"
-continuidad_id = "dr303-34"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "35"
-number = "35"
-data_type = "money"
-semantic_role = "dr303_35"
-continuidad_id = "dr303-35"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "36"
-number = "36"
-data_type = "money"
-semantic_role = "dr303_36"
-continuidad_id = "dr303-36"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "37"
-number = "37"
-data_type = "money"
-semantic_role = "dr303_37"
-continuidad_id = "dr303-37"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "38"
-number = "38"
-data_type = "money"
-semantic_role = "dr303_38"
-continuidad_id = "dr303-38"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "39"
-number = "39"
-data_type = "money"
-semantic_role = "dr303_39"
-continuidad_id = "dr303-39"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "40"
-number = "40"
-data_type = "money"
-semantic_role = "dr303_40"
-continuidad_id = "dr303-40"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "41"
-number = "41"
-data_type = "money"
-semantic_role = "dr303_41"
-continuidad_id = "dr303-41"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "42"
-number = "42"
-data_type = "money"
-semantic_role = "dr303_42"
-continuidad_id = "dr303-42"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "43"
-number = "43"
-data_type = "money"
-semantic_role = "dr303_43"
-continuidad_id = "dr303-43"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "44"
-number = "44"
-data_type = "money"
-semantic_role = "dr303_44"
-continuidad_id = "dr303-44"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "45"
-number = "45"
-data_type = "money"
-semantic_role = "dr303_45"
-continuidad_id = "dr303-45"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "47"
-number = "47"
-data_type = "money"
-semantic_role = "dr303_47"
-continuidad_id = "dr303-47"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "48"
-number = "48"
-data_type = "money"
-semantic_role = "dr303_48"
-continuidad_id = "dr303-48"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "49"
-number = "49"
-data_type = "money"
-semantic_role = "dr303_49"
-continuidad_id = "dr303-49"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "50"
-number = "50"
-data_type = "money"
-semantic_role = "dr303_50"
-continuidad_id = "dr303-50"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "51"
-number = "51"
-data_type = "money"
-semantic_role = "dr303_51"
-continuidad_id = "dr303-51"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "52"
-number = "52"
-data_type = "money"
-semantic_role = "dr303_52"
-continuidad_id = "dr303-52"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "53"
-number = "53"
-data_type = "money"
-semantic_role = "dr303_53"
-continuidad_id = "dr303-53"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "54"
-number = "54"
-data_type = "money"
-semantic_role = "dr303_54"
-continuidad_id = "dr303-54"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "55"
-number = "55"
-data_type = "money"
-semantic_role = "dr303_55"
-continuidad_id = "dr303-55"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "56"
-number = "56"
-data_type = "money"
-semantic_role = "dr303_56"
-continuidad_id = "dr303-56"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "57"
-number = "57"
-data_type = "money"
-semantic_role = "dr303_57"
-continuidad_id = "dr303-57"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "58"
-number = "58"
-data_type = "money"
-semantic_role = "dr303_58"
-continuidad_id = "dr303-58"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_simplificado"]
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "59"
-number = "59"
-data_type = "money"
-semantic_role = "dr303_59"
-continuidad_id = "dr303-59"
-required = false
-input_kind = "bound"
-binding = "modelo-303-casilla-59-entregas-intracomunitarias-base"
-section = ["iva", "resultado"]
-legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
-id = "60"
-number = "60"
-data_type = "money"
-semantic_role = "dr303_60"
-continuidad_id = "dr303-60"
-required = false
-input_kind = "bound"
-binding = "modelo-303-casilla-60-exportaciones-base"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "120"
 number = "120"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_120"
 continuidad_id = "dr303-120"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "122"
 number = "122"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_122"
 continuidad_id = "dr303-122"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "123"
 number = "123"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_123"
 continuidad_id = "dr303-123"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "124"
 number = "124"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_124"
 continuidad_id = "dr303-124"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "62"
 number = "62"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_62"
 continuidad_id = "dr303-62"
-required = false
 input_kind = "bound"
 binding = "modelo-303-criterio-caja-entregas-art75-base"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-75", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "63"
 number = "63"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_63"
 continuidad_id = "dr303-63"
-required = false
 input_kind = "bound"
 binding = "modelo-303-criterio-caja-entregas-art75-cuota"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-75", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "74"
 number = "74"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_74"
 continuidad_id = "dr303-74"
-required = false
 input_kind = "bound"
 binding = "modelo-303-criterio-caja-adquisiciones-base"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-quinquiesdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "75"
 number = "75"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_75"
 continuidad_id = "dr303-75"
-required = false
 input_kind = "bound"
 binding = "modelo-303-criterio-caja-adquisiciones-cuota"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-quinquiesdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "76"
 number = "76"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_76"
 continuidad_id = "dr303-76"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "64"
 continuidad_id = "dr303-64"
 number = "64"
-data_type = "money"
-semantic_role = "dr303_64"
-required = false
-input_kind = "manual"
 section = ["iva", "resultado"]
+semantic_role = "dr303_64"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "65"
 number = "65"
+section = ["iva", "resultado"]
 data_type = "ratio"
 semantic_role = "dr303_65"
 continuidad_id = "dr303-65"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "66"
 continuidad_id = "dr303-66"
 number = "66"
-data_type = "money"
-semantic_role = "dr303_66"
-required = false
-input_kind = "manual"
 section = ["iva", "resultado"]
+semantic_role = "dr303_66"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "77"
 number = "77"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_77"
 continuidad_id = "dr303-77"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "68"
 number = "68"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_68"
 continuidad_id = "dr303-68"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "70"
 number = "70"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "dr303_70"
 continuidad_id = "dr303-70"
-required = false
-input_kind = "manual"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "71"
 continuidad_id = "dr303-71"
 number = "71"
-data_type = "money"
-semantic_role = "dr303_71"
-required = false
-input_kind = "manual"
 section = ["iva", "resultado"]
+semantic_role = "dr303_71"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "500"
 number = "500"
+section = ["iva", "prorrata", "actividad", "fila_1", "cnae"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_1_cnae"
 continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_1", "cnae"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "501"
 number = "501"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_1", "operaciones_total"]
 semantic_role = "m303_prorrata_actividad_fila_1_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-1-operaciones-total"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_1", "operaciones_total"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "502"
 number = "502"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_1", "operaciones_con_derecho"]
 semantic_role = "m303_prorrata_actividad_fila_1_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-1-operaciones-con-derecho"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_1", "operaciones_con_derecho"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "503"
 number = "503"
+section = ["iva", "prorrata", "actividad", "fila_1", "tipo"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_1_tipo"
 continuidad_id = "m303-prorrata-actividad-fila-1-tipo"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_1", "tipo"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "504"
 number = "504"
+section = ["iva", "prorrata", "actividad", "fila_1", "porcentaje"]
 data_type = "ratio"
 semantic_role = "m303_prorrata_actividad_fila_1_porcentaje"
 continuidad_id = "m303-prorrata-actividad-fila-1-porcentaje"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_1", "porcentaje"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "505"
 number = "505"
+section = ["iva", "prorrata", "actividad", "fila_2", "cnae"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_2_cnae"
 continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_2", "cnae"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "506"
 number = "506"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_2", "operaciones_total"]
 semantic_role = "m303_prorrata_actividad_fila_2_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-2-operaciones-total"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_2", "operaciones_total"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "507"
 number = "507"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_2", "operaciones_con_derecho"]
 semantic_role = "m303_prorrata_actividad_fila_2_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-2-operaciones-con-derecho"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_2", "operaciones_con_derecho"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "508"
 number = "508"
+section = ["iva", "prorrata", "actividad", "fila_2", "tipo"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_2_tipo"
 continuidad_id = "m303-prorrata-actividad-fila-2-tipo"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_2", "tipo"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "509"
 number = "509"
+section = ["iva", "prorrata", "actividad", "fila_2", "porcentaje"]
 data_type = "ratio"
 semantic_role = "m303_prorrata_actividad_fila_2_porcentaje"
 continuidad_id = "m303-prorrata-actividad-fila-2-porcentaje"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_2", "porcentaje"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "510"
 number = "510"
+section = ["iva", "prorrata", "actividad", "fila_3", "cnae"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_3_cnae"
 continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_3", "cnae"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "511"
 number = "511"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_3", "operaciones_total"]
 semantic_role = "m303_prorrata_actividad_fila_3_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-3-operaciones-total"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_3", "operaciones_total"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "512"
 number = "512"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_3", "operaciones_con_derecho"]
 semantic_role = "m303_prorrata_actividad_fila_3_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-3-operaciones-con-derecho"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_3", "operaciones_con_derecho"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "513"
 number = "513"
+section = ["iva", "prorrata", "actividad", "fila_3", "tipo"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_3_tipo"
 continuidad_id = "m303-prorrata-actividad-fila-3-tipo"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_3", "tipo"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "514"
 number = "514"
+section = ["iva", "prorrata", "actividad", "fila_3", "porcentaje"]
 data_type = "ratio"
 semantic_role = "m303_prorrata_actividad_fila_3_porcentaje"
 continuidad_id = "m303-prorrata-actividad-fila-3-porcentaje"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_3", "porcentaje"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "515"
 number = "515"
+section = ["iva", "prorrata", "actividad", "fila_4", "cnae"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_4_cnae"
 continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_4", "cnae"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "516"
 number = "516"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_4", "operaciones_total"]
 semantic_role = "m303_prorrata_actividad_fila_4_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-4-operaciones-total"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_4", "operaciones_total"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "517"
 number = "517"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_4", "operaciones_con_derecho"]
 semantic_role = "m303_prorrata_actividad_fila_4_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-4-operaciones-con-derecho"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_4", "operaciones_con_derecho"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "518"
 number = "518"
+section = ["iva", "prorrata", "actividad", "fila_4", "tipo"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_4_tipo"
 continuidad_id = "m303-prorrata-actividad-fila-4-tipo"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_4", "tipo"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "519"
 number = "519"
+section = ["iva", "prorrata", "actividad", "fila_4", "porcentaje"]
 data_type = "ratio"
 semantic_role = "m303_prorrata_actividad_fila_4_porcentaje"
 continuidad_id = "m303-prorrata-actividad-fila-4-porcentaje"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_4", "porcentaje"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "520"
 number = "520"
+section = ["iva", "prorrata", "actividad", "fila_5", "cnae"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_5_cnae"
 continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_5", "cnae"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "521"
 number = "521"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_5", "operaciones_total"]
 semantic_role = "m303_prorrata_actividad_fila_5_operaciones_total"
 continuidad_id = "m303-prorrata-actividad-fila-5-operaciones-total"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_5", "operaciones_total"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "522"
 number = "522"
-data_type = "money"
+section = ["iva", "prorrata", "actividad", "fila_5", "operaciones_con_derecho"]
 semantic_role = "m303_prorrata_actividad_fila_5_operaciones_con_derecho"
 continuidad_id = "m303-prorrata-actividad-fila-5-operaciones-con-derecho"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_5", "operaciones_con_derecho"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "523"
 number = "523"
+section = ["iva", "prorrata", "actividad", "fila_5", "tipo"]
 data_type = "text"
 semantic_role = "m303_prorrata_actividad_fila_5_tipo"
 continuidad_id = "m303-prorrata-actividad-fila-5-tipo"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_5", "tipo"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "524"
 number = "524"
+section = ["iva", "prorrata", "actividad", "fila_5", "porcentaje"]
 data_type = "ratio"
 semantic_role = "m303_prorrata_actividad_fila_5_porcentaje"
 continuidad_id = "m303-prorrata-actividad-fila-5-porcentaje"
-required = false
 input_kind = "projection_only"
-section = ["iva", "prorrata", "actividad", "fila_5", "porcentaje"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[revisions.2022.casillas.constraints]
+[revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "700"
 number = "700"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_current_base"]
 semantic_role = "m303_deducciones_sector_1_domestic_current_base"
 continuidad_id = "m303-deducciones-sector-1-domestic-current-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_current_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "701"
 number = "701"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_current_cuota"]
 semantic_role = "m303_deducciones_sector_1_domestic_current_cuota"
 continuidad_id = "m303-deducciones-sector-1-domestic-current-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_current_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "702"
 number = "702"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_investment_base"]
 semantic_role = "m303_deducciones_sector_1_domestic_investment_base"
 continuidad_id = "m303-deducciones-sector-1-domestic-investment-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_investment_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "703"
 number = "703"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_investment_cuota"]
 semantic_role = "m303_deducciones_sector_1_domestic_investment_cuota"
 continuidad_id = "m303-deducciones-sector-1-domestic-investment-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_investment_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "704"
 number = "704"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_current_base"]
 semantic_role = "m303_deducciones_sector_1_import_current_base"
 continuidad_id = "m303-deducciones-sector-1-import-current-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_current_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "705"
 number = "705"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_current_cuota"]
 semantic_role = "m303_deducciones_sector_1_import_current_cuota"
 continuidad_id = "m303-deducciones-sector-1-import-current-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_current_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "706"
 number = "706"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_investment_base"]
 semantic_role = "m303_deducciones_sector_1_import_investment_base"
 continuidad_id = "m303-deducciones-sector-1-import-investment-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_investment_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "707"
 number = "707"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_investment_cuota"]
 semantic_role = "m303_deducciones_sector_1_import_investment_cuota"
 continuidad_id = "m303-deducciones-sector-1-import-investment-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_investment_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "708"
 number = "708"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_current_base"]
 semantic_role = "m303_deducciones_sector_1_intra_eu_current_base"
 continuidad_id = "m303-deducciones-sector-1-intra-eu-current-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_current_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "709"
 number = "709"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_current_cuota"]
 semantic_role = "m303_deducciones_sector_1_intra_eu_current_cuota"
 continuidad_id = "m303-deducciones-sector-1-intra-eu-current-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_current_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "710"
 number = "710"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_investment_base"]
 semantic_role = "m303_deducciones_sector_1_intra_eu_investment_base"
 continuidad_id = "m303-deducciones-sector-1-intra-eu-investment-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_investment_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "711"
 number = "711"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_investment_cuota"]
 semantic_role = "m303_deducciones_sector_1_intra_eu_investment_cuota"
 continuidad_id = "m303-deducciones-sector-1-intra-eu-investment-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_investment_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "712"
 number = "712"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "reagp_base"]
 semantic_role = "m303_deducciones_sector_1_reagp_base"
 continuidad_id = "m303-deducciones-sector-1-reagp-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "reagp_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "713"
 number = "713"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "reagp_cuota"]
 semantic_role = "m303_deducciones_sector_1_reagp_cuota"
 continuidad_id = "m303-deducciones-sector-1-reagp-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "reagp_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "714"
 number = "714"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "rectification_base"]
 semantic_role = "m303_deducciones_sector_1_rectification_base"
 continuidad_id = "m303-deducciones-sector-1-rectification-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "rectification_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "715"
 number = "715"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "rectification_cuota"]
 semantic_role = "m303_deducciones_sector_1_rectification_cuota"
 continuidad_id = "m303-deducciones-sector-1-rectification-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "rectification_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "716"
 number = "716"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "investment_regularisation"]
 semantic_role = "m303_deducciones_sector_1_investment_regularisation"
 continuidad_id = "m303-deducciones-sector-1-investment-regularisation"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "investment_regularisation"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "717"
 number = "717"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "total"]
 semantic_role = "m303_deducciones_sector_1_total"
 continuidad_id = "m303-deducciones-sector-1-total"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "total"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "718"
 number = "718"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_current_base"]
 semantic_role = "m303_deducciones_sector_2_domestic_current_base"
 continuidad_id = "m303-deducciones-sector-2-domestic-current-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_current_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "719"
 number = "719"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_current_cuota"]
 semantic_role = "m303_deducciones_sector_2_domestic_current_cuota"
 continuidad_id = "m303-deducciones-sector-2-domestic-current-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_current_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "720"
 number = "720"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_investment_base"]
 semantic_role = "m303_deducciones_sector_2_domestic_investment_base"
 continuidad_id = "m303-deducciones-sector-2-domestic-investment-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_investment_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "721"
 number = "721"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_investment_cuota"]
 semantic_role = "m303_deducciones_sector_2_domestic_investment_cuota"
 continuidad_id = "m303-deducciones-sector-2-domestic-investment-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_investment_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "722"
 number = "722"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_current_base"]
 semantic_role = "m303_deducciones_sector_2_import_current_base"
 continuidad_id = "m303-deducciones-sector-2-import-current-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_current_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "723"
 number = "723"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_current_cuota"]
 semantic_role = "m303_deducciones_sector_2_import_current_cuota"
 continuidad_id = "m303-deducciones-sector-2-import-current-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_current_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "724"
 number = "724"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_investment_base"]
 semantic_role = "m303_deducciones_sector_2_import_investment_base"
 continuidad_id = "m303-deducciones-sector-2-import-investment-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_investment_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "725"
 number = "725"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_investment_cuota"]
 semantic_role = "m303_deducciones_sector_2_import_investment_cuota"
 continuidad_id = "m303-deducciones-sector-2-import-investment-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_investment_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "726"
 number = "726"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_current_base"]
 semantic_role = "m303_deducciones_sector_2_intra_eu_current_base"
 continuidad_id = "m303-deducciones-sector-2-intra-eu-current-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_current_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "727"
 number = "727"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_current_cuota"]
 semantic_role = "m303_deducciones_sector_2_intra_eu_current_cuota"
 continuidad_id = "m303-deducciones-sector-2-intra-eu-current-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_current_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "728"
 number = "728"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_investment_base"]
 semantic_role = "m303_deducciones_sector_2_intra_eu_investment_base"
 continuidad_id = "m303-deducciones-sector-2-intra-eu-investment-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_investment_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "729"
 number = "729"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_investment_cuota"]
 semantic_role = "m303_deducciones_sector_2_intra_eu_investment_cuota"
 continuidad_id = "m303-deducciones-sector-2-intra-eu-investment-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_investment_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "730"
 number = "730"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "reagp_base"]
 semantic_role = "m303_deducciones_sector_2_reagp_base"
 continuidad_id = "m303-deducciones-sector-2-reagp-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "reagp_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "731"
 number = "731"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "reagp_cuota"]
 semantic_role = "m303_deducciones_sector_2_reagp_cuota"
 continuidad_id = "m303-deducciones-sector-2-reagp-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "reagp_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[revisions.2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"]
-
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "732"
 number = "732"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "rectification_base"]
 semantic_role = "m303_deducciones_sector_2_rectification_base"
 continuidad_id = "m303-deducciones-sector-2-rectification-base"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "rectification_base"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "733"
 number = "733"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "rectification_cuota"]
 semantic_role = "m303_deducciones_sector_2_rectification_cuota"
 continuidad_id = "m303-deducciones-sector-2-rectification-cuota"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "rectification_cuota"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "734"
 number = "734"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "investment_regularisation"]
 semantic_role = "m303_deducciones_sector_2_investment_regularisation"
 continuidad_id = "m303-deducciones-sector-2-investment-regularisation"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "investment_regularisation"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2022.casillas]]
+[[revisions."2022".casillas]]
 id = "735"
 number = "735"
-data_type = "money"
+section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "total"]
 semantic_role = "m303_deducciones_sector_2_total"
 continuidad_id = "m303-deducciones-sector-2-total"
-required = false
 input_kind = "projection_only"
-section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "total"]
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
-
 [[revisions.2022.casillas]]
 id = "79"
 number = "79"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_79"
 continuidad_id = "m303-exonerado-390-79"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1625,12 +1267,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "80"
 number = "80"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_80"
 continuidad_id = "m303-exonerado-390-80"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1641,12 +1280,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "81"
 number = "81"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_81"
 continuidad_id = "m303-exonerado-390-81"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1657,12 +1293,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "83"
 number = "83"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_83"
 continuidad_id = "m303-exonerado-390-83"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1673,12 +1306,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "84"
 number = "84"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_84"
 continuidad_id = "m303-exonerado-390-84"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1689,12 +1319,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "86"
 number = "86"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_86"
 continuidad_id = "m303-exonerado-390-86"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1705,12 +1332,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "88"
 number = "88"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_88"
 continuidad_id = "m303-exonerado-390-88"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1721,12 +1345,10 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "89"
 number = "89"
+section = ["iva", "exonerado_390", "resumen_anual"]
 data_type = "ratio"
 semantic_role = "m303_exonerado_390_89"
 continuidad_id = "m303-exonerado-390-89"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1739,12 +1361,10 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "90"
 number = "90"
+section = ["iva", "exonerado_390", "resumen_anual"]
 data_type = "ratio"
 semantic_role = "m303_exonerado_390_90"
 continuidad_id = "m303-exonerado-390-90"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1757,12 +1377,10 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "91"
 number = "91"
+section = ["iva", "exonerado_390", "resumen_anual"]
 data_type = "ratio"
 semantic_role = "m303_exonerado_390_91"
 continuidad_id = "m303-exonerado-390-91"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1775,12 +1393,10 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "92"
 number = "92"
+section = ["iva", "exonerado_390", "resumen_anual"]
 data_type = "ratio"
 semantic_role = "m303_exonerado_390_92"
 continuidad_id = "m303-exonerado-390-92"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1793,12 +1409,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "93"
 number = "93"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_93"
 continuidad_id = "m303-exonerado-390-93"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1809,12 +1422,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "94"
 number = "94"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_94"
 continuidad_id = "m303-exonerado-390-94"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1825,12 +1435,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "95"
 number = "95"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_95"
 continuidad_id = "m303-exonerado-390-95"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1841,12 +1448,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "96"
 number = "96"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_96"
 continuidad_id = "m303-exonerado-390-96"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1857,12 +1461,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "97"
 number = "97"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_97"
 continuidad_id = "m303-exonerado-390-97"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1873,12 +1474,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "98"
 number = "98"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_98"
 continuidad_id = "m303-exonerado-390-98"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1889,12 +1487,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "99"
 number = "99"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_99"
 continuidad_id = "m303-exonerado-390-99"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1905,12 +1500,10 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "107"
 number = "107"
+section = ["iva", "exonerado_390", "resumen_anual"]
 data_type = "ratio"
 semantic_role = "m303_exonerado_390_107"
 continuidad_id = "m303-exonerado-390-107"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1923,12 +1516,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "125"
 number = "125"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_125"
 continuidad_id = "m303-exonerado-390-125"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1939,12 +1529,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "126"
 number = "126"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_126"
 continuidad_id = "m303-exonerado-390-126"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1955,12 +1542,9 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "127"
 number = "127"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_127"
 continuidad_id = "m303-exonerado-390-127"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -1971,187 +1555,166 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 [[revisions.2022.casillas]]
 id = "128"
 number = "128"
-data_type = "money"
+section = ["iva", "exonerado_390", "resumen_anual"]
 semantic_role = "m303_exonerado_390_128"
 continuidad_id = "m303-exonerado-390-128"
-required = false
-input_kind = "manual"
-section = ["iva", "exonerado_390", "resumen_anual"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
 [[revisions.2022.casillas]]
 id = "iva.repercutido.general"
 number = "iva.repercutido.general"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "iva_cuota_repercutida_general"
 continuidad_id = "iva-cuota-repercutida-general"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-general-cuota"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.repercutido.reducido"
 number = "iva.repercutido.reducido"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "iva_cuota_repercutida_reducido"
 continuidad_id = "iva-cuota-repercutida-reducido"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-reducido-cuota"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.repercutido.super-reducido"
 number = "iva.repercutido.super-reducido"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "iva_cuota_repercutida_super_reducido"
 continuidad_id = "iva-cuota-repercutida-super-reducido"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-super-reducido-cuota"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.soportado.interiores"
 number = "iva.soportado.interiores"
-data_type = "money"
+section = ["iva", "regimen_general", "deducible"]
 semantic_role = "iva_cuota_soportada_interiores"
 continuidad_id = "iva-cuota-soportada-interiores"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-soportado-interiores-cuota"
-section = ["iva", "regimen_general", "deducible"]
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
-data_type = "money"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
 continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
-section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.interior.devengado"
 number = "iva.autorepercutido.interior.devengado"
-data_type = "money"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 semantic_role = "iva_cuota_autorepercutida_interior_devengado"
 continuidad_id = "iva-cuota-autorepercutida-interior-devengado"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-interior-devengado-cuota"
-section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.interior.deducible"
 number = "iva.autorepercutido.interior.deducible"
-data_type = "money"
+section = ["iva", "regimen_general", "deducible"]
 semantic_role = "iva_cuota_autorepercutida_interior_deducible"
 continuidad_id = "iva-cuota-autorepercutida-interior-deducible"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
-section = ["iva", "regimen_general", "deducible"]
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# Intra-community-acquisition official-box parity casillas. They expose the
+# self-assessed AIC cuota in its official devengado (boxes 10/11) and deducible
+# (boxes 36/37) positions for the export/workbook parity surface. They are NOT
+# added to the resultado formula — the iva.autorepercutido.intracomunitaria
+# semantic casilla already books that cuota into the resultado, and adding these
+# would double-count. The devengado/deducible pair nets to zero (LIVA art. 84
+# inversión + art. 92 deduction).
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.intracomunitaria.devengado"
 number = "iva.autorepercutido.intracomunitaria.devengado"
-data_type = "money"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria_devengado"
 continuidad_id = "iva-cuota-autorepercutida-intracomunitaria-devengado"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
-section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.intracomunitaria.deducible"
 number = "iva.autorepercutido.intracomunitaria.deducible"
-data_type = "money"
+section = ["iva", "regimen_general", "deducible"]
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria_deducible"
 continuidad_id = "iva-cuota-autorepercutida-intracomunitaria-deducible"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
-section = ["iva", "regimen_general", "deducible"]
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# Third-country import IVA deducible (official casilla 33). IVA devengado on the
+# import is settled at customs (DUA) and never reaches M303; only the deducible
+# leg appears here. This is a real deduction (not net-zero), so it feeds the
+# cuota-deducible-total formula. Grounded in LIVA art. 17 (hecho imponible
+# importaciones) + art. 92 (cuotas deducibles).
 [[revisions.2022.casillas]]
 id = "iva.soportado.importaciones"
 number = "iva.soportado.importaciones"
-data_type = "money"
+section = ["iva", "regimen_general", "deducible"]
 semantic_role = "iva_cuota_soportada_importaciones"
 continuidad_id = "iva-cuota-soportada-importaciones"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-soportado-importaciones-cuota"
-section = ["iva", "regimen_general", "deducible"]
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.cuota-devengada-total"
 number = "iva.cuota-devengada-total"
-data_type = "money"
+section = ["iva", "regimen_general", "totales"]
 semantic_role = "iva_cuota_devengada_total"
 continuidad_id = "iva-cuota-devengada-total"
-required = false
 input_kind = "computed"
 formula = "modelo-303-iva-cuota-devengada-total"
-export_exemption_reason = "feeds_addressed_casilla"
-section = ["iva", "regimen_general", "totales"]
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "feeds_addressed_casilla"
 
 [[revisions.2022.casillas]]
 id = "iva.cuota-deducible-total"
 number = "iva.cuota-deducible-total"
-data_type = "money"
+section = ["iva", "regimen_general", "totales"]
 semantic_role = "iva_cuota_deducible_total"
 continuidad_id = "iva-cuota-deducible-total"
-required = false
 input_kind = "computed"
 formula = "modelo-303-iva-cuota-deducible-total"
-export_exemption_reason = "feeds_addressed_casilla"
-section = ["iva", "regimen_general", "totales"]
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "feeds_addressed_casilla"
 
 [[revisions.2022.casillas]]
 id = "iva.resultado-regimen-general"
 number = "iva.resultado-regimen-general"
-data_type = "money"
+section = ["iva", "regimen_general", "totales"]
 semantic_role = "iva_resultado_regimen_general"
 continuidad_id = "iva-resultado-regimen-general"
-required = false
 input_kind = "computed"
 formula = "modelo-303-iva-resultado-regimen-general"
 form_number = "46"
-section = ["iva", "regimen_general", "totales"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.prorrata-volumen-con-derecho"
 number = "prorrata-volumen-con-derecho"
-data_type = "money"
+section = ["iva", "prorrata"]
 semantic_role = "iva_prorrata_volumen_con_derecho"
 continuidad_id = "iva-prorrata-volumen-con-derecho"
-required = false
-input_kind = "manual"
-section = ["iva", "prorrata"]
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -2163,12 +1726,9 @@ source_refs = ["aeat-modelo-303-procedure"]
 [[revisions.2022.casillas]]
 id = "iva.prorrata-volumen-total"
 number = "prorrata-volumen-total"
-data_type = "money"
+section = ["iva", "prorrata"]
 semantic_role = "iva_prorrata_volumen_total"
 continuidad_id = "iva-prorrata-volumen-total"
-required = false
-input_kind = "manual"
-section = ["iva", "prorrata"]
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
@@ -2180,16 +1740,15 @@ source_refs = ["aeat-modelo-303-procedure"]
 [[revisions.2022.casillas]]
 id = "iva.prorrata-porcentaje"
 number = "prorrata-porcentaje"
+section = ["iva", "prorrata"]
 data_type = "ratio"
 semantic_role = "iva_prorrata_porcentaje"
 continuidad_id = "iva-prorrata-porcentaje"
-required = false
 input_kind = "computed"
 formula = "modelo-303-iva-prorrata-porcentaje"
-export_exemption_reason = "record_block_not_modelled"
-section = ["iva", "prorrata"]
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+export_exemption_reason = "record_block_not_modelled"
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
@@ -2201,26 +1760,20 @@ source_refs = ["aeat-modelo-303-procedure"]
 [[revisions.2022.casillas]]
 id = "iva.regularizacion-inversiones"
 number = "regularizacion-inversiones"
-data_type = "money"
+section = ["iva", "regularizacion"]
 semantic_role = "iva_regularizacion_inversiones"
 continuidad_id = "iva-regularizacion-inversiones"
-required = false
-input_kind = "manual"
-section = ["iva", "regularizacion"]
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions.2022.casillas]]
 id = "iva.compensacion-pendiente-periodos-anteriores"
 number = "110"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "iva_compensacion_pendiente_anteriores"
 continuidad_id = "iva-compensacion-pendiente-anteriores"
-semantic_role_cardinality = "shared"
-required = false
 input_kind = "bound"
 binding = "modelo-303-compensacion-pendiente-anteriores"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -2231,13 +1784,11 @@ legal_refs = ["ley-37-1992:art-99"]
 [[revisions.2022.casillas]]
 id = "iva.compensacion-aplicada-periodo"
 number = "78"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "iva_compensacion_aplicada_periodo"
 continuidad_id = "iva-compensacion-aplicada-periodo"
-required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-aplicada-periodo"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -2248,14 +1799,11 @@ legal_refs = ["ley-37-1992:art-99"]
 [[revisions.2022.casillas]]
 id = "iva.compensacion-pendiente-periodos-posteriores"
 number = "87"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "iva_compensacion_pendiente_posteriores"
 continuidad_id = "iva-compensacion-pendiente-posteriores"
-semantic_role_cardinality = "shared"
-required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-pendiente-periodos-posteriores"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -2267,28 +1815,24 @@ legal_refs = ["ley-37-1992:art-99"]
 id = "iva.resultado"
 continuidad_id = "iva-resultado-autoliquidacion"
 number = "69"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "iva_resultado_autoliquidacion"
-required = false
 input_kind = "computed"
 formula = "modelo-303-iva-resultado"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.casillas]]
 id = "iva.compensacion-disponible-fin-periodo"
 number = "compensacion-disponible-fin-periodo"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "iva_compensacion_disponible_fin_periodo"
 continuidad_id = "iva-compensacion-disponible-fin-periodo"
-required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-disponible-fin-periodo"
-export_exemption_reason = "not_in_record_design"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+export_exemption_reason = "not_in_record_design"
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
@@ -2297,16 +1841,14 @@ legal_refs = ["ley-37-1992:art-99"]
 [[revisions.2022.casillas]]
 id = "iva.compensacion-generada-periodo"
 number = "compensacion-generada-periodo"
-data_type = "money"
+section = ["iva", "resultado"]
 semantic_role = "iva_compensacion_generada_periodo"
 continuidad_id = "iva-compensacion-generada-periodo"
-required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-generada-periodo"
-export_exemption_reason = "not_in_record_design"
-section = ["iva", "resultado"]
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+export_exemption_reason = "not_in_record_design"
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
@@ -2315,269 +1857,212 @@ legal_refs = ["ley-37-1992:art-99"]
 [[revisions.2022.casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
+section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
 continuidad_id = "filing-year"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2022.casillas]]
 id = "decl.periodo"
 number = "periodo"
+section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
 continuidad_id = "filing-period"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2022.casillas]]
 id = "01"
 number = "01"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_01"
 continuidad_id = "dr303-01"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-super-reducido-base"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "02"
 number = "02"
+section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_02"
 continuidad_id = "dr303-02"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "03"
 number = "03"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_03"
 continuidad_id = "dr303-03"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "04"
 number = "04"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_04"
 continuidad_id = "dr303-04"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-reducido-base"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "05"
 number = "05"
+section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_05"
 continuidad_id = "dr303-05"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "06"
 number = "06"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_06"
 continuidad_id = "dr303-06"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "07"
 number = "07"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_07"
 continuidad_id = "dr303-07"
-required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-general-base"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "08"
 number = "08"
+section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_08"
 continuidad_id = "dr303-08"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "09"
 number = "09"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_09"
 continuidad_id = "dr303-09"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "10"
 number = "10"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_10"
 continuidad_id = "dr303-10"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "11"
 number = "11"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_11"
 continuidad_id = "dr303-11"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "12"
 number = "12"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_12"
 continuidad_id = "dr303-12"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "13"
 number = "13"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_13"
 continuidad_id = "dr303-13"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "14"
 number = "14"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_14"
 continuidad_id = "dr303-14"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "15"
 number = "15"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_15"
 continuidad_id = "dr303-15"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "16"
 number = "16"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_16"
 continuidad_id = "dr303-16"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "17"
 number = "17"
+section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_17"
 continuidad_id = "dr303-17"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "18"
 number = "18"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_18"
 continuidad_id = "dr303-18"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "19"
 number = "19"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_19"
 continuidad_id = "dr303-19"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "20"
 number = "20"
+section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_20"
 continuidad_id = "dr303-20"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "21"
 number = "21"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_21"
 continuidad_id = "dr303-21"
-required = false
 input_kind = "bound"
 binding = "modelo-303-recargo-equivalencia-reducido-cuota"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "22"
 number = "22"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_22"
 continuidad_id = "dr303-22"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

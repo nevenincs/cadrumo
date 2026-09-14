@@ -1,33 +1,18 @@
-[[revisions.2019-y-siguientes.bindings]]
+[[revisions."2019-y-siguientes".bindings]]
 id = "modelo-115-perceptores"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "01", fact = "perceptor_count_distinct" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 
-[[revisions.2019-y-siguientes.bindings.source_citations]]
+[[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-115-180-folleto-actividades"
 required_text = ["obligados a practicar retención", "arrendamiento o subarrendamiento de bienes inmuebles urbanos"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "retenciones_aggregation"
-target_casilla_id = "01"
-fact = "perceptor_count_distinct"
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "integer"
-channel = "integer"
-
-[[revisions.2019-y-siguientes.bindings]]
+[[revisions."2019-y-siguientes".bindings]]
 id = "modelo-115-base-retenciones"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "02", fact = "taxable_base_sum" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 
-[[revisions.2019-y-siguientes.bindings.source_citations]]
+[[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-115-180-folleto-actividades"
 required_text = ["obligados a practicar retención", "arrendamiento o subarrendamiento de bienes inmuebles urbanos"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "retenciones_aggregation"
-target_casilla_id = "02"
-fact = "taxable_base_sum"
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"

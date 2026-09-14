@@ -10,7 +10,7 @@
 # Dates are NOMINAL; shift_deadline applies weekend and holiday movement at read
 # time.
 
-[[revisions.2022-1t.deadline_windows]]
+[[revisions."2022-1t".deadline_windows]]
 id = "modelo-490-2022-1t"
 filing_year = 2022
 period = "2022 1T"

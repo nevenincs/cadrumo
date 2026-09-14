@@ -1,12 +1,11 @@
-[[revisions.esquema-importacion.filing_schedules]]
+[[revisions."esquema-importacion".filing_schedules]]
 id = "modelo-369-importacion-mensual"
 period_kind = "monthly"
-profile_condition_mode = "all"
 periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.filing_schedules.profile_conditions]]
+[[revisions."esquema-importacion".filing_schedules.profile_conditions]]
 field = "iva.oss_enrolled"
 op = "equals"
 value = true

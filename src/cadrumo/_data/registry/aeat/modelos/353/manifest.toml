@@ -3,7 +3,6 @@ id = "353"
 tax_domain = "iva"
 cadence = "monthly"
 jurisdiction = "ES-AEAT"
-output_sensitivity = "financial"
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",

@@ -1,9 +1,4 @@
-# Exact presentation and payment-cutoff dates transcribed from AEAT's
-# bundled taxpayer calendars. The presentation headings explicitly name
-# Modelo 353; the domicile tables explicitly group monthly Modelos 303 and 353.
-# Each following-January row cites the calendar that publishes its physical dates.
-
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-01"
 filing_year = 2025
 period = "2025 01"
@@ -14,7 +9,7 @@ payment_cutoff_on = 2025-02-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-02"
 filing_year = 2025
 period = "2025 02"
@@ -25,7 +20,7 @@ payment_cutoff_on = 2025-03-26
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-03"
 filing_year = 2025
 period = "2025 03"
@@ -36,7 +31,7 @@ payment_cutoff_on = 2025-04-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-04"
 filing_year = 2025
 period = "2025 04"
@@ -47,7 +42,7 @@ payment_cutoff_on = 2025-05-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-05"
 filing_year = 2025
 period = "2025 05"
@@ -58,7 +53,7 @@ payment_cutoff_on = 2025-06-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-06"
 filing_year = 2025
 period = "2025 06"
@@ -69,7 +64,7 @@ payment_cutoff_on = 2025-07-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-07"
 filing_year = 2025
 period = "2025 07"
@@ -80,7 +75,7 @@ payment_cutoff_on = 2025-08-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-08"
 filing_year = 2025
 period = "2025 08"
@@ -91,7 +86,7 @@ payment_cutoff_on = 2025-09-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-09"
 filing_year = 2025
 period = "2025 09"
@@ -102,7 +97,7 @@ payment_cutoff_on = 2025-10-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-10"
 filing_year = 2025
 period = "2025 10"
@@ -113,7 +108,7 @@ payment_cutoff_on = 2025-11-26
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-11"
 filing_year = 2025
 period = "2025 11"
@@ -124,7 +119,7 @@ payment_cutoff_on = 2025-12-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2025-12"
 filing_year = 2025
 period = "2025 12"
@@ -134,8 +129,12 @@ closes_on = 2026-01-30
 payment_cutoff_on = 2026-01-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+# Exact presentation and payment-cutoff dates transcribed from AEAT's
+# bundled taxpayer calendars. The presentation headings explicitly name
+# Modelo 353; the domicile tables explicitly group monthly Modelos 303 and 353.
+# Each following-January row cites the calendar that publishes its physical dates.
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-01"
 filing_year = 2022
 period = "2022 01"
@@ -146,7 +145,7 @@ payment_cutoff_on = 2022-02-23
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-02"
 filing_year = 2022
 period = "2022 02"
@@ -157,7 +156,7 @@ payment_cutoff_on = 2022-03-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-03"
 filing_year = 2022
 period = "2022 03"
@@ -168,7 +167,7 @@ payment_cutoff_on = 2022-04-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-04"
 filing_year = 2022
 period = "2022 04"
@@ -179,7 +178,7 @@ payment_cutoff_on = 2022-05-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-05"
 filing_year = 2022
 period = "2022 05"
@@ -190,7 +189,7 @@ payment_cutoff_on = 2022-06-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-06"
 filing_year = 2022
 period = "2022 06"
@@ -201,7 +200,7 @@ payment_cutoff_on = 2022-07-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-07"
 filing_year = 2022
 period = "2022 07"
@@ -212,7 +211,7 @@ payment_cutoff_on = 2022-08-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-08"
 filing_year = 2022
 period = "2022 08"
@@ -223,7 +222,7 @@ payment_cutoff_on = 2022-09-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-09"
 filing_year = 2022
 period = "2022 09"
@@ -234,7 +233,7 @@ payment_cutoff_on = 2022-10-26
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-10"
 filing_year = 2022
 period = "2022 10"
@@ -245,7 +244,7 @@ payment_cutoff_on = 2022-11-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-11"
 filing_year = 2022
 period = "2022 11"
@@ -256,7 +255,7 @@ payment_cutoff_on = 2022-12-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2022-12"
 filing_year = 2022
 period = "2022 12"
@@ -267,7 +266,7 @@ payment_cutoff_on = 2023-01-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-01"
 filing_year = 2023
 period = "2023 01"
@@ -278,7 +277,7 @@ payment_cutoff_on = 2023-02-23
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-02"
 filing_year = 2023
 period = "2023 02"
@@ -289,7 +288,7 @@ payment_cutoff_on = 2023-03-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-03"
 filing_year = 2023
 period = "2023 03"
@@ -300,7 +299,7 @@ payment_cutoff_on = 2023-04-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-04"
 filing_year = 2023
 period = "2023 04"
@@ -311,7 +310,7 @@ payment_cutoff_on = 2023-05-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-05"
 filing_year = 2023
 period = "2023 05"
@@ -322,7 +321,7 @@ payment_cutoff_on = 2023-06-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-06"
 filing_year = 2023
 period = "2023 06"
@@ -333,7 +332,7 @@ payment_cutoff_on = 2023-07-26
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-07"
 filing_year = 2023
 period = "2023 07"
@@ -344,7 +343,7 @@ payment_cutoff_on = 2023-08-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-08"
 filing_year = 2023
 period = "2023 08"
@@ -355,7 +354,7 @@ payment_cutoff_on = 2023-09-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-09"
 filing_year = 2023
 period = "2023 09"
@@ -366,7 +365,7 @@ payment_cutoff_on = 2023-10-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-10"
 filing_year = 2023
 period = "2023 10"
@@ -377,7 +376,7 @@ payment_cutoff_on = 2023-11-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-11"
 filing_year = 2023
 period = "2023 11"
@@ -388,7 +387,7 @@ payment_cutoff_on = 2023-12-26
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2023-12"
 filing_year = 2023
 period = "2023 12"
@@ -399,7 +398,7 @@ payment_cutoff_on = 2024-01-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-01"
 filing_year = 2024
 period = "2024 01"
@@ -410,7 +409,7 @@ payment_cutoff_on = 2024-02-26
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-02"
 filing_year = 2024
 period = "2024 02"
@@ -421,7 +420,7 @@ payment_cutoff_on = 2024-03-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-03"
 filing_year = 2024
 period = "2024 03"
@@ -432,7 +431,7 @@ payment_cutoff_on = 2024-04-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-04"
 filing_year = 2024
 period = "2024 04"
@@ -443,7 +442,7 @@ payment_cutoff_on = 2024-05-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-05"
 filing_year = 2024
 period = "2024 05"
@@ -454,7 +453,7 @@ payment_cutoff_on = 2024-06-26
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-06"
 filing_year = 2024
 period = "2024 06"
@@ -465,7 +464,7 @@ payment_cutoff_on = 2024-07-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-07"
 filing_year = 2024
 period = "2024 07"
@@ -476,7 +475,7 @@ payment_cutoff_on = 2024-08-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-08"
 filing_year = 2024
 period = "2024 08"
@@ -487,7 +486,7 @@ payment_cutoff_on = 2024-09-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-09"
 filing_year = 2024
 period = "2024 09"
@@ -498,7 +497,7 @@ payment_cutoff_on = 2024-10-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-10"
 filing_year = 2024
 period = "2024 10"
@@ -509,7 +508,7 @@ payment_cutoff_on = 2024-11-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-11"
 filing_year = 2024
 period = "2024 11"
@@ -520,7 +519,7 @@ payment_cutoff_on = 2024-12-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2021-2025.deadline_windows]]
+[[revisions."2021-2025".deadline_windows]]
 id = "modelo-353-2024-12"
 filing_year = 2024
 period = "2024 12"

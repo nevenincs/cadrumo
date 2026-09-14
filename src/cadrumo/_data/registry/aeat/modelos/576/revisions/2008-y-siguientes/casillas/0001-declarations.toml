@@ -7,6 +7,30 @@
 # Devengo" slot (row 5, @22+4) is written from the draft's own filing_year
 # through a `draft` field, the established mechanism across this registry, so no
 # export field addresses this casilla.
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-576-procedure"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-576-procedure"]
 # Modelo 576 form casillas, transcribed from the bundled AEAT Diseno de
 # Registro cited by aeat-dr-576-2008. Each casilla's `number` is the
 # design's own row ordinal from its "N" column, so the mapping back to the
@@ -16,386 +40,275 @@
 # its construct already declare. Ley 38/1992 (IIEE) is NOT cited: it is absent
 # from this registry's legal catalogue and no article is invented here.
 
-[[revisions.2008-y-siguientes.casillas]]
-id = "decl.ejercicio"
-continuidad_id = "filing-year"
-continuidad_origin = "seeded"
-number = "ejercicio"
-data_type = "year"
-semantic_role = "filing_year"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-576-procedure"]
-
-[[revisions.2008-y-siguientes.casillas]]
-id = "decl.tipo-declaracion"
-number = "tipo-declaracion"
-data_type = "text"
-semantic_role = "tipo_declaracion"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-576-procedure"]
-
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "decl.tipo-transporte"
 number = "8"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["declaracion"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.nuevo-usado"
 number = "12"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.lugar-adquisicion"
 number = "13"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.fecha-primera-matriculacion"
 number = "15"
-data_type = "date"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "date"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-marca"
 number = "16"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-modelo-tipo"
 number = "17"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-bastidor"
 number = "18"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-clasificacion"
 number = "19.1"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-categoria-ce"
 number = "19.2"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-emisiones-co2"
 number = "19.4"
-data_type = "integer"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "integer"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-epigrafe"
 number = "19.5"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.kilometros-horas-uso"
 number = "19.6"
-data_type = "integer"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "integer"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-itv-serie"
 number = "19.7"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-itv-tipo-tarjeta"
 number = "19.8"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-motor"
 number = "20"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-cilindrada"
 number = "21"
-data_type = "integer"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "integer"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-fabricante"
 number = "22"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-modelo"
 number = "23"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-identificacion"
 number = "24"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-eslora"
 number = "25"
-data_type = "decimal"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "decimal"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-fabricante"
 number = "26"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-modelo"
 number = "27"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-serie"
 number = "28"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-ano-fabricacion"
 number = "29"
-data_type = "integer"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "integer"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-peso-maximo-despegue"
 number = "30"
-data_type = "integer"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "integer"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-codigo-itv"
 number = "31"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "liq.base-imponible"
 number = "33"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["liquidacion"]
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "liq.base-imponible-reducida"
 number = "34"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["liquidacion"]
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "liq.tipo"
 number = "35"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["liquidacion"]
+data_type = "ratio"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "liq.cuota"
 number = "36"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["liquidacion"]
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "liq.deduccion-lineal"
 number = "37"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["liquidacion"]
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "liq.cuota-a-ingresar"
 number = "38"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["liquidacion"]
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "liq.a-deducir"
 number = "39"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["liquidacion"]
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "liq.resultado"
 number = "40"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["liquidacion"]
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "decl.justificante-anterior"
 number = "41"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["declaracion"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "decl.causa-hecho-imponible"
 number = "45"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["declaracion"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "introductor.nif"
 number = "47"
-data_type = "nif"
-required = false
-input_kind = "manual"
 section = ["introductor"]
+data_type = "nif"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "introductor.nombre"
 number = "48"
-data_type = "name"
-required = false
-input_kind = "manual"
 section = ["introductor"]
+data_type = "name"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-observaciones"
 number = "50"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 
-[[revisions.2008-y-siguientes.casillas]]
+[[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-observaciones"
 number = "51"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["medio_transporte"]
+data_type = "text"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]

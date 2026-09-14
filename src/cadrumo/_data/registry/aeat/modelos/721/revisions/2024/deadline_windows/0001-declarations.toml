@@ -1,3 +1,12 @@
+[[revisions."2024".deadline_windows]]
+id = "modelo-721-2024-0a"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-01-01
+closes_on = 2025-03-31
+legal_refs = ["orden-hfp-886-2023:art-4", "orden-hac-1504-2024:df-unica", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-721-procedure"]
 # Supported filing years this edition left without a deadline window.
 #
 # GROUNDING. Art 4 states the plazo: "1 de enero" to "31 de marzo" -- NOT the January close the other
@@ -7,17 +16,7 @@
 #
 # Dates are NOMINAL; weekend and festivo movement happens at read time.
 
-[[revisions.2024.deadline_windows]]
-id = "modelo-721-2024-0a"
-filing_year = 2024
-period = "2024 0A"
-period_kind = "annual"
-opens_on = 2025-01-01
-closes_on = 2025-03-31
-legal_refs = ["orden-hfp-886-2023:art-4", "orden-hac-1504-2024:df-unica", "ley-58-2003:art-93"]
-source_refs = ["aeat-modelo-721-procedure"]
-
-[[revisions.2024.deadline_windows]]
+[[revisions."2024".deadline_windows]]
 id = "modelo-721-2025-0a"
 filing_year = 2025
 period = "2025 0A"
@@ -27,7 +26,7 @@ closes_on = 2026-03-31
 legal_refs = ["orden-hfp-886-2023:art-4", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-721-procedure"]
 
-[[revisions.2024.deadline_windows]]
+[[revisions."2024".deadline_windows]]
 id = "modelo-721-2026-0a"
 filing_year = 2026
 period = "2026 0A"

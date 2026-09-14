@@ -1,4 +1,4 @@
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2018-0a"
 filing_year = 2018
 period = "2018 0A"
@@ -7,8 +7,7 @@ opens_on = 2019-11-01
 closes_on = 2019-11-30
 legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
-
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2019-0a"
 filing_year = 2019
 period = "2019 0A"
@@ -17,8 +16,7 @@ opens_on = 2020-11-01
 closes_on = 2020-11-30
 legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
-
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2020-0a"
 filing_year = 2020
 period = "2020 0A"
@@ -27,8 +25,7 @@ opens_on = 2021-11-01
 closes_on = 2021-11-30
 legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
-
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2021-0a"
 filing_year = 2021
 period = "2021 0A"
@@ -37,8 +34,7 @@ opens_on = 2022-11-01
 closes_on = 2022-11-30
 legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
-
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2022-0a"
 filing_year = 2022
 period = "2022 0A"
@@ -47,8 +43,7 @@ opens_on = 2023-11-01
 closes_on = 2023-11-30
 legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
-
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2023-0a"
 filing_year = 2023
 period = "2023 0A"
@@ -57,8 +52,7 @@ opens_on = 2024-11-01
 closes_on = 2024-11-30
 legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
-
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2024-0a"
 filing_year = 2024
 period = "2024 0A"
@@ -67,8 +61,7 @@ opens_on = 2025-11-01
 closes_on = 2025-11-30
 legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
-
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2025-0a"
 filing_year = 2025
 period = "2025 0A"
@@ -77,8 +70,7 @@ opens_on = 2026-11-01
 closes_on = 2026-11-30
 legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
-
-[[revisions.2018-y-siguientes.deadline_windows]]
+[[revisions."2018-y-siguientes".deadline_windows]]
 id = "modelo-232-2026-0a"
 filing_year = 2026
 period = "2026 0A"

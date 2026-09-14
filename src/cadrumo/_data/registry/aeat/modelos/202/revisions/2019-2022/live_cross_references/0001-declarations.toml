@@ -1,3 +1,22 @@
+[[revisions.2019-2022.live_cross_references]]
+id = "modelo-202-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-202-2019-2022-static-documentation-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 # Modelo 202 at the authenticated declaraciones-presentadas register.
 #
 # AEAT's register offers modelo 202 in its own modelo combobox, read from the
@@ -11,26 +30,24 @@
 # OPTIONS against the sede host the register serves, and every state-changing
 # verb forbidden. Nothing here permits a presentation, a signature or a payment.
 
-[[revisions.2019-2022.live_cross_references]]
-id = "modelo-202-static-documentation"
-evidence_tier = "official_source_guidance"
-surface = "static_official_documentation"
-guard_policy_id = "modelo-202-2019-2022-static-documentation-only"
-synthetic_data_allowed = false
-requires_authentication = false
-requires_aeat_authorization = false
-forbidden_actions = ["server-side-save", "signing", "presentation", "payment", "amendment", "cancellation", "document-submission", "declaration-submission"]
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
-
-[[revisions.2019-2022.live_cross_references]]
+[[revisions."2019-2022".live_cross_references]]
 id = "modelo-202-filed-declarations-read"
 evidence_tier = "official_source_guidance"
 surface = "authenticated_read_surface"
 guard_policy_id = "modelo-202-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-allowed_hosts = ["www6.agenciatributaria.gob.es"]
-allowed_methods = ["GET", "HEAD", "OPTIONS"]
-forbidden_actions = ["server-side-save", "signing", "presentation", "payment", "amendment", "cancellation", "document-submission", "declaration-submission"]
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-105"]

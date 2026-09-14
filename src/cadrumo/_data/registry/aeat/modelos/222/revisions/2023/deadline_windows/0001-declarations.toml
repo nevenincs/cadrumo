@@ -16,7 +16,7 @@
 # applies_from 2025-01-01 and cannot speak for filing year 2023. Only the BOE
 # orden, open-ended from 2017, is cited.
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-222-2023-1p"
 filing_year = 2023
 period = "2023 1P"
@@ -26,7 +26,7 @@ closes_on = 2023-04-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
 source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-222-2023-2p"
 filing_year = 2023
 period = "2023 2P"
@@ -36,7 +36,7 @@ closes_on = 2023-10-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
 source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-222-2023-3p"
 filing_year = 2023
 period = "2023 3P"

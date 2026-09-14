@@ -1,10 +1,4 @@
-# AEAT's 2022 contributor calendar publishes each presentation close below.
-# Orden EHA/769/2010 art. 10 supplies the corresponding opening rule.
-# AEAT's 2022 and 2023 contributor calendars publish these quarter closes.
-# AEAT's 2023 contributor calendar publishes each presentation close below.
-# AEAT's 2023 and 2024 contributor calendars publish these quarter closes.
-
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-01"
 filing_year = 2024
 period = "2024 01"
@@ -14,7 +8,7 @@ closes_on = 2024-02-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-02"
 filing_year = 2024
 period = "2024 02"
@@ -24,7 +18,7 @@ closes_on = 2024-03-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-03"
 filing_year = 2024
 period = "2024 03"
@@ -34,7 +28,7 @@ closes_on = 2024-04-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-04"
 filing_year = 2024
 period = "2024 04"
@@ -44,7 +38,7 @@ closes_on = 2024-05-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-05"
 filing_year = 2024
 period = "2024 05"
@@ -54,7 +48,7 @@ closes_on = 2024-06-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-06"
 filing_year = 2024
 period = "2024 06"
@@ -64,7 +58,7 @@ closes_on = 2024-07-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-07"
 filing_year = 2024
 period = "2024 07"
@@ -74,7 +68,7 @@ closes_on = 2024-09-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-08"
 filing_year = 2024
 period = "2024 08"
@@ -84,7 +78,7 @@ closes_on = 2024-09-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-09"
 filing_year = 2024
 period = "2024 09"
@@ -94,7 +88,7 @@ closes_on = 2024-10-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-10"
 filing_year = 2024
 period = "2024 10"
@@ -104,7 +98,7 @@ closes_on = 2024-11-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-11"
 filing_year = 2024
 period = "2024 11"
@@ -114,7 +108,7 @@ closes_on = 2024-12-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-12"
 filing_year = 2024
 period = "2024 12"
@@ -123,8 +117,7 @@ opens_on = 2025-01-01
 closes_on = 2025-01-30
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
-
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-1t"
 filing_year = 2024
 period = "2024 1T"
@@ -134,7 +127,7 @@ closes_on = 2024-04-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-2t"
 filing_year = 2024
 period = "2024 2T"
@@ -144,7 +137,7 @@ closes_on = 2024-07-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-3t"
 filing_year = 2024
 period = "2024 3T"
@@ -154,7 +147,7 @@ closes_on = 2024-10-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2024-4t"
 filing_year = 2024
 period = "2024 4T"
@@ -163,8 +156,7 @@ opens_on = 2025-01-01
 closes_on = 2025-01-30
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
-
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-01"
 filing_year = 2025
 period = "2025 01"
@@ -174,7 +166,7 @@ closes_on = 2025-02-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-02"
 filing_year = 2025
 period = "2025 02"
@@ -184,7 +176,7 @@ closes_on = 2025-03-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-03"
 filing_year = 2025
 period = "2025 03"
@@ -194,7 +186,7 @@ closes_on = 2025-04-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-04"
 filing_year = 2025
 period = "2025 04"
@@ -204,7 +196,7 @@ closes_on = 2025-05-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-05"
 filing_year = 2025
 period = "2025 05"
@@ -214,7 +206,7 @@ closes_on = 2025-06-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-06"
 filing_year = 2025
 period = "2025 06"
@@ -224,7 +216,7 @@ closes_on = 2025-07-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-07"
 filing_year = 2025
 period = "2025 07"
@@ -234,7 +226,7 @@ closes_on = 2025-09-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-08"
 filing_year = 2025
 period = "2025 08"
@@ -244,7 +236,7 @@ closes_on = 2025-09-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-09"
 filing_year = 2025
 period = "2025 09"
@@ -254,7 +246,7 @@ closes_on = 2025-10-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-10"
 filing_year = 2025
 period = "2025 10"
@@ -264,7 +256,7 @@ closes_on = 2025-11-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-11"
 filing_year = 2025
 period = "2025 11"
@@ -274,7 +266,7 @@ closes_on = 2025-12-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-12"
 filing_year = 2025
 period = "2025 12"
@@ -283,8 +275,7 @@ opens_on = 2026-01-01
 closes_on = 2026-01-30
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
-
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-1t"
 filing_year = 2025
 period = "2025 1T"
@@ -294,7 +285,7 @@ closes_on = 2025-04-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-2t"
 filing_year = 2025
 period = "2025 2T"
@@ -304,7 +295,7 @@ closes_on = 2025-07-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-3t"
 filing_year = 2025
 period = "2025 3T"
@@ -314,7 +305,7 @@ closes_on = 2025-10-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2025-4t"
 filing_year = 2025
 period = "2025 4T"
@@ -323,8 +314,7 @@ opens_on = 2026-01-01
 closes_on = 2026-01-30
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
-
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-01"
 filing_year = 2026
 period = "2026 01"
@@ -334,7 +324,7 @@ closes_on = 2026-02-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-12"
 filing_year = 2026
 period = "2026 12"
@@ -344,7 +334,7 @@ closes_on = 2027-02-01
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93", "ley-39-2015:art-30.5"]
 source_refs = ["aeat-modelo-349-plazos-presentacion", "boe-modelo-349-form-2010"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-02"
 filing_year = 2026
 period = "2026 02"
@@ -354,7 +344,7 @@ closes_on = 2026-03-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-03"
 filing_year = 2026
 period = "2026 03"
@@ -364,7 +354,7 @@ closes_on = 2026-04-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-04"
 filing_year = 2026
 period = "2026 04"
@@ -374,7 +364,7 @@ closes_on = 2026-05-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-05"
 filing_year = 2026
 period = "2026 05"
@@ -384,7 +374,7 @@ closes_on = 2026-06-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-06"
 filing_year = 2026
 period = "2026 06"
@@ -394,7 +384,7 @@ closes_on = 2026-07-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-07"
 filing_year = 2026
 period = "2026 07"
@@ -404,7 +394,7 @@ closes_on = 2026-09-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-08"
 filing_year = 2026
 period = "2026 08"
@@ -414,7 +404,7 @@ closes_on = 2026-09-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-09"
 filing_year = 2026
 period = "2026 09"
@@ -424,7 +414,7 @@ closes_on = 2026-10-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-10"
 filing_year = 2026
 period = "2026 10"
@@ -434,7 +424,7 @@ closes_on = 2026-11-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-11"
 filing_year = 2026
 period = "2026 11"
@@ -443,8 +433,7 @@ opens_on = 2026-12-01
 closes_on = 2026-12-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
-
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-1t"
 filing_year = 2026
 period = "2026 1T"
@@ -454,7 +443,7 @@ closes_on = 2026-04-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-4t"
 filing_year = 2026
 period = "2026 4T"
@@ -464,7 +453,7 @@ closes_on = 2027-02-01
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93", "ley-39-2015:art-30.5"]
 source_refs = ["aeat-modelo-349-plazos-presentacion", "boe-modelo-349-form-2010"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-2t"
 filing_year = 2026
 period = "2026 2T"
@@ -474,7 +463,7 @@ closes_on = 2026-07-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-3t"
 filing_year = 2026
 period = "2026 3T"
@@ -483,8 +472,10 @@ opens_on = 2026-10-01
 closes_on = 2026-10-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
+# AEAT's 2022 contributor calendar publishes each presentation close below.
+# Orden EHA/769/2010 art. 10 supplies the corresponding opening rule.
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-01"
 filing_year = 2022
 period = "2022 01"
@@ -494,7 +485,7 @@ closes_on = 2022-02-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-02"
 filing_year = 2022
 period = "2022 02"
@@ -504,7 +495,7 @@ closes_on = 2022-03-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-03"
 filing_year = 2022
 period = "2022 03"
@@ -514,7 +505,7 @@ closes_on = 2022-04-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-04"
 filing_year = 2022
 period = "2022 04"
@@ -524,7 +515,7 @@ closes_on = 2022-05-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-05"
 filing_year = 2022
 period = "2022 05"
@@ -534,7 +525,7 @@ closes_on = 2022-06-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-06"
 filing_year = 2022
 period = "2022 06"
@@ -544,7 +535,7 @@ closes_on = 2022-07-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-07"
 filing_year = 2022
 period = "2022 07"
@@ -554,7 +545,7 @@ closes_on = 2022-09-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-08"
 filing_year = 2022
 period = "2022 08"
@@ -564,7 +555,7 @@ closes_on = 2022-09-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-09"
 filing_year = 2022
 period = "2022 09"
@@ -574,7 +565,7 @@ closes_on = 2022-10-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-10"
 filing_year = 2022
 period = "2022 10"
@@ -584,7 +575,7 @@ closes_on = 2022-11-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-11"
 filing_year = 2022
 period = "2022 11"
@@ -594,7 +585,7 @@ closes_on = 2022-12-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-12"
 filing_year = 2022
 period = "2022 12"
@@ -603,8 +594,9 @@ opens_on = 2023-01-01
 closes_on = 2023-01-30
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+# AEAT's 2022 and 2023 contributor calendars publish these quarter closes.
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-1t"
 filing_year = 2022
 period = "2022 1T"
@@ -614,7 +606,7 @@ closes_on = 2022-04-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-2t"
 filing_year = 2022
 period = "2022 2T"
@@ -624,7 +616,7 @@ closes_on = 2022-07-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-3t"
 filing_year = 2022
 period = "2022 3T"
@@ -634,7 +626,7 @@ closes_on = 2022-10-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2022-4t"
 filing_year = 2022
 period = "2022 4T"
@@ -643,8 +635,9 @@ opens_on = 2023-01-01
 closes_on = 2023-01-30
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+# AEAT's 2023 contributor calendar publishes each presentation close below.
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-01"
 filing_year = 2023
 period = "2023 01"
@@ -654,7 +647,7 @@ closes_on = 2023-02-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-02"
 filing_year = 2023
 period = "2023 02"
@@ -664,7 +657,7 @@ closes_on = 2023-03-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-03"
 filing_year = 2023
 period = "2023 03"
@@ -674,7 +667,7 @@ closes_on = 2023-04-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-04"
 filing_year = 2023
 period = "2023 04"
@@ -684,7 +677,7 @@ closes_on = 2023-05-22
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-05"
 filing_year = 2023
 period = "2023 05"
@@ -694,7 +687,7 @@ closes_on = 2023-06-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-06"
 filing_year = 2023
 period = "2023 06"
@@ -704,7 +697,7 @@ closes_on = 2023-07-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-07"
 filing_year = 2023
 period = "2023 07"
@@ -714,7 +707,7 @@ closes_on = 2023-09-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-08"
 filing_year = 2023
 period = "2023 08"
@@ -724,7 +717,7 @@ closes_on = 2023-09-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-09"
 filing_year = 2023
 period = "2023 09"
@@ -734,7 +727,7 @@ closes_on = 2023-10-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-10"
 filing_year = 2023
 period = "2023 10"
@@ -744,7 +737,7 @@ closes_on = 2023-11-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-11"
 filing_year = 2023
 period = "2023 11"
@@ -754,7 +747,7 @@ closes_on = 2023-12-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-12"
 filing_year = 2023
 period = "2023 12"
@@ -763,8 +756,9 @@ opens_on = 2024-01-01
 closes_on = 2024-01-30
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]
+# AEAT's 2023 and 2024 contributor calendars publish these quarter closes.
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-1t"
 filing_year = 2023
 period = "2023 1T"
@@ -774,7 +768,7 @@ closes_on = 2023-04-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-2t"
 filing_year = 2023
 period = "2023 2T"
@@ -784,7 +778,7 @@ closes_on = 2023-07-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-3t"
 filing_year = 2023
 period = "2023 3T"
@@ -794,7 +788,7 @@ closes_on = 2023-10-20
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2020-y-siguientes.deadline_windows]]
+[[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2023-4t"
 filing_year = 2023
 period = "2023 4T"

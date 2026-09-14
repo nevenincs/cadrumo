@@ -1,4 +1,4 @@
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-01"
 filing_year = 2022
 period = "2022 01"
@@ -8,7 +8,7 @@ closes_on = 2022-02-28
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-02"
 filing_year = 2022
 period = "2022 02"
@@ -18,7 +18,7 @@ closes_on = 2022-03-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-03"
 filing_year = 2022
 period = "2022 03"
@@ -28,7 +28,7 @@ closes_on = 2022-04-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-04"
 filing_year = 2022
 period = "2022 04"
@@ -38,7 +38,7 @@ closes_on = 2022-05-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-05"
 filing_year = 2022
 period = "2022 05"
@@ -48,7 +48,7 @@ closes_on = 2022-06-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-06"
 filing_year = 2022
 period = "2022 06"
@@ -58,7 +58,7 @@ closes_on = 2022-07-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-07"
 filing_year = 2022
 period = "2022 07"
@@ -68,7 +68,7 @@ closes_on = 2022-08-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-08"
 filing_year = 2022
 period = "2022 08"
@@ -78,7 +78,7 @@ closes_on = 2022-09-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-09"
 filing_year = 2022
 period = "2022 09"
@@ -88,7 +88,7 @@ closes_on = 2022-10-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-10"
 filing_year = 2022
 period = "2022 10"
@@ -98,7 +98,7 @@ closes_on = 2022-11-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-11"
 filing_year = 2022
 period = "2022 11"
@@ -108,7 +108,7 @@ closes_on = 2022-12-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2022-12"
 filing_year = 2022
 period = "2022 12"
@@ -118,7 +118,7 @@ closes_on = 2023-01-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-01"
 filing_year = 2023
 period = "2023 01"
@@ -128,7 +128,7 @@ closes_on = 2023-02-28
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-02"
 filing_year = 2023
 period = "2023 02"
@@ -138,7 +138,7 @@ closes_on = 2023-03-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-03"
 filing_year = 2023
 period = "2023 03"
@@ -148,7 +148,7 @@ closes_on = 2023-04-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-04"
 filing_year = 2023
 period = "2023 04"
@@ -158,7 +158,7 @@ closes_on = 2023-05-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-05"
 filing_year = 2023
 period = "2023 05"
@@ -168,7 +168,7 @@ closes_on = 2023-06-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-06"
 filing_year = 2023
 period = "2023 06"
@@ -178,7 +178,7 @@ closes_on = 2023-07-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-07"
 filing_year = 2023
 period = "2023 07"
@@ -188,7 +188,7 @@ closes_on = 2023-08-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-08"
 filing_year = 2023
 period = "2023 08"
@@ -198,7 +198,7 @@ closes_on = 2023-09-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-09"
 filing_year = 2023
 period = "2023 09"
@@ -208,7 +208,7 @@ closes_on = 2023-10-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-10"
 filing_year = 2023
 period = "2023 10"
@@ -218,7 +218,7 @@ closes_on = 2023-11-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-11"
 filing_year = 2023
 period = "2023 11"
@@ -228,7 +228,7 @@ closes_on = 2023-12-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2023-12"
 filing_year = 2023
 period = "2023 12"
@@ -238,7 +238,7 @@ closes_on = 2024-01-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-01"
 filing_year = 2024
 period = "2024 01"
@@ -248,7 +248,7 @@ closes_on = 2024-02-29
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-02"
 filing_year = 2024
 period = "2024 02"
@@ -258,7 +258,7 @@ closes_on = 2024-03-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-03"
 filing_year = 2024
 period = "2024 03"
@@ -268,7 +268,7 @@ closes_on = 2024-04-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-04"
 filing_year = 2024
 period = "2024 04"
@@ -278,7 +278,7 @@ closes_on = 2024-05-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-05"
 filing_year = 2024
 period = "2024 05"
@@ -288,7 +288,7 @@ closes_on = 2024-06-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-06"
 filing_year = 2024
 period = "2024 06"
@@ -298,7 +298,7 @@ closes_on = 2024-07-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-07"
 filing_year = 2024
 period = "2024 07"
@@ -308,7 +308,7 @@ closes_on = 2024-08-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-08"
 filing_year = 2024
 period = "2024 08"
@@ -318,7 +318,7 @@ closes_on = 2024-09-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-09"
 filing_year = 2024
 period = "2024 09"
@@ -328,7 +328,7 @@ closes_on = 2024-10-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-10"
 filing_year = 2024
 period = "2024 10"
@@ -338,7 +338,7 @@ closes_on = 2024-11-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-11"
 filing_year = 2024
 period = "2024 11"
@@ -348,7 +348,7 @@ closes_on = 2024-12-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2024-12"
 filing_year = 2024
 period = "2024 12"
@@ -358,7 +358,7 @@ closes_on = 2025-01-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-01"
 filing_year = 2025
 period = "2025 01"
@@ -368,7 +368,7 @@ closes_on = 2025-02-28
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-02"
 filing_year = 2025
 period = "2025 02"
@@ -378,7 +378,7 @@ closes_on = 2025-03-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-03"
 filing_year = 2025
 period = "2025 03"
@@ -388,7 +388,7 @@ closes_on = 2025-04-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-04"
 filing_year = 2025
 period = "2025 04"
@@ -398,7 +398,7 @@ closes_on = 2025-05-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-05"
 filing_year = 2025
 period = "2025 05"
@@ -408,7 +408,7 @@ closes_on = 2025-06-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-06"
 filing_year = 2025
 period = "2025 06"
@@ -418,7 +418,7 @@ closes_on = 2025-07-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-07"
 filing_year = 2025
 period = "2025 07"
@@ -428,7 +428,7 @@ closes_on = 2025-08-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-08"
 filing_year = 2025
 period = "2025 08"
@@ -438,7 +438,7 @@ closes_on = 2025-09-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-09"
 filing_year = 2025
 period = "2025 09"
@@ -448,7 +448,7 @@ closes_on = 2025-10-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-10"
 filing_year = 2025
 period = "2025 10"
@@ -458,7 +458,7 @@ closes_on = 2025-11-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-11"
 filing_year = 2025
 period = "2025 11"
@@ -468,7 +468,7 @@ closes_on = 2025-12-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-12"
 filing_year = 2025
 period = "2025 12"
@@ -478,7 +478,7 @@ closes_on = 2026-01-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-01"
 filing_year = 2026
 period = "2026 01"
@@ -488,7 +488,7 @@ closes_on = 2026-02-28
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-02"
 filing_year = 2026
 period = "2026 02"
@@ -498,7 +498,7 @@ closes_on = 2026-03-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-03"
 filing_year = 2026
 period = "2026 03"
@@ -508,7 +508,7 @@ closes_on = 2026-04-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-04"
 filing_year = 2026
 period = "2026 04"
@@ -518,7 +518,7 @@ closes_on = 2026-05-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-05"
 filing_year = 2026
 period = "2026 05"
@@ -528,7 +528,7 @@ closes_on = 2026-06-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-06"
 filing_year = 2026
 period = "2026 06"
@@ -538,7 +538,7 @@ closes_on = 2026-07-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-07"
 filing_year = 2026
 period = "2026 07"
@@ -548,7 +548,7 @@ closes_on = 2026-08-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-08"
 filing_year = 2026
 period = "2026 08"
@@ -558,7 +558,7 @@ closes_on = 2026-09-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-09"
 filing_year = 2026
 period = "2026 09"
@@ -568,7 +568,7 @@ closes_on = 2026-10-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-10"
 filing_year = 2026
 period = "2026 10"
@@ -578,7 +578,7 @@ closes_on = 2026-11-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-11"
 filing_year = 2026
 period = "2026 11"
@@ -588,7 +588,7 @@ closes_on = 2026-12-31
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-importacion.deadline_windows]]
+[[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2026-12"
 filing_year = 2026
 period = "2026 12"

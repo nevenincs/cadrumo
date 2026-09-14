@@ -2,8 +2,7 @@
 # but Orden HAC/1430/2025 art. 2 changes the qualifying test from the same
 # declared entity wording in the ejercicio 2024 design to the same-entity,
 # current-and-prior-period wording in the ejercicio 2025 design.
-
-[[revisions.2025.casilla_continuidad_evolutions]]
+[[revisions."2025".casilla_continuidad_evolutions]]
 id = "modelo-182-donation-recurrence-legal-evolved"
 continuidad_id = "donativo-recurrente"
 from_revision = "2024"

@@ -1,8 +1,7 @@
 # Plazo from Orden EHA/3127/2009 art. 5, which states the twenty-natural-day
 # base rule and then the «No obstante» exception giving 1 to 31 January for
 # every form in current use. The 2023 resumen is presented in January 2024.
-
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-190-2023-0a"
 filing_year = 2023
 period = "2023 0A"

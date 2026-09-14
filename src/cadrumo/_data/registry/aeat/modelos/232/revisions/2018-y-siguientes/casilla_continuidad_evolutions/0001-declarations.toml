@@ -4,8 +4,7 @@
 # casilla id, the AEAT number and the legal_refs tuple are identical between the
 # two revisions (decl.cnae at 2.devengo.cnae and decl.ejercicio at
 # 2.devengo.ejercicio). Nothing was added and nothing retired.
-
-[[revisions.2018-y-siguientes.casilla_continuidad_evolutions]]
+[[revisions."2018-y-siguientes".casilla_continuidad_evolutions]]
 id = "m232-actividad-cnae-2016-2017-2018-unchanged"
 continuidad_id = "actividad-cnae"
 from_revision = "2016-2017"
@@ -14,7 +13,7 @@ evolution_kind = "unchanged"
 legal_refs = ["orden-hfp-816-2017:art-1", "orden-hfp-816-2017:art-3"]
 source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure"]
 
-[[revisions.2018-y-siguientes.casilla_continuidad_evolutions]]
+[[revisions."2018-y-siguientes".casilla_continuidad_evolutions]]
 id = "m232-filing-year-2016-2017-2018-unchanged"
 continuidad_id = "filing-year"
 from_revision = "2016-2017"

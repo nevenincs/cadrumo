@@ -12,13 +12,13 @@
 # (@520+8) is RESERVADO para AEAT, so writing the parent as one slot would put
 # taxpayer data into space the Administracion reserves.
 
-[[revisions.2008-y-siguientes.export_layouts]]
+[[revisions."2008-y-siguientes".export_layouts]]
 id = "modelo-576-fichero-boe"
 format = "fixed_width"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records]]
+[[revisions."2008-y-siguientes".export_layouts.records]]
 id = "modelo-576-autoliquidacion-record"
 record_type = "576-01"
 order = 0
@@ -26,7 +26,7 @@ encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-lit-1"
 offset = 1
 length = 8
@@ -40,7 +40,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-lit-2"
 offset = 9
 length = 3
@@ -54,7 +54,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-decl-tipo-declaracion"
 offset = 12
 length = 1
@@ -68,7 +68,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-4"
 offset = 13
 length = 9
@@ -81,7 +81,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-draft-filing-year"
 offset = 22
 length = 4
@@ -95,7 +95,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-6"
 offset = 26
 length = 4
@@ -108,7 +108,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-lit-7"
 offset = 30
 length = 2
@@ -122,7 +122,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-decl-tipo-transporte"
 offset = 32
 length = 1
@@ -136,7 +136,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-taxpayer-tax-id"
 offset = 33
 length = 9
@@ -150,7 +150,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-taxpayer-full-name"
 offset = 42
 length = 40
@@ -164,7 +164,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-11"
 offset = 82
 length = 279
@@ -177,7 +177,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-nuevo-usado"
 offset = 361
 length = 1
@@ -191,7 +191,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-lugar-adquisicion"
 offset = 362
 length = 1
@@ -205,7 +205,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-14"
 offset = 363
 length = 1
@@ -218,7 +218,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-fecha-primera-matriculacion"
 offset = 364
 length = 8
@@ -234,7 +234,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-marca"
 offset = 372
 length = 40
@@ -248,7 +248,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-modelo-tipo"
 offset = 412
 length = 80
@@ -262,7 +262,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-bastidor"
 offset = 492
 length = 22
@@ -276,7 +276,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-clasificacion"
 offset = 514
 length = 4
@@ -290,7 +290,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-categoria-ce"
 offset = 518
 length = 2
@@ -304,7 +304,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-19-3"
 offset = 520
 length = 8
@@ -317,7 +317,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-emisiones-co2"
 offset = 528
 length = 5
@@ -331,7 +331,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-epigrafe"
 offset = 533
 length = 2
@@ -345,7 +345,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-kilometros-horas-uso"
 offset = 535
 length = 6
@@ -359,7 +359,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-itv-serie"
 offset = 541
 length = 12
@@ -373,7 +373,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-itv-tipo-tarjeta"
 offset = 553
 length = 1
@@ -387,7 +387,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-motor"
 offset = 554
 length = 1
@@ -401,7 +401,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-cilindrada"
 offset = 555
 length = 5
@@ -415,7 +415,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-embarcacion-fabricante"
 offset = 560
 length = 40
@@ -429,7 +429,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-embarcacion-modelo"
 offset = 600
 length = 80
@@ -443,7 +443,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-embarcacion-identificacion"
 offset = 680
 length = 22
@@ -457,7 +457,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-embarcacion-eslora"
 offset = 702
 length = 5
@@ -472,7 +472,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-aeronave-fabricante"
 offset = 707
 length = 40
@@ -486,7 +486,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-aeronave-modelo"
 offset = 747
 length = 80
@@ -500,7 +500,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-aeronave-serie"
 offset = 827
 length = 22
@@ -514,7 +514,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-aeronave-ano-fabricacion"
 offset = 849
 length = 4
@@ -528,7 +528,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-aeronave-peso-maximo-despegue"
 offset = 853
 length = 10
@@ -542,7 +542,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-codigo-itv"
 offset = 863
 length = 9
@@ -556,7 +556,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-32"
 offset = 872
 length = 223
@@ -569,7 +569,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-liq-base-imponible"
 offset = 1095
 length = 13
@@ -583,7 +583,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-liq-base-imponible-reducida"
 offset = 1108
 length = 13
@@ -597,7 +597,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-liq-tipo"
 offset = 1121
 length = 5
@@ -612,7 +612,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-liq-cuota"
 offset = 1126
 length = 13
@@ -626,7 +626,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-liq-deduccion-lineal"
 offset = 1139
 length = 13
@@ -640,7 +640,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-liq-cuota-a-ingresar"
 offset = 1152
 length = 13
@@ -654,7 +654,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-liq-a-deducir"
 offset = 1165
 length = 13
@@ -668,7 +668,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-liq-resultado"
 offset = 1178
 length = 13
@@ -682,7 +682,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-decl-justificante-anterior"
 offset = 1191
 length = 13
@@ -696,7 +696,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-42"
 offset = 1204
 length = 30
@@ -709,7 +709,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-43"
 offset = 1234
 length = 30
@@ -722,7 +722,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-44"
 offset = 1264
 length = 76
@@ -735,7 +735,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-decl-causa-hecho-imponible"
 offset = 1340
 length = 1
@@ -749,7 +749,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-46"
 offset = 1341
 length = 8
@@ -762,7 +762,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-introductor-nif"
 offset = 1349
 length = 9
@@ -776,7 +776,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-introductor-nombre"
 offset = 1358
 length = 40
@@ -790,7 +790,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-49"
 offset = 1398
 length = 84
@@ -803,7 +803,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-vehiculo-observaciones"
 offset = 1482
 length = 2
@@ -817,7 +817,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-cmt-embarcacion-observaciones"
 offset = 1484
 length = 2
@@ -831,7 +831,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-reservado-52"
 offset = 1486
 length = 23
@@ -844,7 +844,7 @@ signed = false
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-576-2008"]
 
-[[revisions.2008-y-siguientes.export_layouts.records.fields]]
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
 id = "modelo-576-lit-53"
 offset = 1509
 length = 9

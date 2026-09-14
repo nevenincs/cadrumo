@@ -1,769 +1,504 @@
 # Exact operator-entered positions of the one-record 2004–15 Diseño de Registro.
 # This applicability-grade revision preserves geometry and does not expose a filing-capable writer.
+
+[[revisions."2004-2015".casillas]]
+id = "decl.ejercicio"
+continuidad_id = "filing-year"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[[revisions."2004-2015".casillas]]
+id = "decl.periodo"
+number = "7"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_periodo_309"
+continuidad_id = "declaracion-periodo-309"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+[[revisions."2004-2015".casillas]]
+id = "wire.letras-etiqueta"
+continuidad_id = "letras-etiqueta-persona-fisica"
+number = "5"
+section = ["presentacion","identificacion"]
+data_type = "text"
+semantic_role = "letras_etiqueta_persona_fisica"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+[[revisions."2004-2015".casillas]]
+id = "decl.transmitente-nif"
+number = "25"
+section = ["declarante","liquidacion"]
+data_type = "nif"
+semantic_role = "transmitente_nif"
+continuidad_id = "transmitente-nif"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+[[revisions."2004-2015".casillas]]
+id = "wire.transmitente-apellidos-nombre-razon-social"
+number = "34"
+section = ["declarante","liquidacion"]
+data_type = "name"
 # The official 2004 design has one 40-character campo 9 at position 34,
 # labelled "Apellidos y nombre ó razón social". It is a combined identity
 # surface, not the surname/company member of the split 2016 design; keep its
 # historical wire concept distinct so the old surface can be retired without
 # fabricating a one-to-one chain.
+continuidad_id = "transmitente-apellidos-nombre-razon-social"
+semantic_role = "transmitente_apellidos"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+[[revisions."2004-2015".casillas]]
+id = "wire.transmitente-pais-texto"
+number = "74"
+section = ["declarante","liquidacion"]
+data_type = "text"
 # The 2004 source gives this as a fourteen-character country description.
 # Later designs carry a two-character country code, so it is not the same
 # typed semantic role despite the shared display label.
+continuidad_id = "transmitente-pais-texto-historico"
+semantic_role = "transmitente_pais_texto_historico"
+constraints = { max_length = 14, legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+[[revisions."2004-2015".casillas]]
+id = "decl.situacion-tributaria-agricola"
+number = "88"
+section = ["declarante","liquidacion"]
+data_type = "text"
 # The 2004 taxpayer-status flags are six independent X-or-blank fields. The
 # 2016 design replaces this block with one coded field, so each historical
 # surface is retired rather than linked to the aggregate category selector.
-# The 2004 taxable-event flags are six independent X-or-blank fields. The
-# 2016 design replaces this block with one coded field, so each historical
-# surface is retired rather than linked to the aggregate event selector.
-# Exact numeric [01]–[24] slots in the 1,300-position 2004–15 record.
-
-[[revisions.2004-2015.casillas]]
-id = "decl.ejercicio"
-continuidad_id = "filing-year"
-number = "ejercicio"
-data_type = "year"
-semantic_role = "filing_year"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
-id = "decl.periodo"
-number = "7"
-data_type = "text"
-semantic_role = "declaracion_periodo_309"
-continuidad_id = "declaracion-periodo-309"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
-id = "wire.letras-etiqueta"
-continuidad_id = "letras-etiqueta-persona-fisica"
-number = "5"
-data_type = "text"
-semantic_role = "letras_etiqueta_persona_fisica"
-required = false
-input_kind = "manual"
-section = ["presentacion", "identificacion"]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
-id = "decl.transmitente-nif"
-number = "25"
-data_type = "nif"
-semantic_role = "transmitente_nif"
-continuidad_id = "transmitente-nif"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
-id = "wire.transmitente-apellidos-nombre-razon-social"
-number = "34"
-data_type = "name"
-continuidad_id = "transmitente-apellidos-nombre-razon-social"
-semantic_role = "transmitente_apellidos"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
-id = "wire.transmitente-pais-texto"
-number = "74"
-data_type = "text"
-continuidad_id = "transmitente-pais-texto-historico"
-semantic_role = "transmitente_pais_texto_historico"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-max_length = 14
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
-id = "decl.situacion-tributaria-agricola"
-number = "88"
-data_type = "text"
 continuidad_id = "situacion-tributaria-agricola"
 semantic_role = "situacion_tributaria_agricola"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-max_length = 1
-enum = ["X", ""]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.situacion-tributaria-recargo-equivalencia"
 number = "89"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "situacion-tributaria-recargo-equivalencia"
 semantic_role = "situacion_tributaria_recargo_equivalencia"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-max_length = 1
-enum = ["X", ""]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.situacion-tributaria-sin-derecho-deduccion"
 number = "90"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "situacion-tributaria-sin-derecho-deduccion"
 semantic_role = "situacion_tributaria_sin_derecho_deduccion"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-max_length = 1
-enum = ["X", ""]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.situacion-tributaria-persona-juridica-no-empresario"
 number = "91"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "situacion-tributaria-persona-juridica-no-empresario"
 semantic_role = "situacion_tributaria_persona_juridica_no_empresario"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-max_length = 1
-enum = ["X", ""]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.situacion-tributaria-persona-fisica-no-empresario"
 number = "92"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "situacion-tributaria-persona-fisica-no-empresario"
 semantic_role = "situacion_tributaria_persona_fisica_no_empresario"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-max_length = 1
-enum = ["X", ""]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.situacion-tributaria-otras"
 number = "93"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "situacion-tributaria-otras"
 semantic_role = "situacion_tributaria_otras"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-max_length = 1
-enum = ["X", ""]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-adquisicion-intracomunitaria"
 number = "94"
+section = ["declarante","liquidacion"]
 data_type = "text"
+# The 2004 taxable-event flags are six independent X-or-blank fields. The
+# 2016 design replaces this block with one coded field, so each historical
+# surface is retired rather than linked to the aggregate event selector.
 continuidad_id = "hecho-imponible-adquisicion-intracomunitaria"
 semantic_role = "hecho_imponible_adquisicion_intracomunitaria"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-medios-transporte-nuevos"
 number = "95"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "hecho-imponible-medios-transporte-nuevos"
 semantic_role = "hecho_imponible_medios_transporte_nuevos"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-inversion-sujeto-pasivo"
 number = "96"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "hecho-imponible-inversion-sujeto-pasivo"
 semantic_role = "hecho_imponible_inversion_sujeto_pasivo"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-entrega-inversion-inmobiliaria"
 number = "97"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "hecho-imponible-entrega-inversion-inmobiliaria"
 semantic_role = "hecho_imponible_entrega_inversion_inmobiliaria"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-procedimiento-administrativo-judicial"
 number = "98"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "hecho-imponible-procedimiento-administrativo-judicial"
 semantic_role = "hecho_imponible_procedimiento_administrativo_judicial"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-otros"
 number = "99"
+section = ["declarante","liquidacion"]
 data_type = "text"
 continuidad_id = "hecho-imponible-otros"
 semantic_role = "hecho_imponible_otros"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.vehiculo-marca"
 number = "100"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_marca"
 continuidad_id = "vehiculo-marca"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.vehiculo-tipo"
 number = "140"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_tipo"
 continuidad_id = "vehiculo-tipo"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.vehiculo-modelo"
 number = "180"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_modelo"
 continuidad_id = "vehiculo-modelo"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.vehiculo-bastidor"
 number = "220"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_bastidor"
 continuidad_id = "vehiculo-bastidor"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.vehiculo-clasificacion"
 number = "260"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_clasificacion"
 continuidad_id = "vehiculo-clasificacion"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.embarcacion-fabricante"
 number = "300"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_fabricante"
 continuidad_id = "embarcacion-fabricante"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.embarcacion-tipo"
 number = "340"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_tipo"
 continuidad_id = "embarcacion-tipo"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.embarcacion-identificacion"
 number = "380"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "mtn_embarcacion_identificacion"
 continuidad_id = "mtn-embarcacion-identificacion"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.embarcacion-eslora"
 number = "420"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_eslora"
 continuidad_id = "embarcacion-eslora"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.aeronave-fabricante"
 number = "426"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_fabricante"
 continuidad_id = "aeronave-fabricante"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.aeronave-marca"
 number = "466"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_marca"
 continuidad_id = "aeronave-marca"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.aeronave-serie"
 number = "506"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_serie"
 continuidad_id = "aeronave-serie"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.aeronave-ano"
 number = "546"
+section = ["declarante","liquidacion"]
 data_type = "year"
 semantic_role = "aeronave_ano"
 continuidad_id = "aeronave-ano"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.aeronave-peso"
 number = "550"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_peso"
 continuidad_id = "aeronave-peso"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.justificante-anterior"
 number = "61"
+section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "justificante_anterior"
 continuidad_id = "justificante-anterior"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "wire.observaciones"
 continuidad_id = "observaciones-presentacion"
 number = "64"
+section = ["presentacion"]
 data_type = "text"
 semantic_role = "observaciones_presentacion"
-required = false
-input_kind = "manual"
-section = ["presentacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+# Exact numeric [01]–[24] slots in the 1,300-position 2004–15 record.
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-base-01"
 number = "01"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "rg_base_01"
 continuidad_id = "rg-base-01"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-tipo-02"
 number = "02"
+section = ["declarante","liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_02"
 continuidad_id = "rg-tipo-02"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-cuota-03"
 number = "03"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "rg_cuota_03"
 continuidad_id = "rg-cuota-03"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-base-04"
 number = "04"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "rg_base_04"
 continuidad_id = "rg-base-04"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-tipo-05"
 number = "05"
+section = ["declarante","liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_05"
 continuidad_id = "rg-tipo-05"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-cuota-06"
 number = "06"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "rg_cuota_06"
 continuidad_id = "rg-cuota-06"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-base-07"
 number = "07"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "rg_base_07"
 continuidad_id = "rg-base-07"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-tipo-08"
 number = "08"
+section = ["declarante","liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_08"
 continuidad_id = "rg-tipo-08"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.rg-cuota-09"
 number = "09"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "rg_cuota_09"
 continuidad_id = "rg-cuota-09"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-base-10"
 number = "10"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "re_base_10"
 continuidad_id = "re-base-10"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-tipo-11"
 number = "11"
+section = ["declarante","liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_11"
 continuidad_id = "re-tipo-11"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-cuota-12"
 number = "12"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "re_cuota_12"
 continuidad_id = "re-cuota-12"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-base-13"
 number = "13"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "re_base_13"
 continuidad_id = "re-base-13"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-tipo-14"
 number = "14"
+section = ["declarante","liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_14"
 continuidad_id = "re-tipo-14"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-cuota-15"
 number = "15"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "re_cuota_15"
 continuidad_id = "re-cuota-15"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-base-16"
 number = "16"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "re_base_16"
 continuidad_id = "re-base-16"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-tipo-17"
 number = "17"
+section = ["declarante","liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_17"
 continuidad_id = "re-tipo-17"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-cuota-18"
 number = "18"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "re_cuota_18"
 continuidad_id = "re-cuota-18"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-base-19"
 number = "19"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "re_base_19"
 continuidad_id = "re-base-19"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-tipo-20"
 number = "20"
+section = ["declarante","liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_20"
 continuidad_id = "re-tipo-20"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.re-cuota-21"
 number = "21"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "re_cuota_21"
 continuidad_id = "re-cuota-21"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.cuota-devengada-22"
 number = "22"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "cuota_devengada_22"
 continuidad_id = "cuota-devengada-22"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.a-deducir-23"
 number = "23"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "a_deducir_23"
 continuidad_id = "a-deducir-23"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2004-2015.casillas]]
+[[revisions."2004-2015".casillas]]
 id = "decl.resultado-24"
 number = "24"
-data_type = "money"
+section = ["declarante","liquidacion"]
 semantic_role = "resultado_24"
 continuidad_id = "resultado-24"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2004-2015.casillas.constraints]
-sign = "non_negative"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]

@@ -5,7 +5,7 @@
 # Orden HAC/623/2026 makes tipo 02 run 1 April-31 December for this owner; the
 # 2025 owner retains the pre-amendment whole-following-year interval.
 
-[[revisions.2026-y-siguientes.deadline_windows]]
+[[revisions."2026-y-siguientes".deadline_windows]]
 id = "modelo-210-2026-0a-arrendamiento-ingreso"
 filing_year = 2026
 period = "2026 0A"
@@ -17,7 +17,7 @@ tipo_renta_scope = ["01", "35"]
 legal_refs = ["orden-eha-3316-2010:art-5"]
 source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
 
-[[revisions.2026-y-siguientes.deadline_windows]]
+[[revisions."2026-y-siguientes".deadline_windows]]
 id = "modelo-210-2026-0a-cuota-cero"
 filing_year = 2026
 period = "2026 0A"
@@ -29,7 +29,7 @@ tipo_renta_scope = ["01", "35"]
 legal_refs = ["orden-eha-3316-2010:art-5"]
 source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
 
-[[revisions.2026-y-siguientes.deadline_windows]]
+[[revisions."2026-y-siguientes".deadline_windows]]
 id = "modelo-210-2026-0a-devolucion"
 filing_year = 2026
 period = "2026 0A"
@@ -41,7 +41,7 @@ tipo_renta_scope = ["01", "35"]
 legal_refs = ["orden-eha-3316-2010:art-5"]
 source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
 
-[[revisions.2026-y-siguientes.deadline_windows]]
+[[revisions."2026-y-siguientes".deadline_windows]]
 id = "modelo-210-2026-0a-renta-imputada"
 filing_year = 2026
 period = "2026 0A"

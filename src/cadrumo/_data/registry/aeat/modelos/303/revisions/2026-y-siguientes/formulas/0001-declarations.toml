@@ -1,3 +1,7 @@
+[[revisions.2026-y-siguientes.formulas]]
+id = "modelo-303-iva-resultado-final"
+target_casilla_id = "71"
+rounding = "money-2"
 # Diseño de Registros Modelo 303 2026: casilla [71] = [69] - [70] + [109] - [112].
 #   [69] = resultado de la autoliquidación
 #   [70] = resultados a ingresar de anteriores autoliquidaciones del ejercicio y período
@@ -7,11 +11,6 @@
 #   [112] = pago a cuenta de entregas de gasolinas, gasóleos y biocarburantes atribuido al Estado.
 # For standard first filings of the period: [70]=[109]=[112]=0, so [71] = [69].
 # Source: aeat-dr-303-2026 and aeat-modelo-303-procedure.
-
-[[revisions.2026-y-siguientes.formulas]]
-id = "modelo-303-iva-resultado-final"
-target_casilla_id = "71"
-rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
 additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 

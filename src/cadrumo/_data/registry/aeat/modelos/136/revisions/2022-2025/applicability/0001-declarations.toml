@@ -22,10 +22,10 @@
 # resultado a ingresar in casilla 07, unlike the informativa resumenes that
 # declare it false.
 
-[[revisions.2022-2025.applicability]]
+[[revisions."2022-2025".applicability]]
 id = "m136-seed"
+applicable_entity_types = ["natural_person"]
 applicable_reason = "Modelo 136 (IRPF e IRNR, gravamen especial sobre los premios de determinadas loterias y apuestas): el contribuyente que ha obtenido un premio sujeto al gravamen especial autoliquida la cuota cuando no se le ha practicado la retencion o el ingreso a cuenta correspondiente, conforme a la disposicion adicional 33 de la Ley 35/2006."
 not_applicable_reason = "Modelo 136 no aplica: la disposicion adicional 33 de la Ley 35/2006 exime de presentar la autoliquidacion cuando el premio es de cuantia inferior al importe exento o cuando el pagador ha practicado la retencion o el ingreso a cuenta sobre el."
 cuota_bearing = true
-applicable_entity_types = ["natural_person"]
 legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]

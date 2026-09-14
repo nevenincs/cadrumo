@@ -11,29 +11,20 @@
 # be filled by the entidad desarrolladora del software. No such identity is
 # declared anywhere in this project, so writing either one would be inventing
 # it. Modelo 131 leaves the same two slots unwritten.
-# Design sheet 'DR 12300': the file envelope, positions 1-328.
-# Design sheet 'DR 12301': the declaration page, positions 1-600.
-# AEAT's own Contenido cell for this position reads 'En blanco': this modelo has a
-# single page-01 record, so there is no continuation page to indicate. The
-# complementaria declaration itself is written from amendment evidence below.
-# 'Sujeto pasivo. NIF' -- the retenedor filing, matched to the name position below.
-# This revision replaced the split apellidos/nombre pair with ONE 80-byte field,
-# 'Razon/denominacion social, apellidos y nombre', so it takes the combined
-# identity rather than either half.
 
-[[revisions.2024-y-siguientes.export_layouts]]
+[[revisions."2024-y-siguientes".export_layouts]]
 id = "modelo-123-fichero-boe"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
-[[revisions.2024-y-siguientes.export_layouts.records]]
+# Design sheet 'DR 12300': the file envelope, positions 1-328.
+[[revisions."2024-y-siguientes".export_layouts.records]]
 id = "modelo-123-2024-envelope-header"
 record_type = "envelope_header"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-open"
 offset = 1
 length = 2
@@ -46,8 +37,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-modelo"
 offset = 3
 length = 3
@@ -60,8 +50,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-discriminante"
 offset = 6
 length = 1
@@ -74,8 +63,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-ejercicio"
 offset = 7
 length = 4
@@ -88,8 +76,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-periodo"
 offset = 11
 length = 2
@@ -102,8 +89,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-marker"
 offset = 13
 length = 5
@@ -116,8 +102,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-aux-open"
 offset = 18
 length = 5
@@ -130,8 +115,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-reserved-1"
 offset = 23
 length = 70
@@ -143,8 +127,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-reserved-2"
 offset = 97
 length = 4
@@ -156,8 +139,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-reserved-3"
 offset = 110
 length = 213
@@ -169,8 +151,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-envelope-aux-close"
 offset = 323
 length = 6
@@ -184,14 +165,14 @@ signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
-[[revisions.2024-y-siguientes.export_layouts.records]]
+# Design sheet 'DR 12301': the declaration page, positions 1-600.
+[[revisions."2024-y-siguientes".export_layouts.records]]
 id = "modelo-123-2024-page-01"
 record_type = "page_1"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-open"
 offset = 1
 length = 2
@@ -204,8 +185,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-modelo"
 offset = 3
 length = 3
@@ -218,8 +198,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-pagina"
 offset = 6
 length = 2
@@ -232,8 +211,7 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-identifier-close"
 offset = 8
 length = 4
@@ -246,8 +224,10 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+# AEAT's own Contenido cell for this position reads 'En blanco': this modelo has a
+# single page-01 record, so there is no continuation page to indicate. The
+# complementaria declaration itself is written from amendment evidence below.
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-indicador-pagina-complementaria"
 offset = 12
 length = 1
@@ -259,8 +239,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-tipo-declaracion"
 offset = 13
 length = 1
@@ -273,8 +252,8 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+# 'Sujeto pasivo. NIF' -- the retenedor filing, matched to the name position below.
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-nif"
 offset = 14
 length = 9
@@ -287,8 +266,10 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+# This revision replaced the split apellidos/nombre pair with ONE 80-byte field,
+# 'Razon/denominacion social, apellidos y nombre', so it takes the combined
+# identity rather than either half.
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-nombre-completo"
 offset = 23
 length = 80
@@ -301,8 +282,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-ejercicio"
 offset = 103
 length = 4
@@ -315,8 +295,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-periodo"
 offset = 107
 length = 2
@@ -329,8 +308,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-01"
 offset = 109
 length = 15
@@ -343,8 +321,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-02"
 offset = 124
 length = 15
@@ -357,8 +334,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-03"
 offset = 139
 length = 15
@@ -371,8 +347,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-04"
 offset = 154
 length = 17
@@ -385,8 +360,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-05"
 offset = 171
 length = 17
@@ -399,8 +373,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-06"
 offset = 188
 length = 17
@@ -413,8 +386,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-07"
 offset = 205
 length = 17
@@ -427,8 +399,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-08"
 offset = 222
 length = 17
@@ -441,8 +412,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-09"
 offset = 239
 length = 17
@@ -455,8 +425,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-10"
 offset = 256
 length = 17
@@ -469,8 +438,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-11"
 offset = 273
 length = 17
@@ -483,8 +451,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-12"
 offset = 290
 length = 17
@@ -497,8 +464,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-13"
 offset = 307
 length = 17
@@ -511,8 +477,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-casilla-14"
 offset = 324
 length = 17
@@ -525,8 +490,7 @@ justification = "right"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-declaracion-complementaria"
 offset = 341
 length = 1
@@ -539,8 +503,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-justificante-anterior"
 offset = 342
 length = 13
@@ -553,8 +516,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-iban"
 offset = 355
 length = 34
@@ -567,8 +529,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-reserved-aeat"
 offset = 389
 length = 200
@@ -580,8 +541,7 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-123-2024-page-01-close"
 offset = 589
 length = 12

@@ -1,3 +1,9 @@
+[revisions."2020"]
+binding_source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+formula_source_refs = ["lirpf-cuota-chain-authority"]
+casilla_source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]
+parameter_source_refs = ["aeat-renta-2020-manual-parte1"]
+dependency_classification_source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
 # Prepared and reviewed by an agent against the bundled AEAT diseño de registros
 # dictionary and the ordenes this revision cites; NO human operator has
 # countersigned it, and 'agent_reviewed' plus this reviewer token record that
@@ -22,7 +28,6 @@
 # What it does NOT establish: that the figures a filing produces are correct
 # against AEAT. That is a tax review against official sources, and it is what an
 # operator re-stamping this to 'operator_reviewed' would be attesting.
-[revisions.2020]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
@@ -30,24 +35,88 @@ authority_grade = "filing"
 id = "2020"
 valid_from = 2020-01-01
 valid_to = 2020-12-31
-binding_source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
-formula_source_refs = ["lirpf-cuota-chain-authority"]
-casilla_source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]
-parameter_source_refs = ["aeat-renta-2020-manual-parte1"]
-dependency_classification_source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+period_selector = { years = [2020], periods = ["0A"] }
 orden_aplicabilidad = ["orden-hac-248-2021:art-3"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-248-2021:art-3"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hac-248-2021:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-input-dictionary",
+    "aeat-dr-100-2020-xsd",
+    "aeat-renta-2020-manual-parte1",
+    "boe-modelo-100-2020-form",
+]
 
-[revisions.2020.period_selector]
-years = [2020]
-periods = ["0A"]
-[revisions.2020.family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2020-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-248-2021:art-3"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+[revisions."2020".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2020-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \
+through the same revision."""
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hac-248-2021:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-input-dictionary",
+    "aeat-dr-100-2020-xsd",
+    "aeat-renta-2020-manual-parte1",
+    "boe-modelo-100-2020-form",
+]
 
-[revisions.2020.family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. No such document is bundled for modelo 100: its corpus carries the disenos de registro (wire-record descriptions that print no form labels) and no label-printing form specimen. Authoring patterns anyway would mean inventing the labels a real modelo 100 declaracion prints, which the grounding rule forbids. Bundling a filed or AEAT-published modelo 100 specimen is the change that makes this family authorable."
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-248-2021:art-3"]
-source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+[revisions."2020".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. No such document is bundled for modelo 100: its corpus carries the disenos de registro (wire-record descriptions that print no form labels) and no label-printing form specimen. Authoring patterns anyway would mean inventing the labels a real modelo 100 declaracion prints, which \
+the grounding rule forbids. Bundling a filed or AEAT-published modelo 100 specimen is the change that makes this family authorable."""
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hac-248-2021:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-input-dictionary",
+    "aeat-dr-100-2020-xsd",
+    "aeat-renta-2020-manual-parte1",
+    "boe-modelo-100-2020-form",
+]
+

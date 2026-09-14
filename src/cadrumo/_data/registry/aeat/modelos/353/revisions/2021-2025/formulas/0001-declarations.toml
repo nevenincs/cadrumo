@@ -1,3 +1,46 @@
+[[revisions."2021-2025".formulas]]
+id = "modelo-353-iva-cuota-devengada-total"
+target_casilla_id = "iva.cuota-devengada-total"
+expression = { op = "add", args = [
+    { casilla_id = "iva.repercutido.general" },
+    { casilla_id = "iva.repercutido.reducido" },
+    { casilla_id = "iva.repercutido.super-reducido" },
+    { casilla_id = "iva.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+
+[[revisions."2021-2025".formulas.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]
+
+[[revisions."2021-2025".formulas]]
+id = "modelo-353-iva-cuota-deducible-total"
+target_casilla_id = "iva.cuota-deducible-total"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores" },
+    { casilla_id = "iva.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+
+[[revisions."2021-2025".formulas.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]
+
+[[revisions."2021-2025".formulas]]
+id = "modelo-353-iva-resultado-regimen-general"
+target_casilla_id = "iva.resultado-regimen-general"
+expression = { op = "subtract", args = [
+    { casilla_id = "iva.cuota-devengada-total" },
+    { casilla_id = "iva.cuota-deducible-total" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+
+[[revisions."2021-2025".formulas.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]
 # Modelo 353 numbered-liquidacion formulas for the 2021-2025 revision.
 #
 # The same arithmetic AEAT prints in its own field descriptions on
@@ -5,122 +48,35 @@
 # ([01] - [08]) and [05] is ([03] - [04]). Nothing is inferred and nothing is
 # widened; these are the expressions the design states.
 
-[[revisions.2021-2025.formulas]]
-id = "modelo-353-iva-cuota-devengada-total"
-target_casilla_id = "iva.cuota-devengada-total"
-rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-
-[[revisions.2021-2025.formulas.source_citations]]
-source_ref = "aeat-modelo-353-procedure"
-required_text = ["modelo 353"]
-
-[revisions.2021-2025.formulas.expression]
-op = "add"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "iva.repercutido.general"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "iva.repercutido.reducido"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "iva.repercutido.super-reducido"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "iva.autorepercutido.intracomunitaria"
-
-[[revisions.2021-2025.formulas]]
-id = "modelo-353-iva-cuota-deducible-total"
-target_casilla_id = "iva.cuota-deducible-total"
-rounding = "money-2"
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-
-[[revisions.2021-2025.formulas.source_citations]]
-source_ref = "aeat-modelo-353-procedure"
-required_text = ["modelo 353"]
-
-[revisions.2021-2025.formulas.expression]
-op = "add"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "iva.soportado.interiores"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "iva.autorepercutido.intracomunitaria"
-
-[[revisions.2021-2025.formulas]]
-id = "modelo-353-iva-resultado-regimen-general"
-target_casilla_id = "iva.resultado-regimen-general"
-rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-
-[[revisions.2021-2025.formulas.source_citations]]
-source_ref = "aeat-modelo-353-procedure"
-required_text = ["modelo 353"]
-
-[revisions.2021-2025.formulas.expression]
-op = "subtract"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "iva.cuota-devengada-total"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "iva.cuota-deducible-total"
-
-[[revisions.2021-2025.formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-compensar-pendientes-posteriores"
 target_casilla_id = "09"
+expression = { op = "subtract", args = [{ casilla_id = "02" }, { casilla_id = "08" }] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 
-[[revisions.2021-2025.formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
 
-[revisions.2021-2025.formulas.expression]
-op = "subtract"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "02"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "08"
-
-[[revisions.2021-2025.formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-resultado"
 target_casilla_id = "03"
+expression = { op = "subtract", args = [{ casilla_id = "01" }, { casilla_id = "08" }] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 
-[[revisions.2021-2025.formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
 
-[revisions.2021-2025.formulas.expression]
-op = "subtract"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "01"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "08"
-
-[[revisions.2021-2025.formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-resultado-autoliquidacion"
 target_casilla_id = "05"
+expression = { op = "subtract", args = [{ casilla_id = "03" }, { casilla_id = "04" }] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 
-[[revisions.2021-2025.formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
-
-[revisions.2021-2025.formulas.expression]
-op = "subtract"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "03"
-
-[[revisions.2021-2025.formulas.expression.args]]
-casilla_id = "04"

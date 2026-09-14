@@ -1,3 +1,4 @@
+
 # Modelo 322 casillas for the 2008-2025 revision.
 #
 # Mirrored from the 2026-y-siguientes sibling and scoped by THIS revision's own
@@ -6,11 +7,1550 @@
 # it. Box [112] is deliberately absent -- it is a 2026 addition and the earlier
 # record has no anchor for it -- and so is anything else the sibling declares
 # that this edition does not print.
+
+[[revisions."2008-2022".casillas]]
+id = "01"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-base-imponible"
+number = "01"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "02"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo"
+number = "02"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "03"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-cuota"
+number = "03"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "04"
+continuidad_id = "04"
+number = "04"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "05"
+continuidad_id = "05"
+number = "05"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "06"
+continuidad_id = "06"
+number = "06"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "07"
+continuidad_id = "07"
+number = "07"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "08"
+continuidad_id = "08"
+number = "08"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "09"
+continuidad_id = "09"
+number = "09"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "10"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo"
+number = "10"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_de_operaciones_intragrupo"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "107"
+continuidad_id = "m322-informacion-tributacion-territorio-comun"
+number = "107"
+section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_comun"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "11"
+continuidad_id = "11"
+number = "11"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_de_operaciones_intragrupo"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "12"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general"
+number = "12"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "120"
+continuidad_id = "m322-operaciones-no-sujetas-por-reglas-de-localizacion"
+number = "120"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "122"
+continuidad_id = "m322-operaciones-sujetas-con-inversion-del-sujeto-pasivo"
+number = "122"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_operaciones_sujetas_con_inversion_del_sujeto_pasivo"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "123"
+continuidad_id = "m322-operaciones-no-sujetas-por-reglas-de-localizacion-acogidas-a-los-regimenes-especiales-de-ventanilla-unica"
+number = "123"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "124"
+continuidad_id = "m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica"
+number = "124"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_operaciones_sujetas_y_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "125"
+continuidad_id = "125"
+number = "125"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_operaciones_sujetas_con_inversion_del_sujeto_pasivo"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "126"
+continuidad_id = "126"
+number = "126"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "127"
+continuidad_id = "127"
+number = "127"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_operaciones_sujetas_y_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "128"
+continuidad_id = "m322-operaciones-intragrupo-valoradas-arts-78-79-liva"
+number = "128"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "13"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-tipo"
+number = "13"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "14"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-cuota"
+number = "14"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "15"
+continuidad_id = "15"
+number = "15"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "16"
+continuidad_id = "16"
+number = "16"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "17"
+continuidad_id = "17"
+number = "17"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "18"
+continuidad_id = "18"
+number = "18"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "19"
+continuidad_id = "19"
+number = "19"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "20"
+continuidad_id = "20"
+number = "20"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "21"
+continuidad_id = "m322-liquidacion-iva-devengado-adquisiciones-intracomunitarias-de-bienes-y-servicios-base-imponible"
+number = "21"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_adquisiciones_intracomunitarias_de_bienes_y_servicios_base_imponible"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "22"
+continuidad_id = "m322-liquidacion-iva-devengado-adquisiciones-intracomunitarias-de-bienes-y-servicios-cuota"
+number = "22"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_adquisiciones_intracomunitarias_de_bienes_y_servicios_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "23"
+continuidad_id = "m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias"
+number = "23"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_otras_operaciones_con_inversion_del_sujeto_pasivo_excepto_adquisiciones_intracomunitarias"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "24"
+continuidad_id = "m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias-cuota"
+number = "24"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_otras_operaciones_con_inversion_del_sujeto_pasivo_excepto_adquisiciones_intracomunitarias_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "25"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-en-regimen-general-base-imponible"
+number = "25"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_en_regimen_general_base_imponible"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "26"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-en-regimen-general-cuota"
+number = "26"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_en_regimen_general_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "27"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible"
+number = "27"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+
+[[revisions."2008-2022".casillas]]
+id = "28"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-tipo"
+number = "28"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "29"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota"
+number = "29"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "30"
+continuidad_id = "30"
+number = "30"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "31"
+continuidad_id = "31"
+number = "31"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "32"
+continuidad_id = "32"
+number = "32"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "33"
+continuidad_id = "33"
+number = "33"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "34"
+continuidad_id = "34"
+number = "34"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "35"
+continuidad_id = "35"
+number = "35"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "36"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-del-recargo-de-equivalencia-base-imponible"
+number = "36"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_del_recargo_de_equivalencia_base_imponible"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "37"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-del-recargo-de-equivalencia-cuota"
+number = "37"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_del_recargo_de_equivalencia_cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "38"
+continuidad_id = "m322-liquidacion-iva-devengado-total-cuota"
+number = "38"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_total_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "39"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-corrientes-base-imponible"
+number = "39"
+section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_corrientes_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "40"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-corrientes-cuota"
+number = "40"
+section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_corrientes_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "41"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-bienes-de-inversion-base-imponible"
+number = "41"
+section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_bienes_de_inversion_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "42"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-bienes-de-inversion-cuota"
+number = "42"
+section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_bienes_de_inversion_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "43"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-operaciones-intragrupo-base-imponible"
+number = "43"
+section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_operaciones_intragrupo_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "44"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-operaciones-intragrupo-cuota"
+number = "44"
+section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_operaciones_intragrupo_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "45"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-corrientes-base-imponible"
+number = "45"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_corrientes_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "46"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-corrientes-cuota"
+number = "46"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_corrientes_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "47"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-bienes-de-inversion-base-imponible"
+number = "47"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_bienes_de_inversion_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "48"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-bienes-de-inversion-cuota"
+number = "48"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_bienes_de_inversion_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "49"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-corrientes-base-imponible"
+number = "49"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_corrientes_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "50"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-corrientes-cuota"
+number = "50"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_corrientes_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "500"
+continuidad_id = "m322-prorratas-1-codigo-cnae"
+number = "500"
+section = ["iva", "prorratas"]
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "501"
+continuidad_id = "m322-prorratas-1-importe-operaciones"
+number = "501"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_importe_operaciones"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "502"
+continuidad_id = "m322-prorratas-1-importe-operaciones-con-derecho-a-deduccion"
+number = "502"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_importe_operaciones_con_derecho_a_deduccion"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "503"
+continuidad_id = "m322-prorratas-1-tipo-de-prorrata"
+number = "503"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_tipo_de_prorrata"
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "504"
+continuidad_id = "m322-prorratas-1-porcentaje-de-prorrata"
+number = "504"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_porcentaje_de_prorrata"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "505"
+continuidad_id = "m322-prorratas-2-codigo-cnae"
+number = "505"
+section = ["iva", "prorratas"]
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "506"
+continuidad_id = "m322-prorratas-2-importe-operaciones"
+number = "506"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_importe_operaciones"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "507"
+continuidad_id = "m322-prorratas-2-importe-operaciones-con-derecho-a-deduccion"
+number = "507"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_importe_operaciones_con_derecho_a_deduccion"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "508"
+continuidad_id = "m322-prorratas-2-tipo-de-prorrata"
+number = "508"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_tipo_de_prorrata"
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "509"
+continuidad_id = "m322-prorratas-2-porcentaje-de-prorrata"
+number = "509"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_porcentaje_de_prorrata"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "51"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-de-inversion-base-imponible"
+number = "51"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_de_inversion_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "510"
+continuidad_id = "m322-prorratas-3-codigo-cnae"
+number = "510"
+section = ["iva", "prorratas"]
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "511"
+continuidad_id = "m322-prorratas-3-importe-operaciones"
+number = "511"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_importe_operaciones"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "512"
+continuidad_id = "m322-prorratas-3-importe-operaciones-con-derecho-a-deduccion"
+number = "512"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_importe_operaciones_con_derecho_a_deduccion"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "513"
+continuidad_id = "m322-prorratas-3-tipo-de-prorrata"
+number = "513"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_tipo_de_prorrata"
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "514"
+continuidad_id = "m322-prorratas-3-porcentaje-de-prorrata"
+number = "514"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_porcentaje_de_prorrata"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "515"
+continuidad_id = "m322-prorratas-4-codigo-cnae"
+number = "515"
+section = ["iva", "prorratas"]
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "516"
+continuidad_id = "m322-prorratas-4-importe-operaciones"
+number = "516"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_importe_operaciones"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "517"
+continuidad_id = "m322-prorratas-4-importe-operaciones-con-derecho-a-deduccion"
+number = "517"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_importe_operaciones_con_derecho_a_deduccion"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "518"
+continuidad_id = "m322-prorratas-4-tipo-de-prorrata"
+number = "518"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_tipo_de_prorrata"
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "519"
+continuidad_id = "m322-prorratas-4-porcentaje-de-prorrata"
+number = "519"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_porcentaje_de_prorrata"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "52"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-de-inversion-cuota"
+number = "52"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_de_inversion_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "520"
+continuidad_id = "m322-prorratas-5-codigo-cnae"
+number = "520"
+section = ["iva", "prorratas"]
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "521"
+continuidad_id = "m322-prorratas-5-importe-operaciones"
+number = "521"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_importe_operaciones"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "522"
+continuidad_id = "m322-prorratas-5-importe-operaciones-con-derecho-a-deduccion"
+number = "522"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_importe_operaciones_con_derecho_a_deduccion"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "523"
+continuidad_id = "m322-prorratas-5-tipo-de-prorrata"
+number = "523"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_tipo_de_prorrata"
+data_type = "text"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "524"
+continuidad_id = "m322-prorratas-5-porcentaje-de-prorrata"
+number = "524"
+section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_porcentaje_de_prorrata"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "53"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-y-servicios-corrientes-base-imponible"
+number = "53"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_y_servicios_corrientes_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "54"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-y-servicios-corrientes-cuota"
+number = "54"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_y_servicios_corrientes_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "55"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-de-inversion-base-imponible"
+number = "55"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_de_inversion_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "56"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-de-inversion-cuota"
+number = "56"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_de_inversion_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "57"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-resto-de-operaciones-no-intragrupo-base-imponible"
+number = "57"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_resto_de_operaciones_no_intragrupo_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "58"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-resto-de-operaciones-no-intragrupo-cuota"
+number = "58"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_resto_de_operaciones_no_intragrupo_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "59"
+continuidad_id = "m322-liquidacion-iva-deducible-compensacion-regimen-especial-agricultura-ganaderia-pesca-cuota"
+number = "59"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_compensacion_regimen_especial_agricultura_ganaderia_pesca_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "60"
+continuidad_id = "m322-liquidacion-iva-deducible-regularizacion-bienes-de-inversion-cuota"
+number = "60"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_regularizacion_bienes_de_inversion_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "61"
+continuidad_id = "m322-liquidacion-iva-deducible-regularizacion-por-aplicacion-del-porcentaje-definitivo-de-prorrata-cuota"
+number = "61"
+section = ["iva", "prorratas"]
+semantic_role = "m322_liquidacion_iva_deducible_regularizacion_por_aplicacion_del_porcentaje_definitivo_de_prorrata_cuota"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "62"
+continuidad_id = "m322-liquidacion-iva-deducible-total-a-deducir"
+number = "62"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_total_a_deducir"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+
+[[revisions."2008-2022".casillas]]
+id = "63"
+continuidad_id = "m322-liquidacion-continuacion-diferencia-total-cuota-devengada-menos-total-a-deducir"
+number = "63"
+section = ["iva", "regimen_general", "resultado"]
+semantic_role = "m322_liquidacion_continuacion_diferencia_total_cuota_devengada_menos_total_a_deducir"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "64"
+continuidad_id = "m322-liquidacion-atribuible-administracion-del-estado-porcentaje"
+number = "64"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_atribuible_administracion_del_estado_porcentaje"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "65"
+continuidad_id = "m322-liquidacion-atribuible-administracion-del-estado-cuota"
+number = "65"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_atribuible_administracion_del_estado_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "66"
+continuidad_id = "m322-liquidacion-continuacion-cuotas-compensar-periodos-anteriores-incorporacion-grupo"
+number = "66"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_continuacion_cuotas_compensar_periodos_anteriores_incorporacion_grupo"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "67"
+continuidad_id = "m322-liquidacion-continuacion-resultado-regularizacion-anual-administraciones-forales"
+number = "67"
+section = ["iva", "regimen_general", "resultado"]
+semantic_role = "m322_liquidacion_continuacion_resultado_regularizacion_anual_administraciones_forales"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "68"
+continuidad_id = "m322-liquidacion-continuacion-resultado"
+number = "68"
+section = ["iva", "regimen_general", "resultado"]
+semantic_role = "m322_liquidacion_continuacion_resultado"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "69"
+continuidad_id = "m322-liquidacion-continuacion-a-deducir-resultado-autoliquidaciones-anteriores"
+number = "69"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_continuacion_a_deducir_resultado_autoliquidaciones_anteriores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "70"
+continuidad_id = "m322-resultado-autoliquidacion"
+number = "70"
+section = ["iva", "regimen_general", "resultado"]
+semantic_role = "m322_resultado_autoliquidacion"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "700"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-operaciones-interiores"
+number = "700"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "701"
+continuidad_id = "701"
+number = "701"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "702"
+continuidad_id = "702"
+number = "702"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "703"
+continuidad_id = "703"
+number = "703"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "704"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-co"
+number = "704"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "705"
+continuidad_id = "705"
+number = "705"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "706"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-de"
+number = "706"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "707"
+continuidad_id = "707"
+number = "707"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "708"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-adquisiciones-intracomu"
+number = "708"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "709"
+continuidad_id = "709"
+number = "709"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "71"
+continuidad_id = "m322-informacion-adicional-entregas-intracomunitarias-bienes-servicios"
+number = "71"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_informacion_adicional_entregas_intracomunitarias_bienes_servicios"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "710"
+continuidad_id = "710"
+number = "710"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "711"
+continuidad_id = "711"
+number = "711"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "712"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la"
+number = "712"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "713"
+continuidad_id = "713"
+number = "713"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "714"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-rectificacion-de-deducciones-base-imponible"
+number = "714"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_rectificacion_de_deducciones_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "715"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-rectificacion-de-deducciones-cuota-deducible"
+number = "715"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_rectificacion_de_deducciones_cuota_deducible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "716"
+continuidad_id = "m322-actividades-deduccion-diferenciadas-grupo-1-regularizacion-bienes-inversion-cuota"
+number = "716"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_deduccion_diferenciadas_grupo_1_regularizacion_bienes_inversion_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "717"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-suma-de-deducciones-cuota-deducible"
+number = "717"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_suma_de_deducciones_cuota_deducible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "718"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-operaciones-interiores"
+number = "718"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "719"
+continuidad_id = "719"
+number = "719"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "72"
+continuidad_id = "m322-informacion-adicional-exportaciones-operaciones-asimiladas"
+number = "72"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_informacion_adicional_exportaciones_operaciones_asimiladas"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "720"
+continuidad_id = "720"
+number = "720"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "721"
+continuidad_id = "721"
+number = "721"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "722"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-co"
+number = "722"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "723"
+continuidad_id = "723"
+number = "723"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "724"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-de"
+number = "724"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "725"
+continuidad_id = "725"
+number = "725"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "726"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-adquisiciones-intracomu"
+number = "726"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "727"
+continuidad_id = "727"
+number = "727"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "728"
+continuidad_id = "728"
+number = "728"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "729"
+continuidad_id = "729"
+number = "729"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "730"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la"
+number = "730"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "731"
+continuidad_id = "731"
+number = "731"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "732"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-rectificacion-de-deducciones-base-imponible"
+number = "732"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_rectificacion_de_deducciones_base_imponible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "733"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-rectificacion-de-deducciones-cuota-deducible"
+number = "733"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_rectificacion_de_deducciones_cuota_deducible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "734"
+continuidad_id = "m322-actividades-deduccion-diferenciadas-grupo-2-regularizacion-bienes-inversion-cuota"
+number = "734"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_deduccion_diferenciadas_grupo_2_regularizacion_bienes_inversion_cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "735"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-suma-de-deducciones-cuota-deducible"
+number = "735"
+section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_suma_de_deducciones_cuota_deducible"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
 # Box [73] is carried by the 2022 diseno and dropped by the 2023 one, so it
 # belongs to this revision alone. AEAT prints it "Operaciones no sujetas o con
 # inversion del sujeto pasivo que originan el derecho a deduccion (hasta 30 de
 # junio, resto a 0)" -- a 17-byte money slot in the Informacion adicional block,
 # grounded like its siblings [71] [72] [74] [75] on the orden establishing this modelo.
+id = "73"
+number = "73"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_informacion_adicional_operaciones_no_sujetas_o_con_inversion_del_sujeto_pasivo_que_originan_el_derecho_a_deduccion"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "74"
+continuidad_id = "m322-informacion-adicional-criterio-caja-base-imponible"
+number = "74"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_informacion_adicional_criterio_caja_base_imponible"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "75"
+continuidad_id = "m322-informacion-adicional-criterio-caja-cuota-soportada"
+number = "75"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_informacion_adicional_criterio_caja_cuota_soportada"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "76"
+continuidad_id = "m322-regularizacion-cuotas-art-80-cinco-5-liva"
+number = "76"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_regularizacion_cuotas_art_80_cinco_5_liva"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "77"
+continuidad_id = "m322-iva-importacion-aduana-pendiente-ingreso"
+number = "77"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_iva_importacion_aduana_pendiente_ingreso"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "79"
+continuidad_id = "m322-operaciones-ejercicio-entregas-inmuebles-financieras-no-habituales"
+number = "79"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_entregas_inmuebles_financieras_no_habituales"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "80"
+continuidad_id = "m322-operaciones-ejercicio-regimen-general"
+number = "80"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_general"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "81"
+continuidad_id = "m322-operaciones-ejercicio-criterio-caja-regla-general-art-75-liva"
+number = "81"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_criterio_caja_regla_general_art_75_liva"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "83"
+continuidad_id = "m322-operaciones-ejercicio-exentas-sin-derecho-deduccion"
+number = "83"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_exentas_sin_derecho_deduccion"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "84"
+continuidad_id = "m322-operaciones-ejercicio-no-sujetas-reglas-localizacion-excepto-casilla-126"
+number = "84"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_no_sujetas_reglas_localizacion_excepto_casilla_126"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "86"
+continuidad_id = "m322-operaciones-ejercicio-regimen-simplificado"
+number = "86"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_simplificado"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "88"
+continuidad_id = "m322-operaciones-ejercicio-total-volumen-operaciones"
+number = "88"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_total_volumen_operaciones"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "89"
+continuidad_id = "m322-informacion-tributacion-territorio-alava"
+number = "89"
+section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_alava"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "90"
+continuidad_id = "m322-informacion-tributacion-territorio-guipuzcoa"
+number = "90"
+section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_guipuzcoa"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "91"
+continuidad_id = "m322-informacion-tributacion-territorio-vizcaya"
+number = "91"
+section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_vizcaya"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+
+[[revisions."2008-2022".casillas]]
+id = "92"
+continuidad_id = "m322-informacion-tributacion-territorio-navarra"
+number = "92"
+section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_navarra"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "93"
+continuidad_id = "m322-operaciones-ejercicio-entregas-intracomunitarias-bienes-servicios"
+number = "93"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_entregas_intracomunitarias_bienes_servicios"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "94"
+continuidad_id = "m322-operaciones-ejercicio-exportaciones-otras-operaciones-exentas-derecho-deduccion"
+number = "94"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_exportaciones_otras_operaciones_exentas_derecho_deduccion"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "95"
+continuidad_id = "m322-operaciones-ejercicio-regimen-especial-agricultura-ganaderia-pesca"
+number = "95"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_especial_agricultura_ganaderia_pesca"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "96"
+continuidad_id = "m322-operaciones-ejercicio-regimen-especial-recargo-equivalencia"
+number = "96"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_especial_recargo_equivalencia"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "97"
+continuidad_id = "m322-operaciones-ejercicio-regimen-especial-bienes-usados-objetos-arte-antiguedades-coleccion"
+number = "97"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_especial_bienes_usados_objetos_arte_antiguedades_coleccion"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "98"
+continuidad_id = "m322-operaciones-ejercicio-regimen-especial-agencias-viajes"
+number = "98"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_especial_agencias_viajes"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "99"
+continuidad_id = "m322-operaciones-ejercicio-entregas-bienes-inversion"
+number = "99"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_entregas_bienes_inversion"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-1.codigo"
+continuidad_id = "m322-actividad-otras-1-codigo"
+number = "otras-1.codigo"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_1_codigo"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-1.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-1-epigrafe-iae"
+number = "otras-1.epigrafe-iae"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_1_epigrafe_iae"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-2.codigo"
+continuidad_id = "m322-actividad-otras-2-codigo"
+number = "otras-2.codigo"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_2_codigo"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-2.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-2-epigrafe-iae"
+number = "otras-2.epigrafe-iae"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_2_epigrafe_iae"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-3.codigo"
+continuidad_id = "m322-actividad-otras-3-codigo"
+number = "otras-3.codigo"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_3_codigo"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-3.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-3-epigrafe-iae"
+number = "otras-3.epigrafe-iae"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_3_epigrafe_iae"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-4.codigo"
+continuidad_id = "m322-actividad-otras-4-codigo"
+number = "otras-4.codigo"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_4_codigo"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-4.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-4-epigrafe-iae"
+number = "otras-4.epigrafe-iae"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_4_epigrafe_iae"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-5.codigo"
+continuidad_id = "m322-actividad-otras-5-codigo"
+number = "otras-5.codigo"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_5_codigo"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-5.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-5-epigrafe-iae"
+number = "otras-5.epigrafe-iae"
+section = ["actividad"]
+semantic_role = "m322_actividad_otras_5_epigrafe_iae"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.principal.codigo"
+continuidad_id = "m322-actividad-principal-codigo"
+number = "principal.codigo"
+section = ["actividad"]
+semantic_role = "m322_actividad_principal_codigo"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "actividad.principal.epigrafe-iae"
+continuidad_id = "m322-actividad-principal-epigrafe-iae"
+number = "principal.epigrafe-iae"
+section = ["actividad"]
+semantic_role = "m322_actividad_principal_epigrafe_iae"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.destinatario-criterio-caja"
+continuidad_id = "m322-identificacion-destinatario-criterio-caja"
+number = "destinatario-criterio-caja"
+section = ["identificacion"]
+semantic_role = "m322_identificacion_destinatario_criterio_caja"
+data_type = "text"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.entidad-dominante-nif"
+continuidad_id = "m322-identificacion-nif-entidad-dominante"
+number = "entidad-dominante-nif"
+section = ["identificacion", "grupo"]
+semantic_role = "m322_identificacion_nif_entidad_dominante"
+data_type = "nif"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.exonerado-modelo-390"
+continuidad_id = "m322-identificacion-exonerado-declaracion-resumen-anual-modelo-390"
+number = "exonerado-modelo-390"
+section = ["identificacion"]
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.grupo-numero"
+continuidad_id = "m322-identificacion-numero-grupo"
+number = "grupo-numero"
+section = ["identificacion", "grupo"]
+semantic_role = "m322_identificacion_numero_grupo"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.grupo-rol"
+continuidad_id = "m322-identificacion-grupo-rol"
+number = "grupo-rol"
+section = ["identificacion", "grupo"]
+semantic_role = "m322_identificacion_grupo_rol"
+data_type = "text"
+constraints = { max_length = 1, enum = ["D", "P"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.prorrata-especial"
+continuidad_id = "m322-identificacion-aplicacion-prorrata-especial-opcion-revocacion"
+number = "prorrata-especial"
+section = ["identificacion"]
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.redeme-inscrito"
+continuidad_id = "m322-identificacion-redeme-inscrito"
+number = "redeme-inscrito"
+section = ["identificacion"]
+semantic_role = "m322_identificacion_redeme_inscrito"
+data_type = "text"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.regimen-163-sexies-cinco"
+continuidad_id = "m322-identificacion-regimen-163-sexies-cinco"
+number = "regimen-163-sexies-cinco"
+section = ["identificacion"]
+semantic_role = "m322_identificacion_regimen_163_sexies_cinco"
+data_type = "text"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.tributacion-exclusivamente-foral"
+continuidad_id = "m322-identificacion-tributacion-exclusivamente-foral"
+number = "tributacion-exclusivamente-foral"
+section = ["identificacion"]
+semantic_role = "m322_identificacion_tributacion_exclusivamente_foral"
+data_type = "text"
+constraints = { max_length = 1, enum = ["X"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
 # NO constraints lifted here, deliberately, and this is the one field of the six
 # that must stay bare. The 2026 edition declares enum ["0", "1", "2"], and its
 # own continuidad_evidence says why that is not this edition's value: 2022, 2023
@@ -22,2203 +1562,120 @@
 # is a real cross-edition divergence: the role check compares one signature across
 # every edition and cannot express a design that legitimately widened. It needs a
 # ruling on the check, not an edit to this row.
+[[revisions."2008-2022".casillas]]
+id = "decl.volumen-anual-no-cero"
+continuidad_id = "m322-identificacion-volumen-anual-no-cero"
+number = "volumen-anual-no-cero"
+section = ["identificacion"]
+semantic_role = "m322_identificacion_volumen_anual_no_cero"
+data_type = "text"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"]
+[[revisions."2008-2022".casillas]]
+id = "decl.ejercicio"
+continuidad_id = "filing-year"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2008-2022".casillas]]
+id = "decl.periodo"
+continuidad_id = "filing-period"
+number = "periodo"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 # The three ledger-fed aggregates below are internal calculation surface, not
 # AEAT form boxes. This revision now carries its design's own numbered totals --
 # [38] total cuota devengada, [62] total a deducir, [63] diferencia -- as
 # casillas addressed by the generated export layout, exactly as the 2026 sibling
 # does. These slugs feed those boxes rather than filing a slot of their own, so
 # they are internal_only, mirroring the sibling's identical declaration.
-
-[[revisions.2008-2022.casillas]]
-id = "01"
-continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-base-imponible"
-number = "01"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "02"
-continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo"
-number = "02"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "03"
-continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-cuota"
-number = "03"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "04"
-continuidad_id = "04"
-number = "04"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "05"
-continuidad_id = "05"
-number = "05"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "06"
-continuidad_id = "06"
-number = "06"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "07"
-continuidad_id = "07"
-number = "07"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "08"
-continuidad_id = "08"
-number = "08"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "09"
-continuidad_id = "09"
-number = "09"
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "10"
-continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo"
-number = "10"
-semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_de_operaciones_intragrupo"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "107"
-continuidad_id = "m322-informacion-tributacion-territorio-comun"
-number = "107"
-semantic_role = "m322_informacion_tributacion_territorio_comun"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "tributacion_territorio"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "11"
-continuidad_id = "11"
-number = "11"
-semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_de_operaciones_intragrupo"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "12"
-continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general"
-number = "12"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "120"
-continuidad_id = "m322-operaciones-no-sujetas-por-reglas-de-localizacion"
-number = "120"
-semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "122"
-continuidad_id = "m322-operaciones-sujetas-con-inversion-del-sujeto-pasivo"
-number = "122"
-semantic_role = "m322_operaciones_sujetas_con_inversion_del_sujeto_pasivo"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "123"
-continuidad_id = "m322-operaciones-no-sujetas-por-reglas-de-localizacion-acogidas-a-los-regimenes-especiales-de-ventanilla-unica"
-number = "123"
-semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "124"
-continuidad_id = "m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica"
-number = "124"
-semantic_role = "m322_operaciones_sujetas_y_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "125"
-continuidad_id = "125"
-number = "125"
-semantic_role = "m322_operaciones_sujetas_con_inversion_del_sujeto_pasivo"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "126"
-continuidad_id = "126"
-number = "126"
-semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "127"
-continuidad_id = "127"
-number = "127"
-semantic_role = "m322_operaciones_sujetas_y_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "128"
-continuidad_id = "m322-operaciones-intragrupo-valoradas-arts-78-79-liva"
-number = "128"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "13"
-continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-tipo"
-number = "13"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "14"
-continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-cuota"
-number = "14"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "15"
-continuidad_id = "15"
-number = "15"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "16"
-continuidad_id = "16"
-number = "16"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "17"
-continuidad_id = "17"
-number = "17"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "18"
-continuidad_id = "18"
-number = "18"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "19"
-continuidad_id = "19"
-number = "19"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "20"
-continuidad_id = "20"
-number = "20"
-semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "21"
-continuidad_id = "m322-liquidacion-iva-devengado-adquisiciones-intracomunitarias-de-bienes-y-servicios-base-imponible"
-number = "21"
-semantic_role = "m322_liquidacion_iva_devengado_adquisiciones_intracomunitarias_de_bienes_y_servicios_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "22"
-continuidad_id = "m322-liquidacion-iva-devengado-adquisiciones-intracomunitarias-de-bienes-y-servicios-cuota"
-number = "22"
-semantic_role = "m322_liquidacion_iva_devengado_adquisiciones_intracomunitarias_de_bienes_y_servicios_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "23"
-continuidad_id = "m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias"
-number = "23"
-semantic_role = "m322_liquidacion_iva_devengado_otras_operaciones_con_inversion_del_sujeto_pasivo_excepto_adquisiciones_intracomunitarias"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "24"
-continuidad_id = "m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias-cuota"
-number = "24"
-semantic_role = "m322_liquidacion_iva_devengado_otras_operaciones_con_inversion_del_sujeto_pasivo_excepto_adquisiciones_intracomunitarias_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "25"
-continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-en-regimen-general-base-imponible"
-number = "25"
-semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_en_regimen_general_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "26"
-continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-en-regimen-general-cuota"
-number = "26"
-semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_en_regimen_general_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "27"
-continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible"
-number = "27"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "28"
-continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-tipo"
-number = "28"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "29"
-continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota"
-number = "29"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "30"
-continuidad_id = "30"
-number = "30"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "31"
-continuidad_id = "31"
-number = "31"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "32"
-continuidad_id = "32"
-number = "32"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "33"
-continuidad_id = "33"
-number = "33"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "34"
-continuidad_id = "34"
-number = "34"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "35"
-continuidad_id = "35"
-number = "35"
-semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "36"
-continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-del-recargo-de-equivalencia-base-imponible"
-number = "36"
-semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_del_recargo_de_equivalencia_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "37"
-continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-del-recargo-de-equivalencia-cuota"
-number = "37"
-semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_del_recargo_de_equivalencia_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "recargo"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "38"
-continuidad_id = "m322-liquidacion-iva-devengado-total-cuota"
-number = "38"
-semantic_role = "m322_liquidacion_iva_devengado_total_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "39"
-continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-corrientes-base-imponible"
-number = "39"
-semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_corrientes_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "40"
-continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-corrientes-cuota"
-number = "40"
-semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_corrientes_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "41"
-continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-bienes-de-inversion-base-imponible"
-number = "41"
-semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_bienes_de_inversion_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "42"
-continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-bienes-de-inversion-cuota"
-number = "42"
-semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_bienes_de_inversion_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "43"
-continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-operaciones-intragrupo-base-imponible"
-number = "43"
-semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_operaciones_intragrupo_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "44"
-continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-operaciones-intragrupo-cuota"
-number = "44"
-semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_operaciones_intragrupo_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "45"
-continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-corrientes-base-imponible"
-number = "45"
-semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_corrientes_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "46"
-continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-corrientes-cuota"
-number = "46"
-semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_corrientes_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "47"
-continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-bienes-de-inversion-base-imponible"
-number = "47"
-semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_bienes_de_inversion_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "48"
-continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-bienes-de-inversion-cuota"
-number = "48"
-semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_bienes_de_inversion_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "49"
-continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-corrientes-base-imponible"
-number = "49"
-semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_corrientes_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "50"
-continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-corrientes-cuota"
-number = "50"
-semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_corrientes_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "500"
-continuidad_id = "m322-prorratas-1-codigo-cnae"
-number = "500"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "501"
-continuidad_id = "m322-prorratas-1-importe-operaciones"
-number = "501"
-semantic_role = "m322_prorratas_1_importe_operaciones"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "502"
-continuidad_id = "m322-prorratas-1-importe-operaciones-con-derecho-a-deduccion"
-number = "502"
-semantic_role = "m322_prorratas_1_importe_operaciones_con_derecho_a_deduccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "503"
-continuidad_id = "m322-prorratas-1-tipo-de-prorrata"
-number = "503"
-semantic_role = "m322_prorratas_1_tipo_de_prorrata"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "504"
-continuidad_id = "m322-prorratas-1-porcentaje-de-prorrata"
-number = "504"
-semantic_role = "m322_prorratas_1_porcentaje_de_prorrata"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "505"
-continuidad_id = "m322-prorratas-2-codigo-cnae"
-number = "505"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "506"
-continuidad_id = "m322-prorratas-2-importe-operaciones"
-number = "506"
-semantic_role = "m322_prorratas_2_importe_operaciones"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "507"
-continuidad_id = "m322-prorratas-2-importe-operaciones-con-derecho-a-deduccion"
-number = "507"
-semantic_role = "m322_prorratas_2_importe_operaciones_con_derecho_a_deduccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "508"
-continuidad_id = "m322-prorratas-2-tipo-de-prorrata"
-number = "508"
-semantic_role = "m322_prorratas_2_tipo_de_prorrata"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "509"
-continuidad_id = "m322-prorratas-2-porcentaje-de-prorrata"
-number = "509"
-semantic_role = "m322_prorratas_2_porcentaje_de_prorrata"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "51"
-continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-de-inversion-base-imponible"
-number = "51"
-semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_de_inversion_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "510"
-continuidad_id = "m322-prorratas-3-codigo-cnae"
-number = "510"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "511"
-continuidad_id = "m322-prorratas-3-importe-operaciones"
-number = "511"
-semantic_role = "m322_prorratas_3_importe_operaciones"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "512"
-continuidad_id = "m322-prorratas-3-importe-operaciones-con-derecho-a-deduccion"
-number = "512"
-semantic_role = "m322_prorratas_3_importe_operaciones_con_derecho_a_deduccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "513"
-continuidad_id = "m322-prorratas-3-tipo-de-prorrata"
-number = "513"
-semantic_role = "m322_prorratas_3_tipo_de_prorrata"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "514"
-continuidad_id = "m322-prorratas-3-porcentaje-de-prorrata"
-number = "514"
-semantic_role = "m322_prorratas_3_porcentaje_de_prorrata"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "515"
-continuidad_id = "m322-prorratas-4-codigo-cnae"
-number = "515"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "516"
-continuidad_id = "m322-prorratas-4-importe-operaciones"
-number = "516"
-semantic_role = "m322_prorratas_4_importe_operaciones"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "517"
-continuidad_id = "m322-prorratas-4-importe-operaciones-con-derecho-a-deduccion"
-number = "517"
-semantic_role = "m322_prorratas_4_importe_operaciones_con_derecho_a_deduccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "518"
-continuidad_id = "m322-prorratas-4-tipo-de-prorrata"
-number = "518"
-semantic_role = "m322_prorratas_4_tipo_de_prorrata"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "519"
-continuidad_id = "m322-prorratas-4-porcentaje-de-prorrata"
-number = "519"
-semantic_role = "m322_prorratas_4_porcentaje_de_prorrata"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "52"
-continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-de-inversion-cuota"
-number = "52"
-semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_de_inversion_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "520"
-continuidad_id = "m322-prorratas-5-codigo-cnae"
-number = "520"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "521"
-continuidad_id = "m322-prorratas-5-importe-operaciones"
-number = "521"
-semantic_role = "m322_prorratas_5_importe_operaciones"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "522"
-continuidad_id = "m322-prorratas-5-importe-operaciones-con-derecho-a-deduccion"
-number = "522"
-semantic_role = "m322_prorratas_5_importe_operaciones_con_derecho_a_deduccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "523"
-continuidad_id = "m322-prorratas-5-tipo-de-prorrata"
-number = "523"
-semantic_role = "m322_prorratas_5_tipo_de_prorrata"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "524"
-continuidad_id = "m322-prorratas-5-porcentaje-de-prorrata"
-number = "524"
-semantic_role = "m322_prorratas_5_porcentaje_de_prorrata"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "53"
-continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-y-servicios-corrientes-base-imponible"
-number = "53"
-semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_y_servicios_corrientes_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "54"
-continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-y-servicios-corrientes-cuota"
-number = "54"
-semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_y_servicios_corrientes_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "55"
-continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-de-inversion-base-imponible"
-number = "55"
-semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_de_inversion_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "56"
-continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-de-inversion-cuota"
-number = "56"
-semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_de_inversion_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "57"
-continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-resto-de-operaciones-no-intragrupo-base-imponible"
-number = "57"
-semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_resto_de_operaciones_no_intragrupo_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "58"
-continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-resto-de-operaciones-no-intragrupo-cuota"
-number = "58"
-semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_resto_de_operaciones_no_intragrupo_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "59"
-continuidad_id = "m322-liquidacion-iva-deducible-compensacion-regimen-especial-agricultura-ganaderia-pesca-cuota"
-number = "59"
-semantic_role = "m322_liquidacion_iva_deducible_compensacion_regimen_especial_agricultura_ganaderia_pesca_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "60"
-continuidad_id = "m322-liquidacion-iva-deducible-regularizacion-bienes-de-inversion-cuota"
-number = "60"
-semantic_role = "m322_liquidacion_iva_deducible_regularizacion_bienes_de_inversion_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "61"
-continuidad_id = "m322-liquidacion-iva-deducible-regularizacion-por-aplicacion-del-porcentaje-definitivo-de-prorrata-cuota"
-number = "61"
-semantic_role = "m322_liquidacion_iva_deducible_regularizacion_por_aplicacion_del_porcentaje_definitivo_de_prorrata_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "prorratas"]
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "62"
-continuidad_id = "m322-liquidacion-iva-deducible-total-a-deducir"
-number = "62"
-semantic_role = "m322_liquidacion_iva_deducible_total_a_deducir"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "63"
-continuidad_id = "m322-liquidacion-continuacion-diferencia-total-cuota-devengada-menos-total-a-deducir"
-number = "63"
-semantic_role = "m322_liquidacion_continuacion_diferencia_total_cuota_devengada_menos_total_a_deducir"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "resultado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "64"
-continuidad_id = "m322-liquidacion-atribuible-administracion-del-estado-porcentaje"
-number = "64"
-semantic_role = "m322_liquidacion_atribuible_administracion_del_estado_porcentaje"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "65"
-continuidad_id = "m322-liquidacion-atribuible-administracion-del-estado-cuota"
-number = "65"
-semantic_role = "m322_liquidacion_atribuible_administracion_del_estado_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "66"
-continuidad_id = "m322-liquidacion-continuacion-cuotas-compensar-periodos-anteriores-incorporacion-grupo"
-number = "66"
-semantic_role = "m322_liquidacion_continuacion_cuotas_compensar_periodos_anteriores_incorporacion_grupo"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "67"
-continuidad_id = "m322-liquidacion-continuacion-resultado-regularizacion-anual-administraciones-forales"
-number = "67"
-semantic_role = "m322_liquidacion_continuacion_resultado_regularizacion_anual_administraciones_forales"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "resultado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "68"
-continuidad_id = "m322-liquidacion-continuacion-resultado"
-number = "68"
-semantic_role = "m322_liquidacion_continuacion_resultado"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "resultado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "69"
-continuidad_id = "m322-liquidacion-continuacion-a-deducir-resultado-autoliquidaciones-anteriores"
-number = "69"
-semantic_role = "m322_liquidacion_continuacion_a_deducir_resultado_autoliquidaciones_anteriores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "deducible"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "70"
-continuidad_id = "m322-resultado-autoliquidacion"
-number = "70"
-semantic_role = "m322_resultado_autoliquidacion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "resultado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "700"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-operaciones-interiores"
-number = "700"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "701"
-continuidad_id = "701"
-number = "701"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "702"
-continuidad_id = "702"
-number = "702"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "703"
-continuidad_id = "703"
-number = "703"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "704"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-co"
-number = "704"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "705"
-continuidad_id = "705"
-number = "705"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "706"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-de"
-number = "706"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "707"
-continuidad_id = "707"
-number = "707"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "708"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-adquisiciones-intracomu"
-number = "708"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "709"
-continuidad_id = "709"
-number = "709"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "71"
-continuidad_id = "m322-informacion-adicional-entregas-intracomunitarias-bienes-servicios"
-number = "71"
-semantic_role = "m322_informacion_adicional_entregas_intracomunitarias_bienes_servicios"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "710"
-continuidad_id = "710"
-number = "710"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "711"
-continuidad_id = "711"
-number = "711"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "712"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la"
-number = "712"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "713"
-continuidad_id = "713"
-number = "713"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "714"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-rectificacion-de-deducciones-base-imponible"
-number = "714"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_rectificacion_de_deducciones_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "715"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-rectificacion-de-deducciones-cuota-deducible"
-number = "715"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_rectificacion_de_deducciones_cuota_deducible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "716"
-continuidad_id = "m322-actividades-deduccion-diferenciadas-grupo-1-regularizacion-bienes-inversion-cuota"
-number = "716"
-semantic_role = "m322_actividades_deduccion_diferenciadas_grupo_1_regularizacion_bienes_inversion_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "717"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-suma-de-deducciones-cuota-deducible"
-number = "717"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_suma_de_deducciones_cuota_deducible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "718"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-operaciones-interiores"
-number = "718"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "719"
-continuidad_id = "719"
-number = "719"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "72"
-continuidad_id = "m322-informacion-adicional-exportaciones-operaciones-asimiladas"
-number = "72"
-semantic_role = "m322_informacion_adicional_exportaciones_operaciones_asimiladas"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "720"
-continuidad_id = "720"
-number = "720"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "721"
-continuidad_id = "721"
-number = "721"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "722"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-co"
-number = "722"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "723"
-continuidad_id = "723"
-number = "723"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "724"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-de"
-number = "724"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "725"
-continuidad_id = "725"
-number = "725"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "726"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-adquisiciones-intracomu"
-number = "726"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "727"
-continuidad_id = "727"
-number = "727"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "728"
-continuidad_id = "728"
-number = "728"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "729"
-continuidad_id = "729"
-number = "729"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "730"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la"
-number = "730"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "731"
-continuidad_id = "731"
-number = "731"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "732"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-rectificacion-de-deducciones-base-imponible"
-number = "732"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_rectificacion_de_deducciones_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "733"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-rectificacion-de-deducciones-cuota-deducible"
-number = "733"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_rectificacion_de_deducciones_cuota_deducible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "734"
-continuidad_id = "m322-actividades-deduccion-diferenciadas-grupo-2-regularizacion-bienes-inversion-cuota"
-number = "734"
-semantic_role = "m322_actividades_deduccion_diferenciadas_grupo_2_regularizacion_bienes_inversion_cuota"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "735"
-continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-suma-de-deducciones-cuota-deducible"
-number = "735"
-semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_suma_de_deducciones_cuota_deducible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "73"
-number = "73"
-semantic_role = "m322_informacion_adicional_operaciones_no_sujetas_o_con_inversion_del_sujeto_pasivo_que_originan_el_derecho_a_deduccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "74"
-continuidad_id = "m322-informacion-adicional-criterio-caja-base-imponible"
-number = "74"
-semantic_role = "m322_informacion_adicional_criterio_caja_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "75"
-continuidad_id = "m322-informacion-adicional-criterio-caja-cuota-soportada"
-number = "75"
-semantic_role = "m322_informacion_adicional_criterio_caja_cuota_soportada"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "76"
-continuidad_id = "m322-regularizacion-cuotas-art-80-cinco-5-liva"
-number = "76"
-semantic_role = "m322_regularizacion_cuotas_art_80_cinco_5_liva"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "77"
-continuidad_id = "m322-iva-importacion-aduana-pendiente-ingreso"
-number = "77"
-semantic_role = "m322_iva_importacion_aduana_pendiente_ingreso"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "regimen_general", "devengado"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "79"
-continuidad_id = "m322-operaciones-ejercicio-entregas-inmuebles-financieras-no-habituales"
-number = "79"
-semantic_role = "m322_operaciones_ejercicio_entregas_inmuebles_financieras_no_habituales"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "80"
-continuidad_id = "m322-operaciones-ejercicio-regimen-general"
-number = "80"
-semantic_role = "m322_operaciones_ejercicio_regimen_general"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "81"
-continuidad_id = "m322-operaciones-ejercicio-criterio-caja-regla-general-art-75-liva"
-number = "81"
-semantic_role = "m322_operaciones_ejercicio_criterio_caja_regla_general_art_75_liva"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "83"
-continuidad_id = "m322-operaciones-ejercicio-exentas-sin-derecho-deduccion"
-number = "83"
-semantic_role = "m322_operaciones_ejercicio_exentas_sin_derecho_deduccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "84"
-continuidad_id = "m322-operaciones-ejercicio-no-sujetas-reglas-localizacion-excepto-casilla-126"
-number = "84"
-semantic_role = "m322_operaciones_ejercicio_no_sujetas_reglas_localizacion_excepto_casilla_126"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "86"
-continuidad_id = "m322-operaciones-ejercicio-regimen-simplificado"
-number = "86"
-semantic_role = "m322_operaciones_ejercicio_regimen_simplificado"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "88"
-continuidad_id = "m322-operaciones-ejercicio-total-volumen-operaciones"
-number = "88"
-semantic_role = "m322_operaciones_ejercicio_total_volumen_operaciones"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "89"
-continuidad_id = "m322-informacion-tributacion-territorio-alava"
-number = "89"
-semantic_role = "m322_informacion_tributacion_territorio_alava"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "tributacion_territorio"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "90"
-continuidad_id = "m322-informacion-tributacion-territorio-guipuzcoa"
-number = "90"
-semantic_role = "m322_informacion_tributacion_territorio_guipuzcoa"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "tributacion_territorio"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "91"
-continuidad_id = "m322-informacion-tributacion-territorio-vizcaya"
-number = "91"
-semantic_role = "m322_informacion_tributacion_territorio_vizcaya"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "tributacion_territorio"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "92"
-continuidad_id = "m322-informacion-tributacion-territorio-navarra"
-number = "92"
-semantic_role = "m322_informacion_tributacion_territorio_navarra"
-data_type = "ratio"
-required = false
-input_kind = "manual"
-section = ["iva", "tributacion_territorio"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "93"
-continuidad_id = "m322-operaciones-ejercicio-entregas-intracomunitarias-bienes-servicios"
-number = "93"
-semantic_role = "m322_operaciones_ejercicio_entregas_intracomunitarias_bienes_servicios"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "94"
-continuidad_id = "m322-operaciones-ejercicio-exportaciones-otras-operaciones-exentas-derecho-deduccion"
-number = "94"
-semantic_role = "m322_operaciones_ejercicio_exportaciones_otras_operaciones_exentas_derecho_deduccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "95"
-continuidad_id = "m322-operaciones-ejercicio-regimen-especial-agricultura-ganaderia-pesca"
-number = "95"
-semantic_role = "m322_operaciones_ejercicio_regimen_especial_agricultura_ganaderia_pesca"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "96"
-continuidad_id = "m322-operaciones-ejercicio-regimen-especial-recargo-equivalencia"
-number = "96"
-semantic_role = "m322_operaciones_ejercicio_regimen_especial_recargo_equivalencia"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "97"
-continuidad_id = "m322-operaciones-ejercicio-regimen-especial-bienes-usados-objetos-arte-antiguedades-coleccion"
-number = "97"
-semantic_role = "m322_operaciones_ejercicio_regimen_especial_bienes_usados_objetos_arte_antiguedades_coleccion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "98"
-continuidad_id = "m322-operaciones-ejercicio-regimen-especial-agencias-viajes"
-number = "98"
-semantic_role = "m322_operaciones_ejercicio_regimen_especial_agencias_viajes"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "99"
-continuidad_id = "m322-operaciones-ejercicio-entregas-bienes-inversion"
-number = "99"
-semantic_role = "m322_operaciones_ejercicio_entregas_bienes_inversion"
-data_type = "money"
-required = false
-input_kind = "manual"
-section = ["iva", "resumen_anual", "operaciones"]
-legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-1.codigo"
-continuidad_id = "m322-actividad-otras-1-codigo"
-number = "otras-1.codigo"
-semantic_role = "m322_actividad_otras_1_codigo"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-1.epigrafe-iae"
-continuidad_id = "m322-actividad-otras-1-epigrafe-iae"
-number = "otras-1.epigrafe-iae"
-semantic_role = "m322_actividad_otras_1_epigrafe_iae"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-2.codigo"
-continuidad_id = "m322-actividad-otras-2-codigo"
-number = "otras-2.codigo"
-semantic_role = "m322_actividad_otras_2_codigo"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-2.epigrafe-iae"
-continuidad_id = "m322-actividad-otras-2-epigrafe-iae"
-number = "otras-2.epigrafe-iae"
-semantic_role = "m322_actividad_otras_2_epigrafe_iae"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-3.codigo"
-continuidad_id = "m322-actividad-otras-3-codigo"
-number = "otras-3.codigo"
-semantic_role = "m322_actividad_otras_3_codigo"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-3.epigrafe-iae"
-continuidad_id = "m322-actividad-otras-3-epigrafe-iae"
-number = "otras-3.epigrafe-iae"
-semantic_role = "m322_actividad_otras_3_epigrafe_iae"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-4.codigo"
-continuidad_id = "m322-actividad-otras-4-codigo"
-number = "otras-4.codigo"
-semantic_role = "m322_actividad_otras_4_codigo"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-4.epigrafe-iae"
-continuidad_id = "m322-actividad-otras-4-epigrafe-iae"
-number = "otras-4.epigrafe-iae"
-semantic_role = "m322_actividad_otras_4_epigrafe_iae"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-5.codigo"
-continuidad_id = "m322-actividad-otras-5-codigo"
-number = "otras-5.codigo"
-semantic_role = "m322_actividad_otras_5_codigo"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.otras-5.epigrafe-iae"
-continuidad_id = "m322-actividad-otras-5-epigrafe-iae"
-number = "otras-5.epigrafe-iae"
-semantic_role = "m322_actividad_otras_5_epigrafe_iae"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.principal.codigo"
-continuidad_id = "m322-actividad-principal-codigo"
-number = "principal.codigo"
-semantic_role = "m322_actividad_principal_codigo"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "actividad.principal.epigrafe-iae"
-continuidad_id = "m322-actividad-principal-epigrafe-iae"
-number = "principal.epigrafe-iae"
-semantic_role = "m322_actividad_principal_epigrafe_iae"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["actividad"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.destinatario-criterio-caja"
-continuidad_id = "m322-identificacion-destinatario-criterio-caja"
-number = "destinatario-criterio-caja"
-semantic_role = "m322_identificacion_destinatario_criterio_caja"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[revisions.2008-2022.casillas.constraints]
-max_length = 1
-enum = ["1", "2"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.entidad-dominante-nif"
-continuidad_id = "m322-identificacion-nif-entidad-dominante"
-number = "entidad-dominante-nif"
-semantic_role = "m322_identificacion_nif_entidad_dominante"
-data_type = "nif"
-required = false
-input_kind = "manual"
-section = ["identificacion", "grupo"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.exonerado-modelo-390"
-continuidad_id = "m322-identificacion-exonerado-declaracion-resumen-anual-modelo-390"
-number = "exonerado-modelo-390"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.grupo-numero"
-continuidad_id = "m322-identificacion-numero-grupo"
-number = "grupo-numero"
-semantic_role = "m322_identificacion_numero_grupo"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion", "grupo"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.grupo-rol"
-continuidad_id = "m322-identificacion-grupo-rol"
-number = "grupo-rol"
-semantic_role = "m322_identificacion_grupo_rol"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion", "grupo"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
-
-[revisions.2008-2022.casillas.constraints]
-max_length = 1
-enum = ["D", "P"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.prorrata-especial"
-continuidad_id = "m322-identificacion-aplicacion-prorrata-especial-opcion-revocacion"
-number = "prorrata-especial"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.redeme-inscrito"
-continuidad_id = "m322-identificacion-redeme-inscrito"
-number = "redeme-inscrito"
-semantic_role = "m322_identificacion_redeme_inscrito"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[revisions.2008-2022.casillas.constraints]
-max_length = 1
-enum = ["1", "2"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.regimen-163-sexies-cinco"
-continuidad_id = "m322-identificacion-regimen-163-sexies-cinco"
-number = "regimen-163-sexies-cinco"
-semantic_role = "m322_identificacion_regimen_163_sexies_cinco"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
-
-[revisions.2008-2022.casillas.constraints]
-max_length = 1
-enum = ["1", "2"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.tributacion-exclusivamente-foral"
-continuidad_id = "m322-identificacion-tributacion-exclusivamente-foral"
-number = "tributacion-exclusivamente-foral"
-semantic_role = "m322_identificacion_tributacion_exclusivamente_foral"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[revisions.2008-2022.casillas.constraints]
-max_length = 1
-enum = ["X"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.volumen-anual-no-cero"
-continuidad_id = "m322-identificacion-volumen-anual-no-cero"
-number = "volumen-anual-no-cero"
-semantic_role = "m322_identificacion_volumen_anual_no_cero"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["identificacion"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.ejercicio"
-continuidad_id = "filing-year"
-number = "ejercicio"
-data_type = "year"
-semantic_role = "filing_year"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
-id = "decl.periodo"
-continuidad_id = "filing-period"
-number = "periodo"
-data_type = "period_code"
-semantic_role = "filing_period"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-
-[[revisions.2008-2022.casillas]]
+[[revisions."2008-2022".casillas]]
 id = "iva.repercutido.general"
 continuidad_id = "iva-cuota-repercutida-general"
 number = "iva.repercutido.general"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "iva_cuota_repercutida_general"
-required = false
 input_kind = "bound"
 binding = "modelo-322-iva-repercutido-general-cuota"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
-[[revisions.2008-2022.casillas]]
+[[revisions."2008-2022".casillas]]
 id = "iva.repercutido.reducido"
 continuidad_id = "iva-cuota-repercutida-reducido"
 number = "iva.repercutido.reducido"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "iva_cuota_repercutida_reducido"
-required = false
 input_kind = "bound"
 binding = "modelo-322-iva-repercutido-reducido-cuota"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
-[[revisions.2008-2022.casillas]]
+[[revisions."2008-2022".casillas]]
 id = "iva.repercutido.super-reducido"
 continuidad_id = "iva-cuota-repercutida-super-reducido"
 number = "iva.repercutido.super-reducido"
-data_type = "money"
+section = ["iva", "regimen_general", "devengado"]
 semantic_role = "iva_cuota_repercutida_super_reducido"
-required = false
 input_kind = "bound"
 binding = "modelo-322-iva-repercutido-super-reducido-cuota"
-section = ["iva", "regimen_general", "devengado"]
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
-[[revisions.2008-2022.casillas]]
+[[revisions."2008-2022".casillas]]
 id = "iva.soportado.interiores"
 continuidad_id = "iva-cuota-soportada-interiores"
 number = "iva.soportado.interiores"
-data_type = "money"
+section = ["iva", "regimen_general", "deducible"]
 semantic_role = "iva_cuota_soportada_interiores"
-required = false
 input_kind = "bound"
 binding = "modelo-322-iva-soportado-interiores-cuota"
-section = ["iva", "regimen_general", "deducible"]
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
-[[revisions.2008-2022.casillas]]
+[[revisions."2008-2022".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
 continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
-data_type = "money"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
-required = false
 input_kind = "bound"
 binding = "modelo-322-iva-autorepercutido-intracomunitaria-cuota"
-section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
-[[revisions.2008-2022.casillas]]
+[[revisions."2008-2022".casillas]]
 id = "iva.cuota-devengada-total"
 continuidad_id = "iva-cuota-devengada-total"
 number = "iva.cuota-devengada-total"
-data_type = "money"
+section = ["iva", "regimen_general", "totales"]
 semantic_role = "iva_cuota_devengada_total"
-required = false
 input_kind = "computed"
 internal_only = true
 formula = "modelo-322-iva-cuota-devengada-total"
-section = ["iva", "regimen_general", "totales"]
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
-[[revisions.2008-2022.casillas]]
+[[revisions."2008-2022".casillas]]
 id = "iva.cuota-deducible-total"
 continuidad_id = "iva-cuota-deducible-total"
 number = "iva.cuota-deducible-total"
-data_type = "money"
+section = ["iva", "regimen_general", "totales"]
 semantic_role = "iva_cuota_deducible_total"
-required = false
 input_kind = "computed"
 internal_only = true
 formula = "modelo-322-iva-cuota-deducible-total"
-section = ["iva", "regimen_general", "totales"]
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
-[[revisions.2008-2022.casillas]]
+[[revisions."2008-2022".casillas]]
 id = "iva.resultado-regimen-general"
 continuidad_id = "iva-resultado-regimen-general"
 number = "iva.resultado-regimen-general"
-data_type = "money"
+section = ["iva", "regimen_general", "totales"]
 semantic_role = "iva_resultado_regimen_general"
-required = false
 input_kind = "computed"
 internal_only = true
 formula = "modelo-322-iva-resultado-regimen-general"
-section = ["iva", "regimen_general", "totales"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]

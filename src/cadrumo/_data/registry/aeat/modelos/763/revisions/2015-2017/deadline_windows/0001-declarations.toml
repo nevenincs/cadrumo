@@ -2,7 +2,7 @@
 # presentation during the month following each natural quarter. Only periods
 # selected by this revision are declared.
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2015-1t"
 filing_year = 2015
 period = "2015 1T"
@@ -12,7 +12,7 @@ closes_on = 2015-04-30
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2015-2t"
 filing_year = 2015
 period = "2015 2T"
@@ -22,7 +22,7 @@ closes_on = 2015-07-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2015-3t"
 filing_year = 2015
 period = "2015 3T"
@@ -32,7 +32,7 @@ closes_on = 2015-10-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2015-4t"
 filing_year = 2015
 period = "2015 4T"
@@ -42,7 +42,7 @@ closes_on = 2016-01-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2016-1t"
 filing_year = 2016
 period = "2016 1T"
@@ -52,7 +52,7 @@ closes_on = 2016-04-30
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2016-2t"
 filing_year = 2016
 period = "2016 2T"
@@ -62,7 +62,7 @@ closes_on = 2016-07-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2016-3t"
 filing_year = 2016
 period = "2016 3T"
@@ -72,7 +72,7 @@ closes_on = 2016-10-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2016-4t"
 filing_year = 2016
 period = "2016 4T"
@@ -82,7 +82,7 @@ closes_on = 2017-01-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2017-1t"
 filing_year = 2017
 period = "2017 1T"
@@ -92,7 +92,7 @@ closes_on = 2017-04-30
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2017-2t"
 filing_year = 2017
 period = "2017 2T"
@@ -102,7 +102,7 @@ closes_on = 2017-07-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2017-3t"
 filing_year = 2017
 period = "2017 3T"
@@ -112,7 +112,7 @@ closes_on = 2017-10-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2015-2017.deadline_windows]]
+[[revisions."2015-2017".deadline_windows]]
 id = "modelo-763-2017-4t"
 filing_year = 2017
 period = "2017 4T"

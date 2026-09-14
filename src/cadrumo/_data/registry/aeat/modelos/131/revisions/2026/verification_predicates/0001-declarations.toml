@@ -4,6 +4,12 @@
 # "en ningún caso podrá figurar en la casilla 11 un importe superior a
 # la cantidad positiva consignada en la casilla 10". Enforced via the
 # cap_le_when_positive predicate DSL operator.
+[[revisions."2026".verification_predicates]]
+id = "cap-le-when-positive:c11-cap-by-c10"
+predicate_id = "modelo-131-2026-c11-cap-by-c10"
+expression = 'cap_le_when_positive(["11", "10"])'
+legal_refs = ["rd-439-2007:art-110"]
+
 # No-silent-under-declaration advisory. C01 ("Suma de rendimientos netos" —
 # manual módulos sum for the datos-base activities) and C02 ("Pago fraccionado
 # previo por datos-base" — manual) are both operator inputs because the módulos
@@ -32,6 +38,13 @@
 # itself (Orden de módulos signos × índices correctores) so C01 and C02 become
 # computed; until it lands this advisory makes the under-declaration
 # non-silent, mirroring the M200 base-imponible advisory.
+[[revisions."2026".verification_predicates]]
+id = "implies-nonzero:pago-fraccionado-determinado-cuando-rendimientos-positivos"
+predicate_id = "modelo-131-2026-pago-fraccionado-determinado-cuando-rendimientos-positivos"
+expression = 'implies_nonzero(["01", "02"])'
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-110"]
+
 # Converse guard on the same datos-base pair, closing the direction the
 # advisory above structurally cannot see. That one fires on positive C01 with
 # zero C02, and is silent precisely when C01 is itself the omitted field,
@@ -57,6 +70,13 @@
 # loss filer, a pure-agrario filer and a sin-datos-base filer raise nothing; it
 # fires only on a strictly positive C02 with C01 zero or absent, which
 # art. 110.1.b makes unreachable for a legitimate filing.
+[[revisions."2026".verification_predicates]]
+id = "implies-nonzero:rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"
+predicate_id = "modelo-131-2026-rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"
+expression = 'implies_nonzero(["02", "01"])'
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-110"]
+
 # Table-driven-engine-vs-operator-declared discrepancy (M131 estimación-
 # objetiva módulos engine, per-year roll-forward). Casilla 01 ("Suma de
 # rendimientos netos") stays a manual operator input; for a tabled IAE
@@ -89,6 +109,13 @@
 # Per-activity módulos inputs have to exist first. This is deliberately a note
 # and not a gate — refusing the binding outright would also refuse it once the
 # inputs are per-activity, which is the state we want to reach.
+[[revisions."2026".verification_predicates]]
+id = "advisory-when-computed-diverges:modulos-computed-diverges-de-c01"
+predicate_id = "modelo-131-2026-modulos-computed-diverges-de-c01"
+expression = 'advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4", "orden-hac-1425-2025:da-1"]
+
 # Índice-exceso (b.3) / índices-especiales incompatibility ADVISORY (mirrors
 # the 2025 revision's equivalent advisory). Orden HAC/1425/2025 Anexo II,
 # instrucción 2.3 declares (see
@@ -121,6 +148,20 @@
 # by more than a cent — the índice 1,30 only applies when minorado exceeds
 # the tabled cuantía) AND the declared epígrafe is one of the two tabled
 # activities carrying a documented índice especial.
+[[revisions."2026".verification_predicates]]
+id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-autotaxi"
+predicate_id = "modelo-131-2026-modulos-indice-exceso-incompatible-autotaxi"
+expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "721.2", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2026".verification_predicates]]
+id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-mercancias"
+predicate_id = "modelo-131-2026-modulos-indice-exceso-incompatible-mercancias"
+expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "722", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
+
 # Índices correctores generales incompatibility ADVISORY guards
 # (Fase 3ª, m131_resolve_modulos_indices_generales,
 # 0003-modulos-engine.toml). Orden HAC/1425/2025 Anexo II, instrucción 2.3
@@ -134,59 +175,16 @@
 # engine already applies the correct (non-ignored) índice, so these are
 # review prompts confirming the operator's declaration was not silently
 # dropped, per no-silent-under-declaration.
-
-[[revisions.2026.verification_predicates]]
-id = "cap-le-when-positive:c11-cap-by-c10"
-predicate_id = "modelo-131-2026-c11-cap-by-c10"
-expression = "cap_le_when_positive([\"11\", \"10\"])"
-finding_kind = "BLOCKING_RULE"
-legal_refs = ["rd-439-2007:art-110"]
-
-[[revisions.2026.verification_predicates]]
-id = "implies-nonzero:pago-fraccionado-determinado-cuando-rendimientos-positivos"
-predicate_id = "modelo-131-2026-pago-fraccionado-determinado-cuando-rendimientos-positivos"
-expression = "implies_nonzero([\"01\", \"02\"])"
-finding_kind = "ADVISORY"
-legal_refs = ["rd-439-2007:art-110"]
-
-[[revisions.2026.verification_predicates]]
-id = "implies-nonzero:rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"
-predicate_id = "modelo-131-2026-rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"
-expression = "implies_nonzero([\"02\", \"01\"])"
-finding_kind = "ADVISORY"
-legal_refs = ["rd-439-2007:art-110"]
-
-[[revisions.2026.verification_predicates]]
-id = "advisory-when-computed-diverges:modulos-computed-diverges-de-c01"
-predicate_id = "modelo-131-2026-modulos-computed-diverges-de-c01"
-expression = "advisory_when_computed_diverges([\"01\", \"modulos-rendimiento-neto-actividad\"])"
-finding_kind = "ADVISORY"
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4", "orden-hac-1425-2025:da-1"]
-
-[[revisions.2026.verification_predicates]]
-id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-autotaxi"
-predicate_id = "modelo-131-2026-modulos-indice-exceso-incompatible-autotaxi"
-expression = "casilla_equals_implies_diverges([\"modulos-epigrafe\", \"721.2\", \"modulos-rendimiento-neto-minorado\", \"modulos-rendimiento-neto-modulos\"])"
-finding_kind = "ADVISORY"
-legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
-
-[[revisions.2026.verification_predicates]]
-id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-mercancias"
-predicate_id = "modelo-131-2026-modulos-indice-exceso-incompatible-mercancias"
-expression = "casilla_equals_implies_diverges([\"modulos-epigrafe\", \"722\", \"modulos-rendimiento-neto-minorado\", \"modulos-rendimiento-neto-modulos\"])"
-finding_kind = "ADVISORY"
-legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
-
-[[revisions.2026.verification_predicates]]
+[[revisions."2026".verification_predicates]]
 id = "advisory-when-positive:modulos-pequena-dimension-ignorado-especial"
 predicate_id = "modelo-131-2026-modulos-pequena-dimension-ignorado-especial"
-expression = "advisory_when_positive([\"modulos-pequena-dimension-ignorado-flag\"])"
+expression = 'advisory_when_positive(["modulos-pequena-dimension-ignorado-flag"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
 
-[[revisions.2026.verification_predicates]]
+[[revisions."2026".verification_predicates]]
 id = "advisory-when-positive:modulos-temporada-inicio-actividad-incompatibles"
 predicate_id = "modelo-131-2026-modulos-temporada-inicio-actividad-incompatibles"
-expression = "advisory_when_positive([\"modulos-temporada-inicio-actividad-conflicto-flag\"])"
+expression = 'advisory_when_positive(["modulos-temporada-inicio-actividad-conflicto-flag"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]

@@ -4,6 +4,28 @@
 # not exported. The record's numbered positions are declared beside this file in
 # cdeclarante-razon-social__ccotizacion-diciembre.toml, transcribed from the
 # bundled ANEXO II of the same orden.
+
+[[revisions."2003-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-procedure"]
+
+[[revisions."2003-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-procedure"]
 # Modelo 156 -- the official record-design positions. Transcribed from the
 # bundled ANEXO II of Orden HAC/3580/2003 (source enrolled-modelo-156-layout,
 # corpus/aeat_official/disenos_registro/modelo_156/files/
@@ -13,30 +35,105 @@
 # Every casilla carries its canonical m156_<id> semantic_role, including the
 # twelve monthly cotizacion roles, which the typo-twin gate's calendar-month
 # axis recognises as deliberate siblings rather than misspellings.
+
 # Campo 5. Positions 18-57, alfanumerico. "Se consignara la razon social
 # completa, sin anagrama."
+[[revisions."2003-y-siguientes".casillas]]
+id = "declarante-razon-social"
+number = "tipo1.18-57"
+section = ["declarante"]
+data_type = "name"
+semantic_role = "m156_declarante_razon_social"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Campo 7. Positions 59-107, alfanumerico de 49 posiciones. The design
 # subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares
 # ONE top-level campo of 49 bytes, which is the extent declared here.
+[[revisions."2003-y-siguientes".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m156_persona_relacion"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Campo 8. Positions 108-120, numerico de 13 posiciones. "El numero de
 # justificante correspondiente a la declaracion."
+[[revisions."2003-y-siguientes".casillas]]
+id = "numero-justificante"
+number = "tipo1.108-120"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m156_numero_justificante"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Campo 9. Positions 121-122, alfabetico: 121 declaracion complementaria ("C"),
 # 122 declaracion sustitutiva ("S").
+[[revisions."2003-y-siguientes".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m156_declaracion_complementaria_sustitutiva"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Campo 10. Positions 123-135, numerico de 13 posiciones. Carries content only
 # when campo 9 declares "C" or "S"; "en cualquier otro caso debera rellenarse a
 # CEROS".
+[[revisions."2003-y-siguientes".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m156_numero_identificativo_anterior"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Campo 11. Positions 136-144, numerico de 9 posiciones. "El numero total de
 # afiliados o mutualistas declarados ... (Numero de registros de tipo 2)."
+[[revisions."2003-y-siguientes".casillas]]
+id = "numero-total-afiliados"
+number = "tipo1.136-144"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m156_numero_total_afiliados"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Campo 5. Positions 18-26, alfanumerico de 9 posiciones. "El numero de
 # identificacion fiscal del afiliado o mutualista."
+[[revisions."2003-y-siguientes".casillas]]
+id = "afiliado-nif"
+number = "tipo2.18-26"
+section = ["afiliado"]
+data_type = "nif"
+semantic_role = "m156_afiliado_nif"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Campo 7. Positions 36-75. "Por ser personas fisicas se consignara el primer
 # apellido, un espacio, el segundo apellido, un espacio y el nombre completo."
 # (AEAT prints this row's naturaleza as "Afabetico" -- its own typo for
 # "Alfabetico" -- which is why the PDF reader mis-reads the row; see the layout
 # file's header.)
+[[revisions."2003-y-siguientes".casillas]]
+id = "afiliado-nombre"
+number = "tipo2.36-75"
+section = ["afiliado"]
+data_type = "name"
+semantic_role = "m156_afiliado_nombre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Campo 8. Positions 76-87, alfanumerico de 12 posiciones. "Se consignaran
 # unicamente los digitos sin caracteres especiales que identifiquen al afiliado o
 # mutualista al sistema de proteccion."
+[[revisions."2003-y-siguientes".casillas]]
+id = "numero-afiliacion"
+number = "tipo2.76-87"
+section = ["afiliado"]
+data_type = "text"
+semantic_role = "m156_numero_afiliacion"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 88-96, alfanumerico de 9 posiciones: ENERO. The design
 # subdivides the slot into 88 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -45,6 +142,14 @@
 # 95-96 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-enero"
+number = "tipo2.88-96"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_enero"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 97-105, alfanumerico de 9 posiciones: FEBRERO. The design
 # subdivides the slot into 97 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -53,6 +158,14 @@
 # 104-105 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-febrero"
+number = "tipo2.97-105"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_febrero"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 106-114, alfanumerico de 9 posiciones: MARZO. The design
 # subdivides the slot into 106 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -61,6 +174,14 @@
 # 113-114 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-marzo"
+number = "tipo2.106-114"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_marzo"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 115-123, alfanumerico de 9 posiciones: ABRIL. The design
 # subdivides the slot into 115 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -69,6 +190,14 @@
 # 122-123 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-abril"
+number = "tipo2.115-123"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_abril"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 124-132, alfanumerico de 9 posiciones: MAYO. The design
 # subdivides the slot into 124 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -77,6 +206,14 @@
 # 131-132 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-mayo"
+number = "tipo2.124-132"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_mayo"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 133-141, alfanumerico de 9 posiciones: JUNIO. The design
 # subdivides the slot into 133 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -85,6 +222,14 @@
 # 140-141 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-junio"
+number = "tipo2.133-141"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_junio"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 142-150, alfanumerico de 9 posiciones: JULIO. The design
 # subdivides the slot into 142 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -93,6 +238,14 @@
 # 149-150 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-julio"
+number = "tipo2.142-150"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_julio"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 151-159, alfanumerico de 9 posiciones: AGOSTO. The design
 # subdivides the slot into 151 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -101,6 +254,14 @@
 # 158-159 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-agosto"
+number = "tipo2.151-159"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_agosto"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 160-168, alfanumerico de 9 posiciones: SEPTIEMBRE. The design
 # subdivides the slot into 160 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -109,6 +270,14 @@
 # 167-168 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-septiembre"
+number = "tipo2.160-168"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_septiembre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 169-177, alfanumerico de 9 posiciones: OCTUBRE. The design
 # subdivides the slot into 169 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -117,6 +286,14 @@
 # 176-177 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-octubre"
+number = "tipo2.169-177"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_octubre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 178-186, alfanumerico de 9 posiciones: NOVIEMBRE. The design
 # subdivides the slot into 178 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -125,6 +302,14 @@
 # 185-186 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-noviembre"
+number = "tipo2.178-186"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_noviembre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+
 # Positions 187-195, alfanumerico de 9 posiciones: DICIEMBRE. The design
 # subdivides the slot into 187 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
 # de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
@@ -133,237 +318,10 @@
 # 194-195 parte decimal). AEAT declares ONE top-level campo of 9 bytes
 # mixing an alphabetic flag with a numeric amount, so no single typed codec
 # renders it: it is declared as the design's own alfanumerico span.
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "decl.ejercicio"
-number = "ejercicio"
-data_type = "year"
-semantic_role = "filing_year"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-procedure"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "decl.tipo-declaracion"
-number = "tipo-declaracion"
-data_type = "text"
-semantic_role = "tipo_declaracion"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-procedure"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "declarante-razon-social"
-number = "tipo1.18-57"
-data_type = "name"
-semantic_role = "m156_declarante_razon_social"
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "persona-relacion"
-number = "tipo1.59-107"
-data_type = "text"
-semantic_role = "m156_persona_relacion"
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "numero-justificante"
-number = "tipo1.108-120"
-data_type = "integer"
-semantic_role = "m156_numero_justificante"
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "declaracion-complementaria-sustitutiva"
-number = "tipo1.121-122"
-data_type = "text"
-semantic_role = "m156_declaracion_complementaria_sustitutiva"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "numero-identificativo-anterior"
-number = "tipo1.123-135"
-data_type = "integer"
-semantic_role = "m156_numero_identificativo_anterior"
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "numero-total-afiliados"
-number = "tipo1.136-144"
-data_type = "integer"
-semantic_role = "m156_numero_total_afiliados"
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "afiliado-nif"
-number = "tipo2.18-26"
-data_type = "nif"
-semantic_role = "m156_afiliado_nif"
-required = false
-input_kind = "manual"
-section = ["afiliado"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "afiliado-nombre"
-number = "tipo2.36-75"
-data_type = "name"
-semantic_role = "m156_afiliado_nombre"
-required = false
-input_kind = "manual"
-section = ["afiliado"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "numero-afiliacion"
-number = "tipo2.76-87"
-data_type = "text"
-semantic_role = "m156_numero_afiliacion"
-required = false
-input_kind = "manual"
-section = ["afiliado"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-enero"
-number = "tipo2.88-96"
-data_type = "text"
-semantic_role = "m156_cotizacion_enero"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-febrero"
-number = "tipo2.97-105"
-data_type = "text"
-semantic_role = "m156_cotizacion_febrero"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-marzo"
-number = "tipo2.106-114"
-data_type = "text"
-semantic_role = "m156_cotizacion_marzo"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-abril"
-number = "tipo2.115-123"
-data_type = "text"
-semantic_role = "m156_cotizacion_abril"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-mayo"
-number = "tipo2.124-132"
-data_type = "text"
-semantic_role = "m156_cotizacion_mayo"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-junio"
-number = "tipo2.133-141"
-data_type = "text"
-semantic_role = "m156_cotizacion_junio"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-julio"
-number = "tipo2.142-150"
-data_type = "text"
-semantic_role = "m156_cotizacion_julio"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-agosto"
-number = "tipo2.151-159"
-data_type = "text"
-semantic_role = "m156_cotizacion_agosto"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-septiembre"
-number = "tipo2.160-168"
-data_type = "text"
-semantic_role = "m156_cotizacion_septiembre"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-octubre"
-number = "tipo2.169-177"
-data_type = "text"
-semantic_role = "m156_cotizacion_octubre"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cotizacion-noviembre"
-number = "tipo2.178-186"
-data_type = "text"
-semantic_role = "m156_cotizacion_noviembre"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2003-y-siguientes.casillas]]
+[[revisions."2003-y-siguientes".casillas]]
 id = "cotizacion-diciembre"
 number = "tipo2.187-195"
+section = ["afiliado", "cotizaciones"]
 data_type = "text"
 semantic_role = "m156_cotizacion_diciembre"
-required = false
-input_kind = "manual"
-section = ["afiliado", "cotizaciones"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]

@@ -1,113 +1,5 @@
-# A NIF is a fixed-width alphanumeric identifier that always exactly
-# fills its 9-byte slot, not a zero-filled numeric quantity -- LEFT_ZERO
-# never actually pads a present value here, but its parse-side _unpad
-# strips leading "0" characters from a low-numbered individual DNI
-# (e.g. "00012345Z" -> "12345Z"), corrupting a real identifier. padding
-# none + justification none renders identically for every full-width
-# value (proven by direct render comparison) and its parse side only
-# strips trailing spaces, never real digits.
-# One slot carries "apellidos y nombre" for a persona fisica and "razon
-# social" for a persona juridica, so it must read the fact that is populated
-# for BOTH: full_name. surnames/given_name are blank for an entity and
-# legal_name is blank for a natural person, so either would blank the slot
-# for half the declarant population. The design's "primer apellido, un
-# espacio, el segundo apellido, un espacio y el nombre completo,
-# necesariamente en este orden" is exactly the surnames-first join
-# compose_legal_full_name already performs.
-# The design admits exactly two claves: "C" (cinta magnetica) and "T"
-# (transmision telematica). Cadrumo emits a file for telematic presentation,
-# and blank is not an admitted value, so "T" is the only clave this producer
-# can correctly write.
-# Design campo 7 subcampo 1, "59-67 TELEFONO: Campo numerico de nueve
-# posiciones". Read from the profile contact section, which models the
-# persona con quien relacionarse as its own party: under a gestor this is
-# routinely neither the taxpayer nor the presenter, so neither identity may
-# stand in for it. Absent stays blank, which AEAT prescribes for an
-# unfilled header field.
-# Design campo 7 subcampo 2, "68-107 APELLIDOS Y NOMBRE: Se consignara el
-# primer apellido, un espacio, el segundo apellido, un espacio y el nombre
-# completo, necesariamente en este orden" -- the operator supplies the
-# contact name already composed in that order.
-# Design campo 8. AEAT assigns the numero identificativo to the declaration at
-# presentation rather than deriving it from the draft, so no producer key can
-# carry it -- the filer holds it, and a manual casilla is the channel. Modelo
-# 190 authors the same slot the same way.
-# Design campo 9. AEAT declares 121-122 as ONE two-byte field here (modelo 190
-# splits its own equivalent into two one-byte rows because ITS design does),
-# holding "C" for complementaria or "S" for sustitutiva on a second or later
-# presentation. The amendment_evidence producers cannot serve it: they carry
-# booleans, and a boolean export field renders X rather than the letters this
-# design admits.
-# Design campo 10. Required by the design only when campo 9 carries "C" or "S",
-# naming the declaration this one replaces or supplements. Same filer-held
-# origin as campo 8.
-# Design campo 15 "SELLO ELECTRONICO": "Campo reservado para el sello
-# electronico en presentaciones individuales, que sera cumplimentado
-# EXCLUSIVAMENTE POR LOS PROGRAMAS OFICIALES DE LA A.E.A.T. En cualquier otro
-# caso, y en presentaciones colectivas SE RELLENARA A BLANCOS." Cadrumo is not
-# an official AEAT program, so blancos is the value AEAT prescribes here -- a
-# filler is correct authoring, not a datum papered over.
-#
-# It is also the record's LENGTH ANCHOR. render_fixed_width_export_record_body
-# derives the emitted length from max(offset + length - 1), so dropping this
-# terminal slot truncates the declarante record from 500 bytes to 237.
-# A NIF is a fixed-width alphanumeric identifier that always exactly
-# fills its 9-byte slot, not a zero-filled numeric quantity -- LEFT_ZERO
-# never actually pads a present value here, but its parse-side _unpad
-# strips leading "0" characters from a low-numbered individual DNI
-# (e.g. "00012345Z" -> "12345Z"), corrupting a real identifier. padding
-# none + justification none renders identically for every full-width
-# value (proven by direct render comparison) and its parse side only
-# strips trailing spaces, never real digits.
-# Same shape as decl-nif above: a NIF always exactly fills its 9-byte
-# slot, so left_zero never pads a present value but its parse side
-# strips real leading digits from a low-numbered DNI.
-# Same shape as decl-nif above: a NIF always exactly fills its 9-byte
-# slot, so left_zero never pads a present value but its parse side
-# strips real leading digits from a low-numbered DNI.
-# The diseño's own wording ("se consignarán los dos dígitos numéricos")
-# says this is always exactly two digits from a closed 01-52 table, not
-# a zero-fillable numeric quantity -- left_zero never pads a present
-# value here, but its parse side strips a genuine leading "0" from
-# provinces 01-09 (e.g. "01" Álava parses back as "1").
-# AEAT's diseño de registro calls this position "Numérico" (claves "1"
-# dinerario / "2" especie). data_type stays "text" (the export field enum
-# has no province/enum-code type and the committed golden fixture expects
-# a string), but value_policy "digit-string" enforces ASCII-digit-only
-# content on render and parse without changing the value's Python type.
-# AEAT's diseño de registro declares 93-96 as ONE field, "Numérico %
-# RETENCIÓN", explicitly subdivided ("este campo se subdivide en otros
-# dos") into 93-94 ENTERO and 95-96 DECIMAL -- a parent field with two
-# Numérico sub-parts, not two independent AEAT rows. That shape is a
-# scaled numeric with two decimals, exactly what data_type "decimal" plus
-# decimals 2 renders and parses (parte entera in the high digits, parte
-# decimal in the low two, via the codec's existing scaled-numeric path
-# shared with money fields). A prior fix on this field left it "text"
-# with a digit-string value_policy, which only refused non-digit content
-# without correcting the parsed type -- the field is a genuine percentage
-# value, not an opaque digit string, and the codec already renders/parses
-# money fields (perc.base) with this same left_zero/right shape.
-# AEAT's diseño de registro calls this position "Numérico" (claves 1-4).
-# data_type stays "text" (matching the committed golden fixture's string
-# expectation); value_policy "digit-string" enforces ASCII-digit-only
-# content on render and parse without changing the value's Python type.
-# INE municipality codes are a fixed 5-digit identifier whose first two
-# digits are the province number, so any municipality in provinces
-# 01-09 has a genuine leading "0" -- left_zero never pads a present
-# value here (the code always exactly fills the slot) but its parse
-# side strips that leading digit.
-# Same shape as perc.provincia above: always exactly two digits from a
-# closed table, left_zero never pads a present value but strips a
-# genuine leading "0" from provinces 01-09 on parse.
-# Spanish postal codes are a fixed 5-digit identifier province-prefixed
-# (01001-52006), so any code in provinces 01-09 has a genuine leading
-# "0" -- left_zero never pads a present value here but strips that
-# leading digit on parse.
-
 [[revisions.2023-y-siguientes.export_layouts]]
 id = "modelo-180-fichero-boe"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
 
 [[revisions.2023-y-siguientes.export_layouts.records]]
 id = "modelo-180-declarante"
@@ -164,6 +56,14 @@ offset = 9
 length = 9
 kind = "header"
 producer_key = "taxpayer.tax_id"
+# A NIF is a fixed-width alphanumeric identifier that always exactly
+# fills its 9-byte slot, not a zero-filled numeric quantity -- LEFT_ZERO
+# never actually pads a present value here, but its parse-side _unpad
+# strips leading "0" characters from a low-numbered individual DNI
+# (e.g. "00012345Z" -> "12345Z"), corrupting a real identifier. padding
+# none + justification none renders identically for every full-width
+# value (proven by direct render comparison) and its parse side only
+# strips trailing spaces, never real digits.
 data_type = "text"
 required = true
 padding = "none"
@@ -177,6 +77,14 @@ id = "modelo-180-decl-apellidos-razon-social"
 offset = 18
 length = 40
 kind = "header"
+# One slot carries "apellidos y nombre" for a persona fisica and "razon
+# social" for a persona juridica, so it must read the fact that is populated
+# for BOTH: full_name. surnames/given_name are blank for an entity and
+# legal_name is blank for a natural person, so either would blank the slot
+# for half the declarant population. The design's "primer apellido, un
+# espacio, el segundo apellido, un espacio y el nombre completo,
+# necesariamente en este orden" is exactly the surnames-first join
+# compose_legal_full_name already performs.
 producer_key = "taxpayer.full_name"
 data_type = "text"
 required = true
@@ -191,6 +99,10 @@ id = "modelo-180-decl-tipo-soporte"
 offset = 58
 length = 1
 kind = "literal"
+# The design admits exactly two claves: "C" (cinta magnetica) and "T"
+# (transmision telematica). Cadrumo emits a file for telematic presentation,
+# and blank is not an admitted value, so "T" is the only clave this producer
+# can correctly write.
 literal = "T"
 data_type = "text"
 required = true
@@ -205,6 +117,12 @@ id = "modelo-180-decl-persona-relacion-telefono"
 offset = 59
 length = 9
 kind = "header"
+# Design campo 7 subcampo 1, "59-67 TELEFONO: Campo numerico de nueve
+# posiciones". Read from the profile contact section, which models the
+# persona con quien relacionarse as its own party: under a gestor this is
+# routinely neither the taxpayer nor the presenter, so neither identity may
+# stand in for it. Absent stays blank, which AEAT prescribes for an
+# unfilled header field.
 producer_key = "contact_person.phone"
 data_type = "text"
 required = false
@@ -219,6 +137,10 @@ id = "modelo-180-decl-persona-relacion-nombre"
 offset = 68
 length = 40
 kind = "header"
+# Design campo 7 subcampo 2, "68-107 APELLIDOS Y NOMBRE: Se consignara el
+# primer apellido, un espacio, el segundo apellido, un espacio y el nombre
+# completo, necesariamente en este orden" -- the operator supplies the
+# contact name already composed in that order.
 producer_key = "contact_person.full_name"
 data_type = "text"
 required = false
@@ -227,13 +149,16 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]
-
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-180-decl-numero-identificativo"
 offset = 108
 length = 13
 kind = "casilla"
 casilla_id = "decl.numero-identificativo"
+# Design campo 8. AEAT assigns the numero identificativo to the declaration at
+# presentation rather than deriving it from the draft, so no producer key can
+# carry it -- the filer holds it, and a manual casilla is the channel. Modelo
+# 190 authors the same slot the same way.
 data_type = "text"
 required = false
 padding = "left_zero"
@@ -248,6 +173,12 @@ offset = 121
 length = 2
 kind = "casilla"
 casilla_id = "decl.complementaria-sustitutiva"
+# Design campo 9. AEAT declares 121-122 as ONE two-byte field here (modelo 190
+# splits its own equivalent into two one-byte rows because ITS design does),
+# holding "C" for complementaria or "S" for sustitutiva on a second or later
+# presentation. The amendment_evidence producers cannot serve it: they carry
+# booleans, and a boolean export field renders X rather than the letters this
+# design admits.
 data_type = "text"
 required = false
 padding = "right_space"
@@ -262,6 +193,9 @@ offset = 123
 length = 13
 kind = "casilla"
 casilla_id = "decl.numero-identificativo-anterior"
+# Design campo 10. Required by the design only when campo 9 carries "C" or "S",
+# naming the declaration this one replaces or supplements. Same filer-held
+# origin as campo 8.
 data_type = "text"
 required = false
 padding = "left_zero"
@@ -331,6 +265,16 @@ id = "modelo-180-decl-sello-electronico"
 offset = 238
 length = 263
 kind = "filler"
+# Design campo 15 "SELLO ELECTRONICO": "Campo reservado para el sello
+# electronico en presentaciones individuales, que sera cumplimentado
+# EXCLUSIVAMENTE POR LOS PROGRAMAS OFICIALES DE LA A.E.A.T. En cualquier otro
+# caso, y en presentaciones colectivas SE RELLENARA A BLANCOS." Cadrumo is not
+# an official AEAT program, so blancos is the value AEAT prescribes here -- a
+# filler is correct authoring, not a datum papered over.
+#
+# It is also the record's LENGTH ANCHOR. render_fixed_width_export_record_body
+# derives the emitted length from max(offset + length - 1), so dropping this
+# terminal slot truncates the declarante record from 500 bytes to 237.
 data_type = "text"
 required = false
 padding = "right_space"
@@ -338,6 +282,8 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]
+[[revisions.2023-y-siguientes.export_layouts]]
+id = "modelo-180-fichero-boe"
 
 [[revisions.2023-y-siguientes.export_layouts.records]]
 id = "modelo-180-perceptor"
@@ -394,6 +340,14 @@ offset = 9
 length = 9
 kind = "header"
 producer_key = "taxpayer.tax_id"
+# A NIF is a fixed-width alphanumeric identifier that always exactly
+# fills its 9-byte slot, not a zero-filled numeric quantity -- LEFT_ZERO
+# never actually pads a present value here, but its parse-side _unpad
+# strips leading "0" characters from a low-numbered individual DNI
+# (e.g. "00012345Z" -> "12345Z"), corrupting a real identifier. padding
+# none + justification none renders identically for every full-width
+# value (proven by direct render comparison) and its parse side only
+# strips trailing spaces, never real digits.
 data_type = "text"
 required = true
 padding = "none"
@@ -408,6 +362,9 @@ offset = 18
 length = 9
 kind = "casilla"
 casilla_id = "perc.nif"
+# Same shape as decl-nif above: a NIF always exactly fills its 9-byte
+# slot, so left_zero never pads a present value but its parse side
+# strips real leading digits from a low-numbered DNI.
 data_type = "text"
 required = true
 padding = "none"
@@ -422,6 +379,9 @@ offset = 27
 length = 9
 kind = "casilla"
 casilla_id = "perc.nif-representante-legal"
+# Same shape as decl-nif above: a NIF always exactly fills its 9-byte
+# slot, so left_zero never pads a present value but its parse side
+# strips real leading digits from a low-numbered DNI.
 data_type = "text"
 required = false
 padding = "none"
@@ -450,6 +410,11 @@ offset = 76
 length = 2
 kind = "casilla"
 casilla_id = "perc.provincia"
+# The diseño's own wording ("se consignarán los dos dígitos numéricos")
+# says this is always exactly two digits from a closed 01-52 table, not
+# a zero-fillable numeric quantity -- left_zero never pads a present
+# value here, but its parse side strips a genuine leading "0" from
+# provinces 01-09 (e.g. "01" Álava parses back as "1").
 data_type = "text"
 required = true
 padding = "none"
@@ -469,6 +434,11 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
+# AEAT's diseño de registro calls this position "Numérico" (claves "1"
+# dinerario / "2" especie). data_type stays "text" (the export field enum
+# has no province/enum-code type and the committed golden fixture expects
+# a string), but value_policy "digit-string" enforces ASCII-digit-only
+# content on render and parse without changing the value's Python type.
 value_policy = "digit-string"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]
@@ -494,6 +464,18 @@ offset = 93
 length = 4
 kind = "casilla"
 casilla_id = "perc.porcentaje-retencion"
+# AEAT's diseño de registro declares 93-96 as ONE field, "Numérico %
+# RETENCIÓN", explicitly subdivided ("este campo se subdivide en otros
+# dos") into 93-94 ENTERO and 95-96 DECIMAL -- a parent field with two
+# Numérico sub-parts, not two independent AEAT rows. That shape is a
+# scaled numeric with two decimals, exactly what data_type "decimal" plus
+# decimals 2 renders and parses (parte entera in the high digits, parte
+# decimal in the low two, via the codec's existing scaled-numeric path
+# shared with money fields). A prior fix on this field left it "text"
+# with a digit-string value_policy, which only refused non-digit content
+# without correcting the parsed type -- the field is a genuine percentage
+# value, not an opaque digit string, and the codec already renders/parses
+# money fields (perc.base) with this same left_zero/right shape.
 data_type = "decimal"
 decimals = 2
 required = true
@@ -542,6 +524,10 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
+# AEAT's diseño de registro calls this position "Numérico" (claves 1-4).
+# data_type stays "text" (matching the committed golden fixture's string
+# expectation); value_policy "digit-string" enforces ASCII-digit-only
+# content on render and parse without changing the value's Python type.
 value_policy = "digit-string"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]
@@ -748,6 +734,11 @@ offset = 316
 length = 5
 kind = "casilla"
 casilla_id = "perc.inmueble-codigo-municipio"
+# INE municipality codes are a fixed 5-digit identifier whose first two
+# digits are the province number, so any municipality in provinces
+# 01-09 has a genuine leading "0" -- left_zero never pads a present
+# value here (the code always exactly fills the slot) but its parse
+# side strips that leading digit.
 data_type = "text"
 required = false
 padding = "none"
@@ -762,6 +753,9 @@ offset = 321
 length = 2
 kind = "casilla"
 casilla_id = "perc.inmueble-provincia"
+# Same shape as perc.provincia above: always exactly two digits from a
+# closed table, left_zero never pads a present value but strips a
+# genuine leading "0" from provinces 01-09 on parse.
 data_type = "text"
 required = true
 padding = "none"
@@ -776,6 +770,10 @@ offset = 323
 length = 5
 kind = "casilla"
 casilla_id = "perc.inmueble-codigo-postal"
+# Spanish postal codes are a fixed 5-digit identifier province-prefixed
+# (01001-52006), so any code in provinces 01-09 has a genuine leading
+# "0" -- left_zero never pads a present value here but strips that
+# leading digit on parse.
 data_type = "text"
 required = true
 padding = "none"
@@ -795,4 +793,8 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+[[revisions.2023-y-siguientes.export_layouts]]
+id = "modelo-180-fichero-boe"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]

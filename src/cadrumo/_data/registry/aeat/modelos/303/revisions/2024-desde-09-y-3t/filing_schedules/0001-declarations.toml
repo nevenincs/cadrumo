@@ -1,7 +1,6 @@
 [[revisions.2024-desde-09-y-3t.filing_schedules]]
 id = "modelo-303-trimestral"
 period_kind = "quarterly"
-profile_condition_mode = "all"
 periods = ["3T", "4T"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
 
@@ -32,8 +31,8 @@ source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 [[revisions.2024-desde-09-y-3t.filing_schedules]]
 id = "modelo-303-mensual"
 period_kind = "monthly"
-profile_condition_mode = "any"
 periods = ["09", "10", "11", "12"]
+profile_condition_mode = "any"
 legal_refs = ["rd-1624-1992:art-71", "rd-1624-1992:art-30", "rd-596-2016", "ley-37-1992:art-121"]
 
 [[revisions.2024-desde-09-y-3t.filing_schedules.profile_conditions]]

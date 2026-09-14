@@ -4,7 +4,7 @@
 # orden excerpt) was found to carry no layout content. runner_required
 # stays false pending a verified byte-position parity run against the design.
 
-[[revisions.2008-y-siguientes.workbook_parity_refs]]
+[[revisions."2008-y-siguientes".workbook_parity_refs]]
 id = "modelo-576-orden-static-layout"
 workbook_source = "aeat-dr-576-2008"
 fixture_id = "modelo-576-orden-eha-3851-2007-layout"

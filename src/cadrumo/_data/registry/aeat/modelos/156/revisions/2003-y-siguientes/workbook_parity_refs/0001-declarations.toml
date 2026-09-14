@@ -6,7 +6,7 @@
 # runner_required is false: the anchor pins the official layout provenance
 # without asserting a verified byte-position parity run.
 
-[[revisions.2003-y-siguientes.workbook_parity_refs]]
+[[revisions."2003-y-siguientes".workbook_parity_refs]]
 id = "modelo-156-orden-static-layout"
 workbook_source = "enrolled-modelo-156-layout"
 fixture_id = "modelo-156-orden-hac-3580-2003-layout"

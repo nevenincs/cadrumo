@@ -1,873 +1,708 @@
-# Modelo 309 casillas: the AD-HOC liquidacion's operator values, plus the
-# design's own computed totals ([22] and [24]).
-# The settlement period code (PP), AD-HOC.
-# Modern chain starts here; no predecessor link is asserted to the 2004
-# combined-name, country-description or separate category-flag surfaces.
-# Design tipo de declaracion.
-# Modern chain starts here; no predecessor link is asserted to the 2004
-# combined-name, country-description or separate category-flag surfaces.
-# The person declarante's given name.
-# Design transmitente NIF.
-# Modern chain starts here; no predecessor link is asserted to the 2004
-# combined-name, country-description or separate category-flag surfaces.
-# Design transmitente apellidos o denominacion social.
-# Modern chain starts here; no predecessor link is asserted to the 2004
-# combined-name, country-description or separate category-flag surfaces.
-# Design transmitente nombre.
-# Modern chain starts here; no predecessor link is asserted to the 2004
-# combined-name, country-description or separate category-flag surfaces.
-# Design transmitente pais.
-# Modern chain starts here; no predecessor link is asserted to the 2004
-# combined-name, country-description or separate category-flag surfaces.
-# Design situacion tributaria (5).
-# Modern chain starts here; no predecessor link is asserted to the 2004
-# combined-name, country-description or separate category-flag surfaces.
-# Design hecho imponible (6).
-# Design vehiculo marca.
-# Design vehiculo tipo.
-# Design vehiculo modelo.
-# Design vehiculo bastidor.
-# Design vehiculo clasificacion.
-# Design embarcacion fabricante.
-# Design embarcacion tipo-modelo.
-# Design embarcacion numero de construccion.
-# Design embarcacion eslora maxima.
-# Design aeronave fabricante.
-# Design aeronave marca-tipo-modelo.
-# Design aeronave numero de serie.
-# Design aeronave ano de fabricacion.
-# Design aeronave peso maximo despegue.
-# Design declaracion complementaria (9).
-# Design numero de justificante de la declaracion anterior (9).
-# Design IBAN (10).
-# Design regimen general base imponible [01].
-# Design regimen general tipo % [02].
-# Design regimen general cuota [03].
-# Design regimen general base imponible [04].
-# Design regimen general tipo % [05].
-# Design regimen general cuota [06].
-# Design regimen general base imponible [07].
-# Design regimen general tipo % [08].
-# Design regimen general cuota [09].
-# Design recargo equivalencia base imponible [10].
-# Design recargo equivalencia tipo % [11].
-# Design recargo equivalencia cuota [12].
-# Design recargo equivalencia base imponible [13].
-# Design recargo equivalencia tipo % [14].
-# Design recargo equivalencia cuota [15].
-# Design recargo equivalencia base imponible [16].
-# Design recargo equivalencia tipo % [17].
-# Design recargo equivalencia cuota [18].
-# Design recargo equivalencia base imponible [19].
-# Design recargo equivalencia tipo % [20].
-# Design recargo equivalencia cuota [21].
-# Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
-# Design a deducir [23].
-# Design resultado a ingresar [24]: the design's own [22]-[23].
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.ejercicio"
 continuidad_id = "filing-year"
 continuidad_origin = "grounded"
 continuidad_evidence = "AEAT aeat-dr-309-2004 and aeat-dr-309-2016 identify the declaration's tax year in its header, separately from the aircraft manufacture year. Ejercicio / Ejercicio devengo continues to identify the same non-periodic IVA return's tax year under Orden HAC/3625/2003 apartado 1."
 number = "ejercicio"
+section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.tipo-trigger"
 continuidad_id = "motivo-declaracion-no-periodica"
 continuidad_origin = "not_on_form"
 continuidad_evidence = "NOT A PRINTED BOX. This row carries the slug number 'tipo-trigger' and no position: it is the internal motivo-declaracion-no-periodica concept enrolling the modelo-309-iva-no-periodica construct, input_kind informational, occupying no byte of any record. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) lists 61 positional campos and prints no such field; the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) lists 64 positional campos and prints none either. The 2018-2022 revision's own grounded evidence for this same chain calls it 'this virtual application concept'. It is absent from the predecessor edition because it is not on the form at all."
 number = "tipo-trigger"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "motivo_declaracion_no_periodica"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+# Modelo 309 casillas: the AD-HOC liquidacion's operator values, plus the
+# design's own computed totals ([22] and [24]).
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.periodo"
 number = "107-108"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_periodo_309"
 continuidad_id = "declaracion-periodo-309"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 7 'Periodo 1T, 2T, 3T, 4T' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 11 'Devengo - Periodo'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# The settlement period code (PP), AD-HOC.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.tipo-declaracion"
 continuidad_id = "declaracion-tipo-309"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "THE PREDECESSOR DESIGN PRINTS IT; THE PREDECESSOR EDITION DOES NOT DECLARE IT. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 6, position 13, length 1, 'Tipo de declaracion' (nota 1: 'I (ingreso)'). the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints the same field as campo 3, position 5, length 1, 'tipo declaracion constante I a ingresar' - the one and only occurrence of the phrase 'tipo declaracion' in that design. The 2004-2015 revision declares no casilla for it: its rows cover positions 15, 25, 34, 74, 88-99 and 100-561 plus boxes [01]-[24], and none carries this field. The gap is in the corpus's predecessor declaration, not on the official form."
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "13"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_tipo_309"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design tipo de declaracion.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.nombre"
 continuidad_id = "declarante-nombre-309"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 9, position 83, length 20, 'Identificacion - Nombre', beside campo 8 'Identificacion - Apellidos o Denominacion Social' at position 23. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) identifies the declarante by campo 4 'identificacion - n.i.f.' at position 6 and campo 5 'letras etiqueta (persona fisica)' at position 15 only; its single occurrence of 'apellidos' and its single occurrence of 'nombre' both fall inside campo 9 'transmitente - apellidos y nombre o razon social', which is the TRANSMITENTE, not the declarante. The predecessor form carries no declarante name field at any position, so this box is new on this edition's official form."
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "83-102"
+section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "declarante_nombre_309"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# The person declarante's given name.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.transmitente-nif"
 number = "109-117"
+section = ["declarante", "liquidacion"]
 data_type = "nif"
 semantic_role = "transmitente_nif"
 continuidad_id = "transmitente-nif"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 8 'Transmitente - N.I.F. N.I.F. Valido P.F. o P.J.' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 12 'Transmitente - NIF'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design transmitente NIF.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.transmitente-apellidos"
 continuidad_id = "transmitente-apellidos"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "118-177"
+section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "transmitente_apellidos"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design transmitente apellidos o denominacion social.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.transmitente-nombre"
 continuidad_id = "transmitente-nombre"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "178-197"
+section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "transmitente_nombre"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design transmitente nombre.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.transmitente-pais"
 continuidad_id = "transmitente-pais"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "198-199"
+section = ["declarante", "liquidacion"]
 data_type = "country_code"
 semantic_role = "transmitente_pais"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design transmitente pais.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.situacion-tributaria"
 continuidad_id = "situacion-tributaria"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "A COLLAPSED REPETITION, NOT A NEW BOX. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 16, position 200, length 1, numeric, 'Situacion tributaria:' enumerating six values 1-6. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints those SAME six situations as six separate one-character X-or-blank boxes at positions 88, 89, 90, 91, 92 and 93 - the phrase 'situacion tributaria - ' occurs there exactly six times - and the 2004-2015 revision declares all six as rows of its own. The field existed on the predecessor form; the predecessor edition simply declares no row under this chain, because the six boxes were collapsed into one coded box."
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "200"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design situacion tributaria (5).
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.hecho-imponible"
 continuidad_id = "hecho-imponible"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "A COLLAPSED REPETITION, NOT A NEW BOX. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 17, position 201, length 1, numeric, 'Hecho imponible:' enumerating six values 1-6. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints those SAME six hechos imponibles as six separate one-character X-or-blank boxes at positions 94, 95, 96, 97, 98 and 99 - the phrase 'hecho imponible - ' occurs there exactly six times - and the 2004-2015 revision declares all six as rows of its own. The field existed on the predecessor form; the predecessor edition simply declares no row under this chain, because the six boxes were collapsed into one coded box."
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "201"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "hecho_imponible"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design hecho imponible (6).
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.vehiculo-marca"
 number = "202-241"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_marca"
 continuidad_id = "vehiculo-marca"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 23 'Vehiculos - Marca' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 18 'Vehiculos - Marca'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design vehiculo marca.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.vehiculo-tipo"
 number = "242-281"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_tipo"
 continuidad_id = "vehiculo-tipo"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 24 'Vehiculos - Tipo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 19 'Vehiculos - Tipo'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design vehiculo tipo.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.vehiculo-modelo"
 number = "282-321"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_modelo"
 continuidad_id = "vehiculo-modelo"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 25 'Vehiculos - Modelo (denominacion comercial):' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 20 'Vehiculos - Modelo (denominacion comercial):'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design vehiculo modelo.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.vehiculo-bastidor"
 number = "322-343"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_bastidor"
 continuidad_id = "vehiculo-bastidor"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 26 'Vehiculos - No identificacion (bastidor)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 21 'Vehiculos - No identificacion (bastidor)'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design vehiculo bastidor.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.vehiculo-clasificacion"
 number = "344-349"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_clasificacion"
 continuidad_id = "vehiculo-clasificacion"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 27 'Vehiculos - Clasificacion' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 22 'Vehiculos - Clasificacion'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design vehiculo clasificacion.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.embarcacion-fabricante"
 number = "350-389"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_fabricante"
 continuidad_id = "embarcacion-fabricante"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 28 'Embarcaciones - Fabricante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 23 'Embarcaciones - Fabricante'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design embarcacion fabricante.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.embarcacion-tipo"
 number = "390-469"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_tipo"
 continuidad_id = "embarcacion-tipo"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 29 'Embarcaciones - Tipo-Modelo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 24 'Embarcaciones - Tipo-Modelo'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design embarcacion tipo-modelo.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.embarcacion-identificacion"
 number = "470-491"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "mtn_embarcacion_identificacion"
 continuidad_id = "mtn-embarcacion-identificacion"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 30 'Embarcaciones - Identificacion (No construccion)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 25 'Embarcaciones - Identificacion (No construccion)'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design embarcacion numero de construccion.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.embarcacion-eslora"
 number = "492-496"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_eslora"
 continuidad_id = "embarcacion-eslora"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 31 'Embarcaciones - Eslora maxima' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 26 'Embarcaciones - Eslora maxima'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design embarcacion eslora maxima.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.aeronave-fabricante"
 number = "497-536"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_fabricante"
 continuidad_id = "aeronave-fabricante"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 32 'Aeronaves - Fabricante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 27 'Aeronaves - Fabricante'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design aeronave fabricante.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.aeronave-marca"
 number = "537-616"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_marca"
 continuidad_id = "aeronave-marca"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 33 'Aeronaves - Marca - Tipo - Modelo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 28 'Aeronaves - Marca - Tipo - Modelo'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design aeronave marca-tipo-modelo.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.aeronave-serie"
 number = "617-638"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_serie"
 continuidad_id = "aeronave-serie"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 34 'Aeronaves - No Serie' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 29 'Aeronaves - No Serie'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design aeronave numero de serie.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.aeronave-ano"
 number = "639-642"
+section = ["declarante", "liquidacion"]
 data_type = "year"
 semantic_role = "aeronave_ano"
 continuidad_id = "aeronave-ano"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 35 'Aeronaves - Ano fabricacion' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 30 'Aeronaves - Ano fabricacion'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design aeronave ano de fabricacion.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.aeronave-peso"
 number = "643-652"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_peso"
 continuidad_id = "aeronave-peso"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 36 'Aeronaves - Peso maximo despegue (en Kg.)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 31 'Aeronaves - Peso maximo despegue (en Kg.)'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design aeronave peso maximo despegue.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.complementaria"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 56, position 977, length 1, 'Declaracion complementaria', content 'blanco o X' - a marker box - separately from campo 57 at position 978, 'Numero de justificante de la declaracion anterior'. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) has exactly one occurrence of 'declaracion complementaria': campo 61, position 818, length 13, 'declaracion complementaria - no de justificante', which is the justificante number and which the 2004-2015 revision already declares as decl.justificante-anterior. The predecessor form prints no one-character complementaria marker at any position, so this box is new on this edition's official form."
 number = "977"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_complementaria"
 continuidad_id = "declaracion-complementaria"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design declaracion complementaria (9).
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.justificante-anterior"
 number = "978-990"
+section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "justificante_anterior"
 continuidad_id = "justificante-anterior"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 61 'Declaracion complementaria - No de justificante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 57 'Numero de justificante de la declaracion anterior'; same semantic_role and data_type. number is wire metadata."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design numero de justificante de la declaracion anterior (9).
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.iban"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 58, position 991, length 34, 'IBAN (exclusivamente en Predeclaracion)'. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) contains no occurrence of 'iban' at all, and its campo 3 fixes the tipo de declaracion to the constant 'I' (a ingresar), so the predecessor form carries no refund account field and no refund path whatever. The box did not exist on the predecessor form and is new on this edition's official form."
 number = "991-1024"
+section = ["declarante", "liquidacion"]
 data_type = "iban"
 semantic_role = "devolucion_iban_309"
 continuidad_id = "devolucion-iban-309"
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design IBAN (10).
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+
+
+
+
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-base-01"
 number = "653-669"
 form_number = "01"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "rg_base_01"
 continuidad_id = "rg-base-01"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [01]: 2004-2015 number 01 equals 2016-2017 form_number 01; same semantic_role and data_type. Designs print [01] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 37 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 32."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design regimen general base imponible [01].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-tipo-02"
 number = "670-674"
 form_number = "02"
+section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_02"
 continuidad_id = "rg-tipo-02"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [02]: 2004-2015 number 02 equals 2016-2017 form_number 02; same semantic_role and data_type. Designs print [02] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 38 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 33."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design regimen general tipo % [02].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-cuota-03"
 number = "675-691"
 form_number = "03"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "rg_cuota_03"
 continuidad_id = "rg-cuota-03"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [03]: 2004-2015 number 03 equals 2016-2017 form_number 03; same semantic_role and data_type. Designs print [03] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 39 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 34."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design regimen general cuota [03].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+
+
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-base-04"
 number = "692-708"
 form_number = "04"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "rg_base_04"
 continuidad_id = "rg-base-04"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [04]: 2004-2015 number 04 equals 2016-2017 form_number 04; same semantic_role and data_type. Designs print [04] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 40 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 35."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design regimen general base imponible [04].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-tipo-05"
 number = "709-713"
 form_number = "05"
+section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_05"
 continuidad_id = "rg-tipo-05"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [05]: 2004-2015 number 05 equals 2016-2017 form_number 05; same semantic_role and data_type. Designs print [05] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 41 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 36."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design regimen general tipo % [05].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-cuota-06"
 number = "714-730"
 form_number = "06"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "rg_cuota_06"
 continuidad_id = "rg-cuota-06"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [06]: 2004-2015 number 06 equals 2016-2017 form_number 06; same semantic_role and data_type. Designs print [06] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 42 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 37."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design regimen general cuota [06].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-base-07"
 number = "731-747"
 form_number = "07"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "rg_base_07"
 continuidad_id = "rg-base-07"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [07]: 2004-2015 number 07 equals 2016-2017 form_number 07; same semantic_role and data_type. Designs print [07] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 43 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 38."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design regimen general base imponible [07].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-tipo-08"
 number = "748-752"
 form_number = "08"
+section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_08"
 continuidad_id = "rg-tipo-08"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [08]: 2004-2015 number 08 equals 2016-2017 form_number 08; same semantic_role and data_type. Designs print [08] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 44 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 39."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design regimen general tipo % [08].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.rg-cuota-09"
 number = "753-769"
 form_number = "09"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "rg_cuota_09"
 continuidad_id = "rg-cuota-09"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [09]: 2004-2015 number 09 equals 2016-2017 form_number 09; same semantic_role and data_type. Designs print [09] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 45 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 40."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design regimen general cuota [09].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-base-10"
 number = "770-786"
 form_number = "10"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "re_base_10"
 continuidad_id = "re-base-10"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [10]: 2004-2015 number 10 equals 2016-2017 form_number 10; same semantic_role and data_type. Designs print [10] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 46 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 41."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design recargo equivalencia base imponible [10].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-tipo-11"
 number = "787-791"
 form_number = "11"
+section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_11"
 continuidad_id = "re-tipo-11"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [11]: 2004-2015 number 11 equals 2016-2017 form_number 11; same semantic_role and data_type. Designs print [11] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 47 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 42."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design recargo equivalencia tipo % [11].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-cuota-12"
 number = "792-808"
 form_number = "12"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "re_cuota_12"
 continuidad_id = "re-cuota-12"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [12]: 2004-2015 number 12 equals 2016-2017 form_number 12; same semantic_role and data_type. Designs print [12] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 48 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 43."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design recargo equivalencia cuota [12].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-base-13"
 number = "809-825"
 form_number = "13"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "re_base_13"
 continuidad_id = "re-base-13"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [13]: 2004-2015 number 13 equals 2016-2017 form_number 13; same semantic_role and data_type. Designs print [13] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 49 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 44."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design recargo equivalencia base imponible [13].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-tipo-14"
 number = "826-830"
 form_number = "14"
+section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_14"
 continuidad_id = "re-tipo-14"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [14]: 2004-2015 number 14 equals 2016-2017 form_number 14; same semantic_role and data_type. Designs print [14] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 50 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 45."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design recargo equivalencia tipo % [14].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-cuota-15"
 number = "831-847"
 form_number = "15"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "re_cuota_15"
 continuidad_id = "re-cuota-15"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [15]: 2004-2015 number 15 equals 2016-2017 form_number 15; same semantic_role and data_type. Designs print [15] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 51 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 46."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design recargo equivalencia cuota [15].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-base-16"
 number = "848-864"
 form_number = "16"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "re_base_16"
 continuidad_id = "re-base-16"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [16]: 2004-2015 number 16 equals 2016-2017 form_number 16; same semantic_role and data_type. Designs print [16] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 52 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 47."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design recargo equivalencia base imponible [16].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-tipo-17"
 number = "865-869"
 form_number = "17"
+section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_17"
 continuidad_id = "re-tipo-17"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [17]: 2004-2015 number 17 equals 2016-2017 form_number 17; same semantic_role and data_type. Designs print [17] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 53 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 48."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design recargo equivalencia tipo % [17].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-cuota-18"
 number = "870-886"
 form_number = "18"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "re_cuota_18"
 continuidad_id = "re-cuota-18"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [18]: 2004-2015 number 18 equals 2016-2017 form_number 18; same semantic_role and data_type. Designs print [18] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 54 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 49."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design recargo equivalencia cuota [18].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-base-19"
 number = "887-903"
 form_number = "19"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "re_base_19"
 continuidad_id = "re-base-19"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [19]: 2004-2015 number 19 equals 2016-2017 form_number 19; same semantic_role and data_type. Designs print [19] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 55 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 50."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design recargo equivalencia base imponible [19].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-tipo-20"
 number = "904-908"
 form_number = "20"
+section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_20"
 continuidad_id = "re-tipo-20"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [20]: 2004-2015 number 20 equals 2016-2017 form_number 20; same semantic_role and data_type. Designs print [20] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 56 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 51."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+# Design recargo equivalencia tipo % [20].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.re-cuota-21"
 number = "909-925"
 form_number = "21"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "re_cuota_21"
 continuidad_id = "re-cuota-21"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [21]: 2004-2015 number 21 equals 2016-2017 form_number 21; same semantic_role and data_type. Designs print [21] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 57 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 52."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design recargo equivalencia cuota [21].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.cuota-devengada-22"
 number = "926-942"
 form_number = "22"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "cuota_devengada_22"
 continuidad_id = "cuota-devengada-22"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [22]: 2004-2015 number 22 equals 2016-2017 form_number 22; same semantic_role and data_type. Designs print [22] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 58 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 53."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
 required = true
 input_kind = "computed"
 formula = "modelo-309-cuota-devengada-total"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.a-deducir-23"
 number = "943-959"
 form_number = "23"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "a_deducir_23"
 continuidad_id = "a-deducir-23"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [23]: 2004-2015 number 23 equals 2016-2017 form_number 23; same semantic_role and data_type. Designs print [23] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 59 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 54."
-required = false
-input_kind = "manual"
-section = ["declarante", "liquidacion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design a deducir [23].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "decl.resultado-24"
 number = "960-976"
 form_number = "24"
-data_type = "money"
+section = ["declarante", "liquidacion"]
 semantic_role = "resultado_24"
 continuidad_id = "resultado-24"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [24]: 2004-2015 number 24 equals 2016-2017 form_number 24; same semantic_role and data_type. Designs print [24] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 60 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 55."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Design resultado a ingresar [24]: the design's own [22]-[23].
 required = true
 input_kind = "computed"
 formula = "modelo-309-resultado"
-section = ["declarante", "liquidacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[revisions.2016-2017.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
 continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
 continuidad_origin = "not_on_form"
 continuidad_evidence = "NOT A PRINTED BOX. This row carries a slug number equal to its own id and no position: it is a bound cuota leaf in the inversion_sujeto_pasivo section, input_kind bound to a ledger binding rather than to a record byte. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) lists 61 positional campos and prints no field of this name; the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) lists 64 positional campos and prints none either. The only printed liquidacion fields either design carries are the numbered boxes [01]-[24], which this modelo declares as separate rows. The row is absent from the predecessor edition because it is not on the form at all."
 number = "iva.autorepercutido.intracomunitaria"
-data_type = "money"
+section = ["iva", "no_periodica", "inversion_sujeto_pasivo"]
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
-required = false
 input_kind = "bound"
 binding = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
-section = ["iva", "no_periodica", "inversion_sujeto_pasivo"]
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "iva.soportado.recargo-equivalencia"
 continuidad_id = "iva-cuota-soportada-recargo-equivalencia"
 continuidad_origin = "not_on_form"
 continuidad_evidence = "NOT A PRINTED BOX. This row carries a slug number equal to its own id and no position: it is a bound cuota leaf in the soportado section, input_kind bound to a ledger binding rather than to a record byte. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) lists 61 positional campos and prints no field of this name; the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) lists 64 positional campos and prints none either. The only printed liquidacion fields either design carries are the numbered boxes [01]-[24], which this modelo declares as separate rows. The row is absent from the predecessor edition because it is not on the form at all."
 number = "iva.soportado.recargo-equivalencia"
-data_type = "money"
+section = ["iva", "no_periodica", "soportado"]
 semantic_role = "iva_cuota_soportada_recargo_equivalencia"
-required = false
 input_kind = "bound"
 binding = "modelo-309-iva-soportado-recargo-equivalencia-cuota"
-section = ["iva", "no_periodica", "soportado"]
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 
-[[revisions.2016-2017.casillas]]
+[[revisions."2016-2017".casillas]]
 id = "iva.cuota-no-periodica-total"
 continuidad_id = "iva-cuota-no-periodica-total"
 continuidad_origin = "not_on_form"
 continuidad_evidence = "NOT A PRINTED BOX. This row is declared internal_only = true, input_kind computed, driven by the formula modelo-309-iva-cuota-no-periodica-total, and carries a slug number with no position. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) lists 61 positional campos and prints no such field; the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) lists 64 positional campos and prints none either. The printed totals both designs do carry are the numbered boxes [22] total cuota devengada and [24] resultado a ingresar, which this modelo declares as separate rows. The row is absent from the predecessor edition because it is not on the form at all."
 internal_only = true
 number = "iva.cuota-no-periodica-total"
-data_type = "money"
+section = ["iva", "no_periodica", "totales"]
 semantic_role = "iva_cuota_no_periodica_total"
-required = false
 input_kind = "computed"
 formula = "modelo-309-iva-cuota-no-periodica-total"
-section = ["iva", "no_periodica", "totales"]
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]

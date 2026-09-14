@@ -11,47 +11,14 @@
 # projections joined the closure. The ten official Diseño box numbers
 # (03/06/09/11/13/27/29/33/37/45) are now computed projection targets and part of
 # the closure.
-# Official Diseño box projections (Stage 2): each numbered cuota box is now a
-# computed formula target that copies its semantic source, so it joins the
-# calculation-completeness surface.
-# Informativa base-imponible boxes (entregas intracomunitarias exentas, casilla
-# 59; exportaciones exentas, casilla 60) became computed projection targets when
-# their ledger_iva_aggregation bindings landed; they join the calculation closure.
-# Casilla 122 joins them for the same reason, one box further along the same
-# información adicional line: the supplier's side of a domestic reverse charge
-# (LIVA art. 84.Uno.2.º) is base-only turnover with no cuota, and it became a
-# computed projection target when its ledger_iva_aggregation binding landed.
-# Casilla 120 joins on the same línea de información adicional and for the same
-# reason: a B2B service located where the EU recipient is established (LIVA art.
-# 69.Uno.1) is base-only volumen with no cuota, and became a computed projection
-# target when its ledger_iva_aggregation binding landed.
-# Recargo de equivalencia cuota casillas join the calculation closure once their
-# ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
-# general 5.2%, reducido 1.4%, super-reducido 0.5%).
-# Régimen-general per-tier base casillas (01 super-reducido 4%, 04 reducido 10%,
-# 07 general 21%) and the deducible soportado-interiores base (28) join the
-# calculation closure once their ledger_iva_aggregation base_amount_sum bindings
-# landed (LIVA art. 88 repercutido base / art. 92 soportado base).
-# Deducción regularización cuota casillas (43 regularización bienes de inversión,
-# LIVA art. 107-110; 44 regularización prorrata por porcentaje definitivo, LIVA
-# art. 104-105). Manual-input official record-file boxes referenced as operands of
-# the total-a-deducir deduction chain, so they enter the calculation closure.
-# Régimen especial del criterio de caja informativa boxes (62/63 entregas
-# devengadas art. 75 LIVA base/cuota, 74/75 adquisiciones base/cuota) join the
-# calculation closure once their ledger_iva_aggregation criterio-caja bindings
-# landed (LIVA art. 163 decies-terdecies / quinquiesdecies).
-# The two RD-ley 4/2024 transitional rungs of the régimen-general devengado
-# block. Their base boxes are ledger-bound and their cuota boxes project the
-# matching semantic carriers, exactly as the three ordinary-tier rungs do, so
-# both the boxes and the carriers join the calculation closure.
-# Recargo rungs that joined the calculation closure when total cuota devengada
-# was corrected to enumerate them, as AEAT's own printed formula for [27] does.
-# Joined the closure when total cuota devengada was completed to enumerate every
-# term AEAT prints: [15] modificacion de bases y cuotas, [152] the 0 % rung cuota.
 
 [revisions.2026-y-siguientes.completeness_manifest]
 source_ref = "aeat-dr-303-2026"
-legal_refs = ["ley-12-2002:art-29", "ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-161", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-quinquiesdecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-17", "ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-25", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-75", "ley-37-1992:art-79", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-9", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
+legal_refs = [
+  "ley-12-2002:art-29", "ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-161", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-quinquiesdecies",
+  "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-17", "ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-25", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-75", "ley-37-1992:art-79", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-9", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29",
+  "rd-1624-1992:art-30", "rd-1624-1992:art-71",
+]
 source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
@@ -198,6 +165,9 @@ number = "prorrata-volumen-con-derecho"
 casilla_id = "iva.prorrata-volumen-total"
 number = "prorrata-volumen-total"
 
+# Official Diseño box projections (Stage 2): each numbered cuota box is now a
+# computed formula target that copies its semantic source, so it joins the
+# calculation-completeness surface.
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "03"
 number = "03"
@@ -242,6 +212,9 @@ number = "37"
 casilla_id = "45"
 number = "45"
 
+# Informativa base-imponible boxes (entregas intracomunitarias exentas, casilla
+# 59; exportaciones exentas, casilla 60) became computed projection targets when
+# their ledger_iva_aggregation bindings landed; they join the calculation closure.
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "59"
 number = "59"
@@ -250,14 +223,25 @@ number = "59"
 casilla_id = "60"
 number = "60"
 
+# Casilla 122 joins them for the same reason, one box further along the same
+# información adicional line: the supplier's side of a domestic reverse charge
+# (LIVA art. 84.Uno.2.º) is base-only turnover with no cuota, and it became a
+# computed projection target when its ledger_iva_aggregation binding landed.
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "122"
 number = "122"
 
+# Casilla 120 joins on the same línea de información adicional and for the same
+# reason: a B2B service located where the EU recipient is established (LIVA art.
+# 69.Uno.1) is base-only volumen with no cuota, and became a computed projection
+# target when its ledger_iva_aggregation binding landed.
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "120"
 number = "120"
 
+# Recargo de equivalencia cuota casillas join the calculation closure once their
+# ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
+# general 5.2%, reducido 1.4%, super-reducido 0.5%).
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "158"
 number = "158"
@@ -274,6 +258,10 @@ number = "21"
 casilla_id = "24"
 number = "24"
 
+# Régimen-general per-tier base casillas (01 super-reducido 4%, 04 reducido 10%,
+# 07 general 21%) and the deducible soportado-interiores base (28) join the
+# calculation closure once their ledger_iva_aggregation base_amount_sum bindings
+# landed (LIVA art. 88 repercutido base / art. 92 soportado base).
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "01"
 number = "01"
@@ -290,6 +278,10 @@ number = "07"
 casilla_id = "28"
 number = "28"
 
+# Deducción regularización cuota casillas (43 regularización bienes de inversión,
+# LIVA art. 107-110; 44 regularización prorrata por porcentaje definitivo, LIVA
+# art. 104-105). Manual-input official record-file boxes referenced as operands of
+# the total-a-deducir deduction chain, so they enter the calculation closure.
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "43"
 number = "43"
@@ -298,6 +290,10 @@ number = "43"
 casilla_id = "44"
 number = "44"
 
+# Régimen especial del criterio de caja informativa boxes (62/63 entregas
+# devengadas art. 75 LIVA base/cuota, 74/75 adquisiciones base/cuota) join the
+# calculation closure once their ledger_iva_aggregation criterio-caja bindings
+# landed (LIVA art. 163 decies-terdecies / quinquiesdecies).
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "62"
 number = "62"
@@ -314,6 +310,10 @@ number = "74"
 casilla_id = "75"
 number = "75"
 
+# The two RD-ley 4/2024 transitional rungs of the régimen-general devengado
+# block. Their base boxes are ledger-bound and their cuota boxes project the
+# matching semantic carriers, exactly as the three ordinary-tier rungs do, so
+# both the boxes and the carriers join the calculation closure.
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "153"
 number = "153"
@@ -346,6 +346,8 @@ number = "iva.repercutido.reducido.transitorio"
 casilla_id = "iva.repercutido.super-reducido.transitorio"
 number = "iva.repercutido.super-reducido.transitorio"
 
+# Recargo rungs that joined the calculation closure when total cuota devengada
+# was corrected to enumerate them, as AEAT's own printed formula for [27] does.
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "170"
 number = "170"
@@ -354,6 +356,8 @@ number = "170"
 casilla_id = "26"
 number = "26"
 
+# Joined the closure when total cuota devengada was completed to enumerate every
+# term AEAT prints: [15] modificacion de bases y cuotas, [152] the 0 % rung cuota.
 [[revisions.2026-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "15"
 number = "15"

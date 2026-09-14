@@ -4,7 +4,6 @@ tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
 calculation_class = "informative"
-output_sensitivity = "financial"
 legal_refs = [
     "orden-eha-3012-2008:art-1",
     "orden-eha-3012-2008:art-10",

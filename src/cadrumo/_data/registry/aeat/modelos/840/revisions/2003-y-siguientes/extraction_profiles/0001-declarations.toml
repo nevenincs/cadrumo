@@ -9,29 +9,20 @@
 # Round-trip verified by test_parser_boundary_part2.py::
 # test_parser_extracts_modelo_840_synthetic_fixture_targets against a sanitized synthetic fixture built from
 # the corpus-published labels.
-
-[[revisions.2003-y-siguientes.extraction_profiles]]
+[[revisions."2003-y-siguientes".extraction_profiles]]
 id = "modelo-840-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
 parser = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
+target_casillas = [
+    {casilla_id = "decl.tipo-declaracion", match_strategy = "named_label", value_kind = "enum", label_pattern = '15\s*Declaraci[oó]n\s+de:'},
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "text", label_pattern = '14\s*Ejercicio:'},
+]
 confidence = "strict"
 corpus_round_trip_verified = true
 verification_source = "synthetic_from_aeat_published_text"
 min_coverage = "1.0"
 failure_semantics = "fail_hard"
-accepted_artefact_kinds = ["declaration_pdf"]
 legal_refs = ["orden-hac-2572-2003:apartado-1", "orden-hac-2572-2003:apartado-6"]
 source_refs = ["aeat-dr-840", "boe-modelo-840-2003-form", "aeat-modelo-840-form"]
-
-[[revisions.2003-y-siguientes.extraction_profiles.target_casillas]]
-casilla_id = "decl.tipo-declaracion"
-match_strategy = "named_label"
-value_kind = "enum"
-label_pattern = "15\\s*Declaraci[oó]n\\s+de:"
-
-[[revisions.2003-y-siguientes.extraction_profiles.target_casillas]]
-casilla_id = "decl.ejercicio"
-match_strategy = "named_label"
-value_kind = "text"
-label_pattern = "14\\s*Ejercicio:"

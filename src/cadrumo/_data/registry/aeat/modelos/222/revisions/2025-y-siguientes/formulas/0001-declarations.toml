@@ -1,508 +1,157 @@
-# The diseno de registro labels this box "([16] x [17]) - [49] - [50] - [51] + [52] - [53]"; the instructions
-# for the same period add [49] and [50] and also subtract [58]. The instructions carry the computation and
-# state that [49] works with either sign, which the diseno's signed N typing for [49] and [50] agrees with,
-# so the instructions' formula is authored.
-# [18] (B.1, single rate) and [26] (B.2, several rates) are mutually exclusive computations of the same
-# resultado previo: a group completes one lane's inputs and leaves the other lane's empty, so the unused
-# box resolves to zero and adding both reproduces "clave [18] o clave [26]".
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-modalidad-40-2-a-ingresar"
 target_casilla_id = "03"
+expression = { op = "subtract", args = [{ op = "percent", args = [{ casilla_id = "01" }, { parameter = "is.modalidad_cuota.percentage" }] }, { casilla_id = "02" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["clave [03]", "porcentaje del 18%", "base del pago fraccionado"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "percent"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "01"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-parameter = "is.modalidad_cuota.percentage"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "02"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-total-correcciones-aumentos"
 target_casilla_id = "38"
+expression = { op = "add", args = [{ op = "add", args = [{ casilla_id = "05" }, { casilla_id = "67" }] }, { casilla_id = "07" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["claves [38] y [39]", "] = clave [05] + clave [67] + clave [07]"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "05"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "67"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "07"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-total-correcciones-disminuciones"
 target_casilla_id = "39"
+expression = { op = "add", args = [{ op = "add", args = [{ casilla_id = "06" }, { casilla_id = "37" }] }, { casilla_id = "08" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["claves [38] y [39]", "] = clave [06] + clave [37] + clave [08]"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "06"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "37"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "08"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-suma-bases-imponibles-individuales"
 target_casilla_id = "10"
+expression = { op = "subtract", args = [{ op = "add", args = [{ op = "subtract", args = [{ op = "add", args = [{ casilla_id = "04" }, { casilla_id = "38" }] }, { casilla_id = "39" }] }, { casilla_id = "59" }] }, { casilla_id = "60" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["clave [10]", "] = clave [04] + clave [38] - clave [39] + clave [59] - clave [60]"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-casilla_id = "04"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-casilla_id = "38"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-casilla_id = "39"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "59"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "60"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-base-imponible-previa"
 target_casilla_id = "13"
+expression = { op = "subtract", args = [{ op = "add", args = [{ casilla_id = "10" }, { casilla_id = "11" }] }, { casilla_id = "12" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["clave [13]", "base imponible previa", "] = clave [10] + clave [11] - clave [12]"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "10"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "11"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "12"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-base-pago-fraccionado-b1"
 target_casilla_id = "16"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ op = "add", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ op = "add", args = [{ casilla_id = "13" }, { casilla_id = "44" }] }, { casilla_id = "45" }] }, { casilla_id = "46" }] }, { casilla_id = "14" }] }, { casilla_id = "15" }] }, { casilla_id = "47" }] }, { casilla_id = "48" }] }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["clave [16]", "] será = clave [13] + clave [44] + clave [45] – clave [46] – clave [14] – clave [15] + clave [47] – clave [48], sin poder ser negativa"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "max"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-literal = "0"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args.args]]
-casilla_id = "13"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args.args]]
-casilla_id = "44"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args]]
-casilla_id = "45"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args]]
-casilla_id = "46"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args]]
-casilla_id = "14"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-casilla_id = "15"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-casilla_id = "47"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "48"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-resultado-previo-b1"
 target_casilla_id = "18"
+# The diseno de registro labels this box "([16] x [17]) - [49] - [50] - [51] + [52] - [53]"; the instructions
+# for the same period add [49] and [50] and also subtract [58]. The instructions carry the computation and
+# state that [49] works with either sign, which the diseno's signed N typing for [49] and [50] agrees with,
+# so the instructions' formula is authored.
+expression = { op = "subtract", args = [{ op = "add", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ op = "add", args = [{ op = "percent", args = [{ casilla_id = "16" }, { casilla_id = "17" }] }, { casilla_id = "49" }] }, { casilla_id = "50" }] }, { casilla_id = "51" }] }, { casilla_id = "58" }] }, { casilla_id = "52" }] }, { casilla_id = "53" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["clave [18]", "] será = clave [16] x clave [17] /100 + clave [49] + clave [50] - clave [51] – clave [58] + clave [52] – clave [53]"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args]]
-op = "percent"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args]]
-casilla_id = "16"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args]]
-casilla_id = "17"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args]]
-casilla_id = "49"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args]]
-casilla_id = "50"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-casilla_id = "51"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-casilla_id = "58"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "52"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "53"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-base-pago-fraccionado-b2"
 target_casilla_id = "19"
+expression = { op = "add", args = [{ op = "add", args = [{ op = "add", args = [{ casilla_id = "20" }, { casilla_id = "23" }] }, { casilla_id = "61" }] }, { casilla_id = "64" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["la clave [19] será = clave [20] + clave [23] + clave [61] + clave [64]"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-casilla_id = "20"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-casilla_id = "23"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "61"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "64"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-importe-pago-fraccionado-b2-tipo-1"
 target_casilla_id = "22"
+expression = { op = "percent", args = [{ casilla_id = "20" }, { casilla_id = "21" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["] será = (clave [20] x clave [21]) / 100"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "percent"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "20"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "21"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-importe-pago-fraccionado-b2-tipo-2"
 target_casilla_id = "25"
+expression = { op = "percent", args = [{ casilla_id = "23" }, { casilla_id = "24" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["] = (clave [23] x clave [24]) /100"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "percent"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "23"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "24"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-importe-pago-fraccionado-b2-tipo-3"
 target_casilla_id = "63"
+expression = { op = "percent", args = [{ casilla_id = "61" }, { casilla_id = "62" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["] = (clave [61] x clave [62]) / 100"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "percent"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "61"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "62"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-importe-pago-fraccionado-b2-tipo-4"
 target_casilla_id = "66"
+expression = { op = "percent", args = [{ casilla_id = "64" }, { casilla_id = "65" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["] = (clave [64] x clave [65]) / 100"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "percent"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "64"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "65"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-resultado-previo-b2"
 target_casilla_id = "26"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ op = "add", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ op = "add", args = [{ op = "add", args = [{ op = "add", args = [{ op = "add", args = [{ casilla_id = "22" }, { casilla_id = "25" }] }, { casilla_id = "63" }] }, { casilla_id = "66" }] }, { casilla_id = "54" }] }, { casilla_id = "57" }] }, { casilla_id = "42" }] }, { casilla_id = "43" }] }, { casilla_id = "55" }] }, { casilla_id = "56" }] }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["la clave [26] = clave [22] + clave [25] + clave [63] + clave [66] + clave [54] + clave [57] – clave [42] – clave [43] + clave [55] – clave [56]", "su importe no puede ser negativo"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "max"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-literal = "0"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args.args.args.args]]
-casilla_id = "22"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args.args.args.args]]
-casilla_id = "25"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args.args.args]]
-casilla_id = "63"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args.args]]
-casilla_id = "66"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args.args]]
-casilla_id = "54"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args]]
-casilla_id = "57"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args]]
-casilla_id = "42"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-casilla_id = "43"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-casilla_id = "55"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "56"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-modalidad-40-3-resultado"
 target_casilla_id = "32"
+# [18] (B.1, single rate) and [26] (B.2, several rates) are mutually exclusive computations of the same
+# resultado previo: a group completes one lane's inputs and leaves the other lane's empty, so the unused
+# box resolves to zero and adding both reproduces "clave [18] o clave [26]".
+expression = { op = "subtract", args = [{ op = "subtract", args = [{ op = "percent", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ casilla_id = "18" }, { casilla_id = "26" }] }, { casilla_id = "27" }] }, { casilla_id = "28" }] }, { casilla_id = "29" }] }, { casilla_id = "30" }] }, { casilla_id = "31" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["clave [32]", "] = [[(clave [18] o clave [26]) – clave [27] – clave [28]] x clave [29]/100] - clave [30] - clave [31]"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-op = "percent"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-op = "subtract"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args]]
-op = "add"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args]]
-casilla_id = "18"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args.args]]
-casilla_id = "26"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args.args]]
-casilla_id = "27"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args.args]]
-casilla_id = "28"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args.args]]
-casilla_id = "29"
-
-[[revisions.2025-y-siguientes.formulas.expression.args.args]]
-casilla_id = "30"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "31"
-
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-222-cantidad-a-ingresar"
 target_casilla_id = "34"
+expression = { op = "max", args = [{ casilla_id = "32" }, { casilla_id = "33" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 
 [[revisions.2025-y-siguientes.formulas.source_citations]]
 source_ref = "aeat-modelo-222-instructions"
 required_text = ["clave [34]", "cantidad a ingresar", "la mayor de las claves [32] o [33]"]
-
-[revisions.2025-y-siguientes.formulas.expression]
-op = "max"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "32"
-
-[[revisions.2025-y-siguientes.formulas.expression.args]]
-casilla_id = "33"

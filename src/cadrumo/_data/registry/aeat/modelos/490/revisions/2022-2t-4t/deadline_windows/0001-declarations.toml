@@ -10,7 +10,7 @@
 # Dates are NOMINAL; shift_deadline applies weekend and holiday movement at read
 # time.
 
-[[revisions.2022-2t-4t.deadline_windows]]
+[[revisions."2022-2t-4t".deadline_windows]]
 id = "modelo-490-2022-2t"
 filing_year = 2022
 period = "2022 2T"
@@ -20,7 +20,7 @@ closes_on = 2022-07-31
 legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure"]
 
-[[revisions.2022-2t-4t.deadline_windows]]
+[[revisions."2022-2t-4t".deadline_windows]]
 id = "modelo-490-2022-3t"
 filing_year = 2022
 period = "2022 3T"
@@ -30,7 +30,7 @@ closes_on = 2022-10-31
 legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure"]
 
-[[revisions.2022-2t-4t.deadline_windows]]
+[[revisions."2022-2t-4t".deadline_windows]]
 id = "modelo-490-2022-4t"
 filing_year = 2022
 period = "2022 4T"

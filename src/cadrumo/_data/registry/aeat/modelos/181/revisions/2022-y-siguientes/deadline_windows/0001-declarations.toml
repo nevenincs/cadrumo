@@ -1,12 +1,7 @@
 # Modelo 181 annual deadline windows, grounded in orden-eha-3514-2009 art 6: la presentación se realiza entre el 1 y el 31 de enero del
 # año siguiente al que corresponde la declaración.
-# Supported filing years this edition left without a deadline window.
-#
-# GROUNDING. Art 6 states the plazo: "se realizara en el plazo comprendido entre el dia 1 y el 31 del mes de enero de cada ano".
-#
-# Dates are NOMINAL; weekend and festivo movement happens at read time.
 
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-181-2024-0a"
 filing_year = 2024
 period = "2024 0A"
@@ -16,7 +11,7 @@ closes_on = 2025-01-31
 legal_refs = ["orden-eha-3514-2009:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-181-procedure"]
 
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-181-2025-0a"
 filing_year = 2025
 period = "2025 0A"
@@ -26,7 +21,7 @@ closes_on = 2026-01-31
 legal_refs = ["orden-eha-3514-2009:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-181-procedure"]
 
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-181-2026-0a"
 filing_year = 2026
 period = "2026 0A"
@@ -35,8 +30,13 @@ opens_on = 2027-01-01
 closes_on = 2027-01-31
 legal_refs = ["orden-eha-3514-2009:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-181-procedure"]
+# Supported filing years this edition left without a deadline window.
+#
+# GROUNDING. Art 6 states the plazo: "se realizara en el plazo comprendido entre el dia 1 y el 31 del mes de enero de cada ano".
+#
+# Dates are NOMINAL; weekend and festivo movement happens at read time.
 
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-181-2022-0a"
 filing_year = 2022
 period = "2022 0A"
@@ -46,7 +46,7 @@ closes_on = 2023-01-31
 legal_refs = ["orden-eha-3514-2009:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-181-procedure"]
 
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-181-2023-0a"
 filing_year = 2023
 period = "2023 0A"

@@ -15,15 +15,15 @@
 # `number` restates each casilla's own declared number and neither declares a
 # segmento, because modelo 296's casillas declare none.
 
-[revisions.2024-y-siguientes.completeness_manifest]
+[revisions."2024-y-siguientes".completeness_manifest]
 source_ref = "aeat-dr-296-2024"
 legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-296-2024", "boe-modelo-296-form-layout"]
 
-[[revisions.2024-y-siguientes.completeness_manifest.casillas]]
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "02"
 number = "02"
 
-[[revisions.2024-y-siguientes.completeness_manifest.casillas]]
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "03"
 number = "03"

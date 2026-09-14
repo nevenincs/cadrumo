@@ -1,19 +1,18 @@
 # Complete 1,300-position historical fixed-width record. It is intentionally
 # separate from the post-2015 M30900/M30901 two-record writer.
-
-[[revisions.2004-2015.export_layouts]]
+[[revisions."2004-2015".export_layouts]]
 id = "modelo-309-fichero"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records]]
+[[revisions."2004-2015".export_layouts.records]]
 id = "modelo-309-historical-record"
 record_type = "historical_fixed_width"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-modelo"
 offset = 1
 length = 3
@@ -27,7 +26,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-moneda"
 offset = 4
 length = 1
@@ -41,7 +40,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-tipo-declaracion"
 offset = 5
 length = 1
@@ -55,7 +54,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-nif"
 offset = 6
 length = 9
@@ -69,7 +68,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-letras-etiqueta"
 offset = 15
 length = 4
@@ -83,7 +82,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-ejercicio"
 offset = 19
 length = 4
@@ -97,7 +96,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-periodo"
 offset = 23
 length = 2
@@ -111,7 +110,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-transmitente-nif"
 offset = 25
 length = 9
@@ -125,7 +124,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-transmitente-apellidos"
 offset = 34
 length = 40
@@ -139,7 +138,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-transmitente-pais"
 offset = 74
 length = 14
@@ -153,7 +152,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-situacion-tributaria-agricola"
 offset = 88
 length = 1
@@ -167,7 +166,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-situacion-tributaria-recargo-equivalencia"
 offset = 89
 length = 1
@@ -181,7 +180,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-situacion-tributaria-sin-derecho-deduccion"
 offset = 90
 length = 1
@@ -195,7 +194,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-situacion-tributaria-persona-juridica-no-empresario"
 offset = 91
 length = 1
@@ -209,7 +208,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-situacion-tributaria-persona-fisica-no-empresario"
 offset = 92
 length = 1
@@ -223,7 +222,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-situacion-tributaria-otras"
 offset = 93
 length = 1
@@ -237,7 +236,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-hecho-imponible-adquisicion-intracomunitaria"
 offset = 94
 length = 1
@@ -251,7 +250,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-hecho-imponible-medios-transporte-nuevos"
 offset = 95
 length = 1
@@ -265,7 +264,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-hecho-imponible-inversion-sujeto-pasivo"
 offset = 96
 length = 1
@@ -279,7 +278,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-hecho-imponible-entrega-inversion-inmobiliaria"
 offset = 97
 length = 1
@@ -293,7 +292,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-hecho-imponible-procedimiento-administrativo-judicial"
 offset = 98
 length = 1
@@ -307,7 +306,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-hecho-imponible-otros"
 offset = 99
 length = 1
@@ -321,7 +320,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-vehiculo-marca"
 offset = 100
 length = 40
@@ -335,7 +334,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-vehiculo-tipo"
 offset = 140
 length = 40
@@ -349,7 +348,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-vehiculo-modelo"
 offset = 180
 length = 40
@@ -363,7 +362,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-vehiculo-bastidor"
 offset = 220
 length = 40
@@ -377,7 +376,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-vehiculo-clasificacion"
 offset = 260
 length = 40
@@ -391,7 +390,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-embarcacion-fabricante"
 offset = 300
 length = 40
@@ -405,7 +404,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-embarcacion-tipo"
 offset = 340
 length = 40
@@ -419,7 +418,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-embarcacion-identificacion"
 offset = 380
 length = 40
@@ -433,7 +432,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-embarcacion-eslora"
 offset = 420
 length = 6
@@ -447,7 +446,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-aeronave-fabricante"
 offset = 426
 length = 40
@@ -461,7 +460,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-aeronave-marca"
 offset = 466
 length = 40
@@ -475,7 +474,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-aeronave-serie"
 offset = 506
 length = 40
@@ -489,7 +488,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-aeronave-ano"
 offset = 546
 length = 4
@@ -503,7 +502,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-aeronave-peso"
 offset = 550
 length = 12
@@ -517,7 +516,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-base-01"
 offset = 562
 length = 13
@@ -531,7 +530,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-tipo-02"
 offset = 575
 length = 5
@@ -546,7 +545,7 @@ decimals = 2
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-cuota-03"
 offset = 580
 length = 13
@@ -560,7 +559,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-base-04"
 offset = 593
 length = 13
@@ -574,7 +573,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-tipo-05"
 offset = 606
 length = 5
@@ -589,7 +588,7 @@ decimals = 2
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-cuota-06"
 offset = 611
 length = 13
@@ -603,7 +602,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-base-07"
 offset = 624
 length = 13
@@ -617,7 +616,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-tipo-08"
 offset = 637
 length = 5
@@ -632,7 +631,7 @@ decimals = 2
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-rg-cuota-09"
 offset = 642
 length = 13
@@ -646,7 +645,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-base-10"
 offset = 655
 length = 13
@@ -660,7 +659,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-tipo-11"
 offset = 668
 length = 5
@@ -675,7 +674,7 @@ decimals = 2
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-cuota-12"
 offset = 673
 length = 13
@@ -689,7 +688,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-base-13"
 offset = 686
 length = 13
@@ -703,7 +702,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-tipo-14"
 offset = 699
 length = 5
@@ -718,7 +717,7 @@ decimals = 2
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-cuota-15"
 offset = 704
 length = 13
@@ -732,7 +731,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-base-16"
 offset = 717
 length = 13
@@ -746,7 +745,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-tipo-17"
 offset = 730
 length = 5
@@ -761,7 +760,7 @@ decimals = 2
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-cuota-18"
 offset = 735
 length = 13
@@ -775,7 +774,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-base-19"
 offset = 748
 length = 13
@@ -789,7 +788,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-tipo-20"
 offset = 761
 length = 5
@@ -804,7 +803,7 @@ decimals = 2
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-re-cuota-21"
 offset = 766
 length = 13
@@ -818,7 +817,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-cuota-devengada-22"
 offset = 779
 length = 13
@@ -832,7 +831,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-a-deducir-23"
 offset = 792
 length = 13
@@ -846,7 +845,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-resultado-24"
 offset = 805
 length = 13
@@ -860,7 +859,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-justificante-anterior"
 offset = 818
 length = 13
@@ -874,7 +873,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-contacto"
 offset = 831
 length = 100
@@ -888,7 +887,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-telefono"
 offset = 931
 length = 20
@@ -902,7 +901,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions.2004-2015.export_layouts.records.fields]]
+[[revisions."2004-2015".export_layouts.records.fields]]
 id = "modelo-309-historical-observaciones"
 offset = 951
 length = 350

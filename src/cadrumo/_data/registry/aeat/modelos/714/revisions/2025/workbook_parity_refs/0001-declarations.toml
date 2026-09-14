@@ -3,7 +3,7 @@
 # no AEAT calculation workbook for this modelo, so coverage is the record-design
 # layout and no formula runner is required.
 
-[[revisions.2025.workbook_parity_refs]]
+[[revisions."2025".workbook_parity_refs]]
 id = "modelo-714-record-design"
 workbook_source = "aeat-dr-714-2025"
 fixture_id = "modelo-714-2025-record-design-layout"

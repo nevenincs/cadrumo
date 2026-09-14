@@ -1,3 +1,6 @@
+[revisions."2025"]
+casilla_source_refs = ["boe-modelo-189-base-order"]
+authority_grade = "applicability"
 # valid_to is open, and the selector is now open with it. The approving Orden
 # EHA/3481/2008 art. 1 ("Se aprueba el modelo 189") carries no ejercicio bound,
 # its art. 5 sets a recurring plazo "entre el dia 1 y el 31 del mes de marzo de
@@ -7,26 +10,50 @@
 # "189 - Orden EHA/3481/2008 (actualizado por Orden HFP/1284/2023 de 28 de
 # noviembre)" and publishes no ejercicio 2026 design. A years = [2025] selector
 # therefore refused ejercicio 2026 under a design no orden has withdrawn.
+valid_from = 2025-01-01
+period_selector = { year_from = 2025, periods = ["0A"] }
 # Only form authorities belong here. Orden HAC/132/2026 art. unico approves the
 # relaciones de valores negociados del cuarto trimestre de 2025 -- a per-ejercicio
 # valuation input, not an approval or amendment of the modelo 189 form -- so it
 # cannot ground an open-ended applicability window and would over-claim every year
 # after 2025 if left. It stays in legal_refs below, where it grounds ejercicio 2025.
-[revisions.2025]
-authority_grade = "applicability"
-valid_from = 2025-01-01
+orden_aplicabilidad = [
+    "orden-eha-3481-2008:art-1",
+    "orden-hfp-1180-2023:art-primero",
+    "orden-hfp-1284-2023:art-11",
+]
+legal_refs = [
+    "orden-eha-3481-2008:art-1",
+    "orden-eha-3481-2008:art-5",
+    "orden-hfp-1180-2023:art-primero",
+    "orden-hfp-1284-2023:art-11",
+    "orden-hac-132-2026:art-unico",
+]
+source_refs = [
+    "aeat-modelo-189-procedure",
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+    "boe-modelo-189-2025-values",
+    "aeat-dr-189-2023",
+]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-09-12
-casilla_source_refs = ["boe-modelo-189-base-order"]
-orden_aplicabilidad = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
-legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
-source_refs = ["aeat-modelo-189-procedure", "boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "boe-modelo-189-2025-values", "aeat-dr-189-2023"]
 
-[revisions.2025.period_selector]
-year_from = 2025
-periods = ["0A"]
-[revisions.2025.family_dispositions.formulas]
+[revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
-legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
-source_refs = ["aeat-modelo-189-procedure", "boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "boe-modelo-189-2025-values"]
+legal_refs = [
+    "orden-eha-3481-2008:art-1",
+    "orden-hfp-1180-2023:art-primero",
+    "orden-hfp-1284-2023:art-11",
+    "orden-hac-132-2026:art-unico",
+]
+source_refs = [
+    "aeat-modelo-189-procedure",
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+    "boe-modelo-189-2025-values",
+]
+

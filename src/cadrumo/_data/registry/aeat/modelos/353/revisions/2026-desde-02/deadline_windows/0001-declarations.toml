@@ -1,4 +1,4 @@
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-02"
 filing_year = 2026
 period = "2026 02"
@@ -9,7 +9,7 @@ payment_cutoff_on = 2026-03-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-12"
 filing_year = 2026
 period = "2026 12"
@@ -18,9 +18,15 @@ opens_on = 2027-01-01
 closes_on = 2027-02-01
 payment_cutoff_on = 2027-01-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027", "aeat-calendario-contribuyente-2026-domiciliacion"]
+source_refs = [
+    "boe-modelo-353-2007-form",
+    "aeat-modelo-353-procedure",
+    "aeat-modelo-303-procedure",
+    "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-03"
 filing_year = 2026
 period = "2026 03"
@@ -31,7 +37,7 @@ payment_cutoff_on = 2026-04-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-04"
 filing_year = 2026
 period = "2026 04"
@@ -42,7 +48,7 @@ payment_cutoff_on = 2026-05-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-05"
 filing_year = 2026
 period = "2026 05"
@@ -53,7 +59,7 @@ payment_cutoff_on = 2026-06-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-06"
 filing_year = 2026
 period = "2026 06"
@@ -64,7 +70,7 @@ payment_cutoff_on = 2026-07-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-07"
 filing_year = 2026
 period = "2026 07"
@@ -75,7 +81,7 @@ payment_cutoff_on = 2026-08-26
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-08"
 filing_year = 2026
 period = "2026 08"
@@ -86,7 +92,7 @@ payment_cutoff_on = 2026-09-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-09"
 filing_year = 2026
 period = "2026 09"
@@ -97,7 +103,7 @@ payment_cutoff_on = 2026-10-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-10"
 filing_year = 2026
 period = "2026 10"
@@ -108,7 +114,7 @@ payment_cutoff_on = 2026-11-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
-[[revisions.2026-desde-02.deadline_windows]]
+[[revisions."2026-desde-02".deadline_windows]]
 id = "modelo-353-2026-11"
 filing_year = 2026
 period = "2026 11"

@@ -5,19 +5,18 @@
 # amount instead of hard-coding it inline. No formula consumes this parameter
 # today; the threshold lives here as discoverable legal grounding ahead of
 # the row-set support that will enforce it on per-tercero records.
-
-[[revisions.2025-y-siguientes.parameters]]
+[[revisions."2025-y-siguientes".parameters]]
 id = "modelo-347-tercero-anual-threshold-eur"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["rd-1065-2007:art-33", "orden-eha-3012-2008:art-1"]
 source_refs = ["aeat-modelo-347-procedure"]
 
-[[revisions.2025-y-siguientes.parameters.source_citations]]
+[[revisions."2025-y-siguientes".parameters.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
 required_text = ["operaciones con terceras personas"]
 
-[[revisions.2025-y-siguientes.parameters.values]]
+[[revisions."2025-y-siguientes".parameters.values]]
 value = "3005.06"
 date_axis = "filing_period"
 valid_from = 2025-01-01

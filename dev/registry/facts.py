@@ -5651,9 +5651,10 @@ def _ast_exported_names(tree: ast.AST) -> set[str]:
     exported: set[str] = set()
     for node in getattr(tree, "body", []):
         value: ast.AST | None = None
-        if (isinstance(node, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
-        )) or (isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__"):
+        if (
+            isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets)
+        ) or (isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__"):
             value = node.value
         if value is None:
             continue

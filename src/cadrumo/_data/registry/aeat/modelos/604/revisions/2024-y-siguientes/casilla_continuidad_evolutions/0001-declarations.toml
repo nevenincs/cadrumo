@@ -1,8 +1,7 @@
 # Grounding: aeat-dr-604-2021 page 1 field 41 is the sign of the base of
 # non-exempt subject operations; aeat-dr-604-2024 page 1 field 41 is instead
 # the sign of rectification BI. The 2024-era row is not a successor.
-
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "m604-liq-03-signo-base-sujetas-2021-2023-2024-retired"
 continuidad_id = "signo-base-sujetas"
 from_revision = "2021-2023"

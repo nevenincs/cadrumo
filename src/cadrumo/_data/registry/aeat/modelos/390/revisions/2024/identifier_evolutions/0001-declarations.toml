@@ -5,7 +5,7 @@
 # de Lorca". Same position, same width, same meaning, new label: a rename, so the
 # 2023 identifier is superseded rather than withdrawn.
 
-[[revisions.2024.identifier_evolutions]]
+[[revisions."2024".identifier_evolutions]]
 kind = "replaced"
 family = "bindings"
 identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-lorca"
@@ -14,7 +14,7 @@ to_revision = "2024"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2023", "aeat-dr-390-2024"]
 
-[[revisions.2024.identifier_evolutions]]
+[[revisions."2024".identifier_evolutions]]
 kind = "replaced"
 family = "bindings"
 identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-lorca"

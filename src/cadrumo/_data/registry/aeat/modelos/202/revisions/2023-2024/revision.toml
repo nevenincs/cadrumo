@@ -1,22 +1,51 @@
-
-[revisions.2023-2024]
+[revisions."2023-2024"]
+formula_source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
 predecessor = "2019-2022"
+casilla_source_refs = ["aeat-dr-202-2023"]
+live_cross_reference_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+application_link_source_refs = ["aeat-dr-202-2023"]
 reviewed_against = "2019-2022"
 authority_grade = "filing"
 valid_from = 2023-01-01
 valid_to = 2024-12-31
+period_selector = { year_from = 2023, year_to = 2024, periods = ["1P", "2P", "3P"] }
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-105",
+    "orden-hfp-227-2017:art-1",
+    "orden-hfp-312-2023:art-unico-1-anexo-i",
+]
+orden_aplicabilidad = [
+    "orden-hfp-227-2017:art-1",
+    "orden-hfp-312-2023:art-unico-1-anexo-i",
+]
+source_refs = [
+    "aeat-dr-202-2023",
+    "aeat-modelo-202-instructions-2023-2024",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+    "boe-modelo-202-base-order",
+    "boe-modelo-202-2023-amendment",
+]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
-formula_source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
-casilla_source_refs = ["aeat-dr-202-2023"]
-live_cross_reference_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
-application_link_source_refs = ["aeat-dr-202-2023"]
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105", "orden-hfp-227-2017:art-1", "orden-hfp-312-2023:art-unico-1-anexo-i"]
-orden_aplicabilidad = ["orden-hfp-227-2017:art-1", "orden-hfp-312-2023:art-unico-1-anexo-i"]
-source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "boe-modelo-202-base-order", "boe-modelo-202-2023-amendment"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[revisions."2023-2024".family_dispositions.projection_endpoints]
+reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. A type-level exclusion, not missing work; it changes only if the union gains a 202 member, which is a code change in core, not a registry one."
+legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2023"]
+
+[revisions."2023-2024".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels \
+a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."""
+legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "importe-excluido-quita-espera"
 from_revision = "2019-2022"
@@ -26,7 +55,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "importe-integrado-base-imponible-quita-espera"
 from_revision = "2019-2022"
@@ -36,7 +65,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "importe-integrado-cuota-quita-espera-cooperativas"
 from_revision = "2019-2022"
@@ -46,7 +75,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "rentas-reversion-deterioros-integradas-base-imponible"
 from_revision = "2019-2022"
@@ -56,7 +85,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "importe-reserva-inversiones-canarias"
 from_revision = "2019-2022"
@@ -66,7 +95,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40", "ley-19-1994:art-27"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "importe-bonificacion-art-26-ley-19-1994"
 from_revision = "2019-2022"
@@ -76,7 +105,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "importe-no-computable-regimen-zec"
 from_revision = "2019-2022"
@@ -86,7 +115,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "minoracion-rentas-bonificacion-art-33-lis"
 from_revision = "2019-2022"
@@ -96,7 +125,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "importe-excluido-aumento-capital-art-17-2-lis"
 from_revision = "2019-2022"
@@ -106,7 +135,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "renta-exenta-cap-xiv-tit-vii-lis"
 from_revision = "2019-2022"
@@ -116,7 +145,7 @@ evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion 
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-dr-202-2023"]
 
-[[revisions.2023-2024.lineage_attestations]]
+[[revisions."2023-2024".lineage_attestations]]
 family = "casillas"
 continuidad_id = "importe-bonificacion-art-34-lis"
 from_revision = "2019-2022"
@@ -124,18 +153,4 @@ to_revision = "2023-2024"
 origin = "grounded"
 evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the amount of the allowance expressly identified by article 34 LIS. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
 legal_refs = ["ley-27-2014:art-40"]
-source_refs = ["aeat-dr-202-2023"]
-
-[revisions.2023-2024.period_selector]
-year_from = 2023
-year_to = 2024
-periods = ["1P", "2P", "3P"]
-[revisions.2023-2024.family_dispositions.projection_endpoints]
-reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. A type-level exclusion, not missing work; it changes only if the union gains a 202 member, which is a code change in core, not a registry one."
-legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
-source_refs = ["aeat-dr-202-2023"]
-
-[revisions.2023-2024.family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."
-legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2023"]

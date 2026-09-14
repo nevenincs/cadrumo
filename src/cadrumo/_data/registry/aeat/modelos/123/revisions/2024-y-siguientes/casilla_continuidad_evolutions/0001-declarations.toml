@@ -1,18 +1,8 @@
 # These records state only label and legal-reference evolution. They do not
 # classify renumbering or movement into a totals column as a different concept.
-# The combined withholding base continues in the total column after the dividend/rest breakdown.
-# The combined withholding and payments-on-account amount continues in the total column.
-# The prior-year income amount retains its periodification role.
-# The regularization amount retains its periodification role.
-# The total remains withholding and payments on account plus regularization.
-# The deduction remains prior paid results for the same concept, year and period, only for a complementary return.
-# The payable result remains the withholding-plus-regularization total less prior paid results.
-# The 2007 annex counts recipients. The replacement annex introduced by
-# Orden HAC/56/2024 art. 1 counts income payments, separately for dividends and
-# other income and in total. None of those three counts continues the old
-# recipient-count measure; the reused printed number 01 is not identity.
 
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+# The combined withholding base continues in the total column after the dividend/rest breakdown.
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "base-retenciones-ingresos-a-cuenta-label-and-legal-refs-evolved"
 continuidad_id = "base-retenciones-ingresos-a-cuenta"
 from_revision = "2019-2023"
@@ -21,7 +11,8 @@ evolution_kind = "label_and_legal_refs_evolved"
 legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2024-v20", "boe-modelo-123-2007-form-text", "boe-modelo-123-2024-form-text"]
 
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+# The combined withholding and payments-on-account amount continues in the total column.
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "retenciones-ingresos-a-cuenta-label-and-legal-refs-evolved"
 continuidad_id = "retenciones-ingresos-a-cuenta"
 from_revision = "2019-2023"
@@ -30,7 +21,8 @@ evolution_kind = "label_and_legal_refs_evolved"
 legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2024-v20", "boe-modelo-123-2007-form-text", "boe-modelo-123-2024-form-text"]
 
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+# The prior-year income amount retains its periodification role.
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "ingresos-ejercicios-anteriores-legal-refs-evolved"
 continuidad_id = "ingresos-ejercicios-anteriores"
 from_revision = "2019-2023"
@@ -39,7 +31,8 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2024-v20", "boe-modelo-123-2007-form-text", "boe-modelo-123-2024-form-text"]
 
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+# The regularization amount retains its periodification role.
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "regularizacion-legal-refs-evolved"
 continuidad_id = "regularizacion"
 from_revision = "2019-2023"
@@ -48,7 +41,8 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2024-v20", "boe-modelo-123-2007-form-text", "boe-modelo-123-2024-form-text"]
 
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+# The total remains withholding and payments on account plus regularization.
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "suma-retenciones-regularizacion-legal-refs-evolved"
 continuidad_id = "suma-retenciones-regularizacion"
 from_revision = "2019-2023"
@@ -57,7 +51,8 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2024-v20", "boe-modelo-123-2007-form-text", "boe-modelo-123-2024-form-text"]
 
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+# The deduction remains prior paid results for the same concept, year and period, only for a complementary return.
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "resultado-anteriores-autoliquidaciones-legal-refs-evolved"
 continuidad_id = "resultado-anteriores-autoliquidaciones"
 from_revision = "2019-2023"
@@ -66,7 +61,8 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2024-v20", "boe-modelo-123-2007-form-text", "boe-modelo-123-2024-form-text"]
 
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+# The payable result remains the withholding-plus-regularization total less prior paid results.
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "cuota-a-ingresar-legal-refs-evolved"
 continuidad_id = "cuota-a-ingresar"
 from_revision = "2019-2023"
@@ -74,8 +70,12 @@ to_revision = "2024-y-siguientes"
 evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2024-v20", "boe-modelo-123-2007-form-text", "boe-modelo-123-2024-form-text"]
+# The 2007 annex counts recipients. The replacement annex introduced by
+# Orden HAC/56/2024 art. 1 counts income payments, separately for dividends and
+# other income and in total. None of those three counts continues the old
+# recipient-count measure; the reused printed number 01 is not identity.
 
-[[revisions.2024-y-siguientes.casilla_continuidad_evolutions]]
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
 id = "retired-perceptor-count"
 continuidad_id = "perceptor-count"
 from_revision = "2019-2023"

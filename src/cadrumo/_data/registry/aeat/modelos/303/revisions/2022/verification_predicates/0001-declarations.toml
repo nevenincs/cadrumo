@@ -38,10 +38,9 @@
 # are governed by identical wording. Without this mirror, an amended filing for
 # any year from 2009 to 2022 that declares annual prorrata volumes and leaves
 # casilla 44 blank passes verify with zero findings.
-
 [[revisions.2022.verification_predicates]]
 id = "implies-nonzero:prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
 predicate_id = "modelo-303-2009-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
-expression = "implies_nonzero([\"iva.prorrata-volumen-total\", \"44\"])"
+expression = 'implies_nonzero(["iva.prorrata-volumen-total", "44"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105"]

@@ -18,8 +18,6 @@ from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 _REVISION_FIELD_RE = re.compile(r'^\[\[?revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.([A-Za-z0-9_]+)')
-MAX_TOML_FRAGMENT_LINES = 1_750
-MAX_TOML_ROW_CHARS = 600
 TOML_CASILLA_ID_KEY = "casilla_id"
 COMPLETENESS_CASILLA_0001 = "0001"
 COMPLETENESS_CASILLA_0002 = "0002"

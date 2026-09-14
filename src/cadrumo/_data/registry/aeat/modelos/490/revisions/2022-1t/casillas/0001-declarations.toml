@@ -1,3 +1,4 @@
+
 # Modelo 490 form casillas for the 2022-1t era, transcribed position-by-position
 # from aeat-dr-490-2021. This era's casillas are declared separately from every other
 # era's because casillas are per-revision and the designs differ; nothing is
@@ -6,1845 +7,1431 @@
 # Ley 4/2020 (IDSD) is NOT cited: it is absent from this registry's legal
 # catalogue and no article is invented here, even though the design's own prose
 # references its art. 10.3.
-# Modelo 490 declaration-header casillas, grounded in orden-hac-590-2021 art 1.
-# No numbered form casilla is declared for this era: its diseno de registro
-# for this era is bundled but not a registered source (review_status), so no
-# numbered form casilla is declared. Nothing is fabricated here.
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-indicador-pagina-complementaria-12"
 continuidad_id = "pagina-complementaria-liquidacion"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 conserva el indicador C o blanco de pagina complementaria de liquidacion, distinto del indicador de declaracion complementaria."
 number = "490-01-indicador-pagina-complementaria"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-tipo-declaracion-13"
 continuidad_id = "tipo-de-declaracion"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 nota 1 mantiene I ingreso, U domiciliacion, N negativa y D devolucion."
 number = "490-01-tipo-declaracion"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-identificacion-email-154"
 continuidad_id = "declarante-correo-electronico"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene el correo electronico de identificacion del declarante."
 number = "490-01-identificacion-email"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-identificacion-nif-representante-254"
 continuidad_id = "representante-nif"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene el NIF del representante, separado del NIF del declarante."
 number = "490-01-identificacion-nif-representante"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-identificacion-nombre-representante-263"
 continuidad_id = "representante-nombre-razon-social"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene razon social, nombre y apellidos del representante como un campo combinado."
 number = "490-01-identificacion-nombre-representante"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-grupo-denominacion-388"
 continuidad_id = "grupo-denominacion"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la denominacion o nombre del grupo."
 number = "490-01-grupo-denominacion"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-grupo-pais-dominante-513"
 continuidad_id = "grupo-dominante-pais-residencia"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene el pais de residencia de la dominante codificado ISO 3166-1 alfa-2."
 number = "490-01-grupo-pais-dominante"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-grupo-dominante-515"
 continuidad_id = "grupo-entidad-dominante"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la entidad dominante del grupo, distinta de su pais de residencia y del nombre del grupo."
 number = "490-01-grupo-dominante"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-indicador-regularizacion-A"
 continuidad_id = "regularizacion-base-imponible-indicador"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene el indicador X o blanco de regularizacion de base imponible del art. 10.3 Ley 4/2020."
 number = "A"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-publi-ing-01"
 continuidad_id = "publicidad-en-linea-ingresos-totales"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene los ingresos totales de servicios de publicidad en linea, no su base imponible."
 number = "01"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-publi-base-02"
 continuidad_id = "publicidad-en-linea-base-imponible"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la base imponible del periodo de servicios de publicidad en linea, separada de su regularizacion."
 number = "02"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-publi-reg-base-03"
 continuidad_id = "publicidad-en-linea-regularizacion-base-imponible"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la regularizacion con signo de la base imponible de publicidad en linea, art. 10.3."
 number = "03"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-interm-a-ing-04"
 continuidad_id = "intermediacion-subyacente-ingresos-totales"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene los ingresos totales de intermediacion en linea con entrega de bienes o prestacion de servicios subyacentes."
 number = "04"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-interm-a-base-05"
 continuidad_id = "intermediacion-subyacente-base-imponible"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la base imponible de intermediacion en linea con entrega de bienes o prestacion de servicios subyacentes."
 number = "05"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-interm-a-reg-base-06"
 continuidad_id = "intermediacion-subyacente-regularizacion-base-imponible"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la regularizacion con signo, art. 10.3, de intermediacion con entrega de bienes o prestacion de servicios subyacentes."
 number = "06"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-interm-b-ing-07"
 continuidad_id = "demas-intermediacion-ingresos-totales"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene los ingresos totales de los demas servicios de intermediacion en linea, distintos del grupo con prestaciones subyacentes."
 number = "07"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-interm-b-base-08"
 continuidad_id = "demas-intermediacion-base-imponible"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la base imponible de los demas servicios de intermediacion en linea."
 number = "08"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-interm-b-reg-base-09"
 continuidad_id = "demas-intermediacion-regularizacion-base-imponible"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la regularizacion con signo de la base imponible de los demas servicios de intermediacion en linea, art. 10.3."
 number = "09"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-datos-ing-10"
 continuidad_id = "transmision-datos-ingresos-totales"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene los ingresos totales de los servicios de transmision de datos, no su base imponible."
 number = "10"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-datos-base-11"
 continuidad_id = "transmision-datos-base-imponible"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la base imponible del periodo de los servicios de transmision de datos."
 number = "11"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-datos-reg-base-12"
 continuidad_id = "transmision-datos-regularizacion-base-imponible"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la regularizacion con signo de la base imponible de los servicios de transmision de datos, art. 10.3."
 number = "12"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-base-imponible-total-13"
 continuidad_id = "base-imponible-total-periodo"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la suma de las bases imponibles del periodo de publicidad, las dos clases de intermediacion y transmision de datos."
 number = "13"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-reg-periodos-anteriores-14"
 continuidad_id = "regularizacion-base-imponible-periodos-anteriores"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la suma con signo de las cuatro regularizaciones de base imponible de periodos anteriores, art. 10.3 Ley 4/2020."
 number = "14"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-tipo-15"
 continuidad_id = "tipo-impositivo"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene el tipo impositivo aplicado a la base imponible total del periodo."
 number = "15"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq-cuota-integra-16"
 continuidad_id = "cuota-integra"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene la cuota integra como producto de base imponible total del periodo por tipo impositivo, antes de reparto territorial."
 number = "16"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq21-ajuste-cuota-integra-17"
 continuidad_id = "liq21-ajuste-cuota-integra-17"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49001 campo 34, posicion 899, longitud 17, tipo N: 'Liquidacion. Ajuste cuota integra periodo regularizacion ([14] x [15]) [17]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "17"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "resultado-a-deducir-18"
 continuidad_id = "resultado-anteriores-declaraciones"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t; el mismo diseno DR49001 conserva Resultado. A deducir [18] en posicion 916. La resolucion 2022-1t>2022-2t-4t funda despues [18]>[25] por la insercion territorial; este edge no renumera ni repurposa [18]."
 number = "18"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "liq21-resultado-19"
 continuidad_id = "resultado-liquidacion"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t; el mismo diseno DR49001 conserva Resultado de la liquidacion [19] en posicion 933. La resolucion 2022-1t>2022-2t-4t funda despues [19]>[26] por la insercion territorial; este edge no renumera ni repurposa [19]."
 number = "19"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_01"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-ingreso-bic-swift-950"
 continuidad_id = "ingreso-devolucion-bic-swift"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene el codigo BIC/SWIFT de ingreso o devolucion, separado del IBAN; el desplazamiento del campo no cambia su funcion."
 number = "490-01-ingreso-bic-swift"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-ingreso-iban-961"
 continuidad_id = "ingreso-devolucion-iban"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene el codigo IBAN de la cuenta de ingreso o devolucion, de 34 caracteres; el desplazamiento del campo no cambia su funcion."
 number = "490-01-ingreso-iban"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-declaracion-complementaria-995"
 continuidad_id = "declaracion-complementaria"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene C o blanco para la declaracion complementaria, distinto del indicador de pagina complementaria."
 number = "490-01-declaracion-complementaria"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-justificante-anterior-996"
 continuidad_id = "justificante-declaracion-anterior"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene el numero de justificante de la declaracion anterior de 13 caracteres, asociado a la declaracion complementaria."
 number = "490-01-justificante-anterior"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-01-declaracion-negativa-1009"
 continuidad_id = "declaracion-negativa"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t: DR49001 mantiene N o blanco para la declaracion negativa, distinto del tipo general de declaracion."
 number = "490-01-declaracion-negativa"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_01"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-02-indicador-pagina-complementaria-12"
 continuidad_id = "490-02-indicador-pagina-complementaria-12"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 5, posicion 12, longitud 1, tipo A: 'Indicador de pagina complementaria'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "490-02-indicador-pagina-complementaria"
-data_type = "text"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "text"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-02-regularizacion-ejercicio-13"
 continuidad_id = "490-02-regularizacion-ejercicio-13"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 6, posicion 13, longitud 4, tipo Num: 'Regularizacion (art. 10.3 Ley).Ejercicio'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "490-02-regularizacion-ejercicio"
-data_type = "year"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "year"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-1"
 continuidad_id = "reg21-base-positiva-1"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 7, posicion 17, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).1T [1]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "1"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-8"
 continuidad_id = "reg21-base-positiva-8"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 8, posicion 34, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).2T [8]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "8"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-14"
 continuidad_id = "reg21-base-positiva-14"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 9, posicion 51, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).3T [14]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "14-51"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-20"
 continuidad_id = "reg21-base-positiva-20"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 10, posicion 68, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).4T [20]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "20"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-2"
 continuidad_id = "reg21-base-negativa-2"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 11, posicion 85, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).1T [2]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "2"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-9"
 continuidad_id = "reg21-base-negativa-9"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 12, posicion 102, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).2T [9]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "9"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-15"
 continuidad_id = "reg21-base-negativa-15"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 13, posicion 119, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).3T [15]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "15-119"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-21"
 continuidad_id = "reg21-base-negativa-21"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 14, posicion 136, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).4T [21]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "21"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-3"
 continuidad_id = "reg21-base-total-3"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 15, posicion 153, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).1T [3]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "3"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-10"
 continuidad_id = "reg21-base-total-10"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 16, posicion 170, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).2T [10]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "10-170"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-16"
 continuidad_id = "reg21-base-total-16"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 17, posicion 187, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).3T [16]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "16-187"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-22"
 continuidad_id = "reg21-base-total-22"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 18, posicion 204, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).4T [22]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "22"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-4-221"
 continuidad_id = "reg21-tipo-4-221"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 19, posicion 221, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.1T [4]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "4"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-4-224"
 continuidad_id = "reg21-tipo-4-224"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 20, posicion 224, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.2T [4]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "4-224"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-4-227"
 continuidad_id = "reg21-tipo-4-227"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 21, posicion 227, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.3T [4]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "4-227"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-4-230"
 continuidad_id = "reg21-tipo-4-230"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 22, posicion 230, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.4T [4]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "4-230"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-5"
 continuidad_id = "reg21-cuota-positiva-5"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 23, posicion 233, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).1T [5]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "5"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-11"
 continuidad_id = "reg21-cuota-positiva-11"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 24, posicion 250, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).2T [11]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "11-250"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-17"
 continuidad_id = "reg21-cuota-positiva-17"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 25, posicion 267, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).3T [17]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "17-267"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-23"
 continuidad_id = "reg21-cuota-positiva-23"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 26, posicion 284, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).4T [23]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "23"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-6"
 continuidad_id = "reg21-cuota-negativa-6"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 27, posicion 301, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).1T [6]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "6"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-12"
 continuidad_id = "reg21-cuota-negativa-12"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 28, posicion 318, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).2T [12]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "12-318"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-18"
 continuidad_id = "reg21-cuota-negativa-18"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 29, posicion 335, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).3T [18]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "18-335"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-24"
 continuidad_id = "reg21-cuota-negativa-24"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 30, posicion 352, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).4T [24]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "24"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-7"
 continuidad_id = "reg21-cuota-total-7"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 31, posicion 369, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).1T [7]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "7"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-13"
 continuidad_id = "reg21-cuota-total-13"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 32, posicion 386, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).2T [13]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "13-386"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-19"
 continuidad_id = "reg21-cuota-total-19"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 33, posicion 403, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).3T [19]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "19-403"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-25"
 continuidad_id = "reg21-cuota-total-25"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 34, posicion 420, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).4T [25]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "25"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+
+[[revisions."2022-1t".casillas]]
 id = "490-02-regularizacion-ejercicio-437"
 continuidad_id = "490-02-regularizacion-ejercicio-437"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 35, posicion 437, longitud 4, tipo Num: 'Regularizacion (art. 10.3 Ley).Ejercicio'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "490-02-regularizacion-ejercicio-437"
-data_type = "year"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "year"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-26"
 continuidad_id = "reg21-base-positiva-26"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 36, posicion 441, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).1T [26]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "26"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-33"
 continuidad_id = "reg21-base-positiva-33"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 37, posicion 458, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).2T [33]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "33"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-39"
 continuidad_id = "reg21-base-positiva-39"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 38, posicion 475, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).3T [39]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "39"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-45"
 continuidad_id = "reg21-base-positiva-45"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 39, posicion 492, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).4T [45]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "45"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-27"
 continuidad_id = "reg21-base-negativa-27"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 40, posicion 509, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).1T [27]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "27"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-34"
 continuidad_id = "reg21-base-negativa-34"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 41, posicion 526, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).2T [34]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "34"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-40"
 continuidad_id = "reg21-base-negativa-40"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 42, posicion 543, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).3T [40]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "40"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-46"
 continuidad_id = "reg21-base-negativa-46"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 43, posicion 560, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).4T [46]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "46"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-28"
 continuidad_id = "reg21-base-total-28"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 44, posicion 577, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).1T [28]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "28"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-35"
 continuidad_id = "reg21-base-total-35"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 45, posicion 594, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).2T [35]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "35"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-41"
 continuidad_id = "reg21-base-total-41"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 46, posicion 611, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).3T [41]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "41"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-47"
 continuidad_id = "reg21-base-total-47"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 47, posicion 628, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).4T [47]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "47"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-29-645"
 continuidad_id = "reg21-tipo-29-645"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 48, posicion 645, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.1T [29]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "29"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-29-648"
 continuidad_id = "reg21-tipo-29-648"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 49, posicion 648, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.2T [29]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "29-648"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-29-651"
 continuidad_id = "reg21-tipo-29-651"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 50, posicion 651, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.3T [29]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "29-651"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-29-654"
 continuidad_id = "reg21-tipo-29-654"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 51, posicion 654, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.4T [29]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "29-654"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-30"
 continuidad_id = "reg21-cuota-positiva-30"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 52, posicion 657, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).1T [30]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "30"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-36"
 continuidad_id = "reg21-cuota-positiva-36"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 53, posicion 674, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).2T [36]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "36"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-42"
 continuidad_id = "reg21-cuota-positiva-42"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 54, posicion 691, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).3T [42]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "42"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-48"
 continuidad_id = "reg21-cuota-positiva-48"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 55, posicion 708, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).4T [48]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "48"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-31"
 continuidad_id = "reg21-cuota-negativa-31"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 56, posicion 725, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).1T [31]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "31"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-37"
 continuidad_id = "reg21-cuota-negativa-37"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 57, posicion 742, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).2T [37]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "37"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-43"
 continuidad_id = "reg21-cuota-negativa-43"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 58, posicion 759, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).3T [43]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "43"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-49"
 continuidad_id = "reg21-cuota-negativa-49"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 59, posicion 776, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).4T [49]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "49"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-32"
 continuidad_id = "reg21-cuota-total-32"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 60, posicion 793, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).1T [32]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "32"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-38"
 continuidad_id = "reg21-cuota-total-38"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 61, posicion 810, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).2T [38]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "38"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-44"
 continuidad_id = "reg21-cuota-total-44"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 62, posicion 827, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).3T [44]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "44"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-50"
 continuidad_id = "reg21-cuota-total-50"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 63, posicion 844, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).4T [50]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "50"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-02-regularizacion-ejercicio-861"
 continuidad_id = "490-02-regularizacion-ejercicio-861"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 64, posicion 861, longitud 4, tipo Num: 'Regularizacion (art. 10.3 Ley).Ejercicio'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "490-02-regularizacion-ejercicio-861"
-data_type = "year"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "year"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-51"
 continuidad_id = "reg21-base-positiva-51"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 65, posicion 865, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).1T [51]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "51"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-58"
 continuidad_id = "reg21-base-positiva-58"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 66, posicion 882, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).2T [58]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "58"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-64"
 continuidad_id = "reg21-base-positiva-64"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 67, posicion 899, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).3T [64]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "64"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-70"
 continuidad_id = "reg21-base-positiva-70"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 68, posicion 916, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).4T [70]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "70"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-52"
 continuidad_id = "reg21-base-negativa-52"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 69, posicion 933, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).1T [52]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "52"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-59"
 continuidad_id = "reg21-base-negativa-59"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 70, posicion 950, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).2T [59]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "59"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-65"
 continuidad_id = "reg21-base-negativa-65"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 71, posicion 967, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).3T [65]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "65"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-71"
 continuidad_id = "reg21-base-negativa-71"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 72, posicion 984, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).4T [71]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "71"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-53"
 continuidad_id = "reg21-base-total-53"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 73, posicion 1001, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).1T [53]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "53"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-60"
 continuidad_id = "reg21-base-total-60"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 74, posicion 1018, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).2T [60]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "60"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-66"
 continuidad_id = "reg21-base-total-66"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 75, posicion 1035, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).3T [66]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "66"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-72"
 continuidad_id = "reg21-base-total-72"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 76, posicion 1052, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).4T [72]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "72"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-54-1069"
 continuidad_id = "reg21-tipo-54-1069"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 77, posicion 1069, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.1T [54]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "54"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-54-1072"
 continuidad_id = "reg21-tipo-54-1072"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 78, posicion 1072, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.2T [54]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "54-1072"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-54-1075"
 continuidad_id = "reg21-tipo-54-1075"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 79, posicion 1075, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.3T [54]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "54-1075"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-54-1078"
 continuidad_id = "reg21-tipo-54-1078"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 80, posicion 1078, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.4T [54]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "54-1078"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-55"
 continuidad_id = "reg21-cuota-positiva-55"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 81, posicion 1081, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).1T [55]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "55"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-61"
 continuidad_id = "reg21-cuota-positiva-61"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 82, posicion 1098, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).2T [61]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "61"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-67"
 continuidad_id = "reg21-cuota-positiva-67"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 83, posicion 1115, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).3T [67]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "67"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-73"
 continuidad_id = "reg21-cuota-positiva-73"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 84, posicion 1132, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).4T [73]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "73"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-56"
 continuidad_id = "reg21-cuota-negativa-56"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 85, posicion 1149, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).1T [56]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "56"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-62"
 continuidad_id = "reg21-cuota-negativa-62"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 86, posicion 1166, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).2T [62]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "62"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-68"
 continuidad_id = "reg21-cuota-negativa-68"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 87, posicion 1183, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).3T [68]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "68"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-74"
 continuidad_id = "reg21-cuota-negativa-74"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 88, posicion 1200, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).4T [74]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "74"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-57"
 continuidad_id = "reg21-cuota-total-57"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 89, posicion 1217, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).1T [57]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "57"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-63"
 continuidad_id = "reg21-cuota-total-63"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 90, posicion 1234, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).2T [63]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "63"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-69"
 continuidad_id = "reg21-cuota-total-69"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 91, posicion 1251, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).3T [69]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "69"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-75"
 continuidad_id = "reg21-cuota-total-75"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 92, posicion 1268, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).4T [75]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "75"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "490-02-regularizacion-ejercicio-1285"
 continuidad_id = "490-02-regularizacion-ejercicio-1285"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 93, posicion 1285, longitud 4, tipo Num: 'Regularizacion (art. 10.3 Ley).Ejercicio'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "490-02-regularizacion-ejercicio-1285"
-data_type = "year"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "year"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-76"
 continuidad_id = "reg21-base-positiva-76"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 94, posicion 1289, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).1T [76]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "76"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-83"
 continuidad_id = "reg21-base-positiva-83"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 95, posicion 1306, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).2T [83]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "83"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-89"
 continuidad_id = "reg21-base-positiva-89"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 96, posicion 1323, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).3T [89]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "89"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-positiva-95"
 continuidad_id = "reg21-base-positiva-95"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 97, posicion 1340, longitud 17, tipo Num: '(a) Regu (art. 10.3 Ley). Regularizacion positiva (base imponible).4T [95]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "95"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+# Modelo 490 declaration-header casillas, grounded in orden-hac-590-2021 art 1.
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "decl.ejercicio"
 continuidad_id = "filing-year"
 continuidad_origin = "seeded"
 number = "ejercicio"
+section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "decl.periodo"
 continuidad_id = "filing-period"
 continuidad_origin = "seeded"
 number = "periodo"
+section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure"]
 
-[[revisions.2022-1t.casillas]]
+# No numbered form casilla is declared for this era: its diseno de registro
+# for this era is bundled but not a registered source (review_status), so no
+# numbered form casilla is declared. Nothing is fabricated here.
+
+
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-77"
 continuidad_id = "reg21-base-negativa-77"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 98, posicion 1357, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).1T [77]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "77"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-84"
 continuidad_id = "reg21-base-negativa-84"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 99, posicion 1374, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).2T [84]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "84"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-90"
 continuidad_id = "reg21-base-negativa-90"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 100, posicion 1391, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).3T [90]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "90"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-negativa-96"
 continuidad_id = "reg21-base-negativa-96"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 101, posicion 1408, longitud 17, tipo N: '(b) Regu (art. 10.3 Ley). Regularizacion negativa (base imponible).4T [96]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "96"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-78"
 continuidad_id = "reg21-base-total-78"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 102, posicion 1425, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).1T [78]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "78"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-85"
 continuidad_id = "reg21-base-total-85"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 103, posicion 1442, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).2T [85]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "85"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-91"
 continuidad_id = "reg21-base-total-91"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 104, posicion 1459, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).3T [91]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "91"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-base-total-97"
 continuidad_id = "reg21-base-total-97"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 105, posicion 1476, longitud 17, tipo N: '( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizacion (base imponible).4T [97]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "97"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-79-1493"
 continuidad_id = "reg21-tipo-79-1493"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 106, posicion 1493, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.1T [79]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "79"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-79-1496"
 continuidad_id = "reg21-tipo-79-1496"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 107, posicion 1496, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.2T [79]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "79-1496"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-79-1499"
 continuidad_id = "reg21-tipo-79-1499"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 108, posicion 1499, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.3T [79]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "79-1499"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-tipo-79-1502"
 continuidad_id = "reg21-tipo-79-1502"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 109, posicion 1502, longitud 3, tipo Num: '(d) Regu (art. 10.3 Ley). Tipo impositivo.4T [79]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "79-1502"
-data_type = "ratio"
-required = false
-input_kind = "manual"
 section = ["490_02"]
+data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-80"
 continuidad_id = "reg21-cuota-positiva-80"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 110, posicion 1505, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).1T [80]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "80"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-86"
 continuidad_id = "reg21-cuota-positiva-86"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 111, posicion 1522, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).2T [86]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "86"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-92"
 continuidad_id = "reg21-cuota-positiva-92"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 112, posicion 1539, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).3T [92]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "92"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-positiva-98"
 continuidad_id = "reg21-cuota-positiva-98"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 113, posicion 1556, longitud 17, tipo Num: '(e) = (a) * (d) Regu (art. 10.3 Ley). Regularizacion positiva (cuota).4T [98]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "98"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-81"
 continuidad_id = "reg21-cuota-negativa-81"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 114, posicion 1573, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).1T [81]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "81"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-87"
 continuidad_id = "reg21-cuota-negativa-87"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 115, posicion 1590, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).2T [87]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "87"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-93"
 continuidad_id = "reg21-cuota-negativa-93"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 116, posicion 1607, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).3T [93]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "93"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-negativa-99"
 continuidad_id = "reg21-cuota-negativa-99"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 117, posicion 1624, longitud 17, tipo N: '(f) = (b) * (d) Regu (art. 10.3 Ley). Regularizacion negativa (cuota).4T [99]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "99"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-82"
 continuidad_id = "reg21-cuota-total-82"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 118, posicion 1641, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).1T [82]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "82"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-88"
 continuidad_id = "reg21-cuota-total-88"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 119, posicion 1658, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).2T [88]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "88"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-94"
 continuidad_id = "reg21-cuota-total-94"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 120, posicion 1675, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).3T [94]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "94"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg21-cuota-total-100"
 continuidad_id = "reg21-cuota-total-100"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021: las ediciones 2021 y 2022-1t consumen el MISMO diseno de registro (Orden HAC/590/2021, ejercicio 2021 y 2022 hasta periodo 1T). DR49002 campo 121, posicion 1692, longitud 17, tipo N: '(g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizacion (cuota).4T [100]'. El corte entre ambas ediciones es de periodo, no un rediseno: es el mismo campo impreso."
 number = "100"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
-[[revisions.2022-1t.casillas]]
+[[revisions."2022-1t".casillas]]
 id = "reg-total-cuota-101"
 continuidad_id = "total-regularizacion-cuota"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t; el mismo diseno DR49002 conserva Total Regularizacion (cuota) [101] en posicion 1709. La resolucion 2022-1t>2022-2t-4t funda despues [101]>[363] por la ampliacion territorial; este edge no renumera ni repurposa [101]."
 number = "101"
-data_type = "money"
-required = false
-input_kind = "manual"
 section = ["490_02"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]

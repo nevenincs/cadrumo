@@ -1,3 +1,12 @@
+[[revisions."2022-y-siguientes".deadline_windows]]
+id = "modelo-187-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
+source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
 # Supported filing years this edition left without a deadline window.
 #
 # GROUNDING. Orden HAP/1608/2014 articulo 4 states the plazo verbatim: "El plazo de
@@ -13,17 +22,7 @@
 #
 # Dates are NOMINAL; weekend and festivo movement happens at read time.
 
-[[revisions.2022-y-siguientes.deadline_windows]]
-id = "modelo-187-2025-0a"
-filing_year = 2025
-period = "2025 0A"
-period_kind = "annual"
-opens_on = 2026-01-01
-closes_on = 2026-01-31
-legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
-source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
-
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-187-2022-0a"
 filing_year = 2022
 period = "2022 0A"
@@ -33,7 +32,7 @@ closes_on = 2023-01-31
 legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
 source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
 
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-187-2023-0a"
 filing_year = 2023
 period = "2023 0A"
@@ -43,7 +42,7 @@ closes_on = 2024-01-31
 legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
 source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
 
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-187-2024-0a"
 filing_year = 2024
 period = "2024 0A"
@@ -53,7 +52,7 @@ closes_on = 2025-01-31
 legal_refs = ["orden-hap-1608-2014:art-1", "orden-hap-1608-2014:art-4"]
 source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
 
-[[revisions.2022-y-siguientes.deadline_windows]]
+[[revisions."2022-y-siguientes".deadline_windows]]
 id = "modelo-187-2026-0a"
 filing_year = 2026
 period = "2026 0A"

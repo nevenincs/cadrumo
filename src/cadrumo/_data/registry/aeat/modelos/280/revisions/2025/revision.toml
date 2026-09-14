@@ -1,3 +1,6 @@
+[revisions."2025"]
+casilla_source_refs = ["boe-modelo-280-base-order"]
+authority_grade = "applicability"
 # Modelo 280, declaración informativa anual de Planes de Ahorro a Largo Plazo.
 #
 # CONTINUATION, NOT A NEW DESIGN. The selector opens at 2025 and does not close.
@@ -36,21 +39,68 @@
 # labels by, so respelling it is a cross-tree rename, not a selector correction;
 # siblings 194/2024 and 721/2024 carry the same open selector under a plain-year
 # id. The span is what the selector says, not what the folder is called.
-[revisions.2025]
-authority_grade = "applicability"
 valid_from = 2025-01-01
+period_selector = { year_from = 2025, periods = ["0A"] }
+orden_aplicabilidad = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hap-2118-2015:art-2",
+    "orden-hap-2118-2015:art-4",
+    "orden-hap-2118-2015:art-5",
+    "ley-35-2006:da-26",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+source_refs = [
+    "aeat-modelo-280-procedure",
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "boe-modelo-280-2019-amendment-hac-1276",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+]
 review_status = "agent_reviewed"
-reviewed_by = "agent: TEMPORAL-SPAN review only. This stamp re-dates the revision because its selector changed -- years = [2025] became year_from = 2025 with no upper bound -- and a stamp must not attest a span the revision no longer has. VERIFIED -- THE APPROVING ORDEN IS OPEN-ENDED: Orden HAP/2118/2015 art 1 approves the modelo and its diseños de registro once, art 4 sets a recurring February plazo «de cada año» over «el año natural inmediato anterior», and the disposición final reaches «2015 y ejercicios siguientes». Read from the BOE consolidated text of BOE-A-2015-11074 on 2026-09-12. VERIFIED -- NO LATER AMENDMENT: that consolidated text lists exactly three amending ordenes (HFP/1822/2016, HAC/1276/2019, HFP/1192/2022) and none after 2022; AEAT's modelo 280 procedure page cites the same four ordenes and no other. Both were read on 2026-09-12. The bundled aeat-dr-280-2022 is therefore current, so the span opens over an unchanged design rather than over an unevidenced one. NOT RE-MADE -- THE CASILLA, EXPORT-LAYOUT AND BINDING REVIEW IS INHERITED, not re-performed: it is the agent-prepared 2026-08-19 review of the two 500-byte records against aeat-dr-280-2022, and nothing in it was re-read for this change. NOT CLAIMED -- NO OPERATOR COUNTERSIGNATURE, on either the inherited review or this one. NOT CLAIMED -- FUTURE PLAZOS: only the two authored deadline windows are declared; the open selector asserts nothing about a calendar year whose window is unauthored. NOT CLAIMED -- authority grade is unchanged at applicability; opening a span promotes nothing."
+reviewed_by = """\
+agent: TEMPORAL-SPAN review only. This stamp re-dates the revision because its selector \
+changed -- years = [2025] became year_from = 2025 with no upper bound -- and a stamp must not \
+attest a span the revision no longer has. VERIFIED -- THE APPROVING ORDEN IS OPEN-ENDED: \
+Orden HAP/2118/2015 art 1 approves the modelo and its diseños de registro once, art 4 sets a \
+recurring February plazo «de cada año» over «el año natural inmediato anterior», and the \
+disposición final reaches «2015 y ejercicios siguientes». Read from the BOE consolidated text \
+of BOE-A-2015-11074 on 2026-09-12. VERIFIED -- NO LATER AMENDMENT: that consolidated text \
+lists exactly three amending ordenes (HFP/1822/2016, HAC/1276/2019, HFP/1192/2022) and none \
+after 2022; AEAT's modelo 280 procedure page cites the same four ordenes and no other. Both \
+were read on 2026-09-12. The bundled aeat-dr-280-2022 is therefore current, so the span opens \
+over an unchanged design rather than over an unevidenced one. NOT RE-MADE -- THE CASILLA, \
+EXPORT-LAYOUT AND BINDING REVIEW IS INHERITED, not re-performed: it is the agent-prepared \
+2026-08-19 review of the two 500-byte records against aeat-dr-280-2022, and nothing in it was \
+re-read for this change. NOT CLAIMED -- NO OPERATOR COUNTERSIGNATURE, on either the inherited \
+review or this one. NOT CLAIMED -- FUTURE PLAZOS: only the two authored deadline windows are \
+declared; the open selector asserts nothing about a calendar year whose window is unauthored. \
+NOT CLAIMED -- authority grade is unchanged at applicability; opening a span promotes \
+nothing."""
 reviewed_at = 2026-09-12
-casilla_source_refs = ["boe-modelo-280-base-order"]
-orden_aplicabilidad = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto", "orden-hac-1276-2019:art-quinto", "orden-hfp-1192-2022:art-cuarto"]
-legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2", "orden-hap-2118-2015:art-4", "orden-hap-2118-2015:art-5", "ley-35-2006:da-26", "orden-hfp-1822-2016:art-sexto", "orden-hac-1276-2019:art-quinto", "orden-hfp-1192-2022:art-cuarto"]
-source_refs = ["aeat-modelo-280-procedure", "aeat-dr-280-2022", "boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "boe-modelo-280-2019-amendment-hac-1276", "boe-modelo-280-2022-amendment-hfp-1192"]
 
-[revisions.2025.period_selector]
-year_from = 2025
-periods = ["0A"]
-[revisions.2025.family_dispositions.formulas]
+[revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
-legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto", "orden-hac-1276-2019:art-quinto", "orden-hfp-1192-2022:art-cuarto"]
-source_refs = ["aeat-modelo-280-procedure", "aeat-dr-280-2022", "boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "boe-modelo-280-2019-amendment-hac-1276", "boe-modelo-280-2022-amendment-hfp-1192"]
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+source_refs = [
+    "aeat-modelo-280-procedure",
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "boe-modelo-280-2019-amendment-hac-1276",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+]
+

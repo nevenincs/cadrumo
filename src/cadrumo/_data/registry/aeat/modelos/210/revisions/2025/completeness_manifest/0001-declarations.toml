@@ -19,95 +19,103 @@
 # to the closure; the pure-input official boxes ([4],[6],[9],[10],[11],[13],[14],
 # [15],[18],[19],[20],[25]) feed no formula and are intentionally absent here.
 
-[revisions.2025.completeness_manifest]
+[revisions."2025".completeness_manifest]
 source_ref = "aeat-modelo-210-procedure"
-legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f", "ley-35-2006:art-85"]
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1",
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano", "aeat-dr-210-2022"]
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "base_imponible"
 number = "8"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "base_imponible_ganancias_h"
 number = "17"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "coeficiente_imputacion_inmobiliaria"
 number = "coeficiente_imputacion_inmobiliaria"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "cuota_diferencial"
 number = "31"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "cuota_integra"
 number = "22"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "cuota_integra_reducida"
 number = "28"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "cuota_ley_irnr"
 number = "24"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "deduccion_donativos"
 number = "23"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "dias_imputacion"
 number = "dias_imputacion"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "ganancia_importe"
 number = "12"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "gastos_deducibles"
 number = "7"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "ingreso_devolucion_anterior"
 number = "30"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "limite_convenio"
 number = "26"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "mejora_ganancia"
 number = "16"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "reduccion_convenio"
 number = "27"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "rendimientos_integros"
 number = "5"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "retencion_practicada"
 number = "29"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "tipo_gravamen"
 number = "21"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "tipo_renta"
 number = "tipo_renta"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "valor_adquisicion"
 number = "valor_adquisicion"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "valor_catastral"
 number = "valor_catastral"
 
-[[revisions.2025.completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "valor_comprobado_administracion"
 number = "valor_comprobado_administracion"

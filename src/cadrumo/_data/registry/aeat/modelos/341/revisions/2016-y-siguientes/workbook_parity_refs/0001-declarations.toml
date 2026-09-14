@@ -4,7 +4,7 @@
 # no layout content and retiered to official_source_guidance. runner_required
 # stays false pending a verified byte-position parity run against the design.
 
-[[revisions.2016-y-siguientes.workbook_parity_refs]]
+[[revisions."2016-y-siguientes".workbook_parity_refs]]
 id = "modelo-341-orden-static-layout"
 workbook_source = "aeat-dr-341-2016"
 fixture_id = "modelo-341-orden-min-2000-12-15-m341-layout"

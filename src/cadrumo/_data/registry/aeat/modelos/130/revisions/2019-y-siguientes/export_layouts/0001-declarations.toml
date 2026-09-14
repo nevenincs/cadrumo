@@ -13,27 +13,20 @@
 # are its Nota 1 slots, to be filled by the entidad desarrolladora del software.
 # No such identity is declared anywhere in this project, so writing either one
 # would be inventing it. Modelo 131 leaves the same two slots unwritten.
-# Design sheet 'DR 13000': the file envelope, positions 1-328.
-# Design sheet 'DR 13001': the declaration page, positions 1-600.
-# AEAT's own Contenido cell for this position reads 'En blanco': the modelo has a
-# single page-01 record, so there is no continuation page to indicate. The
-# complementaria declaration itself is design ordinal 31 @432, written below.
-# 'Declarante (1). Sujeto pasivo. NIF' -- the taxpayer, matched to the apellidos and nombre positions below.
-# Modelo 130 is filed by personas fisicas, but the slot stays non-required for symmetry with the surnames pair.
 
-[[revisions.2019-y-siguientes.export_layouts]]
+[[revisions."2019-y-siguientes".export_layouts]]
 id = "modelo-130-fichero-boe"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
-[[revisions.2019-y-siguientes.export_layouts.records]]
+# Design sheet 'DR 13000': the file envelope, positions 1-328.
+[[revisions."2019-y-siguientes".export_layouts.records]]
 id = "modelo-130-envelope-header"
 record_type = "envelope_header"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-open"
 offset = 1
 length = 2
@@ -46,8 +39,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-modelo"
 offset = 3
 length = 3
@@ -60,8 +52,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-discriminante"
 offset = 6
 length = 1
@@ -74,8 +65,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-ejercicio"
 offset = 7
 length = 4
@@ -88,8 +78,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-periodo"
 offset = 11
 length = 2
@@ -102,8 +91,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-marker"
 offset = 13
 length = 5
@@ -116,8 +104,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-aux-open"
 offset = 18
 length = 5
@@ -130,8 +117,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-reserved-1"
 offset = 23
 length = 70
@@ -143,8 +129,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-reserved-2"
 offset = 97
 length = 4
@@ -156,8 +141,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-reserved-3"
 offset = 110
 length = 213
@@ -169,8 +153,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-envelope-aux-close"
 offset = 323
 length = 6
@@ -184,14 +167,14 @@ signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
-[[revisions.2019-y-siguientes.export_layouts.records]]
+# Design sheet 'DR 13001': the declaration page, positions 1-600.
+[[revisions."2019-y-siguientes".export_layouts.records]]
 id = "modelo-130-page-01"
 record_type = "page_1"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-open"
 offset = 1
 length = 2
@@ -204,8 +187,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-modelo"
 offset = 3
 length = 3
@@ -218,8 +200,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-pagina"
 offset = 6
 length = 2
@@ -232,8 +213,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-identifier-close"
 offset = 8
 length = 4
@@ -246,8 +226,10 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+# AEAT's own Contenido cell for this position reads 'En blanco': the modelo has a
+# single page-01 record, so there is no continuation page to indicate. The
+# complementaria declaration itself is design ordinal 31 @432, written below.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-indicador-pagina-complementaria"
 offset = 12
 length = 1
@@ -259,8 +241,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-tipo-declaracion"
 offset = 13
 length = 1
@@ -273,8 +254,8 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+# 'Declarante (1). Sujeto pasivo. NIF' -- the taxpayer, matched to the apellidos and nombre positions below.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-nif"
 offset = 14
 length = 9
@@ -287,8 +268,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-apellidos"
 offset = 23
 length = 60
@@ -301,8 +281,8 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+# Modelo 130 is filed by personas fisicas, but the slot stays non-required for symmetry with the surnames pair.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-nombre"
 offset = 83
 length = 20
@@ -315,8 +295,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-ejercicio"
 offset = 103
 length = 4
@@ -329,8 +308,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-periodo"
 offset = 107
 length = 2
@@ -343,8 +321,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-01"
 offset = 109
 length = 17
@@ -357,8 +334,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-02"
 offset = 126
 length = 17
@@ -371,8 +347,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-03"
 offset = 143
 length = 17
@@ -385,8 +360,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-04"
 offset = 160
 length = 17
@@ -399,8 +373,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-05"
 offset = 177
 length = 17
@@ -413,8 +386,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-06"
 offset = 194
 length = 17
@@ -427,8 +399,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-07"
 offset = 211
 length = 17
@@ -441,8 +412,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-08"
 offset = 228
 length = 17
@@ -455,8 +425,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-09"
 offset = 245
 length = 17
@@ -469,8 +438,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-10"
 offset = 262
 length = 17
@@ -483,8 +451,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-11"
 offset = 279
 length = 17
@@ -497,8 +464,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-12"
 offset = 296
 length = 17
@@ -511,8 +477,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-13"
 offset = 313
 length = 17
@@ -525,8 +490,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-14"
 offset = 330
 length = 17
@@ -539,8 +503,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-15"
 offset = 347
 length = 17
@@ -553,8 +516,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-16"
 offset = 364
 length = 17
@@ -567,8 +529,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-17"
 offset = 381
 length = 17
@@ -581,8 +542,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-18"
 offset = 398
 length = 17
@@ -595,8 +555,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-casilla-19"
 offset = 415
 length = 17
@@ -609,8 +568,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-declaracion-complementaria"
 offset = 432
 length = 1
@@ -623,8 +581,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-justificante-anterior"
 offset = 433
 length = 13
@@ -637,8 +594,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-iban"
 offset = 446
 length = 34
@@ -651,8 +607,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-reserved-aeat"
 offset = 480
 length = 96
@@ -664,8 +619,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-sello-electronico"
 offset = 576
 length = 13
@@ -677,8 +631,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
-
-[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-130-page-01-close"
 offset = 589
 length = 12

@@ -2,6 +2,30 @@
 # the declaration header is declared, grounded in orden-hap-2368-2013 art 1. No
 # numbered form casilla is invented. Their record positions are rendered from
 # the filing header / draft contract, not from casilla-to-position mappings.
+
+[[revisions."2013-2022".casillas]]
+id = "decl.ejercicio"
+continuidad_id = "filing-year"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-270-procedure"]
+
+[[revisions."2013-2022".casillas]]
+id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-270-procedure"]
 # Modelo 270 registro de declarante (tipo 1) resumen casillas.
 #
 # Transcribed position-by-position from BOE-A-2013-13228 Annex II
@@ -20,21 +44,116 @@
 # perceptor") are stated here as prose rather than authored as a formula,
 # because the perceptor detail rows are not themselves modelled as a
 # repeating record in this revision.
+
 # Design campo 7, "PERSONA CON QUIEN RELACIONARSE" @59+49, subdivided by AEAT's
 # own prose into 59-67 TELÉFONO and 68-107 APELLIDOS Y NOMBRE. Declared as the
 # two data AEAT names rather than as one 49-byte slot: the coverage gate
 # measures byte extent, so the design's grouping and the layout's need not
 # agree, and two operator-supplied facts are what the record actually carries.
+[[revisions."2013-2022".casillas]]
+id = "decl.persona-contacto-telefono"
+continuidad_id = "m270-persona-contacto-telefono"
+number = "59-67"
+section = ["declarante", "contacto"]
+data_type = "text"
+semantic_role = "m270_persona_contacto_telefono"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "decl.persona-contacto-nombre"
+continuidad_id = "m270-persona-contacto-nombre"
+number = "68-107"
+section = ["declarante", "contacto"]
+data_type = "name"
+semantic_role = "m270_persona_contacto_nombre"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
 # Design campo 8. A sequential number the filer assigns, whose first three
 # digits are the código 270. It is not derivable from the draft, so it is the
 # operator's datum rather than a producer's.
+[[revisions."2013-2022".casillas]]
+id = "decl.numero-identificativo"
+continuidad_id = "m270-numero-identificativo"
+number = "108-120"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m270_numero_identificativo"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+
 # Design campo 9 @121+2, subdivided by AEAT into 121 DECLARACIÓN COMPLEMENTARIA
 # ("C") and 122 DECLARACIÓN SUSTITUTIVA ("S"). Two independent single-byte
 # claves with different meanings, so two casillas rather than one two-byte slot.
 # These are NOT the application's amendment_evidence boolean: that renders the
 # canonical "X", which this design does not admit here.
+[[revisions."2013-2022".casillas]]
+id = "decl.complementaria"
+continuidad_id = "m270-declaracion-complementaria"
+number = "121"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m270_declaracion_complementaria"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "decl.sustitutiva"
+continuidad_id = "m270-declaracion-sustitutiva"
+number = "122"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m270_declaracion_sustitutiva"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+
 # Design campo 10. Written when campo 9 carries "C" or "S"; the design states
 # "en cualquier otro caso deberá rellenarse a CEROS".
+[[revisions."2013-2022".casillas]]
+id = "decl.numero-identificativo-anterior"
+continuidad_id = "m270-numero-identificativo-anterior"
+number = "123-135"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m270_numero_identificativo_anterior"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "decl.total-perceptores"
+continuidad_id = "total-perceptores-count"
+number = "136-144"
+section = ["declarante", "resumen"]
+data_type = "integer"
+semantic_role = "total_perceptores_count"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "decl.total-importe-premios"
+continuidad_id = "m270-total-importe-premios"
+number = "145-161"
+section = ["declarante", "resumen"]
+semantic_role = "m270_total_importe_premios"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
+
+[[revisions."2013-2022".casillas]]
+id = "decl.total-base-retencion"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+number = "162-178"
+section = ["declarante", "resumen"]
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
+
+[[revisions."2013-2022".casillas]]
+id = "decl.total-retenciones"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+number = "179-195"
+section = ["declarante", "resumen"]
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
 # Modelo 270 registro de perceptor (tipo 2) casillas.
 #
 # Transcribed position-by-position from BOE-A-2013-13228 Annex II
@@ -52,16 +171,161 @@
 # declarante) are not casillas: the design states they repeat the tipo-1
 # values, so the layout writes them from the same constants and draft/producer
 # facts the declarante record uses rather than from a second data entry point.
+
+[[revisions."2013-2022".casillas]]
+id = "perc.nif"
+continuidad_id = "payee-nif"
+number = "18-26"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "payee_nif"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.nif-representante-legal"
+continuidad_id = "payee-representative-nif"
+number = "27-35"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "payee_representative_nif"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.nombre"
+continuidad_id = "payee-name"
+number = "36-75"
+section = ["perceptor", "identificacion"]
+data_type = "name"
+semantic_role = "payee_name"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.nombre-representante"
+continuidad_id = "m270-representante-nombre"
+number = "76-115"
+section = ["perceptor", "identificacion"]
+data_type = "name"
+semantic_role = "m270_representante_nombre"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
 # Claves 1-5 enumerated verbatim by the design: 1 persona física contribuyente
 # del IRPF, 2 entidad en régimen de atribución de rentas residente, 3 persona
 # jurídica o entidad residente sujeto pasivo del IS, 4 establecimiento
 # permanente en territorio español, 5 persona o entidad no residente que opera
 # sin mediación de establecimiento permanente.
+[[revisions."2013-2022".casillas]]
+id = "perc.tipo-perceptor"
+continuidad_id = "m270-tipo-perceptor"
+number = "116"
+section = ["perceptor", "identificacion"]
+data_type = "integer"
+semantic_role = "m270_tipo_perceptor"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
 # "F" persona física, "J" persona jurídica o entidad. Alphabetic, so it is not
 # an enumerated-digit domain; the design fills it only when tipo de perceptor
 # is clave 5.
+[[revisions."2013-2022".casillas]]
+id = "perc.clave-personalidad"
+continuidad_id = "m270-clave-personalidad"
+number = "117"
+section = ["perceptor", "identificacion"]
+data_type = "text"
+semantic_role = "m270_clave_personalidad"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.provincia"
+continuidad_id = "payee-province"
+number = "118-119"
+section = ["perceptor", "identificacion"]
+data_type = "province_code"
+semantic_role = "payee_province"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.fecha-sorteo"
+continuidad_id = "m270-fecha-sorteo"
+number = "120-127"
+section = ["perceptor", "premio"]
+data_type = "date"
+semantic_role = "m270_fecha_sorteo"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.fecha-pago"
+continuidad_id = "m270-fecha-pago-premio"
+number = "128-135"
+section = ["perceptor", "premio"]
+data_type = "date"
+semantic_role = "m270_fecha_pago_premio"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.importe-premio"
+continuidad_id = "m270-importe-premio"
+number = "136-150"
+section = ["perceptor", "premio"]
+semantic_role = "m270_importe_premio"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
+
+[[revisions."2013-2022".casillas]]
+id = "perc.base-retencion"
+continuidad_id = "perc-base-retencion"
+number = "151-165"
+section = ["perceptor", "premio"]
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
+
+[[revisions."2013-2022".casillas]]
+id = "perc.retencion"
+continuidad_id = "perc-retencion"
+number = "166-180"
+section = ["perceptor", "premio"]
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = true
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
+
 # "X" only where a prize previously distributed as participaciones is
 # presented for collection by someone who is not its ultimate beneficiary.
+[[revisions."2013-2022".casillas]]
+id = "perc.gestor-cobro"
+continuidad_id = "m270-gestor-cobro"
+number = "181"
+section = ["perceptor", "premio"]
+data_type = "text"
+semantic_role = "m270_gestor_cobro"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.nif-pais-residencia"
+continuidad_id = "m270-nif-pais-residencia"
+number = "433-452"
+section = ["perceptor", "no_residente"]
+data_type = "text"
+semantic_role = "m270_nif_pais_residencia"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.fecha-nacimiento"
+continuidad_id = "m270-fecha-nacimiento"
+number = "453-460"
+section = ["perceptor", "no_residente"]
+data_type = "date"
+semantic_role = "m270_fecha_nacimiento"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
 # AEAT declares 461-497 as ONE 37-position campo, "LUGAR DE NACIMIENTO",
 # subdivided in its own prose into 461-495 CIUDAD (35) and 496-497 CÓDIGO PAÍS
 # (2). It is declared here as the single campo the design declares, because
@@ -69,348 +333,20 @@
 # would address two coordinates AEAT does not declare. The composite value
 # therefore carries the ciudad left-justified in its 35 positions followed by
 # the two-character country code from Anexo II of Orden EHA/3496/2011.
-
-[[revisions.2013-2022.casillas]]
-id = "decl.ejercicio"
-continuidad_id = "filing-year"
-number = "ejercicio"
-data_type = "year"
-semantic_role = "filing_year"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-270-procedure"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.tipo-declaracion"
-continuidad_id = "tipo-declaracion"
-number = "tipo-declaracion"
-data_type = "text"
-semantic_role = "tipo_declaracion"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-270-procedure"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.persona-contacto-telefono"
-continuidad_id = "m270-persona-contacto-telefono"
-number = "59-67"
-data_type = "text"
-semantic_role = "m270_persona_contacto_telefono"
-required = false
-input_kind = "manual"
-section = ["declarante", "contacto"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.persona-contacto-nombre"
-continuidad_id = "m270-persona-contacto-nombre"
-number = "68-107"
-data_type = "name"
-semantic_role = "m270_persona_contacto_nombre"
-required = false
-input_kind = "manual"
-section = ["declarante", "contacto"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.numero-identificativo"
-continuidad_id = "m270-numero-identificativo"
-number = "108-120"
-data_type = "text"
-semantic_role = "m270_numero_identificativo"
-required = true
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.complementaria"
-continuidad_id = "m270-declaracion-complementaria"
-number = "121"
-data_type = "text"
-semantic_role = "m270_declaracion_complementaria"
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.sustitutiva"
-continuidad_id = "m270-declaracion-sustitutiva"
-number = "122"
-data_type = "text"
-semantic_role = "m270_declaracion_sustitutiva"
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.numero-identificativo-anterior"
-continuidad_id = "m270-numero-identificativo-anterior"
-number = "123-135"
-data_type = "text"
-semantic_role = "m270_numero_identificativo_anterior"
-required = false
-input_kind = "manual"
-section = ["declarante"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.total-perceptores"
-continuidad_id = "total-perceptores-count"
-number = "136-144"
-data_type = "integer"
-semantic_role = "total_perceptores_count"
-required = true
-input_kind = "manual"
-section = ["declarante", "resumen"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.total-importe-premios"
-continuidad_id = "m270-total-importe-premios"
-number = "145-161"
-data_type = "money"
-semantic_role = "m270_total_importe_premios"
-required = true
-input_kind = "manual"
-section = ["declarante", "resumen"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[revisions.2013-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.total-base-retencion"
-continuidad_id = "base-retenciones-ingresos-a-cuenta"
-number = "162-178"
-data_type = "money"
-semantic_role = "base_retenciones_ingresos_a_cuenta"
-required = true
-input_kind = "manual"
-section = ["declarante", "resumen"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[revisions.2013-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "decl.total-retenciones"
-continuidad_id = "retenciones-ingresos-a-cuenta"
-number = "179-195"
-data_type = "money"
-semantic_role = "retenciones_ingresos_a_cuenta"
-required = true
-input_kind = "manual"
-section = ["declarante", "resumen"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[revisions.2013-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.nif"
-continuidad_id = "payee-nif"
-number = "18-26"
-data_type = "nif"
-semantic_role = "payee_nif"
-required = true
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.nif-representante-legal"
-continuidad_id = "payee-representative-nif"
-number = "27-35"
-data_type = "nif"
-semantic_role = "payee_representative_nif"
-required = false
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.nombre"
-continuidad_id = "payee-name"
-number = "36-75"
-data_type = "name"
-semantic_role = "payee_name"
-required = true
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.nombre-representante"
-continuidad_id = "m270-representante-nombre"
-number = "76-115"
-data_type = "name"
-semantic_role = "m270_representante_nombre"
-required = false
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.tipo-perceptor"
-continuidad_id = "m270-tipo-perceptor"
-number = "116"
-data_type = "integer"
-semantic_role = "m270_tipo_perceptor"
-required = true
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.clave-personalidad"
-continuidad_id = "m270-clave-personalidad"
-number = "117"
-data_type = "text"
-semantic_role = "m270_clave_personalidad"
-required = false
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.provincia"
-continuidad_id = "payee-province"
-number = "118-119"
-data_type = "province_code"
-semantic_role = "payee_province"
-required = true
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.fecha-sorteo"
-continuidad_id = "m270-fecha-sorteo"
-number = "120-127"
-data_type = "date"
-semantic_role = "m270_fecha_sorteo"
-required = true
-input_kind = "manual"
-section = ["perceptor", "premio"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.fecha-pago"
-continuidad_id = "m270-fecha-pago-premio"
-number = "128-135"
-data_type = "date"
-semantic_role = "m270_fecha_pago_premio"
-required = true
-input_kind = "manual"
-section = ["perceptor", "premio"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.importe-premio"
-continuidad_id = "m270-importe-premio"
-number = "136-150"
-data_type = "money"
-semantic_role = "m270_importe_premio"
-required = true
-input_kind = "manual"
-section = ["perceptor", "premio"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[revisions.2013-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.base-retencion"
-continuidad_id = "perc-base-retencion"
-number = "151-165"
-data_type = "money"
-semantic_role = "base_retenciones_ingresos_a_cuenta"
-required = true
-input_kind = "manual"
-section = ["perceptor", "premio"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[revisions.2013-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.retencion"
-continuidad_id = "perc-retencion"
-number = "166-180"
-data_type = "money"
-semantic_role = "retenciones_ingresos_a_cuenta"
-required = true
-input_kind = "manual"
-section = ["perceptor", "premio"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[revisions.2013-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.gestor-cobro"
-continuidad_id = "m270-gestor-cobro"
-number = "181"
-data_type = "text"
-semantic_role = "m270_gestor_cobro"
-required = false
-input_kind = "manual"
-section = ["perceptor", "premio"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.nif-pais-residencia"
-continuidad_id = "m270-nif-pais-residencia"
-number = "433-452"
-data_type = "text"
-semantic_role = "m270_nif_pais_residencia"
-required = false
-input_kind = "manual"
-section = ["perceptor", "no_residente"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
-id = "perc.fecha-nacimiento"
-continuidad_id = "m270-fecha-nacimiento"
-number = "453-460"
-data_type = "date"
-semantic_role = "m270_fecha_nacimiento"
-required = false
-input_kind = "manual"
-section = ["perceptor", "no_residente"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2013-2022.casillas]]
+[[revisions."2013-2022".casillas]]
 id = "perc.lugar-nacimiento"
 continuidad_id = "m270-lugar-nacimiento"
 number = "461-497"
+section = ["perceptor", "no_residente"]
 data_type = "text"
 semantic_role = "m270_lugar_nacimiento"
-required = false
-input_kind = "manual"
-section = ["perceptor", "no_residente"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 
-[[revisions.2013-2022.casillas]]
+[[revisions."2013-2022".casillas]]
 id = "perc.pais-residencia"
 continuidad_id = "m270-pais-residencia"
 number = "498-499"
+section = ["perceptor", "no_residente"]
 data_type = "country_code"
 semantic_role = "m270_pais_residencia"
-required = false
-input_kind = "manual"
-section = ["perceptor", "no_residente"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]

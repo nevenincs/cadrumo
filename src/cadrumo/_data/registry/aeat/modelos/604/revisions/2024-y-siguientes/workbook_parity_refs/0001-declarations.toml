@@ -1,7 +1,7 @@
 # Modelo 604 record-design parity anchor for the 2024 era. runner_required
 # stays false pending a verified byte-position parity run against the design.
 
-[[revisions.2024-y-siguientes.workbook_parity_refs]]
+[[revisions."2024-y-siguientes".workbook_parity_refs]]
 id = "modelo-604-orden-static-layout"
 workbook_source = "aeat-dr-604-2024"
 fixture_id = "modelo-604-orden-hac-510-2021-layout"

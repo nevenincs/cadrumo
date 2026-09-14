@@ -7,7 +7,7 @@
 # natural days), not copied from any engine output. The foral (Navarra/País
 # Vasco) modalities of art 5.3 are out of this revision's scope.
 
-[[revisions.2025-y-siguientes.deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-222-2025-1p"
 filing_year = 2025
 period = "2025 1P"
@@ -17,7 +17,7 @@ closes_on = 2025-04-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
 source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
 
-[[revisions.2025-y-siguientes.deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-222-2025-2p"
 filing_year = 2025
 period = "2025 2P"
@@ -27,7 +27,7 @@ closes_on = 2025-10-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
 source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
 
-[[revisions.2025-y-siguientes.deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-222-2025-3p"
 filing_year = 2025
 period = "2025 3P"
@@ -37,7 +37,7 @@ closes_on = 2025-12-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
 source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
 
-[[revisions.2025-y-siguientes.deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-222-2026-1p"
 filing_year = 2026
 period = "2026 1P"
@@ -47,7 +47,7 @@ closes_on = 2026-04-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
 source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
 
-[[revisions.2025-y-siguientes.deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-222-2026-2p"
 filing_year = 2026
 period = "2026 2P"
@@ -57,7 +57,7 @@ closes_on = 2026-10-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
 source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
 
-[[revisions.2025-y-siguientes.deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-222-2026-3p"
 filing_year = 2026
 period = "2026 3P"

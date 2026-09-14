@@ -1,31 +1,24 @@
-[[revisions.2023.casillas]]
+[[revisions."2023".casillas]]
 id = "02"
 number = "02"
-data_type = "money"
+section = ["resumen"]
 semantic_role = "irnr_resumen_base"
-required = false
 input_kind = "bound"
 binding = "modelo-296-prev-216-base-retenciones"
-section = ["resumen"]
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 
-[[revisions.2023.casillas]]
+[[revisions."2023".casillas]]
 id = "03"
 number = "03"
-data_type = "money"
+section = ["resumen"]
 semantic_role = "irnr_resumen_retenciones"
-required = false
 input_kind = "bound"
 binding = "modelo-296-prev-216-retenciones-total"
-section = ["resumen"]
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 
-[[revisions.2023.casillas]]
+[[revisions."2023".casillas]]
 id = "04"
 number = "04"
-data_type = "money"
-semantic_role = "irnr_resumen_retenciones_ingresadas"
-required = false
-input_kind = "manual"
 section = ["resumen"]
+semantic_role = "irnr_resumen_retenciones_ingresadas"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]

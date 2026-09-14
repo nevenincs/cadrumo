@@ -5,15 +5,14 @@
 # IRPF plazo approved each ejercicio -- the same construction its predecessor
 # used. The remission fixes the SHAPE here and the dates in deadline_windows.
 
-[[revisions.2025-y-siguientes.filing_schedules]]
+[[revisions."2025-y-siguientes".filing_schedules]]
 id = "modelo-151-2023-anual"
 period_kind = "annual"
-profile_condition_mode = "all"
 periods = ["0A"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-2", "orden-hfp-1338-2023:art-3"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 
-[[revisions.2025-y-siguientes.filing_schedules.profile_conditions]]
+[[revisions."2025-y-siguientes".filing_schedules.profile_conditions]]
 field = "taxpayer.entity_type"
 op = "equals"
 value = "natural_person"

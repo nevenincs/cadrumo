@@ -1,3 +1,12 @@
+[[revisions.2024-hasta-08-y-2t.verification_expectations]]
+id = "modelo-303-iva-chain-verification"
+computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "64", "66", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "71", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo", "27", "45"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 # Grounded against the AEAT Manual practico IVA 2024, Cap. 9 "La declaracion-
 # resumen anual. Modelo 390", 1T supuesto practico (a domestic-general-21
 # ventas/servicios + recargo de equivalencia + adquisicion intracomunitaria +
@@ -12,6 +21,7 @@
 # contract that enrolls them. See
 # test_m303_2024_regimen_general_manual_worked_example.py and
 # corpus/manual_oracles/modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json.
+externally_grounded_casilla_ids = ["27", "45", "71", "iva.resultado", "iva.resultado-regimen-general"]
 # Calculation verification for Modelo 303 (IVA autoliquidacion, Ley 37/1992):
 # the always-present total cuota boxes. The M303 2023 revision projects the
 # official Diseno-de-Registros numbered boxes as computed formulas; casilla 27
@@ -22,6 +32,20 @@
 # (present per operations) and stay excluded, as does the rate prorrata-porcentaje
 # and the situational autoconsumo-promotor cuota. Grounded in the AEAT DR
 # source_refs.
+[[revisions."2024-hasta-08-y-2t".verification_expectations]]
+id = "modelo-303-total-cuota-verification"
+computed_casilla_ids = ["27", "45"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-94"]
+source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 # Exhaustive reconcile-when-present verification for Modelo 303
 # revision 2024-hasta-08-y-2t: every computed casilla not enrolled in the
 # coverage-gated contract is value-reconciled against the engine WHEN
@@ -30,21 +54,45 @@
 # enrolling a situational casilla never lowers coverage or flips a
 # legitimate filing's verdict (min_coverage = 0). Grounded in the
 # revision's AEAT DR / framework-law refs (reused from modelo-303-iva-chain-verification).
-# Situational boxes, added to close the enrolment gate's exhaustive
-# invariant. Each is export required=true, so the FICHERO always carries a
-# zero for it; the printed declaracion leaves it BLANK when the activity is
-# absent (measured: the annex quarters print box numbers "153 154 155" and
-# "165 166 167" with no values). Reconcile-when-present is the class the
-# enrolment gate names for exactly this shape -- "coverage-gated if it is an
-# always-present final, reconcile-when-present otherwise".
-#
-# HONEST NOW, NOT COMPLETE. Reconcile-when-present never surfaces
-# MISSING_IN_FILED. Today that costs nothing because no extraction profile
-# targets these ids, so neither side ever carries them and nothing is
-# checked either way. IF A PROFILE LATER TARGETS THEM, an omission INSIDE
-# the transitional window -- where the box should carry a value -- will read
-# as legitimately absent rather than under-declared. That is the silent
-# direction, and whoever adds the extraction coverage owns the question.
+[[revisions."2024-hasta-08-y-2t".verification_expectations]]
+id = "modelo-303-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "03",
+    "06",
+    "09",
+    "11",
+    "13",
+    "29",
+    "33",
+    "37",
+    # Situational boxes, added to close the enrolment gate's exhaustive
+    # invariant. Each is export required=true, so the FICHERO always carries a
+    # zero for it; the printed declaracion leaves it BLANK when the activity is
+    # absent (measured: the annex quarters print box numbers "153 154 155" and
+    # "165 166 167" with no values). Reconcile-when-present is the class the
+    # enrolment gate names for exactly this shape -- "coverage-gated if it is an
+    # always-present final, reconcile-when-present otherwise".
+    #
+    # HONEST NOW, NOT COMPLETE. Reconcile-when-present never surfaces
+    # MISSING_IN_FILED. Today that costs nothing because no extraction profile
+    # targets these ids, so neither side ever carries them and nothing is
+    # checked either way. IF A PROFILE LATER TARGETS THEM, an omission INSIDE
+    # the transitional window -- where the box should carry a value -- will read
+    # as legitimately absent rather than under-declared. That is the silent
+    # direction, and whoever adds the extraction coverage owns the question.
+    "10",
+    "154",
+    "155",
+    "iva.autoconsumo.promotor.cuota",
+    "iva.prorrata-porcentaje",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-104", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 # Five of the reconciled leaves are additionally grounded against an independent
 # AEAT authority: the Manual practico IVA 2024, Cap. 9 "Liquidacion primer
 # trimestre" solucion (pag. 293-294) prints each as its own euro figure - "Total
@@ -60,36 +108,4 @@
 # individual boxes the operator files are wrong. See
 # test_m303_2024_regimen_general_manual_worked_example.py and
 # corpus/manual_oracles/modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json.
-
-[[revisions.2024-hasta-08-y-2t.verification_expectations]]
-id = "modelo-303-iva-chain-verification"
-tolerance = "0.00"
-rounding = "money-2"
-min_coverage = "1"
-computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "64", "66", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "71", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo", "27", "45"]
-discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-externally_grounded_casilla_ids = ["27", "45", "71", "iva.resultado", "iva.resultado-regimen-general"]
-
-[[revisions.2024-hasta-08-y-2t.verification_expectations]]
-id = "modelo-303-total-cuota-verification"
-tolerance = "0.01"
-rounding = "money-2"
-min_coverage = "1"
-computed_casilla_ids = ["27", "45"]
-discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-94"]
-source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2024-hasta-08-y-2t.verification_expectations]]
-id = "modelo-303-reconcile-when-present"
-tolerance = "0.01"
-rounding = "money-2"
-min_coverage = "0"
-computed_casilla_ids = []
-reconcile_when_present_casilla_ids = ["03", "06", "09", "11", "13", "29", "33", "37", "10", "154", "155", "iva.autoconsumo.promotor.cuota", "iva.prorrata-porcentaje"]
-discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-104", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 externally_grounded_casilla_ids = ["09", "11", "29", "33", "37"]

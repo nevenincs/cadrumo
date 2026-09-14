@@ -4,6 +4,7 @@
 # governing instrument for 2025 and earlier is orden-hac-96-2003, confirmed by BOE
 # search, by this order's own derogatoria clause, and by AEAT's bundled M185 design
 # corpus carrying no file at all for 2003-2025 (matching zero amendment intervals).
+
 # Modelo 185 monthly deadline windows, grounded in orden-hac-96-2003 disposición
 # Tercero -- the provision that ESTABLISHES this plazo for the years this
 # revision governs: "la información mensual, modelo 185 ... se presentará ...
@@ -15,6 +16,7 @@
 # had already established does NOT govern filing_year 2025; and the windows
 # themselves cited disposición Primero, which approves the diseños físicos y
 # lógicos and states no timing at all.
+
 # THE 2022, 2023 AND 2024 WINDOWS WERE ADDED 2026-09-12, and they are not a new
 # rule. This revision's selector admits every month of 2003-2025, the supported
 # filing span opens at 2022, and only 2025 carried windows -- so thirty-six
@@ -32,8 +34,7 @@
 #
 # Dates are NOMINAL per the storage rule; shift_deadline applies weekend and
 # holiday movement at read time.
-
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-01"
 filing_year = 2022
 period = "2022 01"
@@ -43,7 +44,7 @@ closes_on = 2022-02-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-02"
 filing_year = 2022
 period = "2022 02"
@@ -53,7 +54,7 @@ closes_on = 2022-03-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-03"
 filing_year = 2022
 period = "2022 03"
@@ -63,7 +64,7 @@ closes_on = 2022-04-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-04"
 filing_year = 2022
 period = "2022 04"
@@ -73,7 +74,7 @@ closes_on = 2022-05-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-05"
 filing_year = 2022
 period = "2022 05"
@@ -83,7 +84,7 @@ closes_on = 2022-06-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-06"
 filing_year = 2022
 period = "2022 06"
@@ -93,7 +94,7 @@ closes_on = 2022-07-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-07"
 filing_year = 2022
 period = "2022 07"
@@ -103,7 +104,7 @@ closes_on = 2022-08-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-08"
 filing_year = 2022
 period = "2022 08"
@@ -113,7 +114,7 @@ closes_on = 2022-09-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-09"
 filing_year = 2022
 period = "2022 09"
@@ -123,7 +124,7 @@ closes_on = 2022-10-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-10"
 filing_year = 2022
 period = "2022 10"
@@ -133,7 +134,7 @@ closes_on = 2022-11-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-11"
 filing_year = 2022
 period = "2022 11"
@@ -143,7 +144,7 @@ closes_on = 2022-12-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2022-12"
 filing_year = 2022
 period = "2022 12"
@@ -153,7 +154,7 @@ closes_on = 2023-01-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-01"
 filing_year = 2023
 period = "2023 01"
@@ -163,7 +164,7 @@ closes_on = 2023-02-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-02"
 filing_year = 2023
 period = "2023 02"
@@ -173,7 +174,7 @@ closes_on = 2023-03-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-03"
 filing_year = 2023
 period = "2023 03"
@@ -183,7 +184,7 @@ closes_on = 2023-04-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-04"
 filing_year = 2023
 period = "2023 04"
@@ -193,7 +194,7 @@ closes_on = 2023-05-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-05"
 filing_year = 2023
 period = "2023 05"
@@ -203,7 +204,7 @@ closes_on = 2023-06-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-06"
 filing_year = 2023
 period = "2023 06"
@@ -213,7 +214,7 @@ closes_on = 2023-07-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-07"
 filing_year = 2023
 period = "2023 07"
@@ -223,7 +224,7 @@ closes_on = 2023-08-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-08"
 filing_year = 2023
 period = "2023 08"
@@ -233,7 +234,7 @@ closes_on = 2023-09-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-09"
 filing_year = 2023
 period = "2023 09"
@@ -243,7 +244,7 @@ closes_on = 2023-10-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-10"
 filing_year = 2023
 period = "2023 10"
@@ -253,7 +254,7 @@ closes_on = 2023-11-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-11"
 filing_year = 2023
 period = "2023 11"
@@ -263,7 +264,7 @@ closes_on = 2023-12-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2023-12"
 filing_year = 2023
 period = "2023 12"
@@ -273,7 +274,7 @@ closes_on = 2024-01-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-01"
 filing_year = 2024
 period = "2024 01"
@@ -283,7 +284,7 @@ closes_on = 2024-02-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-02"
 filing_year = 2024
 period = "2024 02"
@@ -293,7 +294,7 @@ closes_on = 2024-03-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-03"
 filing_year = 2024
 period = "2024 03"
@@ -303,7 +304,7 @@ closes_on = 2024-04-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-04"
 filing_year = 2024
 period = "2024 04"
@@ -313,7 +314,7 @@ closes_on = 2024-05-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-05"
 filing_year = 2024
 period = "2024 05"
@@ -323,7 +324,7 @@ closes_on = 2024-06-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-06"
 filing_year = 2024
 period = "2024 06"
@@ -333,7 +334,7 @@ closes_on = 2024-07-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-07"
 filing_year = 2024
 period = "2024 07"
@@ -343,7 +344,7 @@ closes_on = 2024-08-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-08"
 filing_year = 2024
 period = "2024 08"
@@ -353,7 +354,7 @@ closes_on = 2024-09-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-09"
 filing_year = 2024
 period = "2024 09"
@@ -363,7 +364,7 @@ closes_on = 2024-10-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-10"
 filing_year = 2024
 period = "2024 10"
@@ -373,7 +374,7 @@ closes_on = 2024-11-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-11"
 filing_year = 2024
 period = "2024 11"
@@ -383,7 +384,7 @@ closes_on = 2024-12-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2024-12"
 filing_year = 2024
 period = "2024 12"
@@ -393,7 +394,7 @@ closes_on = 2025-01-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-01"
 filing_year = 2025
 period = "2025 01"
@@ -403,7 +404,7 @@ closes_on = 2025-02-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-02"
 filing_year = 2025
 period = "2025 02"
@@ -413,7 +414,7 @@ closes_on = 2025-03-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-03"
 filing_year = 2025
 period = "2025 03"
@@ -423,7 +424,7 @@ closes_on = 2025-04-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-04"
 filing_year = 2025
 period = "2025 04"
@@ -433,7 +434,7 @@ closes_on = 2025-05-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-05"
 filing_year = 2025
 period = "2025 05"
@@ -443,7 +444,7 @@ closes_on = 2025-06-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-06"
 filing_year = 2025
 period = "2025 06"
@@ -453,7 +454,7 @@ closes_on = 2025-07-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-07"
 filing_year = 2025
 period = "2025 07"
@@ -463,7 +464,7 @@ closes_on = 2025-08-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-08"
 filing_year = 2025
 period = "2025 08"
@@ -473,7 +474,7 @@ closes_on = 2025-09-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-09"
 filing_year = 2025
 period = "2025 09"
@@ -483,7 +484,7 @@ closes_on = 2025-10-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-10"
 filing_year = 2025
 period = "2025 10"
@@ -493,7 +494,7 @@ closes_on = 2025-11-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-11"
 filing_year = 2025
 period = "2025 11"
@@ -503,7 +504,7 @@ closes_on = 2025-12-10
 legal_refs = ["orden-hac-96-2003:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure-2003"]
 
-[[revisions.2003-2025.deadline_windows]]
+[[revisions."2003-2025".deadline_windows]]
 id = "modelo-185-2025-12"
 filing_year = 2025
 period = "2025 12"

@@ -9,5 +9,16 @@ extraction_profiles = ["modelo-180-export-record"]
 live_cross_references = ["modelo-180-static-official", "modelo-180-filed-declarations-read"]
 workbook_parity_refs = ["modelo-180-dr-pdf"]
 verification_expectations = ["modelo-180-annual-summary-verification"]
-application_links = ["modelo-180-portal-cross-reference", "modelo-180-filed-declarations-observation", "modelo-180-calculation", "modelo-180-filing", "modelo-180-export", "modelo-180-extractor", "modelo-180-review", "modelo-180-approval", "modelo-180-reconciliation", "modelo-180-workflow"]
+application_links = [
+    "modelo-180-portal-cross-reference",
+    "modelo-180-filed-declarations-observation",
+    "modelo-180-calculation",
+    "modelo-180-filing",
+    "modelo-180-export",
+    "modelo-180-extractor",
+    "modelo-180-review",
+    "modelo-180-approval",
+    "modelo-180-reconciliation",
+    "modelo-180-workflow",
+]
 dependency_classifications = ["modelo-180-dep-115"]

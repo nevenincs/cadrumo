@@ -29,63 +29,21 @@
 # -- while making the coverage gate count the position as written. The gate
 # cannot see through that, so the honest figure is 30/33 with three gaps rather
 # than 33/33 with three blanks.
-# ---------------------------------------------------------------- M34100
-# KNOWN GAP 1 of 3, deliberate and reported. Positions 93-96, "Version del
-# Programa", are one of this design's two "Nota 1" slots; Nota 1 assigns both to
-# the entidad desarrolladora del software ("Debe consignarse el identificador de
-# la version del SW desarrollado por la ED"). No entidad-desarrolladora identity
-# is declared anywhere in this project, so the slot is left UNWRITTEN rather than
-# guessed -- the treatment Modelo 131 committed for the same two slots of the
-# same AEAT envelope grammar.
-#
-# Unwritten rather than filler, deliberately. The record renderer pre-fills every
-# record with spaces and writes fields at their offsets, so an omitted span and a
-# right_space filler emit byte-identical output. The only thing a filler would
-# change is that the coverage gate would count the position as WRITTEN. That is
-# coverage no datum earned, so the position is omitted and reported as a gap.
-# KNOWN GAP 2 of 3, deliberate and reported. Positions 101-109, "NIF Empresa
-# Desarrollo", are the second "Nota 1" slot: the NIF of the entidad
-# desarrolladora del SW. The presenter is NOT the software developer, so writing
-# presenter.tax_id here would put a wrong identity into a slot AEAT defines for
-# someone else -- inventing an identity by misattribution rather than by making
-# one up, but inventing it either way. Left UNWRITTEN, as Modelo 131 does.
-# ---------------------------------------------------------------- M34101
-# Campo 6, "Tipo de declaracion". The design's Nota 1 admits exactly one clave
-# for batch presentation: "D (Devolucion)". Modelo 341 IS the solicitud de
-# reintegro, so D is the only value this producer can correctly write.
-# A NIF exactly fills its 9-byte slot, so left_zero never pads a present value,
-# but its parse side strips real leading zeros from a low-numbered DNI.
-# The design splits identity across two slots -- campo 8 "Apellidos o
-# Denominacion Social" and campo 9 "Nombre" -- so surnames and given name are
-# written separately here rather than through the joined full_name fact that a
-# single-slot design requires.
-# Campos 15-17: "tres enteros + dos decimales" in a 5-byte Num slot.
-# Campos 22-23: the devolucion account. Modelo 341 is a solicitud de reintegro,
-# so this is the slot the refund is paid into.
-# Campo 23, positions 277-287, "SWIFT". Previously reported as a known gap on
-# the grounds that the registry declared no BIC fact; that is no longer true --
-# selected_account.swift_bic exists on the producer-key vocabulary and the
-# export producer resolves it from the same account object the IBAN above comes
-# from, so the slot is written from a real fact rather than faked with a filler.
-#
-# required = false, unlike the IBAN beside it: a BIC is only needed where the
-# refund account is not reachable by IBAN alone, so an account that records none
-# must still file. AEAT marks neither slot obligatorio, so the distinction comes
-# from the fact rather than from the design.
 
-[[revisions.2016-y-siguientes.export_layouts]]
+[[revisions."2016-y-siguientes".export_layouts]]
 id = "modelo-341-fichero-boe"
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records]]
+# ---------------------------------------------------------------- M34100
+[[revisions."2016-y-siguientes".export_layouts.records]]
 id = "modelo-341-envelope-header"
 record_type = "envelope_header"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-open"
 offset = 1
 length = 2
@@ -99,7 +57,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-modelo"
 offset = 3
 length = 3
@@ -113,7 +71,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-page"
 offset = 6
 length = 1
@@ -127,7 +85,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-year"
 offset = 7
 length = 4
@@ -141,7 +99,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-period"
 offset = 11
 length = 2
@@ -155,7 +113,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-marker"
 offset = 13
 length = 5
@@ -169,7 +127,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-aux-open"
 offset = 18
 length = 5
@@ -183,7 +141,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-reserved-1"
 offset = 23
 length = 70
@@ -196,7 +154,21 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+# KNOWN GAP 1 of 3, deliberate and reported. Positions 93-96, "Version del
+# Programa", are one of this design's two "Nota 1" slots; Nota 1 assigns both to
+# the entidad desarrolladora del software ("Debe consignarse el identificador de
+# la version del SW desarrollado por la ED"). No entidad-desarrolladora identity
+# is declared anywhere in this project, so the slot is left UNWRITTEN rather than
+# guessed -- the treatment Modelo 131 committed for the same two slots of the
+# same AEAT envelope grammar.
+#
+# Unwritten rather than filler, deliberately. The record renderer pre-fills every
+# record with spaces and writes fields at their offsets, so an omitted span and a
+# right_space filler emit byte-identical output. The only thing a filler would
+# change is that the coverage gate would count the position as WRITTEN. That is
+# coverage no datum earned, so the position is omitted and reported as a gap.
+
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-reserved-2"
 offset = 97
 length = 4
@@ -209,7 +181,14 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+# KNOWN GAP 2 of 3, deliberate and reported. Positions 101-109, "NIF Empresa
+# Desarrollo", are the second "Nota 1" slot: the NIF of the entidad
+# desarrolladora del SW. The presenter is NOT the software developer, so writing
+# presenter.tax_id here would put a wrong identity into a slot AEAT defines for
+# someone else -- inventing an identity by misattribution rather than by making
+# one up, but inventing it either way. Left UNWRITTEN, as Modelo 131 does.
+
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-reserved-3"
 offset = 110
 length = 213
@@ -222,7 +201,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-aux-close"
 offset = 323
 length = 6
@@ -236,14 +215,15 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records]]
+# ---------------------------------------------------------------- M34101
+[[revisions."2016-y-siguientes".export_layouts.records]]
 id = "modelo-341-page-01"
 record_type = "page_01"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-open"
 offset = 1
 length = 2
@@ -257,7 +237,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-modelo"
 offset = 3
 length = 3
@@ -271,7 +251,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-page"
 offset = 6
 length = 2
@@ -285,7 +265,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-identifier-close"
 offset = 8
 length = 4
@@ -299,7 +279,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-reserved-admin"
 offset = 12
 length = 1
@@ -312,7 +292,10 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+# Campo 6, "Tipo de declaracion". The design's Nota 1 admits exactly one clave
+# for batch presentation: "D (Devolucion)". Modelo 341 IS the solicitud de
+# reintegro, so D is the only value this producer can correctly write.
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-tipo-declaracion"
 offset = 13
 length = 1
@@ -326,12 +309,14 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-nif"
 offset = 14
 length = 9
 kind = "header"
 producer_key = "taxpayer.tax_id"
+# A NIF exactly fills its 9-byte slot, so left_zero never pads a present value,
+# but its parse side strips real leading zeros from a low-numbered DNI.
 data_type = "text"
 required = true
 padding = "none"
@@ -340,7 +325,11 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+# The design splits identity across two slots -- campo 8 "Apellidos o
+# Denominacion Social" and campo 9 "Nombre" -- so surnames and given name are
+# written separately here rather than through the joined full_name fact that a
+# single-slot design requires.
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-apellidos-razon-social"
 offset = 23
 length = 60
@@ -354,7 +343,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-nombre"
 offset = 83
 length = 20
@@ -368,7 +357,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-ejercicio"
 offset = 103
 length = 4
@@ -382,7 +371,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-periodo"
 offset = 107
 length = 2
@@ -396,7 +385,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-importe-operaciones-01"
 offset = 109
 length = 17
@@ -410,7 +399,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-importe-operaciones-02"
 offset = 126
 length = 17
@@ -424,7 +413,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-importe-operaciones-03"
 offset = 143
 length = 17
@@ -438,7 +427,8 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+# Campos 15-17: "tres enteros + dos decimales" in a 5-byte Num slot.
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-porcentaje-compensacion-04"
 offset = 160
 length = 5
@@ -453,7 +443,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-porcentaje-compensacion-05"
 offset = 165
 length = 5
@@ -468,7 +458,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-porcentaje-compensacion-06"
 offset = 170
 length = 5
@@ -483,7 +473,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-importe-compensacion-07"
 offset = 175
 length = 17
@@ -497,7 +487,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-importe-compensacion-08"
 offset = 192
 length = 17
@@ -511,7 +501,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-importe-compensacion-09"
 offset = 209
 length = 17
@@ -525,7 +515,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-importe-total-10"
 offset = 226
 length = 17
@@ -539,7 +529,9 @@ signed = false
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+# Campos 22-23: the devolucion account. Modelo 341 is a solicitud de reintegro,
+# so this is the slot the refund is paid into.
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-iban"
 offset = 243
 length = 34
@@ -553,7 +545,18 @@ signed = false
 legal_refs = ["ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+# Campo 23, positions 277-287, "SWIFT". Previously reported as a known gap on
+# the grounds that the registry declared no BIC fact; that is no longer true --
+# selected_account.swift_bic exists on the producer-key vocabulary and the
+# export producer resolves it from the same account object the IBAN above comes
+# from, so the slot is written from a real fact rather than faked with a filler.
+#
+# required = false, unlike the IBAN beside it: a BIC is only needed where the
+# refund account is not reachable by IBAN alone, so an account that records none
+# must still file. AEAT marks neither slot obligatorio, so the distinction comes
+# from the fact rather than from the design.
+
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-swift-bic"
 offset = 277
 length = 11
@@ -567,7 +570,7 @@ signed = false
 legal_refs = ["ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-reserved-tail"
 offset = 288
 length = 488
@@ -580,7 +583,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-sello-electronico"
 offset = 776
 length = 13
@@ -593,7 +596,7 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions.2016-y-siguientes.export_layouts.records.fields]]
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-end-of-record"
 offset = 789
 length = 12

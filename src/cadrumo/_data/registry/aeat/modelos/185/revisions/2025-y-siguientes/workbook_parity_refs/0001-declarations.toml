@@ -4,7 +4,7 @@
 # the official form-approval provenance without asserting a verified fixed-width
 # byte-position record design (no authoritative Modelo 185 DR is bundled).
 
-[[revisions.2025-y-siguientes.workbook_parity_refs]]
+[[revisions."2025-y-siguientes".workbook_parity_refs]]
 id = "modelo-185-orden-static-layout"
 workbook_source = "enrolled-modelo-185-layout"
 fixture_id = "modelo-185-orden-hac-1197-2025-layout"

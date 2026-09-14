@@ -1,12 +1,11 @@
-[[revisions.esquema-exterior.filing_schedules]]
+[[revisions."esquema-exterior".filing_schedules]]
 id = "modelo-369-exterior-trimestral"
 period_kind = "quarterly"
-profile_condition_mode = "all"
 periods = ["EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"]
 legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-exterior.filing_schedules.profile_conditions]]
+[[revisions."esquema-exterior".filing_schedules.profile_conditions]]
 field = "iva.oss_enrolled"
 op = "equals"
 value = true

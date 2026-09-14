@@ -17,16 +17,13 @@
 # would assert a summation the source does not close. Open question for tax
 # review.
 
-[[revisions.2016-y-siguientes.casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "10"
 continuidad_id = "reagp-importe-compensacion-total"
 continuidad_origin = "seeded"
 number = "10"
-data_type = "money"
+section = ["iva", "reagp", "compensacion", "totales"]
 semantic_role = "reagp_importe_compensacion_total"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The design declares one total-compensacion slot, [10] at position 226, aggregating [07], [08] and [09], which share the sibling role reagp_importe_compensacion. Singleton by the design's construction, not by a missing sibling."
-required = false
-input_kind = "manual"
-section = ["iva", "reagp", "compensacion", "totales"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]

@@ -1,3 +1,7 @@
+[revisions."2015-2022"]
+formula_source_refs = ["aeat-modelo-151-procedure"]
+casilla_source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+application_link_source_refs = ["aeat-modelo-151-procedure"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -13,6 +17,10 @@
 # What it does NOT establish: that the figures a filing produces are correct
 # against AEAT. That is a tax review against official sources, and it is what an
 # operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
 # valid_to/year_to corrected from 2024 to 2022. The prior boundary was wrong on
 # two independent grounds: Orden HFP/1338/2023's own Disposicion Final Segunda(a)
 # states the successor model applies first for ejercicio 2023, and AEAT's own
@@ -22,57 +30,74 @@
 # never resolved to real text; the real governing instrument for this span is
 # Orden HAP/2783/2015, fetched and bundled. Its own text states it is superseded
 # in part (arts 6-10) by Orden HFP/1338/2023 from ejercicio 2023 onward.
-# The edition that actually governs this window: declared
-# 2015-01-01..2022-12-31, matching the revision exactly. AEAT titles it
-# "151 - Orden HAP/2783/2015 (Ejercicios 2015-2022)". Without it this
-# revision cited only the 2023-and-later edition, so every year it
-# claims read as uncovered.
-#
-# That deferred call has since been made: the 2023-and-later edition is
-# cited nowhere in this revision -- not here, not on any of the 529
-# casillas, not in the export layout, not in workbook_parity_refs. It
-# governs from ejercicio 2023 by Orden HFP/1338/2023's own Disposicion
-# Final Segunda(a), which is outside this span, so it does not belong to
-# this revision and no longer appears in it.
-[revisions.2015-2022]
-review_status = "agent_reviewed"
-reviewed_by = "agent-prepared-pending-operator"
-reviewed_at = 2026-08-19
-authority_grade = "filing"
 valid_from = 2015-01-01
 valid_to = 2022-12-31
-formula_source_refs = ["aeat-modelo-151-procedure"]
-casilla_source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-application_link_source_refs = ["aeat-modelo-151-procedure"]
-legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-orden_aplicabilidad = ["orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout", "aeat-dr-151-2015"]
+period_selector = { year_from = 2015, year_to = 2022, periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+    "orden-hap-2783-2015:art-1",
+]
+orden_aplicabilidad = [
+    "orden-hap-2783-2015:art-1",
+]
+source_refs = [
+    "aeat-modelo-151-procedure",
+    "boe-modelo-151-layout",
+    # The edition that actually governs this window: declared
+    # 2015-01-01..2022-12-31, matching the revision exactly. AEAT titles it
+    # "151 - Orden HAP/2783/2015 (Ejercicios 2015-2022)". Without it this
+    # revision cited only the 2023-and-later edition, so every year it
+    # claims read as uncovered.
+    #
+    # That deferred call has since been made: the 2023-and-later edition is
+    # cited nowhere in this revision -- not here, not on any of the 529
+    # casillas, not in the export layout, not in workbook_parity_refs. It
+    # governs from ejercicio 2023 by Orden HFP/1338/2023's own Disposicion
+    # Final Segunda(a), which is outside this span, so it does not belong to
+    # this revision and no longer appears in it.
+    "aeat-dr-151-2015",
+]
 
-[revisions.2015-2022.period_selector]
-year_from = 2015
-year_to = 2022
-periods = ["0A"]
-[revisions.2015-2022.family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-151-2015-2022-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
-legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout", "aeat-dr-151-2015"]
-
-[revisions.2015-2022.family_dispositions.deadline_windows]
-reason = "DEFERRED, not inapplicable: this modelo has a real filing window every year it covers. Orden HAP/2783/2015 art. 3.1 fixes it by REMISSION -- the plazo 'sera el mismo que se apruebe cada ejercicio, con caracter general, para las declaraciones del IRPF' -- so the orden that governs this revision states no date of its own, and each year's concrete opens_on/closes_on is a separate factual claim about that year's Renta campaign orden. Those ordenes are not bundled for 2015-2022, and modelo 100's own declared windows begin at 2020, so five of this revision's eight years have no in-repository authority at all. A window written from memory is a filing-grade harm, so none is written. Bundling each ejercicio's Renta campaign orden, or extending modelo 100's windows back to 2015 and carrying them across under art. 3.1, is the change that makes this family authorable."
+[revisions."2015-2022".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-151-2015-2022-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this \
+declaration through the same revision."""
+legal_refs = [
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+    "orden-hap-2783-2015:art-1",
+]
+source_refs = [
+    "aeat-modelo-151-procedure",
+    "boe-modelo-151-layout",
+    "aeat-dr-151-2015",
+]
+[revisions."2015-2022".family_dispositions.deadline_windows]
+reason = """
+DEFERRED, not inapplicable: this modelo has a real filing window every year it covers. Orden HAP/2783/2015 art. 3.1 fixes it by REMISSION -- the plazo 'sera el mismo que se apruebe cada ejercicio, con caracter general, para las declaraciones del IRPF' -- so the orden that governs this revision states no date of its own, and each year's concrete opens_on/closes_on is a separate factual claim about that year's Renta campaign orden. Those ordenes are not bundled for 2015-2022, and modelo 100's own \
+declared windows begin at 2020, so five of this revision's eight years have no in-repository authority at all. A window written from memory is a filing-grade harm, so none is written. Bundling each ejercicio's Renta campaign orden, or extending modelo 100's windows back to 2015 and carrying them across under art. 3.1, is the change that makes this family authorable."""
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-3"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 
-[revisions.2015-2022.family_dispositions.dependency_classifications]
-reason = "A dependency classification names another modelo whose filed value is FOLDED IN here, and it does that by pointing at the relation-prefill bindings and target constructs that carry the fold-in. This revision declares no relation-prefill binding, so there is no fold-in to classify and an entry here could reference nothing. The retenciones and ingresos a cuenta an impatriado suffers are real and do reduce the cuota diferencial, but they reach this modelo as its own declared casilla inputs on pagina 08 rather than as a cross-modelo carry from the retenedor's return. Declaring a relation-prefill binding reading the retenedor's modelo is what would make this family apply, and that change reaches this declaration through the same revision."
+[revisions."2015-2022".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification names another modelo whose filed value is FOLDED IN here, and it does that by pointing at the relation-prefill bindings and target constructs that carry the fold-in. This revision declares no relation-prefill binding, so there is no fold-in to classify and an entry here could reference nothing. The retenciones and ingresos a cuenta an impatriado suffers are real and do reduce the cuota diferencial, but they reach this modelo as its own \
+declared casilla inputs on pagina 08 rather than as a cross-modelo carry from the retenedor's return. Declaring a relation-prefill binding reading the retenedor's modelo is what would make this family apply, and that change reaches this declaration through the same revision."""
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-2"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout", "aeat-dr-151-2015"]
 
-[revisions.2015-2022.family_dispositions.extraction_profiles]
-reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against this registry's own casilla labels, which would be self-reference. The bundled 151 artefacts are the diseno de registro, which describes the WIRE record and prints no form labels, and the orden, which approves the model in an anexo this repository does not carry as a rendered form. Authoring patterns anyway would mean inventing the labels a real 151 declaracion prints. Bundling a filed or AEAT-published 151 specimen is the change that makes this family authorable."
+[revisions."2015-2022".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against this registry's own casilla labels, which would be self-reference. The bundled 151 artefacts are the diseno de registro, which describes the WIRE record and prints no form labels, and the orden, which approves the model in an anexo this repository does not carry as a rendered form. Authoring patterns anyway would \
+mean inventing the labels a real 151 declaracion prints. Bundling a filed or AEAT-published 151 specimen is the change that makes this family authorable."""
 legal_refs = ["ley-35-2006:art-93", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-modelo-151-procedure", "aeat-dr-151-2015"]
 
-[revisions.2015-2022.family_dispositions.live_cross_references]
-reason = "A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 151: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to bound and no guard policy to declare. Should a Modelo 151 consulta reader ever be built, this disposition is what it replaces."
+[revisions."2015-2022".family_dispositions.live_cross_references]
+reason = """
+A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 151: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to \
+bound and no guard policy to declare. Should a Modelo 151 consulta reader ever be built, this disposition is what it replaces."""
 legal_refs = ["ley-35-2006:art-93", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-modelo-151-procedure"]
+

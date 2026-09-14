@@ -16,140 +16,13 @@
 # the entidad desarrolladora, i.e. the software house, which is neither the
 # presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
 # is a known defect and is not copied here.
-# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
-# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
-# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
-#
-# Each record tiles its declared extent exactly once with no gap and no overlap,
-# checked against the sheet's own declared TOTAL row.
-#
-# Casilla identity is AEAT's own bracketed box number where the design supplies
-# one; rows AEAT leaves unnumbered carry the record type and the design's own
-# offset, because the complementary-page indicator and the regularisation
-# ejercicio each repeat within or across records and are not identifiable by
-# concept alone.
-#
-# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
-# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
-# the entidad desarrolladora, i.e. the software house, which is neither the
-# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
-# is a known defect and is not copied here.
-# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
-# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
-# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
-#
-# Each record tiles its declared extent exactly once with no gap and no overlap,
-# checked against the sheet's own declared TOTAL row.
-#
-# Casilla identity is AEAT's own bracketed box number where the design supplies
-# one; rows AEAT leaves unnumbered carry the record type and the design's own
-# offset, because the complementary-page indicator and the regularisation
-# ejercicio each repeat within or across records and are not identifiable by
-# concept alone.
-#
-# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
-# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
-# the entidad desarrolladora, i.e. the software house, which is neither the
-# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
-# is a known defect and is not copied here.
-# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
-# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
-# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
-#
-# Each record tiles its declared extent exactly once with no gap and no overlap,
-# checked against the sheet's own declared TOTAL row.
-#
-# Casilla identity is AEAT's own bracketed box number where the design supplies
-# one; rows AEAT leaves unnumbered carry the record type and the design's own
-# offset, because the complementary-page indicator and the regularisation
-# ejercicio each repeat within or across records and are not identifiable by
-# concept alone.
-#
-# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
-# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
-# the entidad desarrolladora, i.e. the software house, which is neither the
-# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
-# is a known defect and is not copied here.
-# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
-# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
-# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
-#
-# Each record tiles its declared extent exactly once with no gap and no overlap,
-# checked against the sheet's own declared TOTAL row.
-#
-# Casilla identity is AEAT's own bracketed box number where the design supplies
-# one; rows AEAT leaves unnumbered carry the record type and the design's own
-# offset, because the complementary-page indicator and the regularisation
-# ejercicio each repeat within or across records and are not identifiable by
-# concept alone.
-#
-# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
-# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
-# the entidad desarrolladora, i.e. the software house, which is neither the
-# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
-# is a known defect and is not copied here.
-# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
-# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
-# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
-#
-# Each record tiles its declared extent exactly once with no gap and no overlap,
-# checked against the sheet's own declared TOTAL row.
-#
-# Casilla identity is AEAT's own bracketed box number where the design supplies
-# one; rows AEAT leaves unnumbered carry the record type and the design's own
-# offset, because the complementary-page indicator and the regularisation
-# ejercicio each repeat within or across records and are not identifiable by
-# concept alone.
-#
-# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
-# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
-# the entidad desarrolladora, i.e. the software house, which is neither the
-# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
-# is a known defect and is not copied here.
-# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
-# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
-# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
-#
-# Each record tiles its declared extent exactly once with no gap and no overlap,
-# checked against the sheet's own declared TOTAL row.
-#
-# Casilla identity is AEAT's own bracketed box number where the design supplies
-# one; rows AEAT leaves unnumbered carry the record type and the design's own
-# offset, because the complementary-page indicator and the regularisation
-# ejercicio each repeat within or across records and are not identifiable by
-# concept alone.
-#
-# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
-# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
-# the entidad desarrolladora, i.e. the software house, which is neither the
-# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
-# is a known defect and is not copied here.
-# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
-# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
-# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
-#
-# Each record tiles its declared extent exactly once with no gap and no overlap,
-# checked against the sheet's own declared TOTAL row.
-#
-# Casilla identity is AEAT's own bracketed box number where the design supplies
-# one; rows AEAT leaves unnumbered carry the record type and the design's own
-# offset, because the complementary-page indicator and the regularisation
-# ejercicio each repeat within or across records and are not identifiable by
-# concept alone.
-#
-# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
-# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
-# the entidad desarrolladora, i.e. the software house, which is neither the
-# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
-# is a known defect and is not copied here.
-
-[[revisions.2022-2t-4t.export_layouts]]
+[[revisions."2022-2t-4t".export_layouts]]
 id = "modelo-490-fichero-boe"
 format = "fixed_width"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records]]
+[[revisions."2022-2t-4t".export_layouts.records]]
 id = "modelo-490-envelope-header"
 record_type = "envelope_header"
 order = 0
@@ -157,7 +30,8 @@ encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-lit-1"
 offset = 1
 length = 2
@@ -171,7 +45,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-lit-3"
 offset = 3
 length = 3
@@ -185,7 +59,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-lit-6"
 offset = 6
 length = 1
@@ -199,7 +73,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-draft-filing-year"
 offset = 7
 length = 4
@@ -213,7 +87,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-draft-period-code"
 offset = 11
 length = 2
@@ -227,7 +101,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-lit-13"
 offset = 13
 length = 5
@@ -241,7 +115,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-lit-18"
 offset = 18
 length = 5
@@ -255,7 +129,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-reservado-23"
 offset = 23
 length = 70
@@ -268,7 +142,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-reservado-97"
 offset = 97
 length = 4
@@ -281,7 +155,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-reservado-110"
 offset = 110
 length = 213
@@ -294,7 +168,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-envelope-header-lit-323"
 offset = 323
 length = 6
@@ -307,8 +181,31 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
+# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
+# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
+# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
+#
+# Each record tiles its declared extent exactly once with no gap and no overlap,
+# checked against the sheet's own declared TOTAL row.
+#
+# Casilla identity is AEAT's own bracketed box number where the design supplies
+# one; rows AEAT leaves unnumbered carry the record type and the design's own
+# offset, because the complementary-page indicator and the regularisation
+# ejercicio each repeat within or across records and are not identifiable by
+# concept alone.
+#
+# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
+# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
+# the entidad desarrolladora, i.e. the software house, which is neither the
+# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
+# is a known defect and is not copied here.
+[[revisions."2022-2t-4t".export_layouts]]
+id = "modelo-490-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records]]
+[[revisions."2022-2t-4t".export_layouts.records]]
 id = "modelo-490-490-01"
 record_type = "490-01"
 order = 1
@@ -316,7 +213,8 @@ encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-lit-1"
 offset = 1
 length = 2
@@ -330,7 +228,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-lit-3"
 offset = 3
 length = 3
@@ -344,7 +242,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-lit-6"
 offset = 6
 length = 2
@@ -358,7 +256,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-lit-8"
 offset = 8
 length = 4
@@ -372,7 +270,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-indicador-pagina-complementaria-12"
 offset = 12
 length = 1
@@ -386,7 +284,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-tipo-declaracion-13"
 offset = 13
 length = 1
@@ -400,7 +298,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-taxpayer-tax-id"
 offset = 14
 length = 9
@@ -414,7 +312,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-taxpayer-full-name"
 offset = 23
 length = 125
@@ -428,7 +326,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-draft-filing-year"
 offset = 148
 length = 4
@@ -442,7 +340,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-draft-period-code"
 offset = 152
 length = 2
@@ -456,7 +354,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-identificacion-email-154"
 offset = 154
 length = 100
@@ -470,7 +368,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-identificacion-nif-representante-254"
 offset = 254
 length = 9
@@ -484,7 +382,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-identificacion-nombre-representante-263"
 offset = 263
 length = 125
@@ -498,7 +396,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-grupo-denominacion-388"
 offset = 388
 length = 125
@@ -512,7 +410,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-grupo-pais-dominante-513"
 offset = 513
 length = 2
@@ -526,7 +424,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-grupo-dominante-515"
 offset = 515
 length = 125
@@ -540,7 +438,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-indicador-regularizacion-A"
 offset = 640
 length = 1
@@ -554,7 +452,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-publi-ing-01"
 offset = 641
 length = 17
@@ -568,7 +466,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-publi-base-02"
 offset = 658
 length = 17
@@ -582,7 +480,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-publi-reg-base-03"
 offset = 675
 length = 17
@@ -596,7 +494,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-interm-a-ing-04"
 offset = 692
 length = 17
@@ -610,7 +508,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-interm-a-base-05"
 offset = 709
 length = 17
@@ -624,7 +522,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-interm-a-reg-base-06"
 offset = 726
 length = 17
@@ -638,7 +536,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-interm-b-ing-07"
 offset = 743
 length = 17
@@ -652,7 +550,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-interm-b-base-08"
 offset = 760
 length = 17
@@ -666,7 +564,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-interm-b-reg-base-09"
 offset = 777
 length = 17
@@ -680,7 +578,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-datos-ing-10"
 offset = 794
 length = 17
@@ -694,7 +592,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-datos-base-11"
 offset = 811
 length = 17
@@ -708,7 +606,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-datos-reg-base-12"
 offset = 828
 length = 17
@@ -722,7 +620,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-base-imponible-total-13"
 offset = 845
 length = 17
@@ -736,7 +634,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-reg-periodos-anteriores-14"
 offset = 862
 length = 17
@@ -750,7 +648,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-tipo-15"
 offset = 879
 length = 3
@@ -765,7 +663,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-liq-cuota-integra-16"
 offset = 882
 length = 17
@@ -779,7 +677,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-cuota-integra-estado-17"
 offset = 899
 length = 17
@@ -793,7 +691,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-ajuste-cuota-integra-regularizacion-18"
 offset = 916
 length = 17
@@ -807,7 +705,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-ajuste-cuota-integra-reg-estado-19"
 offset = 933
 length = 17
@@ -821,7 +719,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-20"
 offset = 950
 length = 5
@@ -836,7 +734,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-21"
 offset = 955
 length = 5
@@ -851,7 +749,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-22"
 offset = 960
 length = 5
@@ -866,7 +764,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-reservado-965"
 offset = 965
 length = 5
@@ -879,7 +777,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-24"
 offset = 970
 length = 5
@@ -894,7 +792,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-resultado-a-deducir-25"
 offset = 975
 length = 17
@@ -908,7 +806,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-resultado-liquidacion-26"
 offset = 992
 length = 17
@@ -922,7 +820,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-ingreso-bic-swift-1009"
 offset = 1009
 length = 11
@@ -936,7 +834,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-ingreso-iban-1020"
 offset = 1020
 length = 34
@@ -950,7 +848,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-declaracion-complementaria-1054"
 offset = 1054
 length = 1
@@ -964,7 +862,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-justificante-anterior-1055"
 offset = 1055
 length = 13
@@ -978,7 +876,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-01-declaracion-negativa-1068"
 offset = 1068
 length = 1
@@ -992,7 +890,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-reservado-1069"
 offset = 1069
 length = 20
@@ -1005,7 +903,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-lit-1089"
 offset = 1089
 length = 3
@@ -1019,7 +917,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-lit-1092"
 offset = 1092
 length = 3
@@ -1033,7 +931,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-lit-1095"
 offset = 1095
 length = 2
@@ -1047,7 +945,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-01-lit-1097"
 offset = 1097
 length = 4
@@ -1060,8 +958,31 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
+# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
+# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
+# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
+#
+# Each record tiles its declared extent exactly once with no gap and no overlap,
+# checked against the sheet's own declared TOTAL row.
+#
+# Casilla identity is AEAT's own bracketed box number where the design supplies
+# one; rows AEAT leaves unnumbered carry the record type and the design's own
+# offset, because the complementary-page indicator and the regularisation
+# ejercicio each repeat within or across records and are not identifiable by
+# concept alone.
+#
+# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
+# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
+# the entidad desarrolladora, i.e. the software house, which is neither the
+# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
+# is a known defect and is not copied here.
+[[revisions."2022-2t-4t".export_layouts]]
+id = "modelo-490-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records]]
+[[revisions."2022-2t-4t".export_layouts.records]]
 id = "modelo-490-490-02"
 record_type = "490-02"
 order = 2
@@ -1069,7 +990,8 @@ encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-lit-1"
 offset = 1
 length = 2
@@ -1083,7 +1005,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-lit-3"
 offset = 3
 length = 3
@@ -1097,7 +1019,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-lit-6"
 offset = 6
 length = 2
@@ -1111,7 +1033,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-lit-8"
 offset = 8
 length = 4
@@ -1125,7 +1047,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-02-indicador-pagina-complementaria-12"
 offset = 12
 length = 1
@@ -1139,7 +1061,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-02-regularizacion-ejercicio-13"
 offset = 13
 length = 4
@@ -1153,7 +1075,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-27"
 offset = 17
 length = 17
@@ -1167,7 +1089,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-48"
 offset = 34
 length = 17
@@ -1181,7 +1103,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-69"
 offset = 51
 length = 17
@@ -1195,7 +1117,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-90"
 offset = 68
 length = 17
@@ -1209,7 +1131,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-28"
 offset = 85
 length = 17
@@ -1223,7 +1145,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-49"
 offset = 102
 length = 17
@@ -1237,7 +1159,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-70"
 offset = 119
 length = 17
@@ -1251,7 +1173,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-91"
 offset = 136
 length = 17
@@ -1265,7 +1187,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-29"
 offset = 153
 length = 17
@@ -1279,7 +1201,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-50"
 offset = 170
 length = 17
@@ -1293,7 +1215,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-71"
 offset = 187
 length = 17
@@ -1307,7 +1229,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-92"
 offset = 204
 length = 17
@@ -1321,7 +1243,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-30"
 offset = 221
 length = 17
@@ -1335,7 +1257,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-51"
 offset = 238
 length = 17
@@ -1349,7 +1271,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-72"
 offset = 255
 length = 17
@@ -1363,7 +1285,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-93"
 offset = 272
 length = 17
@@ -1377,7 +1299,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-31"
 offset = 289
 length = 3
@@ -1392,7 +1314,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-52"
 offset = 292
 length = 3
@@ -1407,7 +1329,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-73"
 offset = 295
 length = 3
@@ -1422,7 +1344,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-94"
 offset = 298
 length = 3
@@ -1437,7 +1359,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-32"
 offset = 301
 length = 17
@@ -1451,7 +1373,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-53"
 offset = 318
 length = 17
@@ -1465,7 +1387,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-74"
 offset = 335
 length = 17
@@ -1479,7 +1401,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-95"
 offset = 352
 length = 17
@@ -1493,7 +1415,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-33"
 offset = 369
 length = 17
@@ -1507,7 +1429,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-54"
 offset = 386
 length = 17
@@ -1521,7 +1443,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-75"
 offset = 403
 length = 17
@@ -1535,7 +1457,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-96"
 offset = 420
 length = 17
@@ -1549,7 +1471,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-34"
 offset = 437
 length = 17
@@ -1563,7 +1485,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-55"
 offset = 454
 length = 17
@@ -1577,7 +1499,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-76"
 offset = 471
 length = 17
@@ -1591,7 +1513,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-97"
 offset = 488
 length = 17
@@ -1605,7 +1527,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-35"
 offset = 505
 length = 17
@@ -1619,7 +1541,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-56"
 offset = 522
 length = 17
@@ -1633,7 +1555,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-77"
 offset = 539
 length = 17
@@ -1647,7 +1569,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-98"
 offset = 556
 length = 17
@@ -1661,7 +1583,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-36"
 offset = 573
 length = 17
@@ -1675,7 +1597,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-57"
 offset = 590
 length = 17
@@ -1689,7 +1611,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-78"
 offset = 607
 length = 17
@@ -1703,7 +1625,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-99"
 offset = 624
 length = 17
@@ -1717,7 +1639,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-37"
 offset = 641
 length = 17
@@ -1731,7 +1653,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-58"
 offset = 658
 length = 17
@@ -1745,7 +1667,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-79"
 offset = 675
 length = 17
@@ -1759,7 +1681,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-100"
 offset = 692
 length = 17
@@ -1773,7 +1695,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-38"
 offset = 709
 length = 5
@@ -1788,7 +1710,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-59"
 offset = 714
 length = 5
@@ -1803,7 +1725,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-80"
 offset = 719
 length = 5
@@ -1818,7 +1740,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-101"
 offset = 724
 length = 5
@@ -1833,7 +1755,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-39"
 offset = 729
 length = 5
@@ -1848,7 +1770,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-60"
 offset = 734
 length = 5
@@ -1863,7 +1785,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-81"
 offset = 739
 length = 5
@@ -1878,7 +1800,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-102"
 offset = 744
 length = 5
@@ -1893,7 +1815,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-40"
 offset = 749
 length = 5
@@ -1908,7 +1830,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-61"
 offset = 754
 length = 5
@@ -1923,7 +1845,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-82"
 offset = 759
 length = 5
@@ -1938,7 +1860,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-103"
 offset = 764
 length = 5
@@ -1953,7 +1875,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-41"
 offset = 769
 length = 5
@@ -1968,7 +1890,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-62"
 offset = 774
 length = 5
@@ -1983,7 +1905,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-83"
 offset = 779
 length = 5
@@ -1998,7 +1920,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-104"
 offset = 784
 length = 5
@@ -2013,7 +1935,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-42"
 offset = 789
 length = 5
@@ -2028,7 +1950,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-63"
 offset = 794
 length = 5
@@ -2043,7 +1965,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-84"
 offset = 799
 length = 5
@@ -2058,7 +1980,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-105"
 offset = 804
 length = 5
@@ -2073,7 +1995,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-43"
 offset = 809
 length = 5
@@ -2088,7 +2010,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-64"
 offset = 814
 length = 5
@@ -2103,7 +2025,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-85"
 offset = 819
 length = 5
@@ -2118,7 +2040,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-106"
 offset = 824
 length = 5
@@ -2133,7 +2055,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-829"
 offset = 829
 length = 5
@@ -2146,7 +2068,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-834"
 offset = 834
 length = 5
@@ -2159,7 +2081,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-839"
 offset = 839
 length = 5
@@ -2172,7 +2094,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-844"
 offset = 844
 length = 5
@@ -2185,7 +2107,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-849"
 offset = 849
 length = 5
@@ -2198,7 +2120,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-854"
 offset = 854
 length = 5
@@ -2211,7 +2133,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-859"
 offset = 859
 length = 5
@@ -2224,7 +2146,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-864"
 offset = 864
 length = 5
@@ -2237,7 +2159,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-46"
 offset = 869
 length = 5
@@ -2251,8 +2173,40 @@ justification = "right"
 signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
+# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
+# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
+# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
+#
+# Each record tiles its declared extent exactly once with no gap and no overlap,
+# checked against the sheet's own declared TOTAL row.
+#
+# Casilla identity is AEAT's own bracketed box number where the design supplies
+# one; rows AEAT leaves unnumbered carry the record type and the design's own
+# offset, because the complementary-page indicator and the regularisation
+# ejercicio each repeat within or across records and are not identifiable by
+# concept alone.
+#
+# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
+# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
+# the entidad desarrolladora, i.e. the software house, which is neither the
+# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
+# is a known defect and is not copied here.
+[[revisions."2022-2t-4t".export_layouts]]
+id = "modelo-490-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records]]
+id = "modelo-490-490-02"
+record_type = "490-02"
+order = 2
+encoding = "iso-8859-1"
+line_ending = "none"
+required = true
+
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-67"
 offset = 874
 length = 5
@@ -2267,7 +2221,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-88"
 offset = 879
 length = 5
@@ -2282,7 +2236,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-109"
 offset = 884
 length = 5
@@ -2297,7 +2251,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-47"
 offset = 889
 length = 5
@@ -2312,7 +2266,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-68"
 offset = 894
 length = 5
@@ -2327,7 +2281,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-89"
 offset = 899
 length = 5
@@ -2342,7 +2296,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-110"
 offset = 904
 length = 5
@@ -2357,7 +2311,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-02-regularizacion-ejercicio-909"
 offset = 909
 length = 4
@@ -2371,7 +2325,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-111"
 offset = 913
 length = 17
@@ -2385,7 +2339,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-132"
 offset = 930
 length = 17
@@ -2399,7 +2353,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-153"
 offset = 947
 length = 17
@@ -2413,7 +2367,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-174"
 offset = 964
 length = 17
@@ -2427,7 +2381,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-112"
 offset = 981
 length = 17
@@ -2441,7 +2395,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-133"
 offset = 998
 length = 17
@@ -2455,7 +2409,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-154"
 offset = 1015
 length = 17
@@ -2469,7 +2423,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-175"
 offset = 1032
 length = 17
@@ -2483,7 +2437,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-113"
 offset = 1049
 length = 17
@@ -2497,7 +2451,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-134"
 offset = 1066
 length = 17
@@ -2511,7 +2465,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-155"
 offset = 1083
 length = 17
@@ -2525,7 +2479,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-176"
 offset = 1100
 length = 17
@@ -2539,7 +2493,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-114"
 offset = 1117
 length = 17
@@ -2553,7 +2507,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-135"
 offset = 1134
 length = 17
@@ -2567,7 +2521,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-156"
 offset = 1151
 length = 17
@@ -2581,7 +2535,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-177"
 offset = 1168
 length = 17
@@ -2595,7 +2549,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-115"
 offset = 1185
 length = 3
@@ -2610,7 +2564,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-136"
 offset = 1188
 length = 3
@@ -2625,7 +2579,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-157"
 offset = 1191
 length = 3
@@ -2640,7 +2594,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-178"
 offset = 1194
 length = 3
@@ -2655,7 +2609,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-116"
 offset = 1197
 length = 17
@@ -2669,7 +2623,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-137"
 offset = 1214
 length = 17
@@ -2683,7 +2637,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-158"
 offset = 1231
 length = 17
@@ -2697,7 +2651,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-179"
 offset = 1248
 length = 17
@@ -2711,7 +2665,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-117"
 offset = 1265
 length = 17
@@ -2725,7 +2679,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-138"
 offset = 1282
 length = 17
@@ -2739,7 +2693,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-159"
 offset = 1299
 length = 17
@@ -2753,7 +2707,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-180"
 offset = 1316
 length = 17
@@ -2767,7 +2721,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-118"
 offset = 1333
 length = 17
@@ -2781,7 +2735,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-139"
 offset = 1350
 length = 17
@@ -2795,7 +2749,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-160"
 offset = 1367
 length = 17
@@ -2809,7 +2763,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-181"
 offset = 1384
 length = 17
@@ -2823,7 +2777,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-119"
 offset = 1401
 length = 17
@@ -2837,7 +2791,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-140"
 offset = 1418
 length = 17
@@ -2851,7 +2805,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-161"
 offset = 1435
 length = 17
@@ -2865,7 +2819,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-182"
 offset = 1452
 length = 17
@@ -2879,7 +2833,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-120"
 offset = 1469
 length = 17
@@ -2893,7 +2847,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-141"
 offset = 1486
 length = 17
@@ -2907,7 +2861,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-162"
 offset = 1503
 length = 17
@@ -2921,7 +2875,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-183"
 offset = 1520
 length = 17
@@ -2935,7 +2889,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-121"
 offset = 1537
 length = 17
@@ -2949,7 +2903,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-142"
 offset = 1554
 length = 17
@@ -2963,7 +2917,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-163"
 offset = 1571
 length = 17
@@ -2977,7 +2931,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-184"
 offset = 1588
 length = 17
@@ -2991,7 +2945,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-122"
 offset = 1605
 length = 5
@@ -3006,7 +2960,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-143"
 offset = 1610
 length = 5
@@ -3021,7 +2975,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-164"
 offset = 1615
 length = 5
@@ -3036,7 +2990,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-185"
 offset = 1620
 length = 5
@@ -3051,7 +3005,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-123"
 offset = 1625
 length = 5
@@ -3066,7 +3020,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-144"
 offset = 1630
 length = 5
@@ -3081,7 +3035,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-165"
 offset = 1635
 length = 5
@@ -3096,7 +3050,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-186"
 offset = 1640
 length = 5
@@ -3111,7 +3065,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-124"
 offset = 1645
 length = 5
@@ -3126,7 +3080,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-145"
 offset = 1650
 length = 5
@@ -3141,7 +3095,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-166"
 offset = 1655
 length = 5
@@ -3156,7 +3110,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-187"
 offset = 1660
 length = 5
@@ -3171,7 +3125,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-125"
 offset = 1665
 length = 5
@@ -3186,7 +3140,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-146"
 offset = 1670
 length = 5
@@ -3201,7 +3155,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-167"
 offset = 1675
 length = 5
@@ -3216,7 +3170,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-188"
 offset = 1680
 length = 5
@@ -3231,7 +3185,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-126"
 offset = 1685
 length = 5
@@ -3246,7 +3200,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-147"
 offset = 1690
 length = 5
@@ -3261,7 +3215,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-168"
 offset = 1695
 length = 5
@@ -3276,7 +3230,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-189"
 offset = 1700
 length = 5
@@ -3291,7 +3245,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-127"
 offset = 1705
 length = 5
@@ -3306,7 +3260,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-148"
 offset = 1710
 length = 5
@@ -3321,7 +3275,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-169"
 offset = 1715
 length = 5
@@ -3336,7 +3290,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-190"
 offset = 1720
 length = 5
@@ -3351,7 +3305,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1725"
 offset = 1725
 length = 5
@@ -3364,7 +3318,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1730"
 offset = 1730
 length = 5
@@ -3377,7 +3331,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1735"
 offset = 1735
 length = 5
@@ -3390,7 +3344,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1740"
 offset = 1740
 length = 5
@@ -3403,7 +3357,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1745"
 offset = 1745
 length = 5
@@ -3416,7 +3370,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1750"
 offset = 1750
 length = 5
@@ -3429,7 +3383,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1755"
 offset = 1755
 length = 5
@@ -3441,8 +3395,40 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
+# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
+# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
+# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
+#
+# Each record tiles its declared extent exactly once with no gap and no overlap,
+# checked against the sheet's own declared TOTAL row.
+#
+# Casilla identity is AEAT's own bracketed box number where the design supplies
+# one; rows AEAT leaves unnumbered carry the record type and the design's own
+# offset, because the complementary-page indicator and the regularisation
+# ejercicio each repeat within or across records and are not identifiable by
+# concept alone.
+#
+# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
+# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
+# the entidad desarrolladora, i.e. the software house, which is neither the
+# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
+# is a known defect and is not copied here.
+[[revisions."2022-2t-4t".export_layouts]]
+id = "modelo-490-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records]]
+id = "modelo-490-490-02"
+record_type = "490-02"
+order = 2
+encoding = "iso-8859-1"
+line_ending = "none"
+required = true
+
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1760"
 offset = 1760
 length = 5
@@ -3455,7 +3441,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-130"
 offset = 1765
 length = 5
@@ -3470,7 +3456,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-151"
 offset = 1770
 length = 5
@@ -3485,7 +3471,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-172"
 offset = 1775
 length = 5
@@ -3500,7 +3486,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-193"
 offset = 1780
 length = 5
@@ -3515,7 +3501,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-131"
 offset = 1785
 length = 5
@@ -3530,7 +3516,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-152"
 offset = 1790
 length = 5
@@ -3545,7 +3531,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-173"
 offset = 1795
 length = 5
@@ -3560,7 +3546,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-194"
 offset = 1800
 length = 5
@@ -3575,7 +3561,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-reservado-1805"
 offset = 1805
 length = 184
@@ -3588,7 +3574,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-lit-1989"
 offset = 1989
 length = 3
@@ -3602,7 +3588,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-lit-1992"
 offset = 1992
 length = 3
@@ -3616,7 +3602,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-lit-1995"
 offset = 1995
 length = 2
@@ -3630,7 +3616,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-02-lit-1997"
 offset = 1997
 length = 4
@@ -3643,8 +3629,31 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
+# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
+# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
+# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
+#
+# Each record tiles its declared extent exactly once with no gap and no overlap,
+# checked against the sheet's own declared TOTAL row.
+#
+# Casilla identity is AEAT's own bracketed box number where the design supplies
+# one; rows AEAT leaves unnumbered carry the record type and the design's own
+# offset, because the complementary-page indicator and the regularisation
+# ejercicio each repeat within or across records and are not identifiable by
+# concept alone.
+#
+# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
+# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
+# the entidad desarrolladora, i.e. the software house, which is neither the
+# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
+# is a known defect and is not copied here.
+[[revisions."2022-2t-4t".export_layouts]]
+id = "modelo-490-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records]]
+[[revisions."2022-2t-4t".export_layouts.records]]
 id = "modelo-490-490-03"
 record_type = "490-03"
 order = 3
@@ -3652,7 +3661,8 @@ encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-lit-1"
 offset = 1
 length = 2
@@ -3666,7 +3676,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-lit-3"
 offset = 3
 length = 3
@@ -3680,7 +3690,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-lit-6"
 offset = 6
 length = 2
@@ -3694,7 +3704,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-lit-8"
 offset = 8
 length = 4
@@ -3708,7 +3718,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-03-indicador-pagina-complementaria-12"
 offset = 12
 length = 1
@@ -3722,7 +3732,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-03-regularizacion-ejercicio-13"
 offset = 13
 length = 4
@@ -3736,7 +3746,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-195"
 offset = 17
 length = 17
@@ -3750,7 +3760,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-216"
 offset = 34
 length = 17
@@ -3764,7 +3774,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-237"
 offset = 51
 length = 17
@@ -3778,7 +3788,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-258"
 offset = 68
 length = 17
@@ -3792,7 +3802,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-196"
 offset = 85
 length = 17
@@ -3806,7 +3816,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-217"
 offset = 102
 length = 17
@@ -3820,7 +3830,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-238"
 offset = 119
 length = 17
@@ -3834,7 +3844,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-259"
 offset = 136
 length = 17
@@ -3848,7 +3858,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-197"
 offset = 153
 length = 17
@@ -3862,7 +3872,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-218"
 offset = 170
 length = 17
@@ -3876,7 +3886,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-239"
 offset = 187
 length = 17
@@ -3890,7 +3900,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-260"
 offset = 204
 length = 17
@@ -3904,7 +3914,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-198"
 offset = 221
 length = 17
@@ -3918,7 +3928,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-219"
 offset = 238
 length = 17
@@ -3932,7 +3942,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-240"
 offset = 255
 length = 17
@@ -3946,7 +3956,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-261"
 offset = 272
 length = 17
@@ -3960,7 +3970,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-199"
 offset = 289
 length = 3
@@ -3975,7 +3985,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-220"
 offset = 292
 length = 3
@@ -3990,7 +4000,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-241"
 offset = 295
 length = 3
@@ -4005,7 +4015,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-262"
 offset = 298
 length = 3
@@ -4020,7 +4030,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-200"
 offset = 301
 length = 17
@@ -4034,7 +4044,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-221"
 offset = 318
 length = 17
@@ -4048,7 +4058,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-242"
 offset = 335
 length = 17
@@ -4062,7 +4072,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-263"
 offset = 352
 length = 17
@@ -4076,7 +4086,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-201"
 offset = 369
 length = 17
@@ -4090,7 +4100,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-222"
 offset = 386
 length = 17
@@ -4104,7 +4114,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-243"
 offset = 403
 length = 17
@@ -4118,7 +4128,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-264"
 offset = 420
 length = 17
@@ -4132,7 +4142,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-202"
 offset = 437
 length = 17
@@ -4146,7 +4156,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-223"
 offset = 454
 length = 17
@@ -4160,7 +4170,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-244"
 offset = 471
 length = 17
@@ -4174,7 +4184,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-265"
 offset = 488
 length = 17
@@ -4188,7 +4198,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-203"
 offset = 505
 length = 17
@@ -4202,7 +4212,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-224"
 offset = 522
 length = 17
@@ -4216,7 +4226,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-245"
 offset = 539
 length = 17
@@ -4230,7 +4240,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-266"
 offset = 556
 length = 17
@@ -4244,7 +4254,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-204"
 offset = 573
 length = 17
@@ -4258,7 +4268,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-225"
 offset = 590
 length = 17
@@ -4272,7 +4282,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-246"
 offset = 607
 length = 17
@@ -4286,7 +4296,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-267"
 offset = 624
 length = 17
@@ -4300,7 +4310,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-205"
 offset = 641
 length = 17
@@ -4314,7 +4324,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-226"
 offset = 658
 length = 17
@@ -4328,7 +4338,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-247"
 offset = 675
 length = 17
@@ -4342,7 +4352,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-268"
 offset = 692
 length = 17
@@ -4356,7 +4366,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-206"
 offset = 709
 length = 5
@@ -4371,7 +4381,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-227"
 offset = 714
 length = 5
@@ -4386,7 +4396,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-248"
 offset = 719
 length = 5
@@ -4401,7 +4411,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-269"
 offset = 724
 length = 5
@@ -4416,7 +4426,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-207"
 offset = 729
 length = 5
@@ -4431,7 +4441,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-228"
 offset = 734
 length = 5
@@ -4446,7 +4456,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-249"
 offset = 739
 length = 5
@@ -4461,7 +4471,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-270"
 offset = 744
 length = 5
@@ -4476,7 +4486,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-208"
 offset = 749
 length = 5
@@ -4491,7 +4501,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-229"
 offset = 754
 length = 5
@@ -4506,7 +4516,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-250"
 offset = 759
 length = 5
@@ -4521,7 +4531,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-271"
 offset = 764
 length = 5
@@ -4536,7 +4546,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-209"
 offset = 769
 length = 5
@@ -4551,7 +4561,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-230"
 offset = 774
 length = 5
@@ -4566,7 +4576,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-251"
 offset = 779
 length = 5
@@ -4581,7 +4591,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-272"
 offset = 784
 length = 5
@@ -4596,7 +4606,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-210"
 offset = 789
 length = 5
@@ -4611,7 +4621,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-231"
 offset = 794
 length = 5
@@ -4626,7 +4636,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-252"
 offset = 799
 length = 5
@@ -4641,7 +4651,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-273"
 offset = 804
 length = 5
@@ -4656,7 +4666,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-211"
 offset = 809
 length = 5
@@ -4671,7 +4681,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-232"
 offset = 814
 length = 5
@@ -4686,7 +4696,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-253"
 offset = 819
 length = 5
@@ -4701,7 +4711,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-274"
 offset = 824
 length = 5
@@ -4716,7 +4726,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-829"
 offset = 829
 length = 5
@@ -4729,7 +4739,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-834"
 offset = 834
 length = 5
@@ -4742,7 +4752,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-839"
 offset = 839
 length = 5
@@ -4755,7 +4765,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-844"
 offset = 844
 length = 5
@@ -4768,7 +4778,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-849"
 offset = 849
 length = 5
@@ -4781,7 +4791,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-854"
 offset = 854
 length = 5
@@ -4794,7 +4804,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-859"
 offset = 859
 length = 5
@@ -4807,7 +4817,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-864"
 offset = 864
 length = 5
@@ -4820,7 +4830,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-214"
 offset = 869
 length = 5
@@ -4834,8 +4844,40 @@ justification = "right"
 signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
+# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
+# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
+# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
+#
+# Each record tiles its declared extent exactly once with no gap and no overlap,
+# checked against the sheet's own declared TOTAL row.
+#
+# Casilla identity is AEAT's own bracketed box number where the design supplies
+# one; rows AEAT leaves unnumbered carry the record type and the design's own
+# offset, because the complementary-page indicator and the regularisation
+# ejercicio each repeat within or across records and are not identifiable by
+# concept alone.
+#
+# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
+# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
+# the entidad desarrolladora, i.e. the software house, which is neither the
+# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
+# is a known defect and is not copied here.
+[[revisions."2022-2t-4t".export_layouts]]
+id = "modelo-490-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records]]
+id = "modelo-490-490-03"
+record_type = "490-03"
+order = 3
+encoding = "iso-8859-1"
+line_ending = "none"
+required = true
+
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-235"
 offset = 874
 length = 5
@@ -4850,7 +4892,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-256"
 offset = 879
 length = 5
@@ -4865,7 +4907,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-277"
 offset = 884
 length = 5
@@ -4880,7 +4922,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-215"
 offset = 889
 length = 5
@@ -4895,7 +4937,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-236"
 offset = 894
 length = 5
@@ -4910,7 +4952,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-257"
 offset = 899
 length = 5
@@ -4925,7 +4967,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-278"
 offset = 904
 length = 5
@@ -4940,7 +4982,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-490-03-regularizacion-ejercicio-909"
 offset = 909
 length = 4
@@ -4954,7 +4996,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-279"
 offset = 913
 length = 17
@@ -4968,7 +5010,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-300"
 offset = 930
 length = 17
@@ -4982,7 +5024,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-321"
 offset = 947
 length = 17
@@ -4996,7 +5038,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-declarada-342"
 offset = 964
 length = 17
@@ -5010,7 +5052,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-280"
 offset = 981
 length = 17
@@ -5024,7 +5066,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-301"
 offset = 998
 length = 17
@@ -5038,7 +5080,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-322"
 offset = 1015
 length = 17
@@ -5052,7 +5094,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-positiva-343"
 offset = 1032
 length = 17
@@ -5066,7 +5108,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-281"
 offset = 1049
 length = 17
@@ -5080,7 +5122,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-302"
 offset = 1066
 length = 17
@@ -5094,7 +5136,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-323"
 offset = 1083
 length = 17
@@ -5108,7 +5150,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-negativa-344"
 offset = 1100
 length = 17
@@ -5122,7 +5164,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-282"
 offset = 1117
 length = 17
@@ -5136,7 +5178,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-303"
 offset = 1134
 length = 17
@@ -5150,7 +5192,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-324"
 offset = 1151
 length = 17
@@ -5164,7 +5206,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-base-total-345"
 offset = 1168
 length = 17
@@ -5178,7 +5220,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-283"
 offset = 1185
 length = 3
@@ -5193,7 +5235,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-304"
 offset = 1188
 length = 3
@@ -5208,7 +5250,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-325"
 offset = 1191
 length = 3
@@ -5223,7 +5265,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-tipo-346"
 offset = 1194
 length = 3
@@ -5238,7 +5280,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-284"
 offset = 1197
 length = 17
@@ -5252,7 +5294,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-305"
 offset = 1214
 length = 17
@@ -5266,7 +5308,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-326"
 offset = 1231
 length = 17
@@ -5280,7 +5322,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-positiva-347"
 offset = 1248
 length = 17
@@ -5294,7 +5336,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-285"
 offset = 1265
 length = 17
@@ -5308,7 +5350,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-306"
 offset = 1282
 length = 17
@@ -5322,7 +5364,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-327"
 offset = 1299
 length = 17
@@ -5336,7 +5378,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-negativa-348"
 offset = 1316
 length = 17
@@ -5350,7 +5392,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-286"
 offset = 1333
 length = 17
@@ -5364,7 +5406,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-307"
 offset = 1350
 length = 17
@@ -5378,7 +5420,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-328"
 offset = 1367
 length = 17
@@ -5392,7 +5434,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-total-349"
 offset = 1384
 length = 17
@@ -5406,7 +5448,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-287"
 offset = 1401
 length = 17
@@ -5420,7 +5462,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-308"
 offset = 1418
 length = 17
@@ -5434,7 +5476,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-329"
 offset = 1435
 length = 17
@@ -5448,7 +5490,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-cuota-estado-350"
 offset = 1452
 length = 17
@@ -5462,7 +5504,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-288"
 offset = 1469
 length = 17
@@ -5476,7 +5518,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-309"
 offset = 1486
 length = 17
@@ -5490,7 +5532,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-330"
 offset = 1503
 length = 17
@@ -5504,7 +5546,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-distribucion-351"
 offset = 1520
 length = 17
@@ -5518,7 +5560,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-289"
 offset = 1537
 length = 17
@@ -5532,7 +5574,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-310"
 offset = 1554
 length = 17
@@ -5546,7 +5588,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-331"
 offset = 1571
 length = 17
@@ -5560,7 +5602,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-ajuste-total-estado-352"
 offset = 1588
 length = 17
@@ -5574,7 +5616,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-290"
 offset = 1605
 length = 5
@@ -5589,7 +5631,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-311"
 offset = 1610
 length = 5
@@ -5604,7 +5646,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-332"
 offset = 1615
 length = 5
@@ -5619,7 +5661,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-per-353"
 offset = 1620
 length = 5
@@ -5634,7 +5676,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-291"
 offset = 1625
 length = 5
@@ -5649,7 +5691,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-312"
 offset = 1630
 length = 5
@@ -5664,7 +5706,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-333"
 offset = 1635
 length = 5
@@ -5679,7 +5721,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-alava-con-reg-354"
 offset = 1640
 length = 5
@@ -5694,7 +5736,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-292"
 offset = 1645
 length = 5
@@ -5709,7 +5751,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-313"
 offset = 1650
 length = 5
@@ -5724,7 +5766,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-334"
 offset = 1655
 length = 5
@@ -5739,7 +5781,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-per-355"
 offset = 1660
 length = 5
@@ -5754,7 +5796,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-293"
 offset = 1665
 length = 5
@@ -5769,7 +5811,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-314"
 offset = 1670
 length = 5
@@ -5784,7 +5826,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-335"
 offset = 1675
 length = 5
@@ -5799,7 +5841,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-guipuzcoa-con-reg-356"
 offset = 1680
 length = 5
@@ -5814,7 +5856,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-294"
 offset = 1685
 length = 5
@@ -5829,7 +5871,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-315"
 offset = 1690
 length = 5
@@ -5844,7 +5886,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-336"
 offset = 1695
 length = 5
@@ -5859,7 +5901,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-per-357"
 offset = 1700
 length = 5
@@ -5874,7 +5916,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-295"
 offset = 1705
 length = 5
@@ -5889,7 +5931,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-316"
 offset = 1710
 length = 5
@@ -5904,7 +5946,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-337"
 offset = 1715
 length = 5
@@ -5919,7 +5961,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-vizcaya-con-reg-358"
 offset = 1720
 length = 5
@@ -5934,7 +5976,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1725"
 offset = 1725
 length = 5
@@ -5947,7 +5989,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1730"
 offset = 1730
 length = 5
@@ -5960,7 +6002,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1735"
 offset = 1735
 length = 5
@@ -5973,7 +6015,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1740"
 offset = 1740
 length = 5
@@ -5986,7 +6028,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1745"
 offset = 1745
 length = 5
@@ -5999,7 +6041,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1750"
 offset = 1750
 length = 5
@@ -6012,7 +6054,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1755"
 offset = 1755
 length = 5
@@ -6024,8 +6066,40 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
+# Modelo 490 fichero BOE fixed-width layout for the 2022-2t-4t era, transcribed
+# position-by-position from aeat-dr-490-2022-2t (03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx,
+# sha256 9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66).
+#
+# Each record tiles its declared extent exactly once with no gap and no overlap,
+# checked against the sheet's own declared TOTAL row.
+#
+# Casilla identity is AEAT's own bracketed box number where the design supplies
+# one; rows AEAT leaves unnumbered carry the record type and the design's own
+# offset, because the complementary-page indicator and the regularisation
+# ejercicio each repeat within or across records and are not identifiable by
+# concept alone.
+#
+# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) on the
+# envelope are LEFT UNWRITTEN. AEAT marks both "(Nota 1)" -- to be completed by
+# the entidad desarrolladora, i.e. the software house, which is neither the
+# presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
+# is a known defect and is not copied here.
+[[revisions."2022-2t-4t".export_layouts]]
+id = "modelo-490-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records]]
+id = "modelo-490-490-03"
+record_type = "490-03"
+order = 3
+encoding = "iso-8859-1"
+line_ending = "none"
+required = true
+
+
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1760"
 offset = 1760
 length = 5
@@ -6038,7 +6112,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-298"
 offset = 1765
 length = 5
@@ -6053,7 +6127,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-319"
 offset = 1770
 length = 5
@@ -6068,7 +6142,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-340"
 offset = 1775
 length = 5
@@ -6083,7 +6157,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-per-361"
 offset = 1780
 length = 5
@@ -6098,7 +6172,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-299"
 offset = 1785
 length = 5
@@ -6113,7 +6187,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-320"
 offset = 1790
 length = 5
@@ -6128,7 +6202,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-341"
 offset = 1795
 length = 5
@@ -6143,7 +6217,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-terr-comun-con-reg-362"
 offset = 1800
 length = 5
@@ -6158,7 +6232,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-total-cuota-363"
 offset = 1805
 length = 17
@@ -6172,7 +6246,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-2022-2t-reg-total-cuota-estado-364"
 offset = 1822
 length = 17
@@ -6186,7 +6260,7 @@ signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-reservado-1839"
 offset = 1839
 length = 150
@@ -6199,7 +6273,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-lit-1989"
 offset = 1989
 length = 3
@@ -6213,7 +6287,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-lit-1992"
 offset = 1992
 length = 3
@@ -6227,7 +6301,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-lit-1995"
 offset = 1995
 length = 2
@@ -6241,7 +6315,7 @@ signed = false
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2022-2t"]
 
-[[revisions.2022-2t-4t.export_layouts.records.fields]]
+[[revisions."2022-2t-4t".export_layouts.records.fields]]
 id = "modelo-490-490-03-lit-1997"
 offset = 1997
 length = 4

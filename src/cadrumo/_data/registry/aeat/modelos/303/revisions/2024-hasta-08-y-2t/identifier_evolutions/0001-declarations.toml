@@ -5,7 +5,7 @@
 # projection meanings, so the inherited endpoint identifiers retire at this
 # revision boundary.
 
-[[revisions.2024-hasta-08-y-2t.identifier_evolutions]]
+[[revisions."2024-hasta-08-y-2t".identifier_evolutions]]
 kind = "retired"
 family = "projection_endpoints"
 identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-empleados-inicio-ejercicio.slot-1"
@@ -13,7 +13,7 @@ to_revision = "2024-hasta-08-y-2t"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-dr-303-2024-early"]
 
-[[revisions.2024-hasta-08-y-2t.identifier_evolutions]]
+[[revisions."2024-hasta-08-y-2t".identifier_evolutions]]
 kind = "retired"
 family = "projection_endpoints"
 identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-max-asalariados-simultaneos.slot-1"
@@ -21,7 +21,7 @@ to_revision = "2024-hasta-08-y-2t"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-dr-303-2024-early"]
 
-[[revisions.2024-hasta-08-y-2t.identifier_evolutions]]
+[[revisions."2024-hasta-08-y-2t".identifier_evolutions]]
 kind = "retired"
 family = "projection_endpoints"
 identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-empleados-inicio-ejercicio-actual.slot-2"
@@ -29,7 +29,7 @@ to_revision = "2024-hasta-08-y-2t"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-dr-303-2024-early"]
 
-[[revisions.2024-hasta-08-y-2t.identifier_evolutions]]
+[[revisions."2024-hasta-08-y-2t".identifier_evolutions]]
 kind = "retired"
 family = "projection_endpoints"
 identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-max-asalariados-simultaneos.slot-2"

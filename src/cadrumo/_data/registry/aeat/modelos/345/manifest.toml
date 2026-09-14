@@ -3,7 +3,6 @@ id = "345"
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
-output_sensitivity = "financial"
 calculation_class = "informative"
 legal_refs = [
     "orden-hfp-823-2022:art-1",

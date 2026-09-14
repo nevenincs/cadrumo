@@ -2,7 +2,7 @@
 # presentation during the month following each natural quarter. Only periods
 # selected by this revision are declared.
 
-[[revisions.2018-1t-3t.deadline_windows]]
+[[revisions."2018-1t-3t".deadline_windows]]
 id = "modelo-763-2018-1t"
 filing_year = 2018
 period = "2018 1T"
@@ -12,7 +12,7 @@ closes_on = 2018-04-30
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2018-1t-3t.deadline_windows]]
+[[revisions."2018-1t-3t".deadline_windows]]
 id = "modelo-763-2018-2t"
 filing_year = 2018
 period = "2018 2T"
@@ -22,7 +22,7 @@ closes_on = 2018-07-31
 legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions.2018-1t-3t.deadline_windows]]
+[[revisions."2018-1t-3t".deadline_windows]]
 id = "modelo-763-2018-3t"
 filing_year = 2018
 period = "2018 3T"

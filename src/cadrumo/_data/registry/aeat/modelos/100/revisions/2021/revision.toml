@@ -1,3 +1,11 @@
+[revisions."2021"]
+binding_source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+formula_source_refs = ["lirpf-cuota-chain-authority"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-35-2006:art-27"], source_refs = ["aeat-dr-100-2021-dictionary"] } }
+casilla_source_refs = ["aeat-dr-100-2021-dictionary"]
+parameter_source_refs = ["aeat-renta-2021-manual-parte1"]
+dependency_classification_source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+extraction_profile_source_refs = ["aeat-dr-100-2021-dictionary", "boe-modelo-100-2021-form"]
 # Prepared and reviewed by an agent against the bundled AEAT diseño de registros
 # dictionary and the ordenes this revision cites; NO human operator has
 # countersigned it, and 'agent_reviewed' plus this reviewer token record that
@@ -22,7 +30,6 @@
 # What it does NOT establish: that the figures a filing produces are correct
 # against AEAT. That is a tax review against official sources, and it is what an
 # operator re-stamping this to 'operator_reviewed' would be attesting.
-[revisions.2021]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
@@ -30,24 +37,41 @@ authority_grade = "filing"
 id = "2021"
 valid_from = 2021-01-01
 valid_to = 2021-12-31
-binding_source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-formula_source_refs = ["lirpf-cuota-chain-authority"]
-casilla_source_refs = ["aeat-dr-100-2021-dictionary"]
-parameter_source_refs = ["aeat-renta-2021-manual-parte1"]
-dependency_classification_source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-extraction_profile_source_refs = ["aeat-dr-100-2021-dictionary", "boe-modelo-100-2021-form"]
+period_selector = { years = [2021], periods = ["0A"] }
 orden_aplicabilidad = ["orden-hfp-207-2022:art-3"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hfp-207-2022:art-3"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-[revisions.2021.predecessor.none]
-reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage)."
-legal_refs = ["ley-35-2006:art-27"]
-source_refs = ["aeat-dr-100-2021-dictionary"]
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hfp-207-2022:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-input-dictionary",
+    "aeat-dr-100-2021-xsd",
+    "aeat-renta-2021-manual-parte1",
+    "boe-modelo-100-2021-form",
+]
 
-[revisions.2021.period_selector]
-years = [2021]
-periods = ["0A"]
-[revisions.2021.family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2021-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hfp-207-2022:art-3"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+[revisions."2021".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2021-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \
+through the same revision."""
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hfp-207-2022:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-input-dictionary",
+    "aeat-dr-100-2021-xsd",
+    "aeat-renta-2021-manual-parte1",
+    "boe-modelo-100-2021-form",
+]
+

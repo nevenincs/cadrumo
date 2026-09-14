@@ -21,6 +21,73 @@
 # liquidable hasta" widths sum to these boundaries). This is the STATE default;
 # a CCAA that approves its own escala overrides it (out of scope for Phase-B's
 # state-baseline calc).
+
+[[revisions."2022".parameters]]
+id = "patrimonio-escala-estatal"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-19-1991:art-30"]
+additional_source_refs = ["aeat-manual-patrimonio-2022"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-manual-patrimonio-2022"
+required_text = ["patrimonio neto"]
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "167129.45"
+fixed_addition = "0"
+marginal_rate = "0.002"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "167129.45"
+upper_bound = "334252.88"
+fixed_addition = "334.26"
+marginal_rate = "0.003"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "334252.88"
+upper_bound = "668499.75"
+fixed_addition = "835.63"
+marginal_rate = "0.005"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "668499.75"
+upper_bound = "1336999.51"
+fixed_addition = "2506.86"
+marginal_rate = "0.009"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "1336999.51"
+upper_bound = "2673999.01"
+fixed_addition = "8523.36"
+marginal_rate = "0.013"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "2673999.01"
+upper_bound = "5347998.03"
+fixed_addition = "25904.35"
+marginal_rate = "0.017"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "5347998.03"
+upper_bound = "10695996.06"
+fixed_addition = "71362.33"
+marginal_rate = "0.021"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "10695996.06"
+fixed_addition = "183670.29"
+marginal_rate = "0.035"
+valid_from = 2022-01-01
 # Ejercicio 2022. The art. 30 escala estatal, the art. 28 minimo exento
 # framework and the art. 31 percentages are the same as 2021's because the LAW
 # is the same, not because 2021 was copied. Read from the BOE consolidated text
@@ -32,100 +99,32 @@
 # created the Impuesto Temporal de Solidaridad de las Grandes Fortunas, amends
 # this ley at ARTICLE 5.Uno only (BOE-A-2022-22684) and leaves arts 28, 30 and 31
 # untouched.
-
-[[revisions.2022.parameters]]
-id = "patrimonio-escala-estatal"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-19-1991:art-30"]
-additional_source_refs = ["aeat-manual-patrimonio-2022"]
-
-[[revisions.2022.parameters.source_citations]]
-source_ref = "aeat-manual-patrimonio-2022"
-required_text = ["patrimonio neto"]
-
-[[revisions.2022.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "167129.45"
-fixed_addition = "0"
-marginal_rate = "0.002"
-valid_from = 2022-01-01
-
-[[revisions.2022.parameters.brackets]]
-lower_bound = "167129.45"
-upper_bound = "334252.88"
-fixed_addition = "334.26"
-marginal_rate = "0.003"
-valid_from = 2022-01-01
-
-[[revisions.2022.parameters.brackets]]
-lower_bound = "334252.88"
-upper_bound = "668499.75"
-fixed_addition = "835.63"
-marginal_rate = "0.005"
-valid_from = 2022-01-01
-
-[[revisions.2022.parameters.brackets]]
-lower_bound = "668499.75"
-upper_bound = "1336999.51"
-fixed_addition = "2506.86"
-marginal_rate = "0.009"
-valid_from = 2022-01-01
-
-[[revisions.2022.parameters.brackets]]
-lower_bound = "1336999.51"
-upper_bound = "2673999.01"
-fixed_addition = "8523.36"
-marginal_rate = "0.013"
-valid_from = 2022-01-01
-
-[[revisions.2022.parameters.brackets]]
-lower_bound = "2673999.01"
-upper_bound = "5347998.03"
-fixed_addition = "25904.35"
-marginal_rate = "0.017"
-valid_from = 2022-01-01
-
-[[revisions.2022.parameters.brackets]]
-lower_bound = "5347998.03"
-upper_bound = "10695996.06"
-fixed_addition = "71362.33"
-marginal_rate = "0.021"
-valid_from = 2022-01-01
-
-[[revisions.2022.parameters.brackets]]
-lower_bound = "10695996.06"
-fixed_addition = "183670.29"
-marginal_rate = "0.035"
-valid_from = 2022-01-01
-
-[[revisions.2022.parameters]]
+[[revisions."2022".parameters]]
 id = "patrimonio-limite-conjunto-porcentaje"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-19-1991:art-31"]
 
-[[revisions.2022.parameters.source_citations]]
+[[revisions."2022".parameters.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
 required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
-[[revisions.2022.parameters.values]]
+[[revisions."2022".parameters.values]]
 value = "60"
 date_axis = "filing_period"
 valid_from = 2022-01-01
 
-[[revisions.2022.parameters]]
+[[revisions."2022".parameters]]
 id = "patrimonio-reduccion-maxima-limite-conjunto-porcentaje"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-19-1991:art-31"]
 
-[[revisions.2022.parameters.source_citations]]
+[[revisions."2022".parameters.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
 required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
-[[revisions.2022.parameters.values]]
+[[revisions."2022".parameters.values]]
 value = "80"
 date_axis = "filing_period"
 valid_from = 2022-01-01

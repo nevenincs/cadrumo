@@ -4,14 +4,12 @@ surface = "portal"
 consumer = "portal_m180_resumen_arrendamientos"
 requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-filed-declarations-observation"
 surface = "portal"
 consumer = "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation"
 requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-calculation"
 surface = "calculation"
@@ -19,7 +17,6 @@ consumer = "cadrumo.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-180-2014-form", "aeat-modelo-180-ayuda-presentacion"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-filing"
 surface = "filing"
@@ -27,7 +24,6 @@ consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-export"
 surface = "export"
@@ -35,7 +31,6 @@ consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-extractor"
 surface = "extractor"
@@ -43,7 +38,6 @@ consumer = "cadrumo.domain.calculations.registry.export_parse.parse_export_paylo
 requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-review"
 surface = "review"
@@ -51,7 +45,6 @@ consumer = "cadrumo.application.review"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-approval"
 surface = "approval"
@@ -59,7 +52,6 @@ consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-reconciliation"
 surface = "reconciliation"
@@ -67,7 +59,6 @@ consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]
-
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-workflow"
 surface = "workflow"
@@ -75,8 +66,7 @@ consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.application_links]]
+[[revisions."2019-2022".application_links]]
 id = "modelo-180-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
