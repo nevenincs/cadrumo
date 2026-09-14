@@ -10,7 +10,6 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -22,6 +21,7 @@ from cadrumo.domain.calculations.registry.relations import (
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkDefinition
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -65,7 +65,7 @@ def _nested_legal_refs(value: object) -> set[str]:
 
 
 def test_modelo_180_2023_amendment_is_scoped_to_2023_revision() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("180")
     historical_refs = _nested_legal_refs(modelo.revisions["2019-2022"].model_dump(mode="python"))
     current_refs = _nested_legal_refs(modelo.revisions["2023-y-siguientes"].model_dump(mode="python"))
@@ -75,7 +75,7 @@ def test_modelo_180_2023_amendment_is_scoped_to_2023_revision() -> None:
 
 
 def test_modelo_180_guidance_and_layout_sources_are_separated() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("180"), authority.catalogues
 
     summary_help = catalogues.sources["aeat-modelo-180-ayuda-resumen-datos"]
@@ -110,7 +110,7 @@ def test_modelo_180_extraction_profile_legal_refs_match_target_casillas(
     revision_id: str,
     expected_refs: frozenset[str],
 ) -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("180")
     revision = modelo.revisions[revision_id]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
@@ -131,7 +131,7 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
     filing_year: int,
     period: str,
 ) -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("180"), authority.catalogues
 
     snapshot = build_snapshot(
@@ -179,7 +179,7 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
 
 
 def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("180", filing_year=2025, period="0A")
     snapshot_115 = authority.snapshot("115", filing_year=2025, period="1T")
 
@@ -197,7 +197,7 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
 
 
 def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("180", filing_year=2025, period="0A")
     snapshot_115 = authority.snapshot("115", filing_year=2025, period="1T")
     source_casilla_ids = {casilla.id: casilla for casilla in snapshot_115.revision.casillas}
@@ -241,7 +241,7 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
 
 
 def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
-    snapshot = bundled_authority().snapshot("180", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("180", filing_year=2025, period="0A")
     incomplete_observations = (
         registry_grounded_modelo_observation(
             modelo="115",

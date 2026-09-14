@@ -25,6 +25,7 @@ from ....application.ledger.workspace import (
 )
 from ....application.operator_actions.models import ActionReference
 from ....application.review.filter import LedgerReviewStatus
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
@@ -146,7 +147,7 @@ class LedgerWorkspaceController:
         """Return a safe position and redacted identifier from the visible projection."""
         target = self.classification_target
         if target is None:
-            raise RuntimeError("classification target is unavailable")
+            raise InternalInvariantError("classification target is unavailable")
         position = next(
             index for index, row in enumerate(self.projection.entries, start=1) if row.transaction_id == target
         )
@@ -310,7 +311,7 @@ class LedgerWorkspaceController:
     async def submit_classification(self, patch: ManualLedgerTransactionPatch) -> ManualLedgerTransactionResult:
         """Submit an explicit patch through the injected authorized door."""
         if self.classify_action is None or self.classification_target is None or self.classification_submitter is None:
-            raise RuntimeError("classification submission is unavailable")
+            raise InternalInvariantError("classification submission is unavailable")
         submission = LedgerClassificationSubmissionV1(
             action=self.classify_action,
             transaction_id=self.classification_target,
@@ -324,13 +325,13 @@ class LedgerWorkspaceController:
     async def submit_import(self, prepared: LedgerPreparedImportV1) -> LedgerSourceImportResult:
         """Pass an opaque pre-resolved command to the injected import door."""
         if self.import_submitter is None or prepared not in self.prepared_imports:
-            raise RuntimeError("import submission is unavailable")
+            raise InternalInvariantError("import submission is unavailable")
         return await prepared.submit_with(self.import_submitter)
 
     def evidence_rows(self) -> tuple[LedgerEvidenceRowV1, ...]:
         """Project only canonical review-safe metadata from the injected result."""
         if self.evidence_action is None or self.evidence_items is None:
-            raise RuntimeError("evidence review is unavailable")
+            raise InternalInvariantError("evidence review is unavailable")
         return tuple(
             LedgerEvidenceRowV1(
                 attachment_id=item.attachment_id,
@@ -362,7 +363,7 @@ class LedgerWorkspaceController:
     async def submit_link(self, transaction_id: TransactionId, invoice_id: InvoiceId) -> LedgerLinkResultV1:
         """Admit a visible suggestion and submit it through the authorized door."""
         if self.link_action is None or self.link_submitter is None:
-            raise RuntimeError("Ledger reconciliation is unavailable")
+            raise InternalInvariantError("Ledger reconciliation is unavailable")
         if not any(
             row.transaction_id == transaction_id and row.invoice_id == invoice_id
             for row in self.projection.invoice_reconciliations

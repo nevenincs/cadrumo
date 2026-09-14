@@ -50,6 +50,7 @@ from typing import TYPE_CHECKING, NamedTuple, Self
 from pydantic import Field, GetCoreSchemaHandler, model_validator
 from pydantic_core import CoreSchema, core_schema
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.logging import get_logger
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
@@ -724,6 +725,7 @@ class IvaClassificationResult(IvaStrictFrozen):
     )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _exemption_article_consistent_with_category(self) -> IvaClassificationResult:
         if self.exemption_article is not None and self.category != require_iva_category("domestic_exempt"):
             raise IvaValidationError(

@@ -47,6 +47,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.prorrata_register import (
@@ -107,7 +108,7 @@ class ProrrataRegisterError(_CadrumoError):
     """Raised when a prorrata-register record is structurally invalid."""
 
 
-class ProrrataRegisterValidationError(ProrrataRegisterError, ValueError):
+class ProrrataRegisterValidationError(ProrrataRegisterError):
     """Raised when a prorrata-register model fails Pydantic validation."""
 
 
@@ -152,12 +153,14 @@ class ProrrataEspecialTransitionEvidence(BaseModel):
 
     @field_validator("kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _kind_is_registry_declared(cls, value: object) -> _ProrrataEspecialTransitionKind:
         """Translate the persisted token through the domain registry catalogue."""
         return _require_transition(value)
 
     @field_validator("evidence_reference")
     @classmethod
+    @pydantic_validation_boundary
     def _evidence_reference_is_not_blank(cls, value: str) -> str:
         """Refuse whitespace-only evidence before it reaches encrypted storage."""
         if not value.strip():
@@ -199,12 +202,14 @@ class SectorDefinition(BaseModel):
 
     @field_validator("letra", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _letra_is_registry_declared(cls, value: object) -> _SectorDiferenciadoLetra:
         """Translate the persisted sector letter through the domain catalogue."""
         return _require_sector_letter(value)
 
     @field_validator("member_activity_codes")
     @classmethod
+    @pydantic_validation_boundary
     def _member_codes_non_empty_tokens(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Reject a blank member activity code — every grouped code is a real token."""
         for code in value:
@@ -237,6 +242,7 @@ class ProrrataActivityRow(BaseModel):
     evidence_reference: str = Field(min_length=1, max_length=256)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _deductible_operations_do_not_exceed_total(self) -> ProrrataActivityRow:
         """Reject a row whose declared right-bearing volume exceeds its total."""
         if self.operaciones_con_derecho > self.operaciones_total:
@@ -321,12 +327,14 @@ class ProrrataRegisterEntry(BaseModel):
 
     @field_validator("regime", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _regime_is_registry_declared(cls, value: object) -> _ProrrataRegisterRegime:
         """Translate the persisted regime through the domain registry catalogue."""
         return _require_regime(value)
 
     @field_validator("provisional_provenance", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _provenance_is_registry_declared(
         cls,
         value: object,
@@ -336,6 +344,7 @@ class ProrrataRegisterEntry(BaseModel):
 
     @field_validator("schema_version")
     @classmethod
+    @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than :data:`PRORRATA_REGISTER_SCHEMA_VERSION`."""
         if value != PRORRATA_REGISTER_SCHEMA_VERSION:
@@ -343,6 +352,7 @@ class ProrrataRegisterEntry(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_field_coupling(self) -> ProrrataRegisterEntry:
         """Enforce that the provisional, referenced, and settlement field groups are coherent."""
         _validate_interrupted_entry_fields(self)
@@ -596,6 +606,7 @@ class ProrrataRegister(BaseModel):
 
     @field_validator("schema_version")
     @classmethod
+    @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than :data:`PRORRATA_REGISTER_SCHEMA_VERSION`."""
         if value != PRORRATA_REGISTER_SCHEMA_VERSION:
@@ -603,6 +614,7 @@ class ProrrataRegister(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _keys_unique(self) -> ProrrataRegister:
         """Reject a register that carries two entries for the same (ejercicio, sector_id)."""
         seen = [(entry.ejercicio, entry.sector_id) for entry in self.entries]
@@ -611,6 +623,7 @@ class ProrrataRegister(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _sector_definitions_unique(self) -> ProrrataRegister:
         """Reject a register that declares two sector definitions for the same sector_id."""
         sector_ids = [definition.sector_id for definition in self.sector_definitions]
@@ -619,6 +632,7 @@ class ProrrataRegister(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _activity_row_keys_unique(self) -> ProrrataRegister:
         """Keep each activity identity and fixed row slot unambiguous per year."""
         activity_keys = [(row.ejercicio, row.activity_id) for row in self.activity_rows]
@@ -630,6 +644,7 @@ class ProrrataRegister(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _transitions_are_continuous_and_unambiguous(self) -> ProrrataRegister:
         """Require transition evidence to agree with its prior same-sector state."""
         kinds_by_ejercicio, references_by_ejercicio = _especial_transition_evidence(self.entries)

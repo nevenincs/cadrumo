@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, cast
 import typer
 
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n.render import tr
 from ....core.logging import get_logger as _get_logger
@@ -67,7 +68,7 @@ def _resolve_show_pointer(
     pointer = resolved_command_profile_target(ctx)
     if pointer is not None:
         return pointer
-    raise RuntimeError("explicit profile show target was not resolved by parsed dispatch")
+    raise InternalInvariantError("explicit profile show target was not resolved by parsed dispatch")
 
 
 def _read_record_for_show(ctx: typer.Context, pointer: _ProfileBucketPointer) -> _UserProfileRecord:
@@ -194,7 +195,7 @@ def _resolve_validate_target_pointer(
 
     pointer = resolved_command_profile_target(ctx)
     if pointer is None:
-        raise RuntimeError("explicit profile validate target was not resolved by parsed dispatch")
+        raise InternalInvariantError("explicit profile validate target was not resolved by parsed dispatch")
     return pointer
 
 

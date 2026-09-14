@@ -8,12 +8,12 @@ import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_semantic_coordinate
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.iva.schema import IvaLedgerObservationRole
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -157,7 +157,7 @@ def test_modelo_322_2022_deadlines_have_one_canonical_owner_and_projection() -> 
         assert selected.id == "2008-2022"
         assert owners == [selected.id]
 
-    projected = bundled_authority().deadline_windows(2022, modelos=("322",))
+    projected = compiled_bundled_authority().deadline_windows(2022, modelos=("322",))
     assert len(projected) == 12
     assert tuple(window.period.registry_token for _, _, window in projected) == expected_periods
     assert {revision.id for _, revision, _ in projected} == {"2008-2022"}
@@ -246,7 +246,7 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
         assert select_revision(modelo, filing_year=year, period=period) is revision
 
     for year in range(2023, 2027):
-        projected = bundled_authority().deadline_windows(year, modelos=("322",))
+        projected = compiled_bundled_authority().deadline_windows(year, modelos=("322",))
         expected_count = 12
         assert len(projected) == expected_count
         assert (

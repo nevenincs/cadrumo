@@ -130,7 +130,10 @@ class Expediente(BaseModel):
         """Reject empty / whitespace entries inside ``category_path``."""
         for entry in value:
             if not entry:
-                raise SedeValidationError("category_path entries must be non-empty")
+                error = SedeValidationError("category_path entries must be non-empty")
+                # Pydantic consumes builtin validation errors; keep the
+                # registered sede refusal available as the causal error.
+                raise ValueError(str(error)) from error
         return value
 
 
@@ -382,7 +385,8 @@ class FiledDeclarationAvailability(BaseModel):
         """Reject an ejercicio outside the range every other record in this module accepts."""
         for ejercicio in value:
             if not 2000 <= ejercicio <= 2099:
-                raise SedeValidationError(f"ejercicio outside the supported range: {ejercicio!r}")
+                error = SedeValidationError(f"ejercicio outside the supported range: {ejercicio!r}")
+                raise ValueError(str(error)) from error
         return value
 
 

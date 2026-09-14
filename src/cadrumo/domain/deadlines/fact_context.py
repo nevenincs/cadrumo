@@ -11,7 +11,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
@@ -20,10 +19,8 @@ from ..calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 _DEADLINE_FACT_DATE_AXIS_MAPPING_FACT_ID = "deadline-fact-date-axis-mapping"
 
@@ -32,7 +29,7 @@ _DEADLINE_FACT_DATE_AXIS_MAPPING_FACT_ID = "deadline-fact-date-axis-mapping"
 class DeadlineFactResolutionContext:
     """Authority and explicit filing/submission coordinates for deadline facts."""
 
-    authority: ValidatedRegistryAuthority
+    authority: GovernedFactSource
     filing_period: date
     submission_date: date
 

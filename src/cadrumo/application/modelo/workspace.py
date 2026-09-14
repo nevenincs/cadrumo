@@ -23,7 +23,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.errors.hierarchy import CadrumoError
@@ -116,6 +115,7 @@ from .workspace_producers import (
     ModeloWorkspaceRegistryPortV1,
     ModeloWorkspaceRegistryProjectionV1,
     ModeloWorkspaceWorkPortV1,
+    RegistryAuthorityCapturePort,
 )
 
 
@@ -131,9 +131,6 @@ STATIC_INSPECTION_WORK_REVIEW_FACET = ModeloWorkspaceWorkReviewFacetV1(
     disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
     review=None,
 )
-
-if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def modelo_work_selector_request_for_target(
@@ -263,7 +260,7 @@ def capture_modelo_workspace_target_captures(
     *,
     bucket_id: str,
     catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
-    authority: ValidatedRegistryAuthority,
+    authority: RegistryAuthorityCapturePort,
     grade: RegistryAuthorityGrade | None = None,
 ) -> tuple[
     ModeloWorkspaceContributingProjectionV1[ModeloWorkResolution],
@@ -1031,7 +1028,7 @@ def resolve_static_inspection_result(
     *,
     bucket_id: str,
     catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
-    authority: ValidatedRegistryAuthority,
+    authority: RegistryAuthorityCapturePort,
     output_language: OutputLanguage,
     page_size: int = 200,
     cursor: ModeloWorkspaceCursorV1 | None = None,

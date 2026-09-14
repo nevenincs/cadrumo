@@ -171,7 +171,11 @@ class Envelope[PayloadT: BaseModel](BaseModel):
         try:
             return validate_utc_aware(value)
         except CoreValidationError as exc:
-            raise _storage_validation_error(str(exc)) from exc
+            error = _storage_validation_error(str(exc))
+            # Pydantic only recognises builtin validation exceptions at this
+            # callback boundary. Keep the registered storage error as the
+            # cause so direct adapter code and diagnostics retain its type.
+            raise ValueError(str(error)) from error
 
     @classmethod
     def for_payload_type(cls, payload_cls: type[PayloadT]) -> type[Envelope[PayloadT]]:

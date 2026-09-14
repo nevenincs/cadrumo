@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING
 from pydantic import SecretStr
 
 from ...core.config import Settings, load_settings
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.time.clock import now
@@ -488,7 +488,7 @@ def set_operator_certificate_source_secret(
             secret=secret,
         )
         if intent is None:
-            raise RuntimeError("certificate secret set prepared no durable mutation intent")
+            raise InternalInvariantError("certificate secret set prepared no durable mutation intent")
         _complete_certificate_secret_mutation(
             repository=repository,
             backend=backend,
@@ -697,9 +697,9 @@ def _complete_certificate_secret_mutation(
             completion_witness = f"secret-absent:{intent.operation_id}"
         else:
             if secret is None:
-                raise RuntimeError("certificate secret set recovery requires the retried secret")
+                raise InternalInvariantError("certificate secret set recovery requires the retried secret")
             if intent.request_witness != backend.request_witness(intent.source_name, secret):
-                raise RuntimeError("certificate secret retry does not match durable intent")
+                raise InternalInvariantError("certificate secret retry does not match durable intent")
             if backend.mutation_operation_id(intent.source_name) != intent.operation_id:
                 backend.set(
                     intent.source_name,
@@ -712,7 +712,7 @@ def _complete_certificate_secret_mutation(
         def mark_completed(state: WorkflowState) -> WorkflowState:
             current = state.auth.certificate_secret_mutation_intent
             if current is None or current.operation_id != intent.operation_id:
-                raise RuntimeError("certificate-secret mutation intent changed during completion")
+                raise InternalInvariantError("certificate-secret mutation intent changed during completion")
             if current.completion_witness is not None:
                 return state
             completed = current.model_copy(
@@ -746,9 +746,9 @@ def _finalize_certificate_secret_mutation(
     def finalize(state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
         current = state.auth.certificate_secret_mutation_intent
         if current is None or current.operation_id != intent.operation_id:
-            raise RuntimeError("certificate-secret mutation intent changed during finalization")
+            raise InternalInvariantError("certificate-secret mutation intent changed during finalization")
         if current.completion_witness is None:
-            raise RuntimeError("certificate-secret mutation has no completion witness")
+            raise InternalInvariantError("certificate-secret mutation has no completion witness")
         updated = state.model_copy(
             update={
                 "auth": state.auth.model_copy(

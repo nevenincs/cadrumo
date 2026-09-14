@@ -28,7 +28,7 @@ from pydantic_core import CoreSchema, core_schema
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.aggregation import ThirdPartyDeclarationRole
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.modelo import Modelo
@@ -331,6 +331,7 @@ class RefundAccount(BaseModel):
 
     @field_validator("iban", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_iban(cls, value: object) -> object:
         """Reject a malformed IBAN at the secure-storage boundary.
 
@@ -382,6 +383,7 @@ class ChargeAccount(BaseModel):
 
     @field_validator("iban", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_iban(cls, value: object) -> object:
         """Reject an absent or malformed debit-account IBAN at the domain boundary."""
         if not isinstance(value, str):
@@ -591,6 +593,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
 
     @field_validator("member_nifs")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_member_nifs(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Reject duplicate members and give the roster a stable order.
 
@@ -605,6 +608,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
         return tuple(sorted(value))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_period_year_matches(self) -> CrossPeriodGroupMemberRoster:
         if self.period.filing_year != self.filing_year:
             raise DeadlineValidationError(
@@ -846,6 +850,7 @@ class TaxpayerProfile(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_impatriado_requires_start_date(self) -> Self:
         """Reject the active special-regime token without its start date."""
         from ..calculations.registry.irpf_regimes import irpf_special_regime_impatriado_token
@@ -861,6 +866,7 @@ class TaxpayerProfile(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_non_resident_requires_country(self) -> Self:
         """Reject a NON_RESIDENT_IRNR profile declared without a country code.
 
@@ -877,6 +883,7 @@ class TaxpayerProfile(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_representante_fiscal_required(self) -> Self:
         """Require a fiscal representative for non-EU/EEA non-residents.
 
@@ -1030,6 +1037,7 @@ class RecargoBand(BaseModel):
     legal_ref: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> Self:
         if self.max_completed_months is not None and self.max_completed_months < self.min_completed_months:
             raise DeadlineValidationError(
@@ -1122,6 +1130,7 @@ class ModeloDeadline(BaseModel):
     recovery: Recovery | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_window_order(self) -> ModeloDeadline:
         """Reject obligations whose ``opens_on`` is after ``closes_on``."""
         if self.opens_on > self.closes_on:

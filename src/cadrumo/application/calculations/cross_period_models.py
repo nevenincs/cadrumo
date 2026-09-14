@@ -10,6 +10,7 @@ from typing import Protocol, Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
@@ -133,7 +134,7 @@ if set(OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER) != set(CrossPeriodCl
         blocker.value
         for blocker in set(CrossPeriodCleanStateBlocker) - set(OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER)
     )
-    raise RuntimeError(
+    raise InternalInvariantError(
         "every CrossPeriodCleanStateBlocker must declare an OperatorActionAxis; "
         f"unmapped: {', '.join(_unmapped_cross_period_blockers)}",
     )

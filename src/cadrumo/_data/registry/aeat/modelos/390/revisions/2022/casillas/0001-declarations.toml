@@ -1997,6 +1997,8 @@ legal_refs = ["ley-37-1992:art-163-quaterdecies", "ley-37-1992:art-163-terdecies
 # Box [659] - '7. Resultado liquidación anual - IVA a la importación liquidado por la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]' (offset 47, length 17 and offset 174, length 17).
 [[revisions."2022".casillas]]
 id = "iva.anual.iva-importacion-diferimiento"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-390-2021 y aeat-dr-390-2022, apartado 7 Resultado liquidacion anual: IVA a la importacion liquidado por Aduana para sujetos con diferimiento [659], campo 8. Ambos disenos ya contienen el concepto, mientras la revision 2021 solo declara diez casillas de observacion y omite esta. Las repeticiones del apartado 8 Tributacion por razon del territorio son otra localizacion; no convierten el campo del apartado 7 en una introduccion de 2022."
 number = "659"
 section = ["iva", "anual", "resultado"]
 semantic_role = "iva_iva_importacion_diferimiento"
@@ -2275,6 +2277,8 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71
 # Box [658] - "7. Resultado liquidacion anual - Regularizacion cuotas art. 80.Cinco.5ª LIVA [658]" (offset 13, length 17).
 [[revisions."2022".casillas]]
 id = "iva.anual.regularizacion-cuotas-art-80-cinco-5"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-390-2021 y aeat-dr-390-2022, apartado 7 Resultado liquidacion anual: regularizacion de cuotas del articulo 80.Cinco.5 LIVA [658], campo 6. Ambos disenos ya contienen el concepto, mientras la revision 2021 solo declara diez casillas de observacion y omite esta. Las repeticiones del apartado 8 Tributacion por razon del territorio son otra localizacion; no convierten el campo del apartado 7 en una introduccion de 2022."
 number = "658"
 section = ["iva", "anual", "resultado"]
 semantic_role = "iva_regularizacion_cuotas_art_80_cinco_5"
@@ -2288,6 +2292,8 @@ legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "orden-eha-3111-2009:a
 # Box [84] - "7. Resultado liquidacion anual - Suma de resultados [84]" (offset 30, length 17).
 [[revisions."2022".casillas]]
 id = "iva.anual.suma-resultados"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-390-2021 y aeat-dr-390-2022, apartado 7 Resultado liquidacion anual: suma de resultados [84], campo 7. Ambos disenos ya contienen el concepto, mientras la revision 2021 solo declara diez casillas de observacion y omite esta. Las repeticiones del apartado 8 Tributacion por razon del territorio son otra localizacion; no convierten el campo del apartado 7 en una introduccion de 2022."
 number = "84"
 section = ["iva", "anual", "resultado"]
 semantic_role = "iva_suma_resultados"
@@ -2699,6 +2705,8 @@ binding = "modelo-390-iva-soportado-interiores-base"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.general"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "Acumulador interno por familia de tipo, sin numero oficial; el diseno aeat-dr-390-2022 declara las cuotas ordinarias por tipo por separado. La observacion 2021 antes enlazada aqui representa una cuota impresa especifica y se enlaza con su sucesora por tipo, no con este acumulador de calculo."
 number = "iva.anual.repercutido.general"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_general"
@@ -2709,6 +2717,8 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.reducido"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "Acumulador interno por familia de tipo, sin numero oficial; el diseno aeat-dr-390-2022 declara las cuotas ordinarias por tipo por separado. La observacion 2021 antes enlazada aqui representa una cuota impresa especifica y se enlaza con su sucesora por tipo, no con este acumulador de calculo."
 number = "iva.anual.repercutido.reducido"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_reducido"
@@ -2719,6 +2729,8 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.super-reducido"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "Acumulador interno por familia de tipo, sin numero oficial; el diseno aeat-dr-390-2022 declara las cuotas ordinarias por tipo por separado. La observacion 2021 antes enlazada aqui representa una cuota impresa especifica y se enlaza con su sucesora por tipo, no con este acumulador de calculo."
 number = "iva.anual.repercutido.super-reducido"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_super_reducido"
@@ -3720,6 +3732,8 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 # Box [06] - "Tipo 21 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.tipo-21.cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-390-2021, T39002000 campo 11, cuota ordinaria [06], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 21 %, misma cuota [06]: misma cuota repercutida al tipo 21 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
 number = "06"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_tipo_21"
@@ -3748,6 +3762,8 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 # Box [04] - "Tipo 10 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.tipo-10.cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-390-2021, T39002000 campo 9, cuota ordinaria [04], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 10 %, misma cuota [04]: misma cuota repercutida al tipo 10 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
 number = "04"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_tipo_10"
@@ -3806,6 +3822,8 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 # Box [02] - "Tipo 4 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.tipo-4.cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-390-2021, T39002000 campo 7, cuota ordinaria [02], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 4 %, misma cuota [02]: misma cuota repercutida al tipo 4 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
 number = "02"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_tipo_4"

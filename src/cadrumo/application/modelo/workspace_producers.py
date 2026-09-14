@@ -25,7 +25,7 @@ from .workspace_manifest import ModeloWorkspaceFieldManifestV1
 from .workspace_models import ModeloWorkspaceContributorIdentityV1
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from ...domain.calculations.registry.authority import RegistryAuthorityCapture, RegistryAuthorityCurrentCoordinate
 
 _PRODUCER_CONTRACT_VERSION = 1
 _EPOCH_SCHEMA_VERSION = 2
@@ -34,6 +34,22 @@ type _ProducerCode = Annotated[
     str,
     Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$"),
 ]
+
+
+class RegistryAuthorityCapturePort(Protocol):
+    """Narrow authority surface required by the atomic workspace registry port."""
+
+    def capture_law_selected_projection(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        grade: RegistryAuthorityGrade | None = None,
+    ) -> RegistryAuthorityCapture: ...
+
+    def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate: ...
 
 
 class _WorkspaceProducerModel(BaseModel):
@@ -390,7 +406,7 @@ class ModeloWorkspaceRegistryPortV1:
     def __init__(
         self,
         *,
-        authority: ValidatedRegistryAuthority,
+        authority: RegistryAuthorityCapturePort,
         modelo_id: str,
         filing_year: int,
         period: str,

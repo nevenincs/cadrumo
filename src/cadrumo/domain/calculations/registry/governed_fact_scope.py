@@ -28,6 +28,7 @@ from threading import RLock
 from typing import Final, Protocol
 from weakref import ReferenceType, ref
 
+from ....core.errors.hierarchy import InternalInvariantError
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
 from .facts.schema import GovernedFactCatalogue
 
@@ -113,7 +114,7 @@ def cache_governed_projection[**P, R](
         def projected(*args: P.args, **kwargs: P.kwargs) -> R:
             owner = governed_facts_in_scope()
             if owner is None:
-                raise RuntimeError(
+                raise InternalInvariantError(
                     f"{getattr(function, '__qualname__', type(function).__name__)} requires an explicit "
                     "generation-pinned governed-fact scope"
                 )

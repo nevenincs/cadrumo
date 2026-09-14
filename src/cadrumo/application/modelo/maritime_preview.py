@@ -31,7 +31,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from ...application.calculations.maritime_exemption_service import (
     resolve_maritime_exemption,
@@ -39,13 +39,16 @@ from ...application.calculations.maritime_exemption_service import (
 )
 from ...application.user_profile.projections import fact_value
 from ...core.parsing.utils import parse_bool
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
 from ..calculations.maritime_exemption_service import MaritimeExemptionResult
 from ..workflow.persistence import workflow_state_repository
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 @dataclass(frozen=True)
@@ -179,6 +182,7 @@ def preview_maritime_exemption_for_active_profile(
     annual_salary: Decimal | None,
     qualifying_days: int | None,
     gross_navigation_income: Decimal | None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloMaritimeExemptionPreview:
     """Resolve the active profile maritime exemption preview.
 
@@ -201,6 +205,7 @@ def preview_maritime_exemption_for_active_profile(
             Art. 7.p).
         gross_navigation_income: Optional gross navigation income in EUR for
             REBECA.
+        operation: Optional caller-held generation-pinned registry operation.
 
     Returns:
         :class:`ModeloMaritimeExemptionPreview` carrying original facts,
@@ -212,8 +217,15 @@ def preview_maritime_exemption_for_active_profile(
         :class:`cadrumo.application.calculations.maritime_exemption_service.MaritimeExemptionResult`:
             Typed observation carrier stored on the preview.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return preview_maritime_exemption_for_active_profile(
+                annual_salary=annual_salary,
+                qualifying_days=qualifying_days,
+                gross_navigation_income=gross_navigation_income,
+                operation=indexed_operation,
+            )
     facts = maritime_facts_from_active_profile()
-    authority = bundled_authority()
     resolved_on = date.today()
     try:
         result = resolve_maritime_exemption(
@@ -221,7 +233,7 @@ def preview_maritime_exemption_for_active_profile(
             annual_salary=annual_salary,
             qualifying_days=qualifying_days,
             gross_navigation_income=gross_navigation_income,
-            authority=authority,
+            authority=operation,
             filing_period=resolved_on,
             devengo_date=resolved_on,
         )
@@ -232,7 +244,7 @@ def preview_maritime_exemption_for_active_profile(
             annual_salary=annual_salary,
             qualifying_days=qualifying_days,
             gross_navigation_income=gross_navigation_income,
-            authority=authority,
+            authority=operation,
             filing_period=resolved_on,
             devengo_date=resolved_on,
         )

@@ -79,7 +79,7 @@ def _probe_header_row(
     try:
         offset_index = _required_header_index(values, "posic.")
         type_index = _required_header_index(values, "tipo")
-    except ValueError as header_exc:
+    except RegistryValidationError as header_exc:
         _log.debug(
             "record-design header probe (%s): row %d missing required columns (%s); trying next",
             label,
@@ -90,7 +90,7 @@ def _probe_header_row(
     length_correction: RecordDesignHeaderCellCorrection | None = None
     try:
         length_index = _required_header_index(values, "lon")
-    except ValueError:
+    except RegistryValidationError:
         length_correction = header_corrections.get((sheet_name, row_number, "length"))
         if length_correction is None:
             _log.debug(

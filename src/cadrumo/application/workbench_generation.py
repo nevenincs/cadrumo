@@ -23,6 +23,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ValidationError, model_validator
 
+from ..core.errors.hierarchy import InternalInvariantError
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
@@ -476,7 +477,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             verification=verification,
             custody_count=custody_count,
         ):
-            raise RuntimeError("secure workbench generation changed during capture")
+            raise InternalInvariantError("secure workbench generation changed during capture")
         return _build_workbench_generation_inputs(
             observed_at=observed_at,
             account_session=account_session,

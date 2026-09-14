@@ -18,6 +18,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
@@ -64,6 +65,7 @@ class DecisionProvenance(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_inbound(cls, data: object) -> object:
         """Parse JSON-mode confidence strings back into ``Decimal`` on load."""
         if isinstance(data, cls):
@@ -78,12 +80,14 @@ class DecisionProvenance(BaseModel):
 
     @field_validator("decided_by")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_decided_by(cls, value: str) -> str:
         """Restrict ``decided_by`` to the approved classifier shapes."""
         return validate_classified_by_shape(value)
 
     @field_validator("decided_at", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_decided_at(cls, value: object) -> datetime:
         """Reject naive or blank decision timestamps."""
         return parse_required_aware_datetime(value, field_name="decided_at")
@@ -96,6 +100,7 @@ class DecisionProvenance(BaseModel):
 
     @field_validator("confidence")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
         """Restrict confidence to the inclusive 0..1 range when not None."""
         return validate_confidence_range(value)
@@ -118,6 +123,7 @@ class ClassificationHistoryEntry(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_inbound(cls, data: object) -> object:
         """Parse JSON-mode strings back into strict Python types on load."""
         if isinstance(data, cls):
@@ -141,12 +147,14 @@ class ClassificationHistoryEntry(BaseModel):
 
     @field_validator("classified_at")
     @classmethod
+    @pydantic_validation_boundary
     def _require_aware_timestamp(cls, value: datetime) -> datetime:
         """Reject naive classification timestamps."""
         return require_aware_datetime(value)
 
     @field_validator("classified_by")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_classified_by(cls, value: str) -> str:
         """Restrict ``classified_by`` to the approved shapes."""
         return validate_classified_by_shape(value)
@@ -159,6 +167,7 @@ class ClassificationHistoryEntry(BaseModel):
 
     @field_validator("category_id")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_category_id(cls, value: str | None) -> str | None:
         """Trim the optional foreign key while rejecting blank strings."""
         if value is None:
@@ -176,11 +185,13 @@ class ClassificationHistoryEntry(BaseModel):
 
     @field_validator("confidence")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
         """Restrict confidence to the inclusive 0..1 range when not None."""
         return validate_confidence_range(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling for a history entry."""
         validate_business_pct_coupling(self.business_classification, self.business_pct)
@@ -201,11 +212,13 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
 
     @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_optional_text(cls, value: str | None) -> str | None:
         return trim_lineage_text(value)
 
     @field_validator("linked_at", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_linked_at(cls, value: object) -> datetime:
         return parse_required_aware_datetime(value, field_name="linked_at")
 
@@ -223,11 +236,13 @@ class TransactionEditLineageEntry(BaseModel):
 
     @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_optional_text(cls, value: str | None) -> str | None:
         return trim_lineage_text(value)
 
     @field_validator("edited_at", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_edited_at(cls, value: object) -> datetime:
         return parse_required_aware_datetime(value, field_name="edited_at")
 
@@ -247,6 +262,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_lifecycle_states(cls, data: object) -> object:
         if not is_object_mapping(data):
             return data
@@ -259,6 +275,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     @field_validator("actor", "source_command", "bucket_event_id")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_optional_text(cls, value: str | None) -> str | None:
         return trim_lineage_text(value)
 
@@ -269,10 +286,12 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     @field_validator("changed_at", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_changed_at(cls, value: object) -> datetime:
         return parse_required_aware_datetime(value, field_name="changed_at")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reject_noop_transition(self) -> Self:
         if self.previous_state is self.state:
             raise TransactionValidationError("lifecycle transition must change state")
@@ -290,6 +309,7 @@ class SplitLineage(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_role(cls, data: object) -> object:
         if not is_object_mapping(data):
             return data
@@ -301,6 +321,7 @@ class SplitLineage(BaseModel):
 
     @field_validator("sibling_transaction_ids", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_siblings(cls, value: object) -> tuple[object, ...]:
         if isinstance(value, tuple):
             return OBJECT_TUPLE_ADAPTER.validate_python(value)
@@ -310,6 +331,7 @@ class SplitLineage(BaseModel):
 
     @field_validator("sibling_transaction_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_siblings(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         cleaned: list[str] = []
         for sibling in value:
@@ -332,6 +354,7 @@ class SplitLineage(BaseModel):
         return tuple(sorted(cleaned))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_siblings_for_lineage(self) -> Self:
         if not self.sibling_transaction_ids:
             raise TransactionValidationError("split_lineage must reference at least one sibling transaction id")

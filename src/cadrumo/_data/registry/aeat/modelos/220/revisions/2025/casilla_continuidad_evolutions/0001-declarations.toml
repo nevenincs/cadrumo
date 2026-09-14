@@ -1,0 +1,39 @@
+# The two base/rate bands retain their function; the 2025 design clarifies
+# cooperative scope and renders rates with four decimal places.
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "base-imponible-tramo-uno-evolucion"
+continuidad_id = "base-imponible-tramo-uno"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hac-657-2025:art-3", "orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024", "aeat-dr-220-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "tipo-gravamen-tramo-uno-evolucion"
+continuidad_id = "tipo-gravamen-tramo-uno"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hac-657-2025:art-3", "orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024", "aeat-dr-220-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "base-imponible-tramo-dos-evolucion"
+continuidad_id = "base-imponible-tramo-dos"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hac-657-2025:art-3", "orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024", "aeat-dr-220-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "tipo-gravamen-tramo-dos-evolucion"
+continuidad_id = "tipo-gravamen-tramo-dos"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hac-657-2025:art-3", "orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024", "aeat-dr-220-2025"]
+

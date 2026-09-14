@@ -37,6 +37,7 @@ import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.cli_metadata import is_metadata_invocation
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
@@ -52,10 +53,12 @@ from .operator_surface_reconciliation import current_operator_surface_reconcilia
 # publication therefore refuses the surface instead of falling back to a second
 # identifier universe maintained in Python.
 #
-# It is a module-level constant because ``from __future__ import annotations``
-# stringifies the ``Annotated`` metadata carrying ``click_type=...`` and Typer
-# re-evaluates that string in the defining module's global namespace, where a
-# closure-local binding would be invisible.
+# The parameter type is a module-level object because ``from __future__ import
+# annotations`` stringifies the ``Annotated`` metadata carrying
+# ``click_type=...`` and Typer re-evaluates that string in this module.  The
+# governed values themselves must not be resolved until Click converts a real
+# command argument: importing the CLI, rendering help, and printing the version
+# are metadata-only operations and do not own an authority operation.
 #
 # CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
 # click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
@@ -63,14 +66,30 @@ from .operator_surface_reconciliation import current_operator_surface_reconcilia
 # static duality, with no Any escape.
 def _published_modelo_codes() -> list[str]:
     """Return the identifiers admitted by the bundled published authority."""
-    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
-    return sorted(modelo.id for modelo in bundled_authority().modelos)
+    with bundled_indexed_authority().operation() as operation:
+        return sorted(operation.modelo_ids())
+
+
+class _PublishedModeloCode(click.ParamType[str]):
+    """Validate a modelo identifier against the authority at argument use."""
+
+    name = "modelo"
+
+    def convert(
+        self,
+        value: object,
+        param: click.Parameter | None,
+        ctx: click.Context | None,
+    ) -> str:
+        """Resolve the published directory only for a governed invocation."""
+        return click.Choice(_published_modelo_codes()).convert(value, param, ctx)
 
 
 MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
     typer_click_types.ParamType,
-    click.Choice(_published_modelo_codes()),
+    _PublishedModeloCode(),
 )
 
 # The application- and domain-layer symbols below are imported lazily,
@@ -92,6 +111,7 @@ if TYPE_CHECKING:
     from ...application.operator_surface.command_ports import VerbInputSchema
     from ...application.workflow.state_models import WorkflowState
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloDraft
     from ...domain.invoices.models import InvoiceCatalogue
@@ -114,9 +134,45 @@ __all__ = [
     "format_of",
     "no_active_profile_refusal",
     "notice_lines",
+    "profile_grounding_index_for_operation",
     "resolve_lifecycle_continuation_notice",
     "resolve_notice_action",
 ]
+
+
+def profile_grounding_index_for_operation(operation: PinnedAuthorityOperation):
+    """Build profile grounding from the operation's explicit revision inventory.
+
+    CLI refusal rendering needs the same legal/source unions as profile
+    preflight, but the indexed authority intentionally has no whole-model
+    object graph. Walking the bounded revision-id inventory keeps that
+    projection generation-pinned while avoiding a legacy eager authority.
+    """
+    from ...core.aggregation import BindingSourceKind
+    from ...core.modelo import Modelo
+    from ...domain.calculations.registry.profile_grounding import ProfileKeyGrounding, binding_profile_keys
+
+    modelos: dict[str, set[str]] = {}
+    legal_refs: dict[str, set[str]] = {}
+    source_refs: dict[str, set[str]] = {}
+    for modelo_id, revision_id in operation.revision_ids():
+        revision = operation.revision(modelo_id, revision_id)
+        for binding in revision.bindings:
+            if getattr(binding.source, "value", binding.source) != BindingSourceKind.PROFILE.value:
+                continue
+            for key in binding_profile_keys(binding):
+                modelos.setdefault(key, set()).add(modelo_id)
+                legal_refs.setdefault(key, set()).update(binding.legal_refs)
+                source_refs.setdefault(key, set()).update(binding.source_refs)
+    return {
+        key: ProfileKeyGrounding(
+            profile_key=key,
+            modelos=tuple(Modelo(code) for code in sorted(modelos[key])),
+            legal_refs=tuple(sorted(legal_refs[key])),
+            source_refs=tuple(sorted(source_refs[key])),
+        )
+        for key in sorted(modelos)
+    }
 
 
 REQUESTED_CLI_LEAF_META_KEY = "cadrumo.requested_cli_leaf"
@@ -873,7 +929,7 @@ def _no_active_profile_refusal() -> Exception:
         registered_profile_count=registered_profile_count,
     )
     if verdict is None:
-        raise RuntimeError("no-active-profile refusal did not produce a failed verdict")
+        raise InternalInvariantError("no-active-profile refusal did not produce a failed verdict")
     # Each branch calls tr() with a literal key so the locale scaffold's
     # static discovery can find both keys; a single tr(variable) call would
     # be invisible to that AST-literal scan and the second key would never
@@ -985,16 +1041,9 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from .errors import CliRefusedBoundaryError
 
     record = state.active_profile_record()
-    # The registry authority is reached only on this refusal path, so it is
-    # imported here rather than at module scope: `common` is loaded by the
-    # CLI bootstrap, and a module-level edge made every command -- including
-    # every state-free one -- pay for the whole calculation registry.
-    from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
-
     verdict = inspect_filing_taxpayer_identity_precondition(
         declared_tax_id=declared_tax_id(record),
         profile_name=record.profile_id if record is not None else None,
@@ -1006,7 +1055,11 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
             else None
         )
         if profile_schema is None:
-            raise RuntimeError("filing refusal requires a schema pinned to the authenticated operation")
+            raise InternalInvariantError("filing refusal requires a schema pinned to the authenticated operation")
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            grounding_index = profile_grounding_index_for_operation(operation)
         raise attach_cli_policy_verdict(
             CliRefusedBoundaryError(
                 translated_message="cli.common.errors.filing_requires_declared_tax_id",
@@ -1015,7 +1068,7 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
                         format_profile_selector_requirements(
                             [_TAX_ID_SELECTOR],
                             schema=profile_schema,
-                            grounding_index=build_profile_grounding_index(_bundled_authority()),
+                            grounding_index=grounding_index,
                         ),
                     ),
                 },

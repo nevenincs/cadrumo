@@ -107,7 +107,7 @@ def test_store_rejects_artefact_body_that_does_not_match_metadata(
     store = FiledDeclaracionObservationStore(tmp_path / "observations")
     artefact = _artefact(kind="register_row", body=b"abc", content_type="application/json")
 
-    with pytest.raises(ValueError, match="byte count"):
+    with pytest.raises(SedeValidationError, match="byte count"):
         store.persist_artefact(
             ("130", 2026, Period.from_year_and_code(2026, "1T"), "202610013522222A"), artefact, b"abcd"
         )

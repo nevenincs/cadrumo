@@ -8,11 +8,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     structurally_unroutable_iva_base_categories,
 )
 from cadrumo.domain.iva.schema import IvaCategory
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.loader import load_registry_tree
 
@@ -32,7 +32,7 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
         elif source.exists():
             shutil.copy2(source, scratch_root / catalogue_dir)
 
-    revision_id = bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id
+    revision_id = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id
     bindings_dir = scratch_root / "modelos" / "303" / "revisions" / revision_id / "bindings"
     candidates = sorted(bindings_dir.glob("*intracom-export-base*.toml"))
     assert len(candidates) == 1, f"expected exactly one intracom-export-base fragment, found {candidates}"

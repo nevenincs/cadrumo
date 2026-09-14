@@ -53,28 +53,17 @@ MAX_XML_DEPTH = 100
 under 20; 100 leaves generous headroom while still bounding a walker."""
 
 
-class EInvoiceXmlParseError(CadrumoError, ValueError):
+class EInvoiceXmlParseError(CadrumoError):
     """Raised when an e-invoice XML payload is refused at the read boundary.
 
     Deliberately a refusal rather than a partial result. A structured reader
     that returned half a record on malformed input would be worse than a model:
     it would look exact while being wrong.
 
-    Derives from BOTH bases, and each one earns its place.
-    :class:`~cadrumo.core.errors.CadrumoError` binds the class to the error
-    registry, so the refusal an operator meets carries a stable code and a
-    translated message rather than a bare traceback -- which is what a
-    read-boundary refusal of an operator-supplied file has to do.
-    ``ValueError`` is kept so a pydantic validator can still absorb it, the
-    same pairing the fixture-preparation sanitiser uses for the same reason
-    (``SanitizerValidationError``).
-
-    The alternative the hygiene gate offers -- declaring a
-    ``__bare_base_rationale__`` and staying outside the registry -- would be a
-    claim that this refusal is deliberately unregistered. That is false here:
-    it is operator-facing, it names a file the operator supplied, and there is
-    no reason it should reach them less legibly than every other refusal at
-    this boundary.
+    :class:`~cadrumo.core.errors.CadrumoError` binds the refusal to the error
+    registry, so an operator receives a stable code and translated message.
+    XML parsing is not a Pydantic callback, so the adapter raises this
+    registered type directly rather than leaking a builtin validation base.
     """
 
 

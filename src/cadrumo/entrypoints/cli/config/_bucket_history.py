@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.time.utc import coerce_utc_aware
@@ -168,12 +169,12 @@ def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context |
 
     if profile is not None:
         if ctx is None:
-            raise RuntimeError("explicit profile history target requires parsed dispatch context")
+            raise InternalInvariantError("explicit profile history target requires parsed dispatch context")
         from .._profile_authentication_gate import resolved_command_profile_target
 
         pointer = resolved_command_profile_target(ctx)
         if pointer is None:
-            raise RuntimeError("explicit profile history target was not resolved by parsed dispatch")
+            raise InternalInvariantError("explicit profile history target was not resolved by parsed dispatch")
         return pointer.label, pointer.bucket_id
     selected = resolve_active_bucket_id()
     if selected is None:

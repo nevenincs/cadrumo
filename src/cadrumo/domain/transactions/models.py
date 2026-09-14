@@ -20,7 +20,7 @@ from pydantic_core import core_schema
 
 from ...core.concepto_ingreso import ConceptoIngreso
 from ...core.decimal.constants import ONE
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
@@ -529,6 +529,7 @@ class Transaction(BaseModel):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_enum_field(cls, value: object, info: core_schema.ValidationInfo) -> object:
         """Accept a JSON-decoded enum string alongside a real enum instance.
 
@@ -679,6 +680,7 @@ class Transaction(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_derived_transaction_id(self) -> Self:
         """Validate ``transaction_id`` against the already-validated raw record."""
         if self.transaction_id != derive_transaction_id(self.raw):
@@ -697,6 +699,7 @@ class Transaction(BaseModel):
         "created_event_id",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _validate_optional_ids(cls, value: str | None) -> str | None:
         """Trim optional foreign keys while rejecting blank strings."""
         if value is None:
@@ -708,12 +711,14 @@ class Transaction(BaseModel):
 
     @field_validator("attachment_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_identifier_tuple(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Trim and freeze attachment identifiers."""
         return normalize_identifier_tuple(value)
 
     @field_validator("taxable_base", "iva_rate", "iva_amount", "recargo_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_tax_amounts(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative tax substrate values."""
         return validate_non_negative_decimal(value, field_name=info.field_name or "")
@@ -726,12 +731,14 @@ class Transaction(BaseModel):
 
     @field_validator("classified_by")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_classified_by(cls, value: str) -> str:
         """Restrict ``classified_by`` to the approved shapes."""
         return validate_classified_by_shape(value)
 
     @field_validator("classified_at", "created_at", "modified_at")
     @classmethod
+    @pydantic_validation_boundary
     def _require_aware_timestamp(cls, value: datetime | None) -> datetime | None:
         """Reject naive classification/lifecycle timestamps; ``None`` remains valid here."""
         if value is None:
@@ -740,18 +747,21 @@ class Transaction(BaseModel):
 
     @field_validator("classification_confidence")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_classification_confidence(cls, value: Decimal | None) -> Decimal | None:
         """Restrict classification_confidence to the inclusive 0..1 range when not None."""
         return validate_confidence_range(value)
 
     @field_validator("fx_rate", "value_in_eur")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_fx_fields(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative FX rate or converted amounts."""
         return validate_non_negative_decimal(value, field_name=info.field_name or "")
 
     @field_validator("source_jurisdiction")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
         """Restrict source_jurisdiction to an ISO 3166-1 alpha-2 uppercase code.
 
@@ -773,6 +783,7 @@ class Transaction(BaseModel):
 
     @field_validator("counterparty_country")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_counterparty_country(cls, value: str | None) -> str | None:
         """Restrict counterparty_country to an ISO 3166-1 alpha-2 uppercase code.
 
@@ -824,12 +835,14 @@ class Transaction(BaseModel):
             return None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling."""
         validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_exemption_article_category(self) -> Self:
         """Keep the Art. 20 discriminator coupled to domestic exempt IVA rows."""
         if self.exemption_article is not None:
@@ -842,6 +855,7 @@ class Transaction(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_art_104_tres_exclusion_is_operator_declared(self) -> Self:
         """Reject registry-declared auto-derived exclusions as transaction tags."""
         if self.art_104_tres_exclusion is None:
@@ -862,6 +876,7 @@ class Transaction(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_cash_accounting_axis(self) -> Self:
         """Keep cash-accounting timing evidence independent and complete.
 
@@ -885,6 +900,7 @@ class Transaction(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_fx_coupling(self) -> Self:
         """Enforce that fx_rate and value_in_eur are both set or both absent.
 
@@ -904,6 +920,7 @@ class Transaction(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_gross_equals_base_plus_iva_plus_recargo(self) -> Self:
         """Enforce ``gross == taxable_base + iva_amount + recargo_amount`` to the cent.
 
@@ -993,6 +1010,7 @@ class BucketTransactionRef(BaseModel):
 
     @field_validator("bucket_id", "transaction_id")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_non_blank(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
@@ -1030,6 +1048,7 @@ class TransactionCatalogue(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_catalogue_input(cls, data: object) -> object:
         """Accept either a bare mapping or an iterable of transactions."""
         if isinstance(data, cls):
@@ -1050,6 +1069,7 @@ class TransactionCatalogue(BaseModel):
         return data
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_mapping_keys(self) -> Self:
         """Ensure every mapping key matches the embedded transaction ID."""
         for key, transaction in self.transactions.items():
@@ -1161,6 +1181,7 @@ class OutOfWindowTransactionSummary(BaseModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_date_span(self) -> Self:
         if self.max_filing_date < self.min_filing_date:
             raise TransactionValidationError("out-of-window summary date span must be ordered")

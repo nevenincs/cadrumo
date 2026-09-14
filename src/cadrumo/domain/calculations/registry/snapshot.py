@@ -239,7 +239,13 @@ def build_validated_snapshot(
         check_snapshot_filing_capability(modelo, revision)
     legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
     if grade is RegistryAuthorityGrade.FILING:
-        check_snapshot_filing_review_tier(modelo, revision, catalogues, legal_ids)
+        check_snapshot_filing_review_tier(
+            modelo,
+            revision,
+            catalogues,
+            legal_ids,
+            filing_date=on or date(filing_year, 12, 31),
+        )
     _check_revision_scoped_legal_windows(modelo, revision, catalogues)
     _check_revision_scoped_source_windows(modelo, revision, catalogues)
     snapshot = RegistrySnapshot(
@@ -380,6 +386,8 @@ def _check_snapshot_legal_review_status(
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,
     legal_ids: set[str],
+    *,
+    filing_date: date,
 ) -> None:
     """Require operator review only for the legal slice a snapshot consumes."""
     failures: list[str] = []
@@ -388,7 +396,7 @@ def _check_snapshot_legal_review_status(
         if reference is None:
             continue
         try:
-            verify_legal_reference(reference)
+            verify_legal_reference(reference, filing_date=filing_date)
         except RegistryValidationError as exc:
             failures.append(str(exc))
     if failures:
@@ -403,6 +411,8 @@ def check_snapshot_filing_review_tier(
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,
     legal_ids: set[str],
+    *,
+    filing_date: date,
 ) -> RevisionReviewStatus:
     """Validate a filing snapshot's review boundary and return its weakest tier.
 
@@ -411,7 +421,7 @@ def check_snapshot_filing_review_tier(
     repeat the revision and legal-reference status predicates.
     """
     _check_snapshot_revision_review_status(modelo, revision)
-    _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids)
+    _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids, filing_date=filing_date)
     if revision.review_status is RevisionReviewStatus.AGENT_REVIEWED:
         return RevisionReviewStatus.AGENT_REVIEWED
     if any(

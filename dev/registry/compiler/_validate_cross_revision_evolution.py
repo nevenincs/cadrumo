@@ -9,7 +9,7 @@ facts with divergence evidence in its established diagnostic order.
 from __future__ import annotations
 
 from collections import defaultdict
-from itertools import pairwise
+from itertools import combinations, pairwise
 
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
@@ -64,7 +64,12 @@ def _continuity_evolution_duplicate_failures(
         )
     failures: list[str] = []
     for (continuidad_id, from_revision, to_revision), evolutions in sorted(evolutions_by_boundary.items()):
-        if len(evolutions) > 1:
+        if any(
+            not left.evolution_kind.covered_fields
+            or not right.evolution_kind.covered_fields
+            or left.evolution_kind.covered_fields & right.evolution_kind.covered_fields
+            for left, right in combinations(evolutions, 2)
+        ):
             failures.append(
                 "continuity evolution duplicate: "
                 f"modelo {modelo.id} continuidad_id {continuidad_id!r} "

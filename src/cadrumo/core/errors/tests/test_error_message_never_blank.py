@@ -24,7 +24,7 @@ import pytest
 
 from ...i18n.render import tr
 from ...identity.documents import IdentityError
-from ..error_codes import resolve_error_message
+from ..error_codes import ErrorCategory, ErrorCode, resolve_error_message
 from ..hierarchy import CadrumoError, CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -94,6 +94,23 @@ def test_explicit_message_still_wins_over_the_translation_key() -> None:
 
     assert str(error) == "explicit operator text"
     assert resolve_error_message(error) == tr(_TRANSLATION_KEY)
+
+
+def test_registry_public_message_policy_hides_positional_diagnostics() -> None:
+    """A protected registry row never exposes its raw positional diagnostic."""
+    error = CoreValidationError(r"private path C:\\profiles\\alice\\authority.db")
+    code = ErrorCode(
+        code="INTEGRITY_TEST_PUBLIC_MESSAGE_POLICY",
+        category=ErrorCategory.INTEGRITY,
+        message_key=_TRANSLATION_KEY,
+        retryable=False,
+        public_message_from_registry=True,
+        runbook_id=None,
+    )
+
+    assert str(error).startswith("private path")
+    assert resolve_error_message(error, code) == tr(_TRANSLATION_KEY)
+    assert "alice" not in resolve_error_message(error, code)
 
 
 def test_error_with_neither_message_nor_key_is_still_constructible() -> None:

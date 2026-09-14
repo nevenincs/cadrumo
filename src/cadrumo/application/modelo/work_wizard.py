@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 from ...application.flows.copy import register_copy_source
 from ...application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -254,7 +255,7 @@ class ModeloWorkWizardRun:
         current_steps = self.steps if steps is None else steps
         table = _ACTIVE_COPY_RUNS.get(self._run_token)
         if table is None:
-            raise RuntimeError("Modelo work wizard run is closed")
+            raise InternalInvariantError("Modelo work wizard run is closed")
         pages: list[FlowPage] = []
         for step in current_steps:
             prompt_ref = _copy_ref_id(self._run_token, step, "prompt")

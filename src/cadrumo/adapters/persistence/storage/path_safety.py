@@ -4,8 +4,8 @@ Shape rejection for the free-string ids persistence repositories are keyed by.
 The failure carries the registered ``PathContainmentError`` code
 (``INTEGRITY_STORAGE_PATH_CONTAINMENT``) so it lands in the standard CLI error
 envelope, callers can write a narrow ``except PathContainmentError`` rather
-than a broad ``except ValueError``, and the error still inherits from
-:class:`ValueError` so existing path-shape handlers remain correct.
+than a broad ``except ValueError``; the registered error is exposed directly
+at this adapter boundary.
 
 This module once also wrapped :func:`core.paths.resolve_relative_subpath` as
 ``safe_subpath``, the containment half of a two-layer contract. Nothing called

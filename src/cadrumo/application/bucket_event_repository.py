@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
+from ..core.errors.hierarchy import InternalInvariantError
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 
 
@@ -40,7 +41,7 @@ def bucket_event_history_repository(*, bucket_id: str) -> BucketEventHistoryRepo
     try:
         factory = _BOUND_BUCKET_EVENT_HISTORY_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("bucket event-history persistence has not been composed") from error
+        raise InternalInvariantError("bucket event-history persistence has not been composed") from error
     return factory(bucket_id=bucket_id)
 
 

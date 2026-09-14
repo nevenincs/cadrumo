@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ._revision_span_boundary_support import _boundaries_for
 from ._revision_span_design_support import _declared_revisions, _filing_revisions
@@ -50,7 +50,7 @@ def test_known_unsupported_spans_remain_detectable_and_pinned() -> None:
 def test_modelo_200_filing_request_refuses_at_the_authority_boundary() -> None:
     """The unsafe mixed-layout revision must fail before any filing bytes exist."""
     with pytest.raises(RegistryValidationError) as exc_info:
-        bundled_authority().snapshot(
+        compiled_bundled_authority().snapshot(
             "200",
             filing_year=2025,
             period="0A",

@@ -54,7 +54,12 @@ from typing import Protocol
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.decimal.constants import HUNDRED
-from ...core.errors.hierarchy import CadrumoError as _CadrumoError
+from ...core.errors.hierarchy import (
+    CadrumoError as _CadrumoError,
+)
+from ...core.errors.hierarchy import (
+    pydantic_validation_boundary as _pydantic_validation_boundary,
+)
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _quantize
@@ -83,7 +88,7 @@ class BienInversionRecordError(_CadrumoError):
     """Raised when a bien-de-inversión register record is structurally invalid."""
 
 
-class BienInversionValidationError(BienInversionRecordError, ValueError):
+class BienInversionValidationError(BienInversionRecordError):
     """Raised when a bien-de-inversión record fails Pydantic validation."""
 
 
@@ -190,6 +195,7 @@ class BienInversionIvaRecord(BaseModel):
 
     @field_validator("schema_version")
     @classmethod
+    @_pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than :data:`BIENES_INVERSION_SCHEMA_VERSION`."""
         if value != BIENES_INVERSION_SCHEMA_VERSION:
@@ -207,6 +213,7 @@ class BienInversionIvaRecord(BaseModel):
         return require_bien_inversion_kind(value)
 
     @model_validator(mode="after")
+    @_pydantic_validation_boundary
     def _validate_disposal_window(self) -> BienInversionIvaRecord:
         """A disposal year cannot precede acquisition."""
         if self.disposal is not None and self.disposal.year < self.acquisition_year:
@@ -600,6 +607,7 @@ class BienesInversionIvaRegister(BaseModel):
 
     @field_validator("schema_version")
     @classmethod
+    @_pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than :data:`BIENES_INVERSION_SCHEMA_VERSION`."""
         if value != BIENES_INVERSION_SCHEMA_VERSION:
@@ -607,6 +615,7 @@ class BienesInversionIvaRegister(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @_pydantic_validation_boundary
     def _identifiers_unique(self) -> BienesInversionIvaRegister:
         """Reject a register that carries two records with the same identifier."""
         seen = [record.identifier for record in self.records]
@@ -756,6 +765,7 @@ class RegistroRegularizacionResult(BaseModel):
     parameters_provenance: BienesInversionParameterProvenance
 
     @model_validator(mode="after")
+    @_pydantic_validation_boundary
     def _contributions_equal_casilla_43(self) -> RegistroRegularizacionResult:
         if sum((item.amount for item in self.sector_contributions), Decimal("0.00")) != self.proposed_casilla_43:
             raise BienInversionValidationError("per-asset sector contributions must equal proposed_casilla_43")
@@ -903,6 +913,7 @@ class RegistroTransmisionesResult(BaseModel):
     parameters_provenance: BienesInversionParameterProvenance
 
     @model_validator(mode="after")
+    @_pydantic_validation_boundary
     def _contributions_equal_casilla_43(self) -> RegistroTransmisionesResult:
         if sum((item.amount for item in self.sector_contributions), Decimal("0.00")) != self.proposed_casilla_43:
             raise BienInversionValidationError("per-asset sector contributions must equal proposed_casilla_43")

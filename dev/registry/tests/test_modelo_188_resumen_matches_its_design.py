@@ -25,7 +25,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.record_design import extract_record_design
 
@@ -54,7 +54,7 @@ def _summary_fields():
 
 
 def _resumen_casillas():
-    modelo = next(m for m in bundled_authority().modelos if str(m.id) == "188")
+    modelo = next(m for m in compiled_bundled_authority().modelos if str(m.id) == "188")
     revision = modelo.revisions["2023-y-siguientes"]
     return tuple(c for c in revision.casillas if "resumen" in tuple(c.section or ()))
 

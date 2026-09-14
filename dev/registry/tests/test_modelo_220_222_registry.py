@@ -6,7 +6,7 @@ See Also:
     :class:`~domain.calculations.registry.RegistryValidator`
         Registry integrity gate proving the committed Modelo 220/222 TOML is
         loadable.
-    :func:`~domain.calculations.registry.bundled_authority`
+    :func:`~domain.calculations.registry.compiled_bundled_authority`
         Deadline-window authority used for the legal plazo assertions.
     :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
         Central set these promoted IS-consolidation modelos must leave.
@@ -25,7 +25,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -80,7 +80,7 @@ _CASES = (
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_validators_accept_committed_definitions(case: _ModeloCase) -> None:
     modelo = _committed_modelo(case.modelo_id)
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     assert modelo.id == case.modelo_id
     assert modelo.revisions, f"{case.modelo_id} must declare at least one revision"
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
@@ -88,7 +88,7 @@ def test_modelo_220_222_validators_accept_committed_definitions(case: _ModeloCas
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_approval_and_plazo_resolve_as_legal_authority(case: _ModeloCase) -> None:
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     approval = catalogues.legal[case.approval_ref]
     plazo = catalogues.legal[case.plazo_ref]
     assert approval.evidence_tier == "legal_authority"
@@ -113,7 +113,7 @@ def test_modelo_220_222_deadline_provision_is_cited_by_every_window(case: _Model
 
 def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() -> None:
     """LIS art. 124.1: 25 natural days after six months from period close."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     windows = {w.id: w for _, _, w in authority.deadline_windows(2024, modelos=("220",))}
     assert "modelo-220-2024-0a" in windows
     window = windows["modelo-220-2024-0a"]
@@ -124,7 +124,7 @@ def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() 
 def test_modelo_220_2025_sources_match_the_revision_window() -> None:
     """The 2025 revision cites its own design and period-scoped approving order."""
     modelo = _committed_modelo("220")
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     revision = modelo.revisions["2025"]
 
     assert (revision.valid_from, revision.valid_to) == (date(2025, 1, 1), date(2025, 12, 31))
@@ -141,7 +141,7 @@ def test_modelo_220_2025_sources_match_the_revision_window() -> None:
             revision.valid_to,
         )
 
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         "220",
         filing_year=2025,
         period="0A",
@@ -153,7 +153,7 @@ def test_modelo_220_2025_sources_match_the_revision_window() -> None:
 
 def test_modelo_222_trimestral_windows_open_and_close_on_day_20() -> None:
     """Orden HFP/227/2017 art. 5.2: first 20 natural days of Apr/Oct/Dec."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     windows = {w.id: w for _, _, w in authority.deadline_windows(2025, modelos=("222",))}
     expected = {
         "modelo-222-2025-1p": (date(2025, 4, 1), date(2025, 4, 20)),
@@ -167,6 +167,6 @@ def test_modelo_222_trimestral_windows_open_and_close_on_day_20() -> None:
 
 
 def test_modelo_220_222_are_registry_backed() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for modelo_id in ("220", "222"):
         assert authority.modelo(modelo_id).id == modelo_id

@@ -7,7 +7,6 @@ from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.verification_report import ModeloVerificationFinding
@@ -15,7 +14,7 @@ from ...domain.modelos.verification_report import ModeloVerificationFinding
 __all__ = ["art20_reduccion_advisory_finding"]
 
 
-# fact-relocation: selected Art.20 verification declarations are consumed through RegistryQueryService and the dated mapping fact
+# fact-relocation: selected Art.20 verification declarations are consumed through the dated mapping fact
 def _registry_art20_declaration(
     revision: object,
     *,
@@ -23,7 +22,6 @@ def _registry_art20_declaration(
 ) -> ResolvedMappingFact:
     """Resolve the selected M100 surface and dated Art.20 mapping fact."""
     authority = context.authority
-    model_report = RegistryQueryService(authority).describe_modelo("100")
     effective_date = context.filing_period
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -34,7 +32,7 @@ def _registry_art20_declaration(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise TypeError("selected Art.20 declaration must resolve as a mapping fact")
-    del revision, model_report
+    del revision
     return resolved
 
 

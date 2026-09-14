@@ -30,6 +30,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_serializer, field_validator
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity.bucket import BucketId
 from ...core.identity.transaction_ids import TransactionId
@@ -793,7 +794,7 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
         str(reason)
         for reason in set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) - set(IvaLedgerAggregationIssueReason)
     )
-    raise RuntimeError(
+    raise InternalInvariantError(
         f"every IvaLedgerAggregationIssueReason must declare an OperatorActionAxis; missing={missing}; stale={stale}",
     )
 
@@ -827,7 +828,7 @@ _classified = set(_PREFLIGHT_REASON_BY_IVA_ISSUE) | set(_IVA_ISSUE_REASONS_NOT_R
 if _classified != set(IvaLedgerAggregationIssueReason):
     _unclassified = ", ".join(sorted(r.value for r in set(IvaLedgerAggregationIssueReason) - _classified))
     _stale = ", ".join(sorted(str(r) for r in _classified - set(IvaLedgerAggregationIssueReason)))
-    raise RuntimeError(
+    raise InternalInvariantError(
         "every IvaLedgerAggregationIssueReason must be classified for the ledger preflight: map it in "
         "_PREFLIGHT_REASON_BY_IVA_ISSUE if preflight can receive it, or record why it cannot in "
         f"_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT; unclassified: {_unclassified or 'none'}; "
@@ -835,19 +836,19 @@ if _classified != set(IvaLedgerAggregationIssueReason):
     )
 
 if _both := set(_PREFLIGHT_REASON_BY_IVA_ISSUE) & set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT):
-    raise RuntimeError(
+    raise InternalInvariantError(
         "an IvaLedgerAggregationIssueReason cannot be both mapped into preflight and declared unable to "
         f"reach it; on both sides: {', '.join(sorted(r.value for r in _both))}",
     )
 
 if _unmapped := _reaching_preflight - set(_PREFLIGHT_REASON_BY_IVA_ISSUE):
-    raise RuntimeError(
+    raise InternalInvariantError(
         "a preflight-facing screen emits an IvaLedgerAggregationIssueReason with no preflight counterpart; "
         f"unmapped: {', '.join(sorted(r.value for r in _unmapped))}",
     )
 
 if _detailless := IVA_LEDGER_MISSING_FACT_REASONS - set(_PREFLIGHT_DETAIL_BY_IVA_ISSUE):
-    raise RuntimeError(
+    raise InternalInvariantError(
         "a missing-fact reason reaches preflight with no detail sentence; "
         f"missing: {', '.join(sorted(r.value for r in _detailless))}",
     )

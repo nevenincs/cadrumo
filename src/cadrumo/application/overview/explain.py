@@ -38,7 +38,7 @@ from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
@@ -50,6 +50,7 @@ from ...domain.retention.floor import retention_floor_years
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 
@@ -192,7 +193,7 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
     return facts
 
 
-def _modelo_is_registered(modelo: str) -> bool:
+def _modelo_is_registered(modelo: str, *, operation: PinnedAuthorityOperation) -> bool:
     """Return whether ``modelo`` is a known modelo in the calculation registry.
 
     Distinguishes a genuinely unknown modelo identifier from a real
@@ -202,7 +203,7 @@ def _modelo_is_registered(modelo: str) -> bool:
     than crash on.
     """
     try:
-        bundled_authority().modelo(modelo)
+        operation.modelo_directory(modelo)
     except RegistrySnapshotError:
         return False
     return True
@@ -215,6 +216,7 @@ def build_overview_explain(
     year: int | None = None,
     engine: DeadlineExplanationEngine | None = None,
     today: date | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> OverviewExplain:
     """Decompose a modelo's applicability against the operator's profile.
 
@@ -243,6 +245,8 @@ def build_overview_explain(
         today: Optional reference date for out-of-plazo annotation.
             Defaults to today. Tests pass this explicitly; the CLI uses
             the real current date.
+        operation: Optional caller-held pinned authority operation. When
+            omitted, this builder opens the bundled indexed operation.
 
     Returns:
         An :class:`OverviewExplain` carrying the applicability verdict,
@@ -253,6 +257,16 @@ def build_overview_explain(
             unknown to the registry, or when the deadline engine fails
             for a reason other than a missing deadline-window dataset.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return build_overview_explain(
+                profile,
+                modelo=modelo,
+                year=year,
+                engine=engine,
+                today=today,
+                operation=indexed_operation,
+            )
     modelo_id = modelo.strip()
     if not modelo_id:
         raise OverviewExplainError(
@@ -261,7 +275,7 @@ def build_overview_explain(
     reference_today = today or today_madrid()
     resolved_year = year or reference_today.year
 
-    if not _modelo_is_registered(modelo_id):
+    if not _modelo_is_registered(modelo_id, operation=operation):
         unmodeled_description = _UNMODELED_MODELO_DESCRIPTIONS.get(modelo_id)
         if unmodeled_description is not None:
             # A recognized AEAT obligation the registry does not model: it is a
@@ -290,7 +304,7 @@ def build_overview_explain(
             },
         )
 
-    applicability = derive_modelo_applicability(profile, modelo_id)
+    applicability = derive_modelo_applicability(profile, modelo_id, operation=operation)
     # The scheduling rationale is independent of the applicability
     # verdict: it explains the filing window, not whether the taxpayer
     # owes the modelo. It is only meaningful when the registry carries

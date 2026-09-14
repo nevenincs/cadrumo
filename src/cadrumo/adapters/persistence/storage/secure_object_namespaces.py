@@ -7,6 +7,10 @@ treatment applied by the substrate for every object in that namespace.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import wraps
+from typing import TypeVar
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.classification.policies import SensitivityClass
@@ -32,6 +36,22 @@ SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
+_ValidationResultT = TypeVar("_ValidationResultT")
+
+
+def _pydantic_namespace_validator(
+    function: Callable[..., _ValidationResultT],
+) -> Callable[..., _ValidationResultT]:
+    """Translate the registered namespace refusal at Pydantic's callback edge."""
+
+    @wraps(function)
+    def wrapped(*args: object, **kwargs: object) -> _ValidationResultT:
+        try:
+            return function(*args, **kwargs)
+        except NamespaceRegistryError as exc:
+            raise ValueError(str(exc)) from exc
+
+    return wrapped
 
 
 def is_former_product_namespace(namespace: str) -> bool:
@@ -75,6 +95,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("key")
     @classmethod
+    @_pydantic_namespace_validator
     def _key_is_registry_safe(cls, value: str) -> str:
         if value != value.strip():
             raise NamespaceRegistryError("registry key must not carry surrounding whitespace")
@@ -84,6 +105,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("namespace")
     @classmethod
+    @_pydantic_namespace_validator
     def _namespace_is_sql_safe(cls, value: str) -> str:
         if value != value.strip():
             raise NamespaceRegistryError("namespace must not carry surrounding whitespace")
@@ -93,6 +115,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("default_object_key")
     @classmethod
+    @_pydantic_namespace_validator
     def _default_key_is_repository_safe(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -161,6 +184,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
             )
 
     @model_validator(mode="after")
+    @_pydantic_namespace_validator
     def _singleton_default_key_matches_grammar(self) -> SecureObjectNamespaceDefinition:
         """Keep a singleton namespace's default key equal to its declared grammar.
 
@@ -178,6 +202,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @_pydantic_namespace_validator
     def _remote_mirror_policy_is_consistent(self) -> SecureObjectNamespaceDefinition:
         if self.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:
             if not self.remote_mirror_requires_revision or not self.remote_mirror_requires_integrity_manifest:
@@ -204,6 +229,7 @@ class StorageHierarchyRegistry(BaseModel):
     paths: tuple[StoragePathDefinition, ...]
 
     @model_validator(mode="after")
+    @_pydantic_namespace_validator
     def _reject_duplicate_keys_and_namespaces(self) -> StorageHierarchyRegistry:
         namespace_keys = [item.key for item in self.namespaces]
         namespace_values = [item.namespace for item in self.namespaces]

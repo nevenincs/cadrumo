@@ -544,6 +544,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @786+17 N. Tramo 1 - Base imponible (en grupo de cooperativas resultados cooperativos) | Nota 1
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.786-802"
+continuidad_id = "base-imponible-tramo-uno"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, T22007000 campo 55: base-imponible-tramo-uno. El diseno 2025 mantiene los dos tramos de base y gravamen, precisa por nota 1 que en cooperativas son resultados cooperativos y amplia el tipo a cuatro decimales. Los resultados extracooperativos y tonelaje se declaran separadamente en los nuevos campos 59-64; la funcion del tramo identificado continua, con evolucion de rotulo y precision, no por coincidencia de posicion."
 number = "t22007000.786-802"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -552,6 +555,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @803+6 Num. Tramo 1 - Tipo de gravamen (en grupo de cooperativas resultados cooperativos) | 2 enteros, 4 decimales. Nota 1
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.803-808"
+continuidad_id = "tipo-gravamen-tramo-uno"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, T22007000 campo 56: tipo-gravamen-tramo-uno. El diseno 2025 mantiene los dos tramos de base y gravamen, precisa por nota 1 que en cooperativas son resultados cooperativos y amplia el tipo a cuatro decimales. Los resultados extracooperativos y tonelaje se declaran separadamente en los nuevos campos 59-64; la funcion del tramo identificado continua, con evolucion de rotulo y precision, no por coincidencia de posicion."
 number = "t22007000.803-808"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -561,6 +567,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @809+17 N. Tramo 2 - Base imponible (en grupo de cooperativas resultados cooperativos) | Nota 1
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.809-825"
+continuidad_id = "base-imponible-tramo-dos"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, T22007000 campo 57: base-imponible-tramo-dos. El diseno 2025 mantiene los dos tramos de base y gravamen, precisa por nota 1 que en cooperativas son resultados cooperativos y amplia el tipo a cuatro decimales. Los resultados extracooperativos y tonelaje se declaran separadamente en los nuevos campos 59-64; la funcion del tramo identificado continua, con evolucion de rotulo y precision, no por coincidencia de posicion."
 number = "t22007000.809-825"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -569,6 +578,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @826+6 Num. Tramo 2 - Tipo de gravamen (en grupo de cooperativas resultados cooperativos) | 2 enteros, 4 decimales. Nota 1
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.826-831"
+continuidad_id = "tipo-gravamen-tramo-dos"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, T22007000 campo 58: tipo-gravamen-tramo-dos. El diseno 2025 mantiene los dos tramos de base y gravamen, precisa por nota 1 que en cooperativas son resultados cooperativos y amplia el tipo a cuatro decimales. Los resultados extracooperativos y tonelaje se declaran separadamente en los nuevos campos 59-64; la funcion del tramo identificado continua, con evolucion de rotulo y precision, no por coincidencia de posicion."
 number = "t22007000.826-831"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -578,6 +590,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @832+17 N. Régimen especial entidades navieras en función del tonelaje - Base imponible | Nota 2.
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.832-848"
+continuidad_id = "tonelaje-base-imponible"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-220-2024, T22007000, termina el segundo tramo en 829 y reserva 830-979 para la Administracion. aeat-dr-220-2025 introduce el campo 59 (regimen de entidades navieras en funcion del tonelaje, base) dentro de la ampliacion 832-900, bajo las notas 2 (tonelaje, no cooperativas) y 3 (resultados extracooperativos de grupos cooperativos). El anterior diseno no declara estos campos separados: se sustituye reserva, no se hereda un concepto por posicion."
 number = "t22007000.832-848"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -586,6 +601,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @849+6 Num. Régimen especial entidades navieras en función del tonelaje - Tipo de gravamen | 2 enteros, 4 decimales. Nota 2
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.849-854"
+continuidad_id = "tonelaje-tipo-gravamen"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-220-2024, T22007000, termina el segundo tramo en 829 y reserva 830-979 para la Administracion. aeat-dr-220-2025 introduce el campo 60 (regimen de entidades navieras en funcion del tonelaje, tipo) dentro de la ampliacion 832-900, bajo las notas 2 (tonelaje, no cooperativas) y 3 (resultados extracooperativos de grupos cooperativos). El anterior diseno no declara estos campos separados: se sustituye reserva, no se hereda un concepto por posicion."
 number = "t22007000.849-854"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -595,6 +613,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @855+17 N. Tramo 1 - Base imponible (resultados extracooperativos) | Nota 3
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.855-871"
+continuidad_id = "extracooperativo-base-tramo-uno"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-220-2024, T22007000, termina el segundo tramo en 829 y reserva 830-979 para la Administracion. aeat-dr-220-2025 introduce el campo 61 (resultados extracooperativos, base tramo 1) dentro de la ampliacion 832-900, bajo las notas 2 (tonelaje, no cooperativas) y 3 (resultados extracooperativos de grupos cooperativos). El anterior diseno no declara estos campos separados: se sustituye reserva, no se hereda un concepto por posicion."
 number = "t22007000.855-871"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -603,6 +624,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @872+6 Num. Tramo 1 - Tipo de gravamen (resultados extracooperativos) | 2 enteros, 4 decimales. Nota 3
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.872-877"
+continuidad_id = "extracooperativo-tipo-tramo-uno"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-220-2024, T22007000, termina el segundo tramo en 829 y reserva 830-979 para la Administracion. aeat-dr-220-2025 introduce el campo 62 (resultados extracooperativos, tipo tramo 1) dentro de la ampliacion 832-900, bajo las notas 2 (tonelaje, no cooperativas) y 3 (resultados extracooperativos de grupos cooperativos). El anterior diseno no declara estos campos separados: se sustituye reserva, no se hereda un concepto por posicion."
 number = "t22007000.872-877"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -612,6 +636,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @878+17 N. Tramo 2 - Base imponible 2 (resultados extracooperativos) | Nota 3
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.878-894"
+continuidad_id = "extracooperativo-base-tramo-dos"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-220-2024, T22007000, termina el segundo tramo en 829 y reserva 830-979 para la Administracion. aeat-dr-220-2025 introduce el campo 63 (resultados extracooperativos, base tramo 2) dentro de la ampliacion 832-900, bajo las notas 2 (tonelaje, no cooperativas) y 3 (resultados extracooperativos de grupos cooperativos). El anterior diseno no declara estos campos separados: se sustituye reserva, no se hereda un concepto por posicion."
 number = "t22007000.878-894"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -620,6 +647,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @895+6 Num. Tramo 2 - Tipo de gravamen (resultados extracooperativos) | 2 enteros, 4 decimales. Nota 3
 [[revisions."2025".casillas]]
 id = "T22007000:t22007000.895-900"
+continuidad_id = "extracooperativo-tipo-tramo-dos"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-220-2024, T22007000, termina el segundo tramo en 829 y reserva 830-979 para la Administracion. aeat-dr-220-2025 introduce el campo 64 (resultados extracooperativos, tipo tramo 2) dentro de la ampliacion 832-900, bajo las notas 2 (tonelaje, no cooperativas) y 3 (resultados extracooperativos de grupos cooperativos). El anterior diseno no declara estos campos separados: se sustituye reserva, no se hereda un concepto por posicion."
 number = "t22007000.895-900"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -1375,6 +1405,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @16+17 N. Liquidación. Líquido a ingresar o a devolver. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2025. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02540"
+continuidad_id = "liquidacion-complementaria-resultado-anterior-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 9, [02540], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02540"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1383,6 +1416,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @33+17 Num. Liquidación. Líquido a ingresar o a devolver. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2025. D. Forales/Navarra (totales).
 [[revisions."2025".casillas]]
 id = "T22009001:02541"
+continuidad_id = "liquidacion-complementaria-resultado-anterior-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 10, [02541], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02541"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1391,6 +1427,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @50+17 Num. Liquidación. Líquido a ingresar o a devolver. Complementaria. Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2025. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02788"
+continuidad_id = "liquidacion-complementaria-devolucion-anterior-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 11, [02788], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02788"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1399,6 +1438,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @67+17 Num. Liquidación. Líquido a ingresar o a devolver. Complementaria. Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2025. D. Forales / Navarra (totales)
 [[revisions."2025".casillas]]
 id = "T22009001:02789"
+continuidad_id = "liquidacion-complementaria-devolucion-anterior-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 12, [02789], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02789"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1407,6 +1449,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @84+17 N. Liquidación. Líquido a ingresar o a devolver. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:00621"
+continuidad_id = "liquidacion-complementaria-resultado-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 13, [00621], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "00621"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1415,6 +1460,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @101+17 N. Liquidación. Líquido a ingresar o a devolver. D. Forales / Navarra
 [[revisions."2025".casillas]]
 id = "T22009001:00622"
+continuidad_id = "liquidacion-complementaria-resultado-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 14, [00622], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "00622"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1423,6 +1471,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @118+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Importe integrado en la base imponible. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02790"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-base-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 15, [02790], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02790"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1431,6 +1482,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @135+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Importe integrado en la base imponible. D. Forales / Navarra (totales)
 [[revisions."2025".casillas]]
 id = "T22009001:02791"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-base-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 16, [02791], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02791"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1439,6 +1493,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @152+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Deuda tributaria resultante del fraccionamiento art. 19,1 LIS. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02792"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-deuda-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 17, [02792], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02792"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1447,6 +1504,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @169+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Deuda tributaria resultante del fraccionamiento art. 19,1 LIS. D. Forales / Navarra (totales)
 [[revisions."2025".casillas]]
 id = "T22009001:02793"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-deuda-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 18, [02793], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02793"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1455,6 +1515,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @186+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). 1º fraccionamiento. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02794"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 19, [02794], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02794"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1463,6 +1526,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @203+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). 1º fraccionamiento. D. Forales / Navarra (totales)
 [[revisions."2025".casillas]]
 id = "T22009001:02795"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 20, [02795], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02795"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1471,6 +1537,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @220+17 N. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Resultado de la autoliquidación incluido el 1º fraccionamiento del art. 19.1 LIS. Estado.
 [[revisions."2025".casillas]]
 id = "T22009001:02796"
+continuidad_id = "liquidacion-complementaria-resultado-fraccionamiento-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 21, [02796], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02796"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1479,6 +1548,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @237+17 N. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Resultado de la autoliquidación incluido el 1º fraccionamiento del art. 19.1 LIS. Estado.
 [[revisions."2025".casillas]]
 id = "T22009001:02797"
+continuidad_id = "liquidacion-complementaria-resultado-fraccionamiento-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 22, [02797], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02797"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1487,6 +1559,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @254+17 N. Liquidación. Líquido a ingresar: Complementaria: Resultado de la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2025. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02798"
+continuidad_id = "liquidacion-complementaria-resultado-fraccionamiento-anterior-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 23, [02798], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02798"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1495,6 +1570,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @271+17 N. Liquidación. Líquido a ingresar: Complementaria: Resultado de la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2025. D. Forales / Navarra (totales)
 [[revisions."2025".casillas]]
 id = "T22009001:02799"
+continuidad_id = "liquidacion-complementaria-resultado-fraccionamiento-anterior-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 24, [02799], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02799"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1503,6 +1581,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @288+17 N. Liquidación. Líquido a ingresar. Liquido a ingresar incluido el 1º fraccionamiento del art. 19.1 LIS. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02800"
+continuidad_id = "liquidacion-complementaria-ingreso-fraccionamiento-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 25, [02800], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02800"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1511,6 +1592,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @305+17 N. Liquidación. Líquido a ingresar. Liquido a ingresar incluido el 1º fraccionamiento del art. 19.1 LIS. D. Forales / Navarra (totales)
 [[revisions."2025".casillas]]
 id = "T22009001:02801"
+continuidad_id = "liquidacion-complementaria-ingreso-fraccionamiento-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 26, [02801], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02801"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1519,6 +1603,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @322+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Abono por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL (Estado + D Forales / Navarra)
 [[revisions."2025".casillas]]
 id = "T22009001:01953"
+continuidad_id = "liquidacion-complementaria-abono-conversion-total"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 27, [01953], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "01953"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1527,6 +1614,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @339+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Abono por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL Estado
 [[revisions."2025".casillas]]
 id = "T22009001:03361"
+continuidad_id = "liquidacion-complementaria-abono-conversion-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 28, [03361], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "03361"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1535,6 +1625,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @356+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Abono por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL  D Forales / Navarra
 [[revisions."2025".casillas]]
 id = "T22009001:03362"
+continuidad_id = "liquidacion-complementaria-abono-conversion-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 29, [03362], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "03362"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1543,6 +1636,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @373+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL (Estado + D. Forales/Navarra)
 [[revisions."2025".casillas]]
 id = "T22009001:01954"
+continuidad_id = "liquidacion-complementaria-compensacion-conversion-total"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 30, [01954], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "01954"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1551,6 +1647,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @390+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL Estado
 [[revisions."2025".casillas]]
 id = "T22009001:03363"
+continuidad_id = "liquidacion-complementaria-compensacion-conversion-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 31, [03363], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "03363"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1559,6 +1658,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @407+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL  D. Forales/Navarra
 [[revisions."2025".casillas]]
 id = "T22009001:03364"
+continuidad_id = "liquidacion-complementaria-compensacion-conversion-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 32, [03364], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "03364"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1567,6 +1669,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @424+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Complementaria: Devolución acordada / compensada. Total (Estado + D. Forales / Navarra)
 [[revisions."2025".casillas]]
 id = "T22009001:02802"
+continuidad_id = "liquidacion-complementaria-devolucion-compensada-anterior-total"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 33, [02802], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02802"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1575,6 +1680,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @441+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Complementaria: Devolución acordada / compensada. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02803"
+continuidad_id = "liquidacion-complementaria-devolucion-compensada-anterior-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 34, [02803], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02803"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1583,6 +1691,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @458+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Complementaria: Devolución acordada / compensada. D. Forales / Navarra
 [[revisions."2025".casillas]]
 id = "T22009001:02804"
+continuidad_id = "liquidacion-complementaria-devolucion-compensada-anterior-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 35, [02804], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02804"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1591,6 +1702,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @475+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Abono. Total (Estado + D. Forales / Navarra)
 [[revisions."2025".casillas]]
 id = "T22009001:02805"
+continuidad_id = "liquidacion-complementaria-abono-regularizacion-total"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 36, [02805], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02805"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1599,6 +1713,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @492+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Abono. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02806"
+continuidad_id = "liquidacion-complementaria-abono-regularizacion-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 37, [02806], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02806"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1607,6 +1724,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @509+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Abono.  D. Forales / Navarra
 [[revisions."2025".casillas]]
 id = "T22009001:02807"
+continuidad_id = "liquidacion-complementaria-abono-regularizacion-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 38, [02807], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02807"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1615,6 +1735,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @526+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Compensación. Total (Estado + D. Forales / Navarra)
 [[revisions."2025".casillas]]
 id = "T22009001:02808"
+continuidad_id = "liquidacion-complementaria-compensacion-regularizacion-total"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 39, [02808], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02808"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1623,6 +1746,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @543+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Compensación. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02809"
+continuidad_id = "liquidacion-complementaria-compensacion-regularizacion-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 40, [02809], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02809"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1631,6 +1757,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @560+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Compensación.  D. Forales / Navarra
 [[revisions."2025".casillas]]
 id = "T22009001:02810"
+continuidad_id = "liquidacion-complementaria-compensacion-regularizacion-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 41, [02810], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02810"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1639,6 +1768,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @577+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. A ingresar. Total (Estado + D. Forales / Navarra)
 [[revisions."2025".casillas]]
 id = "T22009001:02811"
+continuidad_id = "liquidacion-complementaria-ingreso-regularizacion-total"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 42, [02811], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02811"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1647,6 +1779,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @594+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. A ingresar. Estado
 [[revisions."2025".casillas]]
 id = "T22009001:02812"
+continuidad_id = "liquidacion-complementaria-ingreso-regularizacion-estado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 43, [02812], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02812"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -1655,6 +1790,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @611+17 N. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. A ingresar. D. Forales / Navarra
 [[revisions."2025".casillas]]
 id = "T22009001:02813"
+continuidad_id = "liquidacion-complementaria-ingreso-regularizacion-forales"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 44, [02813], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
 number = "02813"
 segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
@@ -3268,6 +3406,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @16+1 An. Cuenta corriente tributaria | [0,1]
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.16"
+continuidad_id = "documento-ingreso-devolucion-cuenta-corriente-tributaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 9: cuenta-corriente-tributaria. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.16"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "opciones"]
@@ -3277,6 +3418,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @17+4 Num. Devengo(2) - Ejercicio.{DID_ejer} | 2025
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.17-20"
+continuidad_id = "documento-ingreso-devolucion-ejercicio"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 10: ejercicio. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.17-20"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -3286,6 +3430,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @21+1 Num. Devengo (2). Tipo de ejercicio. {DID_tipo_ejer}
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.21"
+continuidad_id = "documento-ingreso-devolucion-tipo-ejercicio"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 11: tipo-ejercicio. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.21"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -3295,6 +3442,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @22+2 An. Devengo(2). Período Impositivo {DID_periodo} | 0A
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.22-23"
+continuidad_id = "documento-ingreso-devolucion-periodo"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 12: periodo. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.22-23"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -3304,6 +3454,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @24+8 Num. Devengo (2).Período Impositivo fecha de inicio {DID_fi_periodo} (AAAAMMDD)
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.24-31"
+continuidad_id = "documento-ingreso-devolucion-fecha-inicio"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 13: fecha-inicio. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.24-31"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -3313,6 +3466,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @32+8 Num. Devengo (2). Período Impositivo fecha fin {DID_ff_periodo} (AAAAMMDD)
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.32-39"
+continuidad_id = "documento-ingreso-devolucion-fecha-fin"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 14: fecha-fin. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.32-39"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -3322,6 +3478,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @40+9 An. Identificación (1) - NIF. {DID_id_NIF}
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.40-48"
+continuidad_id = "documento-ingreso-devolucion-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 15: nif. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.40-48"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "identificacion"]
@@ -3331,6 +3490,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @49+60 An. Identificación (1) - Apellidos  o Razón Social. {DID_id_apellidos}
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.49-108"
+continuidad_id = "documento-ingreso-devolucion-apellidos-razon-social"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 16: apellidos-razon-social. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.49-108"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "identificacion"]
@@ -3340,6 +3502,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @109+20 An. Identificación (1) - Nombre {DID_id_nombre}
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.109-128"
+continuidad_id = "documento-ingreso-devolucion-nombre"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 17: nombre. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.109-128"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "identificacion"]
@@ -3382,6 +3547,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @180+1 An. Devolución (4) - Modalidad de devolución {DID_modalidad_devolucion} | [<blanco>,D,R,X]
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.180"
+continuidad_id = "documento-ingreso-devolucion-modalidad-devolucion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 21: modalidad-devolucion. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.180"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3391,6 +3559,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @181+17 Num. Devolución (4) - Importe a devolver. {DID_dev_importe}
 [[revisions."2025".casillas]]
 id = "T220DID00:D"
+continuidad_id = "documento-ingreso-devolucion-importe-devolucion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 22: importe-devolucion. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "D"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3399,6 +3570,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @198+1 Num. Devolución(4) - Marca SEPA | 0,1,2,3
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.198"
+continuidad_id = "documento-ingreso-devolucion-marca-sepa"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 23: marca-sepa. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.198"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3408,6 +3582,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @199+34 An. Devolución (4) - Código IBAN - Bloque. {DID_dev_iban}
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.199-232"
+continuidad_id = "documento-ingreso-devolucion-iban-devolucion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 24: iban-devolucion. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.199-232"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3417,6 +3594,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @233+11 An. Devolución (4) - Código SWIFT-BIC. {DID_dev_swift_bic} (sólo Resto de paises/no SEPA)
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.233-243"
+continuidad_id = "documento-ingreso-devolucion-swift-bic"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 25: swift-bic. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.233-243"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3426,6 +3606,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @244+70 An. Devolución (4) - Resto países- Banco/Name of the bank
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.244-313"
+continuidad_id = "documento-ingreso-devolucion-banco-extranjero"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 26: banco-extranjero. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.244-313"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3435,6 +3618,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @314+35 An. Devolución (4) - Resto países - Dirección del banco/Address of the bank
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.314-348"
+continuidad_id = "documento-ingreso-devolucion-direccion-banco"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 27: direccion-banco. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.314-348"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3444,6 +3630,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @349+30 An. Devolución (4) - Resto países - Ciudad/City
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.349-378"
+continuidad_id = "documento-ingreso-devolucion-ciudad-banco"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 28: ciudad-banco. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.349-378"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3453,6 +3642,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @379+40 An. Devolución (4) - Resto países - País/Country
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.379-418"
+continuidad_id = "documento-ingreso-devolucion-pais-banco"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 29: pais-banco. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.379-418"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3462,6 +3654,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @419+2 An. Devolución (5) - Resto países - Código País/Country Code
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.419-420"
+continuidad_id = "documento-ingreso-devolucion-codigo-pais-banco"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 30: codigo-pais-banco. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.419-420"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -3471,6 +3666,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @421+1 An. Ingreso (5) - Modalidad de ingreso. {DID_modalidad_ingreso} | [<blanco>,I,U]
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.421"
+continuidad_id = "documento-ingreso-devolucion-modalidad-ingreso"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 31: modalidad-ingreso. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.421"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "ingreso"]
@@ -3480,6 +3678,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @422+17 Num. Ingreso (5) - Importe a ingresar. {DID_ing_efectivo}
 [[revisions."2025".casillas]]
 id = "T220DID00:I"
+continuidad_id = "documento-ingreso-devolucion-importe-ingreso"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 32: importe-ingreso. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "I"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "ingreso"]
@@ -3488,6 +3689,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @439+34 An. Ingreso (5) - Código IBAN - Bloque. {DID_ing_iban}
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.439-472"
+continuidad_id = "documento-ingreso-devolucion-iban-ingreso"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 33: iban-ingreso. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.439-472"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "ingreso"]
@@ -3497,6 +3701,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @473+17 N. Abono/Compensación(6). Abono por conversión de activos por impuesto diferido (Art. 130 L.I.S.)
 [[revisions."2025".casillas]]
 id = "T220DID00:A"
+continuidad_id = "documento-ingreso-devolucion-abono-activos-diferidos"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 34: abono-activos-diferidos. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "A"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]
@@ -3505,6 +3712,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @490+17 N. Abono/Compensación(6). Compensación por conversión de activos por impuesto diferido (Art. 130 L.I.S.)
 [[revisions."2025".casillas]]
 id = "T220DID00:C"
+continuidad_id = "documento-ingreso-devolucion-compensacion-activos-diferidos"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 35: compensacion-activos-diferidos. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "C"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]
@@ -3546,6 +3756,9 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # @558+1 An. Cuota Cero (7). {DID_cuota_cero} | [0,1]
 [[revisions."2025".casillas]]
 id = "T220DID00:t220did00.558"
+continuidad_id = "documento-ingreso-devolucion-cuota-cero"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025, documento de ingreso o devolucion T220DID00, campo 39: cuota-cero. Los dos disenos mantienen la misma descripcion, dominio y funcion del campo; el documento solo actualiza el literal del ejercicio. La ubicacion dentro del documento de ingreso o devolucion distingue esta ocurrencia de los datos repetidos en otras paginas."
 number = "t220did00.558"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "cuota_cero"]

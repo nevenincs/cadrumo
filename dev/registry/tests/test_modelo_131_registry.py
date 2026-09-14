@@ -9,11 +9,11 @@ import pytest
 
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import LegalRefId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -109,7 +109,7 @@ def test_modelo_131_supported_year_2022_deadline_census_dates_sources_and_owners
         assert source_ref in revision.constructs[0].source_refs
         assert (bundled_path() / source.corpus_path).is_file()
 
-    projected = bundled_authority().deadline_windows(2022, modelos=("131",))
+    projected = compiled_bundled_authority().deadline_windows(2022, modelos=("131",))
     assert len(projected) == 4
     assert {window.period.registry_token for _, _, window in projected} == set(expected_2022)
 

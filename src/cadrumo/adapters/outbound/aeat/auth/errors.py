@@ -34,14 +34,12 @@ class AuthProviderCleanupError(AuthError):
     """Raised when an auth provider retains browser resources after close."""
 
 
-class AuthValidationError(AuthError, ValueError):
+class AuthValidationError(AuthError):
     """Raised when authentication parameters or field values fail domain validation.
 
-    This error inherits from both :class:`AuthError` and :class:`ValueError`,
-    ensuring compatibility with Pydantic's validator contract while remaining
-    catchable under the package's unified error hierarchy. Certificate health
-    and field-validation helpers use this class when invalid values should
-    behave like validation failures and still carry auth-domain error metadata.
+    Auth helpers raise the registered type directly. Any future Pydantic
+    callback that needs this refusal must translate it to a plain ``ValueError``
+    at that callback boundary rather than adding a builtin base here.
     """
 
 

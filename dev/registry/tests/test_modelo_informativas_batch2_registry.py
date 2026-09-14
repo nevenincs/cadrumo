@@ -16,7 +16,7 @@ See Also:
         Test loader for committed registry definitions and legal catalogues.
     :class:`~dev.registry.compiler.validator.RegistryValidator`
         Registry validator that checks the authored legal/source references.
-    :func:`~domain.calculations.registry.authority.bundled_authority`
+    :func:`~domain.calculations.registry.authority.compiled_bundled_authority`
         Authority facade used to resolve annual and monthly deadline windows.
     :class:`~core.modelo.Modelo`
         Canonical fleet membership these six informativas extend.
@@ -31,7 +31,7 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -102,7 +102,7 @@ def test_committed_definition_legal_refs_and_deadlines_are_grounded(
 
 def test_annual_january_windows_resolve() -> None:
     """165/233/156 file in January of the year following the filing year."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for mid in ("165", "156"):
         windows = {w.id: w for _, _, w in authority.deadline_windows(2024, modelos=(mid,))}
         wid = f"modelo-{mid}-2024-0a"
@@ -113,7 +113,7 @@ def test_annual_january_windows_resolve() -> None:
 
 def test_monthly_windows_resolve_following_month() -> None:
     """038/186 close on the last natural day, 185 on the 10th, of the next month."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     # January 2025 reference month -> filed in February 2025.
     for mid, close in (("038", date(2025, 2, 28)), ("185", date(2025, 2, 10))):
         windows = {str(w.period): w for _, _, w in authority.deadline_windows(2025, modelos=(mid,))}
@@ -124,6 +124,6 @@ def test_monthly_windows_resolve_following_month() -> None:
 
 
 def test_all_six_are_registry_backed() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for mid in ("165", "156", "038", "185"):
         assert authority.modelo(mid).id == mid

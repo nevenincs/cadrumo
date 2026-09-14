@@ -14,7 +14,7 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, Field, GetCoreSchemaHandler, StringConstraints, field_validator, model_validator
 from pydantic_core import CoreSchema, core_schema
 
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.filing_projection_ref import M303_MESA_FACTS, M303_REPEATING_FACTS, M303RegimenSimplificadoFact
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -93,6 +93,7 @@ class ActividadOrdenAnual(BaseModel):
     source_refs: tuple[_Token, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _kind_and_modules_are_coherent(self) -> ActividadOrdenAnual:
         if self.kind == "no_agricola" and self.iae_epigrafe is None:
             raise IvaValidationError("a non-agricultural Orden activity requires an IAE epigraph")
@@ -152,6 +153,7 @@ class IndiceTemporadaOrdenAnual(BaseModel):
     source_refs: tuple[_Token, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _range_is_ordered(self) -> IndiceTemporadaOrdenAnual:
         if self.minimum_days > self.maximum_days:
             raise IvaValidationError("an annual seasonal index day range must be ordered")
@@ -219,6 +221,7 @@ class ReduccionLorcaOrdenAnual(BaseModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _matches_registry_reduction(self) -> Self:
         from ..calculations.registry.lorca_reduction import resolve_lorca_reduction
 
@@ -323,6 +326,7 @@ class HechoActividadSimplificado(BaseModel):
     evidence_reference: FilingEvidenceReference
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_closed_fact_multiplicity(self) -> HechoActividadSimplificado:
         if self.fact in M303_MESA_FACTS and self.sub_index is None:
             raise IvaValidationError("a Mesa simplified-regime fact requires sub_index")
@@ -332,6 +336,7 @@ class HechoActividadSimplificado(BaseModel):
 
     @field_validator("value")
     @classmethod
+    @pydantic_validation_boundary
     def _value_is_present(cls, value: str | Decimal) -> str | Decimal:
         if isinstance(value, str) and not value.strip():
             raise IvaValidationError("an applicable activity fact cannot be blank")
@@ -409,6 +414,7 @@ class RegimenSimplificadoFilingRows(BaseModel):
     activities: tuple[RegimenSimplificadoActivity, ...] = Field(max_length=12)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _collection_is_ordered_and_conflict_free(self) -> RegimenSimplificadoFilingRows:
         if any(activity.ejercicio != self.ejercicio for activity in self.activities):
             raise IvaValidationError("every simplified-regime activity must match the filing year")

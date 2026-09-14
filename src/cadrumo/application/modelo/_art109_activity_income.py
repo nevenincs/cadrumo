@@ -46,6 +46,7 @@ from ...domain.transactions.volumen_ingresos import counts_toward_art_109_activi
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema_formula import ParameterDefinition
 
 # Registry-owned ratio, activity entity sets, category applicability, and source
 # references remain in canonical versioned registry/facts TOML.  The selected
@@ -67,7 +68,7 @@ def _art109_registry_declarations(
     filing_year: int,
     period: Period,
     operation: PinnedAuthorityOperation,
-) -> tuple[object, str, str]:
+) -> tuple[ParameterDefinition, str, str]:
     """Resolve the selected Art. 109 ratio and activity selectors."""
     revision = operation.revision_for_context(
         str(Modelo("130")),
@@ -200,6 +201,7 @@ def art_109_retained_income_threshold(
         filing_year: The filing year whose revision declares the parameter.
         period: The filing period, used to resolve the governing revision and
             to date-resolve the parameter value.
+        operation: Optional caller-held generation-pinned registry operation.
 
     Returns:
         The threshold as a fraction (0.70 for the 70 per 100 the article states).
@@ -236,6 +238,7 @@ def derive_art109_activity_income_coverage(
         catalogue: :class:`~domain.transactions.TransactionCatalogue`
             containing the ledger rows to classify for the target period.
         period: Filing period whose date span selects the current-payment rows.
+        operation: Optional caller-held generation-pinned registry operation.
 
     Returns:
         The proven or insufficient :class:`Art109ActivityIncomeCoverage`.
@@ -256,15 +259,21 @@ def derive_art109_activity_income_coverage(
         operation=operation,
     )
     threshold = resolve_parameter(parameter, {"filing_period": period.end_date})
-    exempt_activities = tipo_actividad_code_set(
-        exempt_selector,
-        effective_date=period.end_date,
-        authority=operation,
+    exempt_activities = frozenset(
+        TipoActividad(code)
+        for code in tipo_actividad_code_set(
+            exempt_selector,
+            effective_date=period.end_date,
+            authority=operation,
+        )
     )
-    net_of_subvenciones_activities = tipo_actividad_code_set(
-        net_selector,
-        effective_date=period.end_date,
-        authority=operation,
+    net_of_subvenciones_activities = frozenset(
+        TipoActividad(code)
+        for code in tipo_actividad_code_set(
+            net_selector,
+            effective_date=period.end_date,
+            authority=operation,
+        )
     )
     numerator = ZERO
     denominator = ZERO

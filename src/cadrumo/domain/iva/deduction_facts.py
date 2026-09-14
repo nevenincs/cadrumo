@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -34,6 +35,7 @@ class IvaDeductionClassificationProvenance(BaseModel):
 
     @field_validator("authority", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _project_authority(cls, value: object) -> IvaDeductionEvidenceAuthority:
         """Accept persisted text only after fact-0085 membership validation."""
         if isinstance(value, IvaDeductionEvidenceAuthority):

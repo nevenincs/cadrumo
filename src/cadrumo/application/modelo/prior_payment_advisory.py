@@ -11,14 +11,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "collect_prior_payment_minoracion_not_captured_diagnostics",
@@ -32,11 +35,20 @@ def _selected_registry_declaration(
     modelo: str,
     period_token: str,
     filing_year: int,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ResolvedMappingFact | None:
     """Resolve the dated declaration when it applies to the selected work scope."""
-    authority = bundled_authority()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _selected_registry_declaration(
+                revision,
+                modelo=modelo,
+                period_token=period_token,
+                filing_year=filing_year,
+                operation=indexed_operation,
+            )
     effective_date = date(filing_year, 12, 31)
-    resolved = authority.resolve_governed_fact(
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m130-prior-payment-verification-mapping",
             date_axis=DateAxis.FILING_PERIOD,
@@ -56,11 +68,11 @@ def _selected_registry_declaration(
         raise ValueError("selected prior-payment declaration lacks a revision coordinate")
     if selected_revision != str(revision.id):
         return None
-    RegistryQueryService(authority).describe_modelo_for_scope(
+    operation.revision_for_context(
         selected_modelo,
         filing_year=filing_year,
         period=period_token,
-        as_of=effective_date,
+        on=effective_date,
     )
     return resolved
 

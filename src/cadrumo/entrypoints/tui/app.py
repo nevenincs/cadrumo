@@ -19,6 +19,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Static
 
 from ...application.overview.home import HomeSessionPosture
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.operations import OperationTerminalCondition
 from .account import (
@@ -115,14 +116,14 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def destination_catalogue(self) -> TuiDestinationCatalogueV1:
         """Return the caller-composed closed catalogue for palette navigation."""
         if self._active_destination_catalogue is None:
-            raise RuntimeError("the root has no composed destination catalogue")
+            raise InternalInvariantError("the root has no composed destination catalogue")
         return self._active_destination_catalogue
 
     @property
     def workbench_search_service(self) -> WorkbenchSearchDoorV1:
         """Return the caller-composed application search door for the palette."""
         if self._workbench_search_service is None:
-            raise RuntimeError("the root has no composed workbench search service")
+            raise InternalInvariantError("the root has no composed workbench search service")
         return self._workbench_search_service
 
     @property

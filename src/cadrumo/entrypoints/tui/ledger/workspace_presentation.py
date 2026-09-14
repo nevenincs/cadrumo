@@ -8,6 +8,7 @@ from typing import ClassVar, override
 
 from textual.widgets import DataTable, Static
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
@@ -74,7 +75,7 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
 
     def _transition(self, target: LedgerFlowState) -> None:
         if target not in ALLOWED_FLOW_TRANSITIONS.get(self._flow_state, frozenset()):
-            raise RuntimeError(f"invalid {self.FLOW_NAME} flow transition")
+            raise InternalInvariantError(f"invalid {self.FLOW_NAME} flow transition")
         self._flow_state = target
 
     def _cancel_flow(self) -> None:

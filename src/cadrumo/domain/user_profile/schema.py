@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, field_val
 
 from ...core.classification.policies import SensitivityClass
 from ...core.decimal.coercion import coerce_decimal_strict
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.dates import parse_iso8601_date
@@ -151,6 +152,7 @@ class ProfileFieldDefinition(BaseModel):
 
     @field_validator("required_for_modelos", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _hydrate_required_for_modelos(cls, value: object) -> object:
         """Hydrate the free-form registry tokens into typed modelo members."""
         if isinstance(value, str):
@@ -161,7 +163,7 @@ class ProfileFieldDefinition(BaseModel):
             # unknown and each `_parse_str_enum` call would take an untyped
             # argument. The adapter proves the sequence shape instead.
             entries = _OBJECT_SEQUENCE_ADAPTER.validate_python(value)
-            return tuple(_parse_str_enum(Modelo, entry) for entry in entries)
+            return tuple(Modelo(entry) if isinstance(entry, str) else entry for entry in entries)
         return value
 
     @field_validator("sensitivity", mode="before")
@@ -171,6 +173,7 @@ class ProfileFieldDefinition(BaseModel):
 
     @field_validator("minimum", "maximum", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_decimal_bound(cls, value: object) -> object:
         if value is None or isinstance(value, Decimal):
             return value
@@ -182,6 +185,7 @@ class ProfileFieldDefinition(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_enum_values(self) -> Self:
         _validate_enum_declaration(self)
         _validate_unique_enum_values(self)
@@ -230,6 +234,7 @@ class ProfileSectionDefinition(BaseModel):
         return _parse_sensitivity(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_unique_fields(self) -> Self:
         keys = tuple(field.key for field in self.fields)
         if len(set(keys)) != len(keys):
@@ -309,6 +314,7 @@ class ProfileDerivedSelectorDefinition(BaseModel):
     legal_refs: tuple[_Description, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_pattern_compiles(self) -> Self:
         # Compile eagerly so an unknown placeholder is a schema-load failure
         # rather than a silent non-match discovered at validation time.
@@ -372,6 +378,7 @@ class ProfileSchemaDefinition(BaseModel):
         return _parse_str_enum(ProfileRemovePolicy, value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_unique_sections(self) -> Self:
         keys = tuple(section.key for section in self.sections)
         if len(set(keys)) != len(keys):

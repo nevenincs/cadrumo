@@ -20,7 +20,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
@@ -36,14 +35,11 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from ...domain.calculations.registry.schema_base import DateAxis
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
-
-if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def _retenciones_source_kind(value: object) -> BindingSourceKind:
@@ -168,11 +164,12 @@ class _RetencionesRegistryCatalogue:
 def _resolved_withholding_scheme_fact(
     effective_date: date,
     *,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ResolvedMappingFact:
     """Resolve the dated withholding-scheme mapping without a Python fallback."""
-    selected_authority = authority or bundled_authority()
-    resolved = selected_authority.resolve_governed_fact(
+    if authority is None:
+        raise ValueError("withholding-scheme resolution requires a generation-pinned governed-fact source")
+    resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m111-m115-m123-withholding-scheme-catalogue",
             date_axis=DateAxis.FILING_PERIOD,
@@ -187,7 +184,7 @@ def _resolved_withholding_scheme_fact(
 def registry_work_income_retencion_treatments(
     effective_date: date,
     *,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> Mapping[RetencionScheme, WorkIncomeRetencionTreatment]:
     """Resolve work-income treatment declarations from the dated fact mapping."""
     resolved = _resolved_withholding_scheme_fact(effective_date, authority=authority)
@@ -227,22 +224,21 @@ def registry_work_income_retencion_treatments(
     return treatments
 
 
-# Selected withholding schemes come from RegistryQueryService and the dated mapping fact.
+# Selected withholding schemes come from the pinned revision and dated mapping fact.
 def _registry_retenciones_catalogue(
     period: Period,
     *,
     modelo: str,
-    authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> _RetencionesRegistryCatalogue:
     """Resolve the selected modelo's scheme catalogue without a Python fallback."""
-    selected_authority = authority or bundled_authority()
-    RegistryQueryService(selected_authority).describe_modelo_for_scope(
+    operation.revision_for_context(
         modelo,
         filing_year=period.filing_year,
-        period=period.code,
-        as_of=period.end_date,
+        period=period.registry_token,
+        on=period.end_date,
     )
-    resolved = _resolved_withholding_scheme_fact(period.end_date, authority=selected_authority)
+    resolved = _resolved_withholding_scheme_fact(period.end_date, authority=operation)
     model_schemes: dict[str, frozenset[RetencionScheme]] = {}
     prefix = "modelo."
     suffix = ".schemes"
@@ -274,9 +270,10 @@ def _aggregate_for_modelo(
     *,
     modelo: str,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Shared per-modelo aggregation using the selected registry catalogue."""
-    registry_catalogue = _registry_retenciones_catalogue(period, modelo=modelo)
+    registry_catalogue = _registry_retenciones_catalogue(period, modelo=modelo, operation=operation)
     filtered = filter_observations_for_modelo(
         observations,
         modelo=modelo,
@@ -323,6 +320,7 @@ def aggregate_retenciones_111(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RetencionesAggregation:
     """Aggregate per (perceptor_nif, scheme) into a Modelo 111 payload.
 
@@ -332,13 +330,17 @@ def aggregate_retenciones_111(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo("111").value, period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_retenciones_111(observations, period=period, operation=indexed_operation)
+    return _aggregate_for_modelo(observations, modelo=Modelo("111").value, period=period, operation=operation)
 
 
 def aggregate_retenciones_115(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 115 (retenciones sobre arrendamiento urbano).
 
@@ -347,25 +349,33 @@ def aggregate_retenciones_115(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for Modelo 115.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo("115").value, period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_retenciones_115(observations, period=period, operation=indexed_operation)
+    return _aggregate_for_modelo(observations, modelo=Modelo("115").value, period=period, operation=operation)
 
 
 def aggregate_retenciones_123(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 123 retenciones into a :class:`RetencionesAggregation`.
 
     Covers the capital-income schemes selected by the registry.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo("123").value, period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_retenciones_123(observations, period=period, operation=indexed_operation)
+    return _aggregate_for_modelo(observations, modelo=Modelo("123").value, period=period, operation=operation)
 
 
 def aggregate_retenciones_180(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 180 (resumen anual de retenciones sobre arrendamiento urbano).
 
@@ -377,13 +387,17 @@ def aggregate_retenciones_180(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo("180").value, period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_retenciones_180(observations, period=period, operation=indexed_operation)
+    return _aggregate_for_modelo(observations, modelo=Modelo("180").value, period=period, operation=operation)
 
 
 def aggregate_retenciones_190(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 190 (resumen anual de retenciones IRPF de Modelo 111).
 
@@ -392,20 +406,27 @@ def aggregate_retenciones_190(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for the annual summary.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo("190").value, period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_retenciones_190(observations, period=period, operation=indexed_operation)
+    return _aggregate_for_modelo(observations, modelo=Modelo("190").value, period=period, operation=operation)
 
 
 def aggregate_retenciones_193(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 193 retenciones into a :class:`RetencionesAggregation`.
 
     Resumen anual de retenciones sobre capital mobiliario.
     Shares the 123 scheme catalogue.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo("193").value, period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_retenciones_193(observations, period=period, operation=indexed_operation)
+    return _aggregate_for_modelo(observations, modelo=Modelo("193").value, period=period, operation=operation)
 
 
 class RetencionesTotalsParity(BaseModel):

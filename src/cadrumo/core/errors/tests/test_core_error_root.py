@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_core_validation_error_catch_surface_is_well_defined() -> None:
-    """CoreValidationError is catchable as CoreError, CadrumoError, and ValueError."""
+    """CoreValidationError is canonical and does not impersonate ValueError."""
     assert issubclass(CoreError, CadrumoError)
 
     caught_as_core: CoreError | None = None
@@ -39,16 +39,11 @@ def test_core_validation_error_catch_surface_is_well_defined() -> None:
         caught_as_cadrumo = exc
     assert isinstance(caught_as_cadrumo, CoreError)
 
-    caught_as_value_error: ValueError | None = None
-    try:
-        raise CoreValidationError("value error arm")
-    except ValueError as exc:
-        caught_as_value_error = exc
-    assert isinstance(caught_as_value_error, CoreValidationError)
+    assert not issubclass(CoreValidationError, ValueError)
 
 
 def test_core_not_found_error_descends_from_core_error() -> None:
-    """CoreNotFoundError is a CoreError and KeyError.
+    """CoreNotFoundError is a canonical CoreError, not a KeyError alias.
 
     Non-tautological: raising CoreNotFoundError and catching it as CoreError
     proves the inheritance chain without reading the class definition.
@@ -57,7 +52,7 @@ def test_core_not_found_error_descends_from_core_error() -> None:
     """
     assert issubclass(CoreNotFoundError, CoreError)
     assert issubclass(CoreNotFoundError, CadrumoError)
-    assert issubclass(CoreNotFoundError, KeyError)
+    assert not issubclass(CoreNotFoundError, KeyError)
 
     caught_as_core: CoreError | None = None
     try:
@@ -67,17 +62,6 @@ def test_core_not_found_error_descends_from_core_error() -> None:
 
     assert caught_as_core is not None
     assert isinstance(caught_as_core, CoreNotFoundError)
-    assert isinstance(caught_as_core, KeyError)
-
-    # KeyError arm also fires for mapping-style lookup misses.
-    caught_as_key_error: KeyError | None = None
-    try:
-        raise CoreNotFoundError("key error arm")
-    except KeyError as exc:
-        caught_as_key_error = exc
-
-    assert caught_as_key_error is not None
-    assert isinstance(caught_as_key_error, CoreNotFoundError)
 
 
 def test_core_error_does_not_catch_non_core_cadrumo_error() -> None:

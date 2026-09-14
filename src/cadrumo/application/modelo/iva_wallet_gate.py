@@ -42,14 +42,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Final, NamedTuple, Never, override
+from typing import TYPE_CHECKING, Final, NamedTuple, Never, override
 
 from ...core.casilla_id import CasillaId
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period as _Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
@@ -82,6 +82,9 @@ from ..calculations.revision_carry_gate import revision_carry_outcome
 from ..user_profile.projections import profile_path_values_for_bucket as _profile_path_values_for_bucket
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _M303_PRIOR_COMPENSATION_BINDING_ID: BindingId = "modelo-303-compensacion-pendiente-anteriores"
 _M303_PRIOR_COMPENSATION_ORIGIN_IDS: Final[frozenset[str]] = frozenset(
@@ -688,10 +691,18 @@ def _registry_snapshot_for_work_unit(
     work_unit: WorkUnit,
     *,
     subject_leaf_key: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySnapshot:
     """Resolve the registry snapshot attached to ``work_unit``."""
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _registry_snapshot_for_work_unit(
+                work_unit,
+                subject_leaf_key=subject_leaf_key,
+                operation=indexed_operation,
+            )
     try:
-        return bundled_authority().snapshot(
+        return operation.snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,

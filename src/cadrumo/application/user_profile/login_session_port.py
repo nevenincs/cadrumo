@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypeGuard
 from uuid import UUID
 
+from ...core.errors.hierarchy import InternalInvariantError
+
 if TYPE_CHECKING:
     from ...core.profile_session import ProfileSessionRefusalReason
     from .login_handover import ProfileLoginHandoverJournal
@@ -298,7 +300,7 @@ def profile_login_session_port() -> ProfileLoginSessionPort:
     try:
         return _BOUND_PROFILE_LOGIN_SESSION_PORT.get()
     except LookupError as error:
-        raise RuntimeError("profile login-session infrastructure has not been composed") from error
+        raise InternalInvariantError("profile login-session infrastructure has not been composed") from error
 
 
 def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:

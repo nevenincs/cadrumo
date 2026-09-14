@@ -17,14 +17,20 @@ explicitly.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping, Set
 from decimal import Decimal
 from types import MappingProxyType
+from typing import override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import is_unit_proportion
+from ..calculations.registry.governed_fact_scope import (
+    cache_governed_projection,
+    governed_facts_in_scope,
+)
 from ..categories.registry import load_category_profiles
 from ..categories.spending_category import SpendingCategory
 from ..categories.spending_category_catalogue import require_spending_category
@@ -64,7 +70,8 @@ def validate_usage_ratio_bound(ratio: Decimal, *, label: str) -> Decimal:
     return ratio
 
 
-def _eligible_categories() -> frozenset[SpendingCategory]:
+@cache_governed_projection(maxsize=16)
+def eligible_usage_ratio_categories() -> frozenset[SpendingCategory]:
     """Return every category the shipped corpus makes eligible for a user ratio.
 
     Read from the undated corpus rather than from any resolved filing year. A
@@ -73,19 +80,40 @@ def _eligible_categories() -> frozenset[SpendingCategory]:
     framework facts that does not vary by year, so year selection would add a
     dependency this set must not have.
     """
-    return frozenset(
-        category
-        for category, profile in load_category_profiles().items()
-        if profile.proportionality.kind.is_usage_ratio
-    )
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+
+    authority = governed_facts_in_scope()
+    if not isinstance(authority, PinnedAuthorityOperation):
+        raise UsageRatioValidationError(
+            "usage-ratio eligibility requires a generation-pinned authority operation",
+        )
+    profiles = load_category_profiles(operation=authority)
+    return frozenset(category for category, profile in profiles.items() if profile.proportionality.kind.is_usage_ratio)
 
 
-ELIGIBLE_USAGE_RATIO_CATEGORIES: frozenset[SpendingCategory] = _eligible_categories()
+class _EligibleUsageRatioCategories(Set[SpendingCategory]):
+    """Read-only set view resolved lazily inside the current authority generation."""
+
+    @override
+    def __contains__(self, value: object) -> bool:
+        return value in eligible_usage_ratio_categories()
+
+    @override
+    def __iter__(self) -> Iterator[SpendingCategory]:
+        return iter(eligible_usage_ratio_categories())
+
+    @override
+    def __len__(self) -> int:
+        return len(eligible_usage_ratio_categories())
+
+
+ELIGIBLE_USAGE_RATIO_CATEGORIES: Set[SpendingCategory] = _EligibleUsageRatioCategories()
 """Categories for which a :class:`UsageRatioProfile` may carry an override.
 
-Derived at import time from the undated category-profile corpus: a
+Resolved on first use inside the calling operation's pinned generation: a
 category is eligible iff its projected proportionality kind declares the
-usage-ratio evaluator role.
+usage-ratio evaluator role. The weak-owner cache cannot retain retired
+authority generations.
 """
 
 
@@ -116,6 +144,7 @@ class UsageRatioProfile(BaseModel):
 
     @field_validator("ratios", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_bounds(cls, value: Mapping[SpendingCategory, Decimal]) -> Mapping[SpendingCategory, Decimal]:
         # Pydantic strict-mode Decimal handling rejects NaN / Infinity before this
         # validator runs (both via JSON parse and via Python constructor); the
@@ -132,6 +161,7 @@ class UsageRatioProfile(BaseModel):
         return dict(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_eligibility(self) -> UsageRatioProfile:
         invalid = tuple(category for category in self.ratios if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES)
         if invalid:

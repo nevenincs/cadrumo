@@ -26,6 +26,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_projection_ref import FilingProjectionRef
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
@@ -46,7 +47,7 @@ def _registry_m296_projection_catalogue(
     """Resolve detail-row collections from the selected registry authority."""
     authority = governed_facts_in_scope()
     if authority is None:
-        raise RuntimeError("Modelo 296 projection requires a generation-pinned authority operation")
+        raise InternalInvariantError("Modelo 296 projection requires a generation-pinned authority operation")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-296-detail-collection-mapping",

@@ -7,11 +7,11 @@ from collections.abc import Callable, Mapping
 from datetime import date as _date
 from decimal import Decimal
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.money.rounding import CENT
 from ...core.parsing.dates import parse_date
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_verification import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
@@ -28,6 +28,9 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from .action_errors import ModeloApplicabilityFilterError
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 """Predicate operator mechanics; all predicate instances come from the registry."""
 
@@ -584,16 +587,36 @@ def _selected_revision_verification_predicates(
     filing_year: int,
     period: str,
     query_service: RegistryQueryService | None = None,
+    operation: PinnedAuthorityOperation | None = None,
     as_of: _date | None = None,
 ) -> tuple[VerificationPredicateDefinition, ...]:
     """Read predicate instances from the revision selected by registry query."""
-    service = query_service or RegistryQueryService(bundled_authority())
-    revision = service._resolve_revision_for_scope(
-        modelo,
-        filing_year=filing_year,
-        period=period,
-        as_of=as_of,
-    ).revision
+    if operation is None:
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _selected_revision_verification_predicates(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                query_service=query_service,
+                operation=indexed_operation,
+                as_of=as_of,
+            )
+    if query_service is not None:
+        revision = query_service._resolve_revision_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        ).revision
+    else:
+        revision = operation.revision_for_context(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            on=as_of,
+        )
     return tuple(revision.verification_predicates)
 
 
@@ -617,6 +640,7 @@ def evaluate_verification_predicates(
     filing_year: int | None = None,
     period: str | None = None,
     query_service: RegistryQueryService | None = None,
+    operation: PinnedAuthorityOperation | None = None,
     as_of: _date | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Evaluate Layer 2 cross-casilla predicates into verification findings.
@@ -659,6 +683,7 @@ def evaluate_verification_predicates(
             filing_year=filing_year,
             period=period,
             query_service=query_service,
+            operation=operation,
             as_of=as_of,
         )
 

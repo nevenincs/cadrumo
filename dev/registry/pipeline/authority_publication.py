@@ -26,6 +26,7 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Callable, Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import partial
@@ -44,8 +45,6 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
     PublishedSourceEvidence,
-    read_authority_artifact,
-    write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.authority_store import (
     AuthorityDescriptor,
@@ -55,6 +54,7 @@ from cadrumo.domain.calculations.registry.authority_store import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
+from ..authority_json import read_authority_artifact, write_authority_artifact
 from ..compiler.authority_database import build_authority_database
 from ..compiler.authority_state import canonical_authoring_root_pair
 from ..compiler.build_identity import authority_compiler_identity
@@ -62,6 +62,7 @@ from ..compiler.corpus_provenance import classify_normative_corpus_provenance
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.legal_grounding import published_legal_evidence_text
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
+from ..compiler.profile_schema import CapturedProfileSchema, capture_profile_schema_source
 from ..compiler.source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,
@@ -194,10 +195,12 @@ def validate_authority_candidate(
     resolved_profile_schema = (
         profile_schema_path or resolved_source_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
     ).resolve(strict=True)
+    captured_profile = capture_profile_schema_source(resolved_profile_schema)
     receipt_before = _capture_receipt(
         resolved_registry_root,
         resolved_source_root,
         profile_schema_path=resolved_profile_schema,
+        captured_profile_schema=captured_profile,
     )
     identity = resolve_registry_identity(
         resolved_registry_root,
@@ -208,6 +211,7 @@ def validate_authority_candidate(
         resolved_source_root,
         identity=identity,
         profile_schema_path=resolved_profile_schema,
+        captured_profile_schema=captured_profile,
     )
     receipt_after = _capture_receipt(
         resolved_registry_root,
@@ -477,6 +481,7 @@ def _capture_receipt(
     source_root: Path,
     *,
     profile_schema_path: Path | None = None,
+    captured_profile_schema: CapturedProfileSchema | None = None,
 ) -> AuthorityPublicationReceipt:
     """Capture every mutable input the authority compiler uses for this candidate."""
     registry_identity = resolve_registry_identity(
@@ -488,10 +493,15 @@ def _capture_receipt(
         (path, hash_file(Path(path))[0]) for path, _byte_count, _modified_ns in source_evidence
     )
     profile_path = profile_schema_path or source_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
-    try:
-        profile_schema_sha256 = sha256_hex(profile_path.resolve(strict=True).read_bytes())
-    except OSError as exc:
-        raise RegistryValidationError(f"profile schema source is unavailable at {profile_path}") from exc
+    if captured_profile_schema is not None:
+        if captured_profile_schema.source_path != profile_path.resolve(strict=True):
+            raise RegistryValidationError("captured profile schema path differs from the publication input")
+        profile_schema_sha256 = sha256_hex(captured_profile_schema.payload)
+    else:
+        try:
+            profile_schema_sha256 = sha256_hex(profile_path.resolve(strict=True).read_bytes())
+        except OSError as exc:
+            raise RegistryValidationError(f"profile schema source is unavailable at {profile_path}") from exc
     source_identity_digest = content_hash_hex(
         {
             "schema": _CANDIDATE_IDENTITY_SCHEMA,
@@ -539,7 +549,7 @@ def publish_sqlite_authority_candidate(
             source_root=source_root,
             profile_schema_path=profile_schema_path,
         )
-        return install_validated_authority_database(
+        return _install_validated_authority_database(
             candidate.artifact,
             destination=resolved_destination,
             require_current=lambda: _require_candidate_receipt(candidate),
@@ -564,9 +574,30 @@ def install_validated_authority_database(
     destination: Path,
     require_current: Callable[[], None],
 ) -> AuthorityDescriptor:
-    """Install exact validated bytes and switch one descriptor only after complete traversal."""
+    """Install exact validated bytes under the destination's sole publication lock."""
     resolved_destination = destination.resolve()
     resolved_destination.mkdir(parents=True, exist_ok=True)
+    descriptor_path = resolved_destination / "authority.current.json"
+    with exclusive_file_lock(
+        descriptor_path,
+        timeout=_PUBLICATION_LOCK_TIMEOUT,
+        retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
+    ):
+        return _install_validated_authority_database(
+            artifact,
+            destination=resolved_destination,
+            require_current=require_current,
+        )
+
+
+def _install_validated_authority_database(
+    artifact: AuthorityArtifact,
+    *,
+    destination: Path,
+    require_current: Callable[[], None],
+) -> AuthorityDescriptor:
+    """Install exact validated bytes while the caller owns the publication lock."""
+    resolved_destination = destination.resolve()
     descriptor_path = resolved_destination / "authority.current.json"
     with TemporaryDirectory(prefix="authority-candidate-", dir=resolved_destination) as temporary:
         staged_database = Path(temporary) / "candidate.sqlite3"
@@ -574,36 +605,45 @@ def install_validated_authority_database(
         database_name = f"authority-{compiled.physical_sha256}.sqlite3"
         installed = resolved_destination / database_name
         payload = staged_database.read_bytes()
-        if installed.exists():
-            if (
-                installed.stat().st_size != compiled.byte_count
-                or sha256_hex(installed.read_bytes()) != compiled.physical_sha256
-            ):
-                raise RegistryValidationError(
-                    f"content-addressed authority collision at {installed}; existing bytes differ"
-                )
-        else:
-            with installed.open("xb") as handle:
-                handle.write(payload)
-                handle.flush()
-                os.fsync(handle.fileno())
-        descriptor = AuthorityDescriptor(
-            database=database_name,
-            database_size=compiled.byte_count,
-            database_sha256=compiled.physical_sha256,
-            logical_generation=compiled.logical_generation,
-        )
-        with hardened_staged_publication(descriptor_path) as publication:
-            publication.path.write_bytes(descriptor.to_bytes())
-            reader = SQLiteAuthorityReader(publication.path)
-            try:
-                with reader.lease() as pin:
-                    for query in reader.component_queries():
-                        reader.load(query, pin=pin)
-            finally:
-                reader.close()
-            require_current()
-            publication.publish()
+        created_install = False
+        descriptor_published = False
+        try:
+            if installed.exists():
+                if (
+                    installed.stat().st_size != compiled.byte_count
+                    or sha256_hex(installed.read_bytes()) != compiled.physical_sha256
+                ):
+                    raise RegistryValidationError(
+                        f"content-addressed authority collision at {installed}; existing bytes differ"
+                    )
+            else:
+                with installed.open("xb") as handle:
+                    created_install = True
+                    handle.write(payload)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+            descriptor = AuthorityDescriptor(
+                database=database_name,
+                database_size=compiled.byte_count,
+                database_sha256=compiled.physical_sha256,
+                logical_generation=compiled.logical_generation,
+            )
+            with hardened_staged_publication(descriptor_path) as publication:
+                publication.path.write_bytes(descriptor.to_bytes())
+                reader = SQLiteAuthorityReader(publication.path)
+                try:
+                    with reader.lease() as pin:
+                        for query in reader.component_queries():
+                            reader.load(query, pin=pin)
+                finally:
+                    reader.close()
+                require_current()
+                publication.publish()
+                descriptor_published = True
+        finally:
+            if created_install and not descriptor_published:
+                with suppress(OSError):
+                    installed.unlink()
         _cleanup_retired_authority_databases(
             resolved_destination,
             current_database=descriptor.database,

@@ -33,7 +33,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
@@ -41,7 +41,7 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.rescate_type import RescateType
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -58,7 +58,6 @@ from ...domain.calculations.registry.irnr_tipo_renta import (
     m210_fetch_gated_tipo_renta_codes,
     m210_tipo_renta_code_projection,
 )
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
@@ -112,6 +111,9 @@ from .work_selection import (
     select_modelo_work_resolution,
 )
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 _MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
 _MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
 _MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_inexpressible"
@@ -119,16 +121,18 @@ _MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND = "maternidad_ambiguous_relacion"
 
 
 # fact-relocation: selected calculate-input declarations are consumed through
-# RegistryQueryService and the dated mapping fact.
+# the pinned operation and the dated mapping fact.
 def _registry_calculate_input_declarations(
     work_unit: WorkUnit | None = None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ResolvedMappingFact:
     """Resolve calculate-input declarations from the selected registry mapping."""
-    authority = bundled_authority()
-    modelo = str(work_unit.modelo) if work_unit is not None else "100"
-    RegistryQueryService(authority).describe_modelo(modelo)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _registry_calculate_input_declarations(work_unit, operation=indexed_operation)
     effective_date = date(work_unit.filing_year, 12, 31) if work_unit is not None else date.today()
-    resolved = authority.resolve_governed_fact(
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-calculate-input-declarations-mapping",
             date_axis=DateAxis.FILING_PERIOD,
@@ -140,16 +144,21 @@ def _registry_calculate_input_declarations(
     return resolved
 
 
-def _registry_calculate_input_declaration(key: str, *, work_unit: WorkUnit | None = None) -> str:
+def _registry_calculate_input_declaration(
+    key: str,
+    *,
+    work_unit: WorkUnit | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+) -> str:
     """Return one nonblank calculate-input declaration from exact authority."""
-    resolved = _registry_calculate_input_declarations(work_unit)
+    resolved = _registry_calculate_input_declarations(work_unit, operation=operation)
     values = tuple(str(entry.value).strip() for entry in resolved.payload.entries if str(entry.key) == key)
     if len(values) != 1 or not values[0]:
         raise TypeError(f"calculate-input declarations must define exactly one nonblank {key!r}")
     return values[0]
 
 
-class ModeloCalculateInputError(ModeloError, ValueError):
+class ModeloCalculateInputError(ModeloError):
     """Raised when operator-supplied modelo calculation inputs are invalid."""
 
 
@@ -409,6 +418,8 @@ def _validated_string_casilla_override(
 def _resolve_casilla_overrides(
     casilla_overrides: Mapping[str, str],
     revision: ModeloRevision,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[dict[CasillaId, Decimal], dict[CasillaId, str], str | None]:
     """Resolve canonical casilla overrides onto their registry-declared channels."""
     revision_casillas_by_id = casillas_by_id(revision)
@@ -416,7 +427,7 @@ def _resolve_casilla_overrides(
     text_casilla_inputs: dict[CasillaId, str] = {}
     m210_official_tipo_renta_code: str | None = None
     for raw_key, raw_value in casilla_overrides.items():
-        _refuse_detail_casilla_override(raw_key)
+        _refuse_detail_casilla_override(raw_key, operation=operation)
         key = _validated_canonical_casilla_id(raw_key, revision)
         casilla_def = revision_casillas_by_id.get(key)
         if casilla_def is not None and registry_scalar_value_type(casilla_def.data_type) == "str":
@@ -500,6 +511,7 @@ def build_work_calculate_input_bundle(
     sal_reserva_dotada: Decimal | None = None,
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from operator-supplied tokens.
 
@@ -527,6 +539,31 @@ def build_work_calculate_input_bundle(
     translated into semantic-role casilla values or backend-owned bindings by
     :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return build_work_calculate_input_bundle(
+                work_unit_id=work_unit_id,
+                ports=ports,
+                casilla_overrides=casilla_overrides,
+                binding_overrides=binding_overrides,
+                relation_overrides=relation_overrides,
+                detail_rows=detail_rows,
+                borrador_snapshot_id=borrador_snapshot_id,
+                filing_instance_evidence=filing_instance_evidence,
+                m210_gross_income_source_mode=m210_gross_income_source_mode,
+                prestacion_inss_exenta=prestacion_inss_exenta,
+                rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
+                rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
+                rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+                rescate_plan_pensiones_tipo=rescate_plan_pensiones_tipo,
+                rescate_plan_pensiones_contingencia_year=rescate_plan_pensiones_contingencia_year,
+                rescate_plan_pensiones_rescate_year=rescate_plan_pensiones_rescate_year,
+                sal_beneficio_neto=sal_beneficio_neto,
+                sal_reserva_dotada=sal_reserva_dotada,
+                sal_capital_social=sal_capital_social,
+                autoconsumo_promotor_base=autoconsumo_promotor_base,
+                operation=indexed_operation,
+            )
     catalogue, bucket_id = _capture_work_catalogue(work_unit_id, repository=ports.work_unit_repository)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
     _validate_detail_rows(detail_rows, effective_date=date(work_unit.filing_year, 12, 31))
@@ -534,6 +571,7 @@ def build_work_calculate_input_bundle(
     casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = _resolve_casilla_overrides(
         casilla_overrides,
         revision,
+        operation=operation,
     )
     binding_values, enum_binding_values = _resolve_binding_overrides(binding_overrides, revision)
 
@@ -541,7 +579,8 @@ def build_work_calculate_input_bundle(
         work_unit=work_unit,
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
-        fact_context=_modelo_fact_context(work_unit),
+        fact_context=_modelo_fact_context(work_unit, operation=operation),
+        operation=operation,
         prestacion_inss_exenta=prestacion_inss_exenta,
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
         rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
@@ -757,9 +796,13 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
     )
 
 
-def _refuse_detail_casilla_override(key: str) -> None:
+def _refuse_detail_casilla_override(
+    key: str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> None:
     """Reject detail-row aliases before the decimal-only casilla path parses values."""
-    if not is_detail_casilla_override_key(key):
+    if not is_detail_casilla_override_key(key, operation=operation):
         return
     raise ModeloCalculateCasillaInputError(
         context={"key": key},
@@ -767,9 +810,13 @@ def _refuse_detail_casilla_override(key: str) -> None:
     )
 
 
-def is_detail_casilla_override_key(key: str) -> bool:
+def is_detail_casilla_override_key(
+    key: str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> bool:
     """Return whether *key* names a reserved detail-row alias, not a scalar casilla."""
-    declarations = _registry_calculate_input_declarations()
+    declarations = _registry_calculate_input_declarations(operation=operation)
     prefixes = tuple(
         str(entry.value).strip().lower()
         for entry in declarations.payload.entries
@@ -834,7 +881,11 @@ def _resolved_maternidad_meses(work_unit: WorkUnit) -> MaternidadMesesResolution
     return resolve_maternidad_meses(record, snapshot)
 
 
-def _maternidad_casilla_id(work_unit: WorkUnit) -> CasillaId | None:
+def _maternidad_casilla_id(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> CasillaId | None:
     """The Art. 81.1 deducción casilla for this work unit, or ``None`` when the modelo has none.
 
     The gate on the whole derived-maternidad block. Resolving the role rather
@@ -847,7 +898,11 @@ def _maternidad_casilla_id(work_unit: WorkUnit) -> CasillaId | None:
 
     return casilla_id_for_unambiguous_revision_semantic_role(
         _revision_for_work_unit(work_unit),
-        _registry_calculate_input_declaration("modelo.role.deduccion_maternidad", work_unit=work_unit),
+        _registry_calculate_input_declaration(
+            "modelo.role.deduccion_maternidad",
+            work_unit=work_unit,
+            operation=operation,
+        ),
         modelo_id=str(work_unit.modelo),
     )
 
@@ -1172,9 +1227,13 @@ def _supplied_option_group(
     return supplied
 
 
-def _maternidad_advisories(work_unit: WorkUnit) -> list[CalculationSourceDiagnostic]:
+def _maternidad_advisories(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> list[CalculationSourceDiagnostic]:
     """Raise the non-blocking advisories for the maternidad-deduction casilla."""
-    maternidad_casilla_id = _maternidad_casilla_id(work_unit)
+    maternidad_casilla_id = _maternidad_casilla_id(work_unit, operation=operation)
     if maternidad_casilla_id is None:
         return []
     maternidad = _resolved_maternidad_meses(work_unit)
@@ -1215,6 +1274,7 @@ def _pension_rescate_contributions(
     contingencia_year: int | None,
     rescate_year: int | None,
     fact_context: ModeloFactResolutionContext,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[dict[CasillaId, Decimal], list[CalculationSourceDiagnostic]]:
     """Resolve the DT 12ª pension-rescate reducción and its window advisories.
 
@@ -1241,7 +1301,12 @@ def _pension_rescate_contributions(
     )
     reduccion_casilla_id = _semantic_role_casilla_id(
         work_unit,
-        _registry_calculate_input_declaration("modelo.role.reduccion_trabajo", work_unit=work_unit),
+        _registry_calculate_input_declaration(
+            "modelo.role.reduccion_trabajo",
+            work_unit=work_unit,
+            operation=operation,
+        ),
+        operation=operation,
     )
     inject, window_advisory = _dt12_window_decision(
         reduccion=reduccion,
@@ -1271,6 +1336,7 @@ def _sal_reserva_especial_contribution(
     reserva_dotada: Decimal | None,
     capital_social: Decimal | None,
     fact_context: ModeloFactResolutionContext,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> dict[CasillaId, Decimal]:
     """Resolve the SAL reserva-especial dotación into its semantic-role casilla."""
     supplied = _supplied_option_group(
@@ -1284,7 +1350,12 @@ def _sal_reserva_especial_contribution(
     return {
         _semantic_role_casilla_id(
             work_unit,
-            _registry_calculate_input_declaration("modelo.role.sal_reserva_especial", work_unit=work_unit),
+            _registry_calculate_input_declaration(
+                "modelo.role.sal_reserva_especial",
+                work_unit=work_unit,
+                operation=operation,
+            ),
+            operation=operation,
         ): compute_sal_reserva_especial_dotacion(
             beneficio_neto=resolved_neto,
             reserva_dotada=resolved_dotada,
@@ -1311,6 +1382,7 @@ def apply_calculation_shortcut_inputs(
     sal_reserva_dotada: Decimal | None = None,
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[dict[CasillaId, Decimal], dict[BindingId, Decimal], tuple[CalculationSourceDiagnostic, ...]]:
     """Apply backend-owned tax shortcut inputs for a calculation command.
 
@@ -1343,6 +1415,26 @@ def apply_calculation_shortcut_inputs(
         :func:`cadrumo.application.modelo.semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
             Selects the unique semantic-role casilla for shortcut values.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return apply_calculation_shortcut_inputs(
+                work_unit=work_unit,
+                casilla_inputs=casilla_inputs,
+                binding_values=binding_values,
+                fact_context=fact_context,
+                prestacion_inss_exenta=prestacion_inss_exenta,
+                rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
+                rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
+                rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+                rescate_plan_pensiones_tipo=rescate_plan_pensiones_tipo,
+                rescate_plan_pensiones_contingencia_year=rescate_plan_pensiones_contingencia_year,
+                rescate_plan_pensiones_rescate_year=rescate_plan_pensiones_rescate_year,
+                sal_beneficio_neto=sal_beneficio_neto,
+                sal_reserva_dotada=sal_reserva_dotada,
+                sal_capital_social=sal_capital_social,
+                autoconsumo_promotor_base=autoconsumo_promotor_base,
+                operation=indexed_operation,
+            )
     resolved_casilla_values = dict(casilla_inputs)
     resolved_bindings = dict(binding_values)
     advisories: list[CalculationSourceDiagnostic] = []
@@ -1351,11 +1443,16 @@ def apply_calculation_shortcut_inputs(
         resolved_casilla_values[
             _semantic_role_casilla_id(
                 work_unit,
-                _registry_calculate_input_declaration("modelo.role.inss_exenta", work_unit=work_unit),
+                _registry_calculate_input_declaration(
+                    "modelo.role.inss_exenta",
+                    work_unit=work_unit,
+                    operation=operation,
+                ),
+                operation=operation,
             )
         ] = prestacion_inss_exenta
 
-    advisories.extend(_maternidad_advisories(work_unit))
+    advisories.extend(_maternidad_advisories(work_unit, operation=operation))
 
     pension_casilla_values, pension_advisories = _pension_rescate_contributions(
         work_unit=work_unit,
@@ -1366,6 +1463,7 @@ def apply_calculation_shortcut_inputs(
         contingencia_year=rescate_plan_pensiones_contingencia_year,
         rescate_year=rescate_plan_pensiones_rescate_year,
         fact_context=fact_context,
+        operation=operation,
     )
     resolved_casilla_values.update(pension_casilla_values)
     advisories.extend(pension_advisories)
@@ -1377,6 +1475,7 @@ def apply_calculation_shortcut_inputs(
             reserva_dotada=sal_reserva_dotada,
             capital_social=sal_capital_social,
             fact_context=fact_context,
+            operation=operation,
         ),
     )
 
@@ -1384,6 +1483,7 @@ def apply_calculation_shortcut_inputs(
         binding_id = _registry_calculate_input_declaration(
             "modelo.binding.autoconsumo_promotor",
             work_unit=work_unit,
+            operation=operation,
         )
         resolved_bindings[binding_id] = autoconsumo_promotor_base
 
@@ -1414,11 +1514,15 @@ def _dt12_window_verdict(
     )
 
 
-def _modelo_fact_context(work_unit: WorkUnit) -> ModeloFactResolutionContext:
+def _modelo_fact_context(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ModeloFactResolutionContext:
     """Compose the explicit filing/devengo coordinate for modelo scalar facts."""
     coordinate = date(work_unit.filing_year, 12, 31)
     return ModeloFactResolutionContext(
-        authority=bundled_authority(),
+        authority=operation,
         filing_period=coordinate,
         devengo_date=coordinate,
     )
@@ -1492,10 +1596,18 @@ def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> Calculat
     )
 
 
-def _semantic_role_casilla_id(work_unit: WorkUnit, semantic_role: str) -> CasillaId:
+def _semantic_role_casilla_id(
+    work_unit: WorkUnit,
+    semantic_role: str,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> CasillaId:
     """Resolve one semantic role from the already captured parent work unit."""
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _semantic_role_casilla_id(work_unit, semantic_role, operation=indexed_operation)
     modelo_id = str(work_unit.modelo)
-    revision = RegistryQueryService(bundled_authority()).revision_for_scope(
+    revision = operation.revision_for_context(
         modelo_id,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,

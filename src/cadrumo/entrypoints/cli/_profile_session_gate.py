@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 import typer
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.profile_session import ProfileSessionRefusalReason
 from .command_spec import CommandSpec, ProfileAuthenticationPosture
 
@@ -99,7 +100,7 @@ def _enforce_write_policy(
     if write_policy.allowed:
         return
     if write_policy.verdict is None:
-        raise RuntimeError("root write-policy refusal is missing its verdict")
+        raise InternalInvariantError("root write-policy refusal is missing its verdict")
     projection = common.project_cli_policy_refusal(requested_leaf=leaf, verdict=write_policy.verdict)
     context = {
         key: value
@@ -231,7 +232,7 @@ def _resume_or_authenticate(
     refusal = bind_resumed_profile_session(bucket_id=bucket_id)
     if refusal is None:
         if not active_bucket_session_serves(bucket_id):
-            raise RuntimeError("resumed profile session does not serve the requested target")
+            raise InternalInvariantError("resumed profile session does not serve the requested target")
         if root_selection is not None:
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused")
         if bind_exact_target:

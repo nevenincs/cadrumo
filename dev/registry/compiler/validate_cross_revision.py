@@ -295,10 +295,7 @@ def _field_coverage_components(
         nodes_by_revision[node[0]] = (*nodes_by_revision[node[0]], node)
     for revision in modelo.revisions.values():
         for evolution in revision.casilla_continuidad_evolutions:
-            if evolution.continuidad_id != continuidad_id or not _evolution_covers_field(
-                evolution.evolution_kind,
-                field,
-            ):
+            if evolution.continuidad_id != continuidad_id or field not in evolution.evolution_kind.covered_fields:
                 continue
             for left_node in nodes_by_revision[evolution.from_revision]:
                 for right_node in nodes_by_revision[evolution.to_revision]:
@@ -311,16 +308,6 @@ def _continuity_field_value(casilla: CasillaDefinition, field: str) -> object:
         return getattr(casilla, field)
     except MissingTranslationError:
         return _UNRESOLVED_LOCALIZATION
-
-
-def _evolution_covers_field(evolution_kind: str, field: str) -> bool:
-    if evolution_kind == "label_evolved":
-        return field == "label"
-    if evolution_kind == "legal_refs_evolved":
-        return field == "legal_refs"
-    if evolution_kind == "label_and_legal_refs_evolved":
-        return field in {"label", "legal_refs"}
-    return evolution_kind == "repurposed"
 
 
 def _connect_coverage_nodes(

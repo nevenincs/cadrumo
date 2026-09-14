@@ -197,6 +197,8 @@ class ProfileCapsuleLifecycle:
                 root=self.root,
                 session=record_session,
             )
+        except ProfileRecordIntegrityError:
+            raise
         except (DatabaseError, OSError, SQLAlchemyError, ValueError) as exc:
             raise ProfileRecordIntegrityError(
                 "profile lifecycle restore database fails authenticated current-record validation"

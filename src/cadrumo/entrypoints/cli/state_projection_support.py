@@ -41,6 +41,7 @@ from ...application.modelo.work_lifecycle_ports import WorkLifecyclePortsFactory
 from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFactory
 from ...application.state_projection_ports import StateProjectionReadPorts
 from ...application.user_profile.custody_ports import ProfileBucketStoragePort
+from ...core.errors.hierarchy import InternalInvariantError
 
 _STATE_PROJECTION_PORTS_KEY = "state_projection_read_ports"
 _DIAGNOSTICS_PORTS_KEY = "diagnostics_ports"
@@ -84,7 +85,7 @@ def state_projection_read_ports(ctx: typer.Context) -> StateProjectionReadPorts:
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
     value = root_state.get(_STATE_PROJECTION_PORTS_KEY)
     if not isinstance(value, StateProjectionReadPorts):
-        raise RuntimeError("state projection read ports were not composed")
+        raise InternalInvariantError("state projection read ports were not composed")
     return value
 
 
@@ -93,7 +94,7 @@ def diagnostics_ports(ctx: typer.Context) -> DiagnosticsPorts:
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
     value = root_state.get(_DIAGNOSTICS_PORTS_KEY)
     if not isinstance(value, DiagnosticsPorts):
-        raise RuntimeError("diagnostics ports were not composed")
+        raise InternalInvariantError("diagnostics ports were not composed")
     return value
 
 
@@ -108,7 +109,7 @@ def operator_probe_ports(ctx: typer.Context) -> OperatorProbePorts:
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
     value = root_state.get(_OPERATOR_PROBE_PORTS_KEY)
     if not isinstance(value, OperatorProbePorts):
-        raise RuntimeError("operator probe ports were not composed")
+        raise InternalInvariantError("operator probe ports were not composed")
     return value
 
 
@@ -117,7 +118,7 @@ def operator_scope_ports(ctx: typer.Context) -> OperatorScopePorts:
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
     value = root_state.get(_OPERATOR_SCOPE_PORTS_KEY)
     if not isinstance(value, OperatorScopePorts):
-        raise RuntimeError("operator scope ports were not composed")
+        raise InternalInvariantError("operator scope ports were not composed")
     return value
 
 

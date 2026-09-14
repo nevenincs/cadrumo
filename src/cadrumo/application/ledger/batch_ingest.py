@@ -53,6 +53,8 @@ from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdi
 
 if TYPE_CHECKING:
     from ...core.config import Settings
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.iva.regime_legend import RegimeLegend
     from ..provisioning import HardwareProfile
     from .evidence import PurchaseInvoiceEvidenceService
     from .evidence_input_ports import EvidenceDocumentShapeProbe
@@ -540,6 +542,8 @@ def run_evidence_batch(
     direction: InvoiceKind,
     evidence_ports: LedgerEvidencePorts,
     extraction_ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
     settings: Settings | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
     profile: HardwareProfile | None = None,
@@ -576,6 +580,11 @@ def run_evidence_batch(
             capabilities for this bucket.
         extraction_ports: Required invoice-draft extraction capabilities, including
             the application-owned shape probe, structured reader, and text-layer reader.
+        operation: The caller-owned pinned authority operation used for all
+            governed fact and catalogue resolution during this run. The batch
+            never opens or replaces the operation.
+        legends: Regime legends resolved by the same pinned operation and date
+            coordinate used by the extraction caller.
         settings: Resolved ``Settings``; ``load_settings()`` when omitted, so
             ``override_settings()`` is honoured.
         on_item: Called with each row as it completes, for progress reporting.
@@ -662,6 +671,8 @@ def run_evidence_batch(
                 service=service,
                 extract=extract_invoice_draft_from_evidence,
                 extraction_ports=extraction_ports,
+                operation=operation,
+                legends=legends,
                 read_draft=read_extraction_draft,
                 write_draft=write_extraction_draft,
             )
@@ -715,6 +726,8 @@ def _ingest_one_batch_item(
     service: PurchaseInvoiceEvidenceService,
     extract: Callable[..., InvoiceDraft],
     extraction_ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
     read_draft: Callable[..., StoredExtractionDraft | None],
     write_draft: Callable[..., object],
     needed_inference: bool = True,
@@ -724,6 +737,9 @@ def _ingest_one_batch_item(
     ``needed_inference`` is passed in rather than re-derived here: the shape
     probe already ran once over the bytes at planning time, and asking again
     would re-read the document and risk the two answers disagreeing.
+
+    ``operation`` and ``legends`` are supplied by the enclosing run so every
+    item uses the same caller-owned authority lease and dated resolution.
     """
     identity = batch_item_identity(content_address=content_address, direction=direction)
 
@@ -770,6 +786,8 @@ def _ingest_one_batch_item(
             evidence_id=evidence_id,
             settings=settings,
             ports=extraction_ports,
+            operation=operation,
+            legends=legends,
         )
     except Exception as exc:  # reason: an unreadable document is a refusal row, not a dead run.
         return refused(

@@ -58,6 +58,8 @@ from ...domain.deadlines.engine import classify_obligation_status as _classify_o
 from ...domain.deadlines.errors import DeadlineValidationError as _DeadlineValidationError
 from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
+from ...domain.deadlines.festivos import MODELOS_WITHOUT_SHIFT as _MODELOS_WITHOUT_SHIFT
+from ...domain.deadlines.festivos import load_holiday_calendar as _load_holiday_calendar
 from ...domain.deadlines.festivos import shift_deadline as _shift_deadline
 from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
@@ -522,19 +524,20 @@ def _calendar_event_from_notification(
     # parameter is selected at this outer application composition boundary.
     # An undelivered row has no submission coordinate, so ``as_of`` is the
     # explicit projection coordinate for the state that does not consume it.
-    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
-    facts = _DeadlineFactResolutionContext(
-        authority=bundled_authority(),
-        filing_period=as_of,
-        submission_date=row.fecha_notificacion or as_of,
-    )
-    estado_servicio = _resolve_notificacion_estado_servicio(
-        fecha_notificacion=row.fecha_notificacion,
-        leida=row.leida,
-        as_of=as_of,
-        tacit_rejection_natural_days=facts.integer("dehu-tacit-rejection-natural-days"),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        facts = _DeadlineFactResolutionContext(
+            authority=operation,
+            filing_period=as_of,
+            submission_date=row.fecha_notificacion or as_of,
+        )
+        estado_servicio = _resolve_notificacion_estado_servicio(
+            fecha_notificacion=row.fecha_notificacion,
+            leida=row.leida,
+            as_of=as_of,
+            tacit_rejection_natural_days=facts.integer("dehu-tacit-rejection-natural-days"),
+        )
     return _OverviewCalendarEvent(
         event_type=_OverviewCalendarEventType.MESSAGE,
         post_filing_kind=post_filing_kind,
@@ -796,19 +799,25 @@ def _calendar_entry_from_obligation(
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
 ) -> _OverviewCalendarEntry:
-    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     try:
-        shift = _shift_deadline(
-            obligation.closes_on,
-            modelo=obligation.modelo,
-            ccaa_code=None,
-            authority=bundled_authority(),
-        )
-        adjusted = shift.adjusted_close_date
-        reason = shift.shift_reason
-        holiday_refs = shift.holiday_refs
-        jurisdictions = shift.jurisdictions
+        with bundled_indexed_authority().operation() as operation:
+            holiday_calendar = (
+                None
+                if obligation.modelo in _MODELOS_WITHOUT_SHIFT
+                else _load_holiday_calendar(obligation.closes_on.year, operation=operation)
+            )
+            shift = _shift_deadline(
+                obligation.closes_on,
+                modelo=obligation.modelo,
+                ccaa_code=None,
+                calendar=holiday_calendar,
+            )
+            adjusted = shift.adjusted_close_date
+            reason = shift.shift_reason
+            holiday_refs = shift.holiday_refs
+            jurisdictions = shift.jurisdictions
     except _DeadlineValidationError as exc:
         _log.debug(
             "overview calendar ignored deadline shift validation error",

@@ -32,7 +32,7 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import InvalidOperation
 from enum import StrEnum
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, field_validator, model_validator
 
@@ -51,7 +51,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
     undeclared_casilla_ids,
@@ -75,6 +75,9 @@ from .m145_communication_records_ports import M145CommunicationRecordsPorts
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 _FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")
 _ISO_DATE_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
 _AEAT_DATE_PATTERN = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
@@ -90,23 +93,23 @@ class M145CommunicationServiceError(ModeloError):
     """Base error for Modelo 145 local communication service failures."""
 
 
-class M145CommunicationRecordNotFoundError(M145CommunicationServiceError, KeyError):
+class M145CommunicationRecordNotFoundError(M145CommunicationServiceError):
     """Raised when a Modelo 145 communication record lookup targets no record."""
 
 
-class M145CommunicationRecordAmbiguousError(M145CommunicationServiceError, KeyError):
+class M145CommunicationRecordAmbiguousError(M145CommunicationServiceError):
     """Raised when a Modelo 145 communication record prefix matches multiple records."""
 
 
-class M145CommunicationRecordValidationError(M145CommunicationServiceError, ValueError):
+class M145CommunicationRecordValidationError(M145CommunicationServiceError):
     """Raised when a Modelo 145 communication operation is blocked by validation."""
 
 
-class M145CommunicationRecordExportError(M145CommunicationServiceError, ValueError):
+class M145CommunicationRecordExportError(M145CommunicationServiceError):
     """Raised when a Modelo 145 communication export cannot be rendered."""
 
 
-class M145CommunicationRecordTransitionError(M145CommunicationServiceError, ValueError):
+class M145CommunicationRecordTransitionError(M145CommunicationServiceError):
     """Raised when a Modelo 145 communication state transition is not allowed."""
 
 
@@ -387,10 +390,15 @@ def m145_communication_record_object_key(bucket_id: str, communication_record_id
     return f"m145-communication:{bucket_id}:{communication_record_id}"
 
 
-def _snapshot_for_command(command: M145CommunicationCreateCommand):
+def _snapshot_for_command(
+    command: M145CommunicationCreateCommand,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+):
     return _snapshot_for_scope(
         communication_year=command.communication_year,
         period_token=command.period_token,
+        operation=operation,
     )
 
 
@@ -398,10 +406,18 @@ def _snapshot_for_scope(
     *,
     communication_year: int,
     period_token: M145CommunicationPeriod,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySnapshot:
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _snapshot_for_scope(
+                communication_year=communication_year,
+                period_token=period_token,
+                operation=indexed_operation,
+            )
     contract = build_m145_communication_service_contract(filing_year=communication_year)
 
-    snapshot = bundled_authority().snapshot(
+    snapshot = operation.snapshot(
         Modelo("145").value,
         filing_year=communication_year,
         period=period_token.value,

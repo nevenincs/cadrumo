@@ -155,8 +155,8 @@ def test_storage_error_hierarchy_unified() -> None:
     assert not issubclass(StorageCorruptionError, OutboundStorageError)
 
 
-def test_storage_validation_error_is_value_error_subclass() -> None:
-    assert issubclass(OutboundStorageValidationError, ValueError)
+def test_storage_validation_error_is_registered_not_builtin() -> None:
+    assert not issubclass(OutboundStorageValidationError, ValueError)
 
 
 def test_storage_provider_protocol_keeps_synchronous_bytes_contract() -> None:

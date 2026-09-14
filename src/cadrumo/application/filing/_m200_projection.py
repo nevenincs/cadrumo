@@ -22,6 +22,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_projection_ref import FilingProjectionRef
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -52,7 +53,7 @@ def _registry_m200_projection_catalogue(
     """Resolve row-family routes from the selected registry authority."""
     selected_authority = authority or governed_facts_in_scope()
     if selected_authority is None:
-        raise RuntimeError("Modelo 200 projection requires a generation-pinned authority operation")
+        raise InternalInvariantError("Modelo 200 projection requires a generation-pinned authority operation")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m200-projection-family-catalogue",

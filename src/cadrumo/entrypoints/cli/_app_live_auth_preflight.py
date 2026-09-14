@@ -11,6 +11,7 @@ from ...application.auth.operator import build_live_auth_preflight_report
 from ...application.auth.operator_probe_ports import OperatorProbePorts
 from ...application.auth.operator_results import LiveAuthPreflightReport
 from ...application.auth.operator_scope_ports import OperatorScopePorts
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.redaction.rules import redact_for_cli_output
 
 
@@ -26,7 +27,7 @@ def resolve_active_bucket(active_bucket_id: Callable[[], str] | None, *, family:
     declared an identical guard differing only in the family name.
     """
     if active_bucket_id is None:
-        raise RuntimeError(f"live {family} commands were not registered")
+        raise InternalInvariantError(f"live {family} commands were not registered")
     return active_bucket_id()
 
 

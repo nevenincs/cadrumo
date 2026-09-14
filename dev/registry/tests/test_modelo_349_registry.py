@@ -12,7 +12,6 @@ from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings, resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -23,6 +22,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from cadrumo.tests.inventory import REPO_ROOT
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_file
 from ..compiler.legal_grounding import verify_legal_catalogue
@@ -487,7 +487,7 @@ def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_p
             if window.closes_on.year <= 2026:
                 assert f"aeat-calendario-contribuyente-{window.closes_on.year}" in window.source_refs
 
-        projected = bundled_authority().deadline_windows(filing_year, modelos=("349",))
+        projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("349",))
         assert len(projected) == 16
         assert {window.period.registry_token for _, _, window in projected} == expected_periods
         assert {owner.id for _, owner, _ in projected} == {revision.id}

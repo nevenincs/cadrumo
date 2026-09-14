@@ -5,6 +5,7 @@ Rows map core exception qualnames to stable
 """
 
 from ..error_codes import ErrorCategory, ErrorCode
+from ._core_part2 import DECLARED_ERROR_CODES as _CORE_PART2_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
@@ -44,6 +45,27 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_cadrumo_core",
             retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.errors.hierarchy.InternalInvariantError",
+        ErrorCode(
+            code="INTERNAL_INVARIANT",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_internal_invariant",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.config_state_root.FormerProductStateError",
+        ErrorCode(
+            code="REFUSED_FORMER_PRODUCT_STATE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            public_message_from_registry=True,
             runbook_id=None,
         ),
     ),
@@ -427,4 +449,5 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    *_CORE_PART2_CODES,
 )

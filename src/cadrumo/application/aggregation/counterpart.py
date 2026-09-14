@@ -19,7 +19,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
@@ -32,15 +31,11 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
 from ...core.period import FilingPeriodCode, Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.m347_threshold import m347_declarable_party_ids
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
-
-if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def _validate_source_kind(value: str) -> CounterpartSourceKind:
@@ -61,18 +56,19 @@ class _CounterpartRegistryCatalogue:
         return frozenset().union(*self.model_kinds.values())
 
 
-# fact-relocation: selected M347/M349 counterpart declarations are consumed through RegistryQueryService and the dated mapping fact
+# fact-relocation: selected M347/M349 counterpart declarations are consumed through
+# one generation-pinned operation and the dated mapping fact.
 def _registry_counterpart_catalogue(
     effective_date: date,
     *,
-    authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> _CounterpartRegistryCatalogue:
     """Resolve counterpart kinds and readiness gates from registry authority."""
-    selected_authority = authority or bundled_authority()
-    query_service = RegistryQueryService(selected_authority)
-    query_service.describe_modelo(Modelo("347").value, as_of=effective_date)
-    query_service.describe_modelo(Modelo("349").value, as_of=effective_date)
-    resolved = selected_authority.resolve_governed_fact(
+    for modelo in (Modelo("347").value, Modelo("349").value):
+        directory = operation.modelo_directory(modelo)
+        if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
+            raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m347-m349-counterpart-operation-catalogue",
             date_axis=DateAxis.FILING_PERIOD,
@@ -115,11 +111,14 @@ def _registry_counterpart_catalogue(
 
 
 def _validate_operation_kind(value: str) -> str:
-    """Refuse an operation token absent from the selected registry vocabulary."""
-    catalogue = _registry_counterpart_catalogue(date.today())
-    if value not in catalogue.operation_kinds:
-        accepted = ", ".join(sorted(catalogue.operation_kinds))
-        raise ValueError(f"operation_kind must be a declared 347/349 clave, got {value!r}; accepted: {accepted}")
+    """Validate the operation token's boundary shape.
+
+    Registry membership is checked at the aggregation boundary, where the
+    caller supplies the pinned operation. Pydantic construction has no safe
+    authority-generation input and must not reopen a global catalogue.
+    """
+    if not value.strip():
+        raise ValueError("operation_kind must not be blank")
     return value
 
 
@@ -248,8 +247,17 @@ def _aggregate_for_modelo(
     *,
     modelo: str,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> CounterpartAggregation:
-    registry_catalogue = _registry_counterpart_catalogue(period.end_date)
+    registry_catalogue = _registry_counterpart_catalogue(period.end_date, operation=operation)
+    unsupported = sorted(
+        {observation.operation_kind for observation in observations}
+        - registry_catalogue.model_kinds.get(modelo, frozenset())
+    )
+    if unsupported:
+        raise ValueError(
+            f"operation_kind is not declared for modelo {modelo}: {', '.join(unsupported)}",
+        )
     filtered = filter_observations_for_modelo(
         observations,
         modelo=modelo,
@@ -324,6 +332,7 @@ def aggregate_counterpart_347(
     observations: tuple[CounterpartObservation, ...],
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> CounterpartAggregation:
     """Aggregate Modelo 347 (operaciones con terceros, annual).
 
@@ -333,13 +342,22 @@ def aggregate_counterpart_347(
 
     Returns a :class:`CounterpartAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo("347").value, period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_counterpart_347(observations, period=period, operation=indexed_operation)
+    return _aggregate_for_modelo(
+        observations,
+        modelo=Modelo("347").value,
+        period=period,
+        operation=operation,
+    )
 
 
 def aggregate_counterpart_349(
     observations: tuple[CounterpartObservation, ...],
     *,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> CounterpartAggregation:
     """Aggregate Modelo 349 (operaciones intracomunitarias).
 
@@ -351,7 +369,15 @@ def aggregate_counterpart_349(
     Returns a :class:`CounterpartAggregation` with rollups sorted by
     ``(source_kind, counterparty_nif, operation_kind)``.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo("349").value, period=period)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_counterpart_349(observations, period=period, operation=indexed_operation)
+    return _aggregate_for_modelo(
+        observations,
+        modelo=Modelo("349").value,
+        period=period,
+        operation=operation,
+    )
 
 
 def _counterpart_readiness_for_modelo(
@@ -384,17 +410,30 @@ def _counterpart_readiness_for_modelo(
     }
 
 
-def declarable_counterparty_nifs_347(aggregation: CounterpartAggregation) -> frozenset[str]:
+def declarable_counterparty_nifs_347(
+    aggregation: CounterpartAggregation,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> frozenset[str]:
     """Return counterparties whose full Modelo 347 total exceeds the declaration floor."""
     totals: dict[str, Decimal] = {}
     for rollup in aggregation.rollups:
         totals[rollup.counterparty_nif] = totals.get(rollup.counterparty_nif, Decimal("0")) + rollup.total_invoice_total
-    return m347_declarable_party_ids(totals, effective_date=aggregation.period.end_date)
+    return m347_declarable_party_ids(
+        totals,
+        effective_date=aggregation.period.end_date,
+        authority=operation,
+    )
 
 
-def declarable_for_347(aggregation: CounterpartAggregation, *, counterparty_nif: str) -> bool:
+def declarable_for_347(
+    aggregation: CounterpartAggregation,
+    *,
+    counterparty_nif: str,
+    operation: PinnedAuthorityOperation | None = None,
+) -> bool:
     """Return True iff a counterparty exceeds the 347 declaration floor across all cohorts."""
-    return counterparty_nif in declarable_counterparty_nifs_347(aggregation)
+    return counterparty_nif in declarable_counterparty_nifs_347(aggregation, operation=operation)
 
 
 __all__ = [

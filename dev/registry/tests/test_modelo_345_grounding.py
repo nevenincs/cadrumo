@@ -8,9 +8,9 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import shift_deadline
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue
@@ -45,7 +45,7 @@ _M345_SOURCE_REFS = {
 
 
 def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("345")
     revision = modelo.revisions["2025"]
 
@@ -103,7 +103,7 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
 
 
 def test_modelo_345_additional_data_subfields_follow_official_record_design() -> None:
-    revision = bundled_authority().modelo("345").revisions["2025"]
+    revision = compiled_bundled_authority().modelo("345").revisions["2025"]
     casillas = {str(casilla.id): casilla for casilla in revision.casillas}
 
     expected = (

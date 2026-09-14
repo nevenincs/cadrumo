@@ -199,6 +199,8 @@ def inherit_keyed_family(
             period_scoped=period_scoped,
         ),
         inherited=inherited,
+        inherited_casillas=(),
+        successor_casillas=(),
         successor=successor,
     )
 

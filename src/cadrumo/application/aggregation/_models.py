@@ -26,6 +26,7 @@ from pydantic import (
 )
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
@@ -185,6 +186,7 @@ class LedgerAggregationResultBase(BaseModel, Generic[ObservationT, IssueT]):  # 
         return tuple(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_casilla_period(self) -> Self:
         """Refuse a ``casilla_aggregation`` whose modelo/period drifts from the envelope's own."""
         if self.casilla_aggregation.modelo != self.modelo:

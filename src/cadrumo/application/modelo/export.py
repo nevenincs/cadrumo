@@ -76,7 +76,7 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
@@ -660,11 +660,12 @@ def _resolve_m303_export_arrivals(
     BienesInversionRegularizacionParameters,
 ]:
     """Assemble current canonical register arrivals from the work-unit-bound register."""
-    snapshot = bundled_authority().snapshot(
-        Modelo("303").value,
-        filing_year=period.filing_year,
-        period=period.registry_token,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot(
+            Modelo("303").value,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
     if prorrata_register.is_sectorized:
         apportionment = iva_aggregation.prorrata_apportionment
         if apportionment is None or not apportionment.sector_apportionments:

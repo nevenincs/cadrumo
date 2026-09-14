@@ -123,11 +123,11 @@ class PortalIntegrityError(PortalRegistryError):
     """
 
 
-class PortalValidationError(PortalRegistryError, ValueError):
+class PortalValidationError(PortalRegistryError):
     """Raised when portal metadata violates state or shape invariants.
 
-    Inherits from ValueError to maintain compatibility with Pydantic
-    validators.
+    Pydantic validators translate this registered failure to ``ValueError``
+    at their narrow protocol boundary.
     """
 
 

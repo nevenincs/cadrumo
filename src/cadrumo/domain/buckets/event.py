@@ -19,6 +19,7 @@ from typing import Annotated, Final, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -388,6 +389,7 @@ class BucketEvent(BaseModel):
     payload: Mapping[_PayloadKey, _PayloadValue] = Field(default_factory=dict)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_derived_id(self) -> BucketEvent:
         derived = derive_bucket_event_id(
             bucket_id=self.bucket_id,
@@ -439,6 +441,7 @@ class BucketEventHistoryCatalogue(BaseModel):
     events: Mapping[str, BucketEvent] = Field(default_factory=dict)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_keys_match(self) -> BucketEventHistoryCatalogue:
         for key, event in self.events.items():
             if key != event.event_id:

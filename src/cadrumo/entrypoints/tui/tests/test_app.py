@@ -16,6 +16,7 @@ from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.login_session import ProfileLoginOutcome
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
 from ..account import (
@@ -247,9 +248,9 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
         assert app.query_one("#root-account", Static).render() == "Expired profile"
         assert app._active_target is None
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
-        with pytest.raises(RuntimeError, match="no composed destination"):
+        with pytest.raises(InternalInvariantError, match="no composed destination"):
             _ = app.destination_catalogue
-        with pytest.raises(RuntimeError, match="no composed workbench search"):
+        with pytest.raises(InternalInvariantError, match="no composed workbench search"):
             _ = app.workbench_search_service
 
 
@@ -269,9 +270,9 @@ async def test_expired_custody_refresh_recomposes_without_rendering_a_stale_root
 
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         assert app._account_factories is None
-        with pytest.raises(RuntimeError, match="no composed destination"):
+        with pytest.raises(InternalInvariantError, match="no composed destination"):
             _ = app.destination_catalogue
-        with pytest.raises(RuntimeError, match="no composed workbench search"):
+        with pytest.raises(InternalInvariantError, match="no composed workbench search"):
             _ = app.workbench_search_service
 
 
@@ -400,9 +401,9 @@ async def test_change_user_returns_typed_identity_and_revokes_old_profile_root()
             profile_label="Profile two",
         )
         assert app._account_factories is None
-        with pytest.raises(RuntimeError, match="no composed destination"):
+        with pytest.raises(InternalInvariantError, match="no composed destination"):
             _ = app.destination_catalogue
-        with pytest.raises(RuntimeError, match="no composed workbench search"):
+        with pytest.raises(InternalInvariantError, match="no composed workbench search"):
             _ = app.workbench_search_service
 
 
@@ -433,9 +434,9 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
 
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)
         assert app._account_factories is None
-        with pytest.raises(RuntimeError, match="no composed destination"):
+        with pytest.raises(InternalInvariantError, match="no composed destination"):
             _ = app.destination_catalogue
-        with pytest.raises(RuntimeError, match="no composed workbench search"):
+        with pytest.raises(InternalInvariantError, match="no composed workbench search"):
             _ = app.workbench_search_service
 
 
@@ -465,7 +466,7 @@ async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_lo
         await pilot.pause()
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
         assert app._account_factories is None
-        with pytest.raises(RuntimeError, match="no composed destination"):
+        with pytest.raises(InternalInvariantError, match="no composed destination"):
             _ = app.destination_catalogue
 
 

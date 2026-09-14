@@ -9,7 +9,12 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..compiler.profile_schema import capture_profile_schema, parse_captured_profile_schema
+from ..compiler.profile_schema import (
+    capture_profile_schema,
+    capture_profile_schema_source,
+    parse_captured_profile_schema,
+    validate_captured_profile_schema,
+)
 from ..pipeline.authority_publication import authority_candidate_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -69,3 +74,17 @@ def test_profile_source_bytes_participate_in_candidate_identity(tmp_path: Path) 
     profile.write_bytes(_SCHEMA.replace(b"Synthetic profile schema", b"Changed synthetic profile schema"))
 
     assert authority_candidate_identity(**inputs) != before
+
+
+def test_captured_profile_source_survives_a_to_b_to_a_path_mutation(tmp_path: Path) -> None:
+    """Typing and identity consume the same immutable A bytes despite transient path edits."""
+    profile = tmp_path / "schema.toml"
+    profile.write_bytes(_SCHEMA)
+    captured = capture_profile_schema_source(profile)
+    profile.write_bytes(_SCHEMA.replace(b"Synthetic profile schema", b"Transient schema B"))
+    profile.write_bytes(_SCHEMA)
+
+    typed = validate_captured_profile_schema(captured, legal_reference_ids=frozenset({"law:one"}))
+
+    assert captured.payload == _SCHEMA
+    assert typed.title == "Synthetic profile schema"

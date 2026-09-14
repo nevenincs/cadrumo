@@ -47,7 +47,7 @@ import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel
 
@@ -56,13 +56,12 @@ from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import CENT, round_to_cents
 from ....core.text_fold import fold_diacritics
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from ....domain.notifications.sancion import SancionLiquidacion
 from ..pdf.label_regex import parse_spanish_decimal
 from .errors import SancionArithmeticError, SancionParseError
-
-if TYPE_CHECKING:
-    from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 _STRICT_PERCENTAGE_RE: Final[re.Pattern[str]] = re.compile(r"^\d{1,3}(?:,\d{1,2})?$")
 """Anchored percentage shape, comma-decimal, at most two decimals."""
@@ -122,7 +121,7 @@ _TEXT_VALIDATORS: Final[Mapping[str, re.Pattern[str]]] = {
 def _resolved_sanction_reduction_labels(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource,
 ) -> Mapping[str, tuple[str, ...]]:
     """Build reduction-label variants from the selected art. 188 fact.
 
@@ -131,15 +130,13 @@ def _resolved_sanction_reduction_labels(
     temporally unresolved declarations refuse parsing instead of falling back
     to a locally remembered reduction percentage.
     """
-    from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
     from ....domain.calculations.registry.schema_base import DateAxis
 
     if not isinstance(effective_date, date):
         raise SancionParseError("sanction reduction facts require an effective date")
-    selected_authority = authority or bundled_authority()
     try:
-        resolved = selected_authority.resolve_governed_fact(
+        resolved = authority.resolve_governed_fact(
             MappingFactQuery(
                 fact_id=_SANCTION_REDUCTION_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
@@ -384,7 +381,7 @@ def parse_sancion_document(
     certificado_id: str,
     document_sha256: str,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: PinnedAuthorityOperation | None = None,
 ) -> SancionLiquidacion:
     """Parse the extracted text of one AEAT sanción / liquidación PDF.
 
@@ -398,9 +395,9 @@ def parse_sancion_document(
         effective_date: Filing-period coordinate used to resolve the statutory
             sanction reductions. When the document surface carries no reliable
             legal coordinate, the current date is used by the direct reader.
-        authority: Optional already-validated facts authority. Omitted callers
-            use the bundled validated authority and still fail closed when the
-            reduction fact is absent or malformed.
+        authority: Existing generation-pinned facts operation. Omitted callers
+            open one indexed operation at this top-level boundary and still
+            fail closed when the reduction fact is absent or malformed.
 
     Returns:
         The complete :class:`SancionLiquidacion`.
@@ -412,6 +409,15 @@ def parse_sancion_document(
         SancionArithmeticError: When the printed lines do not reconcile with
             each other, which means a label was bound to the wrong number.
     """
+    if authority is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return parse_sancion_document(
+                text,
+                certificado_id=certificado_id,
+                document_sha256=document_sha256,
+                effective_date=effective_date,
+                authority=indexed_operation,
+            )
     lines = text.splitlines()
     missing: list[str] = []
     malformed: list[str] = []
@@ -449,7 +455,7 @@ def _parse_sancion_values(
     malformed: list[str],
     ambiguous: list[str],
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource,
 ) -> dict[str, object]:
     values: dict[str, object] = {}
     for field, labels in _TEXT_LABELS.items():

@@ -30,6 +30,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .issuer_establishment import simplificada_requires_tax_id_for_domestic_issuer
 
 if TYPE_CHECKING:
@@ -67,7 +68,10 @@ class SimplificadaTaxIdAdvisory(StrEnum):
     ISSUER_UNKNOWN = "issuer_unknown"
 
 
-def resolve_simplificada_tax_id_legal_refs() -> tuple[str, ...]:
+def resolve_simplificada_tax_id_legal_refs(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[str, ...]:
     """Return the legal references carried by the simplified-invoice fact.
 
     The advisory predicate and the invoice model both consume the dated
@@ -84,12 +88,15 @@ def resolve_simplificada_tax_id_legal_refs() -> tuple[str, ...]:
     """
     from datetime import date
 
-    from ...domain.calculations.registry.authority import bundled_authority
     from ...domain.calculations.registry.errors import RegistryValidationError
     from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
     from ...domain.calculations.registry.schema_base import DateAxis
 
-    resolved = bundled_authority().resolve_governed_fact(
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return resolve_simplificada_tax_id_legal_refs(operation=indexed_operation)
+
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="invoice-simplificada-counterparty-tax-id-applicability",
             date_axis=DateAxis.FILING_PERIOD,

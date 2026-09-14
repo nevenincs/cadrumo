@@ -20,7 +20,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from ...core.classification.policies import SensitivityClass
-from ...core.errors.hierarchy import CoreError
+from ...core.errors.hierarchy import CoreError, InternalInvariantError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.profile_publication import ProfilePublicationKindValue
 from ...core.secure_object_write import SecureObjectWrite
@@ -471,7 +471,7 @@ def default_profile_custody_local_record_store() -> ProfileCustodyLocalRecordSto
     return profile_custody_port().local_record_store()
 
 
-class ProfileRecordCryptoError(CoreError, RuntimeError):
+class ProfileRecordCryptoError(CoreError):
     """The configured profile-record crypto provider rejected an operation.
 
     Roots at :class:`~core.errors.CoreError` so the refusal binds to the error
@@ -485,7 +485,7 @@ class ProfileRecordCryptoError(CoreError, RuntimeError):
     """
 
 
-class ProfileCustodyRecordIntegrityError(CoreError, ValueError):
+class ProfileCustodyRecordIntegrityError(CoreError):
     """The persistence provider refused a malformed or altered custody record."""
 
 
@@ -1315,7 +1315,7 @@ def profile_custody_port() -> ProfileCustodyPort:
     try:
         return _BOUND_PROFILE_CUSTODY_PORT.get()
     except LookupError as error:
-        raise RuntimeError("profile custody infrastructure has not been composed") from error
+        raise InternalInvariantError("profile custody infrastructure has not been composed") from error
 
 
 def inventory_committed_profile_custody(profile_id: UUID, *, root: Path | None = None) -> ProfileCustodyInventoryPort:

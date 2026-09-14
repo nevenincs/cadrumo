@@ -63,7 +63,7 @@ source_refs = ["aeat-dr-322-2022", "aeat-modelo-322-procedure", "boe-modelo-322-
 # for a grupo de entidades member, and cites the exact record design the layout
 # was generated from.
 [[revisions."2008-2022".application_links]]
-id = "modelo-322-2008-2025-export"
+id = "modelo-322-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true

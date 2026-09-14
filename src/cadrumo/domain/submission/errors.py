@@ -13,7 +13,7 @@ class SubmissionPreflightError(SubmissionError):
     """Raised when a draft cannot pass local submission preflight."""
 
 
-class SubmissionValidationError(SubmissionError, ValueError):
+class SubmissionValidationError(SubmissionError):
     """Raised when submission models violate state or shape invariants."""
 
 

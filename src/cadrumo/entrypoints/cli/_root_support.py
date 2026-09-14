@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
@@ -62,14 +63,14 @@ def _root_profile_secret_help_lines() -> tuple[str, ...]:
         if isinstance(parameter, OptionSpec) and parameter.profile_secret_channel is not None
     )
     if len(options) != 2:
-        raise RuntimeError("root help requires exactly two profile-secret channel options")
+        raise InternalInvariantError("root help requires exactly two profile-secret channel options")
     rendered: list[tuple[str, str]] = []
     for option in options:
         declaration = option.declarations[0]
         if not option.is_flag:
             declaration = f"{declaration} FD"
         if option.help_key is None:
-            raise RuntimeError("a root profile-secret option lacks localised help")
+            raise InternalInvariantError("a root profile-secret option lacks localised help")
         rendered.append((declaration, tr(option.help_key.value)))
     width = max(len(declaration) for declaration, _ in rendered)
     return (

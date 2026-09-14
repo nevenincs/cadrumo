@@ -16,5 +16,5 @@ from __future__ import annotations
 from ..core.errors.hierarchy import CadrumoError
 
 
-class DomainValidationError(CadrumoError, ValueError):
+class DomainValidationError(CadrumoError):
     """Raised when root-level domain identifiers or value objects are invalid."""

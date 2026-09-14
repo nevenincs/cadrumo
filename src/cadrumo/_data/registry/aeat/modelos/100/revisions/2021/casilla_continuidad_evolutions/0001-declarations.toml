@@ -1,4 +1,236 @@
 [[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0028-2020-2021-label-evolved"
+continuidad_id = "irpf-rendimiento-capital-mobiliario-ahorro-intereses-bonificados"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0249-2020-2021-label-evolved"
+continuidad_id = "irpf-abono-anticipado-conyuge-discapacidad"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0280-2020-2021-label-evolved"
+continuidad_id = "irpf-re-iic-suma-imputaciones"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-95"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0393-2020-2021-label-evolved"
+continuidad_id = "irpf-gyp-subtotales-ganancias-patrimoniales-g2d-t0"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0396-2020-2021-label-evolved"
+continuidad_id = "irpf-gyp-feac-transmisiones-suma-perdidas"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0400-2020-2021-label-evolved"
+continuidad_id = "irpf-gyp-subtotales-ganancias-patrimoniales-g3d-t2"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0419-2020-2021-label-evolved"
+continuidad_id = "irpf-integracion-gyp-general-suma-perdidas"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0433-2020-2021-label-evolved"
+continuidad_id = "irpf-saldo-neto-gyp-general-limite-25pct"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-48"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0436-2020-2021-label-evolved"
+continuidad_id = "irpf-saldo-neto-rdto-capital-mobiliario-ahorro-pendiente-reduccion"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0446-2020-2021-label-evolved"
+continuidad_id = "irpf-saldo-neto-gyp-ahorro-limite-25pct"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0663-2020-2021-label-evolved"
+continuidad_id = "irpf-abono-anticipado-monoparental"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0742-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-a-ric-dotacion-importe-m24em1s"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0832-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-a-inversion-deduccion-importe-dediim1"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0835-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-a-inversion-deduccion-importe-dediim2"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0844-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-a-aeip-aplicado-flag-m22ada"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0988-2020-2021-label-evolved"
+continuidad_id = "irpf-deduccion-castilla-y-leon-partos-multiples-cl13b"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1190-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-b-no-catastral-flag-norcps1"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1195-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-b-no-catastral-flag-norcps2"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1200-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-b-no-catastral-flag-norcps3"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1257-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-general-generado"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-48"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1270-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-c-saldo-neg-gyp-ahorro-generado"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1283-2020-2021-label-evolved"
+continuidad_id = "irpf-anexo-c-rdto-cm-negativo-generado"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1605-2020-2021-label-evolved"
+continuidad_id = "irpf-re-atrib-suma-act-eco"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1606-2020-2021-label-evolved"
+continuidad_id = "irpf-re-atrib-suma-gp-no-transmision-ganancias"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1608-2020-2021-label-evolved"
+continuidad_id = "irpf-re-atrib-suma-gp-transmision-ahorro"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-1609-2020-2021-label-evolved"
+continuidad_id = "irpf-re-atrib-suma-gp-perdidas-ahorro"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0245-2020-2021-label-evolved"
+continuidad_id = "irpf-matrimonio-vigente-todo-anio-flag"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0246-2020-2021-label-evolved"
+continuidad_id = "irpf-conyuge-discapacidad-matrimonio-mes-inicio"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0247-2020-2021-label-evolved"
+continuidad_id = "irpf-conyuge-discapacidad-matrimonio-mes-fin"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]
+[[revisions."2021".casilla_continuidad_evolutions]]
 id = "m100-0063-2020-2021-legal-refs-evolved"
 continuidad_id = "irpf-inmueble-porcentaje-propiedad"
 from_revision = "2020"

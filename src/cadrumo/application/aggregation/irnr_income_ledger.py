@@ -29,8 +29,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.unit_proportion import UnitProportion
-from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
@@ -100,6 +99,7 @@ def _resolve_irnr_registry_revision(
     *,
     modelo: str,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloRevision:
     """Confirm the injected revision is the selected registry scope.
 
@@ -108,11 +108,13 @@ def _resolve_irnr_registry_revision(
     an unscoped or mismatched revision is refused rather than replaced by a
     Python catalogue or default.
     """
-    report = RegistryQueryService(bundled_authority()).describe_modelo(
+    selected = operation.revision_for_context(
         modelo,
+        filing_year=period.filing_year,
         period=period.registry_token,
+        on=period.end_date,
     )
-    if report.revision != revision.id:
+    if str(selected.id) != str(revision.id):
         raise AggregationValidationError(
             "selected registry revision does not match the requested IRNR scope",
         )
@@ -128,6 +130,7 @@ def aggregate_irnr_income_ledger_from_repositories(
     target_casilla_id: CasillaId,
     selected_official_tipo_renta_code: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> IrnrIncomeLedgerAggregation:
     """Load an injected secure transaction catalogue and aggregate one selected M210 code.
 
@@ -140,6 +143,18 @@ def aggregate_irnr_income_ledger_from_repositories(
     dates.  Full-catalogue callers retain the per-row ``OUTSIDE_PERIOD`` issues
     instead.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_irnr_income_ledger_from_repositories(
+                bucket_id=bucket_id,
+                period=period,
+                revision=revision,
+                modelo=modelo,
+                target_casilla_id=target_casilla_id,
+                selected_official_tipo_renta_code=selected_official_tipo_renta_code,
+                transaction_repository=transaction_repository,
+                operation=indexed_operation,
+            )
     repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -155,6 +170,7 @@ def aggregate_irnr_income_ledger_from_repositories(
             modelo=modelo,
             target_casilla_id=target_casilla_id,
             selected_official_tipo_renta_code=selected_official_tipo_renta_code,
+            operation=operation,
         )
 
     partition = repository.partition_by_date_range(period.start_date, period.end_date)
@@ -166,6 +182,7 @@ def aggregate_irnr_income_ledger_from_repositories(
         modelo=modelo,
         target_casilla_id=target_casilla_id,
         selected_official_tipo_renta_code=selected_official_tipo_renta_code,
+        operation=operation,
     )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
@@ -182,6 +199,7 @@ def aggregate_irnr_income_ledger(
     modelo: str,
     target_casilla_id: CasillaId,
     selected_official_tipo_renta_code: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> IrnrIncomeLedgerAggregation:
     """Aggregate selected-code, incoming, registry-admitted IRNR income.
 
@@ -196,6 +214,19 @@ def aggregate_irnr_income_ledger(
     the official code while leaving registry formula evaluation as the one
     arithmetic path after the gross-income binding has been resolved.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_irnr_income_ledger(
+                transactions,
+                bucket_id=bucket_id,
+                period=period,
+                revision=revision,
+                modelo=modelo,
+                target_casilla_id=target_casilla_id,
+                selected_official_tipo_renta_code=selected_official_tipo_renta_code,
+                operation=indexed_operation,
+            )
+
     if not period.has_date_span():
         raise AggregationPeriodError(
             t("aggregation.renta_ledger.errors.unsupported_period"),
@@ -206,6 +237,7 @@ def aggregate_irnr_income_ledger(
         revision,
         modelo=modelo,
         period=period,
+        operation=operation,
     )
     declared_codes = _resolve_selected_income_type_codes(selected_revision, period)
     if selected_official_tipo_renta_code not in declared_codes:

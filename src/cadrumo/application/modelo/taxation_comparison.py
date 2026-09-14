@@ -48,7 +48,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
@@ -72,6 +72,9 @@ from .work_selection import (
     ModeloWorkSelectorRequest,
     select_modelo_work_resolution,
 )
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # ---------------------------------------------------------------------------
 # Output types
@@ -357,6 +360,7 @@ def compare_taxation_for_work_unit(
     work_unit_id: str,
     *,
     ports: TaxationComparisonPorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> TaxationComparisonResult:
     """Run conjunta-vs-individual comparison for an existing Modelo 100 work unit.
 
@@ -380,7 +384,7 @@ def compare_taxation_for_work_unit(
             Performs the pure snapshot comparison after this function resolves
             work-unit state.
     """
-    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
     from ...domain.calculations.registry.errors import RegistrySnapshotError
     from ..aggregation.source_mesh import CalculationSourceContext
@@ -390,6 +394,13 @@ def compare_taxation_for_work_unit(
     from .work_selection import ModeloWorkSelectorState, resolve_modelo_work_bucket
 
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return compare_taxation_for_work_unit(
+                work_unit_id,
+                ports=ports,
+                operation=indexed_operation,
+            )
     bucket_id = resolve_modelo_work_bucket(request)
     catalogue = ports.work_unit_reader.load()
     resolution = _select_taxation_work_unit(
@@ -405,8 +416,7 @@ def compare_taxation_for_work_unit(
     work_unit = resolution.work_unit
 
     try:
-        authority = bundled_authority()
-        snapshot = authority.snapshot(
+        snapshot = operation.snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
@@ -475,6 +485,7 @@ def compare_taxation_for_work_address(
     Args:
         address: The :class:`~cadrumo.application.modelo.work_addressing.ModeloWorkAddress`
             selected by CLI work-address parsing.
+        ports: Read capability used to resolve the addressed work unit.
 
     Returns:
         A :class:`TaxationComparisonResult` for the resolved work unit.

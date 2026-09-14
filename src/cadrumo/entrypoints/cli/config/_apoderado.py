@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from ....application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ....application.auth.apoderado_service import ApoderadoService
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -30,7 +31,7 @@ def _service(ctx: typer.Context) -> ApoderadoService:
             state["apoderado_config_repository_factory"],
         )
     except KeyError as error:
-        raise RuntimeError("apoderado configuration persistence has not been composed") from error
+        raise InternalInvariantError("apoderado configuration persistence has not been composed") from error
     return ApoderadoService(repository_factory=repository_factory, settings=load_settings())
 
 

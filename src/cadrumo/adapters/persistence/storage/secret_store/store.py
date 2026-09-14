@@ -152,12 +152,18 @@ class SecretRecord(BaseModel):
         try:
             return validate_utc_aware(value)
         except CoreValidationError as exc:
-            raise _storage_validation_error(str(exc)) from exc
+            error = _storage_validation_error(str(exc))
+            # Pydantic's callback contract consumes builtin validation errors;
+            # preserve the registered storage refusal as the cause.
+            raise ValueError(str(error)) from error
 
     @field_validator("classification")
     @classmethod
     def _check_class(cls, value: SensitivityClass) -> SensitivityClass:
-        return _validated_secret_class(value, subject="SecretRecord.classification")
+        try:
+            return _validated_secret_class(value, subject="SecretRecord.classification")
+        except StorageValidationError as exc:
+            raise ValueError(str(exc)) from exc
 
 
 class _SecretIndexEntry(BaseModel):
@@ -193,7 +199,10 @@ class _SecretIndexEntry(BaseModel):
         the index could name a class no record in this store can ever have,
         and the blob layout was then routed from that value.
         """
-        return _validated_secret_class(value, subject="_SecretIndexEntry.classification")
+        try:
+            return _validated_secret_class(value, subject="_SecretIndexEntry.classification")
+        except StorageValidationError as exc:
+            raise ValueError(str(exc)) from exc
 
 
 class _SecretIndex(BaseModel):

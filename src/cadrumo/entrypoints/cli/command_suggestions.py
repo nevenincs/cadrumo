@@ -59,6 +59,7 @@ from typer._click.utils import make_default_short_help
 from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 
 #: Per-group synonym tables keyed by the group's command ``name``.
@@ -133,7 +134,7 @@ class LazyImportTarget:
         try:
             target = getattr(module, self.attribute)
         except AttributeError as error:
-            raise RuntimeError(f"lazy CLI target {self.owner!r} does not exist") from error
+            raise InternalInvariantError(f"lazy CLI target {self.owner!r} does not exist") from error
         return _require_typer_target(target, owner=self.owner)
 
 
@@ -175,7 +176,7 @@ type RequiredUnavailableRefusal = Callable[[str, ModuleNotFoundError], Never]
 
 def _require_typer_target(target: object, *, owner: str) -> typer.Typer:
     if not isinstance(target, typer.Typer):
-        raise RuntimeError(f"lazy CLI target {owner!r} does not expose a Typer app")
+        raise InternalInvariantError(f"lazy CLI target {owner!r} does not expose a Typer app")
     return target
 
 
@@ -254,7 +255,7 @@ class LazySubcommand:
                 missing = error.name or str(error).strip() or type(error).__name__
                 if _dependency_is_explicitly_optional(missing, self._target.optional_dependency_names()):
                     if self._optional_unavailable is None:
-                        raise RuntimeError(
+                        raise InternalInvariantError(
                             f"lazy CLI target {self._target.owner!r} declares optional dependency {missing!r} "
                             "without an unavailable surface"
                         ) from error
@@ -266,7 +267,7 @@ class LazySubcommand:
                     raise
                 else:
                     self._required_unavailable(self.name, error)
-                    raise RuntimeError("required lazy-target refusal returned instead of raising") from error
+                    raise InternalInvariantError("required lazy-target refusal returned instead of raising") from error
             if self._decorate is not None:
                 self._decorate(typer_instance)
             command = _typer_get_command(typer_instance)

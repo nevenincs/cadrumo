@@ -111,21 +111,25 @@ def test_resolved_override_predicates_cover_each_registry_semantic() -> None:
         country_code="GB",
         tipo_renta=_tipo_renta("general"),
         devengo_date=_EFFECTIVE_DATE,
+        authority=_authority(),
     )
     ceiling = resolve_convenio_override(
         country_code="MA",
         tipo_renta=_tipo_renta("interest"),
         devengo_date=_EFFECTIVE_DATE,
+        authority=_authority(),
     )
     allocation = resolve_convenio_override(
         country_code="AR",
         tipo_renta=_tipo_renta("pension"),
         devengo_date=_EFFECTIVE_DATE,
+        authority=_authority(),
     )
     exempt = resolve_convenio_override(
         country_code="DE",
         tipo_renta=_tipo_renta("interest"),
         devengo_date=_EFFECTIVE_DATE,
+        authority=_authority(),
     )
 
     assert flat is not None and flat.has_flat_rate and flat.rate == Decimal("0.24")

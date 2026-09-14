@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 from textual.message_pump import MessagePump
 
-from .....tests.inventory import (
+from ....tests.inventory import (
     import_binding_map,
     package_python_files,
     python_files_under,

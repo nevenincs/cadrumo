@@ -19,7 +19,7 @@ class AttachmentError(CadrumoError):
     """
 
 
-class AttachmentValidationError(AttachmentError, ValueError):
+class AttachmentValidationError(AttachmentError):
     """Raised when an attachment payload fails domain validation.
 
     Used both by pydantic-driven validation on :class:`domain.attachments.Attachment`

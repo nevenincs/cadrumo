@@ -16,6 +16,7 @@ from ...application.workbench_generation import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
+from ...core.errors.hierarchy import InternalInvariantError
 from .account import (
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
@@ -41,6 +42,7 @@ if TYPE_CHECKING:
     from ...core.credentials import ProfilePasswordAssessment
     from ...core.external_constants import OutputLanguage
     from ...core.period import Period
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
     from .ledger.models import (
@@ -121,7 +123,9 @@ def compose_secure_profile_workbench_generation_provider(
             or current_session.sealed
             or not profile_session_serves_bucket(current_session, profile_id)
         ):
-            raise RuntimeError("installed workbench requires the live secure session for its selected profile")
+            raise InternalInvariantError(
+                "installed workbench requires the live secure session for its selected profile"
+            )
         if current_session.is_expired(now()):
             raise AccountSessionExpiredError()
         return HomeAccountSession(
@@ -249,10 +253,11 @@ def _declaration_result_casilla_reader() -> Callable[[str, int, Period], str | N
 
     def read(modelo: str, filing_year: int, period: Period) -> str | None:
         from ...application.modelo.settlement_casilla import declaration_result_casilla_id
-        from ...domain.calculations.registry.authority import bundled_authority
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
 
         try:
-            snapshot = bundled_authority().snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
+            with bundled_indexed_authority().operation() as operation:
+                snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
         except Exception:
             return None
         return declaration_result_casilla_id(snapshot.revision)
@@ -494,7 +499,7 @@ def _required_projection[ProjectionT](
 ) -> ProjectionT:
     projection = result.projection
     if projection is None:
-        raise RuntimeError(f"{label} projection is unavailable in this workbench generation")
+        raise InternalInvariantError(f"{label} projection is unavailable in this workbench generation")
     return projection
 
 
@@ -632,20 +637,71 @@ def resolve_modelo_workspace_static_inspection(
     from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ...application.modelo.workspace import resolve_static_inspection_result
     from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
-    from ...domain.calculations.registry.authority import bundled_authority
-
-    return resolve_static_inspection_result(
-        ModeloWorkspaceExactWorkUnitTargetV1(
-            target=ModeloExactWorkUnitTarget(
-                work_unit_id=unit.work_unit_id,
-                bucket_id=unit.bucket_id,
-            )
-        ),
-        bucket_id=unit.bucket_id,
-        catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
-        authority=bundled_authority(),
-        output_language=output_language,
+    from ...domain.calculations.registry.authority import (
+        RegistryAuthorityCapture,
+        RegistryAuthorityCurrentCoordinate,
+        bundled_indexed_authority,
     )
+    from ...domain.calculations.registry.snapshot import collect_snapshot_ref_ids
+    from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
+    from ...domain.calculations.registry.temporal import select_revision_metadata
+
+    class _PinnedAuthorityAdapter:
+        """Minimal workspace authority port backed by one pinned operation."""
+
+        def __init__(self, operation: PinnedAuthorityOperation) -> None:
+            self._operation = operation
+
+        def capture_law_selected_projection(
+            self, modelo_id: str, *, filing_year: int, period: str, on=None, grade=None
+        ) -> RegistryAuthorityCapture:
+            directory = self._operation.modelo_directory(modelo_id)
+            selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=on)
+            revision = self._operation.revision(modelo_id, str(selected.id))
+            if grade is None:
+                modelo_definition = directory.modelo.materialize(revision)
+                legal_ids, source_ids = collect_snapshot_ref_ids(modelo_definition, revision)
+                inspection = RegistryRevisionInspection.from_revision(
+                    modelo=modelo_definition,
+                    revision=revision,
+                    source_root=None,
+                    sources={source_id: self._operation.source_reference(source_id) for source_id in source_ids},
+                    legal_ref_ids=frozenset(legal_ids),
+                )
+                projection = inspection
+            else:
+                projection = self._operation.snapshot(
+                    modelo_id,
+                    filing_year=filing_year,
+                    period=period,
+                    on=on,
+                    grade=grade,
+                )
+            return RegistryAuthorityCapture(
+                projection=projection,
+                comparison_domain=self._operation.generation.logical_generation,
+                generation=0,
+            )
+
+        def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
+            return RegistryAuthorityCurrentCoordinate(
+                comparison_domain=self._operation.generation.logical_generation,
+                generation=0,
+            )
+
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_static_inspection_result(
+            ModeloWorkspaceExactWorkUnitTargetV1(
+                target=ModeloExactWorkUnitTarget(
+                    work_unit_id=unit.work_unit_id,
+                    bucket_id=unit.bucket_id,
+                )
+            ),
+            bucket_id=unit.bucket_id,
+            catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
+            authority=_PinnedAuthorityAdapter(operation),
+            output_language=output_language,
+        )
 
 
 @contextmanager
@@ -667,7 +723,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     secret_field = STORAGE_TAXONOMY[StorageCategory.SECRETS].settings_field
     if secret_field is None:
         message = "the declared secret storage category has no settings field"
-        raise RuntimeError(message)
+        raise InternalInvariantError(message)
     secret_path = root / storage_location(StorageCategory.SECRETS).relative_path()
     with ExitStack() as composition:
         composition.enter_context(
@@ -834,7 +890,7 @@ async def _run_root_session(
         def refresh_search() -> WorkbenchSearchDoorV1:
             refreshed_inputs = root.refresh_search_inputs()
             if refreshed_inputs is None:
-                raise RuntimeError("installed workbench search is unavailable in the refreshed generation")
+                raise InternalInvariantError("installed workbench search is unavailable in the refreshed generation")
             # Parity is checked against the admissions of the SAME capture the
             # inputs came from, not against the session's first ones: a refresh
             # that legitimately changes availability is coherent, and comparing

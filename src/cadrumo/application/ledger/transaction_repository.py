@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
@@ -40,7 +41,7 @@ def transaction_catalogue_repository(*, bucket_id: str) -> TransactionCatalogueR
     try:
         factory = _BOUND_TRANSACTION_CATALOGUE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("transaction catalogue persistence has not been composed") from error
+        raise InternalInvariantError("transaction catalogue persistence has not been composed") from error
     return factory(bucket_id=bucket_id)
 
 

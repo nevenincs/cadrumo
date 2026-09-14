@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tomllib
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -12,6 +13,15 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
 _ENVELOPE_MEMBERS = frozenset({"schema", "sections", "derived_selectors"})
+
+
+@dataclass(frozen=True, slots=True)
+class CapturedProfileSchema:
+    """One immutable profile source capture shared by identity and compilation."""
+
+    source_path: Path
+    payload: bytes
+    schema: ProfileSchemaDefinition
 
 
 def parse_captured_profile_schema(
@@ -68,6 +78,22 @@ def capture_profile_schema(
         source_path=resolved,
         legal_reference_ids=legal_reference_ids,
     )
+
+
+def capture_profile_schema_source(path: Path) -> CapturedProfileSchema:
+    """Capture and type one profile source exactly once for a compiler run."""
+    payload, schema = capture_profile_schema(path)
+    return CapturedProfileSchema(path.resolve(strict=True), payload, schema)
+
+
+def validate_captured_profile_schema(
+    captured: CapturedProfileSchema,
+    *,
+    legal_reference_ids: frozenset[str],
+) -> ProfileSchemaDefinition:
+    """Validate an existing capture against the compiled legal-reference closure."""
+    _validate_declared_legal_references(captured.schema, legal_reference_ids)
+    return captured.schema
 
 
 def _validate_declared_legal_references(

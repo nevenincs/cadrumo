@@ -11,7 +11,7 @@ from __future__ import annotations
 from ..errors.hierarchy import CadrumoError
 
 
-class CorpusManifestError(CadrumoError, ValueError):
+class CorpusManifestError(CadrumoError):
     """Base error for any failure in corpus-manifest parsing or validation.
 
     Concrete failure modes derive from this class; callers can catch

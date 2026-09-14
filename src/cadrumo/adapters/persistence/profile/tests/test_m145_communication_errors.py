@@ -96,11 +96,11 @@ def test_m145_communication_service_errors_are_registered_and_typed() -> None:
         M145CommunicationRecordTransitionError: "REFUSED_M145_COMMUNICATION_RECORD_TRANSITION",
     }
 
-    assert issubclass(M145CommunicationRecordNotFoundError, KeyError)
-    assert issubclass(M145CommunicationRecordAmbiguousError, KeyError)
-    assert issubclass(M145CommunicationRecordValidationError, ValueError)
-    assert issubclass(M145CommunicationRecordExportError, ValueError)
-    assert issubclass(M145CommunicationRecordTransitionError, ValueError)
+    assert not issubclass(M145CommunicationRecordNotFoundError, KeyError)
+    assert not issubclass(M145CommunicationRecordAmbiguousError, KeyError)
+    assert not issubclass(M145CommunicationRecordValidationError, ValueError)
+    assert not issubclass(M145CommunicationRecordExportError, ValueError)
+    assert not issubclass(M145CommunicationRecordTransitionError, ValueError)
     for error_type, code in error_codes.items():
         assert get_registered_error_code(error_type).code == code
 

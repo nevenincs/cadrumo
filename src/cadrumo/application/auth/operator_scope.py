@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from ...core.config import Settings, load_settings
 from ...core.config_live_tests import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from .catalogue import get_auth_provider, known_auth_provider_ids
@@ -254,7 +255,7 @@ def auth_mutation_span(
             or ownership.pid != current_pid
             or ownership.thread_id != current_thread_id
         ):
-            raise RuntimeError("nested auth mutation targets a different bucket or execution owner")
+            raise InternalInvariantError("nested auth mutation targets a different bucket or execution owner")
         ownership.depth += 1
         try:
             yield

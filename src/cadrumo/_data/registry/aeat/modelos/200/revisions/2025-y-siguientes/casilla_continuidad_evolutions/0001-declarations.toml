@@ -1,0 +1,296 @@
+# AEAT DP200024: 2024 campo 33 es importe; 2025 campo 32 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02943-2024-2025-retired"
+continuidad_id = "aieg-ute-canary-goods-bonus-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 35 es importe; 2025 campo 33 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02945-2024-2025-retired"
+continuidad_id = "aieg-ute-balearic-goods-bonus-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 37 es importe; 2025 campo 34 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02947-2024-2025-retired"
+continuidad_id = "aieg-ute-cooperative-bonus-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 39 es importe; 2025 campo 35 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02949-2024-2025-retired"
+continuidad_id = "aieg-ute-housing-rental-bonus-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 41 es importe; 2025 campo 36 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02961-2024-2025-retired"
+continuidad_id = "aieg-ute-canary-shipping-bonus-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 43 es importe; 2025 campo 37 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02963-2024-2025-retired"
+continuidad_id = "aieg-ute-other-bonus-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 45 es importe; 2025 campo 38 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02965-2024-2025-retired"
+continuidad_id = "aieg-ute-research-development-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 47 es importe; 2025 campo 39 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02968-2024-2025-retired"
+continuidad_id = "aieg-ute-technological-innovation-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 49 es importe; 2025 campo 40 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02970-2024-2025-retired"
+continuidad_id = "aieg-ute-spanish-film-producer-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 51 es importe; 2025 campo 41 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02974-2024-2025-retired"
+continuidad_id = "aieg-ute-live-performance-producer-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 53 es importe; 2025 campo 42 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-02979-2024-2025-retired"
+continuidad_id = "aieg-ute-disabled-worker-employment-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 55 es importe; 2025 campo 43 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03062-2024-2025-retired"
+continuidad_id = "aieg-ute-employee-pension-contribution-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 57 es importe; 2025 campo 44 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03064-2024-2025-retired"
+continuidad_id = "aieg-ute-profit-investment-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 59 es importe; 2025 campo 45 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03066-2024-2025-retired"
+continuidad_id = "aieg-ute-forestry-investment-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 61 es importe; 2025 campo 46 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03068-2024-2025-retired"
+continuidad_id = "aieg-ute-west-africa-investment-advertising-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 63 es importe; 2025 campo 47 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03070-2024-2025-retired"
+continuidad_id = "aieg-ute-public-interest-event-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 69 es importe; 2025 campo 50 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00067-2024-2025-retired"
+continuidad_id = "aieg-ute-canary-investment-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 73 es importe; 2025 campo 52 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03248-2024-2025-retired"
+continuidad_id = "aieg-ute-foreign-film-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 75 es importe; 2025 campo 53 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03250-2024-2025-retired"
+continuidad_id = "aieg-ute-canary-foreign-film-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 77 es importe; 2025 campo 54 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03282-2024-2025-retired"
+continuidad_id = "aieg-ute-port-authority-investment-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 79 es importe; 2025 campo 55 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03284-2024-2025-retired"
+continuidad_id = "aieg-ute-nonprofit-donation-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 81 es importe; 2025 campo 56 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03356-2024-2025-retired"
+continuidad_id = "aieg-ute-foral-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 83 es importe; 2025 campo 57 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03360-2024-2025-retired"
+continuidad_id = "aieg-ute-other-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 85 es importe; 2025 campo 58 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03287-2024-2025-retired"
+continuidad_id = "aieg-ute-canary-research-development-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 87 es importe; 2025 campo 59 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03289-2024-2025-retired"
+continuidad_id = "aieg-ute-canary-technological-innovation-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 89 es importe; 2025 campo 60 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03311-2024-2025-retired"
+continuidad_id = "aieg-ute-canary-spanish-film-producer-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+
+# AEAT DP200024: 2024 campo 91 es importe; 2025 campo 61 conserva base, no importe.
+# La columna de importe desaparece de los apartados 7 y 8; el incentivo legal no se declara derogado.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03315-2024-2025-retired"
+continuidad_id = "aieg-ute-canary-live-performance-producer-credit-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-45"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]

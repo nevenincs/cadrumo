@@ -108,7 +108,7 @@ from ..core.period import Period
 from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_location
 from ..core.time.clock import now
-from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.authority import bundled_indexed_authority
 from ..domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
 
 _WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
@@ -516,11 +516,12 @@ def persist_and_reconcile_iva_compensation_wallet(
                 "target_period": observation.target_period.registry_token,
             },
         )
-    snapshot = bundled_authority().snapshot(
-        Modelo("303").value,
-        filing_year=reloaded.target_year,
-        period=reloaded.target_period.registry_token,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot(
+            Modelo("303").value,
+            filing_year=reloaded.target_year,
+            period=reloaded.target_period.registry_token,
+        )
     from ..application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 
     recurrence, prefill = extract_modelo_303_local_iva_compensation_recurrence(
@@ -653,6 +654,7 @@ def _history_row(state: object) -> IvaCompensationHistoryRow:
 
 
 def carry_forward_lot_row(lot: object) -> IvaCompensationCarryForwardLotRow:
+    """Project one persisted carry-forward lot into the live-state DTO."""
     return IvaCompensationCarryForwardLotRow(
         taxpayer_ref=taxpayer_ref(lot.taxpayer_nif),
         source_filing_year=lot.source_filing_year,

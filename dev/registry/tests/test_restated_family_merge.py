@@ -24,7 +24,7 @@ from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
@@ -109,8 +109,9 @@ def _write_revision(
     (revision_dir / "casillas" / "0001-casillas.toml").write_text(casillas, encoding="utf-8", newline="\n")
     (revision_dir / "formulas").mkdir()
     (revision_dir / "formulas" / "0001-formulas.toml").write_text(formulas, encoding="utf-8", newline="\n")
-    (revision_dir / "constructs").mkdir()
-    (revision_dir / "constructs" / "0001-constructs.toml").write_text(constructs, encoding="utf-8", newline="\n")
+    if constructs:
+        (revision_dir / "constructs").mkdir()
+        (revision_dir / "constructs" / "0001-constructs.toml").write_text(constructs, encoding="utf-8", newline="\n")
 
 
 def _build_modelo(root: Path, *, successor_extra: str = "") -> Path:
@@ -213,5 +214,59 @@ def test_restating_a_family_the_edition_states_empty_is_refused_before_the_merge
         f'reason = "{_REASON}" }}]\n'
     )
 
-    with pytest.raises(RegistryLoadError, match="restated in full but declares no 'parameters'"):
+    with pytest.raises(RegistryValidationError, match="restated in full but declares no 'parameters'"):
         load_modelo_directory(_build_modelo(tmp_path, successor_extra=empty_family))
+
+
+@pytest.mark.parametrize(
+    ("base_id", "cuota_id", "target", "accepted"),
+    [
+        ("0011", "0002", "0011", True),
+        ("0011", "0002", "0002", False),
+        ("0002", "0001", "0001", False),
+        ("0011", "0002", "0099", False),
+    ],
+    ids=("renumbered-concept", "different-concept", "reused-number", "absent-target"),
+)
+def test_formula_target_identity_follows_unique_casilla_continuity(
+    tmp_path: Path,
+    base_id: str,
+    cuota_id: str,
+    target: str,
+    *,
+    accepted: bool,
+) -> None:
+    """A target renumbering preserves identity; a reused number does not."""
+    modelo_dir = tmp_path / _MODELO_ID
+    modelo_dir.mkdir()
+    write_standard_manifest(modelo_dir, "Test")
+    _write_revision(
+        modelo_dir,
+        _PREDECESSOR,
+        year=2024,
+        casillas=(
+            _casilla(_PREDECESSOR, "0001", number="1", lineage="base")
+            + _casilla(_PREDECESSOR, "0002", number="2", lineage="cuota")
+        ),
+        formulas=_formula(_PREDECESSOR, _BASE_FORMULA, target="0001"),
+        constructs="",
+    )
+    _write_revision(
+        modelo_dir,
+        _SUCCESSOR,
+        year=2025,
+        predecessor=_PREDECESSOR,
+        casillas=(
+            _casilla(_SUCCESSOR, base_id, number=base_id, lineage="base")
+            + _casilla(_SUCCESSOR, cuota_id, number=cuota_id, lineage="cuota")
+        ),
+        formulas=_formula(_SUCCESSOR, _BASE_FORMULA, target=target),
+        constructs="",
+    )
+    if accepted:
+        revision = _successor(modelo_dir)
+        assert revision.formulas[0].target_casilla_id == target
+        assert next(row for row in revision.casillas if row.id == target).continuidad_id == "base"
+    else:
+        with pytest.raises(RegistryLoadError, match="a change to a field carrying the member's identity"):
+            _successor(modelo_dir)

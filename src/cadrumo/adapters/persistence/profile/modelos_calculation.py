@@ -47,7 +47,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....core.secure_object_write import SecureObjectWrite
-from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
@@ -145,7 +145,7 @@ class CalculationRevisionCatalogueRepository:
         """
         return self._storage.exists()
 
-    def load(self) -> CalculationRevisionCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         """Load and decrypt the persisted calculation-revision catalogue.
 
         A calculation revision is a dated, computed version of a modelo's casilla
@@ -167,6 +167,10 @@ class CalculationRevisionCatalogueRepository:
                 supports, or an integrity error surfaces while decrypting and
                 decoding the record.
         """
+        if operation is None:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return self.load(operation=indexed_operation)
+
         from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError
         from ..storage.schema_lineage import (
@@ -191,7 +195,7 @@ class CalculationRevisionCatalogueRepository:
             )
         if record is None:
             return CalculationRevisionCatalogue()
-        aggregate_context = self._calculation_revision_aggregate_context()
+        aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
         envelope: Envelope[CalculationRevisionCatalogue] | None = None
         validation_failed = False
         try:
@@ -289,7 +293,11 @@ class CalculationRevisionCatalogueRepository:
                     context={"reason": "parent_registry_coordinate_mismatch", "work_unit_id": revision.work_unit_id},
                 )
 
-    def _calculation_revision_aggregate_context(self) -> CalculationRevisionAggregateContext:
+    def _calculation_revision_aggregate_context(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> CalculationRevisionAggregateContext:
         """Load every persisted authority needed to revalidate rectificativa revisions."""
         from .justificante import JustificanteRepository
         from .modelos_filing import ModeloRecordCatalogueRepository
@@ -299,7 +307,7 @@ class CalculationRevisionCatalogueRepository:
         filing_records = ModeloRecordCatalogueRepository(objects=self._objects).load()
         justificantes = tuple(JustificanteRepository(objects=self._objects).iter_justificantes())
         snapshots: dict[str, RegistrySnapshot] = {
-            unit.work_unit_id: bundled_authority().snapshot(
+            unit.work_unit_id: operation.snapshot(
                 Modelo("303").value,
                 filing_year=unit.filing_year,
                 period=unit.period.registry_token,

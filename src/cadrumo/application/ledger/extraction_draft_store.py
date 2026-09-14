@@ -30,6 +30,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core.config import Settings
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
@@ -140,7 +141,7 @@ def _repository(bucket_id: str, settings: Settings) -> ExtractionDraftRepository
     try:
         factory = _BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("extraction-draft persistence has not been composed") from error
+        raise InternalInvariantError("extraction-draft persistence has not been composed") from error
     return factory(bucket_id=bucket_id, settings=settings)
 
 

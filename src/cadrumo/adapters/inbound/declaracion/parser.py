@@ -37,7 +37,7 @@ from ....core.logging import get_logger
 from ....core.period import Period, PeriodError, is_administrative_period_token
 from ....core.text_fold import fold_diacritics
 from ....core.time.clock import now
-from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
@@ -123,6 +123,7 @@ def parse_declaracion(
     period_override: str | None = None,
     extraction_profile_id: str | None = None,
     registry_snapshot: RegistrySnapshot | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> InboundDeclaracionObservation:
     """Parse an AEAT declaración PDF into a :class:`InboundDeclaracionObservation`.
 
@@ -144,6 +145,9 @@ def parse_declaracion(
         registry_snapshot: Pre-built validated :class:`RegistrySnapshot`. When
             omitted, the parser loads the committed registry and builds
             one from the detected modelo, tax year, and period.
+        operation: Existing generation-pinned authority operation used when a
+            snapshot must be loaded. Omit it only at a top-level composition
+            boundary; one indexed operation is opened for the parse.
 
     Returns:
         A strict :class:`InboundDeclaracionObservation` populated with the extracted
@@ -168,6 +172,7 @@ def parse_declaracion(
         period_override=period_override,
         extraction_profile_id=extraction_profile_id,
         registry_snapshot=registry_snapshot,
+        operation=operation,
     )
 
 
@@ -181,6 +186,7 @@ def parse_declaracion_bytes(
     period_override: str | None = None,
     extraction_profile_id: str | None = None,
     registry_snapshot: RegistrySnapshot | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> InboundDeclaracionObservation:
     """Parse declaración PDF bytes without writing them to a plaintext temp file.
 
@@ -202,6 +208,9 @@ def parse_declaracion_bytes(
         registry_snapshot: Pre-built validated :class:`RegistrySnapshot`. When
             omitted, the parser loads the committed registry and builds
             one from the detected modelo, tax year, and period.
+        operation: Existing generation-pinned authority operation used when a
+            snapshot must be loaded. Omit it only at a top-level composition
+            boundary; one indexed operation is opened for the parse.
 
     Returns:
         A :class:`InboundDeclaracionObservation` populated with the extracted casillas,
@@ -226,6 +235,7 @@ def parse_declaracion_bytes(
         period_override=period_override,
         extraction_profile_id=extraction_profile_id,
         registry_snapshot=registry_snapshot,
+        operation=operation,
     )
 
 
@@ -241,6 +251,7 @@ def _parse_declaracion_pages(
     period_override: str | None,
     extraction_profile_id: str | None,
     registry_snapshot: RegistrySnapshot | None,
+    operation: PinnedAuthorityOperation | None = None,
     pdf_bytes: bytes | None = None,
 ) -> InboundDeclaracionObservation:
     """Assemble the shared registry-grounded parse result.
@@ -264,6 +275,7 @@ def _parse_declaracion_pages(
     snapshot = registry_snapshot or _load_registry_snapshot(
         template=template,
         period=period,
+        operation=operation,
     )
     _validate_snapshot_matches_template(snapshot, template)
     profile = _select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
@@ -502,10 +514,13 @@ def _load_registry_snapshot(
     *,
     template: TemplateRevision,
     period: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySnapshot:
-    authority = bundled_authority()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _load_registry_snapshot(template=template, period=period, operation=indexed_operation)
     try:
-        return authority.snapshot(
+        return operation.snapshot(
             template.modelo,
             filing_year=template.año,
             period=period,

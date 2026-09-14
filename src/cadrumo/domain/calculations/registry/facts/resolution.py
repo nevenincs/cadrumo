@@ -378,7 +378,7 @@ def _projection_candidates(
     if before and after:
         return (), TemporalProjectionDirection.AUTHORED, None
     if before:
-        boundary = max(item[1].valid_to for item in before)
+        boundary = max(valid_to for _, window in before if (valid_to := window.valid_to) is not None)
         return (
             tuple(item for item in before if item[1].valid_to == boundary),
             TemporalProjectionDirection.FORWARD,

@@ -63,7 +63,6 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
@@ -74,7 +73,6 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
 )
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -189,6 +187,7 @@ from .workflow_gate import build_revision_workflow_engine as _build_revision_wor
 from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
 
@@ -446,6 +445,7 @@ def _collect_verification_gate_findings(
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
@@ -458,6 +458,7 @@ def _collect_verification_gate_findings(
             target=target,
             profile=workflow_profile,
             transaction_repository=transaction_repository,
+            operation=operation,
         )
     )
     incomplete_modality_finding = registry_modality_finding(
@@ -512,6 +513,7 @@ def _collect_verification_gate_findings(
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target),
+        operation=operation,
     )
 
     def _observe_cross_period_finding(
@@ -701,6 +703,7 @@ def _append_model_specific_findings(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Append cross-model and detail-row verification findings in one place."""
     findings.extend(
@@ -718,7 +721,11 @@ def _append_model_specific_findings(
             observation_repository=observation_repository,
         ),
     )
-    m210_agrupacion_findings = m210_agrupacion_renta_verification_findings(work_unit=work_unit, revision=target)
+    m210_agrupacion_findings = m210_agrupacion_renta_verification_findings(
+        work_unit=work_unit,
+        revision=target,
+        operation=operation,
+    )
     findings.extend(m210_agrupacion_findings)
     for finding in m210_agrupacion_findings:
         failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
@@ -738,7 +745,7 @@ def _append_model_specific_findings(
             work_unit=work_unit,
             revision=target,
             observation_repository=observation_repository,
-            registry_query_service=RegistryQueryService(bundled_authority()),
+            operation=operation,
         ),
     )
 
@@ -756,6 +763,7 @@ def verify_modelo_revision_with_preconditions(
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
     clock: datetime | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloVerificationResult:
     """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates.
 
@@ -776,6 +784,10 @@ def verify_modelo_revision_with_preconditions(
     Args:
         calculation_revision_id: Stable id of the draft
             :class:`CalculationRevision` to verify.
+        certificate_secret_backend_factory: Factory for the certificate-secret
+            capability used by the workflow gate when verification grants.
+        operator_scope_ports: Operator-scope capabilities used by the workflow
+            gate when verification grants.
         actor: Operator label recorded on the verification report and bucket
             history event.
         workflow_profile: :class:`TaxpayerProfile`
@@ -792,6 +804,9 @@ def verify_modelo_revision_with_preconditions(
         workflow_runs_dir: Optional workflow-runs directory override.
         settings: Optional runtime settings for workflow-engine construction.
         clock: Optional timestamp override for deterministic verification.
+        operation: Caller-owned generation-pinned authority operation. When
+            supplied, every registry snapshot and point consumer in this path
+            reads from that operation generation.
 
     Returns:
         The application result containing the persisted
@@ -894,6 +909,7 @@ def verify_modelo_revision_with_preconditions(
             transaction_repository=repos.transaction,
             iva_compensation_decision_repository=repos.iva_compensation_decision,
             cross_period_expected_member_sets=cross_period_expected_member_sets,
+            operation=operation,
         )
     )
     _append_model_specific_findings(
@@ -904,6 +920,7 @@ def verify_modelo_revision_with_preconditions(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         observation_repository=repos.observation,
+        operation=operation,
     )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
@@ -1005,6 +1022,7 @@ def verify_modelo_revision(
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
     clock: datetime | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> VerificationReport:
     """Persist and return the domain verification report without transport recovery data.
 
@@ -1025,6 +1043,7 @@ def verify_modelo_revision(
         workflow_runs_dir=workflow_runs_dir,
         settings=settings,
         clock=clock,
+        operation=operation,
     ).report
 
 
@@ -1200,15 +1219,20 @@ def _append_revision_advisory_findings(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     fact_coordinate = date(work_unit.filing_year, 12, 31)
     modelo_fact_context = ModeloFactResolutionContext(
-        authority=bundled_authority(),
+        authority=operation,
         filing_period=fact_coordinate,
         devengo_date=fact_coordinate,
     )
     for finding in (
-        dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
+        dt12_reduccion_advisory_finding(
+            snapshot.revision,
+            target.casilla_values,
+            operation=operation,
+        ),
         art20_reduccion_advisory_finding(
             snapshot.revision,
             target.casilla_values,
@@ -1217,13 +1241,21 @@ def _append_revision_advisory_findings(
         art52_reduccion_advisory_finding(
             snapshot.revision,
             target.casilla_values,
-            context=modelo_fact_context,
+            operation=operation,
+            modelo=str(work_unit.modelo),
         ),
-        dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values),
+        dt12_antiquity_advisory_finding(
+            snapshot.revision,
+            target.casilla_values,
+            operation=operation,
+            modelo=str(work_unit.modelo),
+        ),
         madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
             snapshot,
             target.casilla_values,
             work_unit=work_unit,
+            operation=operation,
+            profile_decode_context=operation.profile_decode_context(),
         ),
         _m210_convenio_lob_advisory_finding(
             snapshot,
@@ -1358,6 +1390,7 @@ def _resolve_verification_snapshot(
     target: CalculationRevision,
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+    operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot | None:
     from ...domain.calculations.registry.errors import (
         RegistrySnapshotError,
@@ -1365,8 +1398,7 @@ def _resolve_verification_snapshot(
     )
 
     try:
-        authority = bundled_authority()
-        return authority.snapshot(
+        return operation.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
@@ -1593,6 +1625,7 @@ def _collect_revision_verification_findings(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
@@ -1627,6 +1660,7 @@ def _collect_revision_verification_findings(
         target=target,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
+        operation=operation,
     )
     if snapshot is None:
         return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
@@ -1674,6 +1708,7 @@ def _collect_revision_verification_findings(
         target=target,
         profile=profile,
         snapshot=snapshot,
+        operation=operation,
     )
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 

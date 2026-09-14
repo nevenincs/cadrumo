@@ -30,6 +30,7 @@ from pydantic import (
 )
 
 from ...core.citation_grounding import CitationGrounding
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.errors.severity import BaseSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
@@ -155,6 +156,7 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_settlement_amount(self) -> IvaCashAccountingPaymentEvidence:
         if (
             self.taxable_base == Decimal("0")
@@ -531,6 +533,7 @@ class IvaRateRecord(_IvaStrictFrozen):
     """
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> IvaRateRecord:
         """Ensure :attr:`effective_from` precedes :attr:`effective_until`."""
         from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
@@ -603,6 +606,7 @@ class IvaCitation(_IvaStrictFrozen):
         return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate(self) -> IvaCitation:
         """Hold each grounding state to the evidence it claims.
 
@@ -690,6 +694,7 @@ class IvaRegulation(_IvaStrictFrozen):
     )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate(self) -> IvaRegulation:
         """Enforce the at-least-one-citation invariant and its sole carve-out."""
         if self.legal_basis_exempt:
@@ -724,6 +729,7 @@ class IvaCatalogue(_IvaStrictMutable):
     )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_key_alignment(self) -> IvaCatalogue:
         """Ensure every mapping key matches its record's :attr:`IvaRegulation.category`."""
         for key, regulation in self.regulations.items():

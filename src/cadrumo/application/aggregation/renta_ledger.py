@@ -38,11 +38,10 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_exento_token, require_iva_regime
 from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.spending_category import SpendingCategory
@@ -98,12 +97,18 @@ _LEDGER_CATALOGUE_ID = "ledger"
 
 # fact-relocation: selected renta-ledger insurance variants, category-profile
 # routing, issue/applicability, and binding declarations are consumed through the dated mapping
-def _registry_renta_ledger_declarations(*, modelo: str, filing_year: int) -> dict[str, str]:
+def _registry_renta_ledger_declarations(
+    *,
+    modelo: str,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, str]:
     """Resolve the selected renta-ledger declaration mapping without fallbacks."""
-    authority = bundled_authority()
     effective_date = date(filing_year, 12, 31)
-    RegistryQueryService(authority).describe_modelo(modelo, as_of=effective_date)
-    resolved = authority.resolve_governed_fact(
+    directory = operation.modelo_directory(modelo)
+    if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
+        raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="renta-ledger-category-variant-routing-mapping",
             date_axis=DateAxis.FILING_PERIOD,
@@ -129,9 +134,13 @@ def _required_renta_ledger_declaration(entries: Mapping[str, str], key: str) -> 
     return value
 
 
-def _registry_renta_iva_ratio_declarations(*, filing_year: int) -> dict[str, str]:
+def _registry_renta_iva_ratio_declarations(
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, str]:
     """Resolve the dated IVA-ratio policy used by the Renta ledger."""
-    resolved = bundled_authority().resolve_governed_fact(
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="renta-iva-deduction-ratio-policy",
             date_axis=DateAxis.FILING_PERIOD,
@@ -248,9 +257,14 @@ def _seguro_enfermedad_person_counts(
     filing_year: int,
     modelo: str,
     profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
 ) -> dict[str, int]:
     """Resolve insured-person variant counts using selected registry declarations."""
-    declarations = _registry_renta_ledger_declarations(modelo=modelo, filing_year=filing_year)
+    declarations = _registry_renta_ledger_declarations(
+        modelo=modelo,
+        filing_year=filing_year,
+        operation=operation,
+    )
     general_variant = _required_renta_ledger_declaration(declarations, "insurance.variant.general")
     disability_variant = _required_renta_ledger_declaration(declarations, "insurance.variant.discapacidad")
     general_field = _required_renta_ledger_declaration(declarations, "insurance.count_field.general")
@@ -330,6 +344,7 @@ def resolve_iva_deduction_ratio(
     profile_record: UserProfileRecord | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     profile_decode_context: ProfileDecodeContext | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Decimal | None:
     """Resolve the activity's IVA-deduction fraction for :attr:`RentaDeductibilityContext.iva_deduction_ratio`.
 
@@ -352,8 +367,20 @@ def resolve_iva_deduction_ratio(
         prorrata_register_repository: Canonical repository for the bucket's
             prorrata register. The caller owns its store selection so a
             non-active bucket cannot be shadowed by a process-global default.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
     """
-    ratio_policy = _registry_renta_iva_ratio_declarations(filing_year=ejercicio)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return resolve_iva_deduction_ratio(
+                bucket_id=bucket_id,
+                ejercicio=ejercicio,
+                profile_record=profile_record,
+                prorrata_register_repository=prorrata_register_repository,
+                profile_decode_context=profile_decode_context,
+                operation=indexed_operation,
+            )
+    ratio_policy = _registry_renta_iva_ratio_declarations(filing_year=ejercicio, operation=operation)
     exempt_ratio = Decimal(
         _required_renta_ledger_declaration(ratio_policy, "exempt_regime.deduction_ratio"),
     )
@@ -400,6 +427,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     profile_decode_context: ProfileDecodeContext | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
 
@@ -423,6 +451,22 @@ def aggregate_renta_ledger_expenses_from_repositories(
 
     Returns a :class:`RentaLedgerExpenseAggregation`.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_renta_ledger_expenses_from_repositories(
+                bucket_id=bucket_id,
+                period=period,
+                ports=ports,
+                profile_year=profile_year,
+                usage_ratios=usage_ratios,
+                activity_key=activity_key,
+                modelo=modelo,
+                profile_record=profile_record,
+                region_category_overrides=region_category_overrides,
+                prorrata_register_repository=prorrata_register_repository,
+                profile_decode_context=profile_decode_context,
+                operation=indexed_operation,
+            )
     # NOT pre-filtered by date range: a transaction's OWN
     # date can fall outside the requested annual window while its LINKED
     # INVOICE's issue date (the actual ``fact.filing_date`` the classifier
@@ -448,6 +492,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         profile_record=profile_record,
         prorrata_register_repository=prorrata_register_repository,
         profile_decode_context=profile_decode_context,
+        operation=operation,
     )
     return aggregate_renta_ledger_expenses(
         transactions,
@@ -463,6 +508,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         iva_deduction_ratio=iva_deduction_ratio,
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
+        operation=operation,
     )
 
 
@@ -481,6 +527,7 @@ def aggregate_renta_ledger_expenses(
     iva_deduction_ratio: Decimal | None = None,
     profile_record: UserProfileRecord | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -514,10 +561,30 @@ def aggregate_renta_ledger_expenses(
             its 500 and 1.500 euro limbs.
         profile_decode_context: Optional decode context from the caller-held
             authority operation when ``profile_record`` is supplied directly.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_renta_ledger_expenses(
+                transactions,
+                invoices,
+                bucket_id=bucket_id,
+                period=period,
+                profile_year=profile_year,
+                usage_ratios=usage_ratios,
+                activity_key=activity_key,
+                modelo=modelo,
+                residence_ccaa=residence_ccaa,
+                region_category_overrides=region_category_overrides,
+                iva_deduction_ratio=iva_deduction_ratio,
+                profile_record=profile_record,
+                profile_decode_context=profile_decode_context,
+                operation=indexed_operation,
+            )
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.filing_year
     profiles = resources().category_profiles.get(resolved_profile_year)
@@ -537,6 +604,7 @@ def aggregate_renta_ledger_expenses(
             filing_year=resolved_profile_year,
             modelo=modelo,
             profile_decode_context=profile_decode_context,
+            operation=operation,
         ),
     )
     observations: list[RentaDeductibleExpenseObservation] = []

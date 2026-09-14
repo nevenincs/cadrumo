@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import CategoryValidationError
@@ -48,6 +49,7 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
     iva_hint: IvaDeductibilityHint | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_profile(self) -> CategoryProfile:
         if not str(self.display_label).strip():
             raise CategoryValidationError("category profile display_label must not be blank")

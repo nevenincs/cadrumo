@@ -7,6 +7,7 @@ from typing import cast, override
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController, ledger_copy
 from .models import LedgerFlowState, LedgerPreparedImportV1
@@ -95,7 +96,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
         status = self.query_one("#ledger-flow-status", Static)
         selected = self.selected_choice
         if selected is None:  # pragma: no cover - guarded before worker creation
-            raise RuntimeError("prepared import selection disappeared before submission")
+            raise InternalInvariantError("prepared import selection disappeared before submission")
         try:
             result = await self.controller.submit_import(selected)
         except Exception:

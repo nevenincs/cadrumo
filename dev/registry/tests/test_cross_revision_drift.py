@@ -12,13 +12,16 @@ year-to-year drift can be treated as a load-time error.
 from __future__ import annotations
 
 import json
+import re
 import warnings
+from collections.abc import Iterator
 from datetime import date
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import LegalRefId
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
@@ -41,6 +44,7 @@ from ._synthetic_locale_fixtures import (
     _write_test_label,
     synthetic_locale_state,
 )
+from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -197,8 +201,10 @@ def _evolutions(*payloads: dict[str, object]) -> dict[str, tuple[dict[str, objec
 
 
 @pytest.fixture(scope="module")
-def committed_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    return _committed_registry_tree()
+def committed_registry() -> Iterator[tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]]:
+    corpus = _committed_registry_tree()
+    with validating_governed_facts(CandidateFactAuthority(corpus[1].facts)):
+        yield corpus
 
 
 @pytest.fixture(scope="module")
@@ -218,6 +224,18 @@ def _evolution_pairs(modelo: ModeloDefinition, continuidad_id: str) -> dict[tupl
 
 def _cross_revision_casilla_consistency_failures(modelos: list[ModeloDefinition]) -> tuple[str, ...]:
     return cross_revision_casilla_consistency_failures(modelos)
+
+
+def _write_continuity_revision(directory: Path, revision: str, text: str, *, encoding: str) -> None:
+    target = directory / revision
+    target.mkdir()
+    blocks = re.split(r"(?=\[\[revisions\.)", text)
+    (target / "revision.toml").write_text(blocks[0], encoding=encoding)
+    for family in ("casillas", "casilla_continuidad_evolutions"):
+        content = "".join(block for block in blocks[1:] if block.startswith(f'[[revisions."{revision}".{family}]]'))
+        if content:
+            (target / family).mkdir()
+            (target / family / "0001-declarations.toml").write_text(content, encoding=encoding)
 
 
 def _write_continuity_modelo_directory(
@@ -241,7 +259,9 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
-    (revisions_dir / "2024.toml").write_text(
+    _write_continuity_revision(
+        revisions_dir,
+        "2024",
         """
 [revisions."2024"]
 valid_from = 2024-01-01
@@ -277,7 +297,9 @@ source_refs = ["aeat-manual"]
         if include_evolution
         else ""
     )
-    (revisions_dir / "2025.toml").write_text(
+    _write_continuity_revision(
+        revisions_dir,
+        "2025",
         f"""
 [revisions."2025"]
 valid_from = 2025-01-01
@@ -463,6 +485,119 @@ class TestCrossRevisionConsistency:
         )
 
         assert validate_registry_scope([m]) == ()
+
+    def test_section_evolution_accepts_presentation_move_transitively(self) -> None:
+        prior = _casilla(cid="0700", continuidad_id="base", section=("old",))
+        predecessor = _casilla(cid="0700", continuidad_id="base", section=("old",))
+        successor = _casilla(cid="0700", continuidad_id="base", section=("new",))
+        modelo = _three_year_modelo(
+            [prior],
+            [predecessor],
+            [successor],
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="section_evolved")),
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([modelo]) == ()
+        ungrounded = _three_year_modelo([prior], [predecessor], [successor], continuidad_validation={"2025": "strict"})
+        assert any("section" in failure for failure in validate_registry_scope([ungrounded]))
+
+    def test_section_evolution_composes_with_disjoint_label_attestation(self) -> None:
+        predecessor = _casilla(cid="0700", continuidad_id="base", section=("old",), label="Old")
+        successor = _casilla(cid="0700", continuidad_id="base", section=("new",), label="New")
+        modelo = _annual_modelo(
+            predecessor,
+            successor,
+            evolutions=_evolutions(
+                _continuity_evolution(evolution_kind="section_evolved"),
+                _continuity_evolution(evolution_kind="label_evolved"),
+            ),
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([modelo]) == ()
+
+    def test_section_evolution_rejects_overlapping_repurpose_attestation(self) -> None:
+        predecessor = _casilla(cid="0700", continuidad_id="base", section=("old",))
+        successor = _casilla(cid="0700", continuidad_id="base", section=("new",))
+        modelo = _annual_modelo(
+            predecessor,
+            successor,
+            evolutions=_evolutions(
+                _continuity_evolution(evolution_kind="section_evolved"),
+                _continuity_evolution(evolution_kind="repurposed"),
+            ),
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert any("continuity evolution duplicate" in failure for failure in validate_registry_scope([modelo]))
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("label", "A different label"),
+            ("data_type", "text"),
+            ("semantic_role", "different_role"),
+            ("legal_refs", ("ley-58-2003:art-30",)),
+        ],
+    )
+    def test_section_evolution_does_not_cover_other_changes(self, field: str, value: object) -> None:
+        predecessor = _casilla(cid="0700", continuidad_id="base", section=("old",))
+        successor = _casilla(cid="0700", continuidad_id="base", section=("new",), **{field: value})
+        modelo = _annual_modelo(
+            predecessor,
+            successor,
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="section_evolved")),
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert any(field in failure for failure in validate_registry_scope([modelo]))
+
+    def test_representation_evolution_covers_only_data_type(self) -> None:
+        predecessor = _casilla(cid="0700", continuidad_id="base", data_type="text")
+        successor = _casilla(cid="0700", continuidad_id="base", data_type="decimal")
+        modelo = _annual_modelo(
+            predecessor,
+            successor,
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="representation_evolved")),
+            continuidad_validation={"2025": "strict"},
+        )
+        assert validate_registry_scope([modelo]) == ()
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("label", "Changed concept"),
+            ("section", ("new",)),
+            ("semantic_role", "different_role"),
+            ("legal_refs", ("ley-58-2003:art-30",)),
+        ],
+    )
+    def test_representation_evolution_refuses_unrelated_axes(self, field: str, value: object) -> None:
+        predecessor = _casilla(cid="0700", continuidad_id="base", data_type="money")
+        successor = _casilla(cid="0700", continuidad_id="base", data_type="text", **{field: value})
+        modelo = _annual_modelo(
+            predecessor,
+            successor,
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="representation_evolved")),
+            continuidad_validation={"2025": "strict"},
+        )
+        assert any(field in failure for failure in validate_registry_scope([modelo]))
+
+    def test_representation_evolution_does_not_waive_coapplying_role_type_conflict(self) -> None:
+        predecessor = _casilla(cid="0700", continuidad_id="base", data_type="text")
+        successor = _casilla(cid="0700", continuidad_id="base", data_type="decimal")
+        conflicting = _casilla(cid="0800", semantic_role="base", data_type="text")
+        modelo = _annual_modelo(
+            predecessor,
+            successor,
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="representation_evolved")),
+            continuidad_validation={"2025": "strict"},
+        )
+        revision = modelo.revisions["2025"].model_copy(update={"casillas": (successor, conflicting)})
+        modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2025": revision}})
+
+        assert any("role canonical" in failure for failure in validate_registry_scope([modelo]))
 
     def test_strict_continuity_accepts_nonadjacent_change_proved_by_adjacent_evolution(self) -> None:
         prior = _casilla(cid="0700", continuidad_id="base")
@@ -921,16 +1056,9 @@ def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded(committ
 
     assert _evolution_pairs(committed_m100, continuidad_id) == {
         ("2020", "2021"): "legal_refs_evolved",
-        ("2020", "2022"): "legal_refs_evolved",
-        ("2020", "2023"): "legal_refs_evolved",
-        ("2020", "2024"): "legal_refs_evolved",
-        ("2020", "2025"): "legal_refs_evolved",
         ("2021", "2022"): "unchanged",
-        ("2021", "2025"): "legal_refs_evolved",
         ("2022", "2023"): "unchanged",
-        ("2022", "2025"): "legal_refs_evolved",
         ("2023", "2024"): "unchanged",
-        ("2023", "2025"): "legal_refs_evolved",
         ("2024", "2025"): "legal_refs_evolved",
     }
 
@@ -958,19 +1086,9 @@ def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_load
 
     assert _evolution_pairs(committed_m100, continuidad_id) == {
         ("2020", "2021"): "label_and_legal_refs_evolved",
-        ("2020", "2022"): "label_and_legal_refs_evolved",
-        ("2020", "2023"): "label_and_legal_refs_evolved",
-        ("2020", "2024"): "label_and_legal_refs_evolved",
-        ("2020", "2025"): "label_and_legal_refs_evolved",
         ("2021", "2022"): "label_evolved",
-        ("2021", "2023"): "label_evolved",
-        ("2021", "2024"): "label_evolved",
-        ("2021", "2025"): "label_and_legal_refs_evolved",
         ("2022", "2023"): "label_evolved",
-        ("2022", "2024"): "label_evolved",
-        ("2022", "2025"): "label_and_legal_refs_evolved",
         ("2023", "2024"): "label_evolved",
-        ("2023", "2025"): "label_and_legal_refs_evolved",
         ("2024", "2025"): "label_and_legal_refs_evolved",
     }
 
@@ -1022,7 +1140,9 @@ def test_backend_registry_validation_accepts_committed_corpus_drift_gate(
     committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     modelos, catalogues = committed_registry
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
+    RegistryValidator(
+        catalogues, source_root=bundled_path(), user_profile_schema=load_user_profile_schema()
+    ).validate_registry(modelos)
 
 
 def test_singleton_semantic_role_warning_count_does_not_regress(
@@ -1031,7 +1151,9 @@ def test_singleton_semantic_role_warning_count_does_not_regress(
     modelos, catalogues = committed_registry
     with warnings.catch_warnings(record=True) as captured:
         warnings.simplefilter("always")
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
+        RegistryValidator(
+            catalogues, source_root=bundled_path(), user_profile_schema=load_user_profile_schema()
+        ).validate_registry(modelos)
 
     singleton_warnings = [
         str(item.message)

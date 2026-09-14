@@ -1,0 +1,100 @@
+"""Ordered ledger application :class:`~core.errors.ErrorCode` registry shard.
+
+Rows map ledger exception qualnames to stable
+:class:`~core.errors.ErrorCategory` values and canonical locale message keys.
+"""
+
+from ..error_codes import ErrorCategory, ErrorCode
+
+DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
+    (
+        "cadrumo.application.ledger.counterparty_establishment_ports.CounterpartyEstablishmentPersistenceError",
+        ErrorCode(
+            code="FAIL_COUNTERPARTY_ESTABLISHMENT_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_counterparty_establishment_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.evidence_sweep_ports.EvidenceSweepFileNotReachableError",
+        ErrorCode(
+            code="REFUSED_EVIDENCE_SWEEP_FILE_NOT_REACHABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_evidence_sweep_file_not_reachable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.invoice_confirmation_ports.InvoiceConfirmationPersistenceError",
+        ErrorCode(
+            code="FAIL_INVOICE_CONFIRMATION_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_invoice_confirmation_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.invoice_draft_extraction_ports.StructuredInvoiceReadError",
+        ErrorCode(
+            code="INTERNAL_STRUCTURED_INVOICE_READ",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_structured_invoice_read",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.invoice_draft_extraction_ports.InvoiceDraftReaderUnavailableError",
+        ErrorCode(
+            code="FAIL_INVOICE_DRAFT_READER_UNAVAILABLE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_invoice_draft_reader_unavailable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.llm_diagnostics_ports.LlmDiagnosticsReadError",
+        ErrorCode(
+            code="FAIL_LLM_DIAGNOSTICS_READ",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_llm_diagnostics_read",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.period_filter.LedgerPeriodValidationError",
+        ErrorCode(
+            code="REFUSED_LEDGER_PERIOD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_ledger_period_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.persistence_ports.LedgerPersistenceConflictError",
+        ErrorCode(
+            code="LOCKED_LEDGER_PERSISTENCE_CONFLICT",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.canonical_ledger_persistence_conflict",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.workspace.LedgerWorkspaceProjectionError",
+        ErrorCode(
+            code="INTEGRITY_LEDGER_WORKSPACE_PROJECTION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_ledger_workspace_projection",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+)

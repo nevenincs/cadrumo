@@ -20,7 +20,7 @@ from ...profile.submission import (
     SubmissionRepository,
 )
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
-from ..errors import ClassificationError
+from ..errors import ClassificationError, PathContainmentError
 from ..sql.secure_objects import SecureObjectRepository
 from .secure_sql import TestRuntimeProfile
 
@@ -197,7 +197,7 @@ class TestClassificationGate:
 class TestUnsafeSubmissionIds:
     def test_unsafe_id_rejected(self, repo: SubmissionRepository) -> None:
         for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
-            with pytest.raises(ValueError, match=r"identifier|non-empty|submission_id"):
+            with pytest.raises(PathContainmentError, match=r"identifier|non-empty|submission_id"):
                 repo.envelope_path_for(bad)
 
 

@@ -94,12 +94,12 @@ class BrowserError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoE
         )
 
 
-class BrowserValidationError(BrowserError, ValueError):
+class BrowserValidationError(BrowserError):
     """Raised when browser parameters or field values fail domain validation.
 
-    This error inherits from both :class:`BrowserError` and :class:`ValueError`,
-    ensuring compatibility with Pydantic's validator contract while
-    remaining catchable under the package's unified error hierarchy.
+    Pydantic callbacks translate this registered error to a plain
+    ``ValueError`` at their narrow boundary while browser adapter code keeps
+    the registered hierarchy.
     """
 
 

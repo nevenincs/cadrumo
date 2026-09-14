@@ -8,6 +8,7 @@ from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
@@ -244,7 +245,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
     async def _submit(self) -> None:
         pair = self.selected_pair
         if pair is None:  # pragma: no cover
-            raise RuntimeError("reconciliation selection disappeared")
+            raise InternalInvariantError("reconciliation selection disappeared")
         status = self.query_one("#ledger-flow-status", Static)
         try:
             await self.controller.submit_link(*pair)

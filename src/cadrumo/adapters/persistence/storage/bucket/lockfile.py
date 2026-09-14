@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .....core.config import load_settings as _load_settings
+from .....core.errors.hierarchy import InternalInvariantError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
 from .....core.logging import get_logger
@@ -339,7 +340,7 @@ def _acquire_local_slot(
                 return True
             if ownership.thread_id == thread_id:
                 if ownership.depth == 0:
-                    raise RuntimeError(
+                    raise InternalInvariantError(
                         "bucket lock cannot re-enter while initial acquisition is incomplete",
                     )
                 recorded_pid = _read_pid(target)

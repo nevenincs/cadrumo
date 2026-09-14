@@ -77,7 +77,7 @@ from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_
 from ..core.aggregation import BindingSourceKind
 from ..core.auth_provider import AuthProviderKind
 from ..core.bucket_pointer import resolve_active_bucket_id
-from ..core.errors.hierarchy import CadrumoError
+from ..core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ..core.filing_year import FilingYear
 from ..core.identity.profile import ProfileId
 from ..core.logging import get_logger
@@ -85,7 +85,7 @@ from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.operator_action_enums import OperatorActionAxis
 from ..core.period import Period
 from ..core.time.clock import today_madrid
-from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.authority import bundled_indexed_authority
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ..domain.deadlines.models import ObligationStatus, Schedule, TaxpayerProfile
@@ -112,6 +112,7 @@ from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_
 from .workflow.state_models import WorkflowState
 
 if TYPE_CHECKING:
+    from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
     from ..domain.user_profile.values import UserProfileRecord
     from .auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -538,7 +539,7 @@ def _assert_total_action_projection[ActionSourceT: StrEnum](
     if member_set != projection_set:
         missing = sorted(member.value for member in member_set - projection_set)
         unexpected = sorted(str(member) for member in projection_set - member_set)
-        raise RuntimeError(
+        raise InternalInvariantError(
             f"every {source_name} must declare exactly one OperatorActionAxis; "
             f"missing={missing}; unexpected={unexpected}",
         )
@@ -557,7 +558,7 @@ def _assert_total_binding_source_readiness_projection() -> None:
     if member_set != projection_set:
         missing = sorted(member.value for member in member_set - projection_set)
         unexpected = sorted(str(member) for member in projection_set - member_set)
-        raise RuntimeError(
+        raise InternalInvariantError(
             "every BindingSourceKind must declare exactly one binding-readiness locale key; "
             f"missing={missing}; unexpected={unexpected}",
         )
@@ -703,6 +704,7 @@ def _modelo_profile_refusal(
     bucket_id: str,
     request: ModeloReadinessRequest,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> str:
     """Return the first profile refusal while evaluating every refusal limb."""
     from ..core.i18n.render import tr
@@ -721,6 +723,7 @@ def _modelo_profile_refusal(
         record=record,
         bucket_id=bucket_id,
         modelo=request.modelo,
+        operation=operation,
     )
     pre_activity_refusal = pre_activity_period_refusal(
         record=record,
@@ -744,6 +747,7 @@ def _build_modelo_profile_stage(
     context: _ModeloReadinessContext,
     period: Period,
     registry: _ModeloReadinessRegistryResolution,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ProfilePreflightReport, str]:
     """Evaluate profile completeness and target-specific refusal limbs."""
     from .modelo.profile_readiness_gate import modelo_work_profile_preflight_report
@@ -758,13 +762,14 @@ def _build_modelo_profile_stage(
         period=period,
         revision=revision,
         resolve_revision_when_missing=snapshot is not None,
-        authority=bundled_authority(),
+        operation=operation,
     )
     return profile_report, _modelo_profile_refusal(
         record=context.record,
         bucket_id=context.bucket_id,
         request=request,
         period=period,
+        operation=operation,
     )
 
 
@@ -797,15 +802,17 @@ def _evaluate_modelo_readiness(
     *,
     context: _ModeloReadinessContext,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
 ) -> _ModeloReadinessEvaluation:
     """Evaluate profile, registry, binding, and ledger axes for one request."""
     period = _ledger_period_for_modelo_readiness(request)
-    registry = _resolve_modelo_readiness_registry(request, period=period)
+    registry = _resolve_modelo_readiness_registry(request, period=period, operation=operation)
     profile_report, profile_refusal = _build_modelo_profile_stage(
         request,
         context=context,
         period=period,
         registry=registry,
+        operation=operation,
     )
     ledger = _build_modelo_ledger_stage(
         registry.snapshot,
@@ -821,6 +828,7 @@ def _evaluate_modelo_readiness(
             ledger_sources_ready=ledger.ready is True,
             modelo=request.modelo,
             period=period,
+            operation=operation,
         )
         if registry.snapshot is not None
         else ()
@@ -886,16 +894,18 @@ def _build_modelo_readiness(
     context = _load_modelo_readiness_context(active_profile_id, read_ports=read_ports)
     if context is None:
         return ()
-    return tuple(
-        _project_modelo_readiness(
-            _evaluate_modelo_readiness(
-                request,
-                context=context,
-                usage_ratio_profile_loader=read_ports.usage_ratio_profile_loader,
+    with bundled_indexed_authority().operation() as operation:
+        return tuple(
+            _project_modelo_readiness(
+                _evaluate_modelo_readiness(
+                    request,
+                    context=context,
+                    usage_ratio_profile_loader=read_ports.usage_ratio_profile_loader,
+                    operation=operation,
+                )
             )
+            for request in requests
         )
-        for request in requests
-    )
 
 
 # The ledger-preflight binding source set is single-sourced in
@@ -912,6 +922,7 @@ def _resolve_modelo_readiness_registry(
     request: ModeloReadinessRequest,
     *,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> _ModeloReadinessRegistryResolution:
     """Resolve the registry snapshot used by modelo readiness.
 
@@ -923,7 +934,7 @@ def _resolve_modelo_readiness_registry(
 
     period_token = period.registry_token
     try:
-        snapshot = bundled_authority().snapshot(
+        snapshot = operation.snapshot(
             request.modelo,
             filing_year=request.filing_year,
             period=period_token,
@@ -988,6 +999,7 @@ def _missing_calculation_bindings_for_readiness(
     ledger_sources_ready: bool,
     modelo: str,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ProjectionModeloBindingRequirement, ...]:
     """Return registry bindings not available to calculation readiness.
 
@@ -1033,6 +1045,7 @@ def _missing_calculation_bindings_for_readiness(
             snapshot,
             bucket_id=bucket_id,
             profile_record=profile_record,
+            operation=operation,
         )
     except ProfileBindingResolutionError:
         _log.debug(
@@ -1123,6 +1136,7 @@ def build_operator_state_projection(
         certificate_secret_backend_factory: Application-owned certificate-secret
             backend factory used by auth readiness.
         operator_probe_ports: Required inward operator-auth probe capabilities.
+        operator_scope_ports: Operator-scoped auth and profile capabilities.
         read_ports: Required application-owned profile and workspace reads
             composed by the outer entrypoint for this profile scope.
         state: Pre-loaded workflow state. When ``None`` and a profile

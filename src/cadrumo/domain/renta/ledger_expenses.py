@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
@@ -134,6 +135,7 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
 
     @field_validator("usage_ratios", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _usage_ratios_in_bounds(cls, value: dict[SpendingCategory, Decimal]) -> dict[SpendingCategory, Decimal]:
         for category, ratio in value.items():
             _require_decimal(ratio, f"usage ratio for {category.value!r}")
@@ -143,6 +145,7 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
 
     @field_validator("statutory_cap_days")
     @classmethod
+    @pydantic_validation_boundary
     def _cap_days_decimal(cls, value: Decimal | None) -> Decimal | None:
         if value is not None:
             _require_decimal(value, "statutory_cap_days")
@@ -175,12 +178,14 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
 
     @field_validator("gross_amount", "taxable_base", "iva_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _amounts_are_finite_decimals(cls, value: Decimal | None) -> Decimal | None:
         if value is not None:
             _require_decimal(value, "monetary amount")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_invoice_and_direction(self) -> RentaDeductibleExpenseFact:
         if self.invoice_id is None and self.invoice_issue_date is not None:
             raise RentaValidationError("invoice_issue_date requires invoice_id")
@@ -228,12 +233,14 @@ class RentaDeductibilityResult(_RentaStrictFrozenModel):
 
     @field_validator("gross_amount", "deductible_amount", "non_deductible_amount", "statutory_cap_applied")
     @classmethod
+    @pydantic_validation_boundary
     def _result_amounts_are_decimals(cls, value: Decimal | None) -> Decimal | None:
         if value is not None:
             _require_decimal(value, "deductibility result amount")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_category_family(self) -> RentaDeductibilityResult:
         if self.category_family is not family_for(self.category):
             raise RentaValidationError("category_family must match category")
@@ -319,12 +326,14 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
 
     @field_validator("gross_amount", "taxable_base", "iva_amount", "deductible_amount", "non_deductible_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _observation_amounts_are_decimals(cls, value: Decimal | None) -> Decimal | None:
         if value is not None:
             _require_decimal(value, "observation amount")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_period_and_invoice_state(self) -> RentaDeductibleExpenseObservation:
         if self.category_family is not family_for(self.category):
             raise RentaValidationError("category_family must match category")

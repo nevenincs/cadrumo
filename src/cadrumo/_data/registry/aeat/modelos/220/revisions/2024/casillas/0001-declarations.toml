@@ -6058,6 +6058,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @786+17 N. Tramo base imponible 1
 [[revisions."2024".casillas]]
 id = "T22007000:t22007000.786-802"
+continuidad_id = "base-imponible-tramo-uno"
 number = "t22007000.786-802"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -6066,6 +6067,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @803+5 N. Tramo de tipo de gravamen 1 (tres enteros, dos decimales)
 [[revisions."2024".casillas]]
 id = "T22007000:t22007000.803-807"
+continuidad_id = "tipo-gravamen-tramo-uno"
 number = "t22007000.803-807"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -6075,6 +6077,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @808+17 N. Tramo base imponible 2
 [[revisions."2024".casillas]]
 id = "T22007000:t22007000.808-824"
+continuidad_id = "base-imponible-tramo-dos"
 number = "t22007000.808-824"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -6083,6 +6086,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @825+5 N. Tramo de tipo de gravamen 2 (tres enteros, dos decimales)
 [[revisions."2024".casillas]]
 id = "T22007000:t22007000.825-829"
+continuidad_id = "tipo-gravamen-tramo-dos"
 number = "t22007000.825-829"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
@@ -17612,6 +17616,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @16+1 An. Cuenta corriente tributaria
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.16"
+continuidad_id = "documento-ingreso-devolucion-cuenta-corriente-tributaria"
 number = "t220did00.16"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "opciones"]
@@ -17621,6 +17626,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @17+4 Num. Devengo(2) - Ejercicio.{DID_ejer}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.17-20"
+continuidad_id = "documento-ingreso-devolucion-ejercicio"
 number = "t220did00.17-20"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -17630,6 +17636,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @21+1 Num. Devengo (2). Tipo de ejercicio. {DID_tipo_ejer}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.21"
+continuidad_id = "documento-ingreso-devolucion-tipo-ejercicio"
 number = "t220did00.21"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -17639,6 +17646,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @22+2 An. Devengo(2). Período Impositivo {DID_periodo}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.22-23"
+continuidad_id = "documento-ingreso-devolucion-periodo"
 number = "t220did00.22-23"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -17648,6 +17656,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @24+8 Num. Devengo (2).Período Impositivo fecha de inicio {DID_fi_periodo} (AAAAMMDD)
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.24-31"
+continuidad_id = "documento-ingreso-devolucion-fecha-inicio"
 number = "t220did00.24-31"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -17657,6 +17666,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @32+8 Num. Devengo (2). Período Impositivo fecha fin {DID_ff_periodo} (AAAAMMDD)
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.32-39"
+continuidad_id = "documento-ingreso-devolucion-fecha-fin"
 number = "t220did00.32-39"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devengo"]
@@ -17666,6 +17676,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @40+9 An. Identificación (1) - NIF. {DID_id_NIF}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.40-48"
+continuidad_id = "documento-ingreso-devolucion-nif"
 number = "t220did00.40-48"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "identificacion"]
@@ -17675,6 +17686,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @49+60 An. Identificación (1) - Apellidos o Razón Social. {DID_id_apellidos}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.49-108"
+continuidad_id = "documento-ingreso-devolucion-apellidos-razon-social"
 number = "t220did00.49-108"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "identificacion"]
@@ -17684,6 +17696,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @109+20 An. Identificación (1) - Nombre {DID_id_nombre}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.109-128"
+continuidad_id = "documento-ingreso-devolucion-nombre"
 number = "t220did00.109-128"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "identificacion"]
@@ -17720,6 +17733,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @180+1 An. Devolución (4) - Modalidad de devolución {DID_modalidad_devolucion}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.180"
+continuidad_id = "documento-ingreso-devolucion-modalidad-devolucion"
 number = "t220did00.180"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17729,6 +17743,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @181+17 Num. Devolución (4) - Importe a devolver. {DID_dev_importe} [D]
 [[revisions."2024".casillas]]
 id = "T220DID00:D"
+continuidad_id = "documento-ingreso-devolucion-importe-devolucion"
 number = "D"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17737,6 +17752,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @198+1 Num. Devolución(4) - Marca SEPA
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.198"
+continuidad_id = "documento-ingreso-devolucion-marca-sepa"
 number = "t220did00.198"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17746,6 +17762,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @199+34 An. Devolución (4) - Código IBAN - Bloque. {DID_dev_iban}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.199-232"
+continuidad_id = "documento-ingreso-devolucion-iban-devolucion"
 number = "t220did00.199-232"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17755,6 +17772,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @233+11 An. Devolución (4) - Código SWIFT-BIC. {DID_dev_swift_bic} (sólo Resto de paises/no SEPA)
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.233-243"
+continuidad_id = "documento-ingreso-devolucion-swift-bic"
 number = "t220did00.233-243"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17764,6 +17782,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @244+70 An. Devolución (4) - Resto países- Banco/Name of the bank
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.244-313"
+continuidad_id = "documento-ingreso-devolucion-banco-extranjero"
 number = "t220did00.244-313"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17773,6 +17792,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @314+35 An. Devolución (4) - Resto países - Dirección del banco/Address of the bank
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.314-348"
+continuidad_id = "documento-ingreso-devolucion-direccion-banco"
 number = "t220did00.314-348"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17782,6 +17802,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @349+30 An. Devolución (4) - Resto países - Ciudad/City
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.349-378"
+continuidad_id = "documento-ingreso-devolucion-ciudad-banco"
 number = "t220did00.349-378"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17791,6 +17812,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @379+40 An. Devolución (4) - Resto países - País/Country
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.379-418"
+continuidad_id = "documento-ingreso-devolucion-pais-banco"
 number = "t220did00.379-418"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17800,6 +17822,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @419+2 An. Devolución (5) - Resto países - Código País/Country Code
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.419-420"
+continuidad_id = "documento-ingreso-devolucion-codigo-pais-banco"
 number = "t220did00.419-420"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "devolucion"]
@@ -17809,6 +17832,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @421+1 An. Ingreso (5) - Modalidad de ingreso. {DID_modalidad_ingreso}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.421"
+continuidad_id = "documento-ingreso-devolucion-modalidad-ingreso"
 number = "t220did00.421"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "ingreso"]
@@ -17818,6 +17842,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @422+17 Num. Ingreso (5) - Importe a ingresar. {DID_ing_efectivo} [I]
 [[revisions."2024".casillas]]
 id = "T220DID00:I"
+continuidad_id = "documento-ingreso-devolucion-importe-ingreso"
 number = "I"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "ingreso"]
@@ -17826,6 +17851,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @439+34 An. Ingreso (5) - Código IBAN - Bloque. {DID_ing_iban}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.439-472"
+continuidad_id = "documento-ingreso-devolucion-iban-ingreso"
 number = "t220did00.439-472"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "ingreso"]
@@ -17835,6 +17861,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @473+17 N. Abono/Compensación(6). Abono por conversión de activos por impuesto diferido (Art. 130 L.I.S.) [A]
 [[revisions."2024".casillas]]
 id = "T220DID00:A"
+continuidad_id = "documento-ingreso-devolucion-abono-activos-diferidos"
 number = "A"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]
@@ -17843,6 +17870,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @490+17 N. Abono/Compensación(6). Compensación por conversión de activos por impuesto diferido (Art. 130 L.I.S.) [C]
 [[revisions."2024".casillas]]
 id = "T220DID00:C"
+continuidad_id = "documento-ingreso-devolucion-compensacion-activos-diferidos"
 number = "C"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]
@@ -17878,6 +17906,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @558+1 An. Cuota Cero (7). {DID_cuota_cero}
 [[revisions."2024".casillas]]
 id = "T220DID00:t220did00.558"
+continuidad_id = "documento-ingreso-devolucion-cuota-cero"
 number = "t220did00.558"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "cuota_cero"]

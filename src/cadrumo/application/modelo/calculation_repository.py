@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 
 
@@ -43,7 +44,7 @@ def calculation_revision_catalogue_repository(
     try:
         factory = _BOUND_CALCULATION_REVISION_CATALOGUE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("calculation-revision catalogue persistence has not been composed") from error
+        raise InternalInvariantError("calculation-revision catalogue persistence has not been composed") from error
     return factory(bucket_id=bucket_id)
 
 

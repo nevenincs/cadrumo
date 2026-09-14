@@ -40,6 +40,7 @@ from ..core.config import (
     settings_for_active_profile_bucket,
 )
 from ..core.config_support import StorageRouteClassification, StorageRouteKind
+from ..core.errors.hierarchy import InternalInvariantError
 from ..core.i18n.render import tr
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.operator_action_enums import (
@@ -255,7 +256,7 @@ def _settings_environment_name(field_name: str) -> str:
     """Resolve a settings field to the real environment identity or fail."""
     environment_name = field_name.upper()
     if field_name not in Settings.model_fields or environment_name not in Settings.env_var_names():
-        raise RuntimeError(f"settings field has no environment authority: {field_name}")
+        raise InternalInvariantError(f"settings field has no environment authority: {field_name}")
     return environment_name
 
 

@@ -9,21 +9,20 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import Annotated, cast
 
 from pydantic import BaseModel, Field, StringConstraints
 
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...contribuyente.entity_type import EntityType, entity_type_legal_entity_token
+from ...contribuyente.entity_type import EntityType
 from ...deadlines.models import TaxpayerProfile
-from .errors import RegistryFailureClassification, RegistryFailureCondition
+from .entity_type import entity_type_legal_entity_token as _registry_entity_type_legal_entity_token
+from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact, ScalarFactQuery
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .ids import LegalRefId
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -55,7 +54,7 @@ class Modelo202ModalityVerdict(BaseModel):
 def _modelo_202_applicability_declarations(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> dict[str, str]:
     """Resolve the dated Modelo 202 applicability catalogue."""
     resolved = authority.resolve_governed_fact(
@@ -109,13 +108,13 @@ def _modelo_202_legal_refs(
 def resolve_modelo_202_art_40_3_incn_threshold(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the LIS art. 40.3 INCN threshold with complete authority provenance."""
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        authority = governed_facts_in_scope()
+        if authority is None:
+            raise RegistryValidationError("Modelo 202 applicability requires an explicit authority operation or scope")
     declarations = _modelo_202_applicability_declarations(
         effective_date=effective_date,
         authority=authority,
@@ -147,7 +146,7 @@ def modelo_202_modality_from_inputs(
     entity_type: EntityType | None,
     incn_prior_12_months: Decimal | None,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 modality from the two raw inputs (entity type + INCN).
 
@@ -162,14 +161,14 @@ def modelo_202_modality_from_inputs(
         legal grounding.
     """
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        authority = governed_facts_in_scope()
+        if authority is None:
+            raise RegistryValidationError("Modelo 202 applicability requires an explicit authority operation or scope")
     declarations = _modelo_202_applicability_declarations(
         effective_date=effective_date,
         authority=authority,
     )
-    if entity_type is None or entity_type != entity_type_legal_entity_token():
+    if entity_type is None or entity_type != _registry_entity_type_legal_entity_token(authority=authority):
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
             reason=declarations["reason.not_applicable"],

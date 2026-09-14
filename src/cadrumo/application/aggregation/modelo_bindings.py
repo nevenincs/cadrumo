@@ -38,7 +38,7 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
@@ -650,6 +650,8 @@ _IMPATRIADO_REGISTRY_SOURCE_KIND = "ledger_impatriado_income_aggregation"
 
 def _resolve_impatriado_registry_declarations(
     context: CalculationSourceContext,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[str, CasillaId, frozenset[str], frozenset[str]] | None:
     """Resolve the selected filing context's impatriado ledger declarations.
 
@@ -657,8 +659,11 @@ def _resolve_impatriado_registry_declarations(
     Returning ``None`` makes the caller return an empty source resolution rather
     than silently selecting a Python default.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _resolve_impatriado_registry_declarations(context, operation=indexed_operation)
     try:
-        resolved = bundled_authority().resolve_governed_fact(
+        resolved = operation.resolve_governed_fact(
             MappingFactQuery(
                 fact_id=_IMPATRIADO_REGISTRY_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,

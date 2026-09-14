@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     ValidatedRegistryAuthority,
@@ -100,7 +101,7 @@ def revision_carry_outcome(
             )
             selected_revision_id = inspection.revision_id
         else:
-            raise RuntimeError("revision carry selection requires an authority operation")
+            raise InternalInvariantError("revision carry selection requires an authority operation")
     except Exception as exc:
         return RevisionCarryOutcome(
             refused=True,

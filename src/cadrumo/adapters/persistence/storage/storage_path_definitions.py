@@ -19,7 +19,9 @@ here reaches back into ``namespace_registry.py``, so there is no cycle.
 
 from __future__ import annotations
 
-from typing import Final
+from collections.abc import Callable
+from functools import wraps
+from typing import Final, TypeVar
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -95,6 +97,22 @@ BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 SECRET_INDEX_FILENAME = "index.json"  # noqa: S105 - filename, not a credential
 SECRET_INDEX_SCHEMA_VERSION = 1
+_ValidationResultT = TypeVar("_ValidationResultT")
+
+
+def _pydantic_namespace_validator(
+    function: Callable[..., _ValidationResultT],
+) -> Callable[..., _ValidationResultT]:
+    """Translate the registered path refusal at Pydantic's callback edge."""
+
+    @wraps(function)
+    def wrapped(*args: object, **kwargs: object) -> _ValidationResultT:
+        try:
+            return function(*args, **kwargs)
+        except NamespaceRegistryError as exc:
+            raise ValueError(str(exc)) from exc
+
+    return wrapped
 
 
 class StoragePathDefinition(BaseModel):
@@ -123,6 +141,7 @@ class StoragePathDefinition(BaseModel):
 
     @field_validator("key")
     @classmethod
+    @_pydantic_namespace_validator
     def _key_is_registry_safe(cls, value: str) -> str:
         if value != value.strip():
             raise NamespaceRegistryError("path key must not carry surrounding whitespace")
@@ -132,6 +151,7 @@ class StoragePathDefinition(BaseModel):
 
     @field_validator("segment")
     @classmethod
+    @_pydantic_namespace_validator
     def _segment_is_single_path_component(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -142,6 +162,7 @@ class StoragePathDefinition(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @_pydantic_namespace_validator
     def _anchor_matches_kind(self) -> StoragePathDefinition:
         if self.kind is StoragePathKind.LOGICAL_SQL:
             if self.anchor is not None:

@@ -100,6 +100,7 @@ class ProfileCustodyTransactionService:
     """
 
     def __init__(self, *, root: Path | None = None) -> None:
+        """Bind physical custody storage and transaction dependencies to the configured root."""
         self._root = effective_storage_root(root)
         self._adapters: ProfileCustodyPort = profile_custody_port()
         self._repository = ProfileCustodyTransactionRepository(root=self._root)

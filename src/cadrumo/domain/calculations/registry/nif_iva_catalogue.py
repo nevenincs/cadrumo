@@ -11,7 +11,7 @@ from types import MappingProxyType
 from ....core.identity.nif_iva import NifIvaFormatSpec, NifIvaPrefix
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _FACT_ID = "nif-iva-country-format-catalogue"
@@ -172,18 +172,6 @@ def _catalogue(entries: Mapping[str, str]) -> NifIvaCatalogue:
     return NifIvaCatalogue(definitions=definitions)
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_catalogue(effective_date: date) -> NifIvaCatalogue:
-    from .authority import bundled_authority
-
-    return _catalogue(
-        _resolve_entries(
-            effective_date=effective_date,
-            authority=governed_facts_in_scope() or bundled_authority(),
-        )
-    )
-
-
 def resolve_nif_iva_catalogue(
     *,
     effective_date: date | None = None,
@@ -193,7 +181,9 @@ def resolve_nif_iva_catalogue(
     coordinate = effective_date or date.today()
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        return _bundled_catalogue(coordinate)
+        raise RegistryValidationError(
+            "NIF-IVA catalogue resolution requires a generation-pinned governed-fact source",
+        )
     return _catalogue(_resolve_entries(effective_date=coordinate, authority=authority))
 
 

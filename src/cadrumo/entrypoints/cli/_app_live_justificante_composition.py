@@ -36,6 +36,7 @@ from ...application.live.justificante_ports import (
     JustificanteRegistrationPorts,
 )
 from ...application.live.session import active_verified_session
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
 from ...domain.buckets.event import BucketEvent
 from ...domain.buckets.event_repository import emit_bucket_events
@@ -148,7 +149,7 @@ class _LiveRead:
 
     async def capture(self, *, expediente_id: str) -> CapturedJustificante:
         if self._session is None or self._settings is None or expediente_id not in self._expedientes:
-            raise RuntimeError("live justificante capture requires declaration discovery")
+            raise InternalInvariantError("live justificante capture requires declaration discovery")
         capture = await capture_justificante(
             self._session,
             self._expedientes[expediente_id],

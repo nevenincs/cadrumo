@@ -90,6 +90,7 @@ from ...application.user_profile.login_session import login_profile
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core.auth_provider import AuthProviderKind
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.period import Period
 from ...core.time.clock import now
@@ -937,7 +938,7 @@ def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(tmp_p
                 return observed
 
         failed_services = replace(driver.services, observation=_FailedTerminalObservation())
-        with pytest.raises(RuntimeError, match="did not succeed"):
+        with pytest.raises(InternalInvariantError, match="did not succeed"):
             asyncio.run(
                 run_censal_review_through_services(
                     actor_ref="operator:frontend-failed-test",

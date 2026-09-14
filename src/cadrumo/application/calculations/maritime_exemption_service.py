@@ -49,8 +49,8 @@ from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from ...domain.renta.errors import RentaValidationError
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
@@ -97,7 +97,7 @@ def resolve_maritime_exemption(
     annual_salary: Decimal | None = None,
     qualifying_days: int | None = None,
     gross_navigation_income: Decimal | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
     filing_period: date | None = None,
     devengo_date: date | None = None,
 ) -> MaritimeExemptionResult:

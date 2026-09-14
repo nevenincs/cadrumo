@@ -657,7 +657,9 @@ def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefi
 
 def _assert_caused_by_namespace_registry_error(error: ValidationError, case_id: str) -> None:
     causes = [entry.get("ctx", {}).get("error") for entry in error.errors()]
-    assert any(isinstance(cause, NamespaceRegistryError) for cause in causes), case_id
+    assert any(
+        isinstance(cause, ValueError) and isinstance(cause.__cause__, NamespaceRegistryError) for cause in causes
+    ), case_id
 
 
 def test_namespace_definition_invariant_violations_raise_namespace_registry_error() -> None:

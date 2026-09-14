@@ -16,6 +16,8 @@ from contextvars import ContextVar
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypedDict, runtime_checkable
 
+from ...core.errors.hierarchy import InternalInvariantError
+
 if TYPE_CHECKING:
     from ...core.config import Settings
 
@@ -187,7 +189,7 @@ def session_store() -> SessionStoreProtocol:
     try:
         return _BOUND_SESSION_STORE.get()
     except LookupError as exc:
-        raise RuntimeError("AEAT authentication session-store composition is not bound") from exc
+        raise InternalInvariantError("AEAT authentication session-store composition is not bound") from exc
 
 
 __all__ = [

@@ -25,10 +25,11 @@ See Also:
 from __future__ import annotations
 
 from datetime import date
+from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ...core.period import Period
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from ...domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -39,6 +40,9 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.temporal import select_revision_for_year
 from ...domain.user_profile.errors import ProfileNotFoundError
 from .profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _log = get_logger(__name__)
 
@@ -51,6 +55,7 @@ def profile_resolvable_binding_ids(
     period: Period | None,
     as_of: date | None = None,
     revision_id: RevisionId | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> frozenset[str]:
     """Return binding ids resolvable from the active profile's stored facts.
 
@@ -65,7 +70,17 @@ def profile_resolvable_binding_ids(
     bucket has no profile — the caller then treats every binding as missing,
     which is the correct conservative answer.
     """
-    authority = bundled_authority()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return profile_resolvable_binding_ids(
+                modelo=modelo,
+                bucket_id=bucket_id,
+                filing_year=filing_year,
+                period=period,
+                as_of=as_of,
+                revision_id=revision_id,
+                operation=indexed_operation,
+            )
     if period is not None and period.filing_year != filing_year:
         raise RegistryValidationError(
             translated_message="errors.error.error_calculations_registry_validation",
@@ -75,7 +90,7 @@ def profile_resolvable_binding_ids(
         period.registry_token
         if period is not None
         else annual_period_for_year(
-            authority,
+            operation,
             modelo=modelo,
             filing_year=filing_year,
             as_of=as_of,
@@ -84,7 +99,7 @@ def profile_resolvable_binding_ids(
     if resolved_period is None:
         return frozenset[str]()
     try:
-        snapshot = authority.snapshot(
+        snapshot = operation.snapshot(
             modelo,
             filing_year=filing_year,
             period=resolved_period,
@@ -129,7 +144,7 @@ def profile_resolvable_binding_ids(
 
 
 def annual_period_for_year(
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority | PinnedAuthorityOperation,
     *,
     modelo: str,
     filing_year: int,
@@ -147,7 +162,21 @@ def annual_period_for_year(
     ``as_of`` before this helper chooses the revision's first legal period.
     """
     try:
-        definition = authority.validate_modelo(modelo.strip())
+        if isinstance(authority, ValidatedRegistryAuthority):
+            definition = authority.validate_modelo(modelo.strip())
+        else:
+            directory = authority.modelo_directory(modelo.strip())
+            candidates = tuple(
+                metadata
+                for metadata in directory.revisions
+                if metadata.period_selector.periods_for_year(filing_year)
+                and (as_of is None or metadata.contains_date(as_of))
+            )
+            if not candidates:
+                return None
+            selected = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
+            periods = selected.period_selector.periods_for_year(filing_year)
+            return periods[0] if periods else None
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         _log.debug(
             "binding-readiness: annual period unavailable for modelo=%s filing_year=%s; "

@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -155,6 +156,7 @@ class SubmissionAttempt(BaseModel):
     browser_trace_path: Path | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_time_ordering(self) -> SubmissionAttempt:
         """Reject non-UTC timestamps and attempts whose end predates their start."""
         try:
@@ -234,6 +236,7 @@ class ModeloPresentado(BaseModel):
 
     @field_validator("modelo", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_modelo(cls, value: object) -> Modelo:
         """Resolve the filing's modelo through the canonical closed identity.
 
@@ -255,6 +258,7 @@ class ModeloPresentado(BaseModel):
         raise SubmissionValidationError(f"modelo must be a Modelo or str, got {type(value).__name__}")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_ack_consistency(self) -> ModeloPresentado:
         """Enforce ``ACEPTADA`` ↔ justificante-present invariants."""
         try:
@@ -277,6 +281,7 @@ class ModeloPresentado(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_attempt_coordinates(self) -> ModeloPresentado:
         """Bind every attempt to this submission at its own ordinal position.
 
@@ -296,6 +301,7 @@ class ModeloPresentado(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_attempt_chronology_and_status(self) -> ModeloPresentado:
         """Enforce the documented aggregate contract over the attempt history.
 

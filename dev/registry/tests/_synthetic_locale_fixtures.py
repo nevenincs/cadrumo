@@ -29,35 +29,32 @@ synthetic_locale_state = SyntheticLocaleState()
 #: unexpectedly empty synthetic catalogue — rather than drifting silently.
 BUNDLED_DATA_TEST_IDS: frozenset[str] = frozenset(
     {
-        "src/cadrumo/domain/calculations/registry/tests/test_semantic_role.py"
+        "dev/registry/tests/test_semantic_role.py"
         "::TestTypoTwinWarning::test_reviewed_singleton_roles_are_marked_in_committed_registry",
-        "src/cadrumo/domain/calculations/registry/tests/test_semantic_role.py"
+        "dev/registry/tests/test_semantic_role.py"
         "::TestTypoTwinWarning::test_m100_2024_2025_family_profile_roles_are_shared",
-        "src/cadrumo/domain/calculations/registry/tests/test_semantic_role.py"
-        "::TestTypoTwinWarning::test_reviewed_singleton_markers_do_not_warn",
-        "src/cadrumo/domain/calculations/registry/tests/test_semantic_role.py"
+        "dev/registry/tests/test_semantic_role.py::TestTypoTwinWarning::test_reviewed_singleton_markers_do_not_warn",
+        "dev/registry/tests/test_semantic_role.py"
         "::TestSignedCuotaResultadoRoles::test_irpf_and_is_signed_result_roles_are_bound_to_committed_casillas",
-        "src/cadrumo/domain/calculations/registry/tests/test_semantic_role.py"
+        "dev/registry/tests/test_semantic_role.py"
         "::TestModelo347QuarterlyContraparteRolesAreIntentionalSingletons"
         "::test_quarterly_contraparte_importe_roles_marked_intentional_singleton",
-        "src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py"
-        "::test_cross_revision_validator_accepts_committed_corpus",
-        "src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py"
+        "dev/registry/tests/test_cross_revision_drift.py::test_cross_revision_validator_accepts_committed_corpus",
+        "dev/registry/tests/test_cross_revision_drift.py"
         "::test_committed_corpus_non_overlapping_inventory_keeps_annual_m100_drift_visible",
-        "src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py"
-        "::test_committed_m100_continuity_surface_for_0582_is_loaded",
-        "src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py"
+        "dev/registry/tests/test_cross_revision_drift.py::test_committed_m100_continuity_surface_for_0582_is_loaded",
+        "dev/registry/tests/test_cross_revision_drift.py"
         "::test_committed_m100_continuity_surface_for_1038_retirement_is_loaded",
-        "src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py"
+        "dev/registry/tests/test_cross_revision_drift.py"
         "::test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded",
-        "src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py"
+        "dev/registry/tests/test_cross_revision_drift.py"
         "::test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_loaded",
-        "src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py"
+        "dev/registry/tests/test_cross_revision_drift.py"
         "::test_committed_m100_strict_continuity_surface_rejects_covered_label_drift",
-        "src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py"
+        "dev/registry/tests/test_cross_revision_drift.py"
         "::test_backend_registry_validation_accepts_committed_corpus_drift_gate",
-        "src/cadrumo/domain/calculations/registry/tests/test_label_artifacts.py"
-        "::test_committed_corpus_has_no_unresolved_label_placeholders",
+        "dev/registry/tests/test_cross_revision_drift.py::test_singleton_semantic_role_warning_count_does_not_regress",
+        "dev/registry/tests/test_label_artifacts.py::test_committed_corpus_has_no_unresolved_label_placeholders",
     },
 )
 

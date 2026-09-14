@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import base64
 import re
+from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
+from functools import wraps
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -25,6 +27,21 @@ from .errors import LLMValidationError
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
+
+
+def _pydantic_llm_validator[ValidationResultT](
+    function: Callable[..., ValidationResultT],
+) -> Callable[..., ValidationResultT]:
+    """Translate the registered LLM refusal at Pydantic's callback edge."""
+
+    @wraps(function)
+    def wrapped(*args: object, **kwargs: object) -> ValidationResultT:
+        try:
+            return function(*args, **kwargs)
+        except LLMValidationError as exc:
+            raise ValueError(str(exc)) from exc
+
+    return wrapped
 
 
 class MultimodalImageInput(BaseModel):
@@ -132,6 +149,7 @@ class LLMRequest(BaseModel):
 
     @field_validator("prompt")
     @classmethod
+    @_pydantic_llm_validator
     def validate_prompt(cls, value: str) -> str:
         """Ensure prompts are not empty or whitespace-only.
 
@@ -214,6 +232,7 @@ class PromptDefinition(BaseModel):
 
     @field_validator("id")
     @classmethod
+    @_pydantic_llm_validator
     def validate_id(cls, value: str) -> str:
         """Ensure prompt identifiers are kebab-case."""
         if not _PROMPT_ID_PATTERN.fullmatch(value):

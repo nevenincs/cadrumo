@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field, SecretStr
 
 from ....core.config import Settings
 from ....core.errors.error_codes import get_registered_error_code
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.hashing import content_hash_hex
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -290,7 +291,7 @@ class _OnHostInferenceArena:
         with self._lock:
             if self._held <= 0:
                 msg = "on-host inference arena released more slots than it holds"
-                raise RuntimeError(msg)
+                raise InternalInvariantError(msg)
             self._held -= 1
 
 

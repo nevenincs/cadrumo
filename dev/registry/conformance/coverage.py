@@ -57,6 +57,7 @@ from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import RegistryCoverageFacts, ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import (
     BindingId,
     CrossReferenceId,
@@ -504,7 +505,13 @@ def _model_law_coverage_for_coordinate(
             f"coverage coordinate {modelo.id}/{filing_year}/{period} selected revision "
             f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
         )
-    proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
+    proof = _snapshot_filing_review_proof(
+        modelo,
+        revision,
+        authority,
+        inspection,
+        filing_date=min(date(filing_year, 12, 31), revision.valid_to or date.max),
+    )
     if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
         try:
             snapshot = authority.coverage_facts(
@@ -582,7 +589,13 @@ def audit_registry_construct_evidence(
                         f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
                     )
             inspection = inspections[0]
-            proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
+            proof = _snapshot_filing_review_proof(
+                modelo,
+                revision,
+                authority,
+                inspection,
+                filing_date=min(date(coordinates[0][0], 12, 31), revision.valid_to or date.max),
+            )
             if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
                 try:
                     # Every coordinate is still admitted through the snapshot
@@ -1009,15 +1022,19 @@ def _snapshot_filing_review_proof(
     revision: ModeloRevision,
     authority: ValidatedRegistryAuthority,
     inspection: RegistryRevisionInspection,
+    *,
+    filing_date: date,
 ) -> _AuthorityCheckProof | None:
     """Return snapshot-owned filing-review proof, or None when the check refuses."""
     try:
-        tier = check_snapshot_filing_review_tier(
-            modelo,
-            revision,
-            authority.catalogues,
-            set(inspection.legal_ref_ids),
-        )
+        with validating_governed_facts(authority):
+            tier = check_snapshot_filing_review_tier(
+                modelo,
+                revision,
+                authority.catalogues,
+                set(inspection.legal_ref_ids),
+                filing_date=filing_date,
+            )
     except RegistryValidationError:
         return None
     return _PROOF_BY_TIER[tier]

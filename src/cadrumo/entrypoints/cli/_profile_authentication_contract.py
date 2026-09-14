@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from pydantic import SecretStr
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ._bootstrap_exempt import is_bootstrap_exempt
 from .command_spec import CommandSpecNode, ProfileAuthenticationPosture, ProfileSecretSpec
 from .config.secure_input import MachineSecretPayload
@@ -47,7 +48,7 @@ def root_profile_secret_model() -> type[MachineSecretPayload]:
 
     spec = COMMAND_GRAPH.by_key()["root"].profile_secret
     if spec is None:
-        raise RuntimeError("root command spec must declare a profile-secret contract")
+        raise InternalInvariantError("root command spec must declare a profile-secret contract")
     return resolve_profile_secret_model(spec)
 
 

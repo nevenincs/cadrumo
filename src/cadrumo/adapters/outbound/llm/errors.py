@@ -136,12 +136,11 @@ class LLMConsentError(_LLMPreconditionErrorMixin, LLMError):
     """
 
 
-class LLMValidationError(_LLMPreconditionErrorMixin, LLMError, ValueError):
+class LLMValidationError(_LLMPreconditionErrorMixin, LLMError):
     """Raised when an LLM-related object fails validation.
 
-    Inherits from both :class:`~llm.LLMError` and
-    :class:`ValueError` to remain compatible with Pydantic's validator-failure
-    contract while allowing catch-all
-    :class:`~llm.LLMError` handlers to detect integrity
-    failures.
+    Pydantic field validators translate this registered error to a plain
+    ``ValueError`` at their callback boundary while preserving the registered
+    error as the cause. Provider and parsing code keeps the typed
+    :class:`~llm.LLMError` hierarchy.
     """

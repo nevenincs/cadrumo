@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Literal, cast
 
 from ...core.aggregation import BindingSourceKind
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.calculations.registry.binding_provider_registration import (
     BINDING_PROVIDER_REGISTRATIONS,
     RouteOwnership,
@@ -98,7 +99,7 @@ def _resolver_ownership(
     resolver_type: type[ModeloSourceResolver],
 ) -> CalculationRouteResolverOwnership:
     if stage == "manual":
-        raise RuntimeError("manual input is not a class-owned resolver")
+        raise InternalInvariantError("manual input is not a class-owned resolver")
     return CalculationRouteResolverOwnership(
         stage=stage,
         resolver_type=resolver_type,
@@ -158,14 +159,14 @@ def _canonical_stage_map() -> dict[type[ModeloSourceResolver], CalculationRouteR
         resolver_type: cast(CalculationRouteResolverStage, stage) for stage, resolver_type in _CANONICAL_RESOLVER_STAGES
     }
     if len(canonical_stages) != len(_CANONICAL_RESOLVER_STAGES):
-        raise RuntimeError("canonical calculation route repeats a resolver type")
+        raise InternalInvariantError("canonical calculation route repeats a resolver type")
     return canonical_stages
 
 
 def _require_unique_resolver_ids(ownership: tuple[CalculationRouteOwnership, ...]) -> None:
     resolver_ids = tuple(row.resolver_id for row in ownership)
     if len(set(resolver_ids)) != len(resolver_ids):
-        raise RuntimeError("calculation route resolver ids must be unique")
+        raise InternalInvariantError("calculation route resolver ids must be unique")
 
 
 def _require_complete_resolver_coverage(
@@ -176,7 +177,7 @@ def _require_complete_resolver_coverage(
         row.resolver_type for row in ownership if isinstance(row, CalculationRouteResolverOwnership)
     }
     if declared_resolver_types != set(canonical_stages):
-        raise RuntimeError("calculation route must contain every canonical executable resolver exactly once")
+        raise InternalInvariantError("calculation route must contain every canonical executable resolver exactly once")
 
 
 def _require_one_pseudo_owner(
@@ -185,7 +186,7 @@ def _require_one_pseudo_owner(
     message: str,
 ) -> None:
     if sum(isinstance(row, owner_type) for row in ownership) != 1:
-        raise RuntimeError(message)
+        raise InternalInvariantError(message)
 
 
 def _validate_route_shape(
@@ -210,7 +211,7 @@ def _validate_route_shape(
 
 def _validate_manual_owner(row: CalculationRouteManualOwnership) -> None:
     if row != _MANUAL_INPUT_OWNER:
-        raise RuntimeError("calculation route permits only the canonical manual-input pseudo-owner")
+        raise InternalInvariantError("calculation route permits only the canonical manual-input pseudo-owner")
 
 
 def _validate_design_constant_owner(row: CalculationRouteDesignConstantOwnership) -> None:
@@ -219,7 +220,7 @@ def _validate_design_constant_owner(row: CalculationRouteDesignConstantOwnership
     # nothing to compare against and equality with the declared row is the
     # whole guard.
     if row != _DESIGN_CONSTANT_OWNER:
-        raise RuntimeError("calculation route permits only the canonical design-constant pseudo-owner")
+        raise InternalInvariantError("calculation route permits only the canonical design-constant pseudo-owner")
 
 
 def _validate_resolver_owner(
@@ -228,7 +229,7 @@ def _validate_resolver_owner(
 ) -> None:
     expected_stage = canonical_stages.get(row.resolver_type)
     if expected_stage is None:
-        raise RuntimeError(f"calculation route contains an invented resolver: {row.resolver_type!r}")
+        raise InternalInvariantError(f"calculation route contains an invented resolver: {row.resolver_type!r}")
     identity_checks = (
         (
             row.stage,
@@ -248,7 +249,7 @@ def _validate_resolver_owner(
     )
     for actual, expected, message in identity_checks:
         if actual != expected:
-            raise RuntimeError(message)
+            raise InternalInvariantError(message)
 
 
 def _validate_owner(
@@ -267,11 +268,11 @@ def _validate_owner(
 
 def _claim_owned_sources(row: CalculationRouteOwnership, source_owners: dict[BindingSourceKind, str]) -> None:
     if not row.owned_sources:
-        raise RuntimeError(f"calculation route resolver {row.resolver_id!r} owns no source")
+        raise InternalInvariantError(f"calculation route resolver {row.resolver_id!r} owns no source")
     for source_kind in row.owned_sources:
         prior = source_owners.get(source_kind)
         if prior is not None:
-            raise RuntimeError(
+            raise InternalInvariantError(
                 f"calculation route source {source_kind.value!r} has duplicate owners: {prior!r}, {row.resolver_id!r}",
             )
         source_owners[source_kind] = row.resolver_id
@@ -316,15 +317,17 @@ def _require_registered_route_agreement(
         if isinstance(registration.route, RouteOwnership):
             expected = (registration.route.resolver_id, registration.route.stage)
             if declared is None:
-                raise RuntimeError(f"binding provider {kind.value!r} claims route owner {expected!r} but is unrouted")
+                raise InternalInvariantError(
+                    f"binding provider {kind.value!r} claims route owner {expected!r} but is unrouted"
+                )
             if declared != expected:
-                raise RuntimeError(
+                raise InternalInvariantError(
                     f"binding provider {kind.value!r} declares route {expected!r} "
                     f"but the calculation route owns it at {declared!r}",
                 )
             continue
         if declared is not None:
-            raise RuntimeError(
+            raise InternalInvariantError(
                 f"binding provider {kind.value!r} declares no runtime owner but the calculation "
                 f"route owns it at {declared!r}",
             )
@@ -335,7 +338,7 @@ def _require_no_unregistered_route_sources(
 ) -> None:
     unregistered = frozenset(routed) - frozenset(BINDING_PROVIDER_REGISTRATIONS)
     if unregistered != MESH_ONLY_SOURCES:
-        raise RuntimeError(
+        raise InternalInvariantError(
             "the calculation route may own exactly the mesh-only sources without a binding registration; "
             f"found {sorted(kind.value for kind in unregistered)}",
         )
@@ -379,13 +382,15 @@ def require_calculation_route_resolver(stage: CalculationRouteStage, resolver: o
         if row.stage == stage and row.resolver_type is type(resolver)
     )
     if len(matching) != 1:
-        raise RuntimeError(f"runtime calculation resolver is not declared at {stage}: {type(resolver).__name__}")
+        raise InternalInvariantError(
+            f"runtime calculation resolver is not declared at {stage}: {type(resolver).__name__}"
+        )
     declaration = matching[0]
     if (
         getattr(resolver, "resolver_id", None) != declaration.resolver_id
         or getattr(resolver, "owned_sources", None) != declaration.owned_sources
     ):
-        raise RuntimeError(f"runtime calculation resolver identity drifted: {declaration.resolver_id}")
+        raise InternalInvariantError(f"runtime calculation resolver identity drifted: {declaration.resolver_id}")
 
 
 __all__ = [

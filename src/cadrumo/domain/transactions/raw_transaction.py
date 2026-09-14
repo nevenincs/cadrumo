@@ -21,7 +21,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core.decimal.constants import ZERO
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.codes import normalise_iso_4217_currency
@@ -112,6 +112,7 @@ class RawProvenance(BaseModel):
 
     @field_validator("ingested_at")
     @classmethod
+    @pydantic_validation_boundary
     def _require_aware_timestamp(cls, value: datetime) -> datetime:
         """Reject naive timestamps; ingest must record UTC offsets."""
         try:
@@ -121,6 +122,7 @@ class RawProvenance(BaseModel):
 
     @field_validator("provider_name")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_provider_name(cls, value: str) -> str:
         """Trim ``provider_name``; reject the empty string."""
         trimmed = value.strip()
@@ -169,6 +171,7 @@ class RawTransaction(BaseModel):
 
     @field_validator("provider_transaction_id", "description")
     @classmethod
+    @pydantic_validation_boundary
     def _reject_blank_strings(cls, value: str) -> str:
         """Trim and reject blank strings on identifier / narrative fields."""
         trimmed = value.strip()
@@ -178,6 +181,7 @@ class RawTransaction(BaseModel):
 
     @field_validator("amount")
     @classmethod
+    @pydantic_validation_boundary
     def _reject_negative_amount(cls, value: Decimal) -> Decimal:
         """Reject a negative ``amount``; the stored magnitude is non-negative.
 
@@ -195,6 +199,7 @@ class RawTransaction(BaseModel):
 
     @field_validator("currency", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_currency(cls, value: object) -> str:
         """Trim, uppercase, and assert ``currency`` is a three-letter ISO 4217 code.
 

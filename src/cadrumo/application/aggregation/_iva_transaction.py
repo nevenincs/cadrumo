@@ -13,12 +13,12 @@ from decimal import Decimal
 
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
+from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ...domain.iva.flow import (
     IvaFlowDirection,
@@ -52,12 +52,14 @@ from .iva_ledger import (
 )
 
 
-def _resolve_iva_registry_declarations(*, effective_date: date) -> tuple[object, ...]:
+def _resolve_iva_registry_declarations(
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[object, ...]:
     """Resolve the selected IVA model surfaces and governed fact catalogues."""
-    authority = bundled_authority()
-    query_service = RegistryQueryService(authority)
-    modelo_303 = query_service.describe_modelo("303")
-    modelo_390 = query_service.describe_modelo("390")
+    modelo_303 = operation.modelo_directory("303")
+    modelo_390 = operation.modelo_directory("390")
     fact_ids = (
         "iva-invoice-classification-catalogue",
         "iva-category-component-catalogue",
@@ -66,7 +68,7 @@ def _resolve_iva_registry_declarations(*, effective_date: date) -> tuple[object,
         "iva-supply-nature-citation-catalogue",
     )
     facts = tuple(
-        authority.resolve_governed_fact(
+        operation.resolve_governed_fact(
             MappingFactQuery(
                 fact_id=fact_id,
                 date_axis=DateAxis.FILING_PERIOD,
@@ -219,11 +221,13 @@ def _resolve_iva_transaction_amounts(
     *,
     operation_date: date,
     proportionality: Decimal,
+    operation: PinnedAuthorityOperation,
 ) -> _IvaTransactionAmounts | _IvaTransactionOutcome:
     return _resolved_iva_transaction_amounts(
         transaction,
         operation_date=operation_date,
         proportionality=proportionality,
+        operation=operation,
     )
 
 
@@ -232,6 +236,7 @@ def _resolved_iva_transaction_amounts(
     *,
     operation_date: date,
     proportionality: Decimal,
+    operation: PinnedAuthorityOperation,
 ) -> _IvaTransactionAmounts | _IvaTransactionOutcome:
     """Validate measured tax facts, then scale them for the business share."""
     transaction_id = transaction.transaction_id
@@ -264,7 +269,12 @@ def _resolved_iva_transaction_amounts(
                 ),
             ),
         )
-    rate_kind = _canonical_iva_rate_kind(transaction, iva_rate=iva_rate, operation_date=operation_date)
+    rate_kind = _canonical_iva_rate_kind(
+        transaction,
+        iva_rate=iva_rate,
+        operation_date=operation_date,
+        operation=operation,
+    )
     if isinstance(rate_kind, _IvaTransactionOutcome):
         return rate_kind
     return _IvaTransactionAmounts(
@@ -280,9 +290,10 @@ def _canonical_iva_rate_kind(
     *,
     iva_rate: Decimal,
     operation_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> IvaRateKind | _IvaTransactionOutcome:
     """Resolve a declared rate against the legal table available on its date."""
-    rate_kind = iva_rate_kind_for(iva_rate, on_date=operation_date)
+    rate_kind = iva_rate_kind_for(iva_rate, on_date=operation_date, operation=operation)
     if rate_kind is None:
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
@@ -300,12 +311,20 @@ def _resolve_iva_transaction_classification(
     transaction_id: str,
     invoice_kind: InvoiceKind,
     rate_kind: IvaRateKind,
+    operation: PinnedAuthorityOperation,
 ) -> _IvaTransactionClassification | _IvaTransactionOutcome:
     explicit_category = transaction.iva_category
     if explicit_category is not None:
         effective_category = explicit_category
     else:
-        effective_category = domestic_categories_by_rate_kind()[rate_kind]
+        catalogue = resolve_iva_rate_kind_catalogue(
+            effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
+            authority=operation,
+        )
+        definition = next((item for item in catalogue.definitions if item.token == rate_kind), None)
+        if definition is None:
+            raise ValueError(f"IVA rate kind {rate_kind!s} is not declared by the pinned rate catalogue")
+        effective_category = IvaCategory(definition.category)
     flow_direction = derive_flow_for_classification(
         category=effective_category,
         invoice_direction=invoice_kind,
@@ -317,6 +336,7 @@ def classify_iva_transaction(
     transaction: Transaction,
     *,
     resolved_period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> _IvaTransactionOutcome:
     """Filter + classify one ledger transaction against the IVA aggregation pipeline.
 
@@ -328,7 +348,14 @@ def classify_iva_transaction(
     reference; an invalid prorrata reference is reported as a
     ``prorrata_issue`` alongside the observation.
     """
-    _resolve_iva_registry_declarations(effective_date=resolved_period.end_date)
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return classify_iva_transaction(
+                transaction,
+                resolved_period=resolved_period,
+                operation=indexed_operation,
+            )
+    _resolve_iva_registry_declarations(effective_date=resolved_period.end_date, operation=operation)
     context = _resolve_iva_transaction_context(transaction, resolved_period=resolved_period)
     if isinstance(context, _IvaTransactionOutcome):
         return context
@@ -336,6 +363,7 @@ def classify_iva_transaction(
         transaction,
         operation_date=context.operation_date,
         proportionality=context.proportionality,
+        operation=operation,
     )
     if isinstance(amounts, _IvaTransactionOutcome):
         return amounts
@@ -344,6 +372,7 @@ def classify_iva_transaction(
         transaction_id=context.transaction_id,
         invoice_kind=context.invoice_kind,
         rate_kind=amounts.rate_kind,
+        operation=operation,
     )
     if isinstance(classification, _IvaTransactionOutcome):
         return classification

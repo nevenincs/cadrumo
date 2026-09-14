@@ -40,12 +40,12 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from functools import lru_cache
 from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...core.decimal.constants import HUNDRED
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.i18n.translatable import Translatable as t
@@ -59,9 +59,10 @@ from ...core.prorrata_register import (
 )
 from ...core.prose_elision import IssueDetail
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import (
@@ -404,6 +405,7 @@ class IvaLedgerCandidate(BaseModel):
 
     @field_validator("input_classification", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _require_registry_input_classification(cls, value: object) -> object:
         """Accept only art. 106 tokens declared by the selected 0116 fact."""
         if value is None or isinstance(value, InputClassification):
@@ -411,6 +413,7 @@ class IvaLedgerCandidate(BaseModel):
         return require_input_classification(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
         require_iva_cash_accounting_treatment(self.cash_accounting_treatment)
         if self.exemption_article is not None:
@@ -505,6 +508,7 @@ class IvaLedgerAggregation(BaseModel):
         return tuple(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _rectifications_are_consumed_once(self) -> IvaLedgerAggregation:
         rectified_ids = [
             observation.rectifies_ledger_id
@@ -549,6 +553,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     investment_asset_register: BienesInversionIvaRegister | None = None,
     investment_asset_profile_id: str | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> IvaLedgerAggregation:
     """Load the bucket-local transaction catalogue and project IVA observations.
 
@@ -566,7 +571,20 @@ def aggregate_iva_ledger_observations_from_repositories(
         investment_asset_register: Bienes-inversion authority, mandatory
             whenever ``transaction_repository`` is injected.
         investment_asset_profile_id: Profile owning that register.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_iva_ledger_observations_from_repositories(
+                bucket_id=bucket_id,
+                period=period,
+                prorrata_register_repository=prorrata_register_repository,
+                transaction_repository=transaction_repository,
+                investment_asset_register=investment_asset_register,
+                investment_asset_profile_id=investment_asset_profile_id,
+                operation=indexed_operation,
+            )
     if prorrata_register_repository.bucket_id != bucket_id:
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
@@ -599,6 +617,7 @@ def aggregate_iva_ledger_observations_from_repositories(
             ledger_profile_id=bucket_id,
             investment_asset_register=investment_asset_register,
             investment_asset_profile_id=investment_asset_profile_id,
+            operation=operation,
         )
     else:
         partition = repository.partition_by_date_range(period.start_date, period.end_date)
@@ -609,6 +628,7 @@ def aggregate_iva_ledger_observations_from_repositories(
             ledger_profile_id=bucket_id,
             investment_asset_register=investment_asset_register,
             investment_asset_profile_id=investment_asset_profile_id,
+            operation=operation,
         )
         out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
             partition.out_of_window,
@@ -827,6 +847,7 @@ def aggregate_iva_ledger_observations(
     investment_asset_register: BienesInversionIvaRegister,
     investment_asset_profile_id: str,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> IvaLedgerAggregation:
     """Project classified ledger transaction tax facts into an :class:`IvaLedgerAggregation`.
 
@@ -838,7 +859,20 @@ def aggregate_iva_ledger_observations(
         investment_asset_profile_id: Profile that owns the Bienes register.
         prorrata_apportionment: Optional active general-prorrata percentage to
             apply later to deducible IVA cuota binding values.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return aggregate_iva_ledger_observations(
+                transactions,
+                period=period,
+                ledger_profile_id=ledger_profile_id,
+                investment_asset_register=investment_asset_register,
+                investment_asset_profile_id=investment_asset_profile_id,
+                prorrata_apportionment=prorrata_apportionment,
+                operation=indexed_operation,
+            )
     resolved_period = period
     observations: list[IvaLedgerObservation] = []
     prorrata_references: list[ProrrataLedgerReference] = []
@@ -855,7 +889,7 @@ def aggregate_iva_ledger_observations(
             # issue. The exclusion is an explicit, recorded operator decision,
             # not an unclassified row that should nag with a "classify me" advisory.
             continue
-        outcome = classify_iva_transaction(transaction, resolved_period=resolved_period)
+        outcome = classify_iva_transaction(transaction, resolved_period=resolved_period, operation=operation)
         if outcome.gate_issue is not None:
             issues.append(outcome.gate_issue)
             continue
@@ -1505,13 +1539,16 @@ def compute_annual_deducible_totals_by_regime(
 #: leaving the Union.  The category membership is filing law, not aggregation
 #: mechanics, so the ledger reads the dated classification catalogue rather
 #: than maintaining a second Python list beside the invoice classifier.
-@lru_cache(maxsize=1)
-def _registry_export_categories() -> frozenset[IvaCategory]:
-    resolved = bundled_authority().resolve_governed_fact(
+def _registry_export_categories(
+    *,
+    effective_date: date,
+    authority: GovernedFactSource,
+) -> frozenset[IvaCategory]:
+    resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-invoice-classification-catalogue",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=effective_date,
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
@@ -1574,6 +1611,8 @@ def validate_intracom_export_counterparty(
     counterparty_country: str | None,
     eu_member_state: EUMemberState | None,
     identification_state: EUMemberState | None,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaLedgerAggregationIssue | None:
     """Return a gate issue when the counterparty/category coupling is violated.
 
@@ -1615,7 +1654,15 @@ def validate_intracom_export_counterparty(
                     "aggregation.iva_ledger.errors.domestic_identification_on_intra_community_transaction",
                 ),
             )
-    if category in _registry_export_categories():
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise AggregationValidationError(
+            "IVA export-category validation requires a generation-pinned governed-fact source",
+        )
+    if category in _registry_export_categories(
+        effective_date=effective_date or date.today(),
+        authority=selected_authority,
+    ):
         if eu_member_state is not None:
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
@@ -1642,7 +1689,11 @@ def validate_intracom_export_counterparty(
     return None
 
 
-def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
+def validate_iva_ledger_counterparty_category(
+    transaction: Transaction,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> IvaLedgerAggregationIssue | None:
     """Return the D5 counterparty/category gate :class:`IvaLedgerAggregationIssue` for a ledger transaction."""
     category = transaction.iva_category
     if category is None:
@@ -1653,6 +1704,8 @@ def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLe
         counterparty_country=transaction.counterparty_country,
         eu_member_state=transaction.counterparty_eu_member_state,
         identification_state=transaction.counterparty_identification_state,
+        effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
+        authority=authority,
     )
 
 
@@ -1738,7 +1791,12 @@ def prorrata_reference_for(
         )
 
 
-def iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
+def iva_rate_kind_for(
+    rate: Decimal,
+    *,
+    on_date: date,
+    operation: PinnedAuthorityOperation | None = None,
+) -> IvaRateKind | None:
     """Return the tier a declared rate belongs to, or ``None`` if it is not one.
 
     Delegates to :func:`rate_kinds_for_declared_rate`, the registry's own
@@ -1754,7 +1812,17 @@ def iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
     would separate them. Callers that must report the rate itself carry it
     separately on the observation.
     """
-    matched = rate_kinds_for_declared_rate(spanish_eu_member_state(effective_date=on_date), rate, on_date)
+    selected_authority = operation or governed_facts_in_scope()
+    if selected_authority is None:
+        raise AggregationValidationError(
+            "IVA rate classification requires a generation-pinned governed-fact source",
+        )
+    matched = rate_kinds_for_declared_rate(
+        spanish_eu_member_state(effective_date=on_date, authority=selected_authority),
+        rate,
+        on_date,
+        authority=selected_authority,
+    )
     return matched[0] if matched else None
 
 

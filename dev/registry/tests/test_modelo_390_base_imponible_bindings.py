@@ -33,7 +33,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -43,6 +42,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .ledger_iva_aggregation_support import _deduction_provenance
 
@@ -66,7 +66,7 @@ _EXPORT_BASE = Decimal("2300.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _observation(

@@ -27,7 +27,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date, datetime
 from decimal import Decimal
-from functools import lru_cache
 
 from pydantic import BaseModel
 
@@ -38,10 +37,10 @@ from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.currency.service import resolve_fx_conversion_stamp
 from ...domain.invoices.enums import (
@@ -145,14 +144,16 @@ def emit_catalogue_invoice_event(
     return (event.event_id,)
 
 
-@lru_cache(maxsize=32)
 def _registry_m349_operation_type_requirement(
     effective_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[IvaCategory, tuple[IntracomOperationType, ...]]:
     """Resolve the M349 category/clave ambiguity from registry data."""
-    authority = bundled_authority()
-    RegistryQueryService(authority).describe_modelo("349", as_of=effective_date)
-    resolved = authority.resolve_governed_fact(
+    directory = operation.modelo_directory("349")
+    if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
+        raise ValueError(f"Modelo 349 has no registry revision for {effective_date.isoformat()}")
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m347-m349-counterpart-operation-catalogue",
             date_axis=DateAxis.FILING_PERIOD,
@@ -196,6 +197,7 @@ def _require_operation_type_where_the_category_cannot_settle_it(
     iva_category: IvaCategory | None,
     operation_type: IntracomOperationType | None,
     effective_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse an entrega intracomunitaria that does not state its clave.
 
@@ -219,7 +221,10 @@ def _require_operation_type_where_the_category_cannot_settle_it(
             the refusal tells the operator what to state rather than only that
             something is missing.
     """
-    required_category, candidates = _registry_m349_operation_type_requirement(effective_date)
+    required_category, candidates = _registry_m349_operation_type_requirement(
+        effective_date,
+        operation=operation,
+    )
     if iva_category != required_category or operation_type is not None:
         return
     candidate_labels = ", ".join(f"clave {candidate.value}" for candidate in candidates)
@@ -316,6 +321,7 @@ def _apply_operator_asserted_invoice_facts(
     retention_rate: Decimal | None,
     retention_amount: Decimal | None,
     effective_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     if series is not None:
         invoice_payload["series"] = series
@@ -329,6 +335,7 @@ def _apply_operator_asserted_invoice_facts(
         iva_category=iva_category,
         operation_type=operation_type,
         effective_date=effective_date,
+        operation=operation,
     )
     if operation_type is not None:
         invoice_payload["operation_type"] = operation_type.value
@@ -388,6 +395,7 @@ def build_catalogue_invoice(
     recargo_amount: Decimal | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
 
@@ -435,16 +443,46 @@ def build_catalogue_invoice(
     """
     from ...domain.invoices.enums import iva_rate_percentage
 
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return build_catalogue_invoice(
+                bucket_id=bucket_id,
+                kind=kind,
+                counterparty_name=counterparty_name,
+                counterparty_tax_id=counterparty_tax_id,
+                counterparty_country=counterparty_country,
+                invoice_number=invoice_number,
+                issued_at=issued_at,
+                taxable_base=taxable_base,
+                iva_rate=iva_rate,
+                currency=currency,
+                payment_status=payment_status,
+                notes=notes,
+                iva_category=iva_category,
+                operation_type=operation_type,
+                operation_date=operation_date,
+                retention_rate=retention_rate,
+                retention_amount=retention_amount,
+                invoice_class=invoice_class,
+                series=series,
+                rectifies_invoice_number=rectifies_invoice_number,
+                recargo_amount=recargo_amount,
+                lines=lines,
+                rate_provider=rate_provider,
+                operation=indexed_operation,
+            )
+
     # Normalise once, before either the persisted payload or the FX lookup
     # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
     # SAME provider rate as its canonical "GBP" form, not silently miss the
     # rate and leave the invoice unstamped.
     currency = normalise_iso_4217_currency(currency)
     devengo_date = operation_date or issued_at
-    rate_slot = resolve_iva_rate_slot(iva_rate, devengo_date)
-    # The exact devengo date is present at this composition boundary, so both
-    # synthesis and Invoice validation project the same authority fact.
-    pct = iva_rate_percentage(rate_slot, devengo_date)
+    with validating_governed_facts(operation):
+        rate_slot = resolve_iva_rate_slot(iva_rate, devengo_date)
+        # The exact devengo date is present at this composition boundary, so both
+        # synthesis and Invoice validation project the same authority fact.
+        pct = iva_rate_percentage(rate_slot, devengo_date)
     base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
         taxable_base=taxable_base,
         lines=lines,
@@ -486,6 +524,7 @@ def build_catalogue_invoice(
         retention_rate=retention_rate,
         retention_amount=retention_amount,
         effective_date=devengo_date,
+        operation=operation,
     )
     # The euro-conversion stamp. ``currency`` is already the canonical uppercase
     # ISO 4217 token (normalised once above), so the provider is queried with the
@@ -498,7 +537,8 @@ def build_catalogue_invoice(
         issued_at=issued_at,
         rate_provider=rate_provider,
     )
-    return Invoice.model_validate(invoice_payload)
+    with validating_governed_facts(operation):
+        return Invoice.model_validate(invoice_payload)
 
 
 def create_catalogue_invoice(

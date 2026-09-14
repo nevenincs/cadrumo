@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -143,7 +144,7 @@ def incomplete_auth_configuration_verdict(
             "provider_identity_present": provider_identity_present,
         }
     else:
-        raise RuntimeError(f"unsupported incomplete auth provider: {provider}")
+        raise InternalInvariantError(f"unsupported incomplete auth provider: {provider}")
     return no_action_precondition_verdict(
         condition_id=condition_id,
         evidence_id=evidence_id,

@@ -28,7 +28,7 @@ class ProfileCustodyError(SecretStoreError):
     """Base failure for profile-scoped password custody."""
 
 
-class ProfileCustodyRecordError(ProfileCustodyError, ValueError):
+class ProfileCustodyRecordError(ProfileCustodyError):
     """Raised when a current-format custody record is malformed or altered."""
 
 
@@ -45,11 +45,11 @@ class ProfileCustodyConcurrentCapsuleChangeError(ProfileCustodyRecordError):
     """
 
 
-class ProfileCustodyPasswordError(ProfileCustodyError, ValueError):
+class ProfileCustodyPasswordError(ProfileCustodyError):
     """Raised when profile-password representation or proof is refused."""
 
 
-class ProfileCustodyRecoverySecretError(ProfileCustodyError, ValueError):
+class ProfileCustodyRecoverySecretError(ProfileCustodyError):
     """Raised when recovery-secret representation or proof is refused."""
 
 
@@ -77,15 +77,14 @@ class ProfileCustodyRefusedError(ProfileCustodyError):
         self.recovery_guidance = recovery_guidance
 
 
-class WipeTypeError(StorageError, TypeError):
+class WipeTypeError(StorageError):
     """Raised when the wipe primitive receives a value it cannot overwrite.
 
     Zeroisation needs a mutable buffer; handing it an immutable ``bytes`` is a
     programming error whose damage is silent, because the caller believes key
-    material was wiped when nothing was touched. Inherits from both
-    :class:`StorageError` and :class:`TypeError` so a caller catching raw
-    :class:`TypeError` still sees it while the typed storage surface
-    propagates through domain boundaries.
+    material was wiped when nothing was touched. The typed storage surface
+    propagates it through domain boundaries; callers should catch
+    :class:`WipeTypeError` rather than a builtin ``TypeError``.
     """
 
 

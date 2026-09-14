@@ -3780,6 +3780,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @1412+323 An. Pers.jcas. o entidades.  Domicilio social en España (si distinto del fiscal).  Nombre de la vía pública [ONE casilla over 2 printed components: @1412+50, @1734+1]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "pj.dsoc-nombre-via"
+continuidad_id = "persona-juridica-domicilio-social-nombre-via"
 number = "B72"
 section = ["declaracion", "persona_juridica", "domicilio_social"]
 data_type = "text"
@@ -3797,6 +3798,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @1465+273 Num. Pers.jcas. o entidades.  Domicilio social en España (si distinto del fiscal).  Núm casa [ONE casilla over 2 printed components: @1465+5, @1737+1]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "pj.dsoc-numero-casa"
+continuidad_id = "persona-juridica-domicilio-social-numero-casa"
 number = "B74"
 section = ["declaracion", "persona_juridica", "domicilio_social"]
 data_type = "integer"
@@ -3814,6 +3816,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @1473+268 An. Pers.jcas. o entidades.  Domicilio social en España (si distinto del fiscal).  Bloque [ONE casilla over 2 printed components: @1473+3, @1740+1]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "pj.dsoc-bloque"
+continuidad_id = "persona-juridica-domicilio-social-bloque"
 number = "B76"
 section = ["declaracion", "persona_juridica", "domicilio_social"]
 data_type = "text"
@@ -4675,6 +4678,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @247+8 Num. I.V.A. A) Solicita alta/baja en el Registro de extractores de depósitos fiscales de productos incluidos en los ámbitos objetivos de los Impuestos sobre el alcohol y bebidas derivadas Fecha. Día [ONE casilla over 3 printed components: @247+2, @249+2, @251+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "ret.extractores-depositos-alcohol-fecha"
+continuidad_id = "extractores-depositos-alcohol-fecha"
 number = "717.a"
 section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
 data_type = "date"
@@ -4692,6 +4696,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @256+8 Num. I.V.A. A) Solicita alta/baja en el Registro de extractores de depósitos fiscales de productos incluidos en los ámbitos objetivos de los Impuestos sobre Hidrocarburos Fecha. Día [ONE casilla over 3 printed components: @256+2, @258+2, @260+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "ret.extractores-depositos-hidrocarburos-fecha"
+continuidad_id = "extractores-depositos-hidrocarburos-fecha"
 number = "717.b"
 section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
 data_type = "date"
@@ -4722,6 +4727,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @12+1079 Num. 12a. Relación de socios, miembros o partícipes. Causa de la presentación. Fecha. Día [ONE casilla over 12 printed components: @12+2, @14+2, @16+4, @369+2, @371+2, @373+4, @726+2, @728+2, @730+4, @1083+2, @1085+2, @1087+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "soc.causa-fecha"
+continuidad_id = "socio-principal-causa-fecha"
 number = "805"
 section = ["declaracion", "socios"]
 data_type = "date"
@@ -4730,6 +4736,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @20+1080 An. 12a. Relación de socios, miembros o partícipes.  N.I.F. [ONE casilla over 4 printed components: @20+9, @377+9, @734+9, @1091+9]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "soc.nif"
+continuidad_id = "socio-principal-nif"
 number = "800"
 section = ["declaracion", "socios"]
 data_type = "nif"
@@ -4738,6 +4745,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @29+1196 An. 12a. Relac. de socios, miembros o partícipes.  Apellidos y nombre, razón o denom. social [ONE casilla over 4 printed components: @29+125, @386+125, @743+125, @1100+125]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "soc.nombre-razon-social"
+continuidad_id = "socio-principal-nombre-razon-social"
 number = "801"
 section = ["declaracion", "socios"]
 data_type = "name"
@@ -4746,6 +4754,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @158+1076 Num. 12a. Relac. de soc.miemb. o part. Domic. fisc. en el Est. de resid. Cuota o % de partic. (3 ent + 2 decim.) [ONE casilla over 4 printed components: @158+5, @515+5, @872+5, @1229+5]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "soc.cuota-participacion"
+continuidad_id = "socio-principal-cuota-participacion"
 number = "818"
 section = ["declaracion", "socios"]
 data_type = "decimal"
@@ -4754,6 +4763,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @163+1076 Num. 12a. Relac. de soc.miemb. o part. Domic. fisc. en el Est. de resid. Cuota o % de atribuc. (3 ent + 2 decim.) [ONE casilla over 4 printed components: @163+5, @520+5, @877+5, @1234+5]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "soc.cuota-atribucion"
+continuidad_id = "socio-principal-cuota-atribucion"
 number = "859"
 section = ["declaracion", "socios"]
 data_type = "decimal"

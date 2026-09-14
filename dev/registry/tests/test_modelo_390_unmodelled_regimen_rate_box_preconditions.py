@@ -25,9 +25,9 @@ import re
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.rate_box_partition import derive_rate_box_partitions
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -55,7 +55,7 @@ _UNMODELLED_BLOCKS: tuple[tuple[str, str, frozenset[str]], ...] = (
 
 
 def _m390_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _design_text() -> str:
